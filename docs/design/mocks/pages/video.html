@@ -199,6 +199,9 @@
 .kfedit .kc-e:hover{background:var(--panel-2);color:var(--ink)}
 .kfedit .kc-e.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .kfedit .kc-e:focus-visible{outline:none;box-shadow:var(--ring)}
+/* a held key runs no curve, so the curve it would run is shown faded
+   rather than hidden: turning Hold off puts it straight back. */
+.kfedit .select.muted{opacity:.45}
 
 /* the selected key outranks the drag state visually: drag is transient, the
    selection is what the card is bound to */
@@ -614,7 +617,7 @@
         <span class="kfread">Playhead <b id="kfReadV">Opacity 100%</b> @ <span id="kfReadT">4.12s</span></span>
         <span class="tsep"></span>
         <span class="lbl">Easing</span>
-        <div class="seg" id="easeSeg"><button>Linear</button><button class="on">Ease in-out</button><button>Spring</button></div>
+        <span class="select sm" id="easeSel" tabindex="0" role="button" aria-haspopup="menu" title="The curve new keys are given"><span class="lead" id="easeVal">Ease in out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
       </div>
 
       <div class="tlz">
@@ -622,6 +625,19 @@
       </div>
 
     </div>
+
+    <!-- THE ONE EASING LIST, from shared/components/curve.js. Video used to
+         offer Linear / Ease in-out / Spring here and a different six on the
+         key card, which meant the same question had two answers on one
+         screen. Both openers now fill this menu; which one asked is
+         remembered on it. -->
+    <div class="popover menu pop" id="curveMenu" data-curve-menu
+         style="position:absolute;right:var(--s4);bottom:96px;width:252px;max-height:320px;overflow:auto;z-index:30"></div>
+
+    <!-- and the rest of it: the curve no name covers, drawn by hand. Same
+         editor the icon pages get, from the same file. -->
+    <div class="popover pop" id="bezPop" data-curve-editor=".4,0,.2,1"
+         style="position:absolute;right:var(--s4);bottom:96px;width:236px;padding:var(--pad-sm);z-index:31"></div>
   </div>
 
   <div class="caption">
@@ -646,7 +662,7 @@
   var TICKS = [0,3,6,9,12,15];       // ruler ticks / snap points
   var playT = 4.12;                  // playhead time in seconds
   var tool = "select";               // select | blade | text | shape | measure | hand | zoom
-  var ease = "ease";                 // linear | ease | spring
+  var ease = "ease-in-out";          // any id in PZ.curve.list, or "hold"
   var dirty = false;
 
   var pct = function(t){ return (t/DURATION)*100; };
@@ -1091,22 +1107,23 @@
     Object.keys(ps).forEach(function(k){ ps[k].keys.forEach(function(x){ if(out.indexOf(x.t)<0) out.push(x.t); }); });
     return out;
   }
-  function smooth(u){ return u*u*(3-2*u); }
-  function spring(u){ return 1-Math.cos(u*Math.PI*1.5)*Math.exp(-2.2*u); }
-  /* EASING IS A PROPERTY OF THE SEGMENT, not of the document. One global
-     Linear/Ease/Spring switch could only say "every transition in this project
-     bends the same way", which is not a thing anyone wants — the answer to "how
-     do I change the curve between these two keys" has to be reachable from the
-     two keys. So each key carries the curve of the segment LEAVING it, and the
-     global control is only the default handed to new keys. */
-  function easeAt(u, mode){
-    if(mode==="linear") return u;
-    if(mode==="spring") return spring(u);
-    if(mode==="in")     return u*u*u;                 // slow start, arrives fast
-    if(mode==="out")    return 1-Math.pow(1-u,3);     // leaves fast, settles
-    if(mode==="hold")   return 0;                     // no interpolation at all
-    return smooth(u);                                 // "ease" - in and out
-  }
+  /* EASING IS A PROPERTY OF THE SEGMENT, not of the document. One switch in
+     the toolbar could only say "every transition in this project bends the same
+     way", which is not a thing anyone wants — the answer to "how do I change the
+     curve between these two keys" has to be reachable from the two keys. So each
+     key carries the curve of the segment LEAVING it, and the toolbar control is
+     only the default handed to new keys.
+
+     WHICH curves are on offer is not this page's business. They come from
+     shared/components/curve.js, the one list the icon pages and the app also
+     read, so a curve called Ease out here is the same shape called Ease out
+     there. HOLD is the exception and stays local: it is not a curve, it is the
+     absence of a transition, so it sits beside the curve rather than inside the
+     list of them: a key is HELD or it is on a curve. */
+  function easeAt(u, mode){ return window.PZ.curve.at(mode, u); }   // the one named list
+  /* How far along the segment leaving THIS key is. Hold is asked first and
+     separately, because it is not a curve: it is the absence of one. */
+  function segEase(k, u){ return k.hold ? 0 : easeAt(u, k.ease||ease); }
   /* A COLOUR KEYS TO A COLOUR. Interpolating it as a number would produce NaN
      and a blank swatch, so the same easing curve drives a channel-wise mix
      instead — which is what makes "anything is animatable" true rather than a
@@ -1126,7 +1143,7 @@
     for(var i=0;i<k.length-1;i++){
       if(t>=k[i].t && t<=k[i+1].t){
         var u=(t-k[i].t)/((k[i+1].t-k[i].t)||1);
-        var e=easeAt(u, k[i].ease||ease);
+        var e=segEase(k[i], u);
         var a=hex2rgb(k[i].v), b=hex2rgb(k[i+1].v);
         return rgb2hex([0,1,2].map(function(j){ return a[j]+(b[j]-a[j])*e; }));
       }
@@ -1141,7 +1158,7 @@
     for(var i=0;i<k.length-1;i++){
       if(t>=k[i].t && t<=k[i+1].t){
         var u=(t-k[i].t)/((k[i+1].t-k[i].t)||1);
-        return k[i].v+(k[i+1].v-k[i].v)*easeAt(u, k[i].ease||ease);
+        return k[i].v+(k[i+1].v-k[i].v)*segEase(k[i], u);
       }
     }
     return k[k.length-1].v;
@@ -1193,9 +1210,8 @@
          readout will report, or the graph is decoration. 16 steps is past the
          point the difference is visible at this size. */
       for(var i=0;i<k.length-1;i++){
-        var m=k[i].ease||ease;
-        if(m==="linear"){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
-        if(m==="hold"){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i].v)+" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
+        if(k[i].hold){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i].v)+" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
+        if((k[i].ease||ease)==="linear"){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
         for(var st=1; st<=16; st++){
           var u=st/16, tt=k[i].t+(k[i+1].t-k[i].t)*u;
           d+=" L "+xOf(tt)+" "+yOf(p,valueAt(p,tt));
@@ -1305,6 +1321,13 @@
      look away from what you are editing. Time and value are typed. The easing
      row governs the segment LEAVING this key, which is what "the curve between
      these two points" means when you have selected the left one. */
+  /* Hold is not one of the named curves, so it is named here. Everything
+     else reads its label straight off the shared list. */
+  function curveLabel(id){
+    var row=window.PZ.curve.get(id);
+    return row ? row.label : id;
+  }
+
   function renderKeyCard(p){
     var box=document.getElementById("kfEdit");
     if(!box) return;
@@ -1315,7 +1338,7 @@
     }
     var k=p.keys[selKey];
     var isLast = selKey===p.keys.length-1;
-    var mode = k.ease||ease;
+    var mode = k.ease||ease, held = !!k.hold;
     box.classList.add("on");
     box.innerHTML=
       '<div class="kf-r">'+
@@ -1329,20 +1352,25 @@
       (isLast
         ? '<div class="kf-hint">Last key. Nothing after it to ease into.</div>'
         : '<div class="kf-l">Curve to next key</div>'+
-          '<div class="kf-e">'+['linear','in','out','ease','spring','hold'].map(function(m){
-            return '<button class="kc-e'+(m===mode?" on":"")+'" data-ease="'+m+'" title="'+
-              ({linear:"Straight line",in:"Slow start",out:"Slow finish",ease:"Slow both ends",spring:"Overshoot and settle",hold:"Jump, no interpolation"})[m]+
-              '">'+({linear:"Linear",in:"In",out:"Out",ease:"Ease",spring:"Spring",hold:"Hold"})[m]+'</button>';
-          }).join("")+'</div>');
+          '<div class="kf-e">'+
+            '<span class="select sm'+(held?" muted":"")+'" id="kcCurve" tabindex="0" role="button"'+
+              ' aria-haspopup="menu"'+(held?' title="Held, so no curve runs. Pick one to let it move again."':"")+'>'+
+              '<span class="lead">'+curveLabel(mode)+'</span>'+
+              '<span class="car"><i class="ic xs ic-chevron-down"></i></span></span>'+
+            '<button class="kc-e'+(held?" on":"")+'" id="kcHold" aria-pressed="'+held+
+              '" title="Jump at the next key, no transition">Hold</button>'+
+          '</div>');
   }
 
   var kfEditBox=document.getElementById("kfEdit");
   kfEditBox && kfEditBox.addEventListener("click", function(e){
     var p=curProp(); if(!p) return;
-    var b=e.target.closest("[data-ease]");
-    if(b && selKey>=0){
-      p.keys[selKey].ease=b.getAttribute("data-ease");
+    if(e.target.closest("#kcHold") && selKey>=0){
+      p.keys[selKey].hold = !p.keys[selKey].hold;
       markDirty(); renderKf(); updateReadouts(); return;
+    }
+    if(e.target.closest("#kcCurve")){
+      e.stopPropagation(); openCurveMenu("key", e.target.closest("#kcCurve")); return;
     }
     if(e.target.closest("#kcDel") && selKey>=0){
       p.keys.splice(selKey,1); selKey=-1;
@@ -1573,14 +1601,55 @@
     b.addEventListener("click", function(){ setTool(b.getAttribute("data-tool")); });
   });
 
-  var easeSeg=document.getElementById("easeSeg");
-  if(easeSeg) easeSeg.addEventListener("click", function(e){
-    var b=e.target.closest("button"); if(!b) return;
-    [].forEach.call(easeSeg.children,function(x){ x.classList.toggle("on",x===b); });
-    var txt=b.textContent.toLowerCase();
-    ease = txt.indexOf("linear")>=0?"linear": txt.indexOf("spring")>=0?"spring":"ease";
+  /* ---------------- THE CURVE MENU ----------------
+     One menu, two askers. The toolbar asks "what curve should new keys get",
+     the selected key asks "what curve leaves THIS key". Which one asked is
+     remembered on the menu, because the rows are identical either way and a
+     second copy of them is exactly the drift this replaced. */
+  var curveMenu=document.getElementById("curveMenu");
+  var bezPop=document.getElementById("bezPop");
+  function openCurveMenu(who, near){
+    if(!curveMenu) return;
+    curveMenu.__who = who;
+    /* the key card floats next to the graph, so the menu meets it there */
+    if(near && who==="key"){
+      var w=near.closest(".win"), r=near.getBoundingClientRect(), b=w.getBoundingClientRect();
+      curveMenu.style.right="auto";
+      curveMenu.style.bottom="auto";
+      curveMenu.style.left=Math.max(8, Math.min(r.left-b.left, b.width-260))+"px";
+      curveMenu.style.top=Math.max(8, r.bottom-b.top+6)+"px";
+    }else{
+      curveMenu.style.left="auto"; curveMenu.style.top="auto";
+      curveMenu.style.right="var(--s4)"; curveMenu.style.bottom="96px";
+    }
+    [].forEach.call(document.querySelectorAll(".popover.pop.on"), function(x){
+      if(x!==curveMenu) x.classList.remove("on");
+    });
+    curveMenu.classList.add("on");
+  }
+  var easeSel=document.getElementById("easeSel");
+  if(easeSel) easeSel.addEventListener("click", function(e){
+    e.stopPropagation(); openCurveMenu("default", easeSel);
+  });
+  curveMenu && curveMenu.addEventListener("click", function(e){
+    e.stopPropagation();
+    var it=e.target.closest("[data-curve]"); if(!it) return;
+    var id=it.getAttribute("data-curve");
+    curveMenu.classList.remove("on");
+    if(id==="custom"){ bezPop && bezPop.classList.add("on"); return; }
+    if(curveMenu.__who==="key"){
+      var p=curProp();
+      /* picking a curve is asking for a transition, so it lifts a hold */
+      if(p && selKey>=0){ p.keys[selKey].ease=id; p.keys[selKey].hold=false; markDirty(); }
+    }else{
+      ease=id;
+      var lab=document.getElementById("easeVal");
+      if(lab) lab.textContent=curveLabel(id);
+    }
     renderKf(); updateReadouts();
   });
+  bezPop && bezPop.addEventListener("click", function(e){ e.stopPropagation(); });
+  /* outside-click dismissal is popover.js's, for every popover on the page */
   var zoomSeg=document.getElementById("zoomSeg");
   if(zoomSeg) zoomSeg.addEventListener("click", function(e){
     var b=e.target.closest("button"); if(!b) return;

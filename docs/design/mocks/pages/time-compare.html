@@ -241,7 +241,7 @@
 
         <div class="tmc-job">Shape the curve<small>How the value travels</small></div>
         <div class="tmc-cell">A <b>Curve</b> row opening a list with <b>each shape drawn beside its name</b>, ending in <b>Draw a curve</b>: two handles and a <code>cubic-bezier(.45, 0, .55, 1)</code> readout.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 6 and 7</span></div>
-        <div class="tmc-cell">An <b>Easing</b> row: two buttons in a segmented control, Linear and Ease in-out, and nothing else anywhere in ten flows.<span class="tmc-src" data-target="video-zoom-wt">video-zoom-wt · step 7</span></div>
+        <div class="tmc-cell">The same <b>Curve</b> row, from the same file, since 2026-09-15. It was two buttons, Linear and Ease in-out, and nothing else anywhere in ten flows.<span class="tmc-src" data-target="video-zoom-wt">video-zoom-wt · step 7</span></div>
         <div class="tmc-v"><span class="tmc-chip tmc-s">Same, drifting</span></div>
 
         <div class="tmc-job">Relate two moving parts<small>What sits against what, in time</small></div>
@@ -365,7 +365,7 @@
 
       <!-- PROOF 3 -->
       <div>
-        <div class="mlabel">Three · the curve is a named shape, and one side has already settled it</div>
+        <div class="mlabel">Three · the curve is a named shape, and both sides now offer the same one</div>
         <div class="tmc-pair">
           <div class="tmc-quote">
             <div class="tmc-quote-h"><i class="ic ic-bezier"></i>On the icon's Motion entry<span class="tmc-from" data-target="icon-animate-wt">icon-animate-wt</span></div>
@@ -382,17 +382,15 @@
             <div class="tmc-quote-h"><i class="ic ic-video"></i>Under the video's Between the keys<span class="tmc-from" data-target="video-zoom-wt">video-zoom-wt</span></div>
             <div class="tmc-quote-b">
               <div class="section">
-                <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
-                  <span class="seg pseg" role="group" aria-label="Easing, video">
-                    <button tabindex="-1">Linear</button>
-                    <button class="on" tabindex="-1">Ease in-out</button>
-                  </span>
+                <div class="irow"><span class="rl">Curve</span>
+                  <span class="select" tabindex="-1" aria-hidden="true"><span class="lead">Ease in out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                 </div>
+                <p class="note">The same list, from the same file. It used to be two buttons, Linear and Ease in-out, and nothing else anywhere in ten flows.</p>
               </div>
             </div>
           </div>
         </div>
-        <p class="tmc-verdict tmc-warnbar"><b>Same control, and the drift is now one-sided.</b> It used to be four vocabularies across six pages, drawn by different hands with nothing to share. The icon pages have since settled on one list, with the shape drawn beside each name and a curve you can draw yourself, and the video pages still carry two buttons in a segmented control. That is no longer a disagreement, it is a gap with a known answer: the video side adopts what the icon side settled. It is also small work, a list of names and a curve for each, and it is already a task in the queue.</p>
+        <p class="tmc-verdict"><b>Same control, and the drift is closed.</b> It used to be four vocabularies across six pages, drawn by different hands with nothing to share. The icon pages settled on one list, with the shape drawn beside each name and a curve you can draw yourself, and on 2026-09-15 the video pages adopted it: the punch-in, the move, the title cascade and the audio fade all open the same eight names. There is no icon list and video list any more, there is one, it lives in <code>shared/components/curve.js</code>, and <code>node shared/check-easing.mjs</code> fails a page that writes its own.</p>
       </div>
 
       <!-- PROOF 4 -->

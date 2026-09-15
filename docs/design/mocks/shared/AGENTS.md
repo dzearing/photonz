@@ -387,6 +387,20 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   are typing. That shipped on the dashboard and made four fields unusable.
   `node shared/check-fieldwrap.mjs` reads the wrapper list out of the CSS and
   fails on a bare control wearing one.
+- **One set of easing curves, named the same way everywhere.** A control that
+  asks "on what curve" NEVER writes its own list. It writes an empty host and
+  the component fills it:
+  `<div class="popover menu pop" id="curveMenu" data-curve-menu></div>`, plus
+  `<div class="popover pop" id="bezPop" data-curve-editor=".4,0,.2,1"></div>`
+  for the curve no name covers. The eight names, their order, their shapes and
+  their cubic-beziers live in `shared/components/curve.js` and nowhere else;
+  `PZ.curve.at(id, t)` evaluates one if a page needs to animate off it. This
+  is not tidiness: four different lists were on screen at once in September
+  2026, so the same control offered you Spring on one screen and not the next.
+  `node shared/check-easing.mjs` fails a page that draws its own rows, a
+  segmented group that is its own easing vocabulary, and a list that has
+  drifted from the app's `EasingCurve` in `Sources/PhotonzCore/LayerMotion.swift`.
+  `node shared/check-easing.mjs --list` prints the one list.
 - **Home:** every `.cmdpop` gets a trailing **Home** item automatically (the
   shell component appends it). Do not author one per page.
 - **`.elev-0/1/2` and `.elev-3`**, the only surface allowed to sit

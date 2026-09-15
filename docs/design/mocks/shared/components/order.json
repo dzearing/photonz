@@ -16,6 +16,7 @@
     "elevation",
     "button",
     "segmented",
+    "curve",
     "slider",
     "toggle",
     "input",
@@ -46,6 +47,7 @@
   ],
   "js": [
     "core",
+    "curve",
     "shell",
     "entry",
     "dock",

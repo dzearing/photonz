@@ -1,0 +1,42 @@
+/* Photonz mock · curve · THE ONE EASING VOCABULARY.
+   ------------------------------------------------------------------
+   Replaces five hand-written easing controls: the three-button
+   Linear/Ease in-out/Spring segmented group on video.html, the
+   two-button Linear/Ease in-out group on video-move-wt and
+   video-zoom-wt, the Linear/Ease/S-curve fade group on video-audio,
+   and five page-scoped copies of the curve menu on the icon pages
+   (#icon-animate-wt .cvth and friends).
+
+   The look is the menu row's thumbnail and the drawn cubic-bezier
+   editor. The LIST lives in curve.js, because a list pasted into a
+   stylesheet is a list that drifts. See shared/check-easing.mjs for
+   the gate that stops a page inventing its own set again. */
+
+/* ---- the thumbnail beside a curve's name ----
+   The shape IS the control: nobody can tell ease out back from ease
+   out elastic by reading, so every row draws what it does. */
+.cvth{flex:none;width:22px;height:22px;border-radius:5px;
+  background:var(--panel-2);border:1px solid var(--line)}
+.cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
+  stroke-linecap:round;vector-effect:non-scaling-stroke}
+/* a row is thumbnail-then-name, so it needs the menu's own gap.
+   curve.js puts .curvemenu on the host it fills. */
+.curvemenu .menuitem{gap:var(--gap-sm)}
+
+/* the same thumbnail, small, for a list row that reports a curve
+   rather than offers one (a Motion row's sketch) */
+.cvth.sm{width:16px;height:16px;border-radius:4px}
+
+/* ---- the drawn curve editor · two handles you drag ---- */
+.bez{width:100%;aspect-ratio:1;background:var(--well);border:1px solid var(--line);
+  border-radius:var(--r2);box-shadow:var(--well-sh);display:block}
+.bez .gr{stroke:var(--line);stroke-width:.4}
+.bez .cv{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;
+  vector-effect:non-scaling-stroke}
+.bez .hl{stroke:var(--comp);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.bez .hd{fill:var(--comp);stroke:var(--panel);stroke-width:1.4;
+  vector-effect:non-scaling-stroke;cursor:grab}
+.bezval{display:flex;align-items:center;gap:var(--s2);margin-top:var(--gap-sm)}
+.bezval code{flex:1;font-family:var(--mono);font-size:9.5px;color:var(--ink);
+  background:var(--well);box-shadow:var(--well-sh);border-radius:var(--r2);padding:5px 8px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

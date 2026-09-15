@@ -3899,3 +3899,10 @@
 {"t":"2026-09-15T22:59:32.362Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
 {"t":"2026-09-15T22:59:32.404Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
 {"t":"2026-09-15T22:59:49.483Z","ev":"task_done","id":"a-layer-says-how-big-it-is-while-you-drag-it","from":"in_progress","note":"A pill rides under a drag saying the reading it is changing: position while you move, size while you resize, sweep a selection box, or pull a point on a path; gone on release. Rules in PhotonzCore/DragReadout.swift (12 tests), drawing in Sources/Photonz/CanvasDragReadout.swift, flag next-a-drag-says-its-numbers on by default in Next. Verified by Scripts/playtest/drag-readout-walk.json, 80 steps passing, which claims the exact words on the pill mid-gesture with the button still down and then proves the panel reads the same numbers after release. Two path-reshape live-box bugs found and fixed on the way (CanvasDisplay echoed the pre-drag frame back over the live one; previewPath never wrote previewMoves). Full suite green: 7176 tests. Audit: queue/audits/2026-09-15-drag-readout.json with two real window captures."}
+{"t":"2026-09-15T23:00:33.056Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T23:00:33.161Z","ev":"task_started","id":"one-set-of-easing-curves-named-the-same-way-ever","title":"One set of easing curves, named the same way everywhere","priority":"p2-normal"}
+{"t":"2026-09-15T23:09:32.852Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}
+{"t":"2026-09-15T23:09:32.896Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}
+{"t":"2026-09-15T23:09:32.936Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}
+{"t":"2026-09-15T23:09:32.978Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}
+{"t":"2026-09-15T23:09:33.024Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}

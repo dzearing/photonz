@@ -67,6 +67,13 @@
   #lang-motion .ease.es .mo-puck{animation-timing-function:var(--ease-standard)}
   #lang-motion .ease.ed .mo-puck{animation-timing-function:var(--ease-decel)}
   #lang-motion .ease.esp .mo-puck{animation-timing-function:var(--ease-spring)}
+  /* what the same curve is called where a person picks it */
+  #lang-motion .ease .as{margin-top:6px;font-size:9.5px;color:var(--accent);font-weight:640}
+  #lang-motion .curvelist{display:flex;flex-wrap:wrap;gap:var(--s2)}
+  #lang-motion .curvelist .cv1{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 7px;
+    border:1px solid var(--line);border-radius:var(--r2);background:var(--panel-2);
+    font-size:11px;color:var(--ink);white-space:nowrap}
+  #lang-motion .curvelist .cv1 .tk{font-family:var(--mono);font-size:9px;color:var(--faint)}
   @keyframes glide{from{left:0}to{left:calc(100% - 10px)}}
 
   /* ---- What animates: legend map ---- */
@@ -191,16 +198,25 @@
         </div>
         <div class="toklab">Easing tokens <span style="text-transform:none;letter-spacing:0;font-weight:520;color:var(--faint)">· click a card to replay</span></div>
         <div class="eases">
-          <div class="ease es" data-ease><div class="t">Standard</div><div class="c">cubic-bezier(.4,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
-          <div class="ease ed" data-ease><div class="t">Decelerate</div><div class="c">cubic-bezier(0,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
-          <div class="ease esp" data-ease><div class="t">Spring</div><div class="c">cubic-bezier(.34,1.4,.5,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
+          <div class="ease es" data-ease><div class="t">Standard</div><div class="c">cubic-bezier(.4,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div><div class="as">Ease in out</div></div>
+          <div class="ease ed" data-ease><div class="t">Decelerate</div><div class="c">cubic-bezier(0,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div><div class="as">Ease out</div></div>
+          <div class="ease esp" data-ease><div class="t">Spring</div><div class="c">cubic-bezier(.34,1.4,.5,1)</div><div class="mo-rail"><span class="mo-puck"></span></div><div class="as">Ease out back</div></div>
         </div>
+
+        <!-- THE SAME CURVES, UNDER THE NAMES A PERSON PICKS THEM BY.
+             These three tokens are the app's chrome moving. The list below is
+             what somebody animating their own artwork chooses from, and three
+             of its eight ARE these three: one set of shapes, two audiences. -->
+        <div class="toklab">The curves a person picks <span style="text-transform:none;letter-spacing:0;font-weight:520;color:var(--faint)">· wherever the app offers a curve</span></div>
+        <div class="curvelist" id="mocurves"></div>
       </div>
       <div class="meta">
         <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
         <p class="rule">A motion is a <b>duration</b> paired with an <b>easing</b>. Short moves use <code style="font-family:var(--mono)">dur-1</code>, panels and toasts <code style="font-family:var(--mono)">dur-3</code>. <b>Standard</b> for most transitions, <b>decelerate</b> for things entering, <b>spring</b> only for a deliberate settle.</p>
         <div class="dd"><span class="do">Pick from these six values, nothing between.</span><span class="no">Reach for a 500ms ease-in-out because it "feels smooth".</span></div>
         <p class="api"><b>API</b> <code>motion.duration = "dur-2"</code> · <code>motion.easing = "standard"</code>. Tokens resolve to the same CSS variables the UI uses.</p>
+        <p class="rule" style="margin-top:var(--s3)"><b>Two audiences, one set of shapes.</b> The three tokens are the interface moving: a panel opening, a toast arriving. The eight named curves beside them are what somebody animating <i>their own artwork</i> chooses from, on an icon, a title or a punch-in. Three of the eight are the three tokens under the names people actually use for them: <b>Standard is Ease in out</b>, <b>Decelerate is Ease out</b>, and <b>Spring is what Ease out back does</b>. Every curve control in the app and in this study offers those eight in that order, ending in <b>Draw a curve</b>, and <code style="font-family:var(--mono)">node shared/check-easing.mjs</code> fails a page that invents its own.</p>
+        <div class="dd"><span class="do">Say Ease out to a person and decelerate to the stylesheet.</span><span class="no">Offer Spring on one screen and not on the next.</span></div>
       </div>
     </div>
 
@@ -342,6 +358,18 @@
   </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
+<script>
+  /* The list is NOT retyped here. It is read out of the component every curve
+     control on every page is built from, so this page cannot fall behind it. */
+  (function(){
+    var box=document.getElementById("mocurves");
+    if(!box || !window.PZ || !PZ.curve) return;
+    box.innerHTML = PZ.curve.list.map(function(c){
+      return '<span class="cv1">'+PZ.curve.thumb(c)+'<span>'+c.label+'</span>'+
+        (c.token?'<span class="tk">'+c.token+'</span>':'')+'</span>';
+    }).join("") + '<span class="cv1"><i class="ic sm ic-curves"></i><span>Draw a curve…</span></span>';
+  })();
+</script>
 <script>
   (function(){
     var root = document.getElementById('lang-motion');

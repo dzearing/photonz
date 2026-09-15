@@ -225,10 +225,8 @@
                 <div class="field"><span class="k">In</span><span class="v" id="fInVal">1.5s</span></div>
                 <div class="field"><span class="k">Out</span><span class="v" id="fOutVal">1.5s</span></div>
               </div>
-              <div class="seg stack" id="aCurve" style="margin-top:var(--s2)">
-                <button data-c="linear">Linear</button>
-                <button data-c="ease" class="on">Ease</button>
-                <button data-c="scurve">S-curve</button>
+              <div class="irow" style="margin-top:var(--s2)"><span class="rl">Curve</span>
+                <span class="select" id="aSelCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="aCurveVal">Ease in out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
               </div>
             </div>
             <div id="chExtra"><!-- ducking or clip facts, per selection --></div>
@@ -288,6 +286,12 @@
         <div class="menuitem"><i class="ic ic-audio"></i> Compressor</div>
         <div class="menuitem"><i class="ic ic-sparkle"></i> Noise reduction</div>
       </div>
+      <!-- the ONE easing list, from curve.js. A fade is a value moving
+           over time like any other, so it takes the same curves. This
+           page used to be the only place in the study that said
+           "S-curve", which is Ease in out under another name. -->
+      <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);top:297px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
+
       <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
         <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⇧⌘I</span></div>
         <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -334,7 +338,7 @@
     <h4>In the API</h4>
     <div class="codeblk"><span class="cm">// every mixer action is one call an agent can make</span>
 <span class="fn">track</span>(<span class="st">"music"</span>).<span class="fn">duckUnder</span>(<span class="st">"vo"</span>, {amount:<span class="st">-8</span>, ms:<span class="st">300</span>})
-<span class="fn">track</span>(<span class="st">"music"</span>).<span class="fn">fade</span>({inS:<span class="st">1.5</span>, outS:<span class="st">1.5</span>, curve:<span class="st">"ease"</span>})
+<span class="fn">track</span>(<span class="st">"music"</span>).<span class="fn">fade</span>({inS:<span class="st">1.5</span>, outS:<span class="st">1.5</span>, curve:<span class="st">"ease-in-out"</span>})
 <span class="fn">track</span>(<span class="st">"vo"</span>).<span class="fn">gain</span>(<span class="st">0</span>).<span class="fn">solo</span>()</div>
   </div>
 
@@ -367,7 +371,7 @@
   function defaults(){
     return {
       duck:true,
-      curve:"ease",
+      curve:"ease-in-out",
       playT:0,
       playing:false,
       sel:"music",
@@ -410,12 +414,10 @@
     var lo=s[i], hi=s[Math.min(s.length-1,i+1)];
     return lo+(hi-lo)*f;
   }
-  function curveFn(u){
-    u=clamp(u,0,1);
-    if(S.curve==="linear") return u;
-    if(S.curve==="scurve") return u*u*u*(u*(u*6-15)+10);
-    return u*u*(3-2*u);
-  }
+  /* A fade is a value moving over time, so it eases like everything else
+     does. The shapes come from PZ.curve (shared/components/curve.js), the
+     same eight the icon pages and the app offer. */
+  function curveFn(u){ return window.PZ.curve.at(S.curve, clamp(u,0,1)); }
   function autoAt(tr,t){
     var k=tr.auto; if(!k.length) return 1;
     if(t<=k[0].t) return k[0].v;
@@ -616,9 +618,8 @@
     var fi=document.getElementById("fInVal"), fo=document.getElementById("fOutVal");
     if(fi) fi.textContent=tr.fadeIn.toFixed(1)+"s";
     if(fo) fo.textContent=tr.fadeOut.toFixed(1)+"s";
-    [].forEach.call(document.querySelectorAll("#aCurve button"),function(b){
-      b.classList.toggle("on",b.getAttribute("data-c")===S.curve);
-    });
+    var cv=document.getElementById("aCurveVal");
+    if(cv){ var row=window.PZ.curve.get(S.curve); cv.textContent=row?row.label:S.curve; }
     var extra=document.getElementById("chExtra");
     if(!extra) return;
     if(tr.id==="music"){
@@ -768,11 +769,17 @@
   });
   propBody && propBody.addEventListener("click",function(e){
     var tr=trackOf(S.sel);
-    var cb=e.target.closest("#aCurve button");
     if(e.target.closest("#chMute")){ if(tr){ tr.mute=!tr.mute; refresh(); markDirty(); } }
     else if(e.target.closest("#chSolo")){ if(tr){ tr.solo=!tr.solo; refresh(); markDirty(); } }
-    else if(cb){ S.curve=cb.getAttribute("data-c"); refresh(); markDirty(); }
     else if(e.target.closest("#duckToggle")){ setDuck(!S.duck); markDirty(); }
+  });
+
+  /* The curve menu is the shared one, so picking a row is reading its id. */
+  var curveMenu=document.getElementById("curveMenu");
+  curveMenu && curveMenu.addEventListener("click",function(e){
+    var it=e.target.closest("[data-curve]");
+    if(!it || it.getAttribute("data-curve")==="custom") return;
+    S.curve=it.getAttribute("data-curve"); refresh(); markDirty();
   });
 
   function setDuck(on){

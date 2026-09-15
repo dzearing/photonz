@@ -369,7 +369,7 @@
             </div>
             <div class="section">
               <div class="sec-h">Easing <span class="mut">shared curve</span></div>
-              <div class="irow"><span class="rl">Curve</span><span class="select"><span class="lead">Ease out · soft</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Curve</span><span class="select" id="mgSelCurve" tabindex="0" role="button" data-menu="#mgCurveMenu"><span class="lead" id="mgCurveVal">Ease out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
               <div class="irow"><span class="rl">Path</span><span class="chip" style="margin:0"><i class="ic xs ic-pen"></i> Kicker follows a vector</span></div>
             </div>
           </div>
@@ -409,6 +409,10 @@
       </div>
 
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <!-- the ONE easing list, from curve.js. This page used to name a
+           curve nothing else in the study had, "Ease out · soft". -->
+      <div class="popover menu pop" id="mgCurveMenu" data-curve-menu style="position:absolute;right:var(--s4);bottom:115px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
+
       <div class="popover menu pop" id="mgLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
         <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⇧⌘I</span></div>
         <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>

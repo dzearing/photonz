@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T15:20:32.315Z",
-  "updated": "2026-09-15T12:14:53.331Z",
+  "updated": "2026-09-15T23:09:33.023Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while comparing the animation and video flows (task say-where-animating-an-icon-and-editing-a-video). Reproduced, not read:\n\n  $ cd docs/design/mocks\n  $ for f in pages/icon-animate-wt.html pages/icon-loop-wt.html pages/icon-states-wt.html pages/icon-drawon-wt.html pages/video-move-wt.html pages/video-zoom-wt.html; do echo \"--- $f\"; grep -A6 'aria-label=\"Easing\"' $f | grep -o '>[A-Za-z ][A-Za-z -]*</button>' | sed 's/>//;s;</button>;;'; done\n  --- pages/icon-animate-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-loop-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-states-wt.html\n  Linear / Ease out / Spring\n  --- pages/icon-drawon-wt.html\n  Linear / Ease out / Ease in-out\n  --- pages/video-move-wt.html\n  Linear / Ease in-out\n  --- pages/video-zoom-wt.html\n  Linear / Ease in-out\n\nThe design language already has exactly three curves and names them in tokens.css: --ease-standard cubic-bezier(.4,0,.2,1), --ease-decel cubic-bezier(0,0,.2,1), --ease-spring cubic-bezier(.34,1.4,.5,1), documented on pages/lang-motion.html. None of the six user-facing controls above maps cleanly onto those three names. Deciding the mapping (which label means --ease-decel: \"Ease out\"?) is the substance of the task.\n\nWhy it matters beyond tidiness: easing is one of only three things the animation and video flows genuinely share (see docs/design/animation-vs-video.md and the time-compare page). It is the cheapest consolidation on offer and it has already drifted in mocks alone, before a line of app code exists.",
@@ -44,6 +44,31 @@
     {
       "t": "2026-09-15T12:14:53.330Z",
       "note": "seq 9 -> 60"
+    },
+    {
+      "t": "2026-09-15T23:00:33.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T23:09:32.850Z",
+      "note": "Adversarial review BEFORE building. (1) The video walkthroughs traded a one-click segmented switch for a two-click menu, which is slower for the two curves they name. Built it anyway: the icon side already made that trade on purpose (a segmented group can only offer three curves and the fourth thing anyone wants is not on it), and a video move wanting an overshoot has nowhere to go today. (2) video.html's keyframe card offered six chips including Hold. Hold is NOT a curve, it is the absence of a transition, so folding it into a list of eight shapes would have made the list mean two kinds of thing. It is now a separate flag on the key (k.hold), the curve it suspends is shown faded rather than replaced, and picking a curve lifts the hold. (3) video-speed's Ramp/Hold is how a speed stop joins the next one, not an easing vocabulary: left alone deliberately. (4) video-audio said 'S-curve', a name nowhere else in the study, for what is plainly Ease in out. Converted. (5) Steps, 4 and Ease out elastic on a camera punch-in are odd, but one list beats two lists, and that is the whole task."
+    },
+    {
+      "t": "2026-09-15T23:09:32.894Z",
+      "note": "SHIPPED. The list is defined once, in docs/design/mocks/shared/components/curve.{css,js} (registered in order.json, css after segmented, js right after core so rows exist before popover.js and walkthrough.js run). A page writes an EMPTY host and the component fills it: <div class=\"popover menu pop\" id=\"curveMenu\" data-curve-menu></div> and <div class=\"popover pop\" id=\"bezPop\" data-curve-editor=\".4,0,.2,1\"></div>. Canonical row ids easLin/easInOut/easIn/easOut/easSine/easBack/easElastic/easSteps/easCustom (icon-animate and icon-phase used miSine/miCustom and were renamed). PZ.curve publishes {list, draw, menuHTML, editorHTML, upgrade, thumb, get, at}; at(id,t) is a line-by-line transliteration of PhotonzCore EasingCurve.value(at:), bezier solver included, verified against dense sampling (max error <2e-3 on four control-point sets) and reading 0.7756 at half time for Ease in out, the number docs/design/layer-motion.md documents. Converted: the five icon pages (rows deleted, page-local .cvth/.bez/.bezval/.mnote CSS deleted, .mnote promoted to app-patterns.css), video-move-wt, video-zoom-wt (segmented Linear/Ease in-out -> Curve select + menu, walkthrough steps re-cued to data-pop #curveMenu + data-cue #easInOut, eased state carried into later steps via data-set), video-motion (the invented 'Ease out . soft'), video-audio (Linear/Ease/S-curve -> the list; curveFn now calls PZ.curve.at, so the drawn fade is the real curve), video.html (toolbar default + per-key curve + a real bezPop; smooth()/spring()/in/out all deleted in favour of the shared evaluator). time-compare.html proof three rewritten: it was the page ARGUING the video side had not adopted this, and it had to stop saying so."
+    },
+    {
+      "t": "2026-09-15T23:09:32.934Z",
+      "note": "The gate: node shared/check-easing.mjs, three rules, all three PROVEN to fire. (1) a page drawing its own .cvth rows, (2) a segmented group whose buttons are two or more easing words, (3) the component's list drifting from Sources/PhotonzCore/LayerMotion.swift's EasingCurve.named, parsed out of the Swift rather than restated. Proof of (1) and (2): ran it against the pre-change video-zoom-wt, video.html and icon-states-wt from git HEAD, 3 failures, exit 1. Proof of (3): renamed Ease out back to Spring in curve.js, it failed with both lists printed, exit 1. --list prints the one list. Documented in shared/AGENTS.md (gates list), UX-PATTERNS.md D17 (the pattern, with the token mapping and why Hold is not in the list), and pages/lang-motion.html, which now draws the eight beside the three interface tokens and reads them out of curve.js rather than retyping them."
+    },
+    {
+      "t": "2026-09-15T23:09:32.976Z",
+      "note": "Verified in real Chrome (Playwright, 1680x1050, deviceScaleFactor 2): all 11 touched pages return 200 with zero console errors and render the identical nine rows; every walkthrough on the five icon pages and the two video ones steps end to end with no broken data-cue/data-pop/data-activate target; on video.html the toolbar default, the per-key curve, Hold and Draw a curve all work, and the plotted graph path changes shape per curve (704 chars linear, 1164 ease in out, 1187 back, 1162 elastic, 949 steps, 714 held), so the maths is live rather than decorative. Gates green: check-easing, check-reserved, check-a11y-names, check-elevation, check-states, check-selection, check-shortcuts, check-fieldwrap. build-ds.mjs rebuilt. Scripts/test.sh: 7176 tests in 573 suites, passed (no Swift changed, run as the repo rule requires)."
+    },
+    {
+      "t": "2026-09-15T23:09:33.022Z",
+      "note": "left rough, none of it clearing the follow-up bar: (a) the Draw a curve editor's two handles do not drag in ANY mock that has one, including the icon pages this came from, so it is a study-wide limitation rather than something this task broke; (b) the video keyframe card's menu opens over the timeline lane because the card sits low in the panel, readable but covering what you are editing; (c) Ease out elastic's css field is a bezier stand-in, since the real curve is not a bezier and both the app and PZ.curve.at sample it instead, so only a reader of the css string is affected and nothing reads it; (d) pages/video-speed.html keeps its Ramp / Hold control on purpose, it answers a different question. All four are in the audit's rough list where the user can disagree with any of them."
     }
-  ]
+  ],
+  "started": "2026-09-15T23:00:33.158Z"
 }

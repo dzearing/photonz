@@ -1,0 +1,29 @@
+{
+  "feature": "One set of easing curves, named the same way everywhere",
+  "epic": "icon-svg",
+  "summary": "Every screen in the study that asks how a value travels over time now offers the same eight named curves, in the same order, each drawing its own shape, ending in Draw a curve. It used to be four different lists, so the same control offered you Spring on one screen and not on the next.",
+  "setup": "The design study on the dashboard, http://127.0.0.1:8791. Nothing to switch on. This is mock work, not app work, so there is nothing to try in Photonz itself.",
+  "try": [
+    { "do": "Open the video editor page, http://127.0.0.1:8791/pages/video.html.", "shot": "2026-09-15-one-easing-list-1.png" },
+    { "do": "Click Graph on the Opacity row in the right panel, then click a diamond on the graph." },
+    { "do": "Click the curve name under Curve to next key and pick Ease out elastic." },
+    { "do": "Click Hold beside it, and watch the curve fade rather than disappear." },
+    { "do": "Open the punch-in walkthrough, pages/video-zoom-wt.html, and step to Ease the move.", "shot": "2026-09-15-one-easing-list-2.png" },
+    { "do": "Open pages/icon-animate-wt.html and step to the Curve row: same list, same order, same shapes." },
+    { "do": "Open pages/lang-motion.html and read the eight names beside the three motion tokens.", "shot": "2026-09-15-one-easing-list-3.png" }
+  ],
+  "evaluate": [
+    "Eight names plus Draw a curve: is that the right number, or does the everyday case want a shorter front door?",
+    "The shape is drawn beside every name. Do you pick by the picture or by the word?",
+    "Ease in out is the design language's --ease-standard, which is fast out and slow in, not CSS's symmetrical ease-in-out. Is that the right call, or should the name mean what CSS means?",
+    "On the video keyframe card, Hold sits beside the curve rather than inside the list. Does that read, or would you expect Hold among the curves?",
+    "A camera punch-in can now be given Ease out elastic and Steps, 4. Is one list worth offering curves video will rarely want?"
+  ],
+  "rough": [
+    "The screenshots are real browser renders of the study pages, not captures of the Photonz app: this task changed mocks and documentation only, no app code, so there is no walk to photograph.",
+    "Draw a curve opens the editor but its two handles do not drag anywhere: they are static in every mock that has them, including the icon pages this came from.",
+    "The video keyframe card's curve menu opens over the timeline because it is near the bottom of the panel. It is readable but it covers the lane you are editing.",
+    "Ease out elastic's cubic-bezier in the list is an approximation for CSS: the real curve is not a bezier at all, and the app samples it. Anything reading the css field for elastic gets a rough stand-in.",
+    "The speed ramp page still has its own Ramp / Hold control. That is a different question (how a speed stop joins the next one), not an easing vocabulary, so it was deliberately left alone."
+  ]
+}

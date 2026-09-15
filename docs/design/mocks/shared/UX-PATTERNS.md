@@ -2218,3 +2218,61 @@ The test for any guide: **put a filled black rectangle across the whole canvas.*
 The guide should still be visible, and should still be obviously not part of the
 rectangle. Fail the first half and it belongs over; fail the second half and it
 is drawn too strongly.
+
+---
+
+### D17 — "On what curve" is ONE question with ONE answer everywhere
+
+Anywhere a value moves over time, something has to ask how it travels: an icon's
+Motion entry, a video punch-in, a move across the frame, a title cascade, an
+audio fade. In September 2026 four different lists were on screen at once, drawn
+by four different hands. The same control offered you **Spring** on one page and
+not on the next, **Ease out** on a third and **Ease in-out** on a fourth, and
+there was nothing a person could see that explained the difference.
+
+**The list is one list.** It lives in `shared/components/curve.js` and is never
+retyped in a page:
+
+| | | |
+| --- | --- | --- |
+| **Standard** | Linear · Ease in out · Ease in · Ease out | the four nearly every motion wants |
+| **Shaped** | Ease in out sine · Ease out back · Ease out elastic · Steps, 4 | the ones that overshoot or jump |
+| | **Draw a curve…** | two handles and a `cubic-bezier(a,b,c,d)` readout, for the curve no name covers |
+
+Three of the eight ARE the design language's own motion tokens under the names
+people use for them: **Ease in out** is `--ease-standard`, **Ease out** is
+`--ease-decel`, and `--ease-spring` is what **Ease out back** does. The names
+and the numbers are also the app's (`EasingCurve` in
+`Sources/PhotonzCore/LayerMotion.swift`), so a mock and the thing it proposes
+cannot say different words for the same shape.
+
+**The shape is drawn beside every name, and that is the control.** Nobody can
+tell *ease out back* from *ease out elastic* by reading them, so every row
+draws what it does and you pick by eye. That is also why this is a menu rather
+than a segmented group of two or three: three buttons can only offer three
+curves, and the fourth thing anybody wants is not on it.
+
+**How a page asks for it.** An empty host, and the component fills it:
+
+```html
+<div class="popover menu pop" id="curveMenu" data-curve-menu></div>
+<div class="popover pop" id="bezPop" data-curve-editor=".4,0,.2,1"></div>
+```
+
+with the ordinary `.select` row as the trigger:
+`<span class="select" data-menu="#curveMenu"><span class="lead">Ease in out</span>…`.
+A page that needs to animate off the choice calls `PZ.curve.at(id, t)` rather
+than writing its own easing maths. `node shared/check-easing.mjs` fails a page
+that draws its own rows or offers its own vocabulary, and fails the component
+itself if the list drifts from the app's.
+
+**Hold is not a curve, and it does not join the list.** "Jump at the next key,
+no transition" is the *absence* of a transition, so where it exists (the video
+keyframe card) it sits beside the curve as its own control, and the curve it
+suspends is shown faded rather than replaced. Folding it into the list would
+have made the list mean two different kinds of thing.
+
+Canonical pages: `pages/icon-animate-wt.html` (the Motion entry's Curve row and
+the drawn curve), `pages/video.html` (the default for new keys, and the curve
+leaving a selected key), `pages/lang-motion.html` (the list itself, beside the
+three interface tokens it shares its shapes with).

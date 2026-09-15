@@ -22,6 +22,10 @@
 .menuitem .ic{color:var(--faint);width:14px;flex:none}
 .menuitem .sc{margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10px}
 .menu-sep{height:1px;background:var(--line-soft);margin:var(--s1) 0}
+/* the last row of a menu that has to say WHY it offers what it offers.
+   Five pages had written this rule out locally before it moved here. */
+.mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
+  line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 
 /* tooltip -> MOVED to shared/components/tooltip.css (one file per component).
    `.tooltip` is gone: use data-tip="..." for a real one, or .tip-demo for the

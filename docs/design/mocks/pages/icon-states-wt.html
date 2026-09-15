@@ -140,15 +140,8 @@
   /* THE CURVE CONTROL · the one shared by every page with timing. Named curves
      with their shape drawn beside them, and a custom one at the bottom, because
      three buttons in a segmented control is not a vocabulary. */
-  #icon-states-wt #curveMenu .menuitem{gap:var(--gap-sm)}
-  #icon-states-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
-    background:var(--panel-2);border:1px solid var(--line)}
-  #icon-states-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
-    stroke-linecap:round;vector-effect:non-scaling-stroke}
   #icon-states-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
     color:var(--faint);white-space:nowrap}
-  #icon-states-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
-    line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 </style>
 </head>
 <body class="page">
@@ -446,22 +439,7 @@
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-              <div class="popover menu pop" id="curveMenu" style="position:absolute;right:var(--s4);top:396px;width:252px;max-height:320px;overflow:auto;z-index:11">
-            <div class="mlabel">Standard</div>
-            <div class="menuitem" id="easLin"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22 22 2"/></svg> Linear</div>
-            <div class="menuitem" id="easInOut"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C8 22 16 2 22 2"/></svg> Ease in out</div>
-            <div class="menuitem" id="easIn"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C14 22 22 14 22 2"/></svg> Ease in</div>
-            <div class="menuitem" id="easOut"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C2 10 10 2 22 2"/></svg> Ease out</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Shaped</div>
-            <div class="menuitem" id="easSine"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C10 22 14 2 22 2"/></svg> Ease in out sine</div>
-            <div class="menuitem" id="easBack"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C6 26 12 2 22 2"/></svg> Ease out back</div>
-            <div class="menuitem" id="easElastic"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22c3 0 4-22 6-16s3 12 5 9 2-6 9-6"/></svg> Ease out elastic</div>
-            <div class="menuitem" id="easSteps"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22h6v-7h6v-6h8V2"/></svg> Steps, 4</div>
-            <div class="menu-sep"></div>
-            <div class="menuitem" id="easCustom"><i class="ic ic-curves"></i> Draw a curve&#8230; <span class="sc">&#8997;&#8984;C</span></div>
-            <p class="mnote">Named curves are the front door and <b>Draw a curve</b> is the rest of it. The shape beside each name is the point: nobody can tell <i>out back</i> from <i>out elastic</i> by reading them. Same control on every page that has timing.</p>
-          </div>
+              <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);top:396px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
 
           <div class="popover menu pop" id="fillMenu" style="position:absolute;right:var(--s4);top:404px;width:216px;z-index:11">
             <div class="menuitem">None</div>

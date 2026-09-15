@@ -224,11 +224,8 @@
 
                   <div class="section wt-off" id="secEase">
                     <div class="sec-h">Between the keys <span class="mut" id="pEaseState">Linear</span></div>
-                    <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
-                      <span class="seg pseg" role="group" aria-label="Easing">
-                        <button class="on" id="cvLin">Linear</button>
-                        <button id="cvEase">Ease in-out</button>
-                      </span>
+                    <div class="irow"><span class="rl">Curve</span>
+                      <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
                     <p class="note" id="pEaseNote">A linear punch-in reads like a machine. Easing in and out is what makes it look like someone leaned in.</p>
                   </div>
@@ -283,6 +280,12 @@
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
+
+          <!-- ====== THE CURVE MENU · the one easing list, from curve.js ======
+               Video used to offer two buttons of its own, Linear and
+               Ease in-out. It is the same question the icon pages ask, so
+               it is now the same control and the same eight names. -->
+          <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);bottom:57px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
 
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⇧⌘I</span></div>
@@ -423,14 +426,14 @@
 
       <li class="wt-step"
           data-title="Ease the move"
-          data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-cue="#easInOut" data-cue-label="Open Curve, choose Ease in out" data-cue-place="left"
+          data-pop="#curveMenu"
           data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
-          data-activate="#cvEase"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
-          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pEaseState=Ease in-out">
+          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#curveVal=Ease in out|#pEaseState=Ease in out">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
-          <p class="wt-do"><b>Ease in-out</b></p>
+          <p class="wt-do"><b>Ease in out</b></p>
           <p class="wt-where">Properties, under <b>Between the keys</b></p>
           <p class="wt-res">the punch stops arriving at a constant rate. It leans in and settles, which is the difference between a camera move and a zoom slider being dragged.</p>
         </div>
@@ -440,9 +443,8 @@
           data-title="Let it hold"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
           data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
-          data-activate="#cvEase"
           data-css="#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
-          data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pZoomNote=After the last key a value simply stays. Pulling back out later is one more key holding the old 100%, which is why the wide shot was worth recording in step 3.">
+          data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#curveVal=Ease in out|#pEaseState=Ease in out|#pZoomNote=After the last key a value simply stays. Pulling back out later is one more key holding the old 100%, which is why the wide shot was worth recording in step 3.">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do" data-verb="Drag">the <b>playhead</b> on to <b>0:08</b></p>

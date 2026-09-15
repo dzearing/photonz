@@ -134,30 +134,8 @@
      the value it would animate. `.pk` is that value, not a preset's name. */
   #icon-animate-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
     color:var(--faint);white-space:nowrap}
-  #icon-animate-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
-    line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 
-  /* the curve menu draws the curve beside its name, because the name is not
-     the thing: nobody can tell ease-out-back from ease-out-quint by reading. */
-  #icon-animate-wt #curveMenu .menuitem{gap:var(--gap-sm)}
-  #icon-animate-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
-    background:var(--panel-2);border:1px solid var(--line)}
-  #icon-animate-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
-    stroke-linecap:round;vector-effect:non-scaling-stroke}
 
-  /* ---------- THE CUSTOM CURVE EDITOR · handles you drag ---------- */
-  #icon-animate-wt .bez{width:100%;aspect-ratio:1;background:var(--well);border:1px solid var(--line);
-    border-radius:var(--r2);box-shadow:var(--well-sh);display:block}
-  #icon-animate-wt .bez .gr{stroke:var(--line);stroke-width:.4}
-  #icon-animate-wt .bez .cv{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;
-    vector-effect:non-scaling-stroke}
-  #icon-animate-wt .bez .hl{stroke:var(--comp);stroke-width:1.2;vector-effect:non-scaling-stroke}
-  #icon-animate-wt .bez .hd{fill:var(--comp);stroke:var(--panel);stroke-width:1.4;
-    vector-effect:non-scaling-stroke;cursor:grab}
-  #icon-animate-wt .bezval{display:flex;align-items:center;gap:var(--s2);margin-top:var(--gap-sm)}
-  #icon-animate-wt .bezval code{flex:1;font-family:var(--mono);font-size:9.5px;color:var(--ink);
-    background:var(--well);box-shadow:var(--well-sh);border-radius:var(--r2);padding:5px 8px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ---------- THE CYCLE TIMELINE · the bottom dock, with real width --------
      It measures ONE cycle of the loop in milliseconds, so a delay is a distance
@@ -592,37 +570,10 @@
           </div>
 
           <!-- ====== THE CURVE MENU · named curves, each drawn ====== -->
-          <div class="popover menu pop" id="curveMenu" style="position:absolute;right:var(--s4);top:396px;width:258px;max-height:330px;overflow:auto;z-index:11">
-            <div class="mlabel">Standard</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22 22 2"/></svg> Linear</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C8 22 16 2 22 2"/></svg> Ease in out</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C14 22 22 14 22 2"/></svg> Ease in</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C2 10 10 2 22 2"/></svg> Ease out</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Shaped</div>
-            <div class="menuitem" id="miSine"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C10 22 14 2 22 2"/></svg> Ease in out sine</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C6 26 12 2 22 2"/></svg> Ease out back</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22c3 0 4-22 6-16s3 12 5 9 2-6 9-6"/></svg> Ease out elastic</div>
-            <div class="menuitem"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22h6v-7h6v-6h8V2"/></svg> Steps, 4</div>
-            <div class="menu-sep"></div>
-            <div class="menuitem" id="miCustom"><i class="ic ic-curves"></i> Draw a curve… <span class="sc">⌥⌘C</span></div>
-            <p class="mnote">Named curves are the front door and <b>Draw a curve</b> is the rest of it. The shape beside each name is the point: nobody can tell <i>out back</i> from <i>out elastic</i> by reading them.</p>
-          </div>
+          <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);top:396px;width:258px;max-height:330px;overflow:auto;z-index:11"></div>
 
           <!-- ====== THE CUSTOM CURVE EDITOR ====== -->
-          <div class="popover pop" id="bezPop" style="position:absolute;left:var(--s4);top:240px;width:236px;padding:var(--pad-sm);z-index:12">
-            <div class="mlabel" style="margin:0 0 var(--gap-sm)">Draw a curve</div>
-            <svg class="bez" viewBox="0 0 100 100" aria-label="Curve editor">
-              <path class="gr" d="M0 25H100M0 50H100M0 75H100M25 0V100M50 0V100M75 0V100"/>
-              <path class="hl" id="bzL1" d="M0 100 34 44"/>
-              <path class="hl" id="bzL2" d="M100 0 64 0"/>
-              <path class="cv" id="bzCurve" d="M0 100 C34 44 64 0 100 0"/>
-              <circle class="hd" id="bzH1" cx="34" cy="44" r="5.5"/>
-              <circle class="hd" id="bzH2" cx="64" cy="0" r="5.5"/>
-            </svg>
-            <div class="bezval"><code id="bzVal">cubic-bezier(.34, .56, .64, 1)</code></div>
-            <p class="note" style="margin-top:var(--gap-sm)">Drag either handle. The readout is the same four numbers CSS and SVG both take, so what you draw here is what ships.</p>
-          </div>
+          <div class="popover pop" id="bezPop" data-curve-editor=".34,.56,.64,1" style="position:absolute;left:var(--s4);top:240px;width:236px;padding:var(--pad-sm);z-index:12"></div>
 
           <div class="popover menu pop" id="repMenu" style="position:absolute;right:var(--s4);top:678px;width:196px;z-index:11">
             <div class="menuitem">Once</div>

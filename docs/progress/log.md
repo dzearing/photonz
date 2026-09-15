@@ -16054,3 +16054,38 @@ wrong the loop is refusing every walk for nothing.
 Next: audit `queue/audits/2026-09-15-drag-readout.json` is waiting for the user.
 Rotate drags and drag-to-create shapes still say nothing; both are the obvious
 next cases and are in the audit's rough list.
+
+## 2026-09-15 — One set of easing curves, named the same way everywhere
+
+Every screen in the design study that asks how a value travels over time now
+offers the same eight curves, in the same order, each drawing its own shape,
+ending in **Draw a curve**. It used to be four different lists across six pages,
+so the same control offered you Spring on one screen and not on the next.
+
+- **Defined once.** `docs/design/mocks/shared/components/curve.{css,js}`, in
+  `order.json` (css after `segmented`, js right after `core` so the rows exist
+  before `popover.js` and `walkthrough.js` run). A page writes an empty host,
+  `data-curve-menu` and `data-curve-editor="x1,y1,x2,y2"`, and the component
+  fills it. `PZ.curve.at(id, t)` evaluates a curve for a page that animates off
+  the choice; it is a transliteration of `PhotonzCore`'s `EasingCurve`, bezier
+  solver included, checked against dense sampling.
+- **Converted.** The five icon pages (rows and their page-local CSS deleted,
+  `.mnote` promoted to `app-patterns.css`), `video-move-wt`, `video-zoom-wt`,
+  `video-motion`, `video-audio` and `video.html`. `video.html` lost its own
+  `smooth`/`spring`/`in`/`out` maths in favour of the shared evaluator, and
+  **Hold moved out of the curve list onto the key**, because it is not a curve,
+  it is the absence of a transition. `time-compare.html` proof three was the
+  page arguing the video side had not adopted this, and no longer says so.
+- **Gated.** `node shared/check-easing.mjs` fails a page that draws its own
+  rows, a segmented group that is its own easing vocabulary, and the component
+  itself if its list drifts from `Sources/PhotonzCore/LayerMotion.swift`. All
+  three rules were proven to fire against real pre-change source. Written up in
+  `shared/AGENTS.md`, `UX-PATTERNS.md` D17, and `pages/lang-motion.html`, which
+  now draws the eight beside the three interface tokens three of them are.
+
+Verified in real Chrome: 11 pages, no console errors, every walkthrough steps
+end to end with no broken cue target, and the plotted graph on `video.html`
+changes shape per curve. `Scripts/test.sh` green (7176 tests); no Swift changed.
+
+**Next:** nothing is blocked on this. Audit at
+`queue/audits/2026-09-15-one-easing-list.json`.
