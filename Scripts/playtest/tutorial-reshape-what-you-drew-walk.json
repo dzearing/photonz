@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-reshape-what-you-drew-walk",
+  "seed": "The third guide of the Icons track: an icon is really made by changing a shape after it is drawn, because nobody clicks the right five points first time. The guide brings the 24 point frame with a bookmark on it, five hard corners, and teaches the two gestures nobody guesses: a double click on a POINT bends it, and a double click on a LEVER straightens that side. The walk drives the first three for real. The lever one it skips, because a lever only exists after the bend and its length is not a number a walk can know; that step is still held to finding its control on screen.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "reshape-what-you-drew" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-run-of-points", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-run-of-points", "note": "the sample: a bookmark drawn on the 24 point frame, every corner on a crossing of the four point grid" },
+    { "do": "snapshot", "name": "1-a-run-of-points" },
+    { "do": "render", "name": "1-a-run-of-points-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-it", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [360, 238] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "drag-a-point", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-picked", "note": "THE TEST: picking the shape with the pointer put its points on it, with no second tool and no mode" },
+    { "do": "snapshot", "name": "2-picked" },
+
+    { "do": "expectPath", "anchors": 5, "closed": true },
+    { "do": "drag", "from": [360, 244], "to": [360, 238], "steps": 10 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "bend-a-corner", "timeout": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-point-dragged", "note": "the notch at the foot of the bookmark pulled up: the point moved and the runs either side of it came with it" },
+    { "do": "snapshot", "name": "3-point-dragged" },
+    { "do": "render", "name": "3-point-dragged-doc" },
+
+    { "do": "click", "at": [368, 232], "count": 2 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "straighten-one-side", "timeout": 8 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-corner-bent", "note": "THE OTHER TEST: a double click on the top right corner turned it into a smooth bend, and two levers appeared to steer it" },
+    { "do": "snapshot", "name": "4-corner-bent" },
+    { "do": "render", "name": "4-corner-bent-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "read-the-dots", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-read-the-dots", "note": "the walk skipped the lever step rather than guessing where a lever ended up; the last card explains what each dot shape means" },
+    { "do": "snapshot", "name": "5-read-the-dots" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

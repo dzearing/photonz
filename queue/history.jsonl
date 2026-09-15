@@ -3793,3 +3793,13 @@
 {"t":"2026-09-15T18:21:34.489Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
 {"t":"2026-09-15T18:21:34.532Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
 {"t":"2026-09-15T18:21:34.574Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:51.641Z","ev":"task_done","id":"copy-the-look-of-one-shape-onto-another","from":"in_progress","note":"Copy Look and Paste Look ship in Next behind next-copy-a-look, on by default: PhotonzCore/LayerLook.swift defines what a look is and applies it best effort, Photonz/EditorState+Look.swift is the two commands plus a pasteboard of the look's own, and the rows sit in the Layer menu on Option Shift Command C and V and on a layer's right click menu. The edge travels apart from the Effects list so a line takes a circle's border AS its line, which is the two-move promise. Verified: swift build clean, 23 new tests in Tests/PhotonzCoreTests/LayerLookTests.swift, whole suite green (two unrelated timing flakes filed as two-timing-tests-only-fail-when-the-whole-suite). NOT verified in the running app: the screen was locked for the whole task so no walk could run and no picture exists; Scripts/playtest/copy-a-look-walk.json is committed and a sweep is requested. Audit: queue/audits/2026-09-15-copy-a-look.json. Commit 65e04b43."}
+{"t":"2026-09-15T18:23:03.755Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T18:23:03.864Z","ev":"task_started","id":"tutorials-an-icons-track","title":"Tutorials: an Icons track","priority":"p1-high"}
+{"t":"2026-09-15T18:43:56.499Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:43:56.542Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:43:56.586Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:43:56.630Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:44:00.177Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:44:00.220Z","ev":"task_note","id":"tutorials-an-icons-track"}
+{"t":"2026-09-15T18:44:00.261Z","ev":"task_note","id":"tutorials-an-icons-track"}

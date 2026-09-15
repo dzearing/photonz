@@ -91,7 +91,12 @@ final class EditorState {
     var isLibraryVisible = EditorState.libraryVisibleDefault {
         didSet { UserDefaults.standard.set(isLibraryVisible, forKey: Self.libraryVisibleKey) }
     }
-    var isExportDialogPresented = false
+    /// The Export sheet. A guide can point at it (`TutorialAnchor.dialog`), so
+    /// its opening is an event a step can wait for, raised here rather than at
+    /// the menu row because the sheet is opened from more than one place.
+    var isExportDialogPresented = false {
+        didSet { noteDialogOpened(.export, was: oldValue, now: isExportDialogPresented) }
+    }
     #if PHOTONZ_PLAYTEST
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
@@ -104,7 +109,10 @@ final class EditorState {
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
     /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
-    var isNewFrameDialogPresented = false
+    /// A guide points at it and waits for it, the same way Export does.
+    var isNewFrameDialogPresented = false {
+        didSet { noteDialogOpened(.newFrame, was: oldValue, now: isNewFrameDialogPresented) }
+    }
     /// The X, Y, W, H and A boxes, open over the thing they are about
     /// (Next, `next-geometry-fields`, `EditorState+ExactPlacement.swift`).
     /// They used to be a section sitting open in the panel for every layer;
@@ -461,6 +469,14 @@ final class EditorState {
         // no undo step to spend putting it.
     }
 
+    /// Tells a running guide a sheet has just come up. Only the change from
+    /// shut to open is an event: a sheet that is still open is not something
+    /// the person did again.
+    func noteDialogOpened(_ dialog: TutorialAnchor.Dialog, was: Bool, now: Bool) {
+        guard now, !was else { return }
+        TutorialController.shared.note(.dialogOpened(dialog), from: self)
+    }
+
     func toggleCanvasGrid() { setCanvasGridVisible(!canvasGrid.isVisible) }
 
     /// Draw the grid, or stop drawing it. EVERY switch goes through here —
@@ -483,6 +499,9 @@ final class EditorState {
             if isAdjustingGrid { cancelGridAdjustment() }
         }
         canvasGrid.isVisible = shown
+        // A guide about drawing an icon waits for the lines, because a point
+        // that sticks to them is the whole lesson.
+        if shown { TutorialController.shared.note(.gridShown, from: self) }
     }
 
     func toggleSnapToGrid() { canvasGrid.snapsToGrid.toggle() }
@@ -1002,6 +1021,23 @@ final class EditorState {
         }
         document.layers.append(contentsOf: TutorialSampleScreen.layers(for: sample))
         installDocument(document, url: nil)
+        // An icon sample is a 24 point square on a page the size of a screen,
+        // which at the zoom a document opens at is a speck. The Icons track
+        // teaches IN that square, so the camera goes and gets it, exactly as it
+        // does for a frame made from a picked size. It has to wait for the
+        // canvas to report its size, because there is no viewport to frame with
+        // until then.
+        if let icon = document.layers.first(where: { $0.isFrame && IconPreviews.isIconSize($0.frame.size) }) {
+            // With a margin round it, and the margin is not decoration. A step
+            // pointing at the canvas draws its card ACROSS the top of the
+            // picture (`TutorialCalloutLayout.insideSurface`), so an icon
+            // framed edge to edge has its top corner read out from behind the
+            // card talking about it. That is the same thing the Building UI
+            // track found the hard way, and the answer there was the same:
+            // keep the work clear of the card's band.
+            let room = icon.frame.width / 3
+            pendingFocusBox = icon.frame.insetBy(dx: -room, dy: -room)
+        }
     }
 
     /// The document as it was last opened or saved — the clean baseline for
@@ -1559,6 +1595,10 @@ final class EditorState {
     /// the viewport once the resulting canvas view size is known.
     @ObservationIgnored private var pendingOpenScale: CGFloat?
 
+    /// A box the camera should go and get as soon as there is a viewport to do
+    /// it with. Set when a tutorial opens a sample drawn at icon size.
+    @ObservationIgnored private var pendingFocusBox: CGRect?
+
     /// Called when the canvas view lands in (or leaves) a window. Adopts the
     /// window and, for a just-opened document, hides it until it's been sized so
     /// it appears fully formed instead of snapping from SwiftUI's default size.
@@ -1859,6 +1899,7 @@ final class EditorState {
             let zoom = scale / max(1, document.pixelScale)
             viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
                                 zoom: zoom, origin: .zero).clamped()
+            takePendingFocus()
             revealHostWindowIfHidden()
             return
         }
@@ -1867,6 +1908,15 @@ final class EditorState {
         viewport = hadNoSize
             ? .fit(documentSize: current.documentSize, in: size)
             : current.resized(viewSize: size)
+        takePendingFocus()
+    }
+
+    /// Goes and gets whatever was asked for while there was no viewport yet.
+    /// Once only: after this the camera belongs to the person.
+    private func takePendingFocus() {
+        guard let box = pendingFocusBox else { return }
+        pendingFocusBox = nil
+        frameInView(box)
     }
 
     /// Gesture-driven camera updates from the canvas (already clamped by Viewport).

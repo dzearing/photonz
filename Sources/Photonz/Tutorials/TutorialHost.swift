@@ -65,12 +65,27 @@ extension EditorState: TutorialHost {
         }
     }
 
+    /// Whether one of the sheets a guide can point at is up right now.
+    private func isShowing(_ dialog: TutorialAnchor.Dialog) -> Bool {
+        switch dialog {
+        case .newFrame: isNewFrameDialogPresented
+        case .export: isExportDialogPresented
+        }
+    }
+
     func tutorialIsAlreadyTrue(_ trigger: TutorialTrigger) -> Bool {
         switch trigger {
         case .toolPicked(let tool): activeTool == tool
         case .measureMode(let mode): activeTool == .measure && measureToolMode == mode
         case .panelShown: isInspectorShown
         case .layerSelected, .editMade, .undone, .pictureCopied, .specListCopied: false
+        // The three that are STATES rather than events: somebody who already
+        // works with the grid on, or who has the sheet up, has already done
+        // what the step is asking for, and a step that made them switch it off
+        // and on again would be the app arguing with them.
+        case .gridShown: canvasGrid.isVisible
+        case .keylinesShown: iconKeylinesShowing
+        case .dialogOpened(let dialog): isShowing(dialog)
         // Nothing a recording's window can do is ever already true in a
         // picture window, because none of it exists here.
         case .trimModeOpened, .trimStartMoved, .trimEndMoved, .trimApplied,
@@ -102,6 +117,9 @@ extension VideoEditorState: TutorialHost {
         case .trimStartMoved, .trimEndMoved, .trimApplied, .recordingCopied: false
         case .toolPicked, .measureMode, .panelShown, .layerSelected, .editMade,
              .undone, .pictureCopied, .specListCopied: false
+        // A recording's window has no canvas, no grid and neither of these
+        // sheets, so none of them is ever already so in here either.
+        case .gridShown, .keylinesShown, .dialogOpened: false
         }
     }
 

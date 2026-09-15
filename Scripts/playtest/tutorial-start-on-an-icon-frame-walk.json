@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-start-on-an-icon-frame-walk",
+  "seed": "The first guide of the Icons track: an icon is drawn at the size it will really be used, and that size is a frame. The guide opens a page of its own with nothing on it, sends you to New Frame for the 24 point size, then has you switch on the grid and the keylines, which are the two things that keep an icon landing on whole pixels. The card for the size step points at the SHEET rather than at the canvas, so it lands beside the sheet instead of over it.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "start-on-an-icon-frame" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-clear-page", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-a-clear-page", "note": "the guide opened a page of its own with nothing on it, so the frame you are about to make is the only thing on it" },
+    { "do": "snapshot", "name": "1-a-clear-page" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "open-the-size-list", "timeout": 5 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-open-the-size-list", "note": "the card sends you to Layer, New Frame. It waits for the sheet rather than for a Next press" },
+    { "do": "snapshot", "name": "2-open-the-size-list" },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-twenty-four", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-the-sheet", "note": "THE TEST: opening the sheet moved the guide on by itself, and the card is pointing at the sheet, so it sits BESIDE the size list rather than on top of it" },
+    { "do": "snapshot", "name": "3-the-sheet" },
+
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-previews", "timeout": 8 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-the-previews", "note": "a 24 by 24 frame, with the camera gone to get it, and the preview squares in the corner of the canvas" },
+    { "do": "snapshot", "name": "4-the-previews" },
+    { "do": "expectLayers", "atLeast": 2 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "show-the-grid", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "showGrid" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "show-the-keylines", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-grid-on", "note": "THE OTHER TEST: switching the grid on really moved the guide on, so the step waits for the lines rather than asking and hoping" },
+    { "do": "snapshot", "name": "5-grid-on" },
+
+    { "do": "action", "action": "showIconKeylines" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-the-frame-knows", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "6-keylines-and-the-panel", "note": "the keylines are drawn on the frame, and the last card rings the Frame section, which is in the panel because the frame is what is picked" },
+    { "do": "panel", "stage": "6-keylines-and-the-panel" },
+    { "do": "snapshot", "name": "6-keylines-and-the-panel" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide" }
+  ]
+}

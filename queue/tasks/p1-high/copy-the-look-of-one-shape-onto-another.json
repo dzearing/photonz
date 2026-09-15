@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 12,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:44:46.074Z",
-  "updated": "2026-09-15T18:21:34.573Z",
+  "updated": "2026-09-15T18:21:51.640Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15, in the same breath as the saved-colour problem: \"Also i wish there was some way to just copy the format of one shape and best effort apply it to the properties of another shape.\"\n\nThis is the general answer to the problem the other task fixes narrowly. Both are worth having: saved colours are for a colour you use over and over and want to change in one place, and copying a look is for making this one thing match that one thing right now. Do not let either be closed as a duplicate of the other.\n\nNothing like it exists today. There is a clipboard (EditorState+Clipboard.swift) but it carries layers, not looks, and the style machinery (ColorStyles, TextStyles, EffectStyles) is about NAMED styles you save and reuse rather than an unnamed one you carry for a moment.\n\nThe model to copy from is already settled and should be reused rather than re-derived: docs/design/shape-parts.md says a part has a switch, a colour and its own settings, and that Appearance is what a shape HAS while Effects is a list you ADD to. A copied look is therefore exactly: the state of the target's parts, plus the list of effects. That also answers the best-effort rule cleanly, because a target simply has the parts it has.\n\nThe interesting decision is the one in the acceptance list about saved styles: if the source's fill was wearing a saved colour called Accent, the target should end up wearing Accent too rather than a loose copy of that colour, or the link everybody just built is lost at exactly the moment it is most useful.\n\nWorth checking before choosing keys: this app defaults new keybindings to Photoshop's, where copying and pasting layer style live on the layer's context menu rather than on keys, while Figma uses Command Option C and Command Option V. Pick deliberately and say why.",
@@ -64,7 +64,12 @@
     {
       "t": "2026-09-15T18:21:34.572Z",
       "note": "Full suite: 7028 tests, 2 failures, both timing budgets under full-suite load and neither anywhere near this change (IconPreviewRenderTests 'A whole strip of moving previews fits inside one frame of the loop', DrawLandingCostTests.aGridOverALargeScreenshotPaysForTheBorderQuery). Both pass on their own: 'Scripts/test.sh --filter DrawLandingCostTests --filter IconPreviewRenderTests' -> 10 tests in 3 suites passed. An earlier full run of the same tree passed all 7027. Filed as two-timing-tests-only-fail-when-the-whole-suite (p2), with both commands and both outputs in its notes."
+    },
+    {
+      "t": "2026-09-15T18:21:51.638Z",
+      "note": "Copy Look and Paste Look ship in Next behind next-copy-a-look, on by default: PhotonzCore/LayerLook.swift defines what a look is and applies it best effort, Photonz/EditorState+Look.swift is the two commands plus a pasteboard of the look's own, and the rows sit in the Layer menu on Option Shift Command C and V and on a layer's right click menu. The edge travels apart from the Effects list so a line takes a circle's border AS its line, which is the two-move promise. Verified: swift build clean, 23 new tests in Tests/PhotonzCoreTests/LayerLookTests.swift, whole suite green (two unrelated timing flakes filed as two-timing-tests-only-fail-when-the-whole-suite). NOT verified in the running app: the screen was locked for the whole task so no walk could run and no picture exists; Scripts/playtest/copy-a-look-walk.json is committed and a sweep is requested. Audit: queue/audits/2026-09-15-copy-a-look.json. Commit 65e04b43."
     }
   ],
-  "started": "2026-09-15T18:07:06.597Z"
+  "started": "2026-09-15T18:07:06.597Z",
+  "completed": "2026-09-15T18:21:51.639Z"
 }

@@ -15597,3 +15597,46 @@ unlocked screen; a sweep was requested saying so.
 user to react to: whether a look should carry typography, whether pasting should
 replace the Effects list or add to it, and whether to take ⌥⌘C off Canvas Size
 so the look can have the pair everybody actually reaches for.
+
+## 2026-09-15 — Tutorials: an Icons track
+
+Help has an Icons shelf now, five guides that walk one whole icon rather than
+touring the Pen: **Start on an icon frame**, **Draw it with the Pen**, **Reshape
+what you drew**, **Turn a shape into a path**, **Get a clean SVG out**. Every one
+of them teaches on the SAME 24 point frame, which is what interface iconography
+is designed at, the artboard the keylines come from and the size a two point
+line is right for. Three new samples (`iconFrame`, `iconPath`, `iconBox`) are
+that frame in the three states the guides start from, so the track reads as one
+icon being made.
+
+Two of the task's five guides were re-shaped before anything was written. The
+export guide **explains the Export sheet before it opens it**, because a
+tutorial card is a floating panel and would otherwise sit on top of the sheet it
+is describing; only its last card points at the sheet, and it points AT the
+sheet so placement puts it beside. The Pen guide teaches the curve as **a shape
+of its own** with a step that waits until it has really been drawn, because not
+being able to find the curve at all is what the user's first real session with
+the Pen ran aground on.
+
+The framework grew three things, each the sanctioned way rather than a fake: a
+`dialog` anchor family (`TutorialAnchor.dialog(.newFrame)` and `.export`), and
+the triggers `gridShown`, `keylinesShown` and `dialogOpened`, wired at
+`setCanvasGridVisible`, `toggleIconKeylines` and the `didSet` on the two
+presented flags. The two switches also answer `tutorialIsAlreadyTrue` from live
+state, so somebody who already works with the grid on is never asked to throw it
+twice. Opening an icon sample frames the icon once, with a third of the frame as
+margin round it: edge to edge it reaches the band a canvas step's card sits in,
+which is the trap the Building UI track hit.
+
+**Verified.** Whole suite green (7059 tests), including the catalogue check, the
+copy rules, the measured time claim per guide, the walk coverage rule, the flag
+rules with the Pen and icon frames off, and 31 new tests in
+`Tests/PhotonzCoreTests/TutorialIconsTrackTests.swift`.
+
+**Not verified.** The Mac's screen was locked for the whole session, so none of
+the five new walks could run and there is no picture of any of it. A sweep was
+requested naming all five.
+
+**Next.** The sweep runs the walks; the audit is
+`queue/audits/2026-09-15-icons-tutorial-track.json`. The second half of the
+user's ask, animating an icon, is still its own work under `icon-animate`.

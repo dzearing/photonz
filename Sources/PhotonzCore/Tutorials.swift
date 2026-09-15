@@ -124,6 +124,30 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         TutorialAnchor("start.\(action)")
     }
 
+    /// A sheet the app drops over the window, named by what the sheet is FOR
+    /// rather than by anything written on it.
+    ///
+    /// A sheet is the one thing in the app that is not in the window it belongs
+    /// to: it is a window of its own, laid over the middle of the editor. So a
+    /// step about a sheet that pointed at the canvas would put its card on top
+    /// of the very sheet it is talking about, which is the one thing placement
+    /// exists to prevent. Pointing at the sheet itself lands the card beside it.
+    ///
+    /// The name only answers while the sheet is up, which is why a step may
+    /// only use one AFTER a step that waited for the sheet to open.
+    public static func dialog(_ dialog: Dialog) -> TutorialAnchor {
+        TutorialAnchor("dialog.\(dialog.rawValue)")
+    }
+
+    /// The sheets a guide is allowed to point at. Short on purpose: each one is
+    /// somewhere a guide really sends people.
+    public enum Dialog: String, CaseIterable, Codable, Hashable, Sendable {
+        /// The size list Layer \u{25B8} New Frame opens, where the icon sizes live.
+        case newFrame
+        /// The Export sheet: what to write, where it is going, and as what.
+        case export
+    }
+
     /// The panel section this anchor names, or nil when it names something
     /// else. What the app reads to scroll a step's target into view.
     public var panelSectionID: String? {
@@ -172,6 +196,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
             + knownPanelSections.map(panelSection)
             + knownStartActions.map(startHere)
             + VideoPart.allCases.map(video)
+            + Dialog.allCases.map(dialog)
     }
 }
 
@@ -225,6 +250,17 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     case trimApplied
     /// The person put a recording on the clipboard, as a video or as a GIF.
     case recordingCopied
+    /// The person switched the canvas grid on, by key, by the View menu or from
+    /// the grid's own settings. The lines an icon has to land on are the whole
+    /// reason the Icons track asks for them, so it waits for them rather than
+    /// hoping.
+    case gridShown
+    /// The person switched the icon keylines on.
+    case keylinesShown
+    /// The person opened one of the sheets a guide can point at. It is what
+    /// stands between a step and the sheet anchor it names: a card pointed at a
+    /// sheet that is not up yet has nothing to point at.
+    case dialogOpened(TutorialAnchor.Dialog)
 }
 
 /// How a step moves on.
@@ -316,6 +352,9 @@ public enum TutorialTrack: String, CaseIterable, Codable, Hashable, Sendable {
     case colorsAndStyles
     case buildingUI
     case components
+    /// Drawing an icon: the frame it is really used at, the Pen, reshaping what
+    /// you drew, and a clean SVG out the other end.
+    case icons
     case video
 
     /// What the menu and the hub window call this track.
@@ -327,6 +366,7 @@ public enum TutorialTrack: String, CaseIterable, Codable, Hashable, Sendable {
         case .colorsAndStyles: "Colours and Styles"
         case .buildingUI: "Building UI"
         case .components: "Components"
+        case .icons: "Icons"
         case .video: "Video"
         }
     }
@@ -340,6 +380,7 @@ public enum TutorialTrack: String, CaseIterable, Codable, Hashable, Sendable {
         case .colorsAndStyles: "Save a colour once and use it everywhere, then change it in one place."
         case .buildingUI: "Frames, grids and layout that behave like real screens."
         case .components: "Build a piece once, reuse it, and override just the bits that differ."
+        case .icons: "Draw an icon at the size it will really be used, and hand it over as an SVG."
         case .video: "Cut a recording down to the part worth watching, and send it on."
         }
     }
@@ -416,6 +457,24 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// evenly spaced, with clear page round them to drag a selection from.
     case crookedBoxes
 
+    /// A page with one empty icon frame on it, 24 points square, and the view
+    /// already up close on it. Every guide in the Icons track after the first
+    /// one opens on this frame or on a drawing inside it, so the track reads as
+    /// one icon being made rather than five unrelated exercises.
+    ///
+    /// The first guide has you MAKE the frame, so it does not bring one.
+    case iconFrame
+    /// The same frame with a bookmark drawn in it: five hard corners, every
+    /// point on a crossing of the four point grid. The guide about reshaping
+    /// needs corners to bend, and the guide about exporting needs something
+    /// worth exporting.
+    case iconPath
+    /// The same frame with a rounded box in it rather than a drawn path. The
+    /// guide about turning a shape into a path needs a shape that is NOT one
+    /// yet, and the rounding is the point: the curves you get out of it are the
+    /// ones you can then pull on.
+    case iconBox
+
     /// A short recording, written to disk before the window opens.
     ///
     /// The one sample that is not a drawing. The video guides teach in a
@@ -456,6 +515,9 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         // A colour you can give a name to is a colour on a LAYER. Flatten this
         // one and every guide in the styles track has nothing to pick.
         case .stylesScreen: false
+        // An icon is shapes, and shapes are the whole point of it: flatten one
+        // and there is nothing to reshape and nothing to write into an SVG.
+        case .iconFrame, .iconPath, .iconBox: false
         }
     }
 }
@@ -576,6 +638,11 @@ public enum TutorialCatalog {
         TutorialGuides.letAScreenArrangeItself,
         TutorialGuides.paddingAndColumns,
         TutorialGuides.lineThingsUp,
+        TutorialGuides.startOnAnIconFrame,
+        TutorialGuides.drawItWithThePen,
+        TutorialGuides.reshapeWhatYouDrew,
+        TutorialGuides.turnAShapeIntoAPath,
+        TutorialGuides.getACleanSVGOut,
         TutorialGuides.trimARecording,
         TutorialGuides.exportARecording,
     ]

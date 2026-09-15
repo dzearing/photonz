@@ -1,0 +1,30 @@
+{
+  "feature": "Tutorials: the Icons track",
+  "epic": "icon-svg",
+  "summary": "Help now has an Icons shelf with five guides that walk a whole icon: make the 24 point frame it really lives in, draw the outline with the Pen, reshape it, learn the other way into an outline, and save a real SVG. Every one of them teaches on the same icon, in a window of its own.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flags it needs are on by default: Pen, Reshape a path, Turn Into Path, Export SVG, Frames, Icon frames, Icon previews and the canvas grid.",
+  "try": [
+    { "do": "Open Help, Tutorials, Icons, and start Start on an icon frame." },
+    { "do": "Do what it says: Layer, New Frame, press 24 under Icons, then Add Frame." },
+    { "do": "Press ⌘' when the next card asks, then switch on Show Icon Keylines in the View menu." },
+    { "do": "Start Draw it with the Pen, and on the second shape press at the far point and drag before you let go." },
+    { "do": "Start Reshape what you drew, and double click one of the bookmark's corners." },
+    { "do": "Start Turn a shape into a path, and pull one of the points the rounding made." },
+    { "do": "Start Get a clean SVG out, press ⇧⌘E, choose SVG and save it." },
+    { "do": "Open the file you saved in a browser." }
+  ],
+  "evaluate": [
+    "Does the track read as one icon being made, or as five unrelated exercises?",
+    "When a guide opens, is the icon big enough on screen to actually draw in?",
+    "Is press and drag before you let go enough to get a curve out of the Pen first time, or did you still have to hunt?",
+    "The card for the 24 size sits beside the New Frame sheet rather than on the canvas. Does that read, or does it fight the sheet?",
+    "Is 24 by 24 the size you would want to be taught on, or would you rather start bigger?"
+  ],
+  "rough": [
+    "No walk could run. The Mac's screen was locked for the whole of this task, so these five guides have never been driven in a real window and there are no pictures here at all, real or offscreen. A sweep has been asked for, and the loop runs it as soon as the screen is unlocked.",
+    "The last card of the SVG guide is on screen while the Export sheet is up. The card floats above the sheet, so it should be readable, but pressing Done on it may need the sheet closed first. Nobody has watched this happen yet.",
+    "The reshaping guide's walk skips the double click a lever step rather than guessing where a lever ended up after the bend. The step is still held to finding its control on screen; the gesture itself is not driven.",
+    "The grid and the keylines are remembered across windows, so somebody who already works with them on passes straight through those two steps without reading them. That is deliberate, because making somebody switch a thing off and on again would be the app arguing with them, but it does mean the lesson is skipped for exactly the person who did the first guide already.",
+    "The track teaches Turn Into Path and New Frame by naming the Layer menu, because neither has a key of its own. Every other instruction in the track is a key."
+  ]
+}

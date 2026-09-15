@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-turn-a-shape-into-a-path-walk",
+  "seed": "The fourth guide of the Icons track: the other way to get an outline, and for most icons the faster one. Draw a box, round it, turn it into points. The guide brings the 24 point frame with a rounded box on it, has you turn it, and then has you pull one of the points the rounding made, which is the thing a box could never do. The walk turns it from the layer row's own menu, which is where the command lives beside the Layer menu.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "turn-a-shape-into-a-path" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-rounded-box", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-rounded-box", "note": "the sample: a rounded box on the 24 point frame, which is still a box in every way that matters" },
+    { "do": "snapshot", "name": "1-a-rounded-box" },
+    { "do": "render", "name": "1-a-rounded-box-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-box", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [360, 240] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "turn-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-picked", "note": "the box picked: eight square handles round it and a rounding row in the panel, which is as much shape as a box has" },
+    { "do": "panel", "stage": "2-picked" },
+    { "do": "snapshot", "name": "2-picked" },
+
+    { "do": "rightClick", "on": "Box", "choose": "Turn Into Path…" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-it-asks-first", "note": "the question comes up before anything changes, because the box stops being a box" },
+    { "do": "snapshot", "name": "3-it-asks-first" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-moved", "timeout": 8 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectPath", "anchors": 8, "closed": true, "curves": 4 },
+    { "do": "describe", "stage": "4-turned", "note": "THE TEST: the picture is the same rounded box it was, and it is now eight points with four curved runs. Compare 1-a-rounded-box-doc with 4-turned-doc" },
+    { "do": "panel", "stage": "4-turned" },
+    { "do": "snapshot", "name": "4-turned" },
+    { "do": "render", "name": "4-turned-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pull-one", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [364, 232], "to": [364, 238], "steps": 10 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "one-undo-back", "timeout": 8 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-pulled", "note": "THE OTHER TEST: one of the points the rounding made pulled inwards, which is the move a box cannot make" },
+    { "do": "snapshot", "name": "5-pulled" },
+    { "do": "render", "name": "5-pulled-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

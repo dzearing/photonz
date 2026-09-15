@@ -1480,6 +1480,307 @@ public enum TutorialGuides {
                 body: "Drag one of them around. It sticks as it comes into line with the others, so most of the time you never reach for a key at all."),
         ])
 
+    // MARK: - Icons
+
+    // Drawing an icon end to end, which is a different job from everything
+    // above it: you set up the square it will really be used in, you draw the
+    // outline yourself rather than dragging a ready made shape, you bend it
+    // until it is right, and you hand it over as a file somebody else's app
+    // can read.
+    //
+    // Five guides, in the order the job is done in, and every one of them
+    // teaches on the SAME 24 point icon frame, so the track reads as one icon
+    // being made rather than as five exercises. The first has you make the
+    // frame; the rest bring it with them.
+    //
+    // 24 by 24 is not an arbitrary size. It is what interface iconography is
+    // designed at, it is the artboard the keylines are worked out from
+    // (`IconKeylines`), and it is the size where a two point line is the right
+    // weight (`IconStrokeWeight`). Teaching on anything else would teach
+    // numbers nobody meets again.
+
+    /// Where an icon starts: the square it will really be used in, the lines it
+    /// has to land on, and the margin every icon in a set keeps to.
+    ///
+    /// It has you make the frame from the SIZE LIST rather than by dragging one
+    /// out with the frame tool, because a 24 point box dragged on a page the
+    /// size of a screen is a speck. A frame made from a picked size brings the
+    /// camera with it, which is the only way somebody ends this guide looking
+    /// at something they can draw in.
+    public static let startOnAnIconFrame = TutorialGuide(
+        id: "start-on-an-icon-frame",
+        track: .icons,
+        title: "Start on an icon frame",
+        summary: "Make the square your icon really lives in, and turn on the lines that keep it sharp.",
+        minutes: 2,
+        sample: .blankPage,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.iconFramesFlag, FeatureCatalog.iconPreviewsFlag,
+                   FeatureCatalog.canvasGridFlag],
+        steps: [
+            TutorialStep(
+                id: "a-clear-page",
+                anchor: .canvas,
+                title: "An icon needs a size first",
+                body: "An icon is drawn at the size it will be used. That size is a frame, and this page has not got one yet."),
+            TutorialStep(
+                id: "open-the-size-list",
+                anchor: .canvas,
+                title: "Open the size list",
+                body: "In the Layer menu, choose New Frame. It offers screens, and under them the sizes icons are really drawn at.",
+                advance: .waitsFor(.dialogOpened(.newFrame))),
+            TutorialStep(
+                id: "take-twenty-four",
+                anchor: .dialog(.newFrame),
+                title: "Take 24, then Add Frame",
+                body: "24 by 24 is where most interface icons are designed. The view goes and gets the frame, so you can actually draw in it.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "the-previews",
+                anchor: .canvas,
+                title: "The same icon, small",
+                body: "The little squares in the corner are your frame at the sizes it will really be used. A hairline that vanishes there vanishes everywhere."),
+            TutorialStep(
+                id: "show-the-grid",
+                anchor: .canvas,
+                title: "Turn the pixels on",
+                body: "Press \u{2318}'. The lines are what an icon has to land on, and a point you place sticks to the nearest crossing.",
+                advance: .waitsFor(.gridShown)),
+            TutorialStep(
+                id: "show-the-keylines",
+                anchor: .canvas,
+                title: "Keep inside the keylines",
+                body: "Show Icon Keylines, in the View menu, draws the margin every icon in a set keeps to, and the two lines through the middle.",
+                advance: .waitsFor(.keylinesShown)),
+            TutorialStep(
+                id: "what-the-frame-knows",
+                anchor: .panelSection("frame"),
+                title: "The frame itself",
+                body: "Its size is here, and it cuts off anything hanging over the edge. Whatever you draw inside it belongs to it.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
+
+    /// The Pen, taught as drawing an icon rather than as a tour of a tool.
+    ///
+    /// Two shapes, because one of them cannot teach both things: a run of
+    /// clicks makes the hard edges, and a press that DRAGS makes the curve.
+    /// Not being able to find the curve at all is what a real first session
+    /// with the Pen ran aground on, so it gets a shape of its own and a step
+    /// that waits until it has really been drawn.
+    public static let drawItWithThePen = TutorialGuide(
+        id: "draw-it-with-the-pen",
+        track: .icons,
+        title: "Draw it with the Pen",
+        summary: "Click the corners, drag the curves, and close the shape up.",
+        minutes: 2,
+        sample: .iconFrame,
+        requires: [FeatureCatalog.penFlag, FeatureCatalog.layerGroupsFlag,
+                   FeatureCatalog.framesFlag, FeatureCatalog.iconFramesFlag,
+                   FeatureCatalog.canvasGridFlag],
+        steps: [
+            TutorialStep(
+                id: "up-close",
+                anchor: .canvas,
+                title: "Your frame, up close",
+                body: "24 points square, drawn big enough to work in. Everything you draw inside it belongs to it and leaves with it."),
+            // Its own step rather than a sentence on the one above, because
+            // somebody who already works with the grid on passes straight
+            // through a step that waits on it, and the card above is the one
+            // carrying the context.
+            TutorialStep(
+                id: "lines-to-land-on",
+                anchor: .canvas,
+                title: "Lines to land on",
+                body: "Press \u{2318}' if the grid is not showing. Every point the Pen puts down sticks to the nearest crossing of it.",
+                advance: .waitsFor(.gridShown)),
+            TutorialStep(
+                id: "take-the-pen",
+                anchor: .tool(.pen),
+                title: "Take the Pen",
+                body: "Press P. It stays in your hand after each shape, because an icon is five or six shapes in a row.",
+                advance: .waitsFor(.toolPicked(.pen))),
+            TutorialStep(
+                id: "the-line-underneath",
+                anchor: .canvas,
+                title: "Read the line under the canvas",
+                body: "It says what the Pen will do next, and it changes as the shape grows. It is the quickest way out of being stuck."),
+            TutorialStep(
+                id: "click-the-corners",
+                anchor: .canvas,
+                title: "Click out a shape",
+                body: "Click three or four corners, then click the first point again to close it. Each click lands on a crossing of the lines.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "pull-a-curve",
+                anchor: .canvas,
+                title: "Now pull a curve",
+                body: "Start another one. Click a point, then press where the next goes and drag before you let go. Close it on the first point.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "each-shape-is-a-layer",
+                anchor: .panelSection("layers"),
+                title: "Each shape is a layer",
+                body: "A finished outline is its own layer, with a fill and a line you can repaint. Escape puts the Pen down again.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
+
+    /// Changing a shape after it is drawn, which is where an icon is really
+    /// made: nobody clicks the right five points first time.
+    ///
+    /// The two gestures nobody guesses are the two the guide waits on. A double
+    /// click on a POINT bends it, and a double click on a LEVER straightens
+    /// that side, and between them they are how a rounded corner gets made.
+    public static let reshapeWhatYouDrew = TutorialGuide(
+        id: "reshape-what-you-drew",
+        track: .icons,
+        title: "Reshape what you drew",
+        summary: "Move the points, bend the corners, and straighten the sides you did not want curved.",
+        minutes: 2,
+        sample: .iconPath,
+        requires: [FeatureCatalog.penFlag, FeatureCatalog.reshapePathFlag,
+                   FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "a-run-of-points",
+                anchor: .canvas,
+                title: "A shape is a run of points",
+                body: "This bookmark was drawn with the Pen: five hard corners, with a straight run between each pair of them."),
+            TutorialStep(
+                id: "pick-it",
+                anchor: .canvas,
+                title: "Click the shape",
+                body: "Pick it with the pointer and its points appear on it. No second tool to find, and no mode to be in.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "drag-a-point",
+                anchor: .canvas,
+                title: "Drag one of them",
+                body: "The point moves, and the outline either side of it travels with it. Undo puts it back where it was.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "bend-a-corner",
+                anchor: .canvas,
+                title: "Double click a point",
+                body: "The hard corner becomes a smooth bend and two levers appear to steer it. Double click it again to turn it back.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "straighten-one-side",
+                anchor: .canvas,
+                title: "Double click a lever",
+                body: "That side runs straight again. Curved on one side and straight on the other is exactly what a rounded corner is.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "read-the-dots",
+                anchor: .canvas,
+                title: "The dots say what each point is",
+                body: "A square dot is a hard corner, a round one is a bend, and a rounded square is a point curved on one side only."),
+        ])
+
+    /// The other way to get an outline, and for most icons the faster one:
+    /// draw a box, round it, and turn it into points.
+    ///
+    /// It sits after the reshaping guide on purpose. What Turn Into Path hands
+    /// you is a shape you reshape, so it means nothing until you know what to
+    /// do with the points.
+    public static let turnAShapeIntoAPath = TutorialGuide(
+        id: "turn-a-shape-into-a-path",
+        track: .icons,
+        title: "Turn a shape into a path",
+        summary: "Round a box the easy way, then take its corners somewhere a box could never go.",
+        minutes: 2,
+        sample: .iconBox,
+        requires: [FeatureCatalog.turnIntoPathFlag, FeatureCatalog.reshapePathFlag,
+                   FeatureCatalog.penFlag, FeatureCatalog.layerGroupsFlag,
+                   FeatureCatalog.framesFlag, FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "a-rounded-box",
+                anchor: .canvas,
+                title: "A box, and only a box",
+                body: "You can resize it and round it further, but you cannot take one corner of it and pull it somewhere else."),
+            TutorialStep(
+                id: "pick-the-box",
+                anchor: .canvas,
+                title: "Pick it",
+                body: "Click the box. Its rounding is a setting, and a setting is as much shape as a box is ever going to have.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "turn-it",
+                anchor: .canvas,
+                title: "Turn it into a path",
+                body: "In the Layer menu, choose Turn Into Path. It asks you first, because the box stops being a box.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "nothing-moved",
+                anchor: .canvas,
+                title: "The same picture",
+                body: "Not a pixel moved. The rounded corners are real curves now, and every point in them is yours to pull."),
+            TutorialStep(
+                id: "pull-one",
+                anchor: .canvas,
+                title: "Pull one",
+                body: "Drag a point, or double click a lever to straighten a side. Rounding a box first is how most icons really get made.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "one-undo-back",
+                anchor: .canvas,
+                title: "One undo puts the box back",
+                body: "With its rounding row, exactly as it was. Nothing about this turn is a trap door."),
+        ])
+
+    /// The end of the errand: the icon leaves as an icon.
+    ///
+    /// The sheet is explained BEFORE it is opened, so nobody is reading a card
+    /// over the top of the thing it is describing, and the last card points at
+    /// the sheet itself rather than at the canvas underneath it.
+    public static let getACleanSVGOut = TutorialGuide(
+        id: "get-a-clean-svg-out",
+        track: .icons,
+        title: "Get a clean SVG out",
+        summary: "Hand the icon over as real shapes, not as a picture of them.",
+        minutes: 2,
+        sample: .iconPath,
+        requires: [FeatureCatalog.svgExportFlag, FeatureCatalog.penFlag,
+                   FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "shapes-not-pixels",
+                anchor: .canvas,
+                title: "Shapes, not pixels",
+                body: "What you drew is geometry, so it can leave as geometry: sharp at any size, and small enough to sit inside a web page."),
+            TutorialStep(
+                id: "pick-the-frame",
+                anchor: .canvas,
+                title: "Pick the frame",
+                body: "Click its name, just above the top left corner. Export opens on the frame you are in, so the file is the icon alone.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "what-it-asks",
+                anchor: .canvas,
+                title: "Export asks what, and as what",
+                body: "The top row is what to write: this frame, or the whole page. SVG then sits in the format row beside PNG, JPEG and HEIC."),
+            TutorialStep(
+                id: "before-you-save",
+                anchor: .canvas,
+                title: "It says what it cannot draw",
+                body: "Anything with no vector answer, a shadow for instance, is named in the sheet as going out as a picture, before you save."),
+            TutorialStep(
+                id: "open-export",
+                anchor: .canvas,
+                title: "Press \u{21E7}\u{2318}E",
+                body: "The Export sheet comes down over the window.",
+                advance: .waitsFor(.dialogOpened(.export))),
+            TutorialStep(
+                id: "choose-svg-and-save",
+                anchor: .dialog(.export),
+                title: "Choose SVG and save it",
+                body: "What lands on disk is the shapes you drew, laid out so a person can read them. Any site or icon set will take it."),
+        ])
+
     // MARK: The Video track
 
     /// The smallest track, and the only one that teaches in a window with no
@@ -1620,6 +1921,10 @@ public enum TutorialSampleScreen {
         // something else or the screen has no edge, and the guide that has you
         // draw one would look like nothing happened.
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: "#EDF0F5"
+        // An icon frame paints its own white surface, exactly as a screen does,
+        // so the page under it has to be something else or the frame has no
+        // edge at all.
+        case .iconFrame, .iconPath, .iconBox: "#EDF0F5"
         // A recording is not drawn on a page. Its window holds media, and this
         // is never asked of it.
         case .sampleRecording: "#FFFFFF"
@@ -1642,6 +1947,7 @@ public enum TutorialSampleScreen {
         case .componentPieces, .componentOriginal, .componentCopies: []
         case .stylesScreen: []
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: []
+        case .iconFrame, .iconPath, .iconBox: []
         case .sampleRecording: []
         }
     }
@@ -1683,6 +1989,12 @@ public enum TutorialSampleScreen {
         case .handPlacedScreen: [handPlacedScreen()]
         case .tightScreen: [tightScreen()]
         case .crookedBoxes: crookedBoxes()
+        // The Icons track's workbench: one icon frame, empty, with a bookmark
+        // drawn in it, or with a rounded box in it waiting to be turned into
+        // one.
+        case .iconFrame: [iconFrame(holding: [])]
+        case .iconPath: [iconFrame(holding: [drawnBookmark()])]
+        case .iconBox: [iconFrame(holding: [iconRoundedBox()])]
         // A recording, which has no layers at all. What it IS lives in the
         // app, beside the code that can write an MP4.
         case .sampleRecording: []
@@ -2083,6 +2395,50 @@ public enum TutorialSampleScreen {
                                      unit: .points,
                                      role: role)
         return MeasureBuilder.layer(content: content, from: start, to: end)
+    }
+
+    // MARK: The icon workbench
+
+    /// The frame the whole Icons track is drawn on: 24 points square, which is
+    /// the size interface iconography is designed at and the size the keylines
+    /// are worked out from.
+    ///
+    /// Its corner sits on a whole number of grid cells, so the four point lines
+    /// the canvas draws run along the frame's own edges. A frame parked half a
+    /// cell off would teach the opposite of what the track is for.
+    public static let iconFrameBox = CGRect(x: 348, y: 228, width: 24, height: 24)
+
+    /// The line a shape takes on a 24 point frame (`IconStrokeWeight`), so a
+    /// sample looks exactly like something you had just drawn there.
+    private static let iconStroke: CGFloat = 2
+
+    private static func iconFrame(holding children: [Layer]) -> Layer {
+        Layer.frameLayer(name: "Icon", origin: iconFrameBox.origin,
+                         size: iconFrameBox.size, children: children)
+    }
+
+    /// A bookmark, five hard corners, every one of them on a crossing of the
+    /// four point grid and every one inside the keylines.
+    ///
+    /// Corners rather than curves on purpose: the reshaping guide's first real
+    /// lesson is double clicking a point to bend it, and a shape that arrived
+    /// bent has nothing to bend.
+    private static func drawnBookmark() -> Layer {
+        let points = [CGPoint(x: 4, y: 4), CGPoint(x: 20, y: 4), CGPoint(x: 20, y: 20),
+                      CGPoint(x: 12, y: 16), CGPoint(x: 4, y: 20)]
+        let content = PathContent(anchors: points.map { PathAnchor(point: $0) },
+                                  isClosed: true,
+                                  paint: Paint(hex: PathContent.defaultColorHex),
+                                  strokeWidth: iconStroke,
+                                  fill: Paint(hex: PathContent.defaultColorHex))
+        return PathBuilder.layer(content, at: CGPoint(x: 4, y: 4), name: "Bookmark")
+    }
+
+    /// A rounded box on the same frame, which is a box and nothing more until
+    /// somebody turns it into a path.
+    private static func iconRoundedBox() -> Layer {
+        box("Box", CGRect(x: 4, y: 4, width: 16, height: 16),
+            radius: 4, fill: PathContent.defaultColorHex, stroke: nil)
     }
 
     private static func box(_ name: String, _ frame: CGRect, radius: CGFloat,

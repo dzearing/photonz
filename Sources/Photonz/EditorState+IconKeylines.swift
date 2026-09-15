@@ -30,5 +30,10 @@ extension EditorState {
     func toggleIconKeylines() {
         guard iconKeylinesEnabled else { return }
         IconKeylinesStore.shared.isVisible.toggle()
+        // The Icons track waits for them rather than asking and hoping, so the
+        // one switch says when it has been thrown.
+        if IconKeylinesStore.shared.isVisible {
+            TutorialController.shared.note(.keylinesShown, from: self)
+        }
     }
 }

@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-draw-it-with-the-pen-walk",
+  "seed": "The second guide of the Icons track: drawing the outline yourself. The guide brings a 24 point icon frame with the camera already up close on it, hands over the Pen, and has you draw two shapes, because one shape cannot teach both halves of it: a run of clicks makes the hard edges, and a press that DRAGS makes the curve. Not finding the curve at all is what a real first session with the Pen ran aground on, so the curve gets a shape of its own and a step that waits until it has really been drawn. Every point in this walk is written in document coordinates on the 24 point frame at 348,228, so the four point grid crossings are whole multiples of four.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "draw-it-with-the-pen" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "up-close", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-up-close", "note": "THE TEST: the guide's own sample is a 24 point frame, and the camera went and got it, so the square is big enough to draw in rather than a speck in the middle of a page" },
+    { "do": "snapshot", "name": "1-up-close" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "lines-to-land-on", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "showGrid" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-pen", "timeout": 6 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-take-the-pen", "note": "the grid is on and the card rings the Pen in the tool bar" },
+    { "do": "snapshot", "name": "2-take-the-pen" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-line-underneath", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-the-line-underneath", "note": "P really picked the Pen, and the chip under the canvas says what the Pen will do next" },
+    { "do": "snapshot", "name": "3-the-line-underneath" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "click-the-corners", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [352, 232] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [368, 232] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [368, 244] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [352, 232] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pull-a-curve", "timeout": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-clicked-out", "note": "three clicks and a fourth on the first point: a closed shape with hard corners, and the guide moved on by itself when the path landed" },
+    { "do": "snapshot", "name": "4-clicked-out" },
+    { "do": "render", "name": "4-clicked-out-doc" },
+
+    { "do": "click", "at": [352, 248] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [368, 248], "to": [368, 240], "steps": 10 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [352, 248] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "each-shape-is-a-layer", "timeout": 8 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-curve-pulled", "note": "THE OTHER TEST: two points and a press that dragged make a shape with a curve in it, and closing it on the first point finished it" },
+    { "do": "panel", "stage": "5-curve-pulled" },
+    { "do": "snapshot", "name": "5-curve-pulled" },
+    { "do": "render", "name": "5-curve-pulled-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

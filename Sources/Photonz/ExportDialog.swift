@@ -216,6 +216,9 @@ struct ExportDialog: View {
         }
         .padding(20)
         .frame(width: 320)
+        // The last card of the SVG guide points at this sheet, so it sits
+        // beside the sheet rather than over the row it is talking about.
+        .tutorialAnchor(.dialog(.export))
         // Opens on the frame you are working in, and on the format you picked
         // last time, so the common case is Return.
         .onAppear {

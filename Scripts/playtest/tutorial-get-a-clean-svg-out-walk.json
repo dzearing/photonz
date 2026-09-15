@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-get-a-clean-svg-out-walk",
+  "seed": "The last guide of the Icons track: the icon leaves as an icon. The guide explains what the Export sheet asks BEFORE it is opened, so nobody is reading a card laid over the thing it describes, and only the last card points at the sheet itself. The walk picks the frame from the layers list rather than by clicking its name on the canvas, because the name is chrome drawn in view space and the walk writes its points in document space; the event the step waits for is the same either way. It opens Export on SVG through the probe's own way in, because a walk cannot click inside a sheet.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "get-a-clean-svg-out" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "shapes-not-pixels", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-shapes-not-pixels", "note": "the finished icon on its 24 point frame, made of real shapes rather than pixels" },
+    { "do": "snapshot", "name": "1-shapes-not-pixels" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-frame", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Icon" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-it-asks", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-frame-picked", "note": "the frame picked, which is what Export opens on, so the file is the icon and not the page round it" },
+    { "do": "panel", "stage": "2-frame-picked" },
+    { "do": "snapshot", "name": "2-frame-picked" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "before-you-save", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "open-export", "timeout": 5 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "3-open-export", "note": "the card asks for Export and waits for the sheet rather than for a Next press" },
+    { "do": "snapshot", "name": "3-open-export" },
+
+    { "do": "action", "action": "exportDialogAsSVG" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "choose-svg-and-save", "timeout": 8 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-the-sheet", "note": "THE TEST: the sheet coming up moved the guide on by itself, and the last card points at the SHEET, so it sits beside it rather than over the format row it is talking about" },
+    { "do": "snapshot", "name": "4-the-sheet" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "writeSVG", "name": "5-icon" },
+    { "do": "describe", "stage": "5-written", "note": "the same document written out exactly as Export's SVG answer writes it, so the audit can show what really lands on disk" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

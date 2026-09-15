@@ -72,6 +72,9 @@ struct NewFrameDialog: View {
         }
         .padding(20)
         .frame(width: 320)
+        // A guide about starting an icon points at this sheet, so the card
+        // lands beside it rather than on top of it.
+        .tutorialAnchor(.dialog(.newFrame))
         // Opens on the size made last: a second phone screen is Return.
         .onAppear {
             let last = editorState.lastFrameSize

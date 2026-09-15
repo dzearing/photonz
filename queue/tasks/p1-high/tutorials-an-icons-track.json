@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:49:46.787Z",
-  "updated": "2026-09-15T14:49:46.880Z",
+  "updated": "2026-09-15T18:44:00.260Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is the half that can be written TODAY, and it is worth having on its own. Everything it teaches is shipped: the Pen, reshaping, the icon frame and its size, Turn Into Path, and clean SVG export all landed between 2026-09-13 and 2026-09-14.\n\nWrite it against what the app currently does rather than against the tasks that describe it, because several Pen fixes are in flight as this is written: how a tool hands back after drawing, what a path shows when you finish it, and closing a shape with two points are all being changed. Check the behaviour in a real build before writing a step that depends on it, and if a guide would have to teach something awkward, that is a finding to file rather than to document.\n\nThe curve guide is the one that matters most. The user could not find how to make curves at all on their first try, which is what filed a-path-you-drew-shows-you-what-you-can-do-to-it. A tutorial is not the fix for that, but it is the place somebody goes when they are stuck, so teach it plainly.\n\n---\nAsked for by the user on 2026-09-15: \"i would like the app to have a tutorial for making animated svg icons.\"\n\nThe tutorials system is built and has seven tracks - Basics, Redlining, Looks, Colours and Styles, Building UI, Components, Video (PhotonzCore/Tutorials.swift:312, TutorialTrack). There is no Icons track, and nothing queued for one, so this is a new shelf rather than a guide slotted into an existing one.\n\nThe framework itself needs nothing new: a guide is data in the catalogue, the menu and the hub window are generated from it, anchors are checked so a guide pointing at a control that no longer exists fails the build, and progress is remembered. Add data, not UI. Read docs/design/tutorials.md before writing a guide.",
@@ -33,6 +33,39 @@
     {
       "t": "2026-09-15T14:49:46.879Z",
       "note": "seq 290 -> 13"
+    },
+    {
+      "t": "2026-09-15T18:23:03.862Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T18:43:56.497Z",
+      "note": "adversarial pass before building: the mock for this was the task's own guide list, and two of its five were re-shaped. The export guide now explains the sheet BEFORE opening it and only its last card points at the sheet, because a tutorial card is a floating panel and would otherwise sit on top of the sheet it describes. The Pen guide teaches the curve as a SHAPE OF ITS OWN rather than a sentence, because not finding the curve at all is what the user's first real session ran aground on."
+    },
+    {
+      "t": "2026-09-15T18:43:56.540Z",
+      "note": "the track is one icon, not five exercises: three new samples (iconFrame, iconPath, iconBox) are the same 24 point frame in the three states the guides start from. 24 is the size the keylines are worked out from and the size a 2pt line is right for, so nothing taught here is a number nobody meets again."
+    },
+    {
+      "t": "2026-09-15T18:43:56.584Z",
+      "note": "framework grew three things, each the sanctioned way rather than a fake: a dialog anchor family so a step can point AT a sheet (the card lands beside it), and triggers gridShown, keylinesShown and dialogOpened, wired at setCanvasGridVisible, toggleIconKeylines and the two presented flags. The first two also answer tutorialIsAlreadyTrue from live state, so somebody who already works with the grid on is not asked to switch it off and on."
+    },
+    {
+      "t": "2026-09-15T18:43:56.628Z",
+      "note": "opening an icon sample now frames the icon once, with a third of the frame as margin round it. Edge to edge the icon reaches the band a canvas step's card sits in, which is the same trap the Building UI track hit; the margin keeps the work clear of the card."
+    },
+    {
+      "t": "2026-09-15T18:44:00.175Z",
+      "note": "verified without a screen: the whole suite is green (7059 tests), which covers the catalogue check (every anchor a name the app promises), the copy rules, the measured time claim for each of the five guides, the walk coverage rule (all five walks decode and wait on every step id of their guide), the flag rules with the Pen and the icon frames switched off, and 31 new tests of the track itself in TutorialIconsTrackTests."
+    },
+    {
+      "t": "2026-09-15T18:44:00.218Z",
+      "note": "NOT verified: the Mac's screen has been locked since before this task was claimed (CGSSessionScreenIsLocked = 1, checked three times across the task), so none of the five walks could run and there are no pictures at all, real or offscreen. Acceptance items 2 and 10 are the two this leaves open. Asked for a sweep naming all five walks, so the loop runs them the moment the screen is unlocked and any failure comes back as a task."
+    },
+    {
+      "t": "2026-09-15T18:44:00.259Z",
+      "note": "left rough, all in the audit and none of it filed: the last card of the SVG guide is up while the Export sheet is, and pressing Done there may need the sheet shut first (unwatched, so a hypothesis rather than a bug); the reshaping walk skips the double-click-a-lever step rather than guessing where a lever ended up; the grid and keylines steps pass straight through for somebody who already has them on."
     }
-  ]
+  ],
+  "started": "2026-09-15T18:23:03.861Z"
 }

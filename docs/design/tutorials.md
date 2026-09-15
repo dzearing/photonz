@@ -49,8 +49,8 @@ sentences, which side the card sits on, how it advances, and what has to be on
 screen first.
 
 **`TutorialTrack`** — Basics, Redlining, Looks, Colours and Styles, Building UI,
-Components, Video. Tracks are what keep the tutorials from becoming one long
-list: Help shows the tracks, a track shows its guides.
+Components, Icons, Video. Tracks are what keep the tutorials from becoming one
+long list: Help shows the tracks, a track shows its guides.
 
 **`TutorialCatalog`** — every guide the app ships. `populatedTracks` is what a
 menu builds from, so an empty track never shows an empty submenu.
@@ -97,6 +97,15 @@ each wear whichever member was reached for last, so `TutorialAnchor.tool(.rectan
 is on the bar only for somebody who has drawn a rectangle before.
 `TutorialAnchor.toolGroup(.shapes)` is there whatever the slot is wearing, and it
 is what a step meaning "the shapes button" points at.
+
+**A sheet is named too, and it is the one name that comes and goes.**
+`TutorialAnchor.dialog(.newFrame)` and `.dialog(.export)` name the two sheets a
+guide really sends people to. A sheet is a window of its own laid over the
+middle of the editor, and the callout panel floats above it, so a step about a
+sheet that pointed at the canvas would park its card on top of the very thing it
+is describing. Pointing at the sheet lands the card beside it. The name only
+answers while the sheet is up, so a step may only use one AFTER a step that
+waited for `dialogOpened`, and the Icons track's own test holds that rule.
 
 **Where the names live today.** The rows of the card an empty window shows
 (`start.open`, `start.capture`, `start.paste` — the only places in a window
@@ -191,6 +200,9 @@ Triggers are wired at the one place the thing actually happens:
 | `.editMade` | `EditorState.perform` — every command in the app funnels here, and only a change that really changed the document counts |
 | `.undone` | `EditorState.undo`, and only when something came back |
 | `.pictureCopied` | `EditorState.copyCompositeToClipboard`, before the notice, which only exists with the measurements panel on |
+| `.gridShown` | `EditorState.setCanvasGridVisible`, the one funnel every grid switch goes through |
+| `.keylinesShown` | `EditorState.toggleIconKeylines` |
+| `.dialogOpened(…)` | the `didSet` on `isNewFrameDialogPresented` and `isExportDialogPresented`, so it is raised wherever the sheet is opened from |
 
 `.editMade` is deliberately one event for "the person did something to the
 picture" rather than one per command. It is raised at the single funnel every
@@ -809,6 +821,50 @@ about:
 **White cards were a hairline.** The first samples drew white cards on a white
 screen with a pale stroke, which on the probe read as nothing at all. Every
 guide here is about watching cards MOVE, so they are a soft grey fill now.
+
+## The Icons track
+
+Drawing an icon end to end, which is a different job from every track above it:
+you set up the square it will really be used in, you draw the outline yourself
+rather than dragging a ready made shape, you bend it until it is right, and you
+hand it over as a file somebody else's app can read.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Start on an icon frame | a page with nothing on it | New Frame at 24, the camera going and getting it, the preview squares, ⌘' for the grid, and Show Icon Keylines |
+| Draw it with the Pen | a 24 point frame, empty | P, the chip under the canvas, a shape clicked out corner by corner, and a second shape with a curve PULLED out of a press |
+| Reshape what you drew | the same frame with a bookmark on it | points appearing when you pick a path, dragging one, double clicking a point to bend it, double clicking a lever to straighten a side |
+| Turn a shape into a path | the same frame with a rounded box on it | Turn Into Path, the picture not moving, pulling a point the rounding made, and one undo bringing the box back |
+| Get a clean SVG out | the bookmark again | picking the frame so Export opens on it, what the sheet asks, what it says it cannot draw, and ⇧⌘E |
+
+**One icon, five guides.** `iconFrame`, `iconPath` and `iconBox` are the same 24
+point frame in the three states the guides start from, so somebody doing the
+track back to back sees one icon being made rather than five exercises. 24 by 24
+is not arbitrary: it is what interface iconography is designed at, it is the
+artboard the keylines are worked out from (`IconKeylines`), and it is the size
+where a two point line is the right weight (`IconStrokeWeight`).
+
+Three things the track settled:
+
+- **A guide that teaches inside an icon has to bring the camera with it.** A 24
+  point frame on a page the size of a screen is a speck at the zoom a document
+  opens at, and every step after the first would be asking somebody to draw on
+  something they cannot see. Opening an icon sample now frames the icon once, as
+  soon as the canvas reports a size (`EditorState.pendingFocusBox`), which is
+  the same move Layer ▸ New Frame already makes for a picked size.
+- **It frames the icon with a margin round it**, a third of the frame on each
+  side. Edge to edge, the icon reaches the band a canvas step's card sits in and
+  its top corner is read out from behind the card describing it, which is what
+  the Building UI track found the hard way.
+- **A sheet needed a name of its own.** Two guides send people to a sheet, and a
+  card floating over the sheet it is describing is exactly what placement exists
+  to prevent. See the anchor contract above.
+
+Three triggers were added, all of them wired where the thing happens:
+`gridShown`, `keylinesShown` and `dialogOpened`. The first two are switches
+somebody may already have on, so both answer `tutorialIsAlreadyTrue` from live
+state and the step passes straight through rather than asking for a switch to be
+thrown twice.
 
 ## The Video track
 
