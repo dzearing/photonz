@@ -1,0 +1,57 @@
+{
+  "id": "a-hundred-and-fifteen-walks-fail-on-code-that-pa-your-mac-locks-at-night-and-whil",
+  "taskId": "a-hundred-and-fifteen-walks-fail-on-code-that-pa",
+  "question": "Your Mac locks at night, and while it is locked the app cannot be tested at all. Should the loop keep it from locking?",
+  "context": "Every scripted walk drives a real window of the app and then reads it, and that needs the window actually drawn on screen. When the Mac is locked the login window covers everything and macOS stops drawing the app, so nothing a walk reads is true. This Mac locked at 8:46pm on 14 September and the run at midnight reported 115 of 400 walks broken on code that had passed every one of them that afternoon. That part is now fixed: a walk on a locked screen says it could not run instead of calling the app broken. What is left is the question of whether any testing should happen overnight at all.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep it awake while the loop works",
+      "summary": "While the go loop is running, your Mac stops going to sleep and stops locking itself, so the app can keep being driven and checked all night. The screen stays lit. Stopping the loop gives your Mac back its normal behaviour immediately.",
+      "pros": [
+        "The loop keeps its only whole-app check overnight, which is when most of the building happens",
+        "You wake up to results you can trust instead of a night with nothing",
+        "No more mornings where the queue is full of failures that were never real"
+      ],
+      "cons": [
+        "Your screen stays on all night, which uses power and is a lit laptop in a dark room",
+        "Your Mac does not lock itself while the loop runs, so anyone walking past sees whatever is on screen"
+      ],
+      "mitigation": "It only holds while the loop is actually running, never when it is stopped, and it can be switched off without stopping the loop."
+    },
+    {
+      "id": "b",
+      "label": "Leave it alone, tests wait for you",
+      "summary": "Nothing changes about your Mac. When you lock it, the walks stop running and say plainly that they could not run, and the loop catches up the moment you unlock. A night with the Mac locked is a night with no app testing.",
+      "pros": [
+        "Your Mac behaves exactly the way you set it up to",
+        "Nothing of yours is ever left on screen or awake on your behalf",
+        "The false failures are already gone either way: this is only about whether testing happens at all"
+      ],
+      "cons": [
+        "Eight hours a night where nothing checks whether the app still works",
+        "Work built overnight is only checked the next time you unlock"
+      ],
+      "mitigation": "The loop keeps a pending test run and does the whole thing as soon as you unlock, so nothing is skipped, only delayed.",
+      "declines": true
+    },
+    {
+      "id": "c",
+      "label": "Leave it alone, but tell me when it has gone blind",
+      "summary": "Same as leaving it alone, plus the dashboard says how long it has been since the app was last really tested, so a quiet night is visible rather than something you find out about later.",
+      "pros": [
+        "Your Mac behaves the way you set it up",
+        "You can see at a glance whether anything shipped overnight was ever checked",
+        "Cheap: a line on the dashboard, no change to your machine"
+      ],
+      "cons": [
+        "Still eight hours a night with no testing",
+        "One more thing on the dashboard to read"
+      ],
+      "mitigation": "It only appears once the gap is long enough to matter, and disappears again after a real test run."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-15T10:04:44.910Z"
+}

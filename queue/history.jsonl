@@ -3471,3 +3471,5 @@
 {"t":"2026-09-15T09:59:25.233Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
 {"t":"2026-09-15T09:59:30.804Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
 {"t":"2026-09-15T10:04:02.146Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-15T10:04:44.911Z","ev":"decision_opened","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa-your-mac-locks-at-night-and-whil","taskId":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","question":"Your Mac locks at night, and while it is locked the app cannot be tested at all. Should the loop keep it from locking?"}
+{"t":"2026-09-15T10:04:57.103Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
