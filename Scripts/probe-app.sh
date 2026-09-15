@@ -85,8 +85,13 @@ ARGS=()
 # harness reads out of the environment has to be handed over on purpose.
 # PHOTONZ_PLAYTEST_PACE=full puts every `wait` step back on the clock, which is
 # how a walk that has turned flaky says whether the pacing moved under it.
+# PHOTONZ_ALLOW_LOCKED_WALK=1 lets a walk run with the screen locked, which only
+# somebody working on the harness itself wants: the run still records that the
+# screen was locked, so it is a way to watch the machinery, never a way to earn
+# a pass. See Sources/Photonz/Playtest/PlaytestScreenState.swift.
 ENVS=()
 [[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
+[[ "${PHOTONZ_ALLOW_LOCKED_WALK:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_ALLOW_LOCKED_WALK=1")
 if [[ $# -gt 0 ]]; then
   open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"}
 else
@@ -132,10 +137,13 @@ terminal_app() {
 }
 
 SCREEN="unknown"
+LOCKED="unknown"
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   if [[ -f "$GRANTS" ]]; then
     SCREEN="$(node -e 'const g = require("fs").readFileSync(process.argv[1], "utf8");
       console.log(JSON.parse(g).screenRecording ? "granted" : "denied")' "$GRANTS" 2>/dev/null || echo unknown)"
+    LOCKED="$(node -e 'const g = require("fs").readFileSync(process.argv[1], "utf8");
+      console.log(JSON.parse(g).screenLocked ? "locked" : "unlocked")' "$GRANTS" 2>/dev/null || echo unknown)"
     break
   fi
   sleep 0.3
@@ -151,13 +159,20 @@ while IFS='=' read -r key value; do
 done < <(swift Scripts/permcheck.swift 2>/dev/null || true)
 
 TERM_APP="$(terminal_app)"
-LINE="==> Grants: probe Screen Recording $SCREEN · $TERM_APP Accessibility $AX"
+LINE="==> Grants: probe Screen Recording $SCREEN · $TERM_APP Accessibility $AX · screen $LOCKED"
 if [[ "$AUTOMATION" != "unknown" ]]; then LINE="$LINE · Automation $AUTOMATION"; fi
 echo "$LINE"
 
 # Each grant buys a different thing, so say which one is missing and what it
 # costs. Both survive rebuilds (the probe is signed with the stable dev
 # identity), so this is asked once per machine, not once per run.
+if [[ "$LOCKED" == "locked" ]]; then
+  echo "    THE SCREEN IS LOCKED, so this app is not being drawn at all: the login window"
+  echo "    covers it, layout and animations stop, control names never arrive and screen"
+  echo "    capture is refused. Every walk refuses to run and says so rather than report a"
+  echo "    pass or a failure, and nothing you see here is a fact about the app. Unlock the"
+  echo "    screen. (What this cost on 2026-09-14: Sources/Photonz/Playtest/PlaytestScreenState.swift)"
+fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"
   echo "    must say so. Fix once in System Settings > Privacy & Security > Screen & System"

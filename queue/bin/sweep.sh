@@ -79,7 +79,10 @@ status)
     node -e '
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
       const took = r.seconds >= 60 ? `${Math.round(r.seconds / 60)}m` : `${r.seconds}s`;
-      if (r.complete === false) {
+      if (r.screenLocked) {
+        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so the window was never drawn and no walk could read it.`);
+        console.log("Nothing was filed from it and nothing is known about the walk set. It runs again once the screen is unlocked.");
+      } else if (r.complete === false) {
         // Never let a cut-short run read as a clean bill of health: it only
         // reached part of the set, so silence about the rest means nothing.
         console.log(`Last sweep ${r.ended} DID NOT FINISH${r.timedOut ? " (stopped on the clock)" : ""}: it reached ${r.walks} walks in ${took}, of which ${r.passed} passed.`);
@@ -104,7 +107,7 @@ summary)
   if [[ -s "$LATEST" ]]; then
     node -e '
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false }));
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, ...(r.screenLocked ? { screenLocked: true } : {}) }));
     ' "$LATEST"
   else
     echo '{}'
@@ -179,9 +182,41 @@ run)
     fi
   done
   wait "$SWEEP_PID" 2>/dev/null
+  SWEEP_CODE=$?
   cat "$RUNLOG"
 
   took=$(( SECONDS - began_s ))
+
+  # Exit 3 from playtest-all means the sweep DID NOT RUN: the Mac's screen was
+  # locked, so the app's window was never drawn and no walk's answer is about
+  # the app (Sources/Photonz/Playtest/PlaytestScreenState.swift). A sweep in
+  # that state files nothing and claims nothing. The request goes back on the
+  # pile so the loop runs a real one once the screen is unlocked, which is the
+  # difference between losing an hour and filing a hundred bugs that are not
+  # there.
+  if (( SWEEP_CODE == 3 )); then
+    echo "!! The walk sweep could not run: the Mac's screen is locked. Nothing filed."
+    echo "   The request stays pending; the loop runs it again once the screen is unlocked."
+    node -e '
+      const fs = require("fs");
+      const [latest, claimed, req, began, ended, took, runlogRel] = process.argv.slice(1);
+      let requests = [];
+      try { requests = (JSON.parse(fs.readFileSync(claimed, "utf8")).requests) || []; } catch {}
+      // Hand the request back rather than swallow it.
+      let pending = { requests: [] };
+      try { pending = JSON.parse(fs.readFileSync(req, "utf8")); } catch {}
+      if (!Array.isArray(pending.requests)) pending.requests = [];
+      pending.requests = requests.concat(pending.requests);
+      fs.writeFileSync(req, JSON.stringify(pending, null, 2) + "\n");
+      fs.writeFileSync(latest, JSON.stringify({
+        began, ended, seconds: Number(took), walks: 0, passed: 0, failed: [],
+        requests, log: runlogRel, complete: false, timedOut: false, screenLocked: true,
+      }, null, 2) + "\n");
+    ' "$LATEST" "$CLAIMED" "$REQ" "$began" "$(now)" "$took" "queue/sweep/$stamp.log"
+    rm -f "$CLAIMED"
+    Q note "the walk sweep could not run: the Mac's screen is locked, so no walk can read the app's window. Nothing filed; the request is still pending." >/dev/null 2>&1
+    exit 3
+  fi
 
   node -e '
     const fs = require("fs");

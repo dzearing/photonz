@@ -1,0 +1,27 @@
+{
+  "feature": "A walk says when it could not run",
+  "epic": "unmanned-loop",
+  "summary": "The scripted walks stop reporting failures that are not in the app. When the Mac's screen is locked the app is never drawn, so a walk now says it could not run instead of calling the app broken, and the sweep files nothing from it.",
+  "setup": "Nothing to install. Run the commands below from the repo. To see the locked half, lock the screen (Control-Command-Q) and run them again; to see the unlocked half, unlock and run them.",
+  "try": [
+    { "do": "With the screen UNLOCKED, run Scripts/playtest-all.sh --no-build appearance-list-min tutorial-mark-it-up size-limits first-run. All four should pass; they were all failing before this." },
+    { "do": "Lock the screen with Control-Command-Q, wait five seconds, unlock, and read back what that same run says: COULD NOT RUN, not a list of failures." },
+    { "do": "Run Scripts/probe-app.sh and read the Grants: line. It now ends in \"screen unlocked\" or \"screen locked\"." },
+    { "do": "Quit it again with Scripts/probe-app.sh --quit." },
+    { "do": "Run queue/bin/sweep.sh status to see how the last sweep describes itself." },
+    { "do": "Start a guide from the Help menu, then click another app so the Photonz window is fully covered. The callout disappears and comes back when you return to the window." }
+  ],
+  "evaluate": [
+    "When a walk says COULD NOT RUN, is it obvious within one line that this is not the app being broken?",
+    "Is \"the screen is locked\" the first thing you read, rather than a count of failures you have to interpret?",
+    "The loop retries a pending sweep after every task while the screen stays locked, which costs about fifteen seconds each time. Is that the right trade against noticing the unlock quickly?",
+    "A walk run holds off display sleep for its length so it cannot be locked out half way. Is a Mac that stays awake while a sweep runs acceptable, or should the sweep give way instead?",
+    "Should the loop be allowed to keep this Mac awake all night so it can keep testing, or is a night with no walk results the right answer?"
+  ],
+  "rough": [
+    "No real screenshot with this audit. The Screen Recording grant is granted, but the screen has been locked since 2026-09-14 20:46:47 and a locked screen refuses screen capture outright, which is the very thing being fixed.",
+    "The four named walks have not been watched passing on an unlocked screen, because the screen never unlocked during this work. Forced to run under the lock, one of the four now passes outright (first-run-walk, which used to stop at step 8) and a second gets from step 4 to step 33, which is the tutorial half of the fix showing up. The other two need the window actually drawn and cannot pass under a lock by any means. A sweep is already requested and runs the moment the screen is unlocked; that is what will settle it.",
+    "While the screen is locked the loop cannot check anything about the app at all. That is honest but it is not free: a whole night can pass with no walk ever running.",
+    "The lock is read at the start and the end of a walk, not continuously. A screen that locked and unlocked entirely inside one five second walk would not be caught."
+  ]
+}

@@ -145,6 +145,19 @@ private final class Run {
             return
         }
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
+        // Before anything is driven: a locked screen means the window this walk
+        // is about to read will never be drawn, so whatever it found would be a
+        // fact about the login window and not about the app
+        // (`PlaytestScreenState`). Stop here rather than spend five seconds
+        // producing an answer nobody may use.
+        if PlaytestScreenState.isLocked {
+            guard PlaytestScreenState.isAllowedAnyway else {
+                finish(status: PlaytestScreenState.lockedStatus, steps: 0,
+                       error: PlaytestScreenState.lockedExplanation)
+                return
+            }
+            note(0, "start", PlaytestScreenState.allowedAnywayNote)
+        }
         // Watching the main thread from step ZERO. A `wait` judges the editor
         // finished from two signals, and one of them is this meter; it used to
         // be installed by the first press or drag, so every wait before that —
@@ -289,6 +302,24 @@ private final class Run {
     }
 
     private func finish(status: String, steps: Int, error: String?) {
+        // A screen that locked WHILE the walk ran takes the answer with it,
+        // whichever way the walk was going to land. That is how the 20:42 sweep
+        // on 2026-09-14 turned into nineteen failures: it started on an unlocked
+        // screen and was four minutes in when the Mac locked. So the verdict is
+        // re-read here as well as before step one, and a locked run reports
+        // neither pass nor failure.
+        var status = status
+        var error = error
+        // Whether the screen was locked is recorded either way. Only the
+        // VERDICT is withheld, and only when nobody asked for this run on
+        // purpose (`PlaytestScreenState.isAllowedAnyway`).
+        let locked = status == PlaytestScreenState.lockedStatus || PlaytestScreenState.isLocked
+        if locked, !PlaytestScreenState.isAllowedAnyway,
+           status != PlaytestScreenState.lockedStatus {
+            status = PlaytestScreenState.lockedStatus
+            error = PlaytestScreenState.lockedExplanation
+                + (error.map { " (what it had got to: \($0))" } ?? "")
+        }
         // Anything the setup lent goes back first, so a walk that failed
         // halfway leaves nothing of its own in a person's Screenshots folder.
         if let returned = setupRunner.returnCaptures() { note(steps, "setup", returned) }
@@ -307,6 +338,7 @@ private final class Run {
             "secondsSaved": (pacedAway * 100).rounded() / 100,
         ]
         if let error { done["error"] = error }
+        if locked { done["screenLocked"] = true }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
         write(json: done, to: "done.json")
     }

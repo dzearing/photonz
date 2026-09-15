@@ -49,6 +49,12 @@ enum ProbeGrants {
     private static func write(granted: Bool, prompted: Bool, to url: URL) {
         let payload: [String: Any] = [
             "screenRecording": granted,
+            // A locked screen is not a grant, but it costs the loop the same
+            // thing and more: no window is drawn at all, so nothing a walk
+            // reads is about the app (`PlaytestScreenState`). It belongs on the
+            // same line for the same reason, so nobody claims a look at the app
+            // they could not have had.
+            "screenLocked": PlaytestScreenState.isLocked,
             "prompted": prompted,
             "bundleID": Bundle.main.bundleIdentifier ?? "unknown",
             "at": ISO8601DateFormatter().string(from: Date()),

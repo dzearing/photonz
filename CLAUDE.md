@@ -39,6 +39,28 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
 
+### A walk needs the screen unlocked
+
+A scripted walk drives a real window and then reads it. That needs the window
+server to have actually DRAWN it, so when the Mac's screen is locked no walk can
+say anything: the login window covers everything, layout and animations stop,
+the control names SwiftUI hands to AppKit never arrive, and screen capture is
+refused outright. The app is fine; the walk is reading a half-built window.
+
+So a walk run on a locked screen **does not pass and does not fail**. It reports
+`status: "locked"`, `Scripts/playtest.sh` exits 3, `Scripts/playtest-all.sh`
+stops and says "COULD NOT RUN", and `queue/bin/sweep.sh` files nothing and keeps
+the request pending until the screen is unlocked. Every launch prints the state
+on its `Grants:` line (`· screen locked`). Nothing tries to unlock the Mac; a
+run that starts unlocked is held awake for its length so it cannot be locked out
+half way.
+
+This is not theoretical. The Mac locked at 2026-09-14 20:46:47 and the sweep at
+00:09 reported 115 of 400 walks broken, including all 31 tutorial walks, on
+source that had passed every one of them that afternoon. Runners were then sent
+to hunt bugs that were not in the app. See
+`Sources/Photonz/Playtest/PlaytestScreenState.swift`.
+
 ### Three bundles, three owners
 
 `dist/Photonz Dev.app` belongs to **the person working in the app**;

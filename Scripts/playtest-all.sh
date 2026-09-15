@@ -70,8 +70,43 @@ if [[ $BUILD == 1 ]]; then
   Scripts/build-app.sh --probe >/dev/null || { echo "!! probe build failed"; exit 1; }
 fi
 
+# Hold the Mac awake for the length of the run.
+#
+# Every walk reads a window the window server has to have DRAWN. Let the screen
+# idle into sleep with a password asked for and it locks, the login window
+# covers everything, and from that moment every walk is reading a window that is
+# never drawn again: the sweep that started 2026-09-14 20:42 was four minutes in
+# when the Mac locked at 20:46:47, and it reported nineteen failures that were
+# not in the app. So a run that starts on an unlocked screen finishes on one.
+#
+# -d -i holds off display sleep and idle sleep, which is what the screen saver
+# and the lock that follows it hang off. Deliberately NOT -u: that posts user
+# activity, which would light up a display somebody has already put to sleep, at
+# whatever hour the loop happens to reach this. So this keeps an awake Mac awake
+# and does nothing at all to a sleeping one. It is a power assertion rather than
+# a process doing work, it is bounded by -t as well as by the trap below, and it
+# can neither wake nor unlock a screen. Nothing here fights a person who locked
+# the Mac on purpose; the walks simply say they could not run.
+AWAKE=""
+hold_awake() {
+  command -v caffeinate >/dev/null 2>&1 || return 0
+  caffeinate -d -i -t "${PHOTONZ_WALK_AWAKE_SECONDS:-7200}" &
+  AWAKE=$!
+}
+release_awake() {
+  [[ -n "$AWAKE" ]] || return 0
+  kill "$AWAKE" 2>/dev/null
+  wait "$AWAKE" 2>/dev/null
+  AWAKE=""
+}
+trap release_awake EXIT INT TERM
+hold_awake
+
 PASSED=0
 FAILED=()
+# Walks that DID NOT RUN, because the screen was locked. Never counted as
+# failures: see Sources/Photonz/Playtest/PlaytestScreenState.swift.
+LOCKED=0
 # How long the run took, and how long each walk in it took, because "the full
 # run takes about four hours" was a guess nobody could check. Every walk prints
 # its own seconds and the run prints its total, so a walk that has started
@@ -88,9 +123,18 @@ for walk in Scripts/playtest/*.json; do
   fi
   printf '%-40s ' "$name"
   WALK_BEGAN=$SECONDS
-  if out="$(Scripts/playtest.sh "$walk" --no-build 2>&1)"; then
+  out="$(Scripts/playtest.sh "$walk" --no-build 2>&1)"
+  code=$?
+  if (( code == 0 )); then
     verdict="ok"
     PASSED=$((PASSED + 1))
+  elif (( code == 3 )); then
+    # The screen is locked, so this walk did not run and neither will any of
+    # the ones after it. Stop rather than spend eleven minutes writing "could
+    # not run" three hundred times.
+    LOCKED=1
+    printf '%4ds  COULD NOT RUN  the screen is locked\n' $((SECONDS - WALK_BEGAN))
+    break
   else
     reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
     verdict="FAILED  ${reason:-no done.json}"
@@ -104,6 +148,22 @@ done
 TOTAL=$((SECONDS - RUN_BEGAN))
 RAN=$((PASSED + ${#FAILED[@]}))
 echo
+# A run stopped by the lock is NOT a verdict on the walk set. Say so first and
+# on its own line, so nothing downstream reads the counts underneath as one.
+if (( LOCKED )); then
+  echo "==> COULD NOT RUN: the Mac's screen is locked."
+  echo "    A locked screen puts the login window over everything, so the app's window is"
+  echo "    never drawn: layout and animations stop, control names never arrive and screen"
+  echo "    capture is refused. Every walk from that point reads a half-built window, so"
+  echo "    this run is not a pass and not a failure for any walk it did not reach."
+  if (( RAN )); then
+    echo "    It got through $RAN walk(s) before the lock; those counts are real."
+    echo "==> $PASSED passed, ${#FAILED[@]} failed, then stopped"
+    (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
+  fi
+  echo "    Unlock the screen and run it again."
+  exit 3
+fi
 echo "==> $PASSED passed, ${#FAILED[@]} failed"
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
 printf '==> %d walks in %dm %02ds' "$RAN" $((TOTAL / 60)) $((TOTAL % 60))

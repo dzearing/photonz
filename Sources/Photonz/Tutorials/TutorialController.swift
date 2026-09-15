@@ -340,25 +340,42 @@ final class TutorialController {
     private func place() {
         guard let run, let window = hostWindow else { return }
         watchForClose(window)
-        guard !window.isMiniaturized, window.occlusionState.contains(.visible) else {
-            cardPanel?.orderOut(nil)
-            cuePanel?.orderOut(nil)
-            return
-        }
         if revealTries > 0 {
             revealTries -= 1
             if run.step.prepare.contains(.revealTarget) {
                 TutorialAnchorRegistry.shared.reveal(run.step.anchor, in: window)
             }
         }
-        // From here the guide is really up in front of somebody, so this pass
-        // counts as time the step had to find its control.
+        // This pass counts as time the step had to find its control, and the
+        // control either is in the window or it is not.
+        //
+        // Neither of those is a question about what is in FRONT of the window.
+        // They used to be: both lines sat below the guard beneath them, so a
+        // window somebody had buried, or that the login window covered while
+        // the screen was locked, left every step of every guide reading "never
+        // found its control" — about a tool bar plainly in the window, sitting
+        // at a rectangle the registry could name. That is what made 31 of 31
+        // tutorial walks fail on the night of 2026-09-14 with nothing wrong in
+        // the app (`PlaytestScreenState`).
         openStep?.tick()
         let anchor = TutorialAnchorRegistry.shared.screenFrame(of: run.step.anchor, in: window)
         // Found once is found: the step's verdict is settled here, before any
         // of the shortcuts below can return early on a frame where nothing
         // moved.
         if anchor != nil { openStep?.resolved = true }
+        // DRAWING is the part that needs the window in front. A callout over a
+        // covered window would be a card floating on top of whatever the person
+        // is really looking at, so the panels go away and come back when the
+        // window does.
+        guard !window.isMiniaturized, window.occlusionState.contains(.visible) else {
+            cardPanel?.orderOut(nil)
+            cuePanel?.orderOut(nil)
+            // Nothing was placed, so the next visible pass has to place it
+            // rather than deciding nothing moved.
+            lastAnchorFrame = nil
+            drawnStepID = nil
+            return
+        }
         // On screen WHOLE: stop asking, so a person who scrolls somewhere else
         // is not fought by a guide that got what it wanted a moment ago.
         //

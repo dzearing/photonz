@@ -88,9 +88,40 @@ typo comes back in a second rather than as a timeout on an empty folder:
 - `menus-<stage>.json` and `menus-<stage>.txt` for every `menus` step: the menu
   bar as a tree for a program, and the same reading as indented text you can
   `cat` when you want to quote a menu item.
-- `done.json`: `status` (`ok` or `failed`), how many steps completed, and the
-  error when one failed. The run stops at the first failing step; the log
-  keeps everything before it.
+- `done.json`: `status` (`ok`, `failed`, or `locked`), how many steps completed,
+  and the error when one failed. The run stops at the first failing step; the
+  log keeps everything before it.
+
+## A locked screen means the walk did not run
+
+Everything above is read off a window the window server has actually DRAWN.
+Lock the Mac and it stops drawing it: the login window covers every other
+window, macOS suspends layout and drawing for what it now considers hidden,
+Core Animation stops advancing, the accessibility text SwiftUI hands to AppKit
+is never reconciled onto the control, and ScreenCaptureKit refuses with
+`SCStreamErrorDomain -3811`. A walk pointed at that window reads a half-built
+app and reports what it found as though the app had produced it.
+
+So a locked screen is refused rather than waited out:
+
+| Layer | What it does |
+| --- | --- |
+| The harness | Checks before step one and again at the end. Either one locked and the run is `status: "locked"` with `screenLocked: true`, whichever way it was heading. |
+| `Scripts/playtest.sh` | Exits **3**, and says the screen is locked. Not 1. |
+| `Scripts/playtest-all.sh` | Stops at the first locked walk (every walk after it would be locked too), prints `COULD NOT RUN`, exits 3. Counts from walks it reached before the lock are still real and still printed. |
+| `queue/bin/sweep.sh` | Files nothing, records `screenLocked: true`, and hands the request back so the loop runs a real sweep once the screen is unlocked. |
+| `Scripts/probe-app.sh` | Says `· screen locked` on its `Grants:` line, with the cost spelled out. |
+
+Nothing tries to unlock the Mac, and nothing fights a person who locked it on
+purpose. What the harness does do is hold a run that STARTED unlocked awake for
+its length (`caffeinate -d -i -u`, bounded, released on exit), so a sweep can
+never be locked out half way through — which is exactly what happened to the
+sweep that began at 2026-09-14 20:42 and was four minutes old when the Mac
+locked at 20:46:47. `PHOTONZ_WALK_AWAKE_SECONDS` caps that assertion (default
+7200).
+
+Full reasoning, and what the one night it went unnoticed cost:
+`Sources/Photonz/Playtest/PlaytestScreenState.swift`.
 
 ## Script format
 
@@ -720,6 +751,11 @@ plus is genuinely there, right size, right tooltip, and answering to no name at
 all, which is how a walk came to be told there was no such menu in a window the
 menu was plainly in. Nothing is wrong with the button: the step just has to
 look again, which it now does.
+
+Looking again only works if the relayout ever finishes, and on a locked screen
+it does not: nothing is reconciled because nothing is drawn, so the plus stays
+nameless for as long as the walk is willing to wait. That is why a locked screen
+is now refused outright rather than waited out — see below.
 
 ## Where a walk starts from
 

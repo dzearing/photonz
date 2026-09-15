@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-15T08:53:20.371Z",
+  "updated": "2026-09-15T09:58:04.188Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -207,6 +207,10 @@
     {
       "t": "2026-09-15T08:53:20.370Z",
       "note": "Do NOT start triaging this morning's 115 from the top: most of them are probably not broken. The manager pass on 2026-09-15 checked out eb474448, the commit the 2026-09-14 16:19 local sweep built and passed 31 of 31 tutorial walks on, rebuilt it tonight and ran appearance-list-min, tutorial-mark-it-up, size-limits and first-run: all four fail, identically to HEAD. Same source, opposite answer, nine hours apart. Filed as a-hundred-and-fifteen-walks-fail-on-code-that-pa, p1 seq 10, which this task now waits on. Also disproved there: 1ffeff8e, the open -g change in probe-app.sh, and the display going to sleep."
+    },
+    {
+      "t": "2026-09-15T09:58:04.187Z",
+      "note": "RE-TRIAGED 2026-09-15 against the screen lock. The Mac's screen locked at 2026-09-14 20:46:47 local (CGSSessionScreenLockedTime=1789444007) and has stayed locked since. A locked screen puts the login window over every other window, so the app is never drawn: layout and animations stop, the control names SwiftUI hands AppKit never arrive, and screen capture is refused (SCStreamErrorDomain -3811). Every walk after that point read a half-built window. Cut the log by that line:\n\nSTILL STANDS, found before the lock. turn-into-a-path-walk: reproduced four times on clean main at 02:49Z, 03:02Z (19:49 and 20:02 local) and again at 03:42Z, all before 03:46:47Z. That is a real break and this task still owns it. Also standing: the five the 2026-09-15T00:46Z sweep named (container-too-small-walk, icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk), and measure-row-menu-walk which was reproduced on its own at 22:59Z on 2026-09-14.\n\nNOT EVIDENCE, taken under the lock. The 19 failing from the 2026-09-15T05:56:58Z sweep (that run began 20:42 local and was four minutes old when the Mac locked, which is why its walks took 900 to 1045s each) and the 115 from 08:15:33Z. Also the four walks written up at 07:07:08Z as reproduced on untouched main (arrow-parts-walk, outline-position-walk, highlight-one-outline-walk, one-outline-two-kinds-walk): that was 00:07 local, under the lock, so they have to be run again before anyone works them. And the theory at 07:07:41Z that a scripted press cannot reach a SwiftUI tick at all is the lock rather than the app: setOn never runs because the view is never live.\n\nThe fix landed with this task's sibling (a-hundred-and-fifteen-walks-fail-on-code-that-pa): a walk on a locked screen now reports status locked, playtest.sh exits 3, playtest-all.sh stops with COULD NOT RUN, and sweep.sh files nothing and keeps the request pending. So this list cannot fill up with phantoms again. A sweep is already requested; triage this task from the first sweep that runs with the screen unlocked, not from the 115."
     }
   ]
 }
