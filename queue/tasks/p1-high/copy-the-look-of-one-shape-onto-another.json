@@ -1,0 +1,37 @@
+{
+  "id": "copy-the-look-of-one-shape-onto-another",
+  "title": "Copy the look of one shape onto another",
+  "goal": "Two shapes should be quick to match. Today matching them means reading every setting off one and typing it into the other, part by part. Let the look of a shape be copied and put onto another shape, taking across everything the second shape can wear and quietly skipping what it cannot, so making a line match a circle's border is two moves.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:44:46.074Z",
+  "updated": "2026-09-15T14:44:46.166Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-15, in the same breath as the saved-colour problem: \"Also i wish there was some way to just copy the format of one shape and best effort apply it to the properties of another shape.\"\n\nThis is the general answer to the problem the other task fixes narrowly. Both are worth having: saved colours are for a colour you use over and over and want to change in one place, and copying a look is for making this one thing match that one thing right now. Do not let either be closed as a duplicate of the other.\n\nNothing like it exists today. There is a clipboard (EditorState+Clipboard.swift) but it carries layers, not looks, and the style machinery (ColorStyles, TextStyles, EffectStyles) is about NAMED styles you save and reuse rather than an unnamed one you carry for a moment.\n\nThe model to copy from is already settled and should be reused rather than re-derived: docs/design/shape-parts.md says a part has a switch, a colour and its own settings, and that Appearance is what a shape HAS while Effects is a list you ADD to. A copied look is therefore exactly: the state of the target's parts, plus the list of effects. That also answers the best-effort rule cleanly, because a target simply has the parts it has.\n\nThe interesting decision is the one in the acceptance list about saved styles: if the source's fill was wearing a saved colour called Accent, the target should end up wearing Accent too rather than a loose copy of that colour, or the link everybody just built is lost at exactly the moment it is most useful.\n\nWorth checking before choosing keys: this app defaults new keybindings to Photoshop's, where copying and pasting layer style live on the layer's context menu rather than on keys, while Figma uses Command Option C and Command Option V. Pick deliberately and say why.",
+  "acceptance": [
+    "The look of a picked shape can be copied, and put onto one or several other shapes in one go",
+    "It carries what a look is made of: the colours of each part, the outline width, the corner rounding, the opacity, and the effects that were added",
+    "It is best effort by design: a part the target does not have is skipped rather than refused, and the whole thing never fails because one setting did not fit",
+    "It says what it skipped, briefly, so a result that is not quite a match is explained rather than mysterious",
+    "It does NOT carry position, size, rotation or what the shape actually is: a line pasted from a circle is still a line",
+    "A colour that was wearing a saved style arrives still wearing it, rather than arriving as a loose copy of that colour",
+    "It is one undo step however many shapes it reached",
+    "It has keys that somebody coming from another editor would try first, and they do not collide with anything already bound",
+    "Audit under queue/audits/ with a line matched to a circle's border in the promised number of moves, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:44:46.076Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T14:44:46.165Z",
+      "note": "seq 290 -> 12"
+    }
+  ]
+}

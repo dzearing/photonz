@@ -1,0 +1,36 @@
+{
+  "id": "a-saved-colour-goes-wherever-that-colour-belongs",
+  "title": "A saved colour goes wherever that colour belongs",
+  "goal": "You save the colour of a circle's border as a style, then try to put it on a line, and the app refuses because it thinks they are different kinds of thing. They are not: a border and a line are both ink. A colour you saved should be offered anywhere that colour could sensibly go, and where it genuinely cannot, the app should say which part it is for rather than quietly leaving it out of the list.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:44:45.912Z",
+  "updated": "2026-09-15T14:44:46.005Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-15: \"I have a circle and a line. The line is a different color than the circle's border. I want to quickly match them. It's hard. I save the style of the circle border, try to use that for the color of the line, no luck. they mismatch on type. this is weird. Any style which holds a color should be usable for a color style.\"\n\nTHE SCOPING IS DELIBERATE AND IS PROBABLY NOT THE BUG, which is why this needs reproducing rather than a quick edit. PhotonzCore/ColorStyles.swift:842, colorStyles(for slot:), filters saved colours to those whose roles include the slot's role, and the comment above ColorStyleRole at :141 explains why: a row used to offer every saved colour in the document, so the inside of a box could be painted with a colour somebody made for hairlines, and that made the menu meaningless.\n\nBut there are only TWO roles, ink and surface (ColorStyles.swift:148), and ColorSlot.styleRole at :126 puts BOTH .border and .stroke in .ink, with the comment that a line, a letter and a shadow all reach for the ink shelf. A circle's border is .border; a drawn line is .stroke. Both are ink. So the style SHOULD already be offered and the user says it is not. Something else is filtering it, and finding out what is the task.\n\nThree candidates, in order of likelihood:\n1. The gradient guard on the same line: `guard !style.isGradient || slot.acceptsGradient`. If the saved border colour is a gradient and the line's slot does not accept gradients, it is filtered out silently and the reason never reaches the person.\n2. effectiveColorStyleRoles (ColorStyles.swift:817) falls back to inferring roles from where the style is already used when the style has none of its own. A colour saved from a border and used nowhere else may come back as ink-only or as something narrower than intended.\n3. The line's colour may not be reached through .stroke at all. An annotation's parts were reorganised recently (outline moved into Effects, arrows got their parts in Appearance), so check which slot a drawn line's colour actually is before assuming.\n\nThe user's stated principle is the thing to weigh against the existing design: \"Any style which holds a color should be usable for a color style.\" The original scoping exists to keep a short list meaningful, and that is a real concern. A resolution that serves both: keep the scoped list as what is OFFERED FIRST, but never make a colour unreachable - show the rest under a heading that says they are for other parts, which is close to what the menu already does when there are no styles for a part at all (ColorStylePanel.swift has a 'Your saved colours are for other parts' section with a way into the Library). Extend that idea rather than inventing one.",
+  "acceptance": [
+    "Reproduce it first and say exactly what happened: save the colour off a circle's border, try to use it on a line, and record what the app offered, what it refused, and what it said",
+    "A colour saved from a border is offered on a line, and the other way round, because both paint ink",
+    "Where a colour really is not offered, the row says which parts it IS for, instead of the colour simply not appearing",
+    "Dragging a saved colour onto a part that will not take it refuses out loud, with the same words the menu would use",
+    "A gradient saved from a part that allows gradients, dropped on a part that does not, is handled by a stated rule rather than vanishing from the list",
+    "Changing what a saved colour is for, which the Library already offers, still works and is reachable from the place the refusal happens",
+    "Tests in PhotonzCore covering a style saved from one ink part being offered on another, and the gradient case, written before the change",
+    "Audit under queue/audits/ with the circle and line matched in the number of moves it should take, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:44:45.915Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T14:44:46.004Z",
+      "note": "seq 290 -> 11"
+    }
+  ]
+}
