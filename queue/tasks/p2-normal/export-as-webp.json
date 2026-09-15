@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 10.5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:47:32.886Z",
-  "updated": "2026-09-15T20:39:55.312141Z",
+  "updated": "2026-09-15T20:58:59.119Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15, and they were explicit after being offered the alternative: \"ok find use 3rd party. I WANT WEBP NOT AVIF.\" So the decision is made. Do not substitute AVIF, do not offer it instead, and do not reopen the question; if AVIF is added one day it is a separate task.\n\nWHY THIS NEEDS A DEPENDENCY AT ALL, checked rather than assumed on 2026-09-15: CGImageDestinationCopyTypeIdentifiers lists 22 writable types on macOS 26 and WebP is not among them, so ImageIO cannot WRITE WebP however it is asked. CGImageSourceCopyTypeIdentifiers does include org.webmproject.webp, so READING one already works today and must keep working through the system rather than through the new code.\n\nThis is the project's FIRST third party dependency - Package.swift currently has no external dependencies at all - so it sets the precedent for how one is carried. Vendor libwebp's sources as a C target in Package.swift rather than reaching for a system library or a Homebrew formula: Scripts/build-app.sh assembles the app with SwiftPM only and CI uses the same path, so anything needing an installed library breaks the build machine and every fresh clone. Pin the version, record it, and say in the audit how it would be updated.\n\nLicence: libwebp is BSD-3, which asks only that the copyright notice and disclaimer travel with binary distributions, so the app needs somewhere that notice lives and can be read. Google also ships an additional patent grant alongside it; carry that file too. This is the kind of obligation that is trivial to meet now and awkward to retrofit.\n\nStructural note, because it will not fit the existing shape: ImageCodec.encode (Sources/PhotonzRender/ImageCodec.swift:33) writes everything through a CGImageDestination, and every Format has a utType. WebP has neither, so the encode path has to branch on it, and Format.utType stops being answerable for every case. Work out what that means for the save panel and the file extension handling before writing the encoder call, not after.\n\nQuality mapping: ImageCodec.encode takes 0 to 1 and passes it to ImageIO; libwebp takes 0 to 100. Map it in one place so a quality of 0.8 means the same thing whichever format is chosen. This pairs with the task 'choose-the-quality-of-a-lossy-export-and-see-wha', which puts a quality control and a real file size in the dialog - read it first, and if it has landed, WebP simply joins the rule it established rather than inventing a second control.\n\nLossless is in the acceptance list on purpose. This app's main output is screenshots of flat interface, which is exactly the case where lossless WebP beats both PNG and lossy WebP. A WebP export that can only do lossy would miss the best thing about the format for the pictures this app actually makes.",
@@ -73,7 +73,20 @@
     {
       "t": "2026-09-15T20:39:55.312141Z",
       "note": "left rough (not filed, under the follow-up bar): the format row is now five segments in a 320 point sheet and nobody has looked at it, because of the lock. It is the first line of the audit's rough list so the user sees it before anything else, and it is a look rather than a known defect."
+    },
+    {
+      "t": "2026-09-15T20:58:59.032Z",
+      "note": "CI (run 35021643611, clean macos-26 runner): 'Build (all targets)' GREEN, which is the proof the vendored libwebp compiles on a fresh machine with nothing installed. Every WebP suite green there too (WebP encoder, WebP encoding speed, What a picture export will weigh). The run's overall conclusion is RED for exactly one reason and it is not this change: VideoCutExportTests 'Exporting a recording with the middle dropped writes only what is left', which failed identically (0.1264705882352941 < 0.12) on commit 6c3fa294 BEFORE this work. Filed as cutting-a-recording-fails-its-own-test-on-the-bu, p1-high, with both CI logs in its notes. 'Build release app bundle' was skipped by CI because tests failed, so that leg was proved locally instead: a fresh git clone to /tmp with Homebrew off PATH ran both 'swift build' and 'Scripts/build-app.sh --release' clean."
+    },
+    {
+      "t": "2026-09-15T20:58:59.075Z",
+      "note": "left rough (not filed): nothing about the sheet has been looked at, because the screen was locked all session. The five-segment format row in a 320 point sheet is the first line of the audit's rough list so the user sees it before anything else. Also unfiled: whether a WebP should carry an ICC profile. It does not, and that is correct rather than missing, because DocumentRenderer composites in sRGB and a WebP with no profile is read as sRGB by every browser; writing one would mean vendoring libwebpmux for no gain."
+    },
+    {
+      "t": "2026-09-15T20:58:59.117Z",
+      "note": "Export offers WebP behind next-export-webp (on by default in Next), with the same quality slider as JPEG and HEIC and lossless at the top of it, where the line says Lossless instead of Best. libwebp 1.5.0's encoder is vendored as source at Vendor/libwebp and built as the CWebP target, updated by Scripts/vendor-libwebp.sh, which also regenerates the licence shown by the new app menu item Open Source Notices. Reading a WebP is untouched and still goes through macOS. Verified: Scripts/test.sh green, 7145 tests in 572 suites; a fresh clone with Homebrew off PATH builds both swift build and Scripts/build-app.sh --release; CI's build step and every WebP suite green on a clean runner; the written files read back through sips, Quick Look and Chrome 152, which reported the right size and the right alpha. NOT verified in the running app: the Mac's screen was locked all session so no walk could run and there are no screenshots, said plainly in the audit. Audit: queue/audits/2026-09-15-export-webp.json."
     }
   ],
-  "started": "2026-09-15T20:03:49.746Z"
+  "started": "2026-09-15T20:03:49.746Z",
+  "completed": "2026-09-15T20:58:59.118Z"
 }
