@@ -47,9 +47,22 @@ struct ShapePartSettings: View {
                 // (`OutlineWidth.swift`). A highlight, whose stroke is the wash
                 // it is made of rather than a line, still has nothing here.
                 let thickness = editorState.outlineThicknessSelection.of(ids)
-                if !thickness.isEmpty {
+                // ...and what KIND of line it is, under the same bracket,
+                // because the ends, the corners and the dashes are as much a
+                // part of the outline as its weight is
+                // (`PathLineStylePickers.swift`). Only a path answers these
+                // today; a line and an arrow still draw round ends and sharp
+                // corners and are not asked.
+                let lineStyle = editorState.pathLineStyleSelection.of(ids)
+                // Nothing at all while the part is switched OFF. A shape with
+                // no outline used to keep a Thickness reading 0 px under a
+                // colour well that painted nothing, which is the dead control
+                // the switch exists to replace: off has to LOOK off, exactly as
+                // a switched-off Fill does (`LayerPartRow.showsSettings`).
+                if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
                         self.thickness(thickness, ids: thickness.layerIDs)
+                        PathLineStyleSettings(selection: lineStyle)
                     }
                 }
             case .captionText where !selection.isEmpty:

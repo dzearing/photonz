@@ -282,6 +282,11 @@ private struct PartRowView: View {
         switch row.part {
         case .fill:
             editorState.setColorEnabled(slot: .fill, on: on)
+        case .outline:
+            // A path IS its stroke, so its switch is a width rather than a
+            // missing paint: the colour stays put and comes back with the line
+            // (`PathLineStyle.swift`).
+            editorState.setPathOutline(ids: row.switchIDs, on: on)
         case .captionFill:
             editorState.setColorEnabled(slot: .captionFill, on: on)
         case .captionBorder:

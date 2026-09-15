@@ -1,0 +1,32 @@
+{
+  "feature": "A path says what its colour paints, and what kind of line it is",
+  "epic": "icon-vector",
+  "summary": "A shape drawn with the Pen used to show one row simply called Color, with nothing under it but a weight. Its colours are now named for what they paint, Fill and Outline, and under the outline you can say whether the line is solid, dashed or dotted, what its ends look like and how its corners turn. All three come out of the exported SVG the way they look on the canvas.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen is on by default.",
+  "try": [
+    { "do": "Press P, click three spots, then click the first one again to close the shape." },
+    { "do": "Press V and click the shape. Appearance reads Fill, then Outline, each with a tick.", "shot": "2026-09-15-path-line-style-named.png" },
+    { "do": "Under Outline, press the middle picture on the Pattern row: the shape's edge breaks into dashes." },
+    { "do": "An Ends row appears under Pattern. Press its right-hand picture for square dash ends." },
+    { "do": "Press the right-hand picture on Corners to slice the points off, then the middle one to round them.", "shot": "2026-09-15-path-line-style-styled.png" },
+    { "do": "Untick Outline: the colour, the weight and the three pickers all go with it, leaving a plain filled shape.", "shot": "2026-09-15-path-line-style-outline-off.png" },
+    { "do": "Tick it again, then press P and draw an open path: its one colour is called Line, and it is asked about its ends straight away.", "shot": "2026-09-15-path-line-style-open-path.png" },
+    { "do": "File, Export, SVG, and open the file: the dashes, the ends and the corners are all in it." }
+  ],
+  "evaluate": [
+    "Fill and Outline over a shape you drew: does that pair of words tell you which colour is the edge without having to try one?",
+    "The Ends row only appears once there are ends to see, so on a closed shape it arrives when you turn dashes on. Does a row appearing under your hand help, or is it a control moving about while you use it?",
+    "Three pictures rather than three words on each row. Can you tell Sharp from Round from Flat corners at that size, or do you end up reading the word beside the caption?",
+    "Dashes are measured in line widths, so turning a dashed line from 2 up to 8 gives fewer, bigger dashes. Is that what you expect, or should the dash size hold still?",
+    "Solid, Dashed and Dotted, and nothing else. Is a dash pattern you can type numbers into something an icon actually needs?",
+    "Unticking Outline takes the line off and ticking it brings one back at 4 px, not the weight you had. The Fill tick behaves the same way with its colour. Is that right, or should each remember?"
+  ],
+  "rough": [
+    "No real window captures this run: every screenshot here is the offscreen render. The probe reported its Screen Recording grant as granted and every capture still failed with ScreenCaptureKit error -3811. Filed as a follow-up.",
+    "A closed path arrives with its fill and its outline in exactly the same red, so a dashed edge is nearly invisible until you repaint one of them. The walk paints the fill a second colour to make the pictures readable. That is the arriving colours, not this: folded into a-path-the-pen-draws-arrives-with-an-edge-you-ca.",
+    "Ends offers Flat and Square, which are the same shape at two lengths, so the two pictures differ only in how long the stub is. The word beside the caption carries it.",
+    "A sharp corner can still have its very point sliced off by the edge of the shape's own bitmap, because how far a line reaches is worked out from its ends and not from its corners. It was always true and choosing Sharp now makes it a choice: folded into a-drawn-line-has-round-ends-and-round-corners-or.",
+    "Only a path answers these three. A line, an arrow and a Border in the Effects list still draw round ends and sharp corners with no way to change either, which is what that same open task covers.",
+    "A scripted press does not reach a part's tick at all, on any shape, so the walk flips Outline through an action instead. Four walks that press one fail on untouched main the same way."
+  ]
+}

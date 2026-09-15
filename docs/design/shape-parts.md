@@ -76,6 +76,17 @@ will arrive as one more row with a switch, a colour and its own settings.
 > stands out from the fill. Switching Fill off still leaves the outline of the
 > shape rather than nothing at all. See `BorderInk.swift`.
 >
+> **A path is the one exception, added on 2026-09-15.** Everything else wears a
+> ring, and a ring hugs the layer's BOX, which is why the edge could retire into
+> Effects. A path's outline is not a box — a Border round a triangle is a
+> rectangle round a shape that is not one — so its edge stays where the shape
+> is, and `LayerPart.outline` is the part that switches it. A CLOSED path shows
+> Fill and Outline, each with a switch; an OPEN one IS its line and keeps the
+> switchless Line row, for the same reason a line and an arrow do. Its switch is
+> a width rather than a missing paint, and its settings (thickness, and what
+> kind of line it is) go with it, so off looks off.
+> See `docs/design/vector-paths.md`.
+>
 > The rest of this section is kept for the record of what the split used to be.
 
 | Layer | Parts |

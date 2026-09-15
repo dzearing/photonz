@@ -668,6 +668,11 @@ extension EditorState {
         switch part {
         case .fill:
             armToolsFromSelection(slot: .fill, targets: ids)
+        case .outline:
+            // Nothing to arm: the Pen has no colour capsule on the tool bar, so
+            // there is no "next one" holding a path's ink
+            // (`docs/design/vector-paths.md`).
+            break
         case .shadow:
             rememberStyleDefault(of: ids)
         case .arrowHead, .captionFill, .captionBorder:
@@ -693,6 +698,7 @@ extension EditorState {
             guard let layer = doc.layer(id: id) else { continue }
             switch part {
             case .fill: slots[.fill, default: []].append(id)
+            case .outline: slots[.stroke, default: []].append(id)
             case .arrowHead: slots[.arrowHead, default: []].append(id)
             case .chipFill: slots[.chipFill, default: []].append(id)
             case .chipBorder: slots[.chipBorder, default: []].append(id)

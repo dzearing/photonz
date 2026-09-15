@@ -91,11 +91,91 @@ the layer's BOX, and a box round an arbitrary outline is a rectangle round a
 shape that is not one — the exact bug an ellipse hit on 2026-09-08
 (`RingShape.swift`). So a path joins the line and the arrow as a shape that IS
 its stroke, `drawsItsOwnOutline` is true for it, and the Thickness and Colour
-rows read the shape's own settings.
+rows read the shape's own settings. What those rows are CALLED, and what else
+sits under them, is "What its colours are called" and "What kind of line it is"
+below.
 
 Everything in the Effects list — shadow, glow, blur, opacity, blend mode —
 reaches a path unchanged, because those are applied to the layer's rendered
 picture and know nothing about what drew it.
+
+### What its colours are called
+
+A path is a shape like any other, so its parts are named for what they paint
+(`docs/design/shape-parts.md`). It showed one row simply called **Color** until
+2026-09-15, which is what the user hit on their first real session with the Pen:
+"there is a color but it's not clear its the stroke color".
+
+| The path | The rows in Appearance |
+| --- | --- |
+| Closed | **Fill**, with a switch, and **Outline**, with a switch |
+| Open | **Line**, with no switch |
+
+The word follows what the row can honestly promise. A closed path has an inside
+to paint and a line round it, and it can be without either — so both are PARTS,
+with a switch each, and `LayerPart.outline` is a case of its own. An OPEN path
+IS its line: take that away and there is nothing on the canvas at all, which is
+a delete rather than a setting, so it keeps the switchless ink row a line and an
+arrow already use and wears their word.
+
+The switch is a WIDTH rather than a missing paint (`PathLineStyle.swift`):
+switching off sets `strokeWidth` to nought and leaves the colour where it is,
+and switching on hands back the weight a freshly drawn shape wears. That is
+exactly how a switched-off fill behaves — it comes back at its starting colour
+rather than the one it had — so the two rows keep one promise between them.
+
+The row's settings go with the switch. A path with no outline used to keep a
+Thickness reading 0 px under a colour well that painted nothing, which is the
+dead control the switch exists to replace: off has to LOOK off.
+
+A path picked ALONGSIDE a line falls back to the plain word Color and loses the
+switch, because Outline is the wrong word over a line and a switch that reached
+one would promise to delete it.
+
+### What kind of line it is
+
+`PathLineStyle.swift`, and three pickers under the Outline row:
+
+| Row | Answers |
+| --- | --- |
+| **Pattern** | Solid, Dashed, Dotted |
+| **Ends** | Flat, Round, Square |
+| **Corners** | Sharp, Round, Flat |
+
+Named as shapes rather than as drawing-engine words: nobody choosing between
+"butt" and "square" is choosing between two English words that mean the same
+thing. `svgName` is the one place the two vocabularies meet.
+
+**Dashes are measured in LINE WIDTHS, not in points.** Dashed is three widths of
+mark and two of gap, dotted is one and two. Turn a dashed line from 2 up to 8 and
+the dashes grow with it instead of turning into a smear, which is what makes a
+dashed icon look the same at every weight. A dash pattern you type numbers into
+is a power tool with nowhere to live in this panel, and it is not what an icon
+needs.
+
+**Ends and dashes COMPOSE rather than override.** A dot is one width of mark, so
+with round ends it is a dot, with flat ends a small square, and with square ends
+a slightly bigger one. That is why the Ends row is offered as soon as dashes are
+on, even on a closed shape that has no ends of its own: every dash has two
+(`PathContent.showsLineEnds`). A closed SOLID shape is not asked, because there
+it is a control that cannot act.
+
+**A square end reaches further than a round one**, so `strokeOutset` grows for
+it: the far corner of a square cap sits width/√2 from the last point rather than
+width/2, and without the extra room the corners would be sliced off by the edge
+of the shape's own bitmap.
+
+**How far a sharp corner may be carried is stated out loud** (`pathMiterLimit`,
+10). Core Graphics' default is 10 and SVG's is 4, so a file that stayed quiet
+would come back a different shape in a browser than it is on the canvas.
+
+The defaults are exactly what the rasterizer always drew — round ends, sharp
+corners, a solid line — and a file written before any of this existed decodes
+to them, so nothing anybody has already drawn changes.
+
+Only a PATH answers these three today. A line, an arrow and a Border in the
+Effects list still draw round ends and sharp corners and are not asked; that is
+the open task `a-drawn-line-has-round-ends-and-round-corners-or`.
 
 ### Where the line sits
 

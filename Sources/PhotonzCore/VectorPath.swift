@@ -300,6 +300,13 @@ public struct PathContent: Hashable, Codable, Sendable {
     public var fill: Paint?
     /// How the inside is decided where the outline crosses itself.
     public var fillRule: PathFillRule
+    /// What the ends of the line look like: the two ends of an open path, and
+    /// the ends of every dash on a dashed one (`PathLineStyle.swift`).
+    public var lineEnd: PathLineEnd
+    /// How the line turns where two runs meet at an angle.
+    public var lineCorner: PathLineCorner
+    /// Whether the line is unbroken, dashed or dotted.
+    public var linePattern: PathLinePattern
 
     public init(anchors: [PathAnchor],
                 isClosed: Bool = false,
@@ -307,7 +314,10 @@ public struct PathContent: Hashable, Codable, Sendable {
                 strokeWidth: CGFloat = PathContent.defaultStrokeWidth,
                 strokePosition: BorderPosition = .center,
                 fill: Paint? = Paint(hex: PathContent.defaultColorHex),
-                fillRule: PathFillRule = .nonZero) {
+                fillRule: PathFillRule = .nonZero,
+                lineEnd: PathLineEnd = .round,
+                lineCorner: PathLineCorner = .sharp,
+                linePattern: PathLinePattern = .solid) {
         self.anchors = anchors
         self.isClosed = isClosed
         self.paint = paint
@@ -315,6 +325,9 @@ public struct PathContent: Hashable, Codable, Sendable {
         self.strokePosition = strokePosition
         self.fill = fill
         self.fillRule = fillRule
+        self.lineEnd = lineEnd
+        self.lineCorner = lineCorner
+        self.linePattern = linePattern
     }
 
     /// What a freshly drawn path wears, which is what a freshly drawn box
@@ -408,7 +421,14 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// else: the ink lands in exactly the same place either way.
     public var strokeOutset: CGFloat {
         guard strokeWidth > 0 else { return 0 }
-        return effectiveStrokePosition.outset(width: strokeWidth).rounded(.up)
+        let reach = effectiveStrokePosition.outset(width: strokeWidth)
+        // A SQUARE end reaches further than the half width every other end
+        // does: its far corner sits width/√2 from the last point rather
+        // than width/2, so without this the corners of a square-ended line
+        // would be sliced off by the edge of its own bitmap
+        // (`PathLineStyle.swift`).
+        guard showsLineEnds, lineEnd == .square else { return reach.rounded(.up) }
+        return max(reach, strokeWidth * lineEnd.reach).rounded(.up)
     }
 
     /// The position the line is actually drawn in, once an open path's missing
@@ -447,6 +467,7 @@ public struct PathContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case anchors, closed, paint, strokeWidth, strokePosition, fill, fillRule
+        case lineEnd, lineCorner, linePattern
     }
 
     public init(from decoder: any Decoder) throws {
@@ -460,6 +481,12 @@ public struct PathContent: Hashable, Codable, Sendable {
         strokePosition = try c.decodeIfPresent(BorderPosition.self, forKey: .strokePosition) ?? .center
         fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
         fillRule = try c.decodeIfPresent(PathFillRule.self, forKey: .fillRule) ?? .nonZero
+        // A file written before a path could say any of this comes back
+        // wearing exactly the look it had: round ends, sharp corners, a solid
+        // line, which is what the rasterizer always drew.
+        lineEnd = try c.decodeIfPresent(PathLineEnd.self, forKey: .lineEnd) ?? .round
+        lineCorner = try c.decodeIfPresent(PathLineCorner.self, forKey: .lineCorner) ?? .sharp
+        linePattern = try c.decodeIfPresent(PathLinePattern.self, forKey: .linePattern) ?? .solid
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -471,6 +498,9 @@ public struct PathContent: Hashable, Codable, Sendable {
         try c.encode(strokePosition, forKey: .strokePosition)
         try c.encodeIfPresent(fill, forKey: .fill)
         try c.encode(fillRule, forKey: .fillRule)
+        try c.encode(lineEnd, forKey: .lineEnd)
+        try c.encode(lineCorner, forKey: .lineCorner)
+        try c.encode(linePattern, forKey: .linePattern)
     }
 }
 

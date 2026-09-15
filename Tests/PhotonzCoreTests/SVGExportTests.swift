@@ -428,3 +428,64 @@ struct SVGExportTests {
         #expect(!data.contains("L"))
     }
 }
+
+/// What KIND of line a path is drawn with has to survive the trip: an icon
+/// whose ends are round on the canvas and chopped flat in the file is an icon
+/// that cannot be handed over (`docs/design/vector-paths.md`).
+@Suite("A path's line style, exported")
+struct SVGLineStyleExportTests {
+
+    private func svg(_ change: (inout PathContent) -> Void) -> String {
+        var content = SVGExportTests.bowedSquare()
+        content.strokeWidth = 6
+        content.colorHex = "#112233"
+        change(&content)
+        return SVGExportTests.write(
+            SVGExportTests.document([SVGExportTests.pathLayer(content)])).text
+    }
+
+    @Test("The ends and the corners are written out")
+    func endsAndCorners() {
+        let file = svg { $0.lineEnd = .square; $0.lineCorner = .round }
+        #expect(file.contains("stroke-linecap=\"square\""))
+        #expect(file.contains("stroke-linejoin=\"round\""))
+    }
+
+    @Test("A flat end and a sliced corner come out in SVG's own words for them")
+    func theOtherTwo() {
+        let file = svg { $0.lineEnd = .flat; $0.lineCorner = .flat }
+        #expect(file.contains("stroke-linecap=\"butt\""))
+        #expect(file.contains("stroke-linejoin=\"bevel\""))
+    }
+
+    @Test("How far a sharp corner may be carried is written out, because SVG's default is not ours")
+    func theLimitTravels() {
+        let file = svg { $0.lineCorner = .sharp }
+        #expect(file.contains("stroke-miterlimit=\"10\""))
+    }
+
+    @Test("A solid line carries no dash pattern at all")
+    func solidHasNoDashes() {
+        #expect(!svg { _ in }.contains("stroke-dasharray"))
+    }
+
+    @Test("A dashed line comes out dashed, in the same marks and gaps the canvas draws")
+    func dashesTravel() {
+        let file = svg { $0.linePattern = .dashed }
+        #expect(file.contains("stroke-dasharray=\"18 12\""))
+    }
+
+    @Test("A dotted line comes out dotted")
+    func dotsTravel() {
+        #expect(svg { $0.linePattern = .dotted }.contains("stroke-dasharray=\"6 12\""))
+    }
+
+    @Test("An inside line's dashes are the ones you can see, not the doubled ones it is drawn with")
+    func insideLineKeepsItsPattern() {
+        let file = svg { $0.linePattern = .dashed; $0.strokePosition = .inside }
+        // Drawn at double width and clipped, exactly as the canvas does it —
+        // but the marks and gaps are the ones the eye sees.
+        #expect(file.contains("stroke-width=\"12\""))
+        #expect(file.contains("stroke-dasharray=\"18 12\""))
+    }
+}

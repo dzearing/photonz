@@ -474,7 +474,19 @@ private struct Writer {
         }
         let edge = stroke(content.paint, box: box.insetBy(dx: -content.strokeWidth / 2,
                                                           dy: -content.strokeWidth / 2))
-        let join = " stroke-linejoin=\"miter\" stroke-linecap=\"round\""
+        // What KIND of line it is, in SVG's own words (`PathLineStyle.swift`).
+        // The miter limit is stated because SVG's default is 4 and Core
+        // Graphics' is 10, so a file that stayed quiet would come back a
+        // different shape in a browser than it is on the canvas.
+        var join = " stroke-linejoin=\"\(content.lineCorner.svgName)\""
+            + " stroke-linecap=\"\(content.lineEnd.svgName)\""
+        if content.lineCorner == .sharp { join += " stroke-miterlimit=\"\(n(pathMiterLimit))\"" }
+        // The marks and gaps are the ones the eye sees. An inside or outside
+        // line is drawn at DOUBLE width below and half of it cut away, and
+        // doubling the pattern with it would make its dashes twice as long.
+        if let dash = content.dashPattern {
+            join += " stroke-dasharray=\"\(dash.map { n($0) }.joined(separator: " "))\""
+        }
         switch content.effectiveStrokePosition {
         case .center:
             return [indent(level) + "<path d=\"\(data)\"\(attributes)\(edge)"

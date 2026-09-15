@@ -1877,6 +1877,13 @@ private final class Run {
                 // frame's "No background": one click, every picked layer.
                 let fill = editor.colorSwitch(slot: .fill)
                 if fill.isOffered { editor.setColorEnabled(slot: .fill, on: !fill.isOn) }
+            case .togglePathOutline:
+                // The Outline switch over every picked path: one click, every
+                // one of them, exactly as the row's own switch does.
+                let paths = editor.pathLineStyleSelection
+                if !paths.isEmpty {
+                    editor.setPathOutline(ids: paths.layerIDs, on: !paths.hasALine)
+                }
             case .borderSelection:
                 // The Effects Border slider over everything picked: this is
                 // what puts a Border row in the Effects list for every one of

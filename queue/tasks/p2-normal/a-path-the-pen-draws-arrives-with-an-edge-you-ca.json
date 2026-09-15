@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T23:17:43.378Z",
-  "updated": "2026-09-15T00:56:37.314Z",
+  "updated": "2026-09-15T07:07:08.769Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe at 2026-09-14 while giving the Pen its colour capsule.\n\nCommand:\n  Scripts/playtest.sh Scripts/playtest/pen-arms-its-colour-walk.json\n\nOutput (log.json, the expectPath step):\n  Path: 3 anchors, closed, 0 curved runs, 4 px thick, inside #2D7FF9, outline #2D7FF9, as claimed\n\nThe screen capture pen-colour-5-drawn-sc.png in that run shows the triangle with no visible edge at all. The 4px centred stroke means the painted shape reaches 2px past each clicked point, which matters on a 24px icon grid.\n\nThe rule for boxes is PhotonzCore/BorderInk.swift, reached through AnnotationStyles.arrivingStyle(forShape:); it was settled by the user on 2026-09-13 and shipped by a-shape-s-border-arrives-the-same-colour-as-its (done 2026-09-14). A path does not go through it: PenSession.content(_:closed:) in Sources/PhotonzCore/PenDrawing.swift builds PathContent with strokeWidth: startingStrokeWidth and fill: startingPaint, both the armed ink. Deciding whether a closed path arrives with no edge at all is the same decision the box already made, so it is probably a straight application of the same rule rather than a new one; the open-path case must keep its stroke, since a line IS its stroke.\n\nEvery pen walk currently claims 4 px thick and would need teaching.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-15T00:56:37.313Z",
       "note": "Naming, found while giving a path a Thickness row (2026-09-14): the row a path's edge colour sits on is called \"Color\", because LayerParts.swift only titles it \"Line\" when every inked layer is a line or an arrow. On a CLOSED path that puts \"Fill\" directly above \"Color\", and neither name says which of the two is the edge. Worth settling with whatever this task decides the arriving edge should be."
+    },
+    {
+      "t": "2026-09-15T07:07:08.768Z",
+      "note": "2026-09-15: the naming half of this is done. The row a closed path's outline sits on is called Outline now, with a switch, and an open path's is called Line (a-path-says-what-its-colour-paints-how-thick-its). What is still yours is the arriving COLOURS: a closed path still arrives with its fill and its outline in exactly the same red, so the line is invisible until one of them is repainted. It shows up worse now that the line can be dashed, because a dashed edge in the fill's own colour reads as a ragged fill rather than as dashes. The walk for the line style paints the fill a second colour just to make its pictures readable: Scripts/playtest/path-line-style-walk.json."
     }
   ]
 }

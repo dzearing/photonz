@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-14T12:54:44.281Z",
+  "updated": "2026-09-15T07:07:08.728Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -44,6 +44,14 @@
     {
       "t": "2026-09-14T12:54:44.280Z",
       "note": "seq 110 -> 140"
+    },
+    {
+      "t": "2026-09-15T07:07:08.683Z",
+      "note": "2026-09-15: ends and corners LANDED FOR PATHS, in a-path-says-what-its-colour-paints-how-thick-its, which the user filed as p1 and which asked for the same two settings plus a dashed option. PathLineStyle.swift holds PathLineEnd (Flat/Round/Square), PathLineCorner (Sharp/Round/Flat) and PathLinePattern (Solid/Dashed/Dotted); they sit under the Outline row in Appearance beside Thickness, they are drawn by PathRasterizer, written out by SVGExport, and the miter limit is stated in both so the canvas and the file agree. Walk: Scripts/playtest/path-line-style-walk.json. What is LEFT for this task is everything that is not a path: a line, an arrow, and a Border in the Effects list all still draw round ends and sharp corners with no way to change either, and a saved outline style still carries neither. Take the model as built rather than inventing a second one."
+    },
+    {
+      "t": "2026-09-15T07:07:08.727Z",
+      "note": "Also left rough by that task and belonging here: a sharp corner's point can be sliced off by the edge of the shape's own bitmap. PathContent.strokeOutset works the reach out from the line's ENDS and the stroke position only, so a miter that carries the point further than half a line width past the outline has nowhere to be drawn. It was always true (sharp has always been the default) and choosing Sharp now makes it a choice somebody made. Widening the outset to the real miter reach changes every existing path's bitmap and its selection chrome, which is why it was left: PathRenderingTests has a test asserting a 130x100 shape with a 10pt line comes out 140x110, and that number moves."
     }
   ]
 }

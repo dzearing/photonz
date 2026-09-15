@@ -37,6 +37,7 @@ public enum GradientPainter {
     /// joins still come off the shape rather than being approximated.
     public static func stroke(path: CGPath, with paint: Paint, width: CGFloat,
                               lineJoin: CGLineJoin, lineCap: CGLineCap,
+                              dash: [CGFloat]? = nil, miterLimit: CGFloat? = nil,
                               in context: CGContext) {
         guard width > 0 else { return }
         guard paint.isGradient else {
@@ -53,6 +54,7 @@ public enum GradientPainter {
             // were asked for.
             context.setLineJoin(lineJoin)
             context.setLineCap(lineCap)
+            apply(dash: dash, miterLimit: miterLimit, in: context)
             context.addPath(path)
             context.strokePath()
             context.restoreGState()
@@ -62,6 +64,7 @@ public enum GradientPainter {
         context.setLineWidth(width)
         context.setLineJoin(lineJoin)
         context.setLineCap(lineCap)
+        apply(dash: dash, miterLimit: miterLimit, in: context)
         context.addPath(path)
         // Turns the pen stroke into an outline the ramp can be poured into.
         context.replacePathWithStrokedPath()
@@ -69,6 +72,16 @@ public enum GradientPainter {
         context.clip()
         draw(paint, in: outline, in: context)
         context.restoreGState()
+    }
+
+    /// The two settings a stroke only sometimes has: the dashes it is broken
+    /// into, and how far a sharp corner may be carried out before it is sliced
+    /// off instead. Both are stated out loud rather than left to whatever the
+    /// context was last told, and both are left alone when nobody asked, so a
+    /// caller that says nothing draws exactly what it always did.
+    private static func apply(dash: [CGFloat]?, miterLimit: CGFloat?, in context: CGContext) {
+        if let miterLimit { context.setMiterLimit(miterLimit) }
+        if let dash, !dash.isEmpty { context.setLineDash(phase: 0, lengths: dash) }
     }
 
     /// A gradient as its own image, for the places that composite pictures

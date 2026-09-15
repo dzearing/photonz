@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 3.4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:28:43.707Z",
-  "updated": "2026-09-15T02:28:43.793Z",
+  "updated": "2026-09-15T07:07:31.554Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's screenshot is a filled closed path with no outline, and Appearance showed one unlabelled colour, which is why they could not tell what it was for.\n\nThere are two sibling tasks already open that overlap and must not be built twice: \"A line drawn with the Pen can be made thicker or thinner\" and the follow-up about a Border added to a path following the path rather than a box round it. Read both first; if thickness is landing there, this task is about the NAMING and the line style only, and should say so in its log rather than duplicating the work.\n\nThe model to follow is settled and should not be reinvented: docs/design/shape-parts.md, where a part has a switch, a colour and its own settings, and Appearance is what a shape HAS while Effects is the list you add to. A path is a shape like any other and should arrive in that vocabulary.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
@@ -30,6 +30,56 @@
     {
       "t": "2026-09-15T02:28:43.792Z",
       "note": "seq 280 -> 3.4"
+    },
+    {
+      "t": "2026-09-15T05:56:59.223Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T06:31:44.655990Z",
+      "note": "Reproduced on the probe before touching anything. A closed filled path picked in Next: Appearance shows Opacity, Blending, a Fill row (switch + swatch, named Fill) and then a row whose NAME IS \"Color\" (steady name @color.stroke) with a Thickness under it. An open path shows the same \"Color\" row. So the user is right: the second colour has no name saying it paints the outline. Dumps: /tmp/photonz-playtest/path-appearance-probe/panel-closed-path.json and panel-open-path.json."
+    },
+    {
+      "t": "2026-09-15T06:31:44.655990Z",
+      "note": "Also reproduced the dead-control case in acceptance 4: run Scripts/playtest/turn-into-a-path-walk.json and read panel-4-turned.json. A rectangle turned into a path carries strokeWidth 0 (ShapeToPath.wear: \"the stroke is nearly always nought\"), and the panel then shows the bare \"Color\" row with NO Thickness under it at all. A colour well that paints nothing and no way to give the shape a line."
+    },
+    {
+      "t": "2026-09-15T06:31:44.655990Z",
+      "note": "Sibling tasks read first, as the task asks. Thickness ALREADY LANDED (a-line-drawn-with-the-pen-can-be-made-thicker-or, done 2026-09-15) so acceptance 2 is a verify here, not a build. The Border-follows-the-path task is untouched by this: a path's edge is its own stroke, never a Border. The cap/join task a-drawn-line-has-round-ends-and-round-corners-or overlaps acceptance 3 head on; this p1 came from the user and covers paths, so the line style is built here FOR PATHS and that p2 is narrowed to lines, arrows and Effects borders rather than being built twice."
+    },
+    {
+      "t": "2026-09-15T06:31:44.655990Z",
+      "note": "Adversarial review before building. (1) A first-time user picking a filled path sees Fill and Color; Color of WHAT. The parts model already answers this everywhere else, so the row is named for what it paints: Outline on a closed path, Line on an open one, which is the word a line and an arrow already use. (2) Three pickers under one row is heavy, so Ends shows only where it paints something: an open path, or a dashed one (the ends of each dash). A closed solid path shows Corners and Dashes and no Ends. (3) Dotted with flat ends is tiny squares and with round ends is dots. Composing the two settings is honest; OVERRIDING the ends behind someone's back is not, so Dotted composes and Ends is shown whenever dashes are on, which is the whole reason for rule 2. (4) A dash pattern editor with numbers has no home in this panel and is not what an icon needs, so Dashes is three named styles that scale with the line weight. (5) A sharp corner with no limit shoots off into a spike, so the limit is set explicitly on the canvas AND written into the SVG, or the two would disagree. (6) The mock's Path section (node coordinates, Close path) stays unbuilt: it was already judged decoration in docs/design/vector-paths.md."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "Built, core first. PhotonzCore/PathLineStyle.swift: PathLineEnd (flat/round/square), PathLineCorner (sharp/round/flat), PathLinePattern (solid/dashed/dotted), each titled in plain words with an svgName beside it; pathMiterLimit stated at 10 because Core Graphics' default is 10 and SVG's is 4; dash patterns measured in LINE WIDTHS so they hold their look at any weight; PathLineStyleSelection for what the rows read; and the four document mutators. PathContent gained the three fields with a back-compatible decode, and strokeOutset grew for a square end (its far corner sits width/sqrt(2) out, not width/2). LayerParts gained LayerPart.outline: a CLOSED path's edge is a part with a switch, an OPEN one keeps the switchless ink row and is now called Line rather than Color. PathRasterizer and GradientPainter draw all three; SVGExport writes stroke-linecap, stroke-linejoin, stroke-miterlimit and stroke-dasharray, with the dash pattern taken off the width the eye sees rather than the doubled width an inside line is drawn at."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "App: Sources/Photonz/PathLineStylePickers.swift, three segmented pickers under the Outline row beside Thickness, in the same OwnedSettings bracket. Pictures rather than words, the bargain the arrow's Ending row already makes, and each picture is DRAWN with the setting it stands for so it cannot drift from the canvas. Ends is offered only where there are ends to see: an open path, or a dashed one, where every dash has two. EditorState+PathLineStyle.swift holds the four commands, each one whole answer through History.perform."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "Verified. Scripts/test.sh: 6667 tests, all pass, including 44 new ones written before the code (PathLineStyleTests 17, PathPartsTests 12, PathLineStyleRenderingTests 8 comparing rendered pixels for each end and each corner, SVGLineStyleExportTests 7). New walk Scripts/playtest/path-line-style-walk.json passes end to end. 28 path, pen, outline, svg and arrow walks run by hand: 24 pass and 4 fail IDENTICALLY on untouched main (checked by stashing the whole working tree and running them again), so none of them are this. A sweep was asked for, with the reason, because PlaytestAction and layerPartRows both changed shape under every walk."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "Acceptance 5 checked by RENDERING the exported file, not by reading it. The walk writes the document out with writeSVG, and qlmanage -t -s 800 on 4-styled.svg gives a picture of the same dashed, round-cornered, square-ended triangle in the same place as the canvas render beside it (4-styled-doc.png). The file carries stroke-linecap=\"square\", stroke-linejoin=\"round\", stroke-dasharray=\"12 8\"; the open path's file carries stroke-linecap=\"butt\"."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "Adversarial review of the built thing, on the probe. (a) The first corner glyphs were a shallow V and all three read as the same chevron at 12pt, so they were redrawn as a right angle, where a carried point is square, a sliced one is chamfered and a round one is an arc: plainly three shapes now. (b) A scripted press does not reach a part's tick AT ALL, on any shape - reproduced on a plain rectangle pressing Switch in Fill, with the app-side setOn closure never running - so the walk flips Outline through a new togglePathOutline action, exactly as every other walk flips Fill through toggleFillSwitch. Folded into walks-that-fail-in-the-full-sweep with the reproduction. (c) Switching the outline off and on brings the line back at 4 rather than the weight it had. Left deliberately: the Fill tick loses its colour the same way (ColorStyleSelection.setColorEnabled seeds from startingColorHex), so the two rows keep one promise between them. It is an evaluate question in the audit rather than a silent decision."
+    },
+    {
+      "t": "2026-09-15T07:07:29.073143Z",
+      "note": "Left rough, each one placed. Filed: an-audit-gets-a-real-picture-of-the-app-again (every capture this run failed with ScreenCaptureKit -3811 although the Grants line said granted, so the audit ships offscreen renders and says so). Folded into a-drawn-line-has-round-ends-and-round-corners-or: what is left of it is lines, arrows and Effects borders, plus the sharp-corner clipping. Folded into a-path-the-pen-draws-arrives-with-an-edge-you-ca: a dashed edge in the fill's own colour reads as a ragged fill. Folded into walks-that-fail-in-the-full-sweep: four walks failing on untouched main. Not filed, left here: the Flat and Square end glyphs are the same shape at two lengths, which is what those two ends ARE, and the word beside the caption names it."
+    },
+    {
+      "t": "2026-09-15T07:07:31.552Z",
+      "note": "A path names its parts and says what kind of line it is. A closed path shows Fill and Outline, each with a tick; an open one shows Line. Under the outline, beside its Thickness: Pattern (solid, dashed, dotted), Ends (flat, round, square) and Corners (sharp, round, flat), as pictures drawn with the setting they stand for. All three reach the canvas and the exported SVG, checked by rendering the file. Core: PhotonzCore/PathLineStyle.swift plus LayerPart.outline. 44 new tests written first, Scripts/test.sh 6667 pass, new walk path-line-style-walk plus 27 neighbouring walks run by hand. Audit queue/audits/2026-09-15-path-line-style.json."
     }
-  ]
+  ],
+  "started": "2026-09-15T05:56:59.222Z",
+  "completed": "2026-09-15T07:07:31.553Z"
 }

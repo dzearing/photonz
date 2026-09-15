@@ -22,6 +22,20 @@ import Foundation
 public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     /// What is inside the shape: a box's interior, a frame's surface.
     case fill
+    /// The line round a shape that strokes its OWN outline, which today is a
+    /// path and nothing else.
+    ///
+    /// A box and an oval wear a ring instead, and a ring is a Border in the
+    /// Effects list (`OutlineRetirement.swift`). A path cannot follow them:
+    /// a ring hugs the layer's BOX, and a box round an arbitrary outline is a
+    /// rectangle round a shape that is not one. So a path's edge stays where
+    /// the shape is, and it is a part here so that it can be taken off and put
+    /// back the way every other part of every other shape can.
+    ///
+    /// Only a CLOSED path has one. An open path IS its line — take it away and
+    /// there is nothing on the canvas at all, which is a delete rather than a
+    /// setting — so it keeps the switchless ink row a line and an arrow use.
+    case outline
     /// What an arrow ends in.
     ///
     /// A part with no switch, which is the one of its kind. It can be absent —
@@ -57,6 +71,7 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     public var title: String {
         switch self {
         case .fill: return "Fill"
+        case .outline: return "Outline"
         case .arrowHead: return "Head"
         case .captionFill: return "Label Fill"
         case .captionBorder: return "Label Edge"
@@ -72,7 +87,7 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     public var article: String {
         switch self {
         case .fill, .shadow, .captionFill, .arrowHead, .chipFill: return "a"
-        case .captionBorder, .chipBorder: return "an"
+        case .outline, .captionBorder, .chipBorder: return "an"
         }
     }
 
@@ -331,21 +346,40 @@ extension PhotonzDocument {
         // layer's edge is a Border now, and only a Border
         // (`OutlineRetirement.swift`).
         let inked = picked.filter { $0.colorSlots.contains(.stroke) }
-        let plainInk = inked
-        if !plainInk.isEmpty {
-            // Called Line where every layer it speaks for IS a line — an arrow
-            // or a plain line — because an arrow now has a head beside it and
-            // "Color" over one of two colours says nothing about which. A
-            // highlight's stroke is the wash it is made of rather than a line,
-            // so a selection holding one keeps the old plain word.
-            let allLines = plainInk.allSatisfy {
-                let shape = $0.annotation?.shape
-                return shape == .line || shape == .arrow
+        if !inked.isEmpty {
+            // A CLOSED path's edge is a part with a switch, because it is the
+            // one stroke in the app a shape can be without and still be on the
+            // canvas: the fill is still there. Only when everything the row
+            // speaks for is one, though — a switch that reached a line as well
+            // would promise to take away a layer's whole self, and the word
+            // Outline would be wrong over it.
+            let closedPaths = inked.filter { $0.path?.isClosed == true }
+            if closedPaths.count == inked.count {
+                rows.append(LayerPartRow(
+                    part: .outline,
+                    colors: [PartColor(slot: .stroke, layerIDs: closedPaths.map(\.id))],
+                    title: LayerPart.outline.title,
+                    switchIDs: closedPaths.map(\.id),
+                    onCount: closedPaths.filter(\.hasOutline).count,
+                    widthIDs: [], selectionCount: count))
+            } else {
+                // Called Line where every layer it speaks for IS a line — an
+                // arrow, a plain line, or an OPEN path, which is a line
+                // somebody drew by hand — because an arrow now has a head
+                // beside it and "Color" over one of two colours says nothing
+                // about which. A highlight's stroke is the wash it is made of
+                // rather than a line, so a selection holding one keeps the old
+                // plain word.
+                let allLines = inked.allSatisfy {
+                    if let path = $0.path { return !path.isClosed }
+                    let shape = $0.annotation?.shape
+                    return shape == .line || shape == .arrow
+                }
+                rows.append(LayerPartRow(
+                    part: nil, colors: [PartColor(slot: .stroke, layerIDs: inked.map(\.id))],
+                    title: allLines ? "Line" : ColorSlot.stroke.title,
+                    switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
             }
-            rows.append(LayerPartRow(
-                part: nil, colors: [PartColor(slot: .stroke, layerIDs: plainInk.map(\.id))],
-                title: allLines ? "Line" : ColorSlot.stroke.title,
-                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
         }
 
         // An arrow's head. The row is there for every arrow, because every
@@ -484,6 +518,17 @@ extension PhotonzDocument {
                     // The colour that landed, not the one the switch would have
                     // seeded: somebody chose this one by letting go of it.
                     $0.setPaint(paint, for: .fill)
+                }
+            case .outline:
+                // A path with no line gets one back at the weight a fresh
+                // shape wears, painted the colour that was let go of.
+                guard layer.path != nil else { continue }
+                if !layer.hasOutline {
+                    _ = setPathOutline(layerIDs: [id], on: true)
+                }
+                updateLayer(id: id) {
+                    $0.unbindColorStyle(for: .stroke)
+                    $0.setPaint(paint, for: .stroke)
                 }
             case .arrowHead:
                 guard layer.colorSlots.contains(.arrowHead) else { continue }

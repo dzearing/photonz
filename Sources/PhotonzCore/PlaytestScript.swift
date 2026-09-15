@@ -681,6 +681,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// clicking it in the Color section does: it switches a box's inside, or a
     /// frame's surface, on or off across the whole selection.
     case toggleFillSwitch
+    /// Flip the Outline row's switch on every picked PATH, which is what
+    /// clicking it in Appearance does: it takes a drawn shape's line away and
+    /// hands it back at the weight a fresh one wears
+    /// (`PhotonzCore/PathLineStyle.swift`).
+    ///
+    /// Here for the same reason `toggleFillSwitch` is: a scripted press lands
+    /// on a button and on a segment of a picker, and a SwiftUI switch does not
+    /// answer one, so every walk that needs a part switched reaches for an
+    /// action instead.
+    case togglePathOutline
     /// Give every picked layer a border, which is what pulling the Effects
     /// section's Border slider off zero over a selection does. It is what puts
     /// one Border row in the Effects list speaking for the whole selection, so

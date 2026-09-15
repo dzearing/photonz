@@ -1,0 +1,27 @@
+{
+  "id": "an-audit-gets-a-real-picture-of-the-app-again",
+  "title": "An audit gets a real picture of the app again",
+  "goal": "The loop photographs the app for every audit the user reads, and right now every one of those pictures is an offscreen drawing of the window rather than the window itself. The app says it is allowed to record the screen and then fails every time it tries, so nobody reading an audit is seeing what the app actually looks like: colours, shadows and anything layered over the window are all missing.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2700,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T07:07:15.786Z",
+  "updated": "2026-09-15T07:07:15.789Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-14 23:13 and again at 23:54 and 00:20, three separate probe launches. Scripts/probe-app.sh prints \"==> Grants: probe Screen Recording granted\" and every snapshot step then logs:\n\n  [0 capture] failed: Error Domain=com.apple.ScreenCaptureKit.SCStreamErrorDomain Code=-3811 \"Failed to start stream due to audio/video capture failure\"\n\nso <name>.png (the offscreen render) is written and <name>-sc.png never is. Run any walk with a snapshot step to see it, for example Scripts/playtest.sh Scripts/playtest/path-line-style-walk.json, then look in /tmp/photonz-playtest/path-line-style: four .png files, no -sc.png, and the error above six times in log.json.\n\nIt WAS working the day before: Scripts/playtest/out/ in the repo still holds panel-says-less-three-picked-sc.png and panel-says-less-arrange-reference-sc.png written at 2026-09-14 20:27 by the previous task. So something between then and now stopped it, which is the thing to find. Candidates worth checking in order: whether the probe bundle was re-signed with a different identity (the grant is pinned to the code identity, and CLAUDE.md records this exact failure mode for the dev app: \"the app shows as granted/on in System Settings but still can not capture\"); whether SCShareableContent is being asked for while the probe is not frontmost; and whether the grant check the Grants line prints is asking a different question from the one the capture needs (CGPreflightScreenCaptureAccess says undetermined-or-granted, which is not the same as granted).\n\nThe fix of last resort is documented in CLAUDE.md and needs a person: tccutil reset ScreenCapture com.dzearing.photonz.probe, relaunch, re-grant. A runner cannot do that, so if that is the answer the task is to make the Grants line SAY so instead of claiming the grant.\n\nFound while auditing a-path-says-what-its-colour-paints-how-thick-its, whose audit had to ship offscreen renders and say so.",
+  "acceptance": [
+    "A walk with a snapshot step writes a real window capture beside its offscreen drawing again",
+    "The line the app prints about what it is allowed to do agrees with what it can actually do: if recording is going to fail, it does not claim to be granted",
+    "A walk run from a clean start proves it, with the capture file listed in its output"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T07:07:15.788Z",
+      "note": "created (manual)"
+    }
+  ]
+}
