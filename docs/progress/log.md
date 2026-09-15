@@ -15974,3 +15974,47 @@ sweep is requested with the reason written out.
 **Next:** run `path-arrives-with-no-edge-walk` and `path-line-style-walk` the
 moment the screen is unlocked; they join the two walks from the previous task
 waiting on the same thing.
+
+## 2026-09-15 — The size readout during a path reshape: dropped, folded
+
+**Task:** `the-size-readout-keeps-up-while-you-reshape-a-pa` (p2, icon-vector).
+Dropped as superseded, with the substance moved rather than thrown away.
+
+The task was about the X, Y, W and H in the right hand panel sitting frozen
+while you drag a point or a lever on a path. A previous pass suspected the
+premise had moved; this pass verified it rather than taking that on trust.
+Position & Size is no longer a section in the panel at all: `InspectorPanel`
+says so in as many words at line 449 ("its absence is the feature"),
+`availableSections` never offers `.geometry`, and the `.geometry` case at line
+808 is kept only so saved section orders keep decoding. The fields live in
+`ExactPlacementPopover` now, reached from Layer ▸ Position and Size… or a right
+click on the layer's row. A popover is transient, so the mouse-down that starts
+a path drag on the canvas dismisses it: there is no longer any surface on which
+a number can be watched going stale mid-drag.
+
+**The defect underneath is real and did not go away.** `EditorState.previewPath`
+(`EditorState+PathEdit.swift:17`) builds the reshaped document and hands it only
+to the render scheduler via `submit()`. It never writes `previewMoves`, which is
+what `previewedFrame(of:)` and `canvasFrame(of:)` read first, so those return the
+PRE-DRAG box for the whole gesture. A layer move or resize does write
+`previewMoves`, so a live readout built the obvious way would be right for moves
+and resizes and frozen for every path reshape. The live box already exists, on
+the AppKit side: `CanvasPathEdit.swift:239` and `:322` set the canvas view's own
+`selectedLayerFrame` from `content.bounds` each frame.
+
+That is now working detail on `a-layer-says-how-big-it-is-while-you-drag-it`,
+which also gained an acceptance item covering point and lever drags, and took
+the dropped task's seq 50 slot.
+
+**Left rough, recorded on the task:** `CanvasDisplay.swift:935` hides the blue
+selection box during a path drag on purpose, so the outline never chases the
+points. Worth asking the user about, but it reads better as a question once the
+canvas readout exists and there is something to compare it against.
+
+**Not verified:** the Mac's screen was locked, so no walk could run.
+`Scripts/playtest.sh Scripts/playtest/path-chrome-follows-walk.json` reported
+`locked` and took no captures. No app code changed this pass, so nothing needed
+one.
+
+**Next:** build `a-layer-says-how-big-it-is-while-you-drag-it`, now at the front
+of p2 with the path case written into it.
