@@ -2,14 +2,14 @@
   "id": "the-checkmark-example-animates-like-somebody-who",
   "title": "The checkmark example animates like somebody who knows what they are doing",
   "goal": "The checkmark switching on is the example that has to sell the whole feature, and right now it does three things at once, too quickly, with everything starting at the same moment. It should read as one deliberate idea: the circle draws, then the check draws, and the fill arrives by being revealed upward rather than by a pile of separate changes all firing together.",
-  "epic": "",
+  "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:23:23.473Z",
-  "updated": "2026-09-15T14:23:48.693Z",
+  "updated": "2026-09-15T19:18:02.652Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15 after reading the redone mocks: \"the chekmark on shoudl reveal the fill upwards, it's doing too many things. the checkmark on is animating too fast and shows no initial delay to draw the circle and then the check.\"\n\nThe checkmark appears in docs/design/mocks/pages/icon-drawon-wt.html and again in time-compare.html. Whichever page carries it, both must end up telling the same story, so fix it once and make the other follow rather than leaving two versions of the same example.\n\nWhat is worth taking from this beyond the one example: the mock is demonstrating the feature by animating everything at once, which is exactly what a person who has never animated anything would do, and exactly what the app should be teaching them not to do. The example is the argument for delays and sequencing existing at all, so it has to USE them visibly. If the timing surface in the page cannot show a delay before a part starts, that is a finding about the surface and not just about the example.\n\nTWO THINGS THE USER LIKED AND THAT MUST SURVIVE THIS EDIT, said in the same message: \"i like the timing dock, and i like the custom easing adjuster.\" Do not redesign either while fixing the example. If the fix needs something from them, extend rather than replace, and say so in the audit.",
@@ -31,6 +31,15 @@
     {
       "t": "2026-09-15T14:23:48.692Z",
       "note": "seq 2670 -> 4"
+    },
+    {
+      "t": "2026-09-15T19:16:28.901Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T19:18:02.651Z",
+      "note": "ADVERSARIAL REVIEW, before building. Reproduced the complaint by reading the page's own numbers rather than trusting the prose. Three real faults, and they explain every word of the report.\n\n(1) THE ARTWORK CONTRADICTS THE PANEL. The badge's CSS runs 'animation: ... infinite' on both strokes, while the Properties panel insists Repeat is Once and the step copy says 'a badge that draws itself over and over is a badge nobody trusts'. So the thing on screen is exactly what the page argues against: it redraws forever with no rest between laps, which reads as a flicker rather than a gesture. That alone is most of 'animating too fast'.\n\n(2) THERE IS NO PAUSE, THERE IS AN OVERLAP, AND IT IS THE PAGE'S CENTREPIECE. Ring 0.50s at 0.00, check 0.35s at 0.42: the check starts 80ms BEFORE the ring closes, and step 6 spends its whole caption celebrating that as 'the entire craft of this scenario'. The user asked for the opposite, an initial delay so the circle draws and THEN the check does. The negative overlap is the thing being complained about, so it goes, and a stated hold replaces it.\n\n(3) THERE IS NO FILL AT ALL. Nothing in the page can be revealed upward because the badge is two strokes on an empty artboard. So the report is not 'change how the fill animates', it is 'the example needs a fill, and it should arrive as one move'.\n\nWHAT THE MOCK GETS WRONG BEYOND THE ONE EXAMPLE, which the task asked me to look for. The page cannot show a delay as anything a person can see: timing lives in an Order list of two rows in the side column, and a gap between two motions is a subtraction you do in your head. That is a finding about the SURFACE, not the example, and it is already the pending task rebuild-the-spinner-toggle-and-draw-on-flows-on. So this fix does the draw-on third of that task rather than inventing a second answer: Motion becomes a dock group beside Effects, and the timing dock goes across the bottom, exactly as the bell pages do it. That is also the two things the user said they liked, so it is extending them rather than redesigning them.\n\nWHAT I AM CUTTING. The 'send it the other way round' step is a real idea but it is a fourth thing in a flow that is already being told it does too many things; the From row and the direction marker stay, the dedicated step goes, and the flow ends up the same length rather than longer.\n\nWHAT 'REVEAL THE FILL UPWARDS' IS, in the per-property model and not as a preset called Reveal: the fill is a rectangle clipped to the ring, and what animates is its POSITION, 19 units below to 0. One property, one move, already the first item in the property menu. No new vocabulary, and the note can say plainly that it is not a fade and not a scale."
     }
-  ]
+  ],
+  "started": "2026-09-15T19:16:28.900Z"
 }

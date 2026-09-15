@@ -1,0 +1,30 @@
+{
+  "feature": "Draw a checkmark on: the success badge, sequenced",
+  "epic": "icon-animate",
+  "summary": "The checkmark example now reads as one deliberate idea instead of three things happening at once: the ring draws over 420 ms, nothing happens for 180 ms, the check draws, and the fill is revealed upward by one property moving. Every part carries a start time you set, and the timing dock draws the pause as a labelled gap rather than making you subtract.",
+  "setup": "Design study, http://127.0.0.1:8791/index.html#icon-drawon-wt. Nothing to install and nothing in the app yet: this is the mock that argues for the feature. Use the step bar under the window.",
+  "try": [
+    { "do": "Open the page and read the strip across the bottom before touching anything: three layers, every one saying none." },
+    { "do": "Press Next to step 3 and watch the ring draw itself round, once, with one bar at 0 to 420." },
+    { "do": "Press Next to step 4, the version on purpose built wrong: both motions start at 0 and the badge draws itself in a heap.", "shot": "2026-09-15-icon-drawon-4-at-zero.png" },
+    { "do": "Press Next to step 5 and watch the same badge with 600 in Start instead of 0." },
+    { "do": "Point at the 180 ms hold on the strip, in the Check lane, between the two bars." },
+    { "do": "Press Next to step 6 and watch the fill come up underneath the check.", "shot": "2026-09-15-icon-drawon-6-three-beats.png" },
+    { "do": "Press Next to step 7 and compare the curve you drew against the badge beside it.", "shot": "2026-09-15-icon-drawon-7-curve.png" },
+    { "do": "Press Next to step 8 and watch the 16 pixel preview, top left, while it runs." }
+  ],
+  "evaluate": [
+    "Does the 180 ms hold read as deliberate craft, or does the badge now feel slow?",
+    "Is 1.20 seconds end to end right for a success badge, or would you cut it to about 800 ms once the beats are settled?",
+    "Does the fill coming up underneath read as the badge filling in, or as a separate fourth event?",
+    "Is showing the wrong version first, at step 4, teaching or just an extra click on the way to the point?",
+    "On the strip, can you tell at a glance which of the three happens first without reading the numbers?"
+  ],
+  "rough": [
+    "These pictures are browser captures of the design study page, not playtest captures of the app. There is no walk to run: nothing in this scenario exists in Photonz yet, which the page says in its own warning band.",
+    "The Motion list only ever shows one row, because it is the selected layer's motions exactly as Effects is. All three are only visible together on the strip. That is the right model and it may still surprise somebody who read Motion as a list of everything that moves.",
+    "The preview loops the 1.20 seconds and then holds the finished badge for another 800 ms before starting over. Repeat in the panel still reads Once, which is the honest setting, and the page says the replay is the preview rather than the motion. Two people could still read that as a contradiction.",
+    "The property menu and the curve editor are hand placed popovers that land a long way above the control that opens them, because they are taller than the space under it. A real menu would flip the same way but would not sit quite that far off.",
+    "Changed away from the mock, deliberately: the eighty millisecond NEGATIVE overlap that the old page called the entire craft of the scenario is gone, along with the Order list and the Overlap field it lived in. A hold you can see replaced a lean you had to be told about."
+  ]
+}

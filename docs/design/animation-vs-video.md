@@ -120,10 +120,16 @@ carries the same motion ninety milliseconds later, and the only way to set that
 is to drag one bar against another and read the gap. That is why the strip is no
 longer a "later, on evidence" item; the evidence is the flagship flow.
 
-What is still unproved is everything past two parts: six strokes of a wordmark
+Three parts holds too. `icon-drawon-wt` was rebuilt onto the strip on
+2026-09-15: a ring draws, a **180 millisecond hold**, a check draws, and a fill
+is revealed upward by its own position changing. What the strip earns there is
+the PAUSE. In a column of fields a hold is a subtraction you do in your head
+(600 minus 420); on the strip it is a labelled gap between two bars, and the
+flow can show the wrong version first (both starting at 0) and let you see why
+it is wrong rather than saying so.
+
+What is still unproved is everything past three parts: six strokes of a wordmark
 drawing themselves on, where the question becomes whether lanes want grouping.
-`icon-drawon-wt` still carries the old numbered Order list, and rebuilding it
-onto the strip is already filed.
 
 A whole icon SET does not animate together, because icons animate on their own
 triggers in whatever app they end up in, so there is still no case for a shared

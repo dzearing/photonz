@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:25:58.425Z",
-  "updated": "2026-09-15T12:14:53.342Z",
+  "updated": "2026-09-15T19:25:45.303Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pages: docs/design/mocks/pages/icon-loop-wt.html, icon-states-wt.html, icon-drawon-wt.html. Reference implementation: icon-animate-wt.html and icon-phase-wt.html (2026-09-15). What those two do that these do not: a .dgrp id=gMotion sibling to gEffects, .efx rows for entries, a .timeline bottom dock with .track.bl-lt layer rows and .track.bl-pt property rows, bars positioned as percentages of a 1200ms lane with the cycle end marked. The curve menu and the property menu are already correct on all three and should be left alone. The property menu markup is duplicated per page; folding it into shared/components is in scope if it is cleaner. Raised in queue/audits/2026-09-15-motion-property-first.json.",
@@ -36,6 +36,14 @@
     {
       "t": "2026-09-15T12:14:53.341Z",
       "note": "seq 12 -> 70"
+    },
+    {
+      "t": "2026-09-15T19:25:27.061Z",
+      "note": "The draw-on third of this is DONE, landed 2026-09-15 by the-checkmark-example-animates-like-somebody-who. docs/design/mocks/pages/icon-drawon-wt.html now has the Motion dock group (#gMotion, .efx .mrow entries with Start/Over/Curve/Repeat) and the timing dock across the bottom (three .track.idr-lt layer rows, three .track.idr-pt property rows on one 1600 ms lane). The numbered Order list and the Overlap field are gone. What is LEFT of this task is icon-loop-wt.html and icon-states-wt.html only.\n\nTwo things worth copying rather than reinventing when you do those two:\n\n1. A property row stays on the strip with its label reading 'none' before anything is animated, and a step clears .idr-nolane and rewrites the label. That is UX-PATTERNS D10 (render the catalogue, not the keyed set) and it makes the strip useful on step 1 instead of empty.\n\n2. data-set writes textContent, not innerHTML, so any <b> inside a data-set value renders as literal angle brackets in the panel. icon-drawon-wt had that bug in #timNote and #ordNote before this rebuild and it is visible on the page. Check icon-loop-wt and icon-states-wt for the same thing while you are in there: grep for 'data-set=' lines containing '<b>'.\n\nAlso fixed in passing on all three animation pages: each hand-authored a <button class=\"tl-close\"> in its .tlbar, and dock.js injects its own (it is idempotent on .tlrail, not on .tl-close), so every one of them rendered TWO x buttons in the timing dock bar. Verified in Chrome before the fix: two 24x24 .tl-close elements at x=835 and x=1213. Removed from icon-drawon-wt, icon-animate-wt and icon-phase-wt."
+    },
+    {
+      "t": "2026-09-15T19:25:45.302Z",
+      "note": "CORRECTION to the previous entry: point 2 is wrong and there is nothing to check. I said icon-drawon-wt had <b> inside a data-set value before the rebuild. It did not. The bold tags were in the STATIC markup of the note, which is fine; every data-set value on every page at HEAD is plain prose (checked all of docs/design/mocks/pages: 'git show HEAD:<f> | grep -o \\\"data-set=...\\\" | grep -c <b>' is 0 everywhere). I introduced the markup myself while writing the new step values and caught it on screen. The rule is still true and worth knowing when you write steps (data-set writes textContent, so markup renders as literal angle brackets), but do not go looking for it in icon-loop-wt or icon-states-wt as an existing defect. Point 1 and the tl-close fix stand."
     }
   ]
 }

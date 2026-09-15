@@ -9,28 +9,35 @@
   /* icon-drawon-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
      rendered once, driven by the steps below. ONE scenario.
 
-     Two things are different here from the other three animation pages, and
-     both of them matter to the question of whether icons need a timeline.
+     Two things are different here from the other animation pages, and both of
+     them matter to the question of whether icons need a timing surface.
 
      One: this animates the PATH rather than a transform. Nothing moves, turns
      or scales. What changes is how much of the stroke has been drawn, which is
-     a property only a vector tool can offer and the one motion Photonz is
-     closest to being able to do, because it already has the path and can
-     measure it.
+     a property only a vector tool can offer and the one Photonz is closest to
+     being able to do, because it already has the path and can measure it.
 
-     Two: it is the first scenario with an ORDER in it. The ring draws, then the
-     check draws, and the gap between them is the difference between a success
-     mark that lands and one that arrives all at once. Two shapes in order is
-     where an icon starts wanting something time-shaped. The answer drawn here
-     is a SHORT ORDERED LIST with numbers on it, not a multi-track timeline, and
-     the page is honest that a list stops being enough somewhere.
+     Two: it is the scenario where ORDER is the whole craft. Three things
+     happen and the gaps between them are the difference between a success mark
+     that lands and one that arrives in a heap. So every part of the badge
+     carries an explicit START, and the flow deliberately shows the wrong
+     version first: two motions both starting at zero, which is what anybody
+     who has never sequenced anything would build.
 
-     Page-local CSS is the artboard, the badge artwork, the draw-on animation
-     and the order list. Everything else is the shared DS. */
-  #icon-drawon-wt .win.shell{height:846px;min-height:0}
+     REWRITTEN 2026-09-15 after the user's report on the first version, which
+     ran both strokes on an infinite loop with an eighty millisecond NEGATIVE
+     overlap and no rest, while the panel beside it claimed Repeat was Once.
+     Gone: the Order list in the side column and the overlap field. Here
+     instead: the Motion dock group and the timing dock across the bottom, the
+     same two surfaces the bell pages use, plus a third beat (the fill) that
+     arrives by one property moving rather than by several changing at once.
+
+     Page-local CSS is the artboard, the badge artwork, the three motions, the
+     motion list and the timing dock. Everything else is the shared DS. */
+  #icon-drawon-wt .win.shell{height:952px;min-height:0}
   #icon-drawon-wt .canvas{--artboard-glow:520px 360px}
 
-  #icon-drawon-wt .idr-board{position:relative;height:min(400px,72%);width:auto;aspect-ratio:1;
+  #icon-drawon-wt .idr-board{position:relative;height:min(340px,64%);width:auto;aspect-ratio:1;
     border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
     box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
   #icon-drawon-wt .idr-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -38,34 +45,60 @@
   #icon-drawon-wt .idr-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
   #icon-drawon-wt .idr-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
     stroke-linecap:round;stroke-linejoin:round}
-  /* the direction the stroke runs, shown while you are choosing it */
+  /* the direction the stroke runs, shown while the ring's motion is being set */
   #icon-drawon-wt .idr-dir{fill:none;stroke:var(--comp);stroke-width:.13;stroke-linecap:round}
   #icon-drawon-wt .idr-dir circle{fill:var(--comp);stroke:none}
 
-  /* ---------- DRAWING ON · the stroke's own length, animated ----------
-     dasharray is the path length; dashoffset walks it back to nothing. The
-     numbers are real: the ring is 56.5 units round and the check is 13.9 long,
-     which is exactly what the app would measure off the paths. */
-  @keyframes idrRing{from{stroke-dashoffset:56.5}to{stroke-dashoffset:0}}
-  @keyframes idrCheck{from{stroke-dashoffset:13.9}to{stroke-dashoffset:0}}
+  /* ---------- THE THREE MOTIONS, AS PERCENTAGES OF ONE CYCLE ----------
+     The motion itself is 1200ms: ring 0 to 420, a 180ms hold, check 600 to
+     860, fill 860 to 1200. The PREVIEW is a 2000ms cycle, which is those
+     1200ms followed by 800ms of the finished badge sitting still, because a
+     success mark that redraws with no rest reads as a flicker rather than as a
+     gesture. Every number below is that millisecond figure over 2000, which is
+     also exactly the form it leaves in: a CSS keyframe block and a SMIL
+     keyTimes list are both percentages of a cycle. */
+  @keyframes idrRing{0%{stroke-dashoffset:56.5}21%,100%{stroke-dashoffset:0}}
+  @keyframes idrCheck{0%,30%{stroke-dashoffset:13.9}43%,100%{stroke-dashoffset:0}}
+  /* the wrong version, shown on purpose in step 4: the check starts at zero
+     too, so both strokes draw over the top of each other */
+  @keyframes idrCheckAt0{0%{stroke-dashoffset:13.9}13%,100%{stroke-dashoffset:0}}
+  /* the fill is ONE property moving: a rectangle clipped to the ring, sliding
+     up 18 units. Not a fade, not a scale, not a colour change. */
+  @keyframes idrFill{0%,43%{transform:translateY(18px)}60%,100%{transform:translateY(0)}}
+
   #icon-drawon-wt .idr-anim-ring{stroke-dasharray:56.5;stroke-dashoffset:56.5;
-    animation:idrRing var(--idr-ring,.5s) var(--idr-ease,linear) var(--idr-ring-at,0s) infinite}
+    animation:idrRing var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
   #icon-drawon-wt .idr-anim-check{stroke-dasharray:13.9;stroke-dashoffset:13.9;
-    animation:idrCheck var(--idr-check,.35s) var(--idr-ease,linear) var(--idr-check-at,.42s) infinite}
-  #icon-drawon-wt .idr-anim-ring,#icon-drawon-wt .idr-anim-check{animation-play-state:paused}
-  #icon-drawon-wt .idr-play .idr-anim-ring,#icon-drawon-wt .idr-play .idr-anim-check{animation-play-state:running}
-  /* the real-size copies run the same two motions, in the same order. dasharray
-     is in viewBox units so one number serves 16, 24, 32 and 48 alike. */
+    animation:idrCheck var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
+  #icon-drawon-wt .idr-at0 .idr-anim-check{animation-name:idrCheckAt0}
+  #icon-drawon-wt .idr-at0.idr-play .idr-sz .idr-p-check{animation-name:idrCheckAt0}
+  #icon-drawon-wt .idr-anim-fill{animation:idrFill var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
+  #icon-drawon-wt .idr-anim-ring,#icon-drawon-wt .idr-anim-check,
+  #icon-drawon-wt .idr-anim-fill{animation-play-state:paused}
+  #icon-drawon-wt .idr-play .idr-anim-ring,#icon-drawon-wt .idr-play .idr-anim-check,
+  #icon-drawon-wt .idr-play .idr-anim-fill{animation-play-state:running}
+
+  /* the fill itself. It is part of the drawing from the start, so it is a flat
+     wash until something animates it. */
+  #icon-drawon-wt .idr-fill{fill:var(--good);opacity:.26}
+
+  /* the real-size copies run the same three motions on the same cycle.
+     dasharray is in viewBox units, so one number serves 16, 24, 32 and 48. */
   #icon-drawon-wt .idr-sz .idr-p-ring{stroke-dasharray:56.5;stroke-dashoffset:0}
   #icon-drawon-wt .idr-sz .idr-p-check{stroke-dasharray:13.9;stroke-dashoffset:0}
   #icon-drawon-wt .idr-play .idr-sz .idr-p-ring{stroke-dashoffset:56.5;
-    animation:idrRing var(--idr-ring,.5s) var(--idr-ease,linear) var(--idr-ring-at,0s) infinite}
+    animation:idrRing var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
   #icon-drawon-wt .idr-play .idr-sz .idr-p-check{stroke-dashoffset:13.9;
-    animation:idrCheck var(--idr-check,.35s) var(--idr-ease,linear) var(--idr-check-at,.42s) infinite}
+    animation:idrCheck var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
+  #icon-drawon-wt .idr-play .idr-sz .idr-p-fill{
+    animation:idrFill var(--idr-cycle,2s) var(--idr-ease,linear) infinite}
   @media (prefers-reduced-motion:reduce){
     #icon-drawon-wt .idr-anim-ring,#icon-drawon-wt .idr-anim-check,
+    #icon-drawon-wt .idr-anim-fill,
     #icon-drawon-wt .idr-play .idr-sz .idr-p-ring,
-    #icon-drawon-wt .idr-play .idr-sz .idr-p-check{animation:none;stroke-dashoffset:0}
+    #icon-drawon-wt .idr-play .idr-sz .idr-p-check,
+    #icon-drawon-wt .idr-play .idr-sz .idr-p-fill{animation:none;
+      stroke-dashoffset:0;transform:none}
   }
 
   #icon-drawon-wt .idr-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
@@ -81,34 +114,122 @@
     border:1px solid var(--line);color:var(--ink);overflow:hidden}
   #icon-drawon-wt .idr-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
   #icon-drawon-wt .idr-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #icon-drawon-wt .idr-sz.idr-flag .n{color:var(--warn);font-weight:660}
 
-  /* ---------- THE ORDER · a two row list with numbers on it ----------
-     This is the smallest honest answer to "and then what happens". It is a
-     list, not a track, and the page says where a list would stop working. */
-  #icon-drawon-wt .idr-ord{display:flex;flex-direction:column;gap:5px;margin:var(--s2) 0 var(--s2)}
-  #icon-drawon-wt .idr-orow{display:grid;grid-template-columns:16px 1fr auto auto;align-items:center;
-    gap:var(--gap-sm);padding:6px var(--gap-sm);border-radius:var(--r2);
-    background:var(--panel-2);border:1px solid var(--line);font-size:11.5px;color:var(--dim)}
-  #icon-drawon-wt .idr-orow.sel{border-color:var(--accent);background:var(--state-sel)}
-  #icon-drawon-wt .idr-orow .ix{font-family:var(--mono);font-size:10px;color:var(--faint)}
-  #icon-drawon-wt .idr-orow .nm{color:var(--ink);font-weight:560}
-  #icon-drawon-wt .idr-orow .at,#icon-drawon-wt .idr-orow .len{font-family:var(--mono);font-size:10px;color:var(--faint)}
-  #icon-drawon-wt .idr-orow .at{color:var(--comp)}
-  #icon-drawon-wt .idr-tot{display:flex;justify-content:space-between;font-family:var(--mono);
-    font-size:9.5px;color:var(--faint)}
+  /* ---------- THE MOTION LIST · an .efx list, because that is what it is ----
+     The same rows as Effects on the same layer: drag handle, switch, name,
+     curve sketch, value summary. A motion entry wears them unchanged, so
+     learning to add a border teaches you how to add a Dash. */
+  #icon-drawon-wt .efx.mrow{flex-wrap:wrap;margin-bottom:var(--s1)}
+  #icon-drawon-wt .efx.mrow .nm{flex:1 1 auto;min-width:0}
+  #icon-drawon-wt .efx.mrow .emeta{flex:1 0 100%;margin:2px 0 0;padding-left:53px;
+    font-family:var(--mono);font-size:10px;color:var(--faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #icon-drawon-wt .efx.mrow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  #icon-drawon-wt .efx.mrow .crv{flex:none;width:18px;height:18px;border-radius:4px;
+    background:var(--panel-2);border:1px solid var(--line);display:block}
+  #icon-drawon-wt .crv path{fill:none;stroke:var(--accent);stroke-width:2.6;
+    stroke-linecap:round;vector-effect:non-scaling-stroke}
+  #icon-drawon-wt .crv .cus{display:none}
+  #icon-drawon-wt .crv.custom .lin{display:none}
+  #icon-drawon-wt .crv.custom .cus{display:block}
+  #icon-drawon-wt .mset{padding:var(--gap-sm) 0 var(--s1)}
+  #icon-drawon-wt .mnone{display:flex;align-items:center;gap:var(--s2);padding:var(--pad-sm);
+    border:1px dashed var(--line-strong);border-radius:var(--r2);color:var(--faint);font-size:11.5px}
+  #icon-drawon-wt .mnone .ic{color:var(--faint);flex:none}
+  #icon-drawon-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
+    color:var(--faint);white-space:nowrap}
+  #icon-drawon-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
+    line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
+
+  /* THE CURVE CONTROL · named curves with their shape drawn beside them, and a
+     custom one you draw, because three buttons in a segmented control is not a
+     vocabulary. Same control on every page that has timing. */
+  #icon-drawon-wt #curveMenu .menuitem{gap:var(--gap-sm)}
+  #icon-drawon-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
+    background:var(--panel-2);border:1px solid var(--line)}
+  #icon-drawon-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
+    stroke-linecap:round;vector-effect:non-scaling-stroke}
+  #icon-drawon-wt .bez{width:100%;aspect-ratio:1;background:var(--well);border:1px solid var(--line);
+    border-radius:var(--r2);box-shadow:var(--well-sh);display:block}
+  #icon-drawon-wt .bez .gr{stroke:var(--line);stroke-width:.4}
+  #icon-drawon-wt .bez .cv{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;
+    vector-effect:non-scaling-stroke}
+  #icon-drawon-wt .bez .hl{stroke:var(--comp);stroke-width:1.2;vector-effect:non-scaling-stroke}
+  #icon-drawon-wt .bez .hd{fill:var(--comp);stroke:var(--panel);stroke-width:1.4;
+    vector-effect:non-scaling-stroke;cursor:grab}
+  #icon-drawon-wt .bezval{display:flex;align-items:center;gap:var(--s2);margin-top:var(--gap-sm)}
+  #icon-drawon-wt .bezval code{flex:1;font-family:var(--mono);font-size:9.5px;color:var(--ink);
+    background:var(--well);box-shadow:var(--well-sh);border-radius:var(--r2);padding:5px 8px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- THE TIMING DOCK · across the bottom, with real width ----------
+     A delay is a DISTANCE here rather than a number you hold in your head, and
+     the hold between the ring and the check is a labelled gap you can point
+     at. The lane runs 0 to 1600ms; the motion ends at 1200 and the mark says
+     so, with the rest of the lane being the pause before the preview replays. */
+  #icon-drawon-wt .timeline{min-height:200px;padding-bottom:26px}
+  #icon-drawon-wt .tlbar{display:flex;align-items:center;gap:var(--s2);padding:0 0 var(--s2);
+    border-bottom:1px solid var(--edge-lo);margin-bottom:var(--s2)}
+  #icon-drawon-wt .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--faint);font-weight:660;white-space:nowrap}
+  #icon-drawon-wt .tlbar .now{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);
+    font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);
+    border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* a LAYER row is a labelled hairline: it groups the property rows under it
+     without pretending the layer itself occupies time. */
+  #icon-drawon-wt .track.idr-lt{margin:var(--s2) 0 1px}
+  #icon-drawon-wt .track.idr-lt .tl{color:var(--ink);width:58px;font-size:9.5px;
+    text-transform:none;letter-spacing:0;font-weight:660}
+  #icon-drawon-wt .idr-rule{flex:1;height:1px;background:var(--line)}
+  #icon-drawon-wt .track.idr-pt{margin:2px 0}
+  #icon-drawon-wt .track.idr-pt .tl{font-size:9.5px;text-transform:none;letter-spacing:0;
+    padding-left:var(--pad-sm);color:var(--dim)}
+  #icon-drawon-wt .track.idr-pt.idr-nolane .tl{color:var(--faint)}
+  #icon-drawon-wt .idr-lane{height:20px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:5px;position:relative;display:block;flex:1;overflow:visible}
+  /* THE BAR. One entry in the Motion list, drawn where it happens: its width is
+     the duration, its left edge the start, and its grips are how both change. */
+  #icon-drawon-wt .idr-bar{position:absolute;top:1px;bottom:1px;border-radius:4px;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--comp) 70%,transparent),color-mix(in srgb,var(--comp) 40%,transparent));
+    border:1px solid color-mix(in srgb,var(--comp) 80%,transparent);
+    display:flex;align-items:center;padding:0 6px;gap:5px;
+    font-size:8.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;cursor:grab}
+  #icon-drawon-wt .idr-bar.sel{box-shadow:0 0 0 2px var(--accent)}
+  #icon-drawon-wt .idr-bar .gr{position:absolute;top:2px;bottom:2px;width:5px;border-radius:2px;
+    background:rgba(255,255,255,.85)}
+  #icon-drawon-wt .idr-bar .gr.l{left:1px}
+  #icon-drawon-wt .idr-bar .gr.r{right:1px}
+  /* THE HOLD. The pause is a thing on the strip, not a subtraction you do in
+     your head: the distance between the ring landing and the check starting,
+     with its own number on it. */
+  #icon-drawon-wt .idr-hold{position:absolute;top:1px;bottom:1px;display:flex;
+    align-items:center;justify-content:center;border-radius:4px;
+    border-left:1px dashed color-mix(in srgb,var(--accent) 65%,transparent);
+    border-right:1px dashed color-mix(in srgb,var(--accent) 65%,transparent);
+    background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  #icon-drawon-wt .idr-hold .lb{font-family:var(--mono);font-size:8px;font-weight:660;
+    color:var(--accent);white-space:nowrap}
+  /* where the motion stops and the preview rests, on the same --t the DS
+     playhead takes, so it lands on the pixel the ruler says it should */
+  #icon-drawon-wt .idr-end{position:absolute;top:70px;bottom:24px;width:0;z-index:4;
+    border-left:1px dashed color-mix(in srgb,var(--accent) 70%,transparent);
+    left:calc(66px + 12px + (100% - 66px - 24px) * var(--t,.75))}
+  #icon-drawon-wt .idr-end .lb{position:absolute;bottom:-14px;left:4px;font-family:var(--mono);
+    font-size:8.5px;color:var(--accent);white-space:nowrap}
+
+  /* the preview button shows what clicking it DOES, and it is driven by the
+     same class the motion is, so a step that starts the motion can never leave
+     a play triangle sitting over something that is already running. */
+  #icon-drawon-wt .idr-icpause{display:none}
+  #icon-drawon-wt .idr-play .idr-icpause{display:block}
+  #icon-drawon-wt .idr-play .idr-icplay{display:none}
 
   /* the ONE selection, declared rather than drawn (selection.js). It is on
      screen while you are choosing the layer and goes away once the motion
      starts, because a static ring around a shape that is moving reads as
      broken rather than as bounds. */
   #icon-drawon-wt .idr-selbox{position:absolute;left:8.8%;top:8.8%;width:82.4%;height:82.4%;pointer-events:none;z-index:5}
-
-  /* the preview button shows what clicking it DOES, and it is driven by the
-     same class the motion is, so a step that starts the motion can never
-     leave a play triangle sitting over something that is already running. */
-  #icon-drawon-wt .idr-icpause{display:none}
-  #icon-drawon-wt .idr-play .idr-icpause{display:block}
-  #icon-drawon-wt .idr-play .idr-icplay{display:none}
 
   #icon-drawon-wt .idr-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
     padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
@@ -117,21 +238,8 @@
   #icon-drawon-wt .idr-gap .ic{color:var(--warn);flex:none;margin-top:1px}
   #icon-drawon-wt .idr-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
   #icon-drawon-wt .idr-gap b{color:var(--ink);font-weight:600}
-
   #icon-drawon-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
     color:var(--ink);aspect-ratio:16/10}
-  /* THE CURVE CONTROL · the one shared by every page with timing. Named curves
-     with their shape drawn beside them, and a custom one at the bottom, because
-     three buttons in a segmented control is not a vocabulary. */
-  #icon-drawon-wt #curveMenu .menuitem{gap:var(--gap-sm)}
-  #icon-drawon-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
-    background:var(--panel-2);border:1px solid var(--line)}
-  #icon-drawon-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
-    stroke-linecap:round;vector-effect:non-scaling-stroke}
-  #icon-drawon-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
-    color:var(--faint);white-space:nowrap}
-  #icon-drawon-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
-    line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 </style>
 </head>
 <body class="page">
@@ -142,10 +250,12 @@
   <p class="pglead">One job: when something succeeds, the <b>success badge</b> should draw itself rather than appear.
     Two things are different here from the other animation flows. Nothing moves, turns or scales: what changes is
     <b>how much of the stroke has been drawn</b>, which is a motion only a vector tool can offer and the one Photonz is
-    closest to being able to do, because it already has the path and can measure it. And it is the first scenario with an
-    <b>order</b> in it, which is where an icon starts wanting something time-shaped. The answer drawn here is a two row
-    list with numbers on it, not a track, and the page says where a list would stop being enough. Seven real clicks on
-    ONE screen, which never re-renders below.</p>
+    closest to being able to do, because it already has the path and can measure it. And it is the scenario where
+    <b>order is the whole craft</b>: the ring draws, then there is a <b>180 millisecond hold</b>, then the check draws,
+    then the fill comes up underneath it. <b>1.20 seconds end to end</b>, which is slow for a badge and deliberately so,
+    because three beats have to be separable before anybody can judge whether to tighten them. Every part carries an
+    explicit <b>start</b>, and step 4 shows on purpose what happens when they do not. Eight real clicks on ONE screen,
+    which never re-renders below.</p>
 
   <div class="idr-gap">
     <i class="ic sm ic-warning"></i>
@@ -167,7 +277,7 @@
           <div class="mlabel">Motion</div>
           <div class="menuitem"><i class="ic ic-plus"></i> Animate a property&#8230; <span class="sc">&#8679;&#8984;M</span></div>
           <div class="menuitem"><i class="ic ic-swap"></i> Reverse the stroke direction</div>
-          <div class="menuitem"><i class="ic ic-list-number"></i> Order the motions&#8230;</div>
+          <div class="menuitem"><i class="ic ic-timeline"></i> Show the timing dock <span class="sc">&#8997;&#8984;T</span></div>
           <div class="menu-sep"></div>
           <div class="mlabel">Window</div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">&#8997;&#8984;L</span></div>
@@ -182,12 +292,19 @@
                     <pattern id="idrMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
                       <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
                     </pattern>
+                    <clipPath id="idrDiscA"><circle cx="12" cy="12" r="9"/></clipPath>
                   </defs>
                   <rect x="0" y="0" width="24" height="24" fill="url(#idrMinorPat)"/>
                   <rect class="idr-live" x="2" y="2" width="20" height="20" rx=".4"/>
 
-                  <path id="idrRing" class="idr-glyph" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
+                  <!-- the fill, clipped to the ring. What animates is the
+                       RECTANGLE's position; the clip never moves. -->
+                  <g clip-path="url(#idrDiscA)" id="idrFillG" class="idr-fillg">
+                    <rect id="idrFill" class="idr-fill" x="3" y="3" width="18" height="18"/>
+                  </g>
+
                   <path id="idrCheck" class="idr-glyph" d="M7.6 12.2 10.7 15.3 16.4 8.6"/>
+                  <path id="idrRing" class="idr-glyph" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
 
                   <!-- where the ring's stroke starts and which way it runs -->
                   <g id="idrDir" class="idr-dir wt-off">
@@ -197,7 +314,7 @@
                   </g>
                 </svg>
                 <span class="idr-selbox wt-off" id="idrSel" data-sel-frame="Ring &#183; 18 &#215; 18"></span>
-                <div class="cnv-hint wt-off" id="idrHint" style="bottom:-15px">The ring draws, then the check follows it.</div>
+                <div class="cnv-hint wt-off" id="idrHint" style="bottom:-15px">The ring draws, it holds, then the check draws.</div>
               </div>
 
               <div class="idr-sizes" id="idrSizes">
@@ -210,28 +327,36 @@
                   <span class="idr-sz" id="sz16">
                     <span class="px" style="width:26px;height:26px">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/><path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/>
+                        <defs><clipPath id="idrDisc16"><circle cx="12" cy="12" r="9"/></clipPath></defs>
+                        <g clip-path="url(#idrDisc16)" class="idr-fillg"><rect class="idr-fill idr-p-fill" x="3" y="3" width="18" height="18" stroke="none"/></g>
+                        <path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/><path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
                       </svg>
                     </span><span class="n">16</span>
                   </span>
                   <span class="idr-sz">
                     <span class="px" style="width:34px;height:34px">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/><path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/>
+                        <defs><clipPath id="idrDisc24"><circle cx="12" cy="12" r="9"/></clipPath></defs>
+                        <g clip-path="url(#idrDisc24)" class="idr-fillg"><rect class="idr-fill idr-p-fill" x="3" y="3" width="18" height="18" stroke="none"/></g>
+                        <path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/><path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
                       </svg>
                     </span><span class="n">24</span>
                   </span>
                   <span class="idr-sz">
                     <span class="px inv" style="width:42px;height:42px">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/><path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/>
+                        <defs><clipPath id="idrDisc32"><circle cx="12" cy="12" r="9"/></clipPath></defs>
+                        <g clip-path="url(#idrDisc32)" class="idr-fillg"><rect class="idr-fill idr-p-fill" x="3" y="3" width="18" height="18" stroke="none"/></g>
+                        <path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/><path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
                       </svg>
                     </span><span class="n">32</span>
                   </span>
                   <span class="idr-sz">
                     <span class="px" style="width:58px;height:58px">
                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/><path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/>
+                        <defs><clipPath id="idrDisc48"><circle cx="12" cy="12" r="9"/></clipPath></defs>
+                        <g clip-path="url(#idrDisc48)" class="idr-fillg"><rect class="idr-fill idr-p-fill" x="3" y="3" width="18" height="18" stroke="none"/></g>
+                        <path class="idr-p-check" d="M7.6 12.2 10.7 15.3 16.4 8.6"/><path class="idr-p-ring" d="M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9"/>
                       </svg>
                     </span><span class="n">48</span>
                   </span>
@@ -260,8 +385,8 @@
               <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
               <span class="tsep"></span>
               <span class="zoomctl">
-                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
-                <span class="val zval">1600%</span>
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1400" aria-label="Zoom">
+                <span class="val zval">1400%</span>
               </span>
 
           <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
@@ -295,23 +420,26 @@
 
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers">
-              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">2</span>
+            <div class="dgrp" id="gLayers" data-grp="layers" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">3</span>
                 <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
               </div>
               <div class="dgrp-b">
-                <div class="lrow" id="lrCheck"><i class="ic ic-bezier"></i><span class="nm">Check</span>
-                  <i class="ic sm ic-pen wt-off" id="lrCheckMot" title="This layer has motion"></i>
-                  <i class="ic sm ic-eye eye"></i></div>
                 <div class="lrow" id="lrRing"><i class="ic ic-circle"></i><span class="nm">Ring</span>
-                  <i class="ic sm ic-pen wt-off" id="lrRingMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-timeline wt-off" id="lrRingMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrCheck"><i class="ic ic-bezier"></i><span class="nm">Check</span>
+                  <i class="ic sm ic-timeline wt-off" id="lrCheckMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrFill"><i class="ic ic-fill"></i><span class="nm">Fill</span>
+                  <i class="ic sm ic-timeline wt-off" id="lrFillMot" title="This layer has motion"></i>
                   <i class="ic sm ic-eye eye"></i></div>
               </div>
             </div>
 
             <div class="splitter h" data-min="120" data-max="360"></div>
 
-            <div class="dgrp" id="gProps">
+            <div class="dgrp" id="gProps" data-grp="props" data-gh="sm">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
               <div class="dgrp-b">
                 <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
@@ -323,52 +451,104 @@
                       <div class="field"><span class="k">Length</span><span class="v" id="pLen">56.5</span></div>
                       <div class="field"><span class="k">Closed</span><span class="v" id="pClosed">no</span></div>
                     </div>
-                    <p class="note" id="pathNote">The length is measured off the path, not typed. That number is the whole reason this motion is possible: to draw a stroke on you have to know how long it is.</p>
+                    <p class="note" id="pathNote">The length is measured off the path, not typed. That number is the whole reason the next step is possible: to draw a stroke on you have to know how long it is.</p>
                   </div>
+                </div>
 
+                <div id="propsFill" class="wt-off">
                   <div class="section">
-                    <div class="sec-h">Motion <span class="mut" id="pMotMut">none</span></div>
-                    <div class="irow"><span class="rl">Motion</span>
-                      <span class="select" id="selMotion" tabindex="0" role="button"><span class="lead" id="motKind">Nothing yet</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    <div class="sec-h">Shape <span class="mut">Fill</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">Size</span><span class="v">18 &#215; 18</span></div>
+                      <div class="field"><span class="k">Clipped to</span><span class="v">Ring</span></div>
                     </div>
+                    <p class="note">The fill is a rectangle clipped to the ring. That is why it can be revealed: there is something to move behind a shape that holds still.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    <div id="secTiming" class="wt-off">
-                      <div class="irow"><span class="rl">Takes</span>
-                        <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="0.5" aria-label="Seconds"></span>
-                      </div>
-                      <div class="irow"><span class="rl">From</span>
-                        <span class="select" id="selFrom" tabindex="0" role="button"><span class="lead" id="pFrom">Where the stroke starts</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                      <div class="irow"><span class="rl">Curve</span>
-                        <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                      <div class="irow"><span class="rl">Repeat</span>
-                        <span class="select" id="selRepeat" tabindex="0" role="button"><span class="lead" id="repVal">Once</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                      <p class="note" id="timNote">Dash is the one property here that keeps its <b>Repeat</b> on <b>Once</b>. A badge that draws itself over and over is a badge nobody trusts.</p>
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- EFFECTS · what you ADD. It sits here so the list below it can be
+                 read against it: same header, same plus, same rows. -->
+            <div class="dgrp" id="gEffects" data-grp="effects" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">what you add</span>
+                <button class="btn ghost icon sm" title="Add an effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                <div class="mnone"><i class="ic sm ic-effects"></i> Nothing added</div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="460"></div>
+
+            <!-- ====== MOTION, the list beside Effects ======
+                 Same header with a plus, same rows, same switches. The only
+                 difference is what a row means: an Effects row is something the
+                 layer paints, a Motion row is a property that changes. -->
+            <div class="dgrp grow" id="gMotion" data-grp="motion" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Motion</span><span class="cnt" id="pMotMut">what changes</span>
+                <button class="btn ghost icon sm" id="btnAddMotion" title="Animate a property of this layer" data-menu="#propMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                <div id="motEmpty"><div class="mnone"><i class="ic sm ic-timeline"></i> Nothing moves yet</div>
+                  <p class="note">The same shape as the list above it. An entry is one <b>property of this layer</b> that changes over time, with a switch, a summary and its own settings.</p>
+                </div>
+
+                <!-- one entry per layer, wearing the Effects row unchanged -->
+                <div class="efx mrow sel wt-off" id="mxRing">
+                  <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                  <span class="nm">Dash</span>
+                  <svg class="crv" id="crvRing" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C2 10 10 2 22 2"/></svg>
+                  <span class="emeta" id="mxRingMeta">all gap &#8594; all dash &#183; 56.5 long</span>
+                </div>
+                <div class="efx mrow sel wt-off" id="mxCheck">
+                  <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                  <span class="nm">Dash</span>
+                  <svg class="crv" id="crvCheck" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C2 10 10 2 22 2"/></svg>
+                  <span class="emeta" id="mxCheckMeta">all gap &#8594; all dash &#183; 13.9 long</span>
+                </div>
+                <div class="efx mrow sel wt-off" id="mxFill">
+                  <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                  <span class="nm">Position</span>
+                  <svg class="crv" id="crvFill" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C2 10 10 2 22 2"/></svg>
+                  <span class="emeta" id="mxFillMeta">0, 18 &#8594; 0, 0</span>
+                </div>
+
+                <div id="motSettings" class="mset wt-off">
+                  <div id="msDash" class="wt-off">
+                    <div class="irow"><span class="rl">From</span>
+                      <span class="select" id="selFrom" tabindex="0" role="button" data-menu="#fromMenu"><span class="lead" id="pFrom">Where the stroke starts</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
                   </div>
-
-                  <!-- THE ORDER · the smallest honest answer to "and then what" -->
-                  <div class="section wt-off" id="secOrder">
-                    <div class="sec-h">Order <span class="mut" id="pOrdMut">2 motions</span></div>
-                    <div class="idr-ord">
-                      <div class="idr-orow" id="ordRing"><span class="ix">1</span><span class="nm">Ring</span><span class="len">0.50s</span><span class="at">at 0.00</span></div>
-                      <div class="idr-orow" id="ordCheck"><span class="ix">2</span><span class="nm">Check</span><span class="len">0.35s</span><span class="at" id="ordCheckAt">at 0.42</span></div>
+                  <div id="msPos" class="wt-off">
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">From</span><input id="pFromXY" value="0, 18" aria-label="From, in units"></span>
+                      <span class="stepper sm"><span class="k">To</span><input id="pToXY" value="0, 0" aria-label="To, in units"></span>
                     </div>
-                    <div class="irow"><span class="rl">Overlap</span>
-                      <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pOverlap" value="-0.08" aria-label="Overlap in seconds"></span>
-                    </div>
-                    <div class="idr-tot"><span id="ordTot">whole thing &#183; 0.77s</span><span>2 of 2 in order</span></div>
-                    <p class="note" id="ordNote">Two shapes in order, as a list with real numbers rather than as a track. One field says how much the second one leans into the first: a small negative overlap is what makes the check feel like it comes out of the ring rather than after it.</p>
                   </div>
+                  <div class="numgrid">
+                    <span class="stepper sm"><span class="k">Start</span><input id="pStart" value="0" aria-label="Start, in milliseconds"></span>
+                    <span class="stepper sm"><span class="k">Over</span><input id="pOver" value="420" aria-label="Duration, in milliseconds"></span>
+                  </div>
+                  <div class="irow"><span class="rl">Curve</span>
+                    <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <div class="irow"><span class="rl">Repeat</span>
+                    <span class="select" id="selRepeat" tabindex="0" role="button" data-menu="#repMenu"><span class="lead" id="repVal">Once</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <p class="note" id="motNote"><b>Start</b> is the field this whole scenario turns on. It is the same number as the left edge of the bar in the dock below, so moving either moves both, and it is set rather than inferred: the app cannot know whether you meant the check to follow the ring or to race it.</p>
                 </div>
               </div>
             </div>
 
             <div class="splitter h" data-min="120" data-max="420"></div>
 
-            <div class="dgrp grow collapsed" id="gLibrary">
+            <div class="dgrp collapsed" id="gLibrary">
               <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
                 <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
               </div>
@@ -398,9 +578,9 @@
                 <div data-scope-body="styles" class="wt-off">
                   <div style="padding:0 var(--pad-sm)">
                     <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
-                    <div class="styrow"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / draws itself on</span><span class="use">2 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / draws itself on</span><span class="use">3 uses</span></div>
                   </div>
-                  <p class="note" style="padding:var(--gap-sm) var(--pad-sm) 0">The failure badge wants the same motion with a different second shape. That is the argument for saving a motion as a style rather than rebuilding it per glyph.</p>
+                  <p class="note" style="padding:var(--gap-sm) var(--pad-sm) 0">The failure badge wants the same three beats with a different second shape. That is the argument for saving a set of motions as a style rather than rebuilding it per glyph.</p>
                 </div>
                 <div data-scope-body="systems" class="wt-off">
                   <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
@@ -412,10 +592,29 @@
           <div class="drail">
             <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gMotion" title="Motion"><i class="ic sm ic-timeline"></i><span class="lb">Motion</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-              <div class="popover menu pop" id="curveMenu" style="position:absolute;right:var(--s4);top:396px;width:252px;max-height:320px;overflow:auto;z-index:11">
+          <!-- ====== THE PROPERTY MENU · built from what THIS layer has ====== -->
+          <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:205px;width:274px;z-index:11">
+            <div class="mlabel">Transform</div>
+            <div class="menuitem" id="miPos"><i class="ic ic-move"></i> Position <span class="pk">3, 3</span></div>
+            <div class="menuitem"><i class="ic ic-scale"></i> Scale <span class="pk">100%</span></div>
+            <div class="menuitem"><i class="ic ic-rotate-right"></i> Rotation <span class="pk">0&#176;</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Appearance</div>
+            <div class="menuitem"><i class="ic ic-opacity"></i> Opacity <span class="pk">100%</span></div>
+            <div class="menuitem"><i class="ic ic-color"></i> Colour <span class="pk">#3ECF8E</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Path &#183; only a drawn shape has these</div>
+            <div class="menuitem"><i class="ic ic-node"></i> Path points <span class="pk">12 points</span></div>
+            <div class="menuitem"><i class="ic ic-line"></i> Stroke width <span class="pk">1.75 pt</span></div>
+            <div class="menuitem" id="miDrawOn"><i class="ic ic-border"></i> Dash <span class="pk">none &#183; 56.5 long</span></div>
+            <p class="mnote">Drawing a stroke on is not a preset, it is the <b>Dash</b> of this path animated from &ldquo;all gap&rdquo; to &ldquo;all dash&rdquo;. It is only offered because the path knows how long it is, which is what the Length readout above is for. Same list on <button class="link" data-target="icon-animate-wt">Make a bell swing</button>.</p>
+          </div>
+
+          <div class="popover menu pop" id="curveMenu" style="position:absolute;right:var(--s4);top:340px;width:252px;max-height:320px;overflow:auto;z-index:11">
             <div class="mlabel">Standard</div>
             <div class="menuitem" id="easLin"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22 22 2"/></svg> Linear</div>
             <div class="menuitem" id="easInOut"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C8 22 16 2 22 2"/></svg> Ease in out</div>
@@ -432,32 +631,44 @@
             <p class="mnote">Named curves are the front door and <b>Draw a curve</b> is the rest of it. The shape beside each name is the point: nobody can tell <i>out back</i> from <i>out elastic</i> by reading them. Same control on every page that has timing.</p>
           </div>
 
-          <div class="popover menu pop" id="motMenu" style="position:absolute;right:var(--s4);top:170px;width:274px;z-index:11">
-            <div class="mlabel">Transform</div>
-            <div class="menuitem"><i class="ic ic-move"></i> Position <span class="pk">3, 3</span></div>
-            <div class="menuitem"><i class="ic ic-scale"></i> Scale <span class="pk">100%</span></div>
-            <div class="menuitem"><i class="ic ic-rotate-right"></i> Rotation <span class="pk">0&#176;</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Appearance</div>
-            <div class="menuitem"><i class="ic ic-opacity"></i> Opacity <span class="pk">100%</span></div>
-            <div class="menuitem"><i class="ic ic-color"></i> Colour <span class="pk">#3ECF8E</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Path &#183; only a drawn shape has these</div>
-            <div class="menuitem"><i class="ic ic-node"></i> Path points <span class="pk">12 points</span></div>
-            <div class="menuitem"><i class="ic ic-line"></i> Stroke width <span class="pk">2.2 pt</span></div>
-            <div class="menuitem" id="miDrawOn"><i class="ic ic-border"></i> Dash <span class="pk">none &#183; 56.5 long</span></div>
-            <p class="mnote">Drawing a stroke on is not a preset, it is the <b>Dash</b> of this path animated from &ldquo;all gap&rdquo; to &ldquo;all dash&rdquo;. It is only offered because the path knows how long it is, which is what the Length readout above is for. Same list on <button class="link" data-target="icon-animate-wt">Make a bell swing</button>.</p>
+          <!-- ====== THE CUSTOM CURVE EDITOR ====== -->
+          <div class="popover pop" id="bezPop" style="position:absolute;right:288px;top:348px;width:236px;padding:var(--pad-sm);z-index:12">
+            <div class="mlabel" style="margin:0 0 var(--gap-sm)">Draw a curve</div>
+            <svg class="bez" viewBox="0 0 100 100" aria-label="Curve editor">
+              <path class="gr" d="M0 25H100M0 50H100M0 75H100M25 0V100M50 0V100M75 0V100"/>
+              <path class="hl" id="bzL1" d="M0 100 20 30"/>
+              <path class="hl" id="bzL2" d="M100 0 30 0"/>
+              <path class="cv" id="bzCurve" d="M0 100 C20 30 30 0 100 0"/>
+              <circle class="hd" id="bzH1" cx="20" cy="30" r="5.5"/>
+              <circle class="hd" id="bzH2" cx="30" cy="0" r="5.5"/>
+            </svg>
+            <div class="bezval"><code id="bzVal">cubic-bezier(.2, .7, .3, 1)</code></div>
+            <p class="note" style="margin-top:var(--gap-sm)">Drag either handle. The readout is the same four numbers CSS and SVG both take, so what you draw here is what ships.</p>
           </div>
 
-          <div class="popover menu pop" id="fromMenu" style="position:absolute;right:var(--s4);top:432px;width:250px;z-index:11">
+          <div class="popover menu pop" id="fromMenu" style="position:absolute;right:var(--s4);top:520px;width:250px;z-index:11">
             <div class="menuitem">Where the stroke starts</div>
             <div class="menuitem" id="miFromEnd"><i class="ic ic-swap"></i> The other end</div>
             <div class="menuitem"><i class="ic ic-align-center"></i> Outward from the middle</div>
+            <p class="mnote">A path has a direction because somebody drew it in one, and nothing in the app has ever made that visible. This is the first thing that does: the marker on the artboard is where the stroke begins.</p>
+          </div>
+
+          <div class="popover menu pop" id="repMenu" style="position:absolute;right:var(--s4);bottom:300px;width:206px;z-index:11">
+            <div class="menuitem">Once</div>
+            <div class="menuitem">3 times</div>
+            <div class="menuitem"><i class="ic ic-loop"></i> Forever</div>
+            <p class="mnote">Every motion in this badge stays on <b>Once</b>. A success mark that keeps redrawing is a success mark nobody believes. The preview below replays it so you can watch it, which is not the same thing.</p>
+          </div>
+
+          <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:330px;width:220px;z-index:11">
+            <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
+            <div class="menuitem"><i class="ic ic-blur"></i> Blur</div>
+            <div class="menuitem"><i class="ic ic-border"></i> Border</div>
           </div>
 
           <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:120px;width:238px;z-index:11">
             <div class="menuitem"><i class="ic ic-plus"></i> Animate a property&#8230; <span class="sc">&#8679;&#8984;M</span></div>
-            <div class="menuitem"><i class="ic ic-list-number"></i> Order the motions&#8230;</div>
+            <div class="menuitem"><i class="ic ic-timeline"></i> Show the timing dock <span class="sc">&#8997;&#8984;T</span></div>
             <div class="menuitem"><i class="ic ic-swatch"></i> Save motion as a style</div>
           </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
@@ -465,122 +676,200 @@
             <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
           </div>
         </div>
+
+        <!-- ====== THE TIMING DOCK · across the bottom, with real width ======
+             The side column can say WHAT changes and BY HOW MUCH. It cannot say
+             how three parts of one icon sit against each other in time, because
+             that is a comparison and a comparison needs width. So Start and
+             Over live here as a BAR you drag, the same two numbers as the
+             fields above, and the HOLD between the ring and the check is a
+             labelled gap rather than a subtraction you do in your head. -->
+        <div class="timeline" id="timeline" data-tl-summary="Success badge &#183; nothing moves yet">
+          <div class="tlbar">
+            <span class="lbl">The whole thing</span>
+            <span class="now" id="tlNow"><i class="ic xs ic-timeline"></i> <span id="tlLen">nothing yet</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" id="tlFit" title="Fit it to the width"><i class="ic ic-zoom-fit"></i><span class="lb">Fit</span></button>
+          </div>
+          <div class="ruler"><span>0</span><span>200</span><span>400</span><span>600</span><span>800</span><span>1000</span><span>1200</span><span>1400 ms</span></div>
+
+          <div class="track idr-lt"><span class="tl"><i class="ic xs ic-circle"></i> Ring</span>
+            <span class="idr-rule"></span>
+          </div>
+          <div class="track idr-pt idr-nolane" id="trkRing"><span class="tl" id="trkRingLb">none</span>
+            <div class="idr-lane">
+              <div class="idr-bar sel wt-off" id="barRing" style="left:0%;width:26.25%" tabindex="0" role="button" aria-label="Ring, dash, start and duration">
+                <span class="gr l"></span><span id="barRingLb" style="padding-left:6px">0 &#8594; 420</span><span class="gr r"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="track idr-lt"><span class="tl"><i class="ic xs ic-bezier"></i> Check</span>
+            <span class="idr-rule"></span>
+          </div>
+          <div class="track idr-pt idr-nolane" id="trkCheck"><span class="tl" id="trkCheckLb">none</span>
+            <div class="idr-lane">
+              <div class="idr-hold wt-off" id="barHold" style="left:26.25%;width:11.25%"><span class="lb">180 ms hold</span></div>
+              <div class="idr-bar wt-off" id="barCheck" style="left:0%;width:16.25%" tabindex="0" role="button" aria-label="Check, dash, start and duration">
+                <span class="gr l"></span><span id="barCheckLb" style="padding-left:6px">0 &#8594; 260</span><span class="gr r"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="track idr-lt"><span class="tl"><i class="ic xs ic-fill"></i> Fill</span>
+            <span class="idr-rule"></span>
+          </div>
+          <div class="track idr-pt idr-nolane" id="trkFill"><span class="tl" id="trkFillLb">none</span>
+            <div class="idr-lane">
+              <div class="idr-bar wt-off" id="barFill" style="left:53.75%;width:21.25%" tabindex="0" role="button" aria-label="Fill, position, start and duration">
+                <span class="gr l"></span><span id="barFillLb" style="padding-left:6px">860 &#8594; 1200</span><span class="gr r"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="idr-end wt-off" id="endMark" style="--t:.75"><span class="lb" id="endMarkLb">done, then it rests</span></div>
+          <div class="playhead" id="playhead" style="--t:0;top:70px"></div>
+        </div>
       </div>
     </div>
 
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
     <ol class="wt-steps">
 
       <li class="wt-step"
           data-title="Select the ring"
           data-cue="#lrRing" data-cue-label="Click the Ring layer" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
           data-select="#lrRing" data-show="#idrSel,#propsShape" data-hide="#propsEmpty"
           data-set="#propKind=Glyph">
         <div class="wt-cap comp">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Ring</b> layer</p>
           <p class="wt-where">the Layers group, at the top of the dock</p>
-          <p class="wt-res">Properties opens with a <b>Path</b> section, and the first thing in it is a number nobody typed: this stroke is <b>56.5 units</b> long. That measurement is the whole reason the next step is possible, and it is the sort of thing only a drawing tool has lying around.</p>
+          <p class="wt-res">Properties opens with a <b>Path</b> section, and the first thing in it is a number nobody typed: this stroke is <b>56.5 units</b> long. That measurement is the whole reason the next step is possible, and it is the sort of thing only a drawing tool has lying around. Below Properties sit two lists with the same header and the same plus: <b>Effects</b>, which is what the layer paints, and <b>Motion</b>, which is what changes.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Draw it on"
-          data-cue="#selMotion" data-cue-label="Click Animate, choose Dash" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
-          data-select="#lrRing" data-pop="#motMenu"
+          data-title="Open the property list"
+          data-cue="#btnAddMotion" data-cue-label="Click the plus on Motion" data-cue-place="left"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrRing" data-pop="#propMenu"
           data-show="#idrSel,#propsShape" data-hide="#propsEmpty"
           data-set="#propKind=Glyph">
         <div class="wt-cap comp">
           <span class="wt-n">2</span>
-          <p class="wt-do">the <b>Motion</b> row, and look at the bottom group</p>
-          <p class="wt-where">Properties, in the Motion section</p>
+          <p class="wt-do">the <b>plus</b> on the Motion list</p>
+          <p class="wt-where">the Motion group header, the same place Effects has one</p>
           <p class="wt-res">the same list of <b>this layer's properties</b> as every other glyph, with one heading that only a drawn shape gets: <b>Path</b>, holding <b>Path points</b>, <b>Stroke width</b> and <b>Dash</b>. Everything above that heading moves the shape around. These change the shape itself, which is a different kind of thing and worth a line between them. Drawing a stroke on is not a preset called Draw on, it is Dash going from all gap to all dash, and it is only offered because the path knows how long it is.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Watch it draw"
+          data-title="Draw the ring on, over 420 milliseconds"
           data-cue="#miDrawOn" data-cue-label="Click Dash" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
-          data-select="#lrRing" data-pop="#motMenu"
-          data-show="#propsShape,#secTiming,#lrRingMot,#idrHint" data-hide="#idrSel,#propsEmpty"
-          data-class="#idrRing=idr-anim-ring|#idrWin=idr-play|#idrCheck=wt-off"
-          data-css="#idrWin=--idr-ring:0.5s;--idr-check-at:99s"
-          data-set="#propKind=Glyph|#motKind=Dash|#pMotMut=dash|#chipMotion=dash|#chipRun=0.50s|#timNote=Repeat stays on Once. A badge that draws itself over and over is a badge nobody trusts.">
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrRing" data-pop="#propMenu"
+          data-show="#propsShape,#mxRing,#motSettings,#msDash,#lrRingMot,#idrHint,#idrDir,#barRing,#endMark"
+          data-hide="#idrSel,#propsEmpty,#motEmpty,#idrCheck,.idr-fillg"
+          data-class="#idrRing=idr-anim-ring|#idrWin=idr-play|#trkRing=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s|#endMark=--t:.2625"
+          data-set="#propKind=Glyph|#pMotMut=1 motion|#pStart=0|#pOver=420|#trkRingLb=Dash|#chipMotion=1 motion|#chipRun=0.42s|#tlLen=0.42 s|#idrHint=The ring draws itself round, once.|#motNote=Two numbers and the bar below carries both: Start is its left edge, Over is its width. The marker on the artboard is where this stroke begins and which way it runs, which every path has had all along and nothing ever showed you.">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
-          <p class="wt-do"><b>Dash</b>, and let it run from all gap to all dash</p>
+          <p class="wt-do"><b>Dash</b>, and set <b>Over</b> to <b>420</b></p>
           <p class="wt-where">the property list, under <b>Path</b></p>
-          <p class="wt-res">the ring draws itself round, over half a second, and the check is hidden for the moment so there is one thing to look at. Nothing moved, turned or scaled. <b>Repeat came up as Once</b>, unlike every other motion in the app, because a success mark that keeps redrawing is a success mark nobody believes.</p>
+          <p class="wt-res">the ring draws itself round and the timing dock at the bottom gets its first bar: <b>0 to 420</b>, drawn where it happens. The check and the fill are hidden for the moment so there is one thing to look at. Nothing moved, turned or scaled. <b>Repeat came up as Once</b>, unlike every other motion in the app, because a success mark that keeps redrawing is a success mark nobody believes; the preview replays it so you can watch it, which is a different thing and the dock says so at the right hand end.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Send it the other way round"
-          data-cue="#selFrom" data-cue-label="Click From, choose The other end" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
-          data-select="#lrRing" data-pop="#fromMenu"
-          data-show="#propsShape,#secTiming,#lrRingMot,#idrHint,#idrDir" data-hide="#idrSel,#propsEmpty"
-          data-class="#idrRing=idr-anim-ring|#idrWin=idr-play|#idrCheck=wt-off"
-          data-css="#idrWin=--idr-ring:0.5s;--idr-check-at:99s"
-          data-set="#propKind=Glyph|#motKind=Dash|#pMotMut=dash|#pFrom=The other end|#chipMotion=dash|#chipRun=0.50s|#timNote=A path has a direction because it was drawn in one, and until now nothing in the app ever made that visible. Drawing a stroke on is the first thing that does.">
+          data-title="Give the check the same motion, and watch it go wrong"
+          data-cue="#lrCheck" data-cue-label="Click the Check layer, then Dash" data-cue-place="left"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrCheck"
+          data-show="#propsShape,#mxCheck,#motSettings,#msDash,#lrRingMot,#lrCheckMot,#idrHint,#idrCheck,#barRing,#barCheck,#endMark"
+          data-hide="#idrSel,#propsEmpty,#motEmpty,#idrDir,.idr-fillg,#mxRing"
+          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrWin=idr-play idr-at0|#barCheck=sel|#barRing=-sel|#trkRing=-idr-nolane|#trkCheck=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s|#barCheck=left:0%;width:16.25%|#endMark=--t:.2625"
+          data-set="#propKind=Glyph|#pPathMut=Check|#pLen=13.9|#pMotMut=1 motion|#pStart=0|#pOver=260|#trkRingLb=Dash|#trkCheckLb=Dash|#chipMotion=2 motions|#chipRun=0.42s|#tlLen=0.42 s|#barCheckLb=0 &#8594; 260|#idrHint=Both start at zero, so both draw at once.|#pathNote=The check is 13.9 units long. Same motion, a quarter of the distance, so it needs its own duration rather than inheriting the ring's.|#motNote=A new motion starts at 0, because the app has no way of knowing what you meant. That default is honest and it is also wrong here, and you can see that it is wrong without being told: two bars with the same left edge, one badge drawing itself in a heap.">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
-          <p class="wt-do">the <b>From</b> row, and choose <b>The other end</b></p>
-          <p class="wt-where">Properties, under Motion</p>
-          <p class="wt-res">the ring sweeps anticlockwise instead, and a small marker appears on the artboard showing <b>where the stroke begins and which way it runs</b>. Every path has a direction because somebody drew it in one, and this is the first feature in the app that ever makes that visible. You should not have to guess it from the result.</p>
+          <p class="wt-do">the <b>Check</b> layer, then <b>Dash</b> again, over <b>260</b></p>
+          <p class="wt-where">Layers, then the plus on Motion</p>
+          <p class="wt-res">this is the version somebody builds on their first try, and it is here on purpose. Both motions start at <b>0</b>, so the badge draws its ring and its tick over the top of each other and reads as a scribble rather than as a mark being made. The dock shows exactly why: <b>two bars with the same left edge</b>. Nothing is broken and nothing warns you. It is just wrong, and the next field is the whole fix.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Give the check the same motion"
-          data-cue="#lrCheck" data-cue-label="Click the Check layer, then Dash" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-title="Give it a hold, then the check"
+          data-cue="#pStart" data-cue-label="Type 600 in Start" data-cue-place="left"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
           data-select="#lrCheck"
-          data-show="#propsShape,#secTiming,#secOrder,#lrRingMot,#lrCheckMot,#idrHint,#idrCheck" data-hide="#idrSel,#propsEmpty,#idrDir"
-          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrWin=idr-play|#ordCheck=sel"
-          data-css="#idrWin=--idr-ring:0.5s;--idr-check:0.35s;--idr-check-at:0.5s"
-          data-set="#propKind=Glyph|#pPathMut=Check|#pLen=13.9|#motKind=Dash|#pMotMut=dash|#pDur=0.35|#pFrom=Where the stroke starts|#chipMotion=2 motions|#chipRun=0.85s|#ordCheckAt=at 0.50|#ordTot=whole thing &#183; 0.85s|#pathNote=The check is 13.9 units long. Same motion, a quarter of the distance, so it needs its own duration rather than inheriting the ring's.">
+          data-show="#propsShape,#mxCheck,#motSettings,#msDash,#lrRingMot,#lrCheckMot,#idrHint,#idrCheck,#barRing,#barCheck,#barHold,#endMark"
+          data-hide="#idrSel,#propsEmpty,#motEmpty,#idrDir,.idr-fillg,#mxRing"
+          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrWin=idr-play|#barCheck=sel|#barRing=-sel|#trkRing=-idr-nolane|#trkCheck=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s|#barCheck=left:37.5%;width:16.25%|#endMark=--t:.5375"
+          data-set="#propKind=Glyph|#pPathMut=Check|#pLen=13.9|#pMotMut=1 motion|#pStart=600|#pOver=260|#trkRingLb=Dash|#trkCheckLb=Dash|#chipMotion=2 motions|#chipRun=0.86s|#tlLen=0.86 s|#barCheckLb=600 &#8594; 860|#idrHint=The ring draws, it holds, then the check draws.|#motNote=600 is not 420. The extra 180 milliseconds is a hold, and the dock draws it rather than making you subtract: a dashed box between the ring landing and the check leaving, with its own number on it.">
         <div class="wt-cap comp">
           <span class="wt-n">5</span>
-          <p class="wt-do">the <b>Check</b> layer, then <b>Dash</b> again, over <b>0.35</b>s</p>
-          <p class="wt-where">Layers, then the Motion section</p>
-          <p class="wt-res">now there are two motions and the app has to say what happens when. An <b>Order</b> section appears: <b>Ring at 0.00, Check at 0.50</b>, whole thing 0.85 seconds. It is a list with real numbers in it, not a track with lanes, and for two shapes that is plainly enough.</p>
+          <p class="wt-do"><b>600</b> in the <b>Start</b> field</p>
+          <p class="wt-where">Motion, under the Dash entry</p>
+          <p class="wt-res">the ring finishes at 420, <b>nothing happens for 180 milliseconds</b>, and then the check draws. That pause is the whole difference between a badge that is being made and a badge that is being dumped on you, and it is a thing you can point at: the dock marks it as a dashed box in the check's lane, labelled with its own number. This is the step the scenario exists for. Everything before it was setup.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Let the check lean into the ring"
-          data-cue="#pOverlap" data-cue-label="Type -0.08 in Overlap" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
-          data-select="#lrCheck"
-          data-show="#propsShape,#secTiming,#secOrder,#lrRingMot,#lrCheckMot,#idrHint,#idrCheck" data-hide="#idrSel,#propsEmpty,#idrDir"
-          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrWin=idr-play|#ordCheck=sel"
-          data-css="#idrWin=--idr-ring:0.5s;--idr-check:0.35s;--idr-check-at:0.42s"
-          data-set="#propKind=Glyph|#pPathMut=Check|#pLen=13.9|#motKind=Dash|#pMotMut=dash|#pDur=0.35|#pOverlap=-0.08|#chipMotion=2 motions|#chipRun=0.77s|#ordCheckAt=at 0.42|#ordTot=whole thing &#183; 0.77s|#ordNote=Eighty milliseconds of overlap is the whole difference between two animations played in sequence and one gesture. It is also exactly the kind of number nobody would find by dragging a clip on a ruler.">
+          data-title="Bring the fill up underneath it"
+          data-cue="#lrFill" data-cue-label="Click the Fill layer, then Position" data-cue-place="left"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrFill"
+          data-show="#propsFill,#mxFill,#motSettings,#msPos,#lrRingMot,#lrCheckMot,#lrFillMot,#idrHint,#idrCheck,.idr-fillg,#barRing,#barCheck,#barHold,#barFill,#endMark"
+          data-hide="#idrSel,#propsEmpty,#propsShape,#motEmpty,#idrDir,#mxRing,#mxCheck,#msDash"
+          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrFill=idr-anim-fill|#idrWin=idr-play|#barFill=sel|#barCheck=-sel|#trkRing=-idr-nolane|#trkCheck=-idr-nolane|#trkFill=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s|#barCheck=left:37.5%;width:16.25%|#endMark=--t:.75"
+          data-set="#propKind=Shape|#pMotMut=1 motion|#trkRingLb=Dash|#trkCheckLb=Dash|#trkFillLb=Position|#pStart=860|#pOver=340|#chipMotion=3 motions|#chipRun=1.20s|#tlLen=1.20 s|#idrHint=Ring, hold, check, and the fill comes up.|#motNote=One property. The fill is not fading in, not scaling up and not changing colour: a rectangle clipped to the ring moves 18 units up, and the ring's own edge does the rest. A reveal that is one number in one field is a reveal you can retime in one place.">
         <div class="wt-cap comp">
           <span class="wt-n">6</span>
-          <p class="wt-do"><b>-0.08</b> in the <b>Overlap</b> field</p>
-          <p class="wt-where">Properties, in the Order section</p>
-          <p class="wt-res">the check now starts eighty milliseconds before the ring has closed, and the badge reads as <b>one gesture</b> rather than two animations played back to back. That is the entire craft of this scenario and it is one number. A ruler would have let you drag for it; a field lets you nudge it and watch, which is faster for a value this small.</p>
+          <p class="wt-do">the <b>Fill</b> layer, then <b>Position</b>, from <b>0, 18</b> to <b>0, 0</b>, starting at <b>860</b></p>
+          <p class="wt-where">Layers, then the plus on Motion</p>
+          <p class="wt-res">the fill rises into the badge from underneath, arriving as the check lands. It is <b>one property moving</b>: the fill is a rectangle clipped to the ring, and what changes is where that rectangle is. Not a fade, not a scale, not a colour, not three of those at once, which is what makes it read as the badge filling rather than as something being switched on. Three bars now, left to right, and the total reads <b>1.20 seconds</b>.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Ease it, and check it small"
-          data-cue="#easOut" data-cue-label="Click Curve, choose Ease out" data-pop="#curveMenu" data-cue-place="left"
-          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
-          data-select="#lrCheck" data-activate="#easOut"
-          data-show="#propsShape,#secTiming,#secOrder,#lrRingMot,#lrCheckMot,#idrHint,#idrCheck" data-hide="#idrSel,#propsEmpty,#idrDir"
-          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrWin=idr-play|#ordCheck=sel"
-          data-css="#idrWin=--idr-ring:0.5s;--idr-check:0.35s;--idr-check-at:0.42s;--idr-ease:cubic-bezier(.2,.7,.3,1)"
-          data-set="#propKind=Glyph|#pPathMut=Check|#pLen=13.9|#motKind=Dash|#pMotMut=dash|#pDur=0.35|#pOverlap=-0.08|#chipMotion=2 motions|#chipRun=0.77s|#ordCheckAt=at 0.42|#ordTot=whole thing &#183; 0.77s">
+          data-title="Give the strokes a curve"
+          data-cue="#easCustom" data-cue-label="Click Curve, then Draw a curve" data-cue-place="left"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrFill" data-pop="#bezPop" data-activate="#easCustom"
+          data-show="#propsFill,#mxFill,#motSettings,#msPos,#lrRingMot,#lrCheckMot,#lrFillMot,#idrHint,#idrCheck,.idr-fillg,#barRing,#barCheck,#barHold,#barFill,#endMark"
+          data-hide="#idrSel,#propsEmpty,#propsShape,#motEmpty,#idrDir,#mxRing,#mxCheck,#msDash"
+          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrFill=idr-anim-fill|#idrWin=idr-play|#crvFill=custom|#crvRing=custom|#crvCheck=custom|#barFill=sel|#barCheck=-sel|#trkRing=-idr-nolane|#trkCheck=-idr-nolane|#trkFill=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s;--idr-ease:cubic-bezier(.2,.7,.3,1)|#barCheck=left:37.5%;width:16.25%|#endMark=--t:.75"
+          data-set="#propKind=Shape|#pMotMut=1 motion|#trkRingLb=Dash|#trkCheckLb=Dash|#trkFillLb=Position|#pStart=860|#pOver=340|#curveVal=Custom|#chipMotion=3 motions|#chipRun=1.20s|#tlLen=1.20 s|#motNote=The four numbers in the readout are the ones CSS and SVG both take, so what you draw here is what ships. The sketch on each Motion row changes to match, which is how you tell at a glance that three entries share one curve.">
         <div class="wt-cap comp">
           <span class="wt-n">7</span>
-          <p class="wt-do"><b>Ease out</b></p>
-          <p class="wt-where">the Curve row</p>
-          <p class="wt-res">both strokes now start quickly and settle, which is how a pen actually moves. At <b>16</b> the ring reads as a wipe rather than a drawn line, because there are not enough pixels in the stroke for the eye to follow a tip: the motion survives being small but it stops being the <i>same</i> motion. Worth knowing before it ships into a toolbar.</p>
+          <p class="wt-do"><b>Draw a curve</b>, and pull the first handle down</p>
+          <p class="wt-where">the Curve row, at the bottom of the named list</p>
+          <p class="wt-res">all three beats now start quickly and settle, which is how a pen actually moves and how a thing that has weight actually arrives. The named curves are the front door and this is the rest of it: the readout is <b>cubic-bezier(.2, .7, .3, 1)</b>, the same four numbers that leave in the file. The little sketch on each Motion row redraws, so you can see without opening anything that the three entries are sharing one curve.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Check it at the size it ships"
+          data-cue="#sz16" data-cue-label="Look at 16" data-cue-place="right"
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
+          data-select="#lrFill" data-activate="#easCustom"
+          data-show="#propsFill,#mxFill,#motSettings,#msPos,#lrRingMot,#lrCheckMot,#lrFillMot,#idrHint,#idrCheck,.idr-fillg,#barRing,#barCheck,#barHold,#barFill,#endMark"
+          data-hide="#idrSel,#propsEmpty,#propsShape,#motEmpty,#idrDir,#mxRing,#mxCheck,#msDash"
+          data-class="#idrRing=idr-anim-ring|#idrCheck=idr-anim-check|#idrFill=idr-anim-fill|#idrWin=idr-play|#crvFill=custom|#crvRing=custom|#crvCheck=custom|#sz16=idr-flag|#barFill=sel|#barCheck=-sel|#trkRing=-idr-nolane|#trkCheck=-idr-nolane|#trkFill=-idr-nolane"
+          data-css="#idrWin=--idr-cycle:2s;--idr-ease:cubic-bezier(.2,.7,.3,1)|#barCheck=left:37.5%;width:16.25%|#endMark=--t:.75"
+          data-set="#propKind=Shape|#pMotMut=1 motion|#trkRingLb=Dash|#trkCheckLb=Dash|#trkFillLb=Position|#pStart=860|#pOver=340|#curveVal=Custom|#chipMotion=3 motions|#chipRun=1.20s|#tlLen=1.20 s|#idrHint=Same three beats at 16, 24, 32 and 48.|#motNote=The four previews run the same three motions off the same numbers, because a dash length in viewBox units serves every size. What does not survive is the READING of it: at 16 the ring is a wipe rather than a drawn line.">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do">at the <b>16</b> preview, top left, while it runs</p>
+          <p class="wt-where">the Real size panel on the artboard</p>
+          <p class="wt-res">the sequence survives being small and it stops being the <i>same</i> sequence. At <b>16</b> there are not enough pixels in the stroke for the eye to follow a tip, so the ring reads as a wipe; the hold and the fill still land, which is why the badge still says success rather than saying nothing. Worth knowing before it ships into a toolbar: the beats are the part that scales, the drawing is not.</p>
         </div>
       </li>
 
@@ -597,9 +886,9 @@
 
   <div class="caption">
     <div class="c"><div class="lab">The idea</div><p>Drawing a stroke on animates <b>the path, not the shape's position</b>. It needs the path's length and its direction, which a vector tool already has and a video editor never would. Of the four animation scenarios this is the cheapest to build and the easiest to forget exists.</p></div>
-    <div class="c"><div class="lab g2">The honest bit</div><p>This is the first flow with an <b>order</b> in it, and order is the thing timelines are for. The answer drawn here is a two row list with real numbers and one overlap field, which is plainly enough for two shapes and plainly not enough for twenty.</p></div>
-    <div class="c"><div class="lab g2">A direction</div><p>The order list could <b>stagger a whole group</b> in one control: pick eight bars of a chart, say 40 milliseconds apart, and let the list fill itself in. That covers most of what people would otherwise open a timeline to do.</p></div>
-    <div class="c"><div class="lab g2">Open question</div><p>Where does the list stop being enough, and what replaces it? A <b>track per motion</b> is the obvious answer and it drags the whole video timeline in behind it. A <b>nested sequence</b> keeps the list but makes people think about grouping. This is the one question in the whole animation study that a comparison with the video flows should actually decide.</p></div>
+    <div class="c"><div class="lab g2">The craft</div><p>Three beats, three explicit starts, and <b>a hold you can point at</b>. The badge is 1.20 seconds because each beat has to be separable before anybody can argue about tightening it. The fill arrives by <b>one property moving</b>, which is the difference between a mark being made and a state being switched.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The dock could <b>stagger a whole group</b> in one gesture: pick eight bars of a chart, say 40 milliseconds apart, and let it lay the starts out. That covers most of what people would otherwise open a full timeline to do, and it is the same Start field being written many times.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Three lanes fit. Where does one cycle stop being enough, and what replaces it? A <b>document-length timeline</b> is the obvious answer and it drags the whole video surface in behind it. A <b>nested sequence</b> keeps the cycle but makes people think about grouping. Compared against the video flows on <button class="link" data-target="time-compare">One ruler or two</button>.</p></div>
   </div>
 </section>
 </main>
@@ -624,12 +913,6 @@
         });
       });
     }
-    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
-      var bs = [].slice.call(g.querySelectorAll('button'));
-      bs.forEach(function (b) {
-        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
-      });
-    });
     /* the pause button really pauses: a preview you cannot stop is the first
        thing anyone complains about */
     var play = root.querySelector('#btnPlay');
