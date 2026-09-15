@@ -1,0 +1,58 @@
+{
+  "id": "the-grid-line-under-a-pen-point-lights-up-while",
+  "title": "Before you press, a drawing tool shows where its first point will land",
+  "goal": "With the grid on, you aim a drawing tool at the canvas and nothing says where the point is actually going to go: you press, and the shape starts on whichever line the snap chose, which you find out after the fact. Every tool that starts a shape should show a small mark at the spot it would land, while you are still just hovering, and then say which lines caught it once you are drawing.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T20:51:46.449Z",
+  "updated": "2026-09-15T14:35:07.598Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-15: \"when i use the pen tool and hover over the grid with it enabled, i'd love a little dot where the pen will land when i mouse down, similar to other tools that snap to a thing\", then immediately broadened: \"same with rects, lines, etc\".\n\nSo this is a rule about aiming, not a Pen feature. A tool that snaps knows where the press would land before the press; showing it is the difference between placing a point and discovering where it went.\n\nThis task was originally only the second half of the problem, lighting the grid line under a point WHILE drawing. That half stays in the acceptance list, but the hover mark is the more valuable half and comes first: it is the one that stops you undoing.\n\nSnapping itself already works and should not be rebuilt. 'A Pen point lands on the grid line you can see' is done, and the Snapping machinery, the canvasSnap settings and the snapGuide layer are all in place (Sources/Photonz/CanvasDisplay.swift around the snapGuideLayer, and Snapping in PhotonzCore). The question this task answers is only what is DRAWN before the press, so the answer should come from asking the existing snap where the point would go rather than working it out a second way. If the two ever disagree the mark is a lie, which is worse than no mark.\n\nReuse the existing vocabulary rather than inventing: the canvas already has a pointer cue system (CanvasPointerCue, and the done task 'every-handle-on-the-canvas-says-what-it-does-to-the') and a snap guide layer that lights lines during a drag. The measure tool also already previews where a caliper foot would land while hovering, which is the closest existing thing to what is being asked for here and worth reading first.\n\nPer-mouse-move cost is in the acceptance list on purpose: this runs on every hover frame, over a document that may be large, and the app has just been through a round of selection-cost work. Measure it rather than assuming it is free.",
+  "acceptance": [
+    "Hovering with the Pen over a canvas whose grid is on shows a small mark at the exact point a press would land, and it moves from crossing to crossing as the pointer moves",
+    "The same is true of every other tool that starts a shape: rectangle, ellipse, line, arrow, highlight and frame, so this is one rule rather than a Pen feature",
+    "Where the point would NOT snap, because the grid is off or Command is held to drag free, the mark says that honestly rather than sitting on a lie: say in the audit what it does then",
+    "While a shape is being drawn, the lines the point came to rest on light up, which is what a dragged box already does",
+    "The mark uses the canvas's existing snap and pointer cue look rather than introducing a new kind of dot, and the audit names which one it reused",
+    "It is readable at every zoom and never covers the thing it is pointing at",
+    "It costs nothing noticeable: measure the per-mouse-move cost with the grid on and a busy document, and report it",
+    "It disappears the moment the tool changes or the pointer leaves the canvas, so nothing is left drawn on an idle window",
+    "A playtest walk hovers with two different tools on a grid and checks the mark is where the point lands",
+    "Audit under queue/audits/ with the mark captured under several tools, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T20:51:46.451Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:50.416Z",
+      "note": "seq 2610 -> 530"
+    },
+    {
+      "t": "2026-09-14T12:54:47.094Z",
+      "note": "seq 530 -> 550"
+    },
+    {
+      "t": "2026-09-15T12:14:53.921Z",
+      "note": "seq 550 -> 590"
+    },
+    {
+      "t": "2026-09-15T14:35:07.499209Z",
+      "note": "user asked for a hover mark showing where a point will land, for every drawing tool not just the Pen; folded into this task and broadened"
+    },
+    {
+      "t": "2026-09-15T14:35:07.550Z",
+      "note": "seq 590 -> 8"
+    },
+    {
+      "t": "2026-09-15T14:35:07.597Z",
+      "note": "priority p2-normal -> p1-high"
+    }
+  ]
+}
