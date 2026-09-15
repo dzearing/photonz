@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 85,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:15:03.625Z",
-  "updated": "2026-09-15T23:45:37.867Z",
+  "updated": "2026-09-15T23:45:49.521Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the design review of 2026-09-15. Three audits from the same day, each stating its own behaviour and none able to cite the other two:\n\nqueue/audits/2026-09-15-layer-motion.json, rough item four: \"Editing a field while the preview is PAUSED does not start it: you press play. Adding a motion does start it. Those are two different rules and somebody may well expect one.\"\n\nqueue/audits/2026-09-15-layer-motion.json, evaluate item one: \"Adding a motion starts it playing on its own. Is that the right amount of eager, or do you want to press play yourself?\"\n\nqueue/audits/2026-09-15-motion-pivot.json, evaluate item three: \"Grabbing the pivot starts the loop if it is stopped, because a still picture cannot show you a pivot. Is that helpful or is it the app taking over?\"\n\nEach of the three was argued honestly on its own and each is defensible alone. Together they are three answers to one question, shipped within eight hours of each other, and the person meeting them is meeting all three in one sitting. The pivot case has the strongest argument for starting the loop (a still picture cannot show you a pivot), so it is the one to reason from rather than the one to change first.\n\nNot seen on a screen: the Mac has been locked since 2026-09-14 20:46:47, so none of the three was ever run in a walk. The behaviours are read from the audits the runners wrote from their own code, not from watching the app.",
@@ -44,7 +44,12 @@
     {
       "t": "2026-09-15T23:45:37.866Z",
       "note": "Review AFTER building, done by reading rather than by using it: the Mac's screen has been locked since 2026-09-14 20:46, so no walk can run and no picture of the app is possible. Two things the read turned up. First, a real defect the rule surfaced: canPlayMotion asked whether a LAP LENGTH existed rather than whether anything was switched on, and a lap dragged onto the strip stays written down after every row on it is switched off, so the play button stayed live over a picture where nothing moved - and under the new rule the next number typed would have started a loop of a still icon. It now asks automaticMotionCycleLengthMS > 0, which is the question about what is ON. Second, left rough rather than filed: dragging inside the colour well on a Color motion writes a value continuously and each write now starts the lap over, so the preview sits pinned at the top of the lap while your hand is in the colour wheel. It did the same before this change whenever the preview was already running, so it is not new, it is only reachable from stopped now too; a person would barely notice and nothing is broken, so it stays here rather than becoming a near-twin task. Also left rough: undo and redo deliberately do NOT start the loop, on the grounds that they put back a picture you have already seen. That is the one place the rule could reasonably have gone the other way, and it is in the audit's rough list for the user to disagree with."
+    },
+    {
+      "t": "2026-09-15T23:45:49.519Z",
+      "note": "One rule, settled and written down: motion plays unless you stop it (docs/design/layer-motion.md, and at the top of EditorState+Motion.swift). Every gesture that could start the preview now goes through motionChanged() or motionGestureBegan(): add, remove, the row switch, every number, the pivot, both timing-strip drags, the lap length. Typing a number into a paused row now plays it, which is the case that used to land an edit with nothing on screen to show it. Two carve-outs, stated as part of the rule: working on the drawing rather than the motion, and the preview speed. The tutorial special case in openTutorialSample folded into installDocument, so any saved icon that moves opens moving. Also fixed: canPlayMotion asked whether a lap length existed rather than whether anything was switched on, so the play button stayed live over a picture where nothing moved. Verified: swift build clean, 7184 tests green, commit 89c95f94 on main. NOT verified: the walk. Scripts/playtest/motion-one-play-rule-walk.json drives all three gestures and both carve-outs and reads the transport back after each, and it parses at 56 steps, but the Mac's screen has been locked since 2026-09-14 20:46 so no walk on this machine can run at all. The sweep already pending runs it the moment the screen is unlocked and files a task if it fails. Audit: queue/audits/2026-09-15-motion-play-rule.json, which asks the user the question this task did not decide for them - is plays-unless-you-stop-it the right amount of eager?"
     }
   ],
-  "started": "2026-09-15T23:38:00.973Z"
+  "started": "2026-09-15T23:38:00.973Z",
+  "completed": "2026-09-15T23:45:49.520Z"
 }
