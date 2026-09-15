@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 3.3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:28:43.553Z",
-  "updated": "2026-09-15T03:42:14.338Z",
+  "updated": "2026-09-15T03:42:24.365Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The MODEL already supports this and it was designed in on purpose. Sources/PhotonzCore/VectorPath.swift describes a corner as \"two independent sides\" and smooth as the promise that the two stay aligned, and alignHandles at :106 says in its own comment that \"a half-smooth anchor stays half-smooth rather than sprouting a handle nobody dragged\". So the gap is entirely in the gesture, and nothing in PhotonzCore should need rewriting.\n\nThis was called out as the case that would decide whether the model was right, in the notes on the original reshaping task. The model got it right; the way in was never built.\n\nOption-dragging a lever already breaks the pair, which is most of the way there. The question to answer is whether that is enough once it is discoverable, or whether the point needs a way to drop one side's handle entirely so the segment goes properly straight rather than merely unaligned. Those are different shapes and only one of them is what a person means by \"straight on this side\".\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-15T03:42:14.337Z",
       "note": "Left rough, not filed: (a) reaching a half and half point from a HARD corner still takes two gestures, curve the point then straighten the side you did not want — a person is guided through it by the chip and nothing is broken, so it does not clear the bar on its own; (b) the Pen's own chip still does not mention Option, which is how you lay one down while drawing — already written up as a known rough edge in docs/design/vector-paths.md; (c) the Pen draws every anchor it has placed as the same round dot, so while drawing you cannot tell corners from bends from half and half points, unlike the reshaping chrome. All three are in the audit's rough list where the user can turn any of them into a task."
+    },
+    {
+      "t": "2026-09-15T03:42:24.363Z",
+      "note": "Double clicking the end of a lever pulls it in, so that side of the point runs straight while the other keeps its curve; Option click still does the same. Such a point draws as a rounded square, between the corner's square and the bend's circle, and the chip names what you picked and the way back. In Next, CanvasPathEdit.swift plus a new PhotonzCore PathEditHint. Verified: Scripts/test.sh green (6623 tests, new PhotonzCore tests written first for both directions, save and reload, and SVG); path-reshape-walk extended and passing with real screen captures; all 7 path, 12 pen and 2 layer-pick walks pass except turn-into-a-path-walk, which fails identically on a clean main and is folded into walks-that-fail-in-the-full-sweep. Audit at queue/audits/2026-09-15-half-smooth-points.json."
     }
   ],
-  "started": "2026-09-15T03:08:51.134Z"
+  "started": "2026-09-15T03:08:51.134Z",
+  "completed": "2026-09-15T03:42:24.364Z"
 }
