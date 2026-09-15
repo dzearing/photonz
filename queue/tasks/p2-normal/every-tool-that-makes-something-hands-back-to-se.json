@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p2-normal",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:31:06.145Z",
-  "updated": "2026-09-15T19:14:53.059Z",
+  "updated": "2026-09-15T19:15:12.510Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15: \"after i create a shape, it doesn't select it and switch to V tool.\"\n\nThis is about the PEN specifically, and it is a rule the rest of the app already follows. PhotonzCore/ArrowCaptionEntry.swift:57, toolAfterLanding, returns .select for everything except an arrow that is about to offer a caption, so rectangles, ellipses, lines and highlights all hand back with the new layer picked. The v0.14 changelog stated it as a principle out loud: \"Every tool that creates something, shapes, text, zoom callouts, and measures, hands you back to Select with the new object selected... Drawing five rectangles now means pressing R five times.\" The Pen does not do this.\n\nIT REVERSES A DELIBERATE DECISION, so do it knowingly rather than as a bug fix. The task 'the-pen-stays-in-your-hand-for-the-next-shape' is done and made the Pen keep itself in hand, on the reasoning that drawing several paths in a row is common. That reasoning is real, and the answer to it is the app's own: the tool's key puts it straight back, which is what every other drawing tool relies on. Consistency across ten tools beats one press saved in one of them, and the user has now run into the consequence twice.\n\nDo NOT undo what landed alongside it. The task 'a-path-you-drew-shows-you-what-you-can-do-to-it' made a picked path show its points with the Pen in hand as well as Select (CanvasPathEdit.editablePath). That stays: it is right on its own terms, and it means somebody who does keep the Pen in hand is not stranded. This task changes which tool you are holding, not what a path shows.\n\nCheck the other creating tools while in there rather than assuming the Pen is alone: the frame tool, the lens tool and the zoom callout each commit through their own path in EditorCanvasSurface.swift (onFrameCreate, onLensCreate, onZoomCalloutCommit) and none of them goes through toolAfterLanding. Whether they hand back is worth establishing rather than guessing, and if any does not, it belongs in this fix.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-15T19:14:53.058Z",
       "note": "left rough: a walk cannot read a layer's X and Y, so it cannot claim directly that an arrow key moved something. The pen-hands-back walk proves it indirectly (nudge, then one undo, then check the shape is still there). Not filed: a position assertion verb is an agent-facing convenience, not something a person using the app would notice."
+    },
+    {
+      "t": "2026-09-15T19:15:12.508Z",
+      "note": "The Pen now hands back to Select with the new path picked, like the other ten tools that make a layer. Tool.createsLayers names those eleven and a test over the list asserts each hands back through ArrowCaptionEntry.toolAfterLanding; .pen also joins preservesLayerSelection so pressing P over a finished path still reaches its points. Nine walks updated (pen-stays-in-hand renamed to pen-hands-back), tutorial copy and docs/design/vector-paths.md rewritten. VERIFIED: swift build clean, Scripts/test.sh green, 7074 tests in 565 suites. NOT VERIFIED: the Mac's screen was locked for the whole task so not one walk could run (status locked, zero steps); a sweep is requested with that reason. Audit: queue/audits/2026-09-15-pen-hands-back.json, no screenshots and it says why. Commit a24cf067."
     }
   ],
-  "started": "2026-09-15T19:04:40.897Z"
+  "started": "2026-09-15T19:04:40.897Z",
+  "completed": "2026-09-15T19:15:12.509Z"
 }
