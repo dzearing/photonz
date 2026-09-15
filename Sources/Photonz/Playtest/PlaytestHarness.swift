@@ -1033,15 +1033,27 @@ private final class Run {
 
         case .writeSVG(let name):
             let editor = try requireEditor()
+            // A drawing that moves writes the file that moves: one lap of the
+            // loop, in the file (`SVGMotionExport.swift`). A still one writes
+            // exactly what it always did.
+            let animation: SVGExport.Animation = editor.document?.hasMotion == true
+                ? .moving(cycleMS: editor.document?.motionCycleLengthMS ?? 1) : .still
             guard let document = editor.document,
-                  let written = SVGExporter.data(document, store: editor.store) else {
+                  let written = SVGExporter.data(document, store: editor.store,
+                                                 animation: animation) else {
                 throw Failure(description: "the document did not write as SVG")
             }
             try written.data.write(to: out.appendingPathComponent("\(name).svg"))
             let pictured = written.fallbacks.isEmpty
                 ? "every layer as shapes"
                 : written.fallbacks.map { "\($0.layerName) as a picture" }.joined(separator: ", ")
-            note(number, step.name, "\(name).svg \(written.data.count) bytes, \(pictured)")
+            let text = String(data: written.data, encoding: .utf8) ?? ""
+            let animations = text.components(separatedBy: "<animate").count - 1
+            let motion = animations > 0
+                ? ", \(animations) moving \(animations == 1 ? "part" : "parts")"
+                : ""
+            note(number, step.name,
+                 "\(name).svg \(written.data.count) bytes, \(pictured)\(motion)")
 
         case .panelMenu(let menu, let row, let shot, let choose, let clicking):
             try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
@@ -1982,6 +1994,12 @@ private final class Run {
                 // app's memory, so a walk that photographs Export on SVG
                 // cannot change what the NEXT walk's Export opens on.
                 editor.playtestOpensExportOnSVG = true
+                editor.isExportDialogPresented = true
+            case .exportDialogToWebPage:
+                editor.playtestExportDestination = .webPage
+                editor.isExportDialogPresented = true
+            case .exportDialogToReadme:
+                editor.playtestExportDestination = .readme
                 editor.isExportDialogPresented = true
             case .showLibrary: editor.setLibraryVisible(true)
             case .showComponentShelf:

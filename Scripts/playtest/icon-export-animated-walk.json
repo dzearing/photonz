@@ -1,0 +1,49 @@
+{
+  "out": "/tmp/photonz-playtest/icon-export-animated-walk",
+  "seed": "An icon that swings is only useful if it still swings once somebody else has the file. This walk draws a shape, tells it to turn, and then hands it over: it writes the SVG the app writes and reports how many moving parts landed in it, and it photographs the Export sheet asking WHERE THE FILE IS GOING before it asks for a format, with the list of what survives the trip underneath. The same sheet is then photographed bound for a code host, where the answer changes on its own: a README strips an animation out, so the format moves to a picture and a plain sentence says why.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 240], "to": [600, 400], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [490, 320] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
+    { "do": "describe", "stage": "1-it-swings", "note": "one shape, told to turn: it swings out one way, through where it was drawn, and back, for ever. That is what has to survive being handed over." },
+    { "do": "panel", "stage": "1-it-swings" },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "1-it-swings" },
+
+    { "do": "writeSVG", "name": "2-animated-icon" },
+    { "do": "describe", "stage": "2-written", "note": "THE TEST: the file the app writes, written. The log line above says how big it is and how many moving parts are in it. There is no picture inside it: the turn, the curve, the repeat and the colours are all text, so the icon stays sharp at every size and the file is small enough to read." },
+
+    { "do": "action", "action": "exportDialogToWebPage" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-where-it-is-going", "note": "THE TEST: the sheet asks WHERE THE FILE IS GOING before it asks for a format, because that is the question that decides whether the animation survives and it is the one most people can answer. Under it, what makes the trip and what does not, with the file's real size. The crossed-out line is the most useful thing on the sheet: a drawing in a page receives no clicks, so whatever the icon reacts to is the page's job." },
+    { "do": "snapshot", "name": "3-where-it-is-going" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "exportDialogToReadme" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-a-readme-strips-it", "note": "THE TEST: the same sheet, bound for a code host, changes its own answer. A code host cleans the files people upload, so the animation would be taken out and often the drawing with it; the format moves to a picture, and a plain sentence says why rather than leaving somebody to find out in review." },
+    { "do": "snapshot", "name": "4-a-readme-strips-it" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Rotation", "present": false },
+    { "do": "describe", "stage": "5-undone", "note": "and the motion comes off in one undo, which puts the document back to a still drawing that exports exactly the still file it always did." }
+  ]
+}

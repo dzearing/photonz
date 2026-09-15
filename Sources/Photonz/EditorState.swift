@@ -97,6 +97,9 @@ final class EditorState {
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
     var playtestOpensExportOnSVG = false
+    /// Probe only: where the Export sheet says the file is going, for the same
+    /// reason. Nil leaves the sheet on whatever was last picked.
+    var playtestExportDestination: SVGHandoff.Destination?
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
@@ -1718,11 +1721,16 @@ final class EditorState {
     /// embedded as a picture in the right place; the Export sheet has already
     /// said which layers those are, so this does not stop to tell you again.
     /// `frameID` narrows it to one frame exactly as the picture formats do.
-    func exportSVG(frameID: UUID? = nil) {
+    func exportSVG(frameID: UUID? = nil, animated: Bool = false) {
         guard let document else { return }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
-        guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer)
+        // One lap of the loop, written into the file, where the file is going
+        // somewhere that plays it (`SVGHandoff`).
+        let animation: SVGExport.Animation = animated && target.hasMotion
+            ? .moving(cycleMS: target.motionCycleLengthMS) : .still
+        guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
+                                             animation: animation)
         else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.svg]
@@ -1736,6 +1744,26 @@ final class EditorState {
         } catch {
             presentError("Couldn't export the SVG.", error)
         }
+    }
+
+    /// How big the SVG for this target would be and what of its motion the file
+    /// could not carry, so the Export sheet can say both before you save.
+    ///
+    /// Only answered for a drawing made entirely of shapes. Anything carrying a
+    /// photograph would have to be rendered to be measured, and rendering a
+    /// twelve megapixel document to put a number on a label is not a trade
+    /// worth making while somebody is still choosing.
+    func svgPreflight(frameID: UUID? = nil, animated: Bool = false)
+        -> (bytes: Int, unmoved: [SVGExport.Fallback])? {
+        guard let document else { return nil }
+        let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
+        let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
+        guard SVGExport.embeddedPictures(in: target).isEmpty else { return nil }
+        let animation: SVGExport.Animation = animated && target.hasMotion
+            ? .moving(cycleMS: target.motionCycleLengthMS) : .still
+        guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
+                                             animation: animation) else { return nil }
+        return (written.data.count, written.unmoved)
     }
 
     /// Renders the composite at `scale` and writes it where the user picks.

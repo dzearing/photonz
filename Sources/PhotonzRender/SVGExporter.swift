@@ -19,8 +19,9 @@ public enum SVGExporter {
     /// The document as SVG, with everything that had to fall back to a picture
     /// named in the result.
     public static func export(_ document: PhotonzDocument, store: ImageStore,
-                              renderer: DocumentRenderer = DocumentRenderer()) -> SVGExport.Result {
-        SVGExport.write(document,
+                              renderer: DocumentRenderer = DocumentRenderer(),
+                              animation: SVGExport.Animation = .still) -> SVGExport.Result {
+        SVGExport.write(document, animation: animation,
                         picture: { layer, origin in
                             picture(of: layer, at: origin, in: document,
                                     store: store, renderer: renderer)
@@ -34,11 +35,12 @@ public enum SVGExporter {
 
     /// The document as SVG bytes, ready to be written to a file.
     public static func data(_ document: PhotonzDocument, store: ImageStore,
-                            renderer: DocumentRenderer = DocumentRenderer())
-        -> (data: Data, fallbacks: [SVGExport.Fallback])? {
-        let result = export(document, store: store, renderer: renderer)
+                            renderer: DocumentRenderer = DocumentRenderer(),
+                            animation: SVGExport.Animation = .still)
+        -> (data: Data, fallbacks: [SVGExport.Fallback], unmoved: [SVGExport.Fallback])? {
+        let result = export(document, store: store, renderer: renderer, animation: animation)
         guard let data = result.text.data(using: .utf8) else { return nil }
-        return (data, result.fallbacks)
+        return (data, result.fallbacks, result.unmoved)
     }
 
     // MARK: - A picture of one layer

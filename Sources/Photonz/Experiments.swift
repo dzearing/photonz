@@ -370,6 +370,16 @@ extension Experiments {
         penEnabled && isEnabled(FeatureCatalog.svgExportFlag)
     }
 
+    /// `next-export-animated-svg`: whether Export asks where the file is
+    /// going and writes the motion into an SVG bound for a web page. It needs
+    /// both parents: with no SVG there is nothing to animate, and with no
+    /// Motion list there is never anything moving to carry, so the question
+    /// would be asked about a difference nobody could make.
+    var animatedSVGExportEnabled: Bool {
+        svgExportEnabled && motionEnabled
+            && isEnabled(FeatureCatalog.animatedSVGExportFlag)
+    }
+
     /// `next-turn-into-path`: whether a box, an oval or a line can be turned
     /// into a path from the two menus. It needs the reshaping work, because
     /// converting a shape you then cannot edit is a command with no payoff: the

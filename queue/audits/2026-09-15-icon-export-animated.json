@@ -1,0 +1,32 @@
+{
+  "feature": "Hand an animated icon over",
+  "epic": "icon-export",
+  "summary": "An icon that swings now leaves the app still swinging: Export writes a small SVG with the motion in it as text, sharp at every size and with no picture inside it. The sheet asks where the file is going before it asks for a format, and says in plain words what survives the trip.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"An animated icon leaves the app as an animated SVG\" is on by default; it needs the Pen, SVG export and the Motion list, which are all on too.",
+  "try": [
+    { "do": "Drag out a rectangle, or draw a shape with the Pen (P), and click it with the Select tool." },
+    { "do": "Press the plus on the Motion header in the right hand panel and choose Rotation. It starts swinging." },
+    { "do": "Drag the pivot knob on the picture up to the top edge, so it swings from a mount rather than rocking about its middle." },
+    { "do": "Press Command E." },
+    { "do": "Read the first row: Where it is going. Leave it on A web page and read the five lines under it." },
+    { "do": "Change it to A README on a code host, and watch the format and the list change themselves." },
+    { "do": "Put it back on A web page and press Export, then open the saved file in a browser.", "shot": "2026-09-15-icon-export-animated-in-a-browser.png" }
+  ],
+  "evaluate": [
+    "Asked where the file is going before what format it should be: does that land as obviously right, or as one more question between you and a file?",
+    "The crossed-out line says a drawing in a page receives no clicks. Is that worth the room it takes on the sheet, or is it noise you would read once and never again?",
+    "Choosing a README moves the format to a picture for you and says why. Does that read as helpful or as the sheet overruling you?",
+    "Does the icon in the browser look like the icon on the canvas, at the same moment of the swing?",
+    "Is the file size on the sheet (a swinging icon is about 1.5 KB) worth saying?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this task, so no walk could run: there is no picture of the Export sheet itself, and everything in the app is compiled and unit tested but unphotographed. The walk is written and waiting at Scripts/playtest/icon-export-animated-walk.json.",
+    "The picture shipped with this audit is the exported file playing in a browser, in an image tag and inline side by side, not a picture of Photonz. The shape in it is a crude test triangle rather than a real icon.",
+    "What the browser plays was checked against the app's own numbers at ten moments of one lap: the two agree to within a fifth of a degree, the difference being the straight lines between sampled points on a sine curve.",
+    "Telling a shape to GROW still does nothing on a path and only part of the way on a rectangle, which is an app bug rather than an export one: filed as \"A shape told to grow does not grow\". Until it is fixed, an icon that grows will be bigger in a browser than on the canvas, because the file writes what the row says.",
+    "The mock offered Lottie and Video as formats and neither exists in the app, so a README gets a picture instead of a video. A destination that hands you a format nothing can write is worse than no destination row at all.",
+    "The mock's \"the same thing as a GIF, 74 KB\" comparison is not shown: there is no GIF writer here, so the number would have been invented. The real size of the real file is shown instead.",
+    "The mock ticks \"Follows the text colour, currentColor kept\" and the exporter writes real colours rather than currentColor, so that line is not claimed.",
+    "The mock's own open question, whether the sheet should change the format for you or only warn, is answered by doing both: the destination moves the format and says why, and the format picker stays exactly where it was so it can be moved straight back."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:16.755Z",
-  "updated": "2026-09-15T12:14:53.253Z",
+  "updated": "2026-09-15T12:37:22.953Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -33,6 +33,23 @@
     {
       "t": "2026-09-15T12:14:53.252Z",
       "note": "seq 24 -> 40"
+    },
+    {
+      "t": "2026-09-15T12:16:33.203Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T12:25:57.653Z",
+      "note": "core writer lands: 26 tests green. Motion goes out as SMIL, one lap shared by every motion, stated as fractions of it. Adversarial review of the mock is in the notes below."
+    },
+    {
+      "t": "2026-09-15T12:37:22.909Z",
+      "note": "adversarial review of the mock, before building: (1) the mock's format list offers Lottie and Video and the app can write neither, so picking a README would have handed somebody a dead button; destinations now map only onto what the app can actually write, and a README gets a picture. (2) the mock's 'same thing as a GIF, 74 KB' would have been an invented number, cut, real byte size shown instead. (3) the mock ticks 'currentColor kept' and the exporter writes real colours, cut. (4) the mock's open question (change the format for you or only warn) is answered by doing both: the destination moves the format and says why, the picker stays put. Shortest version that keeps the value: the destination row only appears when something in the drawing actually moves, so Export is untouched for everyone else."
+    },
+    {
+      "t": "2026-09-15T12:37:22.952Z",
+      "note": "left rough (not filed, no person would hit it): a turn on a layer that is ALSO flipped or skewed is dropped rather than turning about the wrong thing, and so is a colour or width change on an inside/outside line, which the file draws in two halves. Both are named on the Export sheet before you save."
     }
-  ]
+  ],
+  "started": "2026-09-15T12:16:33.202Z"
 }

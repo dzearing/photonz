@@ -1,0 +1,28 @@
+{
+  "id": "a-shape-told-to-grow-does-not-grow",
+  "title": "A shape told to grow does not grow",
+  "goal": "Telling a layer to change its size over time is one of the six things the Motion list offers, and on the shapes icons are made of it does nothing at all: the box round the drawing grows and the drawing inside it stays exactly the size it was. On a rectangle something happens, but not the amount the row says. Somebody adds Scale, watches nothing move, and concludes the feature is broken.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T12:34:58.830Z",
+  "updated": "2026-09-15T12:34:58.833Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-15 while building animated SVG export. A scale motion only edits `layer.frame` (`MotionProperty.applied`, LayerMotion.swift ~line 723). A path's anchors are stored in the layer's own coordinates and are NOT re-fitted when the frame changes: resizing a path by hand goes through `PathBuilder.resized`, which scales the anchors, and the motion never calls it. `DocumentRenderer` then rasterizes the path into a bigger box and scales that box into the frame at 1:1, so nothing grows.\n\nThe probe, run as Tests/PhotonzRenderTests (deleted after; paste it back to re-run):\n\n  let content = PathContent(anchors: [ (0,0), (40,0), (40,40), (0,40) ], isClosed: true, paint: Paint(hex: \"#FF0000\"), fill: Paint(hex: \"#FF0000\"))\n  var layer = PathBuilder.layer(content, at: CGPoint(x: 30, y: 30))\n  layer.motions = [LayerMotion(property: .scale, from: .number(100), to: .number(200), timing: MotionTiming(startMS: 0, durationMS: 1000), curve: .linear, repeats: .forever)]\n  // ...same again with an AnnotationContent(shape: .rectangle) layer\n  renderer.render(document.moved(toMotionTimeMS: 0)) vs .moved(toMotionTimeMS: 999), counting pixels with alpha > 20\n\nRan with: Scripts/test.sh --filter ZZScaleProbe\nPrinted:\n  PROBE path: start 1936 px, end 1936 px      <- identical: the drawing never grew\n  PROBE rect: start 1600 px, end 2512 px      <- grew 1.57x in area where 4x was asked for\n\nThe export writes what the MODEL means (a scale about the middle of the layer, `SVGMotionExport.swift`), so today a grown icon in a browser is bigger than the same icon on the canvas. Fixing this makes the two agree; the export needs no change.",
+  "acceptance": [
+    "A path drawn with the Pen, told to go from 100% to 200%, is drawn twice as big at the end of the lap as at the start",
+    "A rectangle told the same thing is drawn twice as big, not one and a quarter times",
+    "The canvas, the looping preview at small sizes and an exported animated SVG all agree about how big it is at a given moment",
+    "A test asserts the drawn size at the two ends of the lap, so this cannot come back"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T12:34:58.832Z",
+      "note": "created (manual)"
+    }
+  ]
+}

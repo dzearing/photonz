@@ -538,6 +538,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// time, so this asks for SVG the same way picking it once would and then
     /// opens the sheet.
     case exportDialogAsSVG
+    /// The Export sheet with the hand-off question answered for it (Next,
+    /// `next-export-animated-svg`): a walk cannot open a menu inside a sheet,
+    /// so this says where the file is going and then opens it. Asked for on
+    /// the sheet rather than written into the app's memory, so a walk cannot
+    /// change where the NEXT walk's Export opens on.
+    case exportDialogToWebPage, exportDialogToReadme
     /// The View menu's Library rows (Next, `next-library`), so a walk can
     /// photograph the shelf.
     case showLibrary, hideLibrary

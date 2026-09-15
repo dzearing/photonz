@@ -97,6 +97,60 @@ falls back to a picture instead, because that halo is painted into the words.
   their own drawing.
 * The only generated names are gradient and clip ids, one number each.
 
+## When the drawing moves
+
+A document whose layers are told to change over time can go out as a file that
+**plays it itself** (`Sources/PhotonzCore/SVGMotionExport.swift`). Nothing about
+the still file changes: a drawing with nothing moving in it writes the same
+bytes it always did, and an animated one is the same shapes with animation
+elements threaded through them.
+
+**One lap, stated as fractions of itself.** Every motion in a document shares
+the lap the canvas and the timing strip use, and each one is written as a list
+of moments inside that lap, each moment a fraction of it. Milliseconds on
+screen, fractions in the file. Two animations with two different durations would
+drift apart on the first repeat, which would quietly destroy the one thing a lag
+between two parts of one drawing is for.
+
+**SMIL, not CSS keyframes.** A turn has to say the point it turns ABOUT, and
+`<animateTransform type="rotate">` says it in plain user units in the value
+itself. The CSS answer is `transform-origin`, whose meaning inside an SVG
+depends on `transform-box` and on whether the transform arrived as an attribute
+or as a property — and a bell hanging from the wrong point is the exact mistake
+`MotionPivot` exists to prevent.
+
+| What moves | What the file says |
+| --- | --- |
+| Position | `animateTransform type="translate"`, as a move from where it was drawn |
+| Rotation | `animateTransform type="rotate"`, about the pivot, in canvas units |
+| Scale | `animateTransform type="scale"`, between a step out to the middle and back |
+| Opacity | `animate attributeName="opacity"` |
+| Colour | `animate` on `fill` or `stroke`, on a group the shape INHERITS from |
+| Line width | `animate attributeName="stroke-width"`, inherited the same way |
+
+Curves SVG can state are stated — `keySplines` for the four standard eases and
+for one you drew — and curves it cannot are drawn point by point instead: back
+and elastic overshoot, and SMIL keeps both control points inside the unit
+square. Steps become `calcMode="discrete"`. Every value is asked of the motion
+ITSELF rather than worked out again, so the file and the canvas can never
+disagree about what a curve or a there-and-back means.
+
+**A host that strips it still gets the icon.** Every animated attribute is also
+written as an ordinary attribute on the group that carries the animation, so a
+reader that throws the animation away draws the drawing at the top of its lap
+rather than a black square. That is checked by rendering the file back through
+the system's own SVG reader and comparing it with the canvas
+(`anAnimatedFileStillDrawsTheIconWhereTheLapStarts`).
+
+## Where it is going, asked before what format
+
+`SVGHandoff` is the model behind the Export sheet's first question. The same
+animated SVG plays on a web page, is thrown away by a design tool, and is
+stripped out of a README, so a list of formats cannot tell you what will happen
+to what you just made. The sheet asks the destination, moves the format to the
+one that survives, and lists what makes the trip and what does not — including
+the one line nothing carries: **a drawing in a page receives no clicks**.
+
 ## Saying what it could not do
 
 `SVGExport.fallbacks(in:)` answers the same question the writer answers, without
@@ -130,3 +184,9 @@ covers the writing itself.
   SVG itself, and the render-back check could not verify it.
 * **A fallback picture is rasterized at 2×.** It is the one part of the file
   that does not scale.
+* **A turn on a layer that is also flipped or skewed does not animate.** The two
+  cannot be separated out of one matrix, so the turn is dropped and named in the
+  result's `unmoved` list rather than turning about the wrong thing.
+* **A colour or a line width on a shape the file draws in two halves** — an
+  inside or an outside line — is dropped the same way, because the width a
+  group hands down would reach the wrong one of the two.

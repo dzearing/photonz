@@ -64,18 +64,27 @@ public enum SVGExport {
         /// Everything that could not be written as shapes, in the order it was
         /// met.
         public var fallbacks: [Fallback]
+        /// Parts of the MOTION the file could not carry, each with the reason
+        /// in words a person can read. Empty for a still file.
+        public var unmoved: [Fallback]
 
-        public init(text: String, fallbacks: [Fallback]) {
+        public init(text: String, fallbacks: [Fallback], unmoved: [Fallback] = []) {
             self.text = text
             self.fallbacks = fallbacks
+            self.unmoved = unmoved
         }
     }
 
     /// The whole document as SVG.
+    ///
+    /// `animation` decides whether the motions in the document travel with it.
+    /// A document with nothing moving writes exactly the same file either way.
     public static func write(_ document: PhotonzDocument,
+                             animation: Animation = .still,
                              picture: PictureMaker? = nil,
                              outlineText: TextOutliner? = nil) -> Result {
-        var writer = Writer(picture: picture, outlineText: outlineText)
+        var writer = Writer(picture: picture, outlineText: outlineText,
+                            animation: animation)
         return writer.run(document)
     }
 
@@ -331,8 +340,15 @@ private extension LayerContent {
 private struct Writer {
     let picture: SVGExport.PictureMaker?
     let outlineText: SVGExport.TextOutliner?
+    var animation: SVGExport.Animation = .still
     var defs: [String] = []
     var fallbacks: [SVGExport.Fallback] = []
+    var unmoved: [SVGExport.Fallback] = []
+    /// Paint roles the group around the layer being written is animating, so
+    /// the shape itself must leave them unsaid and inherit them instead.
+    var omitPaint: Set<String> = []
+    /// The same for the width of the one line the layer draws.
+    var omitsStrokeWidth = false
     var nextPaintNumber = 1
     var nextClipNumber = 1
 
@@ -350,7 +366,7 @@ private struct Writer {
         lines.append(contentsOf: body)
         lines.append("</svg>")
         return SVGExport.Result(text: lines.joined(separator: "\n") + "\n",
-                                fallbacks: fallbacks)
+                                fallbacks: fallbacks, unmoved: unmoved)
     }
 
     // MARK: A stack of layers
@@ -368,23 +384,39 @@ private struct Writer {
     mutating func write(_ layer: Layer, groupOffset: CGPoint, level: Int) -> [String] {
         let canvasOrigin = CGPoint(x: groupOffset.x + layer.frame.minX,
                                    y: groupOffset.y + layer.frame.minY)
-        switch SVGExport.answer(for: layer, canOutlineText: outlineText != nil) {
+        let answer = SVGExport.answer(for: layer, canOutlineText: outlineText != nil)
+        let isPicture: Bool = if case .picture = answer { true } else { false }
+        // What this layer is told to do over time, as the groups that do it.
+        // A still export asks for none of this, and a layer with nothing
+        // moving comes back with nothing to wrap it in.
+        let wrap = animation.cycleMS.map {
+            MotionSVG.wrap(for: layer, cycleMS: $0, level: level, isPicture: isPicture)
+        } ?? MotionSVG.Wrap()
+        unmoved.append(contentsOf: wrap.dropped)
+        let inner = level + wrap.levels
+
+        let body: [String]
+        switch answer {
         case .picture(let reason):
             if let reason {
                 fallbacks.append(SVGExport.Fallback(layerName: layer.name, reason: reason))
             }
-            return picture(of: layer, canvasOrigin: canvasOrigin,
-                           groupOffset: groupOffset, level: level)
+            body = picture(of: layer, canvasOrigin: canvasOrigin,
+                           groupOffset: groupOffset, level: inner, wrap: wrap)
         case .vector:
-            return shapes(of: layer, canvasOrigin: canvasOrigin,
-                          groupOffset: groupOffset, level: level)
+            body = shapes(of: layer, canvasOrigin: canvasOrigin,
+                          groupOffset: groupOffset, level: inner, wrap: wrap)
         }
+        // A layer that drew nothing needs no groups round the nothing.
+        guard !body.isEmpty else { return [] }
+        return wrap.opens + body + wrap.closes
     }
 
     /// A layer with no vector answer, as the picture somebody else made of it,
     /// in the place it belongs.
     mutating func picture(of layer: Layer, canvasOrigin: CGPoint,
-                          groupOffset: CGPoint, level: Int) -> [String] {
+                          groupOffset: CGPoint, level: Int,
+                          wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> [String] {
         guard let made = picture?(layer, canvasOrigin), !made.png.isEmpty,
               made.box.width > 0, made.box.height > 0 else { return [] }
         // The picture's box is stated against the canvas; inside a group, the
@@ -394,13 +426,14 @@ private struct Writer {
         return [indent(level) + "<image x=\"\(n(box.minX))\" y=\"\(n(box.minY))\""
             + " width=\"\(n(box.width))\" height=\"\(n(box.height))\""
             + " preserveAspectRatio=\"none\""
-            + attribute("opacity", opacity(layer.style.opacity))
+            + attribute("opacity", wrap.omitsOpacity ? nil : opacity(layer.style.opacity))
             + " href=\"data:image/png;base64,\(data)\"/>"]
     }
 
     /// A layer as the shapes it is made of.
     mutating func shapes(of layer: Layer, canvasOrigin: CGPoint,
-                         groupOffset: CGPoint, level: Int) -> [String] {
+                         groupOffset: CGPoint, level: Int,
+                         wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> [String] {
         // Everything inside is written in the layer's OWN coordinates and the
         // layer is put in its place once, on the way in.
         var inside: [String] = []
@@ -413,16 +446,23 @@ private struct Writer {
                                                                  y: canvasOrigin.y),
                                             level: inner))
         } else {
+            // What the group around this layer is animating, the shape leaves
+            // unsaid: an inherited colour or width is how the animation
+            // reaches a shape SMIL is not attached to.
+            omitPaint = wrap.omitPaint
+            omitsStrokeWidth = wrap.omitsStrokeWidth
             inside.append(contentsOf: content(of: layer, canvasOrigin: canvasOrigin,
                                               level: inner))
+            omitPaint = []
+            omitsStrokeWidth = false
         }
         inside.append(contentsOf: rings(of: layer, level: inner))
         // A group with nothing left in it is nothing at all, rather than an
         // empty pair of tags for somebody to wonder about.
         guard !inside.isEmpty else { return [] }
 
-        let place = placement(of: layer)
-        let fade = attribute("opacity", opacity(layer.style.opacity))
+        let place = placement(of: layer, withoutTurn: wrap.ownsTheTurn)
+        let fade = attribute("opacity", wrap.omitsOpacity ? nil : opacity(layer.style.opacity))
         // A group stays a group, so the file has the nesting the layers list
         // shows. A layer that turned out to be one shape carries its own
         // placing instead of sitting alone inside a wrapper.
@@ -490,7 +530,7 @@ private struct Writer {
         switch content.effectiveStrokePosition {
         case .center:
             return [indent(level) + "<path d=\"\(data)\"\(attributes)\(edge)"
-                + " stroke-width=\"\(n(content.strokeWidth))\"\(join)/>"]
+                + width(content.strokeWidth) + join + "/>"]
         case .inside, .outside:
             // There is no such thing as a path inset by half a line width, so
             // the line is drawn DOUBLE width and the half that should not be
@@ -535,7 +575,7 @@ private struct Writer {
             return [indent(level) + "<line x1=\"\(n(annotation.start.x))\""
                 + " y1=\"\(n(annotation.start.y))\" x2=\"\(n(annotation.end.x))\""
                 + " y2=\"\(n(annotation.end.y))\"\(ink)"
-                + " stroke-width=\"\(n(annotation.strokeWidth))\" stroke-linecap=\"round\"/>"]
+                + width(annotation.strokeWidth) + " stroke-linecap=\"round\"/>"]
         case .ellipse:
             var lines: [String] = []
             if let inside = annotation.fill {
@@ -552,7 +592,7 @@ private struct Writer {
                 lines.append(indent(level) + "<ellipse cx=\"\(n(ring.midX))\""
                     + " cy=\"\(n(ring.midY))\" rx=\"\(n(ring.width / 2))\""
                     + " ry=\"\(n(ring.height / 2))\" fill=\"none\"\(ink)"
-                    + " stroke-width=\"\(n(annotation.strokeWidth))\"/>")
+                    + width(annotation.strokeWidth) + "/>")
             }
             return lines
         case .rectangle:
@@ -568,7 +608,7 @@ private struct Writer {
                 let ring = box.insetBy(dx: annotation.strokeWidth / 2 - annotation.strokeOutset,
                                        dy: annotation.strokeWidth / 2 - annotation.strokeOutset)
                 let ink = stroke(annotation.paint, box: ring)
-                    + " stroke-width=\"\(n(annotation.strokeWidth))\""
+                    + width(annotation.strokeWidth)
                 lines.append(boxElement(ring, radii: radii.fitted(in: ring.size),
                                  paint: " fill=\"none\"" + ink, level: level))
             }
@@ -650,6 +690,12 @@ private struct Writer {
 
     // MARK: Paint
 
+    /// The width of the one line this layer draws, or nothing where the group
+    /// around it is animating that width and the shape inherits it.
+    func width(_ value: CGFloat) -> String {
+        omitsStrokeWidth ? "" : " stroke-width=\"\(n(value))\""
+    }
+
     mutating func fill(_ paint: Paint, box: CGRect) -> String {
         paints(paint, box: box, as: "fill")
     }
@@ -662,6 +708,8 @@ private struct Writer {
     /// the colour is see-through, its own opacity; or a pointer at a ramp
     /// written into the definitions.
     mutating func paints(_ paint: Paint, box: CGRect, as role: String) -> String {
+        // Said by the group around it, which is animating it.
+        if omitPaint.contains(role) { return "" }
         guard paint.isGradient, let id = define(paint, box: box) else {
             let rgba = RGBA(hex: paint.hex) ?? RGBA(r: 0, g: 0, b: 0)
             var text = " \(role)=\"\(rgba.hexString)\""
@@ -709,13 +757,16 @@ private struct Writer {
 
     /// Where the layer sits and how it is turned, as one transform — or
     /// nothing at all, which is what a layer at the origin deserves.
-    func placement(of layer: Layer) -> String {
+    func placement(of layer: Layer, withoutTurn: Bool = false) -> String {
         var parts: [String] = []
         let origin = layer.frame.origin
         if origin.x != 0 || origin.y != 0 {
             parts.append("translate(\(n(origin.x)) \(n(origin.y)))")
         }
-        if !layer.transform.isIdentity {
+        // A turn that is animated is stated by the group doing the animating,
+        // which starts from the angle the motion starts at. Saying it here as
+        // well would turn the drawing twice.
+        if !layer.transform.isIdentity, !withoutTurn {
             let middle = CGPoint(x: layer.frame.width / 2, y: layer.frame.height / 2)
             if layer.transform.rotation != 0, layer.transform.skewX == 0,
                layer.transform.skewY == 0, !layer.transform.flipHorizontal,

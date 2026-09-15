@@ -47,6 +47,46 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "shapes")
     }
 
+    // MARK: - A file that moves
+
+    @Test func anAnimatedFileStillDrawsTheIconWhereTheLapStarts() throws {
+        var content = Self.bowedSquare().normalized()
+        content.fillColorHex = "#FFD60A"
+        content.colorHex = "#1C1C1E"
+        content.strokeWidth = 4
+        var layer = Layer(name: "Bell", content: .path(content),
+                          frame: CGRect(origin: CGPoint(x: 40, y: 30), size: content.bounds.size))
+        // Hanging from its mount, which is the case a wrong pivot ruins.
+        layer.motions = [LayerMotion(property: .rotation, from: .number(-14), to: .number(14),
+                                     timing: MotionTiming(startMS: 0, durationMS: 800),
+                                     curve: .easeInOutSine, repeats: .foreverThereAndBack,
+                                     pivot: MotionPivot(unit: CGPoint(x: 0.5, y: 0)))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "swinging",
+                                      animation: .moving(cycleMS: document.motionCycleLengthMS))
+    }
+
+    @Test func aFileThatFadesAndRepaintsStillDrawsWhatItStartsAs() throws {
+        var content = Self.bowedSquare().normalized()
+        content.fillColorHex = "#34C759"
+        content.colorHex = "#34C759"
+        content.strokeWidth = 0
+        var layer = Layer(name: "Blob", content: .path(content),
+                          frame: CGRect(origin: CGPoint(x: 30, y: 25), size: content.bounds.size))
+        layer.style.opacity = 1
+        layer.motions = [
+            LayerMotion(property: .opacity, from: .number(60), to: .number(100),
+                        timing: MotionTiming(startMS: 0, durationMS: 500),
+                        curve: .linear, repeats: .foreverThereAndBack),
+            LayerMotion(property: .color, from: .color("#34C759"), to: .color("#FF375F"),
+                        timing: MotionTiming(startMS: 0, durationMS: 500),
+                        curve: .linear, repeats: .foreverThereAndBack)
+        ]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "fading",
+                                      animation: .moving(cycleMS: document.motionCycleLengthMS))
+    }
+
     @Test func aBoxKeepsTheLineRoundIt() throws {
         // A drawn rectangle's edge is a Border in the Effects list
         // (`OutlineRetirement.swift`), so this is the everyday case.
@@ -208,11 +248,17 @@ struct SVGExportRenderTests {
     static func expectTheSamePicture(of document: PhotonzDocument, name: String,
                                      store: ImageStore = ImageStore(),
                                      tolerance: Double = 1,
+                                     animation: SVGExport.Animation = .still,
                                      sourceLocation: SourceLocation = #_sourceLocation) throws {
         let renderer = DocumentRenderer()
-        let mine = try #require(renderer.render(document, store: store),
+        // A file that carries the motion still has to DRAW something standing
+        // still, for every reader that does not play it. What it draws is the
+        // top of the lap, so that is what the canvas is asked for too.
+        let canvasShows = animation.isMoving ? document.moved(toMotionTimeMS: 0) : document
+        let mine = try #require(renderer.render(canvasShows, store: store),
                                 "the app could not draw \(name)", sourceLocation: sourceLocation)
-        let result = SVGExporter.export(document, store: store, renderer: renderer)
+        let result = SVGExporter.export(document, store: store, renderer: renderer,
+                                        animation: animation)
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("photonz-svg-\(name)-\(UUID().uuidString).svg")
         try result.text.write(to: url, atomically: true, encoding: .utf8)

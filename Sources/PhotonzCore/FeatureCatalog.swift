@@ -146,6 +146,8 @@ public enum FeatureCatalog {
 
     public static let motionStripFlag = "next-motion-strip"
 
+    public static let animatedSVGExportFlag = "next-export-animated-svg"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -455,6 +457,15 @@ public enum FeatureCatalog {
                     name: motionFlag,
                     title: "Tell a layer to change one of its properties over time",
                     description: "Adds Motion to the right hand panel, directly under Effects and read the same way: a list you add to with the plus on its header. An entry is one property of the layer you have picked that changes over time. The plus offers only what that layer actually has, each with the value it is wearing right now: where it sits, how big it is, how far it is turned, how see-through it is, what colour it is, and on a drawn line how thick that line is. There is no menu of canned motions with names like Pulse or Wiggle, because those are combinations of these and combinations are what you make. Each entry says what it goes from and to, how long after the start of the loop it begins, how long it takes, on which curve, and how often it repeats: once, three times, for ever, or for ever there and back, which is what an icon nearly always wants and what a new entry starts as. The curves are one named set with the shape drawn beside each name, from linear through the four standard eases to back, elastic and steps, plus one you draw yourself by dragging two handles. The picture plays it in the canvas, and the play button on the Motion header starts and stops the preview, as does the space bar with the picture in focus. How fast it plays is a rate you pick, full speed or a quarter or a tenth, and everything slows together: a ninety millisecond gap between two parts of one drawing is under six frames at full speed, so slowing the loop is how you judge one at all. Nothing is ever baked in: a motion is worked out at the moment the canvas is drawn, exactly like a blur or a shadow, so the layer you can still drag is the layer you drew, and every change is one step for undo. Off means no Motion section and nothing in any document moves.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: animatedSVGExportFlag,
+                    title: "An animated icon leaves the app as an animated SVG",
+                    description: "Export asks where the file is going before it asks for a format, because that is the question that decides whether the animation survives the trip and it is the one most people can answer. Four destinations: a web page, a README on a code host, a design tool and an app bundle. A web page gets an animated SVG, and the motion, the repeat, the curve and the colours are written into the file itself as text, so the icon keeps swinging in an image tag, stays sharp at every size and is small enough to read. The other three cannot run it: a code host cleans what it is given and gets a picture instead, and a design tool and an app take the shapes and draw their own motion. The sheet says which of those it is, and lists what makes the trip and what does not, including the one thing nothing carries: an icon in a page receives no clicks, so whatever it reacts to is the page's job. The format picker sits right where it always did and the destination simply moves it, so nothing is taken away from somebody who knows what they want. Needs SVG export and the Motion list, and a drawing with nothing moving in it exports exactly the file it did before. Off means Export never asks about the destination and an SVG is always a still one.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
