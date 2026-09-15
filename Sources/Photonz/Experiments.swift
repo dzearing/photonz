@@ -399,6 +399,16 @@ extension Experiments {
     /// it always wrote, at the quality it always used.
     var exportQualityEnabled: Bool { isEnabled(FeatureCatalog.exportQualityFlag) }
 
+    /// `next-export-webp`: whether Export offers WebP beside the three formats
+    /// macOS can write. It needs the quality slider, because WebP's whole range
+    /// hangs off it: the slider is how a lossy WebP is tuned and, at the top,
+    /// how a lossless one is asked for. Without that control WebP would be a
+    /// fourth button that always wrote the same file, so with the quality
+    /// switch off this reads as off too.
+    var webPExportEnabled: Bool {
+        exportQualityEnabled && isEnabled(FeatureCatalog.webPExportFlag)
+    }
+
     /// `next-export-animated-svg`: whether Export asks where the file is
     /// going and writes the motion into an SVG bound for a web page. It needs
     /// both parents: with no SVG there is nothing to animate, and with no

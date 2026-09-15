@@ -10,6 +10,7 @@ struct ExportQualityTests {
     @Test func onlyTheFormatsThatThrowPixelsAwayHaveAQuality() {
         #expect(ExportQuality.applies(toFormat: "jpeg"))
         #expect(ExportQuality.applies(toFormat: "heic"))
+        #expect(ExportQuality.applies(toFormat: "webp"))
         // A PNG keeps every pixel and an SVG has none: a quality means nothing
         // for either, so neither grows a control.
         #expect(!ExportQuality.applies(toFormat: "png"))
@@ -17,10 +18,22 @@ struct ExportQualityTests {
     }
 
     /// A format nobody has taught this about gets no control rather than a
-    /// control that does nothing. WebP will be taught here when it arrives.
+    /// control that does nothing.
     @Test func anUnknownFormatGetsNoQuality() {
-        #expect(!ExportQuality.applies(toFormat: "webp"))
+        #expect(!ExportQuality.applies(toFormat: "tiff"))
         #expect(!ExportQuality.applies(toFormat: ""))
+    }
+
+    /// WebP is the one format whose top of the slider throws nothing away, so
+    /// lossless is reached by dragging to 100 rather than by a second control.
+    @Test func theTopOfTheSliderIsLosslessOnlyForWebP() {
+        #expect(ExportQuality.isLossless(atPercent: 100, format: "webp"))
+        #expect(!ExportQuality.isLossless(atPercent: 95, format: "webp"))
+        #expect(!ExportQuality.isLossless(atPercent: 100, format: "jpeg"))
+        #expect(!ExportQuality.isLossless(atPercent: 100, format: "heic"))
+        #expect(ExportQuality.word(for: 100, format: "webp") == "Lossless")
+        #expect(ExportQuality.word(for: 95, format: "webp") == "Best")
+        #expect(ExportQuality.word(for: 100, format: "jpeg") == "Best")
     }
 
     @Test func theSliderCannotReachAQualityThatBreaksThePicture() {

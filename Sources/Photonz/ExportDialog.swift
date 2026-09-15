@@ -2,8 +2,8 @@ import PhotonzCore
 import PhotonzRender
 import SwiftUI
 
-/// What Export is being asked for. Three of the four are pictures and take a
-/// scale; the fourth has no pixels in it at all, which is why this is one
+/// What Export is being asked for. All but one of the answers is a picture and
+/// takes a scale; the last has no pixels in it at all, which is why this is one
 /// choice rather than a format plus a flag (Next, `next-export-svg`).
 enum ExportChoice: Hashable {
     case picture(ImageCodec.Format)
@@ -22,13 +22,15 @@ enum ExportChoice: Hashable {
         }
     }
 
-    /// The choice last used, or PNG. An answer this build cannot offer — SVG
-    /// with the flag off — comes back as PNG rather than as a format with no
-    /// button.
-    static func remembered(offeringSVG: Bool) -> ExportChoice {
+    /// The choice last used, or PNG. An answer this build cannot offer — SVG or
+    /// WebP with the flag off — comes back as PNG rather than as a format with
+    /// no button, which would leave the picker showing nothing selected.
+    static func remembered(offeringSVG: Bool, offeringWebP: Bool) -> ExportChoice {
         let stored = UserDefaults.standard.string(forKey: rememberedKey)
         if stored == "svg" { return offeringSVG ? .svg : .picture(.png) }
-        return ImageCodec.Format(rawValue: stored ?? "").map(ExportChoice.picture) ?? .picture(.png)
+        guard let format = ImageCodec.Format(rawValue: stored ?? "") else { return .picture(.png) }
+        if format == .webp, !offeringWebP { return .picture(.png) }
+        return .picture(format)
     }
 
     func remember() {
@@ -61,6 +63,11 @@ enum ExportQualityMemory {
 /// With frames in the document (Next, `next-frames`) it also asks WHAT to
 /// export: the whole canvas, or one frame on its own. It opens on the frame you
 /// have selected, so exporting the screen you are working on is Return.
+///
+/// With WebP in the picker (Next, `next-export-webp`), it behaves like the other
+/// lossy formats: same slider, same live size. The one thing it does that they
+/// cannot is at the very top of that slider, where it writes a lossless file and
+/// the line under the slider says "Lossless" instead of "Best".
 ///
 /// With SVG in the picker (Next, `next-export-svg`), choosing it puts the scale
 /// row away — 1× and 2× mean nothing for a file with no pixels — and says
@@ -108,6 +115,8 @@ struct ExportDialog: View {
     }
 
     private var offersSVG: Bool { Experiments.shared.svgExportEnabled }
+
+    private var offersWebP: Bool { Experiments.shared.webPExportEnabled }
 
     /// Whether the hand-off question is worth asking at all: something in the
     /// drawing moves, so where it is going decides whether that survives.
@@ -177,6 +186,14 @@ struct ExportDialog: View {
         return qualities[lossyFormat.rawValue] ?? ExportQuality.standard
     }
 
+    /// What the slider reads out loud. At the top of a format whose top is
+    /// lossless, the number alone would hide the only thing worth knowing.
+    private var qualityVoice: String {
+        ExportQuality.isLossless(atPercent: qualityPercent, format: lossyFormat?.rawValue ?? "")
+            ? "100 percent, lossless"
+            : "\(qualityPercent) percent"
+    }
+
     private var qualityBinding: Binding<Double> {
         Binding(get: { Double(qualityPercent) },
                 set: { value in
@@ -187,7 +204,8 @@ struct ExportDialog: View {
 
     /// What the chosen quality is called, and what it costs, on one line.
     private var qualityNote: String {
-        let word = ExportQuality.word(for: qualityPercent)
+        let word = ExportQuality.word(for: qualityPercent,
+                                      format: lossyFormat?.rawValue ?? "")
         if let pictureBytes { return "\(word) · \(ExportQuality.fileSize(bytes: pictureBytes))" }
         return weighed ? word : "\(word) · working out the size"
     }
@@ -292,6 +310,9 @@ struct ExportDialog: View {
                 Text("PNG").tag(ExportChoice.picture(.png))
                 Text("JPEG").tag(ExportChoice.picture(.jpeg))
                 Text("HEIC").tag(ExportChoice.picture(.heic))
+                if offersWebP {
+                    Text("WebP").tag(ExportChoice.picture(.webp))
+                }
                 if offersSVG {
                     Text("SVG").tag(ExportChoice.svg)
                 }
@@ -330,9 +351,12 @@ struct ExportDialog: View {
                         if offersQuality, ExportQuality.applies(toFormat: format.rawValue) {
                             ExportQualityMemory.remember(percent, format: format.rawValue)
                         }
+                        // Handing over the sizer hands over the work it has
+                        // already done: the number you just read came from
+                        // encoding this very file, so saving it is instant.
                         editorState.exportComposite(format: format, scale: scale,
                                                     quality: ExportQuality.fraction(percent),
-                                                    frameID: frameID)
+                                                    frameID: frameID, using: sizer)
                     case .svg:
                         editorState.exportSVG(frameID: frameID, animated: carriesTheMotion)
                     }
@@ -349,7 +373,7 @@ struct ExportDialog: View {
         // last time, so the common case is Return.
         .onAppear {
             frameID = editorState.selectedFrameID
-            choice = ExportChoice.remembered(offeringSVG: offersSVG)
+            choice = ExportChoice.remembered(offeringSVG: offersSVG, offeringWebP: offersWebP)
             destination = SVGHandoff.remembered
             #if PHOTONZ_PLAYTEST
             if let asked = editorState.playtestExportDestination { destination = asked }
@@ -406,7 +430,7 @@ struct ExportDialog: View {
                        in: Double(ExportQuality.lowest)...Double(ExportQuality.highest),
                        step: Double(ExportQuality.step))
                     .accessibilityLabel("Quality")
-                    .accessibilityValue("\(qualityPercent) percent")
+                    .accessibilityValue(qualityVoice)
                 Text("\(qualityPercent)%")
                     .monospacedDigit()
                     .frame(width: 38, alignment: .trailing)

@@ -565,6 +565,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// same reason: a walk cannot click the format row inside a sheet, and the
     /// quality slider only exists for a format that has a quality.
     case exportDialogAsJPEG
+    /// The Export sheet already on WebP (Next, `next-export-webp`), so a walk
+    /// can photograph the one format whose slider reaches lossless.
+    case exportDialogAsWebP
     /// The Export sheet with the hand-off question answered for it (Next,
     /// `next-export-animated-svg`): a walk cannot open a menu inside a sheet,
     /// so this says where the file is going and then opens it. Asked for on

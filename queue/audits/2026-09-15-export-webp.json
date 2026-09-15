@@ -1,0 +1,32 @@
+{
+  "feature": "Export as WebP",
+  "epic": "measure-redline",
+  "summary": "Export now offers WebP beside PNG, JPEG and HEIC, with the same quality slider and the same live file size. At the top of that slider it writes a lossless file, which for a screenshot of flat panels is less than half the size of the same picture as a PNG.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Export as WebP\" and it is on by default; it rides on \"Choose the quality of an export\", which is also on.",
+  "try": [
+    { "do": "Open a screenshot: File ▸ Open, or drag one onto the window." },
+    { "do": "Press ⌘E." },
+    { "do": "Click WebP in the Format row." },
+    { "do": "Drag Quality to 80 and read the line under it." },
+    { "do": "Drag Quality all the way to the right and read that line again." },
+    { "do": "Press Export… and save the file." },
+    { "do": "Open the saved file in Safari or Chrome." },
+    { "do": "Open the app menu and choose Open Source Notices…" }
+  ],
+  "evaluate": [
+    "WebP sits between HEIC and SVG in the format row, as a fifth segment. Does the row still read at a glance, or is it now too crowded?",
+    "At the top of the slider the line says \"Lossless\" rather than \"Best\". Is that enough to tell you what that setting does?",
+    "Lossless is reached by dragging the quality to 100 rather than by its own switch. Does that feel like the right place for it, or would you look for a separate control?",
+    "Was there a wait you noticed between pressing Export… and the save panel appearing?",
+    "For the screenshots you actually hand over, is lossless WebP now what you would reach for instead of PNG?"
+  ],
+  "rough": [
+    "There is no picture of any of this. The Mac's screen was locked for the whole task, so no walk could run at all, and a locked screen refuses offscreen renders too. The one thing worth eyeballing first is the format row: five segments now sit in a 320 point sheet and nobody has seen it.",
+    "The walk Scripts/playtest/export-webp-walk.json is written and unrun for the same reason. It needs one run on an unlocked screen.",
+    "Measured on the 1800 x 1400 screenshot fixture, release build: PNG 570 KB, JPEG at 80% 505 KB, HEIC at 80% 260 KB, WebP at 80% 188 KB, WebP at 90% 247 KB, WebP lossless 250 KB. So lossless WebP is 56% smaller than the PNG and costs about the same as WebP at 90%, while keeping every pixel exactly.",
+    "Speed, release build: a 12 megapixel picture takes 0.33s lossy at 90% and 2.92s lossless, and the lossless figure is a worst case because that test picture carries a full frame gradient. The same screenshot fixture takes 0.51s lossless, about 0.2s per megapixel. The encode happens off the main thread, so nothing freezes, and pressing Export after the sheet has shown you the size hands over the bytes it already made rather than encoding twice.",
+    "A WebP cannot hold a side longer than 16383 pixels, which a very wide canvas at 2x can reach. That is now an alert naming the limit and suggesting 1x or PNG, rather than a button that does nothing, but it has not been seen on screen either.",
+    "Opening a WebP is untouched: it still goes through macOS, which reads the format and cannot write it. Only writing is new code.",
+    "libwebp 1.5.0 is vendored as source under Vendor/libwebp, which is the project's first third party dependency. Nothing has to be installed to build. Scripts/vendor-libwebp.sh is the whole update story: change the version and checksum in it and run it, and it also regenerates the licence the app shows."
+  ]
+}

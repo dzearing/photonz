@@ -2092,6 +2092,9 @@ private final class Run {
                 // NEXT walk's Export opens on.
                 editor.playtestOpensExportOnPicture = .jpeg
                 editor.isExportDialogPresented = true
+            case .exportDialogAsWebP:
+                editor.playtestOpensExportOnPicture = .webp
+                editor.isExportDialogPresented = true
             case .exportDialogAsSVG:
                 // Asked for on the sheet itself rather than written into the
                 // app's memory, so a walk that photographs Export on SVG

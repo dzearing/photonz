@@ -1833,25 +1833,69 @@ final class EditorState {
     /// frame's own box becomes the canvas, so what comes out is that screen and
     /// nothing else — not the canvas behind it, not the layer overlapping it
     /// from outside — and the file is named after the frame.
+    ///
+    /// The picture is made off the main actor. Three of the formats go out
+    /// through ImageIO and take a few tens of milliseconds, but a lossless WebP
+    /// of a 12 megapixel document is a second or more of solid arithmetic, and
+    /// doing that on the main actor is a window that stops drawing. The sheet
+    /// has already closed by then, so what a person sees is the app still alive
+    /// and then the save panel, rather than a beach ball.
     func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9,
-                         frameID: UUID? = nil) {
+                         frameID: UUID? = nil, using warm: ExportSizer? = nil) {
         guard let document else { return }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
-        let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
-        guard let image = previewRenderer.render(target, store: store, scale: scale),
-              let data = ImageCodec.encode(image, format: format, quality: quality) else { return }
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [format.utType]
         let base = frame.flatMap { document.layer(id: $0)?.name }
             ?? documentURL?.deletingPathExtension().lastPathComponent
             ?? "Photonz Export"
-        panel.nameFieldStringValue = "\(base)\(scale == 2 ? "@2x" : "").\(format.fileExtension)"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        do {
-            try data.write(to: url)
-        } catch {
-            presentError("Couldn't export the image.", error)
+        // The very sizer the Export sheet weighed with, when there is one, so
+        // the file that lands is byte for byte the one the sheet said it would
+        // be AND is already made. Without one, a fresh sizer does the work.
+        let sizer = warm ?? ExportSizer(renderer: previewRenderer, store: store)
+        Task { [weak self] in
+            let data = await sizer.data(of: document, frameID: frame, scale: scale,
+                                        format: format, quality: quality)
+            guard let self else { return }
+            guard let data else {
+                self.presentExportRefusal(format: format, document: document,
+                                          frameID: frame, scale: scale)
+                return
+            }
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [format.utType]
+            panel.nameFieldStringValue =
+                "\(base)\(scale == 2 ? "@2x" : "").\(format.fileExtension)"
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do {
+                try data.write(to: url)
+            } catch {
+                self.presentError("Couldn't export the image.", error)
+            }
         }
+    }
+
+    /// Says why nothing was written, rather than letting Export do nothing.
+    ///
+    /// There is one reason a person can act on: WebP cannot describe a side
+    /// longer than 16383 pixels, which a big canvas at 2x reaches. Naming the
+    /// limit and the format is what turns a dead button into a choice between
+    /// 1x and another format.
+    private func presentExportRefusal(format: ImageCodec.Format, document: PhotonzDocument,
+                                      frameID: UUID?, scale: CGFloat) {
+        let size = document.exportTarget(frameID: frameID).canvasSize
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn't export the image."
+        if format == .webp, !WebPEncoder.canEncode(width: width, height: height) {
+            alert.informativeText =
+                "WebP cannot hold a picture longer than \(WebPEncoder.limit) pixels on a side, "
+                + "and this one is \(width) × \(height). Export it at 1× or as PNG."
+        } else {
+            alert.informativeText = "The picture could not be written as \(format.rawValue.uppercased())."
+        }
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     /// ⇧⌘C: the flattened composite goes on the pasteboard as PNG + TIFF

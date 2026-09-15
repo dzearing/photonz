@@ -154,6 +154,8 @@ public enum FeatureCatalog {
 
     public static let exportQualityFlag = "next-export-quality"
 
+    public static let webPExportFlag = "next-export-webp"
+
     public static let animatedSVGExportFlag = "next-export-animated-svg"
 
     public static let cutRecordingFlag = "next-cut-a-recording"
@@ -566,6 +568,15 @@ public enum FeatureCatalog {
                     name: exportQualityFlag,
                     title: "Choose the quality of an export and see what it will weigh",
                     description: "Adds a Quality slider to Export for the two formats that throw pixels away, JPEG and HEIC, and says exactly what the file will weigh at the quality you pick, before you save it. The number is not a guess and not a formula: the picture really is encoded while you watch, so the size on the line is the size of the file that lands on disk, down to the byte. Move the slider and the number follows, with a plain word beside it saying what that quality is, Best, High, Good, Low or Rough, so somebody after a file small enough to send can find it without knowing which percentage that is. Changing 1x to 2x changes the number too, because that is a different file. The slider stops at thirty percent: low enough to make a file a fraction of the size, high enough that the words in a screenshot do not break into blocks on the way past. Each format keeps its own answer for next time, because eighty for a JPEG and eighty for a HEIC are not the same picture. PNG and SVG show no slider at all, since a PNG keeps every pixel and an SVG has none, so a quality would mean nothing for either. Off means Export writes what it always wrote, at the quality it always used.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: webPExportFlag,
+                    title: "Export as WebP",
+                    description: "Adds WebP beside PNG, JPEG and HEIC in Export, which is the format to reach for when a picture is going on a web page: every browser reads it, and it is usually a good deal smaller than the same picture as a PNG or a JPEG. It takes the same Quality slider as the other lossy formats, so eighty percent means the same amount of picture whichever you pick, and the size on the line under it is the real size of the file that will land. The top of that slider does something WebP alone can do: at one hundred percent it writes a lossless file, keeping every pixel exactly, and for a screenshot of flat panels that file is usually SMALLER than the same picture as a PNG as well as sharper than any lossy setting, so the line says Lossless rather than Best to make it findable. Transparency comes across either way, including the soft edge of a shadow or a rounded corner. Opening a WebP already worked and is untouched. Needs Choose the quality of an export, which owns the slider. Off means Export offers the formats it always did.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

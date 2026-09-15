@@ -13,13 +13,15 @@ It runs as a **resident menu-bar agent** (CleanShot-style): always available to 
 - **Swift 6 / SwiftUI** app shell with macOS 26 Liquid Glass (`.glassEffect`) surfaces.
 - **Core Image over Metal** for compositing and effects (GPU path everywhere).
 - **SwiftPM only** — no Xcode project. `Scripts/build-app.sh` assembles the `.app`.
+- **One third-party dependency, vendored as source.** `Vendor/libwebp` is libwebp's encoder, built as the `CWebP` target, because ImageIO can read a WebP and cannot write one. Nothing has to be installed on the machine: a clean checkout builds. `Scripts/vendor-libwebp.sh` is how it is updated, and it also regenerates `Sources/Photonz/OpenSourceNotices.swift`, which is where the licence the app is obliged to show lives (app menu ▸ Open Source Notices…).
 
 ## Module map
 
 | Module | Role | Rules |
 | --- | --- | --- |
 | `PhotonzCore` | Document model: layers, geometry, history. | Pure values. CoreGraphics types only. 100% testable. |
-| `PhotonzRender` | `ImageStore` (bitmaps) + `DocumentRenderer` (CIImage compositor). | No UI imports. Pixel-tested. |
+| `PhotonzRender` | `ImageStore` (bitmaps) + `DocumentRenderer` (CIImage compositor) + `ImageCodec`/`WebPEncoder`. | No UI imports. Pixel-tested. |
+| `CWebP` | Vendored libwebp encoder (`Vendor/libwebp`). | Third-party C. Never edited by hand; re-vendored by script. |
 | `PhotonzMedia` | Recording media IO: poster frames, MP4 re-encode (trim/crop), animated GIF/HEIC, and `VideoAssetCommit` (a save bakes edits into the stored file). | AVFoundation/ImageIO, no UI imports. Tested against real synthesized MP4s. |
 | `Photonz` (app) | SwiftUI/AppKit shell: menu-bar `AppCoordinator`, per-window `EditorState`/`EditorView`, capture + history overlay, tools. | Thin; logic pushed down into core. |
 

@@ -150,6 +150,7 @@ struct EditorCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
+            Button("Open Source Notices…") { coordinator.showOpenSourceNotices() }
             Button("Check for Updates…") { coordinator.checkForUpdates() }
             Divider()
             // Release picker + feature flags (phase 18). App-level, so it opens

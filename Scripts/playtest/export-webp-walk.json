@@ -1,0 +1,82 @@
+{
+  "out": "/tmp/photonz-playtest/export-webp-walk",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+      "width": 1280,
+      "height": 900
+    },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "0-opened",
+      "note": "a dense screenshot of flat panels and small words, which is exactly the picture WebP was added for: it is going on a web page, and it is the kind of picture lossless WebP beats both PNG and lossy WebP on"
+    },
+    { "do": "exportQuality", "format": "webp", "percent": 80 },
+    { "do": "action", "action": "exportDialogAsWebP" },
+    { "do": "wait", "seconds": 1.5 },
+    {
+      "do": "describe",
+      "stage": "1-webp-lossy",
+      "note": "Export on WebP at eighty percent. Same slider as JPEG and HEIC, same live size worked out by really encoding the picture, so nothing new to learn"
+    },
+    { "do": "snapshot", "name": "export-webp-1-lossy" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "writePicture",
+      "name": "export-webp-80",
+      "format": "webp",
+      "quality": 80,
+      "scale": 1
+    },
+    { "do": "exportQuality", "format": "webp", "percent": 100 },
+    { "do": "action", "action": "exportDialogAsWebP" },
+    { "do": "wait", "seconds": 2.5 },
+    {
+      "do": "describe",
+      "stage": "2-webp-lossless",
+      "note": "the same sheet at the top of the slider. The word under it says Lossless rather than Best, which is the only place the app tells you that WebP alone can keep every pixel, and the size beside it says what that costs"
+    },
+    { "do": "snapshot", "name": "export-webp-2-lossless" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "writePicture",
+      "name": "export-webp-lossless",
+      "format": "webp",
+      "quality": 100,
+      "scale": 1
+    },
+    {
+      "do": "writePicture",
+      "name": "export-webp-compare-png",
+      "format": "png",
+      "quality": 100,
+      "scale": 1
+    },
+    {
+      "do": "writePicture",
+      "name": "export-webp-compare-jpeg",
+      "format": "jpeg",
+      "quality": 80,
+      "scale": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-sizes-side-by-side",
+      "note": "the same picture written four ways, with the bytes in the four log lines above: WebP at eighty, WebP lossless, PNG, and JPEG at eighty. Four files a person can open rather than four numbers"
+    },
+    { "do": "action", "action": "exportDialog" },
+    { "do": "wait", "seconds": 1 },
+    {
+      "do": "describe",
+      "stage": "4-picker-has-five",
+      "note": "Export back on PNG, so the whole format row is visible: PNG, JPEG, HEIC, WebP and SVG. WebP sits with the pictures rather than off on its own, because that is what it is"
+    },
+    { "do": "snapshot", "name": "export-webp-4-picker" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

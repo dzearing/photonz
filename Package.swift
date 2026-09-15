@@ -7,6 +7,26 @@ let package = Package(
         .macOS("26.0")
     ],
     targets: [
+        // The one third-party dependency in the whole project: libwebp's
+        // encoder, vendored as source so a clean checkout builds with nothing
+        // installed on the machine. macOS can READ a WebP through ImageIO and
+        // cannot write one, so only the encoder is here. See
+        // Vendor/libwebp/VERSION for the pinned release and
+        // Scripts/vendor-libwebp.sh for how it is updated.
+        .target(
+            name: "CWebP",
+            path: "Vendor/libwebp",
+            exclude: ["COPYING", "PATENTS", "AUTHORS", "VERSION"],
+            publicHeadersPath: "src/webp",
+            cSettings: [
+                // libwebp includes its own headers from the library root
+                // ("src/dsp/dsp.h"), the way its own build system does.
+                .headerSearchPath("."),
+                // Encoding a 12 megapixel picture on one core is not a time
+                // worth waiting for; libwebp splits the work when this is on.
+                .define("WEBP_USE_THREAD"),
+            ]
+        ),
         // Pure-Swift document model: layers, geometry, commands, undo.
         // No UI imports allowed here — keep it fully unit-testable.
         .target(
@@ -16,7 +36,7 @@ let package = Package(
         // Core Image / Metal compositing of a PhotonzCore document.
         .target(
             name: "PhotonzRender",
-            dependencies: ["PhotonzCore"],
+            dependencies: ["PhotonzCore", "CWebP"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         // AVFoundation / ImageIO media IO for recordings: poster frames, MP4

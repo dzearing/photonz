@@ -1,0 +1,6 @@
+libwebp 1.5.0
+https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.5.0.tar.gz
+sha256 7d6fab70cf844bf6769077bd5d7a74893f8ffd4dfb42861745750c63c2a5c92c
+
+Vendored by Scripts/vendor-libwebp.sh. Do not edit these files by hand: to
+update, change the version and checksum in that script and run it.

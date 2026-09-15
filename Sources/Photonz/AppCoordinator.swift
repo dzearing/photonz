@@ -775,6 +775,30 @@ final class AppCoordinator {
         }
     }
 
+    /// The licence on the one piece of code in this app somebody else wrote.
+    ///
+    /// It is here because the licence asks for it: a binary that carries
+    /// libwebp has to carry its notice somewhere a person can read it. A panel
+    /// rather than a file beside the app, so it travels wherever the app does.
+    func showOpenSourceNotices() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = OpenSourceNotices.title
+        alert.informativeText = OpenSourceNotices.intro
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 460, height: 260))
+        text.isEditable = false
+        text.drawsBackground = false
+        text.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        text.string = OpenSourceNotices.text
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 260))
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        scroll.documentView = text
+        alert.accessoryView = scroll
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
     /// Shared About panel (menu-bar menu + the editor windows' app menu).
     func showAbout() {
         NSApp.activate(ignoringOtherApps: true)

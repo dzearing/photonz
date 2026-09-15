@@ -17,7 +17,16 @@ public enum ExportQuality {
     ///
     /// A positive list on purpose: a format nobody has taught this about gets
     /// no control rather than a control that does nothing to it.
-    public static let lossyFormats: Set<String> = ["jpeg", "heic"]
+    public static let lossyFormats: Set<String> = ["jpeg", "heic", "webp"]
+
+    /// The formats where the very top of the slider throws nothing away at all.
+    ///
+    /// WebP alone: it is two encoders in one file format, and asking for all of
+    /// the picture asks for the lossless one. That is what lets the top of the
+    /// slider mean lossless without Export growing a second control, and it is
+    /// the setting a screenshot of flat panels usually wants, because the
+    /// lossless encoder beats both PNG and lossy WebP on that kind of picture.
+    public static let losslessAtFullQuality: Set<String> = ["webp"]
 
     /// The lowest quality the slider can reach, as a percentage.
     ///
@@ -54,9 +63,22 @@ public enum ExportQuality {
         return Swift.min(lowest + steps * step, highest)
     }
 
+    /// Whether this answer keeps every pixel: the top of the slider, on a
+    /// format whose top is lossless.
+    public static func isLossless(atPercent percent: Int, format id: String) -> Bool {
+        losslessAtFullQuality.contains(id) && snapped(percent) >= highest
+    }
+
     /// The 0 to 1 the encoder wants.
     public static func fraction(_ percent: Int) -> Double {
         Double(snapped(percent)) / 100
+    }
+
+    /// One word for what a percentage looks like, with the one thing a format
+    /// can add to it: on WebP the top of the slider is not "Best", it is
+    /// lossless, and saying so out loud is what makes that setting findable.
+    public static func word(for percent: Int, format id: String) -> String {
+        isLossless(atPercent: percent, format: id) ? "Lossless" : word(for: percent)
     }
 
     /// One word for what a percentage looks like.

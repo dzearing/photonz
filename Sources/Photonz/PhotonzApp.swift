@@ -226,6 +226,7 @@ struct MenuBarMenu: View {
         Button("Welcome & Permissions…") { coordinator.showWelcome() }
         Button("Experiments…") { coordinator.showExperiments() }
         Button("About \(AppInfo.name)") { coordinator.showAbout() }
+        Button("Open Source Notices…") { coordinator.showOpenSourceNotices() }
 
         Divider()
 

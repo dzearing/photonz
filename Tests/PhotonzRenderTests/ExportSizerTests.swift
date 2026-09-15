@@ -154,4 +154,51 @@ struct ExportSizerTests {
         // being dropped, which would put a whole render back on every stop.
         #expect(againMS < firstMS)
     }
+
+    /// Pressing Export after reading the size must not encode the file twice.
+    ///
+    /// The bytes on the sheet ARE the file, so the save hands over the ones
+    /// already made. The saving is only felt where the encode is slow, which is
+    /// why this is measured on a lossless WebP.
+    @Test func savingReusesTheFileThatWasWeighed() async throws {
+        let document = busyDocument(width: 900, height: 700)
+        let sizer = sizer()
+        let first = Date()
+        let weighed = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                   format: .webp, quality: 1))
+        let toWeigh = Date().timeIntervalSince(first)
+        let second = Date()
+        let saved = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                 format: .webp, quality: 1))
+        let toSave = Date().timeIntervalSince(second)
+        #expect(saved == weighed)
+        #expect(toSave < toWeigh / 4)
+    }
+
+    /// Kept bytes are keyed by everything that changes them, so a second answer
+    /// at a different quality, scale or format is never the first one again.
+    @Test func keptBytesAreNotHandedToADifferentQuestion() async throws {
+        let document = busyDocument(width: 400, height: 300)
+        let sizer = sizer()
+        let webp = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                format: .webp, quality: 0.8))
+        let sameAgain = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                     format: .webp, quality: 0.8))
+        let better = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                  format: .webp, quality: 1))
+        let png = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                               format: .png, quality: 0.8))
+        let bigger = try #require(await sizer.data(of: document, frameID: nil, scale: 2,
+                                                  format: .webp, quality: 0.8))
+        #expect(sameAgain == webp)
+        #expect(better != webp)
+        #expect(png != webp)
+        #expect(bigger != webp)
+        // And forgetting really forgets: the same question asked again makes
+        // the same file rather than handing back a stale one.
+        await sizer.forget()
+        let afterForgetting = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                           format: .webp, quality: 0.8))
+        #expect(afterForgetting == webp)
+    }
 }

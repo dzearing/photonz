@@ -56,4 +56,4 @@ This is intentionally synchronous and simple for now. The planned evolution (Pha
 ## Persistence (Phase 6)
 
 - Native format: `.photonz` package — `document.json` (the Codable `PhotonzDocument`) + `images/<uuid>.heic` for each `ImageRef`.
-- Export: PNG/JPEG/HEIC via `CGImageDestination` from the rendered composite; clipboard via `NSPasteboard`.
+- Export: PNG/JPEG/HEIC via `CGImageDestination` from the rendered composite; WebP via `WebPEncoder` (vendored libwebp, since ImageIO cannot write one), where quality 1.0 means lossless; clipboard via `NSPasteboard`. Reading a WebP is always the system's job.

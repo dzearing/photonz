@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 10.5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:47:32.886Z",
-  "updated": "2026-09-15T20:01:02.489Z",
+  "updated": "2026-09-15T20:39:55.312141Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15, and they were explicit after being offered the alternative: \"ok find use 3rd party. I WANT WEBP NOT AVIF.\" So the decision is made. Do not substitute AVIF, do not offer it instead, and do not reopen the question; if AVIF is added one day it is a separate task.\n\nWHY THIS NEEDS A DEPENDENCY AT ALL, checked rather than assumed on 2026-09-15: CGImageDestinationCopyTypeIdentifiers lists 22 writable types on macOS 26 and WebP is not among them, so ImageIO cannot WRITE WebP however it is asked. CGImageSourceCopyTypeIdentifiers does include org.webmproject.webp, so READING one already works today and must keep working through the system rather than through the new code.\n\nThis is the project's FIRST third party dependency - Package.swift currently has no external dependencies at all - so it sets the precedent for how one is carried. Vendor libwebp's sources as a C target in Package.swift rather than reaching for a system library or a Homebrew formula: Scripts/build-app.sh assembles the app with SwiftPM only and CI uses the same path, so anything needing an installed library breaks the build machine and every fresh clone. Pin the version, record it, and say in the audit how it would be updated.\n\nLicence: libwebp is BSD-3, which asks only that the copyright notice and disclaimer travel with binary distributions, so the app needs somewhere that notice lives and can be read. Google also ships an additional patent grant alongside it; carry that file too. This is the kind of obligation that is trivial to meet now and awkward to retrofit.\n\nStructural note, because it will not fit the existing shape: ImageCodec.encode (Sources/PhotonzRender/ImageCodec.swift:33) writes everything through a CGImageDestination, and every Format has a utType. WebP has neither, so the encode path has to branch on it, and Format.utType stops being answerable for every case. Work out what that means for the save panel and the file extension handling before writing the encoder call, not after.\n\nQuality mapping: ImageCodec.encode takes 0 to 1 and passes it to ImageIO; libwebp takes 0 to 100. Map it in one place so a quality of 0.8 means the same thing whichever format is chosen. This pairs with the task 'choose-the-quality-of-a-lossy-export-and-see-wha', which puts a quality control and a real file size in the dialog - read it first, and if it has landed, WebP simply joins the rule it established rather than inventing a second control.\n\nLossless is in the acceptance list on purpose. This app's main output is screenshots of flat interface, which is exactly the case where lossless WebP beats both PNG and lossy WebP. A WebP export that can only do lossy would miss the best thing about the format for the pictures this app actually makes.",
@@ -37,6 +37,43 @@
     {
       "t": "2026-09-15T20:01:02.488Z",
       "note": "the quality half of this is now built and landed (2026-09-15, task choose-the-quality-of-a-lossy-export-and-see-wha). WebP joins it by adding \"webp\" to ExportQuality.lossyFormats in Sources/PhotonzCore/ExportQuality.swift and adding the case to ImageCodec.Format; the Export sheet then grows the slider and the live size line for it with no further UI work, because the sheet asks ExportQuality.applies(toFormat:) rather than naming formats. Do NOT invent a second quality control for it."
+    },
+    {
+      "t": "2026-09-15T20:03:49.747Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "adversarial review before building: (1) the mock question does not arise, there is no mock, only a format. (2) The shortest version that delivers the value is NOT a new control: the quality slider that landed this morning already answers 'how much picture', and WebP's lossless mode is literally the top of that range, so lossless is reached by dragging to 100 and the word under the slider changes from Best to Lossless. A separate 'WebP (Lossless)' entry in the format row was rejected: it makes the row six wide and asks a person to know that two of the six are the same format. (3) Decorative and cut: nothing about the encoder is surfaced (method, alpha quality, image hint); they are chosen once, measured, and commented. (4) What the app cannot deliver that the format implies: WebP cannot hold a side over 16383 px, which a wide canvas at 2x reaches, so Export would have been a button that does nothing; it now shows an alert naming the limit."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "measured rather than guessed: ImageIO on macOS 26 lists 22 writable types and WebP is not among them (CGImageDestinationCopyTypeIdentifiers), while CGImageSourceCopyTypeIdentifiers does list org.webmproject.webp. So reading stays with the system and only writing is new code. UTType.webP exists as a system constant, so Format.utType stays total and the save panel needed no special case."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "lossless level chosen by measurement, not by picking the maximum: on the 1800x1400 screenshot fixture in release, libwebp lossless level 3 is 0.43s/287 KB, level 6 is 0.51s/256 KB, level 9 is 2.62s/155 KB. Level 6 is the knee and is what WebPEncoder uses; the numbers are in the comment beside it."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "premultiplication is the trap this format sets: CGImage hands out premultiplied pixels and libwebp wants straight ones, so a soft edge would come back muddy. CGBitmapContext refuses to draw into a straight-alpha bitmap at all, so the draw is premultiplied and vImageUnpremultiplyData_RGBA8888 undoes it. There is a test that checks the colour along the fading rim of a disc against the source, not just in the middle."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "delight: pressing Export after watching the size line no longer re-encodes. ExportSizer now keeps the last file it made, keyed by frame, scale, format and quality, and the Export sheet hands its warm sizer to exportComposite. Without that, a lossless WebP of a big document was a second encode of several seconds. exportComposite also moved off the main actor, so no format can freeze the window."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "NOT VERIFIED IN THE APP: the Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true, and every probe launch printed 'screen locked'), so Scripts/playtest/export-webp-walk.json refused to run, status locked, 0 steps, and there are no screenshots and no offscreen renders. The walk is written and needs one run on an unlocked screen. Said plainly in the audit's rough list."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "verified without a window instead: the file reads back through ImageIO in tests (which is the same decoder Preview, Quick Look and Safari use), sips and qlmanage both read it, and Chrome 152 was driven to load the lossless, the lossy and the transparent files and read their pixels off a canvas: 1800x1400, corner alpha 0, centre alpha 254, rim alpha 101, colours within 2 of the PNG reference. Colour space is a non-issue because DocumentRenderer already composites in sRGB and an untagged WebP is read as sRGB."
+    },
+    {
+      "t": "2026-09-15T20:39:55.312141Z",
+      "note": "left rough (not filed, under the follow-up bar): the format row is now five segments in a 320 point sheet and nobody has looked at it, because of the lock. It is the first line of the audit's rough list so the user sees it before anything else, and it is a look rather than a known defect."
     }
-  ]
+  ],
+  "started": "2026-09-15T20:03:49.746Z"
 }

@@ -28,6 +28,13 @@ public actor ExportSizer {
         let scale: CGFloat
     }
 
+    /// A render plus everything that turns it into a file.
+    private struct Encoding: Hashable {
+        let render: Render
+        let format: ImageCodec.Format
+        let quality: Double
+    }
+
     private let renderer: DocumentRenderer
     private let store: ImageStore
     /// The last render, and what it was of.
@@ -38,6 +45,15 @@ public actor ExportSizer {
     /// Dragging the quality is the case that has to be fast, and that never
     /// changes the key at all.
     private var kept: (of: Render, picture: CGImage)?
+
+    /// The last file made, and what it was made of.
+    ///
+    /// The point of keeping it is the moment after: the Export sheet asks what
+    /// the picture weighs, a person reads the number and presses Export, and
+    /// the answer to "write that file" is a file that was made a second ago.
+    /// Without this the whole encode runs again, which on a lossless WebP of a
+    /// big document is seconds of waiting for bytes we already had.
+    private var encoded: (of: Encoding, data: Data)?
 
     public init(renderer: DocumentRenderer, store: ImageStore) {
         self.renderer = renderer
@@ -59,13 +75,21 @@ public actor ExportSizer {
     /// number came from — which is how a walk proves the number was true.
     public func data(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,
                      format: ImageCodec.Format, quality: Double) -> Data? {
-        guard let image = picture(of: document, frameID: frameID, scale: scale) else { return nil }
-        return ImageCodec.encode(image, format: format, quality: quality)
+        let key = Encoding(render: Render(frameID: frameID, scale: scale),
+                           format: format, quality: quality)
+        if let encoded, encoded.of == key { return encoded.data }
+        guard let image = picture(of: document, frameID: frameID, scale: scale),
+              let data = ImageCodec.encode(image, format: format, quality: quality) else {
+            return nil
+        }
+        encoded = (key, data)
+        return data
     }
 
     /// Throws away what has been kept, for a caller whose document changed.
     public func forget() {
         kept = nil
+        encoded = nil
     }
 
     private func picture(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat) -> CGImage? {
