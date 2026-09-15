@@ -63,7 +63,7 @@ if ! bundle; then
   rm -rf "$APP"
   if ! bundle; then
     say "bundling failed twice; putting the app back on the previous build"
-    (( RUNNING )) && open "$APP"
+    (( RUNNING )) && open -g "$APP"
     exit 1
   fi
 fi
@@ -71,7 +71,13 @@ fi
 # even when it came back on its own during a failed attempt.
 if (( RUNNING )); then
   quit_app
-  open "$APP"
+  # -g: relaunch WITHOUT bringing it to the front. This runs between tasks
+  # whenever code lands, so a plain `open` stole the user's focus every twenty
+  # minutes or so and made the app unusable while they were working in it
+  # (reported 2026-09-14: "i can't even use the app because you keep stealing
+  # focus"). The refresh is meant to put the app back as it found it, and it was
+  # not found frontmost.
+  open -g "$APP"
   sleep 2
 fi
 say "$APP rebuilt$( ((RUNNING)) && echo " and relaunched" || echo "; it was not running, so it stays closed")"

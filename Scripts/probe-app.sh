@@ -88,9 +88,9 @@ ARGS=()
 ENVS=()
 [[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
 if [[ $# -gt 0 ]]; then
-  open -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"}
+  open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"}
 else
-  open -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} ${ARGS[@]+"${ARGS[@]}"}
+  open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} ${ARGS[@]+"${ARGS[@]}"}
 fi
 
 # The app is a menu-bar agent: no window and no Dock icon is the normal state,
