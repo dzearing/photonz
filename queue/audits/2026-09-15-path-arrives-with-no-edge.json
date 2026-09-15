@@ -1,0 +1,26 @@
+{
+  "feature": "A shape you draw with the Pen lands on the points you clicked",
+  "epic": "icon-vector",
+  "summary": "A closed shape drawn with the Pen now arrives as its fill and nothing else, so its edges land exactly on the points you clicked instead of two points outside them. Ask it for an outline afterwards and you get one you can actually see against its own fill.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen is P. Nothing to switch on.",
+  "try": [
+    { "do": "Press P and click three points on the canvas, then click the first point again to close the shape." },
+    { "do": "Press V, and read the Appearance panel: Fill is on, Outline is switched off." },
+    { "do": "Turn the Outline switch on and look at the shape." },
+    { "do": "Switch Fill off, and look again." },
+    { "do": "Undo twice, then press P, click three points and press Return to finish the path open." },
+    { "do": "Read the Thickness under its Line row." }
+  ],
+  "evaluate": [
+    "Does the closed shape sit exactly on the three points you clicked, or does it still look bigger than where you put them?",
+    "Is arriving with no edge at all the right default for icon work, or would you rather every shape came out with a line you then take off?",
+    "The first outline is graphite on a light fill and white on a dark one. Is that the right colour to be handed, or should asking for an edge open the colour picker instead?",
+    "Switching Fill off hands the shape back an outline so it does not vanish. Does that read as the app helping, or as the app arguing with you?",
+    "An open path still comes out 4 px thick. Is a line keeping its weight while a shape loses its edge a distinction that makes sense while you are drawing?"
+  ],
+  "rough": [
+    "There is no picture in this audit at all. The Mac's screen was locked for the whole of this task, so macOS stopped drawing the app and not one walk could run, offscreen render included. Everything here is verified by the 7160 unit tests and nothing else, and the walks that prove it (path-arrives-with-no-edge-walk, new, and path-line-style-walk, taught) have never been executed. A sweep is queued and will run them the moment the screen is unlocked.",
+    "While you hover the first point to close a shape, the preview loses its line and becomes a solid fill in that instant. That IS the shape that is about to land, so the preview is honest, but it is a visible change under your hand and it may read as a glitch the first time.",
+    "A filled shape with no line is now clickable only where it is painted: the eight points of forgiveness outside its edge came from the stroke, and there is no stroke. That matches how a filled box with no border already behaves, so it is consistency rather than a regression, but small shapes are a slightly smaller target than they were yesterday."
+  ]
+}

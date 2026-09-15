@@ -198,12 +198,23 @@ extension PhotonzDocument {
     /// missing paint: the colour stays put and comes back with the line, the
     /// way a switched-off fill keeps its colour. A path that is handed one back
     /// gets `width`, which is the weight a freshly drawn shape wears.
+    ///
+    /// The one colour that does NOT stay put is one that would be invisible.
+    /// A closed path arrives as its fill and nothing else, both painted the ink
+    /// the Pen was armed with, so the first outline it is ever asked for would
+    /// otherwise land in the fill's own colour and draw nothing anybody can
+    /// see. It takes an ink that reads instead, exactly as a box's first border
+    /// does (`BorderInk.swift`).
     @discardableResult
     public mutating func setPathOutline(layerIDs: [UUID], on: Bool,
                                         width: CGFloat = PathContent.defaultStrokeWidth) -> Int {
         changePaths(layerIDs) { path in
             guard (path.strokeWidth > 0) != on else { return }
-            path.strokeWidth = on ? max(width, 1) : 0
+            guard on else {
+                path.strokeWidth = 0
+                return
+            }
+            path.gainingALineThatReads(width: max(width, 1))
         }
     }
 

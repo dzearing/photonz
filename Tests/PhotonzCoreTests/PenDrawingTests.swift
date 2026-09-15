@@ -813,6 +813,57 @@ struct PenDrawingTests {
         #expect(content.paint.hex == "#00A870")
     }
 
+    @Test func aClosedPathArrivesWithNoLineRoundIt() {
+        // The rule a box already follows: no edge until you ask for one
+        // (`BorderInk.swift`). A closed path used to come out filled AND
+        // outlined in the one armed ink, so the outline was invisible and the
+        // painted shape reached half a line width past every point that was
+        // clicked. It lands on its points now.
+        var session = PenSession()
+        session.startingPaint = Paint(hex: "#00A870")
+        session.startingStrokeWidth = 4
+        _ = click(&session, 0, 0)
+        _ = click(&session, 40, 0)
+        _ = click(&session, 40, 40)
+        session.pointer = CGPoint(x: 0, y: 0)
+        guard case .closed(let content) = click(&session, 0, 0) else {
+            Issue.record("the click on the first anchor did not close the path")
+            return
+        }
+        #expect(content.strokeWidth == 0)
+        #expect(content.fill?.hex == "#00A870")
+    }
+
+    @Test func theShapeUnderTheHandIsTheShapeThatLands() {
+        // The preview shown while the pointer sits on the first anchor is the
+        // shape a click there would make, so it carries no line either: a
+        // preview that previewed an edge the commit does not make would shrink
+        // on release.
+        var session = PenSession()
+        session.startingStrokeWidth = 4
+        _ = click(&session, 0, 0)
+        _ = click(&session, 40, 0)
+        _ = click(&session, 40, 40)
+        session.pointer = CGPoint(x: 40, y: 40)
+        // Still an open run to the pointer: a line, and a line is its stroke.
+        #expect(session.previewPath?.strokeWidth == 4)
+        session.pointer = CGPoint(x: 0, y: 0)
+        #expect(session.previewPath?.isClosed == true)
+        #expect(session.previewPath?.strokeWidth == 0)
+    }
+
+    @Test func anOpenPathKeepsTheWeightItCameOutAt() {
+        // A line IS its stroke, so a line of no width is not a shape with no
+        // edge, it is nothing at all. Closing is the only thing that takes the
+        // weight away.
+        var session = PenSession()
+        session.startingStrokeWidth = 3
+        _ = click(&session, 0, 0)
+        _ = click(&session, 40, 0)
+        _ = click(&session, 40, 40)
+        #expect(session.finish()?.strokeWidth == 3)
+    }
+
     @Test func anOpenPathStillHasNoInsideHoweverItIsArmed() {
         // Arming a colour does not give a line an inside: an open path is a
         // line, and a fill on it would be a setting for something not drawn.

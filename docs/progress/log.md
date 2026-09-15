@@ -15932,3 +15932,45 @@ which is why it carries no state labels, and the audit says so in plain words.
 **Next:** run `tutorial-component-versions-walk` the moment the screen is
 unlocked, along with the WebP export walk that is still waiting on the same
 thing.
+
+## 2026-09-15 — A shape the Pen draws lands on the points you clicked
+
+**What changed.** A closed path off the Pen used to arrive filled AND outlined
+in the one ink the Pen was armed with. The outline was invisible, and because
+the 4pt stroke is centred, the painted shape reached two points past every point
+that was clicked, which on a 24 point icon grid is a sixth of the drawing. A box
+stopped doing this on 2026-09-14 when the user settled "no edge until you ask
+for one" (`BorderInk.swift`); the Pen was never taught it.
+
+Three pieces, all in `PhotonzCore`:
+
+- `PenSession.content(_:closed:)` gives a CLOSED path a stroke width of nought
+  and keeps the armed ink as its fill. An OPEN path is untouched, because a line
+  IS its stroke.
+- `PathContent.gainingALineThatReads(width:)` in `BorderInk.swift` paints the
+  FIRST outline a path is ever asked for in graphite or white, whichever stands
+  further off the fill, exactly as a box's first border is painted. A colour
+  somebody chose is left alone: only an ink lost against the fill is repainted,
+  so a line switched off and on comes back as it was. `setPathOutline(on: true)`
+  goes through it.
+- `Layer.gainingItsOutlineIfNothingWouldPaint()` now carries a path too, so
+  switching a closed path's Fill off hands back the line that carries it rather
+  than leaving a layer that paints nothing. That is the second half of the box
+  rule and it had to come along, or this change would have shipped a way to make
+  a drawing disappear.
+
+`docs/design/vector-paths.md` records the rule. Ten tests across
+`PenDrawingTests` and `PathPartsTests`. One new walk,
+`path-arrives-with-no-edge-walk`; `path-line-style-walk` taught to ask for an
+edge before reading the rows that describe one.
+
+**Verified:** `Scripts/test.sh` green, 7160 tests in 572 suites.
+
+**Not verified:** the Mac's screen was locked for the whole task, so not one
+walk could run — no screen capture and no offscreen render either, because a
+locked walk exits before its first step. Both walks were confirmed to parse. A
+sweep is requested with the reason written out.
+
+**Next:** run `path-arrives-with-no-edge-walk` and `path-line-style-walk` the
+moment the screen is unlocked; they join the two walks from the previous task
+waiting on the same thing.

@@ -28,6 +28,17 @@ import Foundation
 ///   wearing the fill's colour. With no edge to fall back on, taking the fill
 ///   away would leave an invisible layer, so a shape losing its last paint
 ///   gains the outline that carries it.
+///
+/// ## A path drawn with the Pen follows the same two rules
+///
+/// Added on 2026-09-15. A closed path arrived filled AND outlined in the one
+/// ink the Pen was armed with, so it had the box's old problem twice over: an
+/// outline nobody could see, and a painted shape reaching half a line width
+/// past every point that was clicked. It arrives as its fill and nothing else
+/// now (`PenSession.content`), the edge it is asked for afterwards reads
+/// against that fill (`PathContent.gainingALineThatReads`), and taking its fill
+/// away gives it back the line that carries it. An OPEN path is outside all of
+/// this: a line IS its stroke.
 public enum BorderInk {
 
     /// The ink for a ring sitting against something light.
@@ -121,9 +132,49 @@ extension Layer {
     /// somewhere, and this is it. Does nothing to a shape that still paints
     /// something, so it is safe to call after any edit.
     mutating func gainingItsOutlineIfNothingWouldPaint() {
+        // A path wears its own stroke rather than a Border in the Effects list,
+        // so the line that carries it is that stroke (`OutlineWidth.swift`).
+        // Its own colour is the right one: with the inside gone there is
+        // nothing behind the line but the canvas.
+        if var path, path.paintsNothingAtAll {
+            path.strokeWidth = BorderInk.fallbackWidth
+            content = .path(path)
+            return
+        }
         guard paintsNothingAtAll, let annotation else { return }
         var ring = BorderEffect(width: BorderInk.fallbackWidth, position: annotation.strokePosition)
         ring.paint = annotation.paint
         style.effects.append(.border(ring))
+    }
+}
+
+extension PathContent {
+
+    /// Whether this path would paint NOTHING AT ALL: a closed shape with no
+    /// inside and no line round it either, so the canvas shows a layer you can
+    /// only find in the layers list.
+    ///
+    /// An OPEN path can never land here. A line IS its stroke, so taking that
+    /// away is a delete rather than a setting, and the panel does not offer the
+    /// switch at all (`LayerParts.swift`).
+    var paintsNothingAtAll: Bool { isClosed && fill == nil && strokeWidth <= 0 }
+
+    /// Gives this path the line it has just been asked for, in an ink that
+    /// READS against what it is filled with.
+    ///
+    /// The same rule a box's first border follows. A closed path arrives as its
+    /// fill and nothing else (`PenSession.content`), so the edge somebody asks
+    /// for afterwards is the FIRST one it has ever had — and painting a first
+    /// edge in the fill's own colour is how a shape ends up with a line the
+    /// panel claims and the picture does not have.
+    ///
+    /// A colour somebody chose is theirs: only an ink that would be LOST
+    /// against the fill is repainted, so a line switched off and switched back
+    /// on comes back in the colour it had. An open path has no fill to be lost
+    /// against, so it is never repainted either.
+    mutating func gainingALineThatReads(width: CGFloat) {
+        strokeWidth = width
+        guard BorderInk.isLost(paint, against: fill) else { return }
+        paint = BorderInk.standingOut(from: fill)
     }
 }

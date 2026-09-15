@@ -524,10 +524,24 @@ public struct PenSession: Equatable, Sendable {
     /// A path wearing what a freshly drawn shape wears. An OPEN path carries no
     /// fill at all: it is a line, and offering it an inside it does not have is
     /// how a panel ends up with a row that does nothing.
+    ///
+    /// ## A closed path arrives with NO LINE ROUND IT
+    ///
+    /// The rule a box already follows: no edge until you ask for one
+    /// (`BorderInk.swift`). Until this, a closed path came out filled AND
+    /// outlined in the one armed ink, so the outline was invisible and the
+    /// painted shape reached half a line width past every point that was
+    /// clicked — two points all round at the weight a path starts at, which on
+    /// a 24 point icon grid is a sixth of the whole drawing. The shape now
+    /// lands exactly on its points, and the edge it is given afterwards
+    /// arrives in an ink that reads.
+    ///
+    /// An OPEN path is untouched. A line IS its stroke, so a line of no width
+    /// is not a shape with no edge, it is nothing at all.
     private func content(_ anchors: [PathAnchor], closed: Bool) -> PathContent {
         PathContent(anchors: anchors, isClosed: closed,
                     paint: startingPaint,
-                    strokeWidth: startingStrokeWidth,
+                    strokeWidth: closed ? 0 : startingStrokeWidth,
                     fill: closed ? startingPaint : nil)
     }
 

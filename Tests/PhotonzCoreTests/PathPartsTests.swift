@@ -121,6 +121,65 @@ struct PathPartsTests {
         #expect(doc.layer(id: layer.id)?.path?.strokeWidth == PathContent.defaultStrokeWidth)
     }
 
+    @Test("The FIRST outline a path is asked for reads against its own fill, never matches it")
+    func firstOutlineStandsOut() {
+        // A closed path arrives filled and unlined, both in the one ink the Pen
+        // was armed with. Handing it the fill's own colour back as a line would
+        // draw nothing anybody can see, so it takes the ink a box's first
+        // border takes (`BorderInk.swift`).
+        let layer = path(closed: true, strokeWidth: 0, fill: Paint(hex: "#FF3B30"))
+        var doc = document([layer])
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true) == 1)
+        let drawn = doc.layer(id: layer.id)?.path
+        #expect(drawn?.strokeWidth == PathContent.defaultStrokeWidth)
+        #expect(drawn?.colorHex == BorderInk.standingOutHex(from: Paint(hex: "#FF3B30")))
+        #expect(drawn?.colorHex != "#FF3B30")
+    }
+
+    @Test("A line somebody painted comes back in its own colour when it is switched on again")
+    func paintedOutlineKeepsItsColour() {
+        var content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 60, y: 0)),
+                                            PathAnchor(point: CGPoint(x: 30, y: 50))],
+                                  isClosed: true, fill: Paint(hex: "#FF3B30"))
+        content.strokeWidth = 0
+        content.colorHex = "#2D7FF9"
+        let layer = Layer(name: "Path", content: .path(content),
+                          frame: CGRect(x: 0, y: 0, width: 60, height: 50))
+        var doc = document([layer])
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true) == 1)
+        #expect(doc.layer(id: layer.id)?.path?.colorHex == "#2D7FF9")
+    }
+
+    @Test("An open path's line is never repainted: there is no fill for it to be lost against")
+    func openPathLineKeepsItsColour() {
+        let layer = path(closed: false, strokeWidth: 0, fill: nil)
+        var doc = document([layer])
+        #expect(doc.setPathOutline(layerIDs: [layer.id], on: true) == 1)
+        #expect(doc.layer(id: layer.id)?.path?.colorHex == PathContent.defaultColorHex)
+    }
+
+    @Test("Taking a closed path's fill away leaves the outline that carries it")
+    func fillOffLeavesTheLine() {
+        // A path with no inside and no line paints nothing at all: a layer you
+        // can only find in the layers list. The same rule a box follows
+        // (`BorderInk.swift`).
+        let layer = path(closed: true, strokeWidth: 0, fill: Paint(hex: "#FF3B30"))
+        var doc = document([layer])
+        #expect(doc.setColorEnabled(layerIDs: [layer.id], slot: .fill, on: false) == 1)
+        let drawn = doc.layer(id: layer.id)?.path
+        #expect(drawn?.fill == nil)
+        #expect(drawn?.strokeWidth == BorderInk.fallbackWidth)
+    }
+
+    @Test("A closed path that still has a line keeps it when its fill goes")
+    func fillOffLeavesALineAlone() {
+        let layer = path(closed: true, strokeWidth: 9, fill: Paint(hex: "#FF3B30"))
+        var doc = document([layer])
+        #expect(doc.setColorEnabled(layerIDs: [layer.id], slot: .fill, on: false) == 1)
+        #expect(doc.layer(id: layer.id)?.path?.strokeWidth == 9)
+    }
+
     @Test("Letting a colour go on a switched-off outline gives it a line in that colour")
     func droppingAColourOnIt() {
         let layer = path(closed: true, strokeWidth: 0)

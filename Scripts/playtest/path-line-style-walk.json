@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/path-line-style",
-  "seed": "A shape drawn with the Pen showed one row simply called Color, with no way to tell what that colour painted and nothing to say about the line itself. The walk draws a closed shape and an open one and reads their Appearance: the closed one's two colours are Fill and Outline, the open one's is Line, and under the line sit its thickness and what KIND of line it is - solid, dashed or dotted, what its ends look like and how its corners turn. It ends by switching the outline off and writing the whole thing out as SVG.",
+  "seed": "A shape drawn with the Pen showed one row simply called Color, with no way to tell what that colour painted and nothing to say about the line itself. The walk draws a closed shape, asks it for an edge, and reads its Appearance beside an open one: the closed one's two colours are Fill and Outline, the open one's is Line, and under the line sit its thickness and what KIND of line it is - solid, dashed or dotted, what its ends look like and how its corners turn. It ends by switching the outline off and writing the whole thing out as SVG.",
   "setup": {
     "forget": ["shapes", "frames", "tools"]
   },
@@ -20,6 +20,10 @@
     { "do": "wait", "seconds": 0.9 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "width": 0 },
+    { "do": "describe", "stage": "0-no-edge", "note": "a closed shape off the Pen arrives as its fill and nothing else, so the walk asks for an edge before reading the rows that describe one. That rule is path-arrives-with-no-edge-walk to prove; here it is only the starting point." },
+    { "do": "action", "action": "togglePathOutline" },
+    { "do": "wait", "seconds": 0.7 },
     { "do": "expectPath", "anchors": 3, "closed": true, "width": 4 },
     { "do": "action", "action": "paintSelectionColor" },
     { "do": "wait", "seconds": 0.5 },

@@ -124,6 +124,15 @@ and switching on hands back the weight a freshly drawn shape wears. That is
 exactly how a switched-off fill behaves — it comes back at its starting colour
 rather than the one it had — so the two rows keep one promise between them.
 
+The one colour that does NOT stay put is one that would be invisible. A closed
+path arrives as its fill and nothing else, so the first outline it is ever asked
+for would land in the fill's own colour and draw nothing anybody can see. It
+takes graphite or white instead, whichever stands further off the fill, exactly
+as a box's first border does (`BorderInk.swift`). Only an ink that is LOST
+against the fill is repainted, so a line switched off and switched back on comes
+back in the colour it had, and an open path — which has no fill to be lost
+against — is never repainted at all.
+
 The row's settings go with the switch. A path with no outline used to keep a
 Thickness reading 0 px under a colour well that painted nothing, which is the
 dead control the switch exists to replace: off has to LOOK off.
@@ -397,9 +406,15 @@ What the sticky Pen landed alongside stays: a picked path shows its points under
 the Pen as well as under Select, so pressing P over a finished shape reaches its
 anchors.
 
-A path arrives wearing what a new box wears — the redline red, 4pt of line,
-filled when it closed and no fill at all when it did not, because an open path
-is a line. The Pen carries no colour capsule on the tool bar: the Appearance
+A path arrives wearing what a new box wears, which since 2026-09-15 means **no
+edge until you ask for one**. A CLOSED path is its fill and nothing else: no
+line round it, so its edges land exactly on the points that were clicked. It
+used to come out filled AND outlined in the one armed ink, so the outline was
+invisible and the painted shape reached half a line width past every point —
+two points all round, which on a 24 point icon grid is a sixth of the drawing.
+An OPEN path is untouched and keeps the weight the canvas set, because a line IS
+its stroke and a line of no width is not a shape with no edge, it is nothing at
+all. It carries no fill either. The Pen carries no colour capsule on the tool bar: the Appearance
 panel repaints the path it just made, and a second place to set the same two
 colours with nothing behind it is noise.
 

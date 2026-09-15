@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/path-arrives-with-no-edge",
+  "seed": "A shape drawn with the Pen came out filled AND outlined in the one colour the Pen was armed with, so the outline was invisible and the painted shape reached half a line width past every point that was clicked: two points all round, which on a 24 point icon grid is a sixth of the drawing. A box stopped doing this in September. The walk draws a closed shape and checks it arrives as a fill and nothing else, asks for an edge and checks the edge it gets can actually be seen against that fill, then draws an open path and checks a line still comes out as a line.",
+  "setup": {
+    "forget": ["shapes", "frames", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [300, 300] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [520, 300] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [410, 470] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [300, 300] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "expectPath", "anchors": 3, "closed": true, "width": 0 },
+    { "do": "describe", "stage": "1-no-edge", "note": "THE TEST: a closed shape off the Pen is its fill and nothing else. It used to arrive with 4 points of line painted the fill's own colour, so the panel claimed an outline the picture did not have and the shape sat 2 points bigger all round than the three points that were clicked." },
+    { "do": "panel", "stage": "1-no-edge" },
+    { "do": "snapshot", "name": "1-no-edge" },
+    { "do": "render", "name": "1-no-edge-doc" },
+
+    { "do": "expect", "control": "Switch", "in": "Outline", "present": true },
+    { "do": "action", "action": "togglePathOutline" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "width": 4 },
+    { "do": "describe", "stage": "2-edge-asked-for", "note": "THE TEST: the edge you ask for arrives in an ink that READS against the inside it sits on, not a second copy of the fill. The same rule a box's first border follows, so the two shapes behave alike." },
+    { "do": "snapshot", "name": "2-edge-asked-for" },
+    { "do": "render", "name": "2-edge-asked-for-doc" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [760, 300] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [920, 300] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [990, 470] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "expectPath", "anchors": 3, "closed": false, "width": 4, "fill": "none" },
+    { "do": "describe", "stage": "3-a-line-is-its-line", "note": "THE TEST: an open path is untouched. A line IS its stroke, so a line of no width would not be a shape with no edge, it would be nothing at all: it comes out at the weight the canvas set and with no inside to paint." },
+    { "do": "snapshot", "name": "3-a-line-is-its-line" },
+    { "do": "render", "name": "3-a-line-is-its-line-doc" }
+  ]
+}

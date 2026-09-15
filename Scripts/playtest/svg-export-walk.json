@@ -78,7 +78,7 @@
     {
       "do": "describe",
       "stage": "1-drawn",
-      "note": "a closed shape drawn with the Pen: two straight edges and a curved top, filled and outlined"
+      "note": "a closed shape drawn with the Pen: two straight edges and a curved top, filled, with no line round it"
     },
     {
       "do": "snapshot",
