@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/place-a-version",
-  "seed": "A button with a Disabled version used to take two steps to place: drop a copy, then switch it. The walk gives Button a Disabled version, sets the shelf tile to it, and drags one copy out that arrives already disabled.",
+  "seed": "A button with a Disabled variant used to take two steps to place: drop a copy, then switch it. The walk gives Button a Disabled variant, sets the shelf tile to it, and drags one copy out that arrives already disabled.",
   "steps": [
     {
       "do": "blank",
@@ -166,7 +166,7 @@
     {
       "do": "describe",
       "stage": "5-copy-panel",
-      "note": "the copy picked: its own Version row already reads Disabled, and it can still be switched back"
+      "note": "the copy picked: its own Variant row already reads Disabled, and it can still be switched back"
     },
     {
       "do": "snapshot",

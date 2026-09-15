@@ -100,19 +100,33 @@ struct TutorialComponentsTrackTests {
         }
     }
 
-    @Test func nothingInTheTrackSaysVariant() {
-        // The task that asked for this track called the fourth guide
-        // "Variants". The app has never used that word: a component holds
-        // VERSIONS, the panel says Versions, and a guide teaches what shipped
-        // rather than what the plan called it.
+    @Test func nothingInTheTrackSaysVersion() {
+        // A guide teaches the word the panel says. Until 2026-09-15 the panel
+        // said "Versions" and this test held the track to it; the panel now
+        // asks one question called Variant, in one list called Properties, so
+        // the word that must not appear is the old one.
+        //
+        // "Version" is also the other thing that word means in an editor — the
+        // history of a document — which is half of why it had to go.
         for guide in components {
             for step in guide.steps {
-                #expect(!step.body.lowercased().contains("variant"),
+                #expect(!step.body.lowercased().contains("version"),
                         "\(guide.id)/\(step.id) teaches a word the panel does not use")
-                #expect(!step.title.lowercased().contains("variant"), "\(guide.id)/\(step.id)")
+                #expect(!step.title.lowercased().contains("version"), "\(guide.id)/\(step.id)")
             }
-            #expect(!guide.summary.lowercased().contains("variant"), "\(guide.id)")
-            #expect(!guide.title.lowercased().contains("variant"), "\(guide.id)")
+            #expect(!guide.summary.lowercased().contains("version"), "\(guide.id)")
+            #expect(!guide.title.lowercased().contains("version"), "\(guide.id)")
+        }
+    }
+
+    @Test func theTrackSaysAdjustableNowhere() {
+        // The other invented word. Everything a copy may set is a PROPERTY.
+        for guide in components {
+            for step in guide.steps {
+                #expect(!step.body.lowercased().contains("adjustable"),
+                        "\(guide.id)/\(step.id) teaches a word the panel does not use")
+                #expect(!step.title.lowercased().contains("adjustable"), "\(guide.id)/\(step.id)")
+            }
         }
     }
 

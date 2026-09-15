@@ -148,7 +148,7 @@ public struct ComponentKnobSelection: Hashable, Sendable {
         let are = count == 1 ? "is a copy" : "are copies"
         let those = count == 1 ? "that one" : "those"
         return "\(count) of the \(selectionCount) selected layers \(are) of \(componentName). "
-            + "The knobs below change \(those)."
+            + "The properties below change \(those)."
     }
 
     /// What the section says when the picked copies come from different
@@ -156,7 +156,7 @@ public struct ComponentKnobSelection: Hashable, Sendable {
     /// averaging them would be inventing a control neither original has.
     public static let differentComponentsNote =
         "These copies come from different components. "
-        + "Pick copies of one component to set their knobs together."
+        + "Pick copies of one component to set their properties together."
 }
 
 extension PhotonzDocument {

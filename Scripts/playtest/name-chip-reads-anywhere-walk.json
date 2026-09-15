@@ -61,13 +61,13 @@
     { "do": "action", "action": "zoomToFit" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "version-word",
-      "note": "the Button now has two drawings, so each says which version it is rather than repeating the component's name" },
+      "note": "the Button now has two drawings, so each says which variant it is rather than repeating the component's name" },
     { "do": "snapshot", "name": "chip-2-version" },
 
     { "do": "move", "at": [320, 265], "space": "document" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "spelled-out",
-      "note": "the pointer resting on the first drawing: it spells out the component's name AND which version this one is, which is the label the report was about" },
+      "note": "the pointer resting on the first drawing: it spells out the component's name AND which variant this one is, which is the label the report was about" },
     { "do": "snapshot", "name": "chip-3-spelled-out" },
 
     { "do": "move", "at": [40, 40] },

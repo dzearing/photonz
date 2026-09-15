@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-whole-path",
-  "seed": "The whole component path in one sitting, played as somebody who has never seen the app. Draw a button by hand, make it a component, hand it two knobs, give it a second look called Disabled, place three copies, change one of them, put that change back, place a copy that arrives already Disabled, then edit the original once and carry that edit to every version. Every turn claims what the panel is showing, so the walk fails when the app answers differently rather than when a step falls over.",
+  "seed": "The whole component path in one sitting, played as somebody who has never seen the app. Draw a button by hand, make it a component, hand it two knobs, give it a second look called Disabled, place three copies, change one of them, put that change back, place a copy that arrives already Disabled, then edit the original once and carry that edit to every variant. Every turn claims what the panel is showing, so the walk fails when the app answers differently rather than when a step falls over.",
   "setup": {
     "forget": [
       "shapes",
@@ -151,7 +151,7 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": false
     },
     {
@@ -182,7 +182,7 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": true
     },
     {
@@ -209,7 +209,7 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": false
     },
     {
@@ -232,7 +232,7 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": true
     },
     {
@@ -414,7 +414,7 @@
     },
     {
       "do": "expect",
-      "menu": "Version",
+      "menu": "Variant",
       "reads": "Default"
     },
     {
@@ -674,7 +674,7 @@
     },
     {
       "do": "expect",
-      "menu": "Version",
+      "menu": "Variant",
       "reads": "Disabled"
     },
     {
@@ -703,7 +703,7 @@
     },
     {
       "do": "expect",
-      "menu": "Version",
+      "menu": "Variant",
       "reads": "Default"
     },
     {
@@ -721,13 +721,13 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": true
     },
     {
       "do": "describe",
       "stage": "10b-edit-original",
-      "note": "Edit Original pressed on a copy showing Default: it lands on the Default drawing, the one that copy shows, with the Versions list saying which is showing"
+      "note": "Edit Original pressed on a copy showing Default: it lands on the Default drawing, the one that copy shows, with the Variants list saying which is showing"
     },
     {
       "do": "snapshot",
@@ -758,12 +758,12 @@
     },
     {
       "do": "expect",
-      "control": "Apply to Other Versions",
+      "control": "Apply to Other Variants",
       "present": true
     },
     {
       "do": "expect",
-      "control": "Apply to Other Versions",
+      "control": "Apply to Other Variants",
       "reads": "every version already matches"
     },
     {
@@ -785,7 +785,7 @@
     },
     {
       "do": "expect",
-      "control": "Apply to Other Versions",
+      "control": "Apply to Other Variants",
       "reads": "there is something to carry"
     },
     {
@@ -803,7 +803,7 @@
     },
     {
       "do": "press",
-      "control": "Apply to Other Versions"
+      "control": "Apply to Other Variants"
     },
     {
       "do": "wait",
@@ -811,13 +811,13 @@
     },
     {
       "do": "expect",
-      "control": "Apply to Other Versions",
+      "control": "Apply to Other Variants",
       "reads": "every version already matches"
     },
     {
       "do": "describe",
       "stage": "13-every-version",
-      "note": "THE LAST POINT: one press carried that shadow to the Disabled drawing too, so the copy placed as Disabled has it as well, and the button now says the versions match"
+      "note": "THE LAST POINT: one press carried that shadow to the Disabled drawing too, so the copy placed as Disabled has it as well, and the button now says the variants match"
     },
     {
       "do": "snapshot",
@@ -837,13 +837,13 @@
     },
     {
       "do": "expect",
-      "control": "Apply to Other Versions",
+      "control": "Apply to Other Variants",
       "reads": "there is something to carry"
     },
     {
       "do": "describe",
       "stage": "14-undone",
-      "note": "one undo takes it back off every version at once, because carrying it was one step"
+      "note": "one undo takes it back off every variant at once, because carrying it was one step"
     },
     {
       "do": "render",

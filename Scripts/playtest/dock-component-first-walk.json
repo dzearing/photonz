@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-component-first",
-  "seed": "A laptop-sized window, and a Button component with two versions. The Component section says WHICH version a copy is showing and holds its knobs, so it has to be readable the moment you pick the copy. Before 2026-09-06 it sat under Layout, the tallest section in the dock, which put every one of its rows below the bottom of the panel: you had to scroll to find out what you had picked. This walk reads the dock's own measurements back rather than trusting a picture, and makes four claims: a copy shows Component whole with its Version row, an original does too, an ordinary rectangle still leads with Position & Size, and a dock somebody has scrolled stays exactly where they left it when the selection changes.",
+  "seed": "A laptop-sized window, and a Button component with two variants. The Component section says WHICH variant a copy is showing and holds its knobs, so it has to be readable the moment you pick the copy. Before 2026-09-06 it sat under Layout, the tallest section in the dock, which put every one of its rows below the bottom of the panel: you had to scroll to find out what you had picked. This walk reads the dock's own measurements back rather than trusting a picture, and makes four claims: a copy shows Component whole with its Variant row, an original does too, an ordinary rectangle still leads with Position & Size, and a dock somebody has scrolled stays exactly where they left it when the selection changes.",
   "steps": [
     {
       "do": "blank",
@@ -98,7 +98,7 @@
     {
       "do": "describe",
       "stage": "1-copy",
-      "note": "THE POINT: a copy picked with nothing scrolled. Component is whole inside the dock, second from the top, so the Version row is the first thing under the Layers list instead of a scroll away."
+      "note": "THE POINT: a copy picked with nothing scrolled. Component is whole inside the dock, second from the top, so the Variant row is the first thing under the Layers list instead of a scroll away."
     },
     {
       "do": "panel",
@@ -122,7 +122,7 @@
     {
       "do": "describe",
       "stage": "2-original",
-      "note": "the original picked: its name and its versions are whole on screen too, where the whole section used to start below the fold."
+      "note": "the original picked: its name and its variants are whole on screen too, where the whole section used to start below the fold."
     },
     {
       "do": "panel",

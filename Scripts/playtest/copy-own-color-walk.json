@@ -23,7 +23,7 @@
     { "do": "action", "action": "exposeColor" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-exposed",
-      "note": "the original's Adjustable list grew a colour knob, named Fill for the part it paints rather than for the box it sits on" },
+      "note": "the original's Properties list grew a colour property, named Fill for the part it paints rather than for the box it sits on" },
     { "do": "snapshot", "name": "copy-own-color-1-exposed" },
 
     { "do": "action", "action": "pickFirstComponent" },
@@ -82,7 +82,7 @@
     { "do": "click", "at": [400, 250] },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "8-original",
-      "note": "back on the original, whose Adjustable list shows the one colour knob" },
+      "note": "back on the original, whose Properties list shows the one colour knob" },
     { "do": "snapshot", "name": "copy-own-color-8-original" },
 
     { "do": "action", "action": "pickFirstComponent" },

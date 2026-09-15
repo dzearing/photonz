@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/version-labels-row",
-  "seed": "Four versions of one button standing side by side. Every version of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the box that opens stands on the letters it is going to replace: the component's name stays printed in front of it and only the version sits inside the box.",
+  "seed": "Four variants of one button standing side by side. Every variant of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the box that opens stands on the letters it is going to replace: the component's name stays printed in front of it and only the variant sits inside the box.",
   "setup": {
     "forget": [
       "panel",

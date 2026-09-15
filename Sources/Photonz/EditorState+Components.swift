@@ -422,7 +422,7 @@ extension EditorState {
             bringIntoView(box, alongside: source)
         }
         raiseCanvasNotice(.componentVersionAdded(
-            version: document.componentVersion(of: componentID, id: added)?.name ?? "The new version",
+            version: document.componentVersion(of: componentID, id: added)?.name ?? "The new variant",
             component: document.mainComponent(componentID: componentID)?.name))
         return added
     }
@@ -430,6 +430,31 @@ extension EditorState {
     func renameComponentVersion(componentID: UUID, version: UUID, to name: String) {
         guard componentsEnabled else { return }
         perform { $0.renameComponentVersion(componentID: componentID, version: version, to: name) }
+    }
+
+    // MARK: - The variant property (Next flag `next-components`)
+
+    /// The look-changing properties of a component: none while it holds one
+    /// drawing, one the moment it holds two (`ComponentVariantProperty`).
+    ///
+    /// A LIST, not a single answer, because a real button wants a Type and a
+    /// State before long and the panel that renders this has to be ready to
+    /// show both.
+    func componentVariantProperties(of componentID: UUID) -> [ComponentVariantProperty] {
+        guard componentsEnabled else { return [] }
+        return document?.componentVariantProperties(of: componentID) ?? []
+    }
+
+    /// What this component's variant property is called on the panel and on
+    /// every copy: "Variant" until the author calls it State or Type.
+    func componentVariantName(of componentID: UUID) -> String {
+        document?.componentVariantName(of: componentID) ?? ComponentNaming.defaultVariantPropertyName
+    }
+
+    /// Calls the variant property something else. A blank name is refused.
+    func renameComponentVariantProperty(of componentID: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform { $0.renameComponentVariantProperty(of: componentID, to: name) }
     }
 
     /// Which version a copy is showing, resolved: the one it was set to while
@@ -811,7 +836,7 @@ extension EditorState {
         if let instance { selectLayer(instance, inGroup: document?.parentID(of: instance)) }
     }
 
-    /// Whether Make Wording Adjustable would do anything for this piece.
+    /// Whether Make Its Wording a Property would do anything for this piece.
     func canExposePieceWording(of id: UUID) -> Bool {
         guard componentsEnabled else { return false }
         return document?.canExposePieceWording(of: id) ?? false
@@ -1088,7 +1113,7 @@ extension EditorState {
         setSelection(nil, captureLayers: false, recording: false)
         let knob = document.componentHome(of: made.group)
             .flatMap { document.componentProperty(componentID: $0, propertyID: made.property) }?.name
-        raiseCanvasNotice(.componentChoiceMade(options: made.options, knob: knob ?? "the choice knob"))
+        raiseCanvasNotice(.componentChoiceMade(options: made.options, knob: knob ?? "the choice property"))
     }
 
     /// Layer ▸ Select Original: jumps from a copy to the thing every copy

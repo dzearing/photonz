@@ -214,7 +214,7 @@ struct ComponentKnobSelectionTests {
         #expect(selection.selectionCount == 3)
         #expect(selection.reachNote
                 == "2 of the 3 selected layers are copies of Button. "
-                + "The knobs below change those.")
+                + "The properties below change those.")
     }
 
     /// Copies of two different components have no knob in common: the section
@@ -237,7 +237,7 @@ struct ComponentKnobSelectionTests {
         #expect(selection.isEmpty)
         #expect(ComponentKnobSelection.differentComponentsNote
                 == "These copies come from different components. "
-                + "Pick copies of one component to set their knobs together.")
+                + "Pick copies of one component to set their properties together.")
     }
 
     /// The copies keep the order they were given, so the row reads the same way

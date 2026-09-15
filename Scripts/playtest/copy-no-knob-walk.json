@@ -37,7 +37,7 @@
     { "do": "snapshot", "name": "noknob-3-refused" },
     { "do": "panel", "stage": "3-refused" },
 
-    { "do": "press", "control": "Make Text Adjustable" },
+    { "do": "press", "control": "Make Text a Property" },
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "4-exposed", "note": "one press and the copy has a Wording knob, with a field on its own section" },
     { "do": "snapshot", "name": "noknob-4-exposed" },

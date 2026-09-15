@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-versions",
-  "seed": "A button has a normal look and a disabled look. Before versions those were two components that drifted apart the first time somebody edited one. The walk drops a Button, gives it a second version called Disabled, fades that drawing, then places two copies and puts one of them on Disabled.",
+  "seed": "A button has a normal look and a disabled look. Before variants those were two components that drifted apart the first time somebody edited one. The walk drops a Button, gives it a second variant called Disabled, fades that drawing, then places two copies and puts one of them on Disabled.",
   "steps": [
     {
       "do": "blank",
@@ -51,7 +51,7 @@
     {
       "do": "describe",
       "stage": "1-original",
-      "note": "the original picked: the Component section holds a Versions block saying it is one drawing"
+      "note": "the original picked: the Component section holds a Variant row saying it is one drawing"
     },
     {
       "do": "snapshot",
@@ -113,7 +113,7 @@
     {
       "do": "describe",
       "stage": "3-version-differs",
-      "note": "the Disabled drawing is faded, so the two versions no longer look the same"
+      "note": "the Disabled drawing is faded, so the two variants no longer look the same"
     },
     {
       "do": "snapshot",
@@ -169,7 +169,7 @@
     {
       "do": "describe",
       "stage": "4-copy-panel",
-      "note": "a copy picked: the Version row is at the top of its knobs, reading Default"
+      "note": "a copy picked: the Variant row is at the top of its knobs, reading Default"
     },
     {
       "do": "snapshot",

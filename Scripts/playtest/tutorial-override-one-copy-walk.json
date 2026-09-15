@@ -15,7 +15,7 @@
     { "do": "click", "at": [176, 112] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-knob", "timeout": 6 },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "2-add-a-knob", "note": "the original's own section, with the Adjustable list empty and saying what it is for" },
+    { "do": "describe", "stage": "2-add-a-knob", "note": "the original's own section, with the Properties list empty and saying what it is for" },
     { "do": "panel", "stage": "2-add-a-knob" },
     { "do": "snapshot", "name": "2-add-a-knob" },
 

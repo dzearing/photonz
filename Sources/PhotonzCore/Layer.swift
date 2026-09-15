@@ -727,6 +727,13 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// a copy — "Default", "Disabled". Nil while the component has one version,
     /// because there is nothing to tell it apart from.
     public var versionName: String?
+    /// Set on a **main component**: what the PROPERTY these drawings are
+    /// options of is called — "Variant" until somebody calls it State or Type
+    /// (`ComponentVariantProperty`). Every drawing of the component carries the
+    /// same answer, so deleting the one it was typed on does not take it away.
+    /// Nil is a component nobody has renamed it on, which is every component
+    /// saved before a variant was a property.
+    public var variantName: String?
     /// Set on an **instance**: the component this copy follows
     /// (`docs/design/ui-building.md`, step C5). Its children are not its own —
     /// the document keeps them equal to the main's, so editing the main is the
@@ -812,6 +819,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
+        case variantName
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -827,6 +835,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         if componentID != nil {
             try c.encodeIfPresent(versionID, forKey: .versionID)
             try c.encodeIfPresent(versionName, forKey: .versionName)
+            // ...and only a component whose variant property somebody renamed
+            // writes this one, so one still calling it Variant is byte for byte
+            // what it was.
+            try c.encodeIfPresent(variantName, forKey: .variantName)
             // Only a component somebody put on the shared shelf writes this, so
             // one that belongs to its document alone is byte for byte what it
             // always was.
@@ -881,6 +893,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         instanceOf = try c.decodeIfPresent(UUID.self, forKey: .instanceOf)
         versionID = try c.decodeIfPresent(UUID.self, forKey: .versionID)
         versionName = try c.decodeIfPresent(String.self, forKey: .versionName)
+        variantName = try c.decodeIfPresent(String.self, forKey: .variantName)
         instanceVersion = try c.decodeIfPresent(UUID.self, forKey: .instanceVersion)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []

@@ -35,7 +35,7 @@
     { "do": "action", "action": "exposeNumber" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-exposed",
-      "note": "the original's Adjustable list grew a number knob, named Corner radius for the number it turns rather than for the box it sits on, with a number chip beside it" },
+      "note": "the original's Properties list grew a number property, named Corner radius for the number it turns rather than for the box it sits on, with a number chip beside it" },
     { "do": "snapshot", "name": "copy-own-number-1-exposed" },
 
     { "do": "action", "action": "pickFirstComponent" },

@@ -50,7 +50,7 @@ struct ComponentVersionTests {
         #expect(added != nil)
         let versions = c.doc.componentVersions(of: c.componentID)
         #expect(versions.count == 2)
-        #expect(versions.map(\.name) == ["Default", "Version 2"])
+        #expect(versions.map(\.name) == ["Default", "Variant 2"])
         // The second version is a complete drawing of its own: same pieces,
         // its own layers, so changing one changes nothing in the other.
         let second = c.doc.mainComponent(componentID: c.componentID, version: added)!
@@ -100,9 +100,9 @@ struct ComponentVersionTests {
         var c = withComponent()
         #expect(c.doc.componentLibraryEntries.first?.detail == ComponentNaming.mainDetail)
         c.doc.addComponentVersion(componentID: c.componentID)
-        #expect(c.doc.componentLibraryEntries.first?.detail == "2 versions")
+        #expect(c.doc.componentLibraryEntries.first?.detail == "2 variants")
         c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 400, y: 300))
-        #expect(c.doc.componentLibraryEntries.first?.detail == "2 versions • 1 copy")
+        #expect(c.doc.componentLibraryEntries.first?.detail == "2 variants • 1 copy")
     }
 
     // MARK: - A copy picks one
@@ -361,7 +361,7 @@ struct ComponentVersionTests {
         let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
         c.doc.setInstanceVersion(instance: copy, to: disabled)
         #expect(c.doc.layerRows(expanded: [], selected: []).first { $0.id == copy }?
-            .versionName == "Version 2")
+            .versionName == "Variant 2")
         let second = c.doc.mainComponent(componentID: c.componentID, version: disabled)!
         c.doc.removeLayers(ids: [second.id])
         #expect(c.doc.layerRows(expanded: [], selected: []).allSatisfy { $0.versionName == nil })
@@ -406,7 +406,7 @@ struct ComponentVersionTests {
         let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
         let copy = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
         c.doc.setInstanceVersion(instance: copy, to: disabled)
-        #expect(c.doc.canvasVersionNames()[copy] == "Version 2")
+        #expect(c.doc.canvasVersionNames()[copy] == "Variant 2")
         let second = c.doc.mainComponent(componentID: c.componentID, version: disabled)!
         c.doc.removeLayers(ids: [second.id])
         #expect(c.doc.canvasVersionNames().isEmpty)

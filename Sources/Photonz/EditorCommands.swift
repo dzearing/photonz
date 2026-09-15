@@ -603,13 +603,13 @@ struct EditorCommands: Commands {
                 // be open with a component picked for it to mean anything.
                 Button("Insert Component") { editor?.insertPickedComponent() }
                     .disabled(!(editor?.canInsertPickedComponent ?? false))
-                // Add Version takes no key either: it is a thing you do once
-                // per look, from the original's own section, and a key for it
-                // would be a key nobody could name.
-                Button("Add Version") { editor?.addComponentVersion() }
+                // Add Variant takes no key either: it is a thing you do once
+                // per look, from the original's own Properties list, and a key
+                // for it would be a key nobody could name.
+                Button("Add Variant") { editor?.addComponentVersion() }
                     .disabled(!(editor?.canAddComponentVersion ?? false))
-                // Apply to Other Versions is ABSENT unless the selected piece
-                // is part of an original that HAS other versions, because on
+                // Apply to Other Variants is ABSENT unless the selected piece
+                // is part of an original that HAS other looks, because on
                 // anything else it is a row about a feature you are not using.
                 // When it is there it NAMES them — "Apply to Hover and
                 // Disabled" — so nobody has to press it to find out what it

@@ -93,7 +93,7 @@ public struct ComponentVersionApply: Hashable, Sendable {
     /// Whether pressing it would do anything at all.
     public var wouldChangeAnything: Bool { !changing.isEmpty }
 
-    /// What the row says. It NAMES the versions it would change while there are
+    /// What the row says. It NAMES the variants it would change while there are
     /// few enough to name, because "which ones is this about to touch" is the
     /// question somebody asks with their hand on the menu.
     public var title: String {
@@ -102,10 +102,10 @@ public struct ComponentVersionApply: Hashable, Sendable {
         case 0:
             // Dimmed, and saying why it is dimmed. A dead row with no reason on
             // it is a row people hunt the reason for.
-            return skipped.isEmpty ? "Other Versions Already Match" : "No Other Version Has This Part"
+            return skipped.isEmpty ? "Other Variants Already Match" : "No Other Variant Has This Part"
         case 1: return "Apply to \(names[0])"
         case 2: return "Apply to \(names[0]) and \(names[1])"
-        default: return "Apply to \(names.count) Other Versions"
+        default: return "Apply to \(names.count) Other Variants"
         }
     }
 
@@ -116,12 +116,12 @@ public struct ComponentVersionApply: Hashable, Sendable {
         let names = changing.map(\.version.name)
         if isWholeDrawing {
             lines.append(names.isEmpty
-                ? "This drawing's own surface already matches every other version. The pieces inside are carried across one at a time, by selecting one."
+                ? "This drawing's own surface already matches every other variant. The pieces inside are carried across one at a time, by selecting one."
                 : "Gives \(ComponentVersionApply.list(names)) this drawing's own surface: its colour, rounding, border, shadow and fade. The pieces inside each version are left alone, and are carried across one at a time.")
         } else if names.isEmpty {
             lines.append(skipped.isEmpty
-                ? "\(pieceName) already looks and reads the same in every other version."
-                : "No other version has a \(pieceName) this could reach.")
+                ? "\(pieceName) already looks and reads the same in every other variant."
+                : "No other variant has a \(pieceName) this could reach.")
         } else {
             lines.append("Gives \(pieceName) in \(ComponentVersionApply.list(names)) this one's look and wording. Where it sits, how big it is and what is inside it are left alone.")
         }

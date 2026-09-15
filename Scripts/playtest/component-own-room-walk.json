@@ -187,7 +187,7 @@
     {
       "do": "describe",
       "stage": "1-exposed",
-      "note": "the Adjustable list grew a knob named Padding, and it names the CARD itself rather than any piece inside it. The Add menu offers this row first, because the card is the outermost thing"
+      "note": "the Properties list grew a property named Padding, and it names the CARD itself rather than any piece inside it. The Add menu offers this row first, because the card is the outermost thing"
     },
     {
       "do": "snapshot",

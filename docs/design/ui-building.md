@@ -3710,3 +3710,60 @@ screenshot is the case to look at again. And a SCREEN's name is still bare grey
 letters straight on the picture — the same disease on the same strip. Put a
 screen inside a crimson shape and its name reads at 1.9:1, photographed and
 filed separately.
+
+## Landed: a component has properties, and a variant is one of them (Next, `next-components`, 2026-09-15)
+
+A naming fix that is really a model fix. The Component section on an original
+carried two lists with two words this app invented: **Versions**, the drawings
+the component holds, and **Adjustable**, the things a copy may set. The user, on
+2026-09-15, looking at a component: "i don't even know what 'Versions' is", then
+"what the hell is adjustable? Component properties? How is 'adjustable'
+different from anything?", then the rule this work is held to — "panes purposes
+should be predictable and clear."
+
+**They were two names for halves of one idea.** A component has **Properties**.
+A property is anything a copy can be given its own answer for. A **variant** is
+the kind of property whose answer picks which drawing the copy shows. The user's
+own correction settled it: "component properties makes sense. Variant is a
+property of the component."
+
+- **One list, one Add.** The original's section shows **Properties**. Its Add
+  menu opens with a **Variant** section ("A second look", then "Another look"),
+  and the rest of the menu is unchanged: pick a piece of the component and the
+  kind of property it should be.
+- **The variant is a row, not a section.** It wears an editable name, a
+  `variant` chip like every other row's kind chip, and its looks underneath. The
+  name is the point: an author calls it **State**, or **Type**, or **Size**, and
+  every copy's panel then asks that question by that name.
+- **A copy reads the same list.** The Properties heading, the variant row under
+  its own name, then a row per property with its value. What somebody learns on
+  one side of a component is the word they meet on the other.
+- **A component with one look has no variant property at all**, so a plain
+  component's panel is the panel it always was.
+
+**Why the model holds a LIST of variant properties even though it holds at most
+one today.** A real button wants a Type of primary or secondary AND a State of
+rest or hovered almost immediately, and designing for exactly one look-changing
+property and discovering later that two are needed is a rewrite rather than an
+addition. `componentVariantProperties(of:)` answers an array and the panel loops
+over it, so a second one is an addition. When it arrives, the drawings stay a
+FLAT list and each carries an answer per variant property, with a combination
+nobody drew falling back to the nearest one that was — a sparse matrix, not a
+full product, because a version is a whole drawing and Type × State × Size as a
+full product is twenty-four drawings made by hand.
+
+**The old spelling stays in the code and in the file.** `ComponentVersion`,
+`versionID`, `versionName` are what a document saved yesterday holds, and
+renaming a coding key rewrites the format for no one's benefit. Version is the
+old spelling of the word; nowhere a person can read it says version. The
+tutorial track is held to that by a test
+(`TutorialComponentsTrackTests.nothingInTheTrackSaysVersion`), which is the same
+test that used to hold it to the opposite.
+
+Model in `ComponentVariantProperty.swift` (`ComponentVariantProperty`,
+`componentVariantProperties`, `componentVariantName`,
+`renameComponentVariantProperty`) and the `variantName` field on `GroupContent`;
+the panel in `ComponentPanel.swift` (`ComponentPropertyList`,
+`ComponentVariantPropertyRow`, `ComponentInstanceProperties`). Menus: Layer ▸
+**Add Variant**, Layer ▸ **Apply to Other Variants**. Tests in
+`ComponentVariantPropertyTests.swift`.

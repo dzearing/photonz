@@ -420,24 +420,26 @@ extension ComponentNaming {
     /// meaning something.
     public static let defaultVersionName = "Default"
 
-    /// What the version in position `index` is called before anybody names it.
+    /// What the look in position `index` is called before anybody names it.
+    /// "Variant", because that is the word the panel now asks the question in
+    /// (`ComponentVariantProperty`).
     public static func versionName(at index: Int) -> String {
-        index == 0 ? defaultVersionName : "Version \(index + 1)"
+        index == 0 ? defaultVersionName : "Variant \(index + 1)"
     }
 
-    /// A version name nobody is using yet: "Version 2", then "Version 3"…
+    /// A name nobody is using yet: "Variant 2", then "Variant 3"…
     static func freshVersionName(taken: [String], count: Int) -> String {
         var index = max(count + 1, 2)
-        while taken.contains("Version \(index)") { index += 1 }
-        return "Version \(index)"
+        while taken.contains("Variant \(index)") { index += 1 }
+        return "Variant \(index)"
     }
 
-    /// The detail line on a component's tile: how many versions it holds and
-    /// how many copies of it are out. A component with one version says nothing
-    /// about versions, because one version is just the component.
+    /// The detail line on a component's tile: how many looks it holds and how
+    /// many copies of it are out. A component with one look says nothing about
+    /// variants, because one look is just the component.
     public static func detail(instanceCount: Int, versionCount: Int) -> String {
         guard versionCount > 1 else { return detail(instanceCount: instanceCount) }
-        let versions = "\(versionCount) versions"
+        let versions = "\(versionCount) variants"
         switch instanceCount {
         case 0: return versions
         case 1: return "\(versions) • 1 copy"

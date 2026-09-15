@@ -135,7 +135,7 @@ struct InstanceRoundingTests {
     @Test func theNoteNamesTheKnob() {
         let c = withCopy()
         #expect(c.doc.instanceRoundingNote(layerIDs: [c.copy])
-            == "This copy is rounded by its Corner radius knob, in the Component section below.")
+            == "This copy is rounded by its Corner radius property, in the Component section below.")
     }
 
     /// Named by whatever the author called it, because that is the word on the
@@ -143,7 +143,7 @@ struct InstanceRoundingTests {
     @Test func theNoteUsesTheAuthorsOwnWord() {
         let c = withCopy(knobNamed: "Roundness")
         #expect(c.doc.instanceRoundingNote(layerIDs: [c.copy])
-            == "This copy is rounded by its Roundness knob, in the Component section below.")
+            == "This copy is rounded by its Roundness property, in the Component section below.")
     }
 
     /// Two roundings exposed, both named.
@@ -161,7 +161,7 @@ struct InstanceRoundingTests {
         let copy = c.doc.insertComponentInstance(of: c.componentID,
                                                  at: CGPoint(x: 400, y: 400))!
         #expect(c.doc.instanceRoundingNote(layerIDs: [copy])
-            == "This copy is rounded by its Corner radius and Chip rounding knobs, "
+            == "This copy is rounded by its Corner radius and Chip rounding properties, "
                 + "in the Component section below.")
     }
 
@@ -171,7 +171,7 @@ struct InstanceRoundingTests {
         let second = c.doc.insertComponentInstance(of: c.componentID,
                                                    at: CGPoint(x: 600, y: 400))!
         #expect(c.doc.instanceRoundingNote(layerIDs: [c.copy, second])
-            == "These copies are rounded by their Corner radius knob, "
+            == "These copies are rounded by their Corner radius property, "
                 + "in the Component section below.")
     }
 

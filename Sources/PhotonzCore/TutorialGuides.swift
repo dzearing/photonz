@@ -863,12 +863,12 @@ public enum TutorialGuides {
         ])
 
     /// The part everybody gets wrong: a copy cannot simply be edited, and the
-    /// way in is a knob the ORIGINAL offers.
+    /// way in is a PROPERTY the ORIGINAL offers.
     ///
-    /// The order of the steps is the model. The original decides what is
-    /// adjustable, because the decision applies to every copy at once; the copy
-    /// answers, and its answer survives the next edit to the original because
-    /// it is written back over the top after the refill.
+    /// The order of the steps is the model. The original decides which
+    /// properties it has, because the decision applies to every copy at once;
+    /// the copy answers, and its answer survives the next edit to the original
+    /// because it is written back over the top after the refill.
     public static let overrideOneCopy = TutorialGuide(
         id: "override-one-copy",
         track: .components,
@@ -888,8 +888,8 @@ public enum TutorialGuides {
             TutorialStep(
                 id: "add-a-knob",
                 anchor: .panelSection("component"),
-                title: "Make its words adjustable",
-                body: "Under Adjustable, open Add and pick the Label's Wording. Every copy gets that one knob and nothing else.",
+                title: "Give it a Wording property",
+                body: "Under Properties, open Add and pick the Label's Wording. Every copy gets that one property and nothing else.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
@@ -916,7 +916,7 @@ public enum TutorialGuides {
                 id: "the-way-back",
                 anchor: .panelSection("component"),
                 title: "There is always a way back",
-                body: "The arrow beside the knob puts this copy back on the original's words. Nothing is ever stuck.",
+                body: "The arrow beside the property puts this copy back on the original's words. Nothing is ever stuck.",
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
         ])
@@ -924,9 +924,10 @@ public enum TutorialGuides {
     /// A component holds more than one drawing of itself, and a copy picks
     /// which one it shows.
     ///
-    /// It is called Versions because that is what the panel calls it. The task
-    /// that asked for this track said "Variants", and a guide teaches what
-    /// shipped rather than what the plan called it.
+    /// The looks are the options of the component's VARIANT property, which is
+    /// one row of its Properties list (`ComponentVariantProperty`). The guide
+    /// keeps its id, because an id is what a saved place in a track points at,
+    /// and nobody reads it.
     public static let componentVersions = TutorialGuide(
         id: "component-versions",
         track: .components,
@@ -947,7 +948,7 @@ public enum TutorialGuides {
                 id: "add-a-version",
                 anchor: .panelSection("component"),
                 title: "Add a second drawing",
-                body: "Under Versions, press Add. A copy of this drawing lands beside it on clear page, and it is an ordinary drawing you can edit.",
+                body: "Under Properties, open Add and pick A second look. A copy of this drawing lands beside it on clear page, and it is an ordinary drawing you can edit.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
@@ -977,7 +978,7 @@ public enum TutorialGuides {
                 id: "switch-it",
                 anchor: .panelSection("component"),
                 title: "Switch it to Disabled",
-                body: "Version is the top row of a copy's settings. Choose Disabled and this copy redraws. The other one carries on as it was.",
+                body: "Variant is the top row of a copy's properties. Choose Disabled and this copy redraws. The other one carries on as it was.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),

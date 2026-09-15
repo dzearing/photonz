@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-component-versions-walk",
-  "seed": "The fourth guide of the Components track: a component holds more than one drawing of itself, and every copy says which one it is showing. A button needs a switched off look as well, and keeping both under one name is what stops the two drifting apart. The guide is called One name, two looks rather than Variants, because the panel says Versions and a guide teaches what shipped.",
+  "seed": "The fourth guide of the Components track: a component holds more than one drawing of itself, and every copy says which one it is showing. A button needs a switched off look as well, and keeping both under one name is what stops the two drifting apart. The guide is called One name, two looks, and the panel asks the question as one PROPERTY of the component called Variant.",
   "setup": { "forget": ["tutorials", "panel", "color", "groups"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
@@ -15,11 +15,11 @@
     { "do": "click", "at": [176, 112] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-version", "timeout": 6 },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "2-add-a-version", "note": "the Versions block on the original, saying it holds one drawing and what adding another is for" },
+    { "do": "describe", "stage": "2-add-a-version", "note": "the Properties list on the original, empty, saying what goes in it" },
     { "do": "panel", "stage": "2-add-a-version" },
     { "do": "snapshot", "name": "2-add-a-version" },
 
-    { "do": "press", "control": "Add Version" },
+    { "do": "action", "action": "addComponentVersion" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "name-it", "timeout": 6 },
     { "do": "wait", "seconds": 1 },
     { "do": "describe", "stage": "3-second-drawing", "note": "a second drawing landed beside the first on clear page, it is the one selected, and its name is waiting to be typed over" },
@@ -43,14 +43,14 @@
     { "do": "key", "key": "escape" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-copy", "timeout": 6 },
     { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "5-greyed", "note": "THE TEST for versions being whole drawings: only the Disabled drawing changed. The first drawing and both copies are untouched" },
+    { "do": "describe", "stage": "5-greyed", "note": "THE TEST for variants being whole drawings: only the Disabled drawing changed. The first drawing and both copies are untouched" },
     { "do": "snapshot", "name": "5-greyed" },
     { "do": "render", "name": "5-greyed-doc" },
 
     { "do": "click", "at": [176, 216] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "switch-it", "timeout": 6 },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "6-copy-picked", "note": "a copy's own section, with Version as its top row" },
+    { "do": "describe", "stage": "6-copy-picked", "note": "a copy's own section, with Variant as its top row" },
     { "do": "panel", "stage": "6-copy-picked" },
     { "do": "snapshot", "name": "6-copy-picked" },
 

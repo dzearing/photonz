@@ -66,9 +66,9 @@ extension PhotonzDocument {
             // Copies of different components, each with a rounding of its own
             // name. Naming all of them would be a list nobody reads, and naming
             // one would be a claim about the others.
-            return "These copies are rounded by knobs their originals set up, \(ending)"
+            return "These copies are rounded by properties their originals set up, \(ending)"
         }
-        let knob = names.count == 1 ? "knob" : "knobs"
+        let knob = names.count == 1 ? "property" : "properties"
         let listed = ComponentVersionApply.list(names)
         return skipped.count == 1
             ? "This copy is rounded by its \(listed) \(knob), \(ending)"

@@ -200,8 +200,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
         case .componentChoiceMade: return "Choice added"
-        case .componentVersionAdded: return "Version added"
-        case .componentVersionGone: return "Version deleted"
+        case .componentVersionAdded: return "Variant added"
+        case .componentVersionGone: return "Variant deleted"
         case .componentVersionsMatched: return "Applied"
         case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
@@ -248,7 +248,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(version) is now its own drawing of \(component) on the canvas"
         case .componentVersionGone(let count, let version):
             let copies = count == 1 ? "1 copy" : "\(count) copies"
-            guard let version, !version.isEmpty else { return "\(copies) moved to another version" }
+            guard let version, !version.isEmpty else { return "\(copies) moved to another variant" }
             return "\(copies) moved to \(version)"
         case .componentVersionsMatched(let piece, let versions):
             guard !versions.isEmpty else { return piece }

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/apply-to-versions",
-  "seed": "A component holds a Default drawing and a Hover drawing, and Hover has been faded so the two are genuinely different. The walk rounds the Background inside Default, then applies that one edit to every other version: Hover's Background rounds too, and Hover keeps its fade.",
+  "seed": "A component holds a Default drawing and a Hover drawing, and Hover has been faded so the two are genuinely different. The walk rounds the Background inside Default, then applies that one edit to every other variant: Hover's Background rounds too, and Hover keeps its fade.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1320, "height": 920 },
     { "do": "action", "action": "showComponentShelf" },
@@ -27,7 +27,7 @@
     { "do": "action", "action": "roundCorners" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-one-version-edited",
-      "note": "the Background inside Default is rounded. Hover's is still square: this is the cost a version being a whole drawing buys" },
+      "note": "the Background inside Default is rounded. Hover's is still square: this is the cost a variant being a whole drawing buys" },
     { "do": "snapshot", "name": "apply-to-versions-2-one-version-edited" },
     { "do": "render", "name": "apply-to-versions-2-one-version-edited-doc" },
     { "do": "action", "action": "applyToOtherComponentVersions" },
@@ -39,7 +39,7 @@
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-one-undo",
-      "note": "one Command Z put every version back, because it was one step" },
+      "note": "one Command Z put every variant back, because it was one step" },
     { "do": "snapshot", "name": "apply-to-versions-4-one-undo" },
     { "do": "render", "name": "apply-to-versions-4-one-undo-doc" }
   ]

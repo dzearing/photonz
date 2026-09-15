@@ -203,7 +203,7 @@ struct ComponentVersionMatchTests {
         // Four versions is more names than a menu row can carry, so it counts.
         let fourth = c.doc.addComponentVersion(componentID: c.componentID, from: c.hoverVersion)!
         c.doc.renameComponentVersion(componentID: c.componentID, version: fourth, to: "Pressed")
-        #expect(c.doc.componentVersionApply(from: c.boxID)!.title == "Apply to 3 Other Versions")
+        #expect(c.doc.componentVersionApply(from: c.boxID)!.title == "Apply to 3 Other Variants")
     }
 
     @Test func aVersionThatAlreadyMatchesIsNotNamed() {
@@ -238,7 +238,7 @@ struct ComponentVersionMatchTests {
         let c = withTwoVersions()
         let plan = c.doc.componentVersionApply(from: c.boxID)!
         #expect(plan.wouldChangeAnything == false)
-        #expect(plan.title == "Other Versions Already Match")
+        #expect(plan.title == "Other Variants Already Match")
         #expect(plan.help.contains("already looks and reads the same"))
     }
 
@@ -255,7 +255,7 @@ struct ComponentVersionMatchTests {
         let plan = c.doc.componentVersionApply(from: c.labelID)!
         #expect(plan.matches.isEmpty)
         #expect(plan.skipped.map(\.name) == ["Hover"])
-        #expect(plan.title == "No Other Version Has This Part")
+        #expect(plan.title == "No Other Variant Has This Part")
         #expect(plan.help.contains("Hover has no Label to change."))
     }
 

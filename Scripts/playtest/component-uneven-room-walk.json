@@ -57,7 +57,7 @@
     { "do": "wait", "seconds": 1.2 },
     { "do": "action", "action": "exposeRoom" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-exposed", "note": "the whole point: the Adjustable list grew a Padding knob even though the four sides disagree. Before this the row was simply missing" },
+    { "do": "describe", "stage": "1-exposed", "note": "the whole point: the Properties list grew a Padding property even though the four sides disagree. Before this the row was simply missing" },
     { "do": "snapshot", "name": "component-uneven-room-1-exposed" },
     { "do": "action", "action": "pickFirstComponent" },
     { "do": "wait", "seconds": 0.5 },

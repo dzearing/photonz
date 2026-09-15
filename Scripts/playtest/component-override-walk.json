@@ -23,7 +23,7 @@
     { "do": "action", "action": "exposeWording" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-exposed",
-      "note": "the original's section grew an Adjustable list with one wording knob on it, called Wording for what it controls and waiting with its name selected" },
+      "note": "the original's section grew an Properties list with one wording property on it, called Wording for what it controls and waiting with its name selected" },
     { "do": "snapshot", "name": "component-override-1-exposed" },
     { "do": "menus", "stage": "1-layer-menu", "menu": "Layer" },
 

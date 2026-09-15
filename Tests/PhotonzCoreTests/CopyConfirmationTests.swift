@@ -87,7 +87,7 @@ struct CopyConfirmationTests {
         let named = CopyConfirmation(subject: .componentVersionAdded(version: "Disabled",
                                                                      component: "Button"),
                                      shownAt: t0)
-        #expect(named.title == "Version added")
+        #expect(named.title == "Variant added")
         #expect(named.detail == "Disabled is now its own drawing of Button on the canvas")
         // A component nobody has named still gets a readable line.
         let unnamed = CopyConfirmation(subject: .componentVersionAdded(version: "Version 2",

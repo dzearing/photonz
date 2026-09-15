@@ -154,7 +154,7 @@
     },
     {
       "do": "expect",
-      "control": "Add Version",
+      "control": "Add Property",
       "present": true
     },
     {

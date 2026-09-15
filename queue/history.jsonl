@@ -3709,3 +3709,7 @@
 {"t":"2026-09-15T15:28:55.150Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
 {"t":"2026-09-15T15:28:55.191Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
 {"t":"2026-09-15T15:30:28.597Z","ev":"task_done","id":"the-name-that-floats-over-a-component-can-be-rea","from":"in_progress","note":"The canvas name chip now sits on the label plate the measure readout and arrow caption already used (LabelPlate in PhotonzCore, lifted out of AnnotationContent.captionChipColor so there is one rule). White on the component plate #503186 reads 9.88:1 AAA, measured off real window captures and identical over a light canvas, a saturated shape, a crimson shape and a real screenshot; live chips use the accent through the same rule at 9.63:1. Was 1.0:1 on the blue a starter button is painted in. Scripts/test.sh green (6910, 7 new), component/version/name/caption walk families green, new walk name-chip-reads-anywhere-walk.json. Audit: queue/audits/2026-09-15-canvas-name-chip.json."}
+{"t":"2026-09-15T15:31:08.418Z","ev":"task_started","id":"every-pane-says-what-it-is-for-in-words-somebody","title":"Every pane says what it is for, in words somebody already knows","priority":"p1-high"}
+{"t":"2026-09-15T15:33:28.278Z","ev":"task_note","id":"every-pane-says-what-it-is-for-in-words-somebody"}
+{"t":"2026-09-15T15:33:28.320Z","ev":"task_note","id":"every-pane-says-what-it-is-for-in-words-somebody"}
+{"t":"2026-09-15T15:54:52.255Z","ev":"task_note","id":"every-pane-says-what-it-is-for-in-words-somebody"}

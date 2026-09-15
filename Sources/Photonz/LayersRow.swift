@@ -66,9 +66,9 @@ struct LayersRow: View, Equatable {
                          ?? "hiding \(outOfView.hiddenInside) out of view")
         }
         // The same words the row prints under its name, so a walk can check
-        // which version a row is showing instead of squinting at a picture.
+        // which look a row is showing instead of squinting at a picture.
         if componentsEnabled, let version = display.versionName {
-            parts.append("showing the \(version) version")
+            parts.append("showing the \(version) variant")
         }
         return parts.joined(separator: ", ")
     }
@@ -254,7 +254,7 @@ struct LayersRow: View, Equatable {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .panelHelp("This is the \(version) version of \(display.name)")
+                    .panelHelp("This is the \(version) variant of \(display.name)")
             }
         }
     }
@@ -437,9 +437,9 @@ struct LayersRow: View, Equatable {
         // nothing on the layer you right-clicked is a row people hunt the
         // reason for.
         if display.isMainComponent, editorState.canAddComponentVersion {
-            Button("Add Version") { editorState.addComponentVersion() }
+            Button("Add Variant") { editorState.addComponentVersion() }
         }
-        // Only on a piece of an original that has other versions, and it names
+        // Only on a piece of an original that has other looks, and it names
         // them, so the row answers "what would this touch" before it is
         // pressed. Same rule as the Layer menu.
         if let title = editorState.applyToOtherComponentVersionsTitle {

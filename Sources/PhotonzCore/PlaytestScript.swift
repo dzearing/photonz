@@ -1271,7 +1271,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// shapes.
     case writeSVG(name: String)
     /// Open a menu that lives INSIDE the window — the Add menu on a
-    /// component's Adjustable list, the ellipsis on the Measurements header —
+    /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
     /// either pick one of its rows (`choose`) or close it having chosen
     /// nothing.

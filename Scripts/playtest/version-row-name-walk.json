@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/version-row-name",
-  "seed": "A component called Save button grows a second version. Both drawings sit in the layers list carrying the same name, so each row has to show the name AND which version it is, at the dock's own width. The name used to be squeezed out between the mark and a version chip until the row read as one ellipsis, so this walk photographs those two rows, and one of them being renamed. It then places a copy and switches it, because a copy showing a version other than the first has to say so in its row as well.",
+  "seed": "A component called Save button grows a second variant. Both drawings sit in the layers list carrying the same name, so each row has to show the name AND which variant it is, at the dock's own width. The name used to be squeezed out between the mark and a variant chip until the row read as one ellipsis, so this walk photographs those two rows, and one of them being renamed. It then places a copy and switches it, because a copy showing a variant other than the first has to say so in its row as well.",
   "setup": {
     "forget": [
       "panel",
@@ -124,7 +124,7 @@
     {
       "do": "describe",
       "stage": "renaming",
-      "note": "the Disabled drawing renaming: the field sits where the name was and the version stays under it"
+      "note": "the Disabled drawing renaming: the field sits where the name was and the variant stays under it"
     },
     {
       "do": "snapshot",
@@ -185,7 +185,7 @@
     {
       "do": "describe",
       "stage": "copy-on-a-version",
-      "note": "a copy placed and switched to the other version: the two originals still read name over version, and the copy's row now says Disabled under its name too, so a copy left on Default and one switched are no longer the same row"
+      "note": "a copy placed and switched to the other variant: the two originals still read name over variant, and the copy's row now says Disabled under its name too, so a copy left on Default and one switched are no longer the same row"
     },
     {
       "do": "snapshot",
