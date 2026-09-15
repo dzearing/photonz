@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 12.5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:51:15.223Z",
-  "updated": "2026-09-15T22:09:21.962Z",
+  "updated": "2026-09-15T22:20:07.762Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15: the button component tutorial's \"2 states\" thing should be \"Making states in a component\", covering \"a button transitioning from rest, hovered, pressed, disabled, and how to preview the button in its different states\".\n\nThe guide to rewrite is componentVersions in Sources/PhotonzCore/TutorialGuides.swift, id 'component-versions', currently titled \"One name, two looks\" with the summary \"A button needs a disabled look too. Both live under one component.\" It teaches adding a second version under the Versions panel. So the mechanism it teaches is right; the story around it is thin.\n\nWHAT THE APP ACTUALLY HAS, checked: components hold VERSIONS, a copy picks which version it shows, versions can be named, and the canvas says which version a copy is showing. There is no notion of an interaction state anywhere in the model - no hover, no pressed, no disabled - confirmed by grepping ComponentInstances and ComponentStyle. So states are a CONVENTION built on versions: you name four versions after the four states. That is exactly how designers work in other tools, and it is honest to teach it that way. Do not invent a states feature inside a tutorial.\n\nThat also means the previewing half needs care. 'See the button in each state' with what exists means placing four copies and pointing each at a different version, which is a real and useful thing to teach. If that turns out clumsy - if there is no quick way to flip one copy through its versions, or no way to see them together without arranging copies by hand - that is a genuine feature gap the user has just walked into from the other direction, and it belongs in a task of its own rather than being smoothed over in the guide's words. The acceptance list asks for exactly that.\n\nKeep the existing guide's own rule, which is already written in its comment: it is called Versions because that is what the panel calls it, and a guide teaches what shipped rather than what the plan called it. If the guide's TITLE changes to talk about states, the steps must still name the Versions panel the person is looking at.",
@@ -49,7 +49,24 @@
     {
       "t": "2026-09-15T22:09:21.961Z",
       "note": "Measured where four drawings actually land on the guide's sample (720x480, button 240x52 at 88,88): Default (88,88), Hover (352,88), Pressed (352,164), Disabled (352,240). All four fit inside the canvas and none overlap, so the guide really can leave all four states on screen together. They land as one drawing plus a column of three rather than a row of four, with the sample's two copies underneath the first: that is the honest shape of it and goes in the audit."
+    },
+    {
+      "t": "2026-09-15T22:20:07.629Z",
+      "note": "Post-build review on the built thing. The guide is eight steps and the estimate lands at about 165s against a three minute claim, which the honesty test passes. What is still clumsy and is written into the audit: the Add menu still says 'A second look' after you have renamed the question to State, so the guide says state seven times beside a menu that does not; and Pressed and Disabled share one step that lets you press Next rather than watching you, which is the only step in the guide that does not wait on you. Both are in the audit's rough list for the user to react to; neither is filed, because neither is broken and the naming one belongs to the journey task that already owns the vocabulary."
+    },
+    {
+      "t": "2026-09-15T22:20:07.674Z",
+      "note": "The finding the acceptance list asked for, folded rather than filed: seeing all four states at once is left to wherever the app finds room, so they read as one drawing plus a column rather than a set. make-a-button-with-states-and-properties-and-set already carries 'Four copies showing four different looks can be put side by side and told apart' in its own checklist, so the measurements and the picture went into that task's log instead of a near-twin task."
+    },
+    {
+      "t": "2026-09-15T22:20:07.717Z",
+      "note": "left rough: the guide never presses Apply to Other Variants, it only says the row is there. Watching one change reach all four is the better lesson and there was no ninth step to put it in. If the user says in the audit that being told is not enough, that is the shape of the follow-up."
+    },
+    {
+      "t": "2026-09-15T22:20:07.760Z",
+      "note": "The Components track's last guide now teaches the four states a button really has. Sources/PhotonzCore/TutorialGuides.swift: id kept, titled 'A button in all its states', eight steps in three minutes, and step four has you type State over the box that says Variant, which is the shipped control that lets the rest of the guide say 'state' in the app's own words. Sources/Photonz/ComponentPanel.swift registers that name box so a walk can check the rename. Scripts/playtest/tutorial-component-versions-walk.json rewritten to build all four states and end with a copy switched to one. docs/design/tutorials.md and docs/progress/log.md updated. Verified: Scripts/test.sh green, 7152 tests in 572 suites, with new tests holding the four state names, the rename coming before the steps that rely on it, the guide ending on the canvas, and every state the app lays down landing inside the canvas without overlapping anything. NOT verified: the Mac's screen was locked for the entire task, so the rewritten walk could not run once and no picture of the app exists; a sweep is requested and waits for an unlocked screen. Audit at queue/audits/2026-09-15-states-guide.json, whose picture is the page rendered straight out of the document and says so. Pushed as 44eb256b."
     }
   ],
-  "started": "2026-09-15T22:06:16.627Z"
+  "started": "2026-09-15T22:06:16.627Z",
+  "completed": "2026-09-15T22:20:07.761Z"
 }
