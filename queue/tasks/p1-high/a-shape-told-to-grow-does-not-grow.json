@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 280,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:34:58.830Z",
-  "updated": "2026-09-15T12:34:58.833Z",
+  "updated": "2026-09-15T13:31:46.505Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 while building animated SVG export. A scale motion only edits `layer.frame` (`MotionProperty.applied`, LayerMotion.swift ~line 723). A path's anchors are stored in the layer's own coordinates and are NOT re-fitted when the frame changes: resizing a path by hand goes through `PathBuilder.resized`, which scales the anchors, and the motion never calls it. `DocumentRenderer` then rasterizes the path into a bigger box and scales that box into the frame at 1:1, so nothing grows.\n\nThe probe, run as Tests/PhotonzRenderTests (deleted after; paste it back to re-run):\n\n  let content = PathContent(anchors: [ (0,0), (40,0), (40,40), (0,40) ], isClosed: true, paint: Paint(hex: \"#FF0000\"), fill: Paint(hex: \"#FF0000\"))\n  var layer = PathBuilder.layer(content, at: CGPoint(x: 30, y: 30))\n  layer.motions = [LayerMotion(property: .scale, from: .number(100), to: .number(200), timing: MotionTiming(startMS: 0, durationMS: 1000), curve: .linear, repeats: .forever)]\n  // ...same again with an AnnotationContent(shape: .rectangle) layer\n  renderer.render(document.moved(toMotionTimeMS: 0)) vs .moved(toMotionTimeMS: 999), counting pixels with alpha > 20\n\nRan with: Scripts/test.sh --filter ZZScaleProbe\nPrinted:\n  PROBE path: start 1936 px, end 1936 px      <- identical: the drawing never grew\n  PROBE rect: start 1600 px, end 2512 px      <- grew 1.57x in area where 4x was asked for\n\nThe export writes what the MODEL means (a scale about the middle of the layer, `SVGMotionExport.swift`), so today a grown icon in a browser is bigger than the same icon on the canvas. Fixing this makes the two agree; the export needs no change.",
@@ -23,6 +23,40 @@
     {
       "t": "2026-09-15T12:34:58.832Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T13:12:41.793Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T13:25:11.356Z",
+      "note": "Reproduced first, and it was worse than the note said: BOTH the path and the rectangle drew 1600px at 100% and 1600px at 200%. The note's 1.57x on a rectangle was an artefact of that probe's fixture, not the app. Root cause confirmed: MotionProperty.applied set layer.frame only, and every rasterizer draws the content payload (path anchors, annotation endpoints) into whatever box it is handed, so a 40pt shape was painted into an 80pt box."
+    },
+    {
+      "t": "2026-09-15T13:31:44.073Z",
+      "note": "Fixed: scale now magnifies the layer about the middle of its box (Sources/PhotonzCore/MotionScale.swift, Layer.drawnLarger(by:about:)), reusing the existing resized(to:) for per-kind geometry and multiplying on top what a re-fit deliberately leaves alone: stroke width, type size, corner radius, shadow. Groups magnify whole rather than placing their pieces. Also pinned the order motions are applied in to the order the exported file nests them (MotionProperty.nestingOrder, now read by both LayerMotion and SVGMotionExport), because growing a shape now multiplies its line and so which row was added first had started to matter. Verified: 1600px -> 6400px (exactly 4x area) for both a path and a rectangle; 6876 tests pass."
+    },
+    {
+      "t": "2026-09-15T13:31:44.117Z",
+      "note": "Acceptance item 3 (canvas, looping preview and exported SVG agree): the small-size looping preview goes through the same document.moved(layerID:toMotionTimeMS:) as the canvas (EditorState+IconPreviews.swift:77), so it agrees by construction. Agreement with the file is pinned by a test that compares the canvas growth against the factor the export writes at four moments of the lap."
+    },
+    {
+      "t": "2026-09-15T13:31:44.159Z",
+      "note": "Could NOT verify in the running app: the Mac's screen was locked for the whole task, so Scripts/playtest.sh motion-swings-a-layer-walk refused to run (status locked, Window captures: none). The audit's two pictures are the canvas's own offscreen render, and the audit says so in rough."
+    },
+    {
+      "t": "2026-09-15T13:31:44.200Z",
+      "note": "left rough: scaling a text layer grows its type and its box then re-measures to fit the bigger words, so a label's vertical middle can drift a point or two as it swells (every other kind grows exactly about its middle). Did not earn a task: it is a consequence of a text box being as tall as its words, nobody has asked for a label that scales, and it is a point or two."
+    },
+    {
+      "t": "2026-09-15T13:31:44.242Z",
+      "note": "Filed one follow-up that cleared the bar, with a reproduction: a-piece-that-slides-inside-an-icon-that-grows-sl (p2-normal). A child's position delta is not multiplied by an ancestor's magnification, so a piece slides 20pt where the exported SVG moves it 40pt on a doubled icon. Exposed by this fix rather than caused by it: before it, a scaling group did not magnify its children at all."
+    },
+    {
+      "t": "2026-09-15T13:31:46.503Z",
+      "note": "Scale magnifies the layer about the middle of its box instead of only moving the box round it: shape, line weight, type size, corner and shadow all grow together, matching the scale() an animated SVG already exported. Sources/PhotonzCore/MotionScale.swift (new), LayerMotion.swift, SVGMotionExport.swift. Verified by counting drawn pixels through the real renderer: a path and a rectangle both go 1600px -> 6400px over a lap that asks them to double, where both used to stay at 1600. 6876 tests pass. Audit: queue/audits/2026-09-15-motion-scale.json. Screen was locked all run, so the pictures are offscreen renders, not window captures, and the audit says so."
     }
-  ]
+  ],
+  "started": "2026-09-15T13:12:41.792Z",
+  "completed": "2026-09-15T13:31:46.504Z"
 }

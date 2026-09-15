@@ -1,0 +1,27 @@
+{
+  "id": "a-piece-that-slides-inside-an-icon-that-grows-sl",
+  "title": "A piece that slides inside an icon that grows slides the wrong distance",
+  "goal": "When a whole icon is told to grow and one piece of it is told to slide, the piece moves the distance it was given rather than that distance scaled up with the icon. The icon in the app and the same icon exported as an animated SVG then part company: in a browser the piece travels twice as far on an icon drawn at twice the size. Somebody builds a pulse-and-slide icon, checks it in the app, ships it, and it plays differently for everyone else.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 2650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T13:28:55.170Z",
+  "updated": "2026-09-15T13:28:55.173Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-15 right after fixing a-shape-told-to-grow-does-not-grow, which is what exposed it: before that fix a scaling group did not magnify its children at all, so nothing composed. Now the child grows correctly and only the slide distance is left short.\n\nCause: Layer.movedTree applies a group's own motions, then recurses and applies each child's motions to the already-magnified child. MotionProperty.applied for .position writes `moved.frame.origin + (point - authored.frame.origin)`, and `point` is stated in the child's ORIGINAL coordinates, so the delta is never multiplied by the magnification an ancestor has already applied. SVGMotionExport nests translate inside scale (MotionProperty.nestingOrder), where the outer scale does multiply it. Likely fix: thread the accumulated magnification down through movedTree and multiply a position delta by it.\n\nThe probe, run as Tests/PhotonzCoreTests/ZZNestTests.swift (deleted after; paste it back to re-run): a 10pt rectangle child at (0,0) with a .position motion from (0,0) to (20,0), inside a group at (0,0,100,100) with a .scale motion pinned at 200%, then `group.movedTree(toMotionTimeMS: 999, cycleMS: 1000)`.\n\nRan with: Scripts/test.sh --filter ZZNest\nPrinted:\n  ZZNEST dot frame in a group doubled: (19.98, 0.0, 20.0, 20.0)\n\nThe size is right (10 -> 20). The x is 19.98 where it should be about 40.",
+  "acceptance": [
+    "A piece told to slide 20pt inside a group told to grow to 200% is drawn 40pt along, not 20pt",
+    "The app and an exported animated SVG put that piece in the same place at the same moment of the lap",
+    "A test asserts the slid distance for a nested piece at both ends of the lap"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T13:28:55.172Z",
+      "note": "created (manual)"
+    }
+  ]
+}
