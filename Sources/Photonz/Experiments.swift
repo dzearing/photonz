@@ -347,6 +347,10 @@ extension Experiments {
     /// point of a shape (`CanvasDrawLanding`).
     var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }
 
+    /// The pill that rides under a drag saying where it is going or how big it
+    /// is becoming (`CanvasDragReadout`).
+    var dragReadoutEnabled: Bool { isEnabled(FeatureCatalog.dragReadoutFlag) }
+
     /// `next-motion`: whether the Motion section exists under Effects, with the
     /// plus that tells a layer to change one of its properties over time, and
     /// whether the canvas plays it. The model is never flagged: a document that

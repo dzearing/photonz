@@ -132,6 +132,8 @@ public enum FeatureCatalog {
 
     public static let drawLandingFlag = "next-where-the-point-will-land"
 
+    public static let dragReadoutFlag = "next-a-drag-says-its-numbers"
+
     public static let reshapePathFlag = "next-reshape-a-path"
 
     public static let turnIntoPathFlag = "next-turn-into-path"
@@ -523,6 +525,15 @@ public enum FeatureCatalog {
                     name: penFlag,
                     title: "Draw any shape with the Pen",
                     description: "Adds the Pen, P, at the end of the drawing tools. Click to drop a corner, or press and drag to pull a curve out of the point you are placing, so one outline can have hard edges and curves in it: a triangle, a teardrop, a rounded box, the sort of shape an icon is made of. The run between the last point and the pointer is drawn while you move, so you see the curve before you commit it. Click the first point to close the shape and it fills; Return finishes it as an open line; Escape throws the drawing away. Holding Shift puts the next point on one of the usual angles. With the grid on and Snap to grid on, a point lands on the nearest crossing of the lines you can see, the same lines a drag catches, and holding Command puts it exactly where the pointer is. Holding Option means the two sides of a point are not tied together, which is what lets a straight edge run into a curve: drag a point out with Option held and the edge arriving at it stays straight, and press Option on the point you just placed to pull its handle back in so the next edge leaves straight. That is how a rounded corner gets drawn. Command Z steps back one point at a time while you draw instead of losing the whole path. The colour the next path comes out in is the swatch on the tool bar, the same place every other drawing tool keeps its colour, so you choose it before you draw rather than repainting afterwards. What you get is an ordinary layer: move it, resize it, turn it, repaint its inside and its edge, give it a shadow, undo it. Off means no Pen tool and P does nothing; a path already in a document draws either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: dragReadoutFlag,
+                    title: "A drag says where it is and how big it is while it happens",
+                    description: "A drag says nothing about itself while it is in flight. Move a layer and there is no number anywhere saying where it has got to; pull a handle and nothing says how big it is becoming; sweep a selection box and its size is a thing you find out after you let go. The numbers used to follow a drag in the right hand panel, and now that Position and Size is something you ask for rather than something always open, the watching half of that reading had nowhere to live. With this on, a small dark pill rides under whatever is being dragged and says the reading the drag is changing: where it is going while you move it, and how big it is becoming while you resize it, sweep a selection box, or pull a point or a lever on a path. It is one reading rather than four numbers, because the half you are not changing is noise under a moving box. It sits centred just below the thing it describes and never on top of it, steps above instead when the thing is against the bottom of the window, and slides sideways to stay readable at the edges. It is there only while the button is down: the moment you let go it is gone, and the shape you landed on is what the panel and the Position and Size fields read. Off means a drag stays silent and you find out what you got after you release.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

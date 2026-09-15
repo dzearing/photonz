@@ -16018,3 +16018,39 @@ one.
 
 **Next:** build `a-layer-says-how-big-it-is-while-you-drag-it`, now at the front
 of p2 with the path case written into it.
+
+## 2026-09-15 — a drag says where it is and how big it is
+
+Built the canvas drag readout (`next-a-drag-says-its-numbers`, on by default in
+Next). A small dark pill rides under whatever is being dragged and carries the
+one reading that drag is changing: position while you move, size while you
+resize, sweep a selection box, or pull a point or lever on a path. It goes the
+instant the button comes up.
+
+The rules live in `PhotonzCore/DragReadout.swift` (what it says, where it goes,
+12 tests). The drawing is `Sources/Photonz/CanvasDragReadout.swift`, a CALayer
+pill refreshed from `refreshOverlays`. It is deliberately NOT in `EditorState`:
+every live box already exists on the canvas side, an observable read per pointer
+move would re-run the editor body sixty times a second, and `previewMoves` is
+blind to a path reshape anyway.
+
+Two live-box bugs fell out of verifying it, both about a path reshape:
+`CanvasDisplay.apply` echoed the pre-drag `selectedLayerFrame` back over the
+live one mid-reshape (it guarded `moveDrag`/`resizeDrag` but not
+`pathAnchorDrag`), and `previewPath` never wrote `previewMoves`, so Position and
+Size sat on the pre-drag numbers for the whole gesture and jumped on release.
+Both fixed; the canvas and the panel now agree mid-drag.
+
+New playtest step `expectReadout`, and the `drag` step gained a `readout` claim
+checked with the button still down — the only way to assert a reading that
+exists solely mid-gesture. Walk: `Scripts/playtest/drag-readout-walk.json`.
+
+Open question for whoever is next in this area: the Mac reported its screen
+LOCKED throughout, and yet the forced run wrote eight complete, correct window
+captures of a fully drawn app. Folded into
+`a-hundred-and-fifteen-walks-fail-on-code-that-pa`, because if that reading is
+wrong the loop is refusing every walk for nothing.
+
+Next: audit `queue/audits/2026-09-15-drag-readout.json` is waiting for the user.
+Rotate drags and drag-to-create shapes still say nothing; both are the obvious
+next cases and are in the audit's rough list.

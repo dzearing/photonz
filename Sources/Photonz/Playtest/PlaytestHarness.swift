@@ -642,7 +642,8 @@ private final class Run {
                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
-        case .drag(let from, let to, let steps, let modifiers, let halfway, let hold, let wobble):
+        case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
+                   let readout, let wobble):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -687,6 +688,13 @@ private final class Run {
                 await screenCapture(window, name: hold)
                 held = ", held \(hold).png"
             }
+            // The numbers the drag is carrying, read with the button STILL
+            // DOWN. After the picture, so a walk that fails this claim has
+            // already photographed what it is complaining about.
+            var said = ""
+            if let readout {
+                said = ", " + (try checkDragReadout(says: readout, absent: false))
+            }
             // The pointer's shape WHILE the button is down: the only moment a
             // closed-hand grab cue exists, and a walk cannot photograph it.
             let heldCursor = Self.cursorName()
@@ -701,7 +709,7 @@ private final class Run {
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys), "
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
 
@@ -1217,6 +1225,10 @@ private final class Run {
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
                                smooth: smooth, halfSmooth: halfSmooth, width: width,
                                fill: fill, ink: ink, anchorAt: anchorAt),
+                 state: describe())
+
+        case .expectReadout(let says, let absent):
+            note(number, step.name, try checkDragReadout(says: says, absent: absent),
                  state: describe())
 
         case .expectChrome(let within):
@@ -3262,6 +3274,35 @@ private final class Run {
         }
         return "a press would land on \(short(landing)), "
             + "\(Self.round1(off))pt from the \(short(wanted)) claimed"
+    }
+
+    /// What the pill riding under a drag says right now.
+    ///
+    /// It reads `liveDragReadout`, which is the string the canvas actually put
+    /// on screen, so a walk that passes here has proved the words a person can
+    /// see rather than that some number was computed somewhere.
+    private func checkDragReadout(says: String?, absent: Bool) throws -> String {
+        let canvas = try requireCanvas()
+        let showing = canvas.liveDragReadout
+        if absent {
+            guard showing == nil else {
+                throw Failure(description: "nothing is being dragged, and the canvas is still "
+                    + "carrying a reading that says \"\(showing!)\". The pill belongs to a drag "
+                    + "in flight: it has outlived the gesture that put it there.")
+            }
+            return "no reading on the canvas, which is right with nothing in hand"
+        }
+        guard let says else { return "nothing claimed" }
+        guard let showing else {
+            throw Failure(description: "nothing on the canvas is saying what this drag is doing, "
+                + "and the walk expects \"\(says)\". Check the drag really moved past the click "
+                + "tolerance, and that \(FeatureCatalog.dragReadoutFlag) is on.")
+        }
+        guard showing == says else {
+            throw Failure(description: "the reading under the drag says \"\(showing)\", and the "
+                + "walk expects \"\(says)\".")
+        }
+        return "the drag reads \"\(showing)\""
     }
 
     private func checkHint(contains: String) throws -> String {

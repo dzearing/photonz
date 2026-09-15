@@ -1,0 +1,28 @@
+{
+  "feature": "A drag says where it is and how big it is",
+  "epic": "ui-building",
+  "summary": "A small dark pill now rides under whatever you are dragging and says the one reading that drag is changing: where it is going while you move it, how big it is becoming while you resize it, sweep a selection box, or pull a point on a path. It goes the instant you let go.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"A drag says where it is and how big it is while it happens\" and it is on by default.",
+  "try": [
+    { "do": "Draw a rectangle, press V for the arrow, and drag it across the canvas. Watch the pill under it.", "shot": "2026-09-15-drag-readout-move.png" },
+    { "do": "Let go. The pill goes; open Position and Size and check X and Y read the two numbers the pill last said." },
+    { "do": "Drag the rectangle's bottom right handle. The pill now says a size instead of a place." },
+    { "do": "Press M, sweep a selection box over empty canvas, and read its size while you are still holding the button." },
+    { "do": "Press P, click three corners, click the first one again to close the shape, then drag one of its points a long way out.", "shot": "2026-09-15-drag-readout-reshape.png" },
+    { "do": "Pick two layers with a sweep and drag them together: the pill describes the box the pair makes." }
+  ],
+  "evaluate": [
+    "Is the reading where your eye already is, or are you still looking to the right hand panel for it?",
+    "Is one reading the right amount? A move says only where, a resize says only how big; would you rather have both at once?",
+    "Should the numbers carry the unit (\"580 × 448 px\") or stay bare the way they are?",
+    "Does the pill sitting under the box feel right, or would you rather it followed the pointer?",
+    "Dragging two layers at once puts the pill under the middle of the pair, which can be empty space between them. Does that read, or does it look orphaned?"
+  ],
+  "rough": [
+    "The screen was locked while this was checked. The lock flag said locked at both ends of the run and the walk only ran because it was forced, and yet eight complete, correct pictures of the window came out of it, so the pictures here are real photographs of the app rather than offscreen drawings. That disagreement is a problem for the loop, not for this feature, and it is folded into the task about walks failing at night.",
+    "Turning a layer says nothing. The angle has a field of its own and the acceptance did not ask for it, so a rotate drag is still silent; it is the obvious next case.",
+    "Drawing a NEW shape by dragging it out (rectangle, ellipse, frame) says nothing either. It is the same want and the same gesture, and it was left out to keep this change to the things that already exist on the canvas.",
+    "Moving a pixel region, or its outline on its own, says nothing.",
+    "Fixed on the way past, because the new pill made it visible: while you reshaped a path the Position and Size fields sat on the shape as it was BEFORE the press for the whole gesture and jumped on release. The canvas read 420 × 320 under the pointer while the panel beside it said 300 × 200. Both now say the same thing."
+  ]
+}

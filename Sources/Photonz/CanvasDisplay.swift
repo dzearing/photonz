@@ -199,7 +199,16 @@ extension CanvasNSView {
         if cropDrag == nil {
             self.cropRect = cropRect
         }
-        if moveDrag == nil, resizeDrag == nil {
+        // A path reshape counts as mid-drag for exactly the same reason, and
+        // was missing from this list. `pathEditMouseDragged` rebuilds the box
+        // from the shape under the pointer on every frame, but a reshape never
+        // records anything in `previewMoves`, so the frame SwiftUI hands back
+        // is the shape as it was BEFORE the press — and echoing it here put the
+        // pre-drag box back a frame later, for the whole gesture. Caught by
+        // `drag-readout-walk`, where the reading under a point dragged out past
+        // the old edge sat on the old 300 × 200 instead of the 420 × 320 the
+        // shape had become.
+        if moveDrag == nil, resizeDrag == nil, pathAnchorDrag == nil {
             self.selectedLayerFrame = selectedLayerFrame
         }
         self.groupContext = groupContext
@@ -312,6 +321,9 @@ extension CanvasNSView {
         refreshDrawLanding()
         refreshPathEditChrome()
         refreshMotionPivotChrome()
+        // Last, because it is placed against boxes the refreshes above have
+        // just settled, and because it draws over all of them.
+        refreshDragReadout()
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every

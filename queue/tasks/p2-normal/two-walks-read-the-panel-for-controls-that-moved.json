@@ -1,0 +1,31 @@
+{
+  "id": "two-walks-read-the-panel-for-controls-that-moved",
+  "title": "Two walks read the panel for controls that moved out of it",
+  "goal": "Two scripted walks stop part way through because they look in the right hand panel for controls that are no longer there: one asks for a Position and Size section to drag, the other for a Top Left corner field. Both moved out of the panel when position and size became something you ask for. Point the walks at where those controls live now, so the app driving itself stops reporting a failure that is really a move.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2740,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T22:59:18.767Z",
+  "updated": "2026-09-15T22:59:22.680Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED on main at 58a7e626 with no local changes (stashed, rebuilt, re-ran):\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build panel-section-drag\n  panel-section-drag  4s  FAILED  step 6 (dragSection): there is no section called \"Position & Size\" in the panel; there is Layers, Measure Tool\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build corner-drag-rounds\n  corner-drag-rounds-walk  8s  FAILED  step 29 (expect): no field called \"Top Left\" is in the panel to read; the ones that are: Opacity, Blending, Corner Radius\n\nBoth are consequences of position-and-size-leave-the-panel (done 2026-09-15): the section is now a popover reached with the positionAndSize action, and the per-corner fields are in the four sided popout off Corner Radius. Neither walk is in the last sweep list in walks-that-fail-in-the-full-sweep, because that sweep ran at 08:15Z, before the panel change landed.\n\nThe override was used only because the machine reported its screen locked; see a-hundred-and-fifteen-walks-fail-on-code-that-pa for why that reading is itself in doubt. Both walks fail identically with and without it.",
+  "acceptance": [
+    "Scripts/playtest-all.sh --no-build panel-section-drag passes",
+    "Scripts/playtest-all.sh --no-build corner-drag-rounds passes",
+    "Neither walk claims a control by a name that is no longer in the panel"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T22:59:18.769Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T22:59:22.679Z",
+      "note": "folded into walks-that-fail-in-the-full-sweep, which already covers walks that stop on controls that moved; the two walk names and their exact failures are in that task's log"
+    }
+  ]
+}

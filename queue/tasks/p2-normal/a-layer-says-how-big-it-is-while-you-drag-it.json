@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T16:14:53.606Z",
-  "updated": "2026-09-15T22:32:54.636Z",
+  "updated": "2026-09-15T22:59:32.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Created by position-and-size-leave-the-panel on 2026-09-15. The Position & Size section followed a drag in flight (GeometryInspector reads previewedFrame, and EditorState.regionGeometry gave a live marquee its four numbers). Taking the section out of the panel kept the typing but lost the watching: the popover is a place a thing happens, and a canvas click dismisses it, so it cannot be the live readout. This is the feature that ought to replace that half, and it is better than what it replaces because it is where the eye already is. The measure tool already draws pill readouts on the canvas (AnnotationStyles, LabelPlate, CanvasNameLabel) so the drawing is not new.\n\nFolded in from the-size-readout-keeps-up-while-you-reshape-a-pa (dropped 2026-09-15): PATH RESHAPES NEED EXTRA PLUMBING that layer moves and resizes do not.\n\nA layer move or resize writes EditorState.previewMoves[id], and everything that reads a live box goes through previewedFrame(of:)/canvasFrame(of:) (EditorState.swift:2253-2320), which read that dictionary first. A readout built on those is automatically right for move and resize.\n\nA path point or lever drag does NOT write previewMoves. EditorState.previewPath (EditorState+PathEdit.swift:17) builds the reshaped document and hands it only to the render scheduler via submit(); it never writes editorState.document and never touches previewMoves. So previewedFrame returns the PRE-DRAG box for the whole gesture, and a readout built the obvious way would sit frozen through every path reshape.\n\nThe live box is already computed, just on the AppKit side: CanvasPathEdit.swift:239 and :322 set the canvas view's own selectedLayerFrame from content.bounds each frame. Either push that into previewMoves (or a sibling preview store) from previewPath, or have the readout read the canvas value for path drags. The first is preferable: one door, and the Position and Size popover reads right too.\n\nEvidence the old symptom was real, from the 2026-09-14 run of Scripts/playtest/path-chrome-follows-walk.json: mid-drag capture 6-mid-two-anchor-drag-sc.png read X 200 Y 192 W 580 H 448 while the shot right after release, 7-after-two-anchor-drag-sc.png, read X 260 Y 189 W 580 H 381. That was the panel section, which no longer exists, but the stale source behind those numbers is unchanged.",
@@ -32,6 +32,31 @@
     {
       "t": "2026-09-15T22:32:54.635Z",
       "note": "seq 2690 -> 50"
+    },
+    {
+      "t": "2026-09-15T22:33:38.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T22:35:16.035Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The working detail says the readout must be built on previewMoves and that path drags need extra plumbing into it. Rejected: the readout does not belong in EditorState at all. Every live box already exists on the AppKit side of the canvas, in the view that is drawing the drag — moveDrag/multiMove/resizeDrag (CanvasView.swift:1391+), marquee and regionDrag (CanvasView.swift:880-900), and for a path reshape selectedLayerFrame, set every frame at CanvasPathEdit.swift:239. Drawing the pill there gets all four cases with no new plumbing, costs SwiftUI nothing (an EditorState read on every pointer move would re-run the editor body 60 times a second, exactly what EditorCanvasSurface exists to prevent), and satisfies 'nothing is added to the right hand panel' by construction. (2) What it says: the reading the drag is CHANGING, not all four numbers. A move says its position, a resize, a sweep and a reshape say their size. Four numbers in a pill mid-drag is a table, and the half you are not changing is noise. (3) Anchored to the box, not the pointer: centred under the live box, so it reads as that box's label and one rule covers a sweep (which has no layer) and a multi-drag (which has no single layer). (4) Cut: a delta readout (+40), a draggable pill, a unit switch, rotate (the angle has its own reading and is not in the acceptance). (5) The numbers must be the ones Position and Size would show, or the app says two different things about one layer: the canvas works in canvas space, so the pill converts through Document.parentSpaceFrame(layer.withSlack(box)) the same way EditorState.storedCanvasFrame does."
+    },
+    {
+      "t": "2026-09-15T22:59:32.273Z",
+      "note": "BUILT. PhotonzCore/DragReadout.swift holds the rules (what the pill says, where it goes) with 12 tests in DragReadoutTests; Sources/Photonz/CanvasDragReadout.swift draws it as a CALayer pill in the canvas view, refreshed from refreshOverlays so it lands on the same frame as the box it labels. Flag next-a-drag-says-its-numbers, on by default in Next. New playtest step expectReadout, and the drag step gained a readout claim checked with the button STILL DOWN, which is the only way to assert a reading that exists solely mid-gesture. Walk: Scripts/playtest/drag-readout-walk.json, 80 steps, passes."
+    },
+    {
+      "t": "2026-09-15T22:59:32.317Z",
+      "note": "TWO BUGS FOUND AND FIXED while verifying, both about a path reshape being invisible to everything that reads a live box. (1) CanvasDisplay.apply guarded its selectedLayerFrame echo on moveDrag and resizeDrag but not pathAnchorDrag, so a SwiftUI update mid-reshape put the pre-drag box back a frame after pathEditMouseDragged had computed the live one. (2) EditorState.previewPath never wrote previewMoves, so the Position and Size fields sat on the pre-drag numbers for the whole gesture. Reproduced with a picture: the canvas read 420 × 320 under the pointer while the popover beside it read 300 × 200 (7-mid-reshape-sc.png, first run). Both fixed; the same capture now shows the pill and the panel agreeing at 420 × 320."
+    },
+    {
+      "t": "2026-09-15T22:59:32.360Z",
+      "note": "ACCEPTANCE, item by item. (1) Move shows position, resize shows size, next to the thing, updating as it moves: drag-readout-walk claims 343, 287 mid-move and 268 × 142 mid-resize with the button down, and the panel reads the same after release. (2) A sweep shows its size the whole time: 203 × 131 claimed mid-sweep, and expectRegion proves that is exactly the region that landed. (3) A path point drag shows the shape as it is and does not jump: 420 × 320 claimed mid-drag, panel W/H read 420/320 after release. (4) Gone on release: expectReadout absent after every one of the five drags. Never covers the thing: DragReadout.plate is outside the box by construction, tested four ways including the no-room-below flip. (5) Nothing added to the panel: the feature is entirely in the canvas view and PhotonzCore."
+    },
+    {
+      "t": "2026-09-15T22:59:32.402Z",
+      "note": "left rough, not filed: the pill under a two-layer drag is centred on the box the pair makes, which can be the empty gap between them (10-mid-multi-move-sc.png). It is the honest anchor and nobody has complained; it is an evaluate question in the audit instead. Also left rough: the flip above the box when there is no room below is tested in DragReadoutTests but never photographed in the app, because forcing it needs a box whose bottom is off screen and no deterministic walk gesture does that at a fixed zoom."
     }
-  ]
+  ],
+  "started": "2026-09-15T22:33:38.410Z"
 }

@@ -18,12 +18,22 @@ extension EditorState {
         guard var doc = document else { return }
         discardDragPreview()
         doc.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) }
+        // The box the shape occupies RIGHT NOW, in the one place everything
+        // that reads a live box already looks. `submit` renders without
+        // touching `document`, so without this the app holds the shape as it
+        // was before the press for the whole gesture, and the Position and Size
+        // fields sat on the pre-drag numbers and jumped on release — reproduced
+        // 2026-09-15 with the canvas reading 420 × 320 under the pointer while
+        // the panel beside it still said 300 × 200.
+        if let box = doc.canvasBounds(of: id) { previewMoves = [id: box] }
         submit(doc)
     }
 
     /// Letting go: ONE undo step for the whole drag, however many frames of it
     /// were drawn on the way.
     func commitPath(_ id: UUID, _ content: PathContent) {
+        // The document is about to hold the real shape, so the stand-in goes.
+        previewMoves = [:]
         discardDragPreview()
         perform { $0.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) } }
     }

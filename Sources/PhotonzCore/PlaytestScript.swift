@@ -1215,9 +1215,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// button still down. `["shift"]` against no modifiers presses it midway,
     /// `[]` against `modifiers: ["shift"]` lets it go midway. Nil means the
     /// keys never change, which is every other drag.
+    /// `readout` is what the pill riding under the drag must say at the end of
+    /// the travel, with the button STILL DOWN. It is the only way to claim
+    /// anything about a reading that exists solely mid-gesture, and a walk that
+    /// passes it has proved the number kept up with the pointer rather than
+    /// that a pill was drawn somewhere.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
-              hold: String?, wobble: CGFloat)
+              hold: String?, readout: String?, wobble: CGFloat)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -1590,6 +1595,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// holds at every zoom. Left off it is one point: the points are on the
     /// shape, not near it.
     case expectChrome(within: CGFloat)
+    /// What the pill riding under a drag says right now, or that there is no
+    /// pill at all. The absent form is how a walk proves the reading goes the
+    /// instant the button comes up rather than lingering over the canvas.
+    case expectReadout(says: String?, absent: Bool)
     /// Where the canvas says a press would put the first point of a shape,
     /// which is the mark drawn under the pointer while you are only hovering
     /// (`CanvasDrawLanding`).
@@ -1787,7 +1796,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -1842,6 +1851,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
+        case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
         case .expectLayers: "expectLayers"
@@ -1934,7 +1944,17 @@ public enum PlaytestStep: Sendable, Equatable {
                          modifiers: try f.modifiers(),
                          halfway: try f.optionalModifiers("halfway"),
                          hold: try f.optionalString("hold"),
+                         readout: try f.optionalString("readout"),
                          wobble: CGFloat(try f.optionalNumber("wobble") ?? 0))
+        case "expectReadout":
+            let says = try f.optionalString("says")
+            let absent = try f.optionalFlag("absent") ?? false
+            guard absent != (says != nil) else {
+                throw f.invalid("says", "expectReadout claims one of two things: \"says\" with "
+                    + "the words the pill under the drag must be carrying, or \"absent\": true "
+                    + "for no pill at all. It cannot claim both and it has to claim one")
+            }
+            self = .expectReadout(says: says, absent: absent)
         case "type":
             self = .type(try f.string("text"))
         case "focus":

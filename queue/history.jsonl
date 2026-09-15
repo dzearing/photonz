@@ -3887,3 +3887,14 @@
 {"t":"2026-09-15T22:32:50.618Z","ev":"task_note","id":"the-size-readout-keeps-up-while-you-reshape-a-pa"}
 {"t":"2026-09-15T22:32:54.637Z","ev":"task_resequenced","id":"a-layer-says-how-big-it-is-while-you-drag-it","from":2690,"to":50}
 {"t":"2026-09-15T22:32:58.662Z","ev":"task_dropped","id":"the-size-readout-keeps-up-while-you-reshape-a-pa","from":"in_progress","note":"Superseded, verified rather than assumed. Every acceptance item is about numbers in the right hand panel, and Position & Size is no longer a section there (InspectorPanel.swift:449 and :808; availableSections never offers it). The fields moved into a transient popover that the mouse-down starting a path drag dismisses, so there is no surface left on which a number can go stale mid-drag. The real plumbing defect underneath (previewPath never writes previewMoves, so previewedFrame is the pre-drag box for the whole gesture) is unchanged and is folded into a-layer-says-how-big-it-is-while-you-drag-it, which gained a path point and lever drag acceptance item and this task's seq 50 slot."}
+{"t":"2026-09-15T22:33:38.310Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T22:33:38.413Z","ev":"task_started","id":"a-layer-says-how-big-it-is-while-you-drag-it","title":"A layer says how big it is while you drag it","priority":"p2-normal"}
+{"t":"2026-09-15T22:35:16.037Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
+{"t":"2026-09-15T22:59:14.372Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-15T22:59:18.771Z","ev":"task_created","id":"two-walks-read-the-panel-for-controls-that-moved","priority":"p2-normal","title":"Two walks read the panel for controls that moved out of it"}
+{"t":"2026-09-15T22:59:22.636Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T22:59:22.681Z","ev":"task_dropped","id":"two-walks-read-the-panel-for-controls-that-moved","from":"pending","note":"folded into walks-that-fail-in-the-full-sweep, which already covers walks that stop on controls that moved; the two walk names and their exact failures are in that task's log"}
+{"t":"2026-09-15T22:59:32.275Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
+{"t":"2026-09-15T22:59:32.319Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
+{"t":"2026-09-15T22:59:32.362Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}
+{"t":"2026-09-15T22:59:32.404Z","ev":"task_note","id":"a-layer-says-how-big-it-is-while-you-drag-it"}

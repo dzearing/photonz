@@ -745,6 +745,13 @@ final class CanvasNSView: NSView {
     /// is in flight. See `CanvasTextStyleDrop.swift`.
     let dropNoteLayer = CAShapeLayer()
     let dropNoteTextLayer = CATextLayer()
+    /// The pill that rides under a drag in flight saying where it is going or
+    /// how big it is becoming, and the words on it. A scripted walk reads them
+    /// back through `liveDragReadout`. See `CanvasDragReadout.swift`.
+    let dragReadoutLayer = CAShapeLayer()
+    let dragReadoutTextLayer = CATextLayer()
+    /// What that pill says RIGHT NOW, or nil when no drag is being described.
+    var dragReadoutShown: String?
     /// What that pill currently says, for a playtest to read back. Nil whenever
     /// no style is over this canvas.
     var textStyleDropNote: String?
@@ -1789,6 +1796,9 @@ final class CanvasNSView: NSView {
         dropNoteLayer.isHidden = true
         dropNoteLayer.addSublayer(dropNoteTextLayer)
         layer?.addSublayer(dropNoteLayer)
+        // The numbers a drag carries with it, above the outline and the guides
+        // they are describing. See `CanvasDragReadout.swift`.
+        setUpDragReadoutChrome()
         // Crop chrome stacks above the composite and the selection chrome
         // (which is hidden in crop mode anyway).
         cropDimLayer.fillColor = CGColor(gray: 0, alpha: 0.55)
