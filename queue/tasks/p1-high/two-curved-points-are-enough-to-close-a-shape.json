@@ -1,0 +1,34 @@
+{
+  "id": "two-curved-points-are-enough-to-close-a-shape",
+  "title": "Two curved points are enough to close a shape",
+  "goal": "Draw two points, curve them, and try to join the second back to the first: the app refuses. But two curved points are a perfectly good closed shape, and a common one. A leaf, a petal, an eye and a lens are all two points and two curves. Closing should be allowed whenever the result is a real shape, not only once there are three points.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 3.1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T02:28:43.251Z",
+  "updated": "2026-09-15T02:28:43.339Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The rule is one line: Sources/PhotonzCore/PenDrawing.swift:158, `guard anchors.count >= 3, let first = anchors.first else { return false }`. Three is the right floor for straight runs, because two straight points enclose nothing, and it is wrong the moment the segments curve.\n\nSo the fix is not to lower the number to two, it is to ask the real question: does closing this path enclose an area. Two anchors whose segments both bow outward do; two anchors on a straight line do not. Say in the audit what test was used.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
+  "acceptance": [
+    "A path of two anchors can be closed when the result encloses an area, and the shape fills",
+    "Two anchors with no curve at all, which would enclose nothing, still cannot close, and the app says why rather than going quiet",
+    "The closing target behaves the same as it does with three or more points: the same press on the first anchor, the same cue under the pointer",
+    "A closed two point shape survives save and load, exports to SVG correctly, and reshapes like any other path",
+    "Tests in PhotonzCore for closing with two anchors curved, two anchors straight, and the existing three or more cases, written before the change",
+    "Audit under queue/audits/ with a leaf drawn in two points, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T02:28:43.253Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T02:28:43.338Z",
+      "note": "seq 280 -> 3.1"
+    }
+  ]
+}

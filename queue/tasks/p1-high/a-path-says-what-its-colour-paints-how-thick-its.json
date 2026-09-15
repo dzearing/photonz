@@ -1,0 +1,35 @@
+{
+  "id": "a-path-says-what-its-colour-paints-how-thick-its",
+  "title": "A path says what its colour paints, how thick its line is, and what kind of line it is",
+  "goal": "Pick a path and Appearance shows a colour with no indication of what it paints, no thickness for the line, and no way to choose what kind of line it is. Every other shape in the app names its parts. A path should too, so you can tell the fill from the outline, set how thick the outline is, and say whether it is round ended, square ended, dashed or solid.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 3.4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T02:28:43.707Z",
+  "updated": "2026-09-15T02:28:43.793Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's screenshot is a filled closed path with no outline, and Appearance showed one unlabelled colour, which is why they could not tell what it was for.\n\nThere are two sibling tasks already open that overlap and must not be built twice: \"A line drawn with the Pen can be made thicker or thinner\" and the follow-up about a Border added to a path following the path rather than a box round it. Read both first; if thickness is landing there, this task is about the NAMING and the line style only, and should say so in its log rather than duplicating the work.\n\nThe model to follow is settled and should not be reinvented: docs/design/shape-parts.md, where a part has a switch, a colour and its own settings, and Appearance is what a shape HAS while Effects is the list you add to. A path is a shape like any other and should arrive in that vocabulary.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
+  "acceptance": [
+    "Each colour a path shows is named for what it paints, the way every other shape's parts are named",
+    "The outline has a thickness you can set, and it is beside the colour that paints it rather than somewhere else",
+    "The kind of line can be chosen: at least the ends and the corners, round or square, and a dashed option",
+    "A path with no outline yet offers to add one the same way any other shape does, rather than showing dead controls",
+    "What is shown matches what is drawn and what is exported: a round ended dashed line comes out of SVG round ended and dashed, checked by rendering the exported file",
+    "It uses the parts model the app already has rather than a new section, so a path reads like the shapes beside it",
+    "Audit under queue/audits/ with the section captured over a path that has both a fill and an outline, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T02:28:43.709Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T02:28:43.792Z",
+      "note": "seq 280 -> 3.4"
+    }
+  ]
+}

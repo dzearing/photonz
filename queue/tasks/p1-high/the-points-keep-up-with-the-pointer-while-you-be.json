@@ -1,0 +1,34 @@
+{
+  "id": "the-points-keep-up-with-the-pointer-while-you-be",
+  "title": "The points keep up with the pointer while you bend a curve",
+  "goal": "Drag a lever to bend a curve and the shape follows your pointer, but the points and levers drawn on top of it stay where they were until you let go. So the thing you are aiming with is in one place and the thing you are steering is in another, and you cannot tell what you are doing until you stop doing it.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 3.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T02:28:43.407Z",
+  "updated": "2026-09-15T02:28:43.487Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduce before fixing, because the obvious explanation is already ruled out: the drag DOES refresh the chrome with the live shape. Sources/Photonz/CanvasPathEdit.swift:177 pathEditMouseDragged builds the reshaped content, updates selectedLayerFrame to its new bounds, then calls onPathPreview and refreshPathEditChrome(previewing: content) on every move. And refreshPathEditChrome at :318 explicitly handles the in-flight case: its own comment says \"While a drag is in flight the layer's box on disk is the old one, so the chrome is placed against the box the preview is being drawn in\", and it offsets by drag.originalFrame plus the preview bounds.\n\nSo do not \"fix\" this by adding a refresh that is already there. Something subtler is wrong: candidates are the origin arithmetic at :329 disagreeing with where the preview actually renders, the chrome reading picked.content from the document rather than the preview somewhere further down the function, or the preview and the chrome being applied on different frames. Instrument it and find out which, rather than guessing.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
+  "acceptance": [
+    "Reproduce it first and say exactly what lags: the anchors, the levers, the selection box, or all three, and by how much",
+    "While a lever is being dragged, the anchors and levers are drawn against the same shape the canvas is drawing, every frame",
+    "The same holds while dragging an anchor rather than a lever, and while dragging several picked anchors at once",
+    "Nothing jumps at the moment the button is released: where the chrome was on the last frame of the drag is where it is on the first frame after it",
+    "It holds at several zooms, and on a path whose box is growing past its old edges during the drag, which is the case the frame handling is there for",
+    "Audit under queue/audits/ with frames captured mid-drag showing the chrome on the shape, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T02:28:43.409Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T02:28:43.486Z",
+      "note": "seq 280 -> 3.2"
+    }
+  ]
+}
