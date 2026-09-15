@@ -1107,11 +1107,11 @@ private final class Run {
             note(number, step.name, try checkMeasures(count), state: describe())
 
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
-                         let width, let fill, let ink, let anchorAt):
+                         let halfSmooth, let width, let fill, let ink, let anchorAt):
             note(number, step.name,
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
-                               smooth: smooth, width: width, fill: fill, ink: ink,
-                               anchorAt: anchorAt),
+                               smooth: smooth, halfSmooth: halfSmooth, width: width,
+                               fill: fill, ink: ink, anchorAt: anchorAt),
                  state: describe())
 
         case .expectChrome(let within):
@@ -2991,7 +2991,7 @@ private final class Run {
     /// What the path the Pen drew is made of, asked of the document rather than
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
-                           curves: Int?, smooth: Int?, width: CGFloat?,
+                           curves: Int?, smooth: Int?, halfSmooth: Int?, width: CGFloat?,
                            fill: String?, ink: String?,
                            anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
@@ -3056,6 +3056,15 @@ private final class Run {
         if let smooth, bends != smooth {
             throw Failure(description: "\(shape), \(bends) of them smooth — not the "
                 + "\(smooth) claimed")
+        }
+        // Points curved on ONE side only: a line arrives and a curve leaves, or
+        // the other way round. Counted off the handles rather than off `kind`,
+        // because such a point IS a corner by kind — the two sides are not tied
+        // together — and counting kinds would make it invisible.
+        let halves = content.anchors.filter(\.isHalfSmooth).count
+        if let halfSmooth, halves != halfSmooth {
+            throw Failure(description: "\(shape), \(halves) of them curved on one side only "
+                + "— not the \(halfSmooth) claimed")
         }
         // Where one named point ended up, asked in the space the walk wrote it
         // in. A path's anchors are stored against its own corner, so the claim

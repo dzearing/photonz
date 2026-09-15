@@ -1461,9 +1461,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// blue triangle proves it is blue-ish, not that it is the blue the tool
     /// bar was set to, and an offscreen render resolves colours differently
     /// again. `fill: "none"` claims a path with no inside at all.
+    /// `halfSmooth` is how many of its points curve on ONE side only, which
+    /// is the one shape neither `curves` nor `smooth` can pin down: a point
+    /// that arrives straight and leaves on a curve is not a smooth bend and
+    /// the runs either side of it are counted the same whether it is one or a
+    /// hard corner sitting between a line and a curve.
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
-                    smooth: Int?, width: CGFloat?, fill: String?, ink: String?,
-                    anchorAt: PlaytestAnchorClaim?)
+                    smooth: Int?, halfSmooth: Int?, width: CGFloat?, fill: String?,
+                    ink: String?, anchorAt: PlaytestAnchorClaim?)
     /// How far the points and levers drawn on the picked path may be from the
     /// shape the canvas is actually drawing, in screen points, at the worst
     /// moment of the drag that just ran.
@@ -1980,6 +1985,7 @@ public enum PlaytestStep: Sendable, Equatable {
             let anchors = try f.optionalNumber("anchors")
             let curves = try f.optionalNumber("curves")
             let smooth = try f.optionalNumber("smooth")
+            let halfSmooth = try f.optionalNumber("halfSmooth")
             let closed = try f.optionalFlag("closed")
             // Where one named point ENDED UP, which is the only way a walk can
             // claim that dragging it did anything: a reshaped path has the same
@@ -2012,16 +2018,19 @@ public enum PlaytestStep: Sendable, Equatable {
                 }
             }
             guard anchors != nil || closed != nil || curves != nil || smooth != nil
-                    || width != nil || fill != nil || ink != nil || anchorAt != nil else {
+                    || halfSmooth != nil || width != nil || fill != nil || ink != nil
+                    || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
                     + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
-                    + "how many of its points are smooth bends, \"width\" for the weight its "
+                    + "how many of its points are smooth bends, \"halfSmooth\" for how many "
+                    + "curve on one side only, \"width\" for the weight its "
                     + "line came out at, \"fill\" or \"ink\" for the colours it came out "
                     + "wearing, or \"anchor\" and \"near\" for "
                     + "where one point ended up")
             }
-            for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth)] {
+            for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth),
+                                   ("halfSmooth", halfSmooth)] {
                 guard let value else { continue }
                 guard value >= 0, value == value.rounded() else {
                     throw f.invalid(field, "a number of \(field) is a whole number, zero or more, not \(value)")
@@ -2030,6 +2039,7 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectPath(layer: try f.optionalString("layer"),
                                anchors: anchors.map { Int($0) }, closed: closed,
                                curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
+                               halfSmooth: halfSmooth.map { Int($0) },
                                width: width.map { CGFloat($0) }, fill: fill, ink: ink,
                                anchorAt: anchorAt)
         case "expectChrome":

@@ -357,15 +357,24 @@ in the A field brings the points back.
 | Drag a lever | Bends that side. On a smooth point the far lever swings round to match, keeping its own length. |
 | ⌥ drag a lever | The same, with the two sides freed from each other: the far one holds still. |
 | ⌥ click a lever | Pulls that lever in, so that side runs straight. A point curved on one side and straight on the other, which is what a rounded corner is made of. |
-| Double click a point | Hard corner becomes a smooth bend, and again turns it back. It is also how a broken point is JOINED: both sides come back in line. |
+| Double click a point | Hard corner becomes a smooth bend, and again turns it back. It is also how a broken point is JOINED: both sides come back in line, and a point curved on ONE side gets its other side back. |
+| Double click a lever | Pulls that lever in, so that side runs straight. The same thing ⌥ click does, in the app's own idiom: two clicks change what the thing under them is. |
 | Double click the outline | Adds a point exactly where you clicked. |
 | Delete | Takes the picked points out, the curve closing over the gap. With no point picked it still deletes the layer. |
 | Escape | Lets the points go, before it lets the layer go. |
 
-A square dot is a hard corner and a round one is a smooth bend, so what a point
-IS can be read off the canvas. A picked one is filled in the accent instead of
-hollow. The chip under the canvas carries the three gestures nobody guesses,
-one line at a time as what is picked changes.
+A square dot is a hard corner, a round one is a smooth bend, and a rounded
+square is a point curved on ONE side only — half way between the two, which is
+what it is. So what a point IS can be read off the canvas. The dot says
+whether, not which side: the outline itself already shows which run is
+straight, and a glyph turned to face the straight side read as a diamond at
+eight points across rather than as anything anybody could name. A picked point
+is filled in the accent instead of hollow.
+
+The chip under the canvas carries the gestures nobody guesses, and it names the
+point you have picked: a hard corner is told how to curve it rather than told to
+drag a lever it has not got, a bend is told about its levers, and a point curved
+on one side says so and gives the way back in both directions.
 
 ### The two that are real geometry
 
@@ -497,9 +506,17 @@ and compares the two bitmaps byte for byte.
   flanks. The path's is the correct one; the oval's is the one to fix.
 * **Line cap and line join are not settable.** Icons want butt caps and a miter
   limit sooner or later.
-* **There is no way to place a half-smooth anchor without Option**, and the
-  chip does not mention Option. A pen user will try it; a newcomer will not need
-  it. Whether it deserves a line on screen is a question for the audit.
+* **The Pen still needs ⌥ to place a half-smooth anchor as it draws**, and its
+  own chip does not mention it. Reshaping no longer does — a double click on a
+  lever is the way in there, and the chip says so — but the two tools now
+  answer the same question differently.
+* **Reaching a half-and-half point from a HARD corner takes two gestures**:
+  double click the point to curve both sides, then double click one lever to
+  straighten the side you did not want. The chip guides the first step but
+  cannot name the second until there is a lever to name.
+* **The Pen draws every anchor it has placed as the same round dot**, so while
+  you are drawing you cannot see which points are corners, bends, or curved on
+  one side. The reshaping chrome tells all three apart.
 * **A path cannot be scaled by dragging any more once its points show.** The
   Position and Size fields do it, and a group round it does it, but there is no
   corner to pull. Whether that is missed is the question the reshape audit asks.

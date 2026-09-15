@@ -927,6 +927,9 @@ final class CanvasNSView: NSView {
     /// drawing (`pathChromeDrift`).
     var pathChromeShowing: PathContent?
     var pathChromeOrigin: CGPoint = .zero
+    /// The last line handed to the chip, so the same words are not published
+    /// again on every overlay pass.
+    var pathEditHintShowing: String?
     /// The worst that drift got over the drag that is running, or the last one
     /// that ran. Reset by the press that starts a drag.
     var pathChromeDriftPeak: CGFloat = 0

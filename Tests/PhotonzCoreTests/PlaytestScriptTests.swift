@@ -2148,12 +2148,32 @@ struct PlaytestScriptTests {
 
     // MARK: - The colours a path came out wearing
 
+    @Test("An expectPath step can claim how many points curve on one side only")
+    func expectPathCountsHalfSmoothPoints() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPath", "halfSmooth": 2 } ] }
+        """)
+        guard case .expectPath(_, _, _, _, _, let half, _, _, _, _) = script.steps[0] else {
+            Issue.record("expectPath"); return
+        }
+        #expect(half == 2)
+    }
+
+    @Test("A claim about points curved on one side has to be a count")
+    func expectPathRefusesANonsenseHalfSmoothCount() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectPath", "halfSmooth": -1 } ] }
+            """)
+        }
+    }
+
     @Test("An expectPath step can claim the two colours the path came out in")
     func expectPathNamesTheColours() throws {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "#2D7FF9", "ink": "#2D7FF9" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "#2D7FF9")
@@ -2167,7 +2187,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "none" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "none")

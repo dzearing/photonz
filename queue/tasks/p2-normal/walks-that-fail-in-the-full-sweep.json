@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-15T03:05:58.396Z",
+  "updated": "2026-09-15T03:42:06.024Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -182,6 +182,10 @@
     {
       "t": "2026-09-15T03:05:58.395Z",
       "note": "effects-open-into-view-walk is flaky, not broken: it failed once inside 'Scripts/playtest-all.sh --no-build pen' at step 16 (expect) with 'the control called \"Twist\" in \"Border\" reads \"Border, open\", not \"Border, shut\"', then passed three times in a row on the same build run on its own. Same shape as the three flakes the 16:12Z sweep reported."
+    },
+    {
+      "t": "2026-09-15T03:42:06.023Z",
+      "note": "turn-into-a-path-walk is still failing as of 2026-09-15 03:5xZ, reproduced a fourth time on a clean main: 'git stash push -u', rebuilt the probe, 'Scripts/playtest.sh Scripts/playtest/turn-into-a-path-walk.json' -> '[42 expectPath] FAILED: no path in the document; the layers are: Background, Rectangle'. Pressing Return on the 'Turn Into Path?' sheet leaves the rectangle a rectangle. The wait step right before it reports mainBusy 1242ms over 867 passes with the longest pass 357ms, so the main thread is doing a lot of work while the sheet is up, which may be why the Return never reaches the button. The other six path and pen walks pass on the same build."
     }
   ]
 }

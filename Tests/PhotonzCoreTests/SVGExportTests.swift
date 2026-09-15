@@ -388,6 +388,35 @@ struct SVGExportTests {
         return String(rest[..<end])
     }
 
+    /// A point curved on one side only has to come out of the file as the
+    /// shape it is, and the two directions are written differently: the run
+    /// with no handle at EITHER end is a plain line, while a run with a handle
+    /// at one end only is a curve whose other control point sits on the anchor.
+    @Test func aPointCurvedOnOneSideOnlyIsWrittenAsALineAndACurve() {
+        // Arrives straight, leaves curving, then arrives curving again.
+        let content = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 0), handleOut: CGPoint(x: 40, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 100), handleIn: CGPoint(x: 0, y: -40))
+        ])
+        let data = SVGExport.pathData(content)
+        #expect(data.contains("L100 0"), "the straight side is a line: \(data)")
+        #expect(data.contains("C140 0 100 60 100 100"), "the curved side bends: \(data)")
+
+        // The other way round: a run that LEAVES straight into a point that
+        // arrives curving is still a curve, with its first control point on
+        // the anchor it left.
+        let mirrored = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0), handleOut: CGPoint(x: 30, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 0), handleIn: CGPoint(x: -30, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 100), handleIn: CGPoint(x: 0, y: -40))
+        ])
+        let out = SVGExport.pathData(mirrored)
+        #expect(!out.contains("L"), "neither run is straight: \(out)")
+        #expect(out.contains("C100 0 100 60 100 100"),
+                "the control point sits on the anchor the run left: \(out)")
+    }
+
     @Test func aTwoPointLeafIsWrittenAsTwoCurvesAndAClose() {
         // The smallest closed shape there is. It has to come out as a real
         // outline rather than as a line that happens to double back.

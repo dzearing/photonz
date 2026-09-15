@@ -49,34 +49,3 @@ extension EditorState {
         return true
     }
 }
-
-/// What the chip under the canvas says while a path's points are showing.
-///
-/// Three gestures decide whether this feels like a drawing app or like a
-/// puzzle, and none of them is guessable: double click to add a point, double
-/// click a point to curve it, Option to break a point's two sides apart. The
-/// chip says the one that applies to what is picked right now rather than
-/// listing all three at once.
-enum PathEditHint {
-
-    /// What the chip is called while a path's points are showing.
-    static let title = "Path"
-
-    static let opening = "Drag a point to reshape. Double click a point to curve it, "
-        + "or the outline to add one."
-
-    static let pointPicked = "Drag a lever to bend the curve. "
-        + "Option drag frees the two sides, Delete takes the point out."
-
-    static let severalPicked = "Arrow keys nudge the points you picked. "
-        + "Delete takes them out."
-
-    /// The line for a path with `picked` of its points selected.
-    static func line(picked: Int) -> String {
-        switch picked {
-        case 0: opening
-        case 1: pointPicked
-        default: severalPicked
-        }
-    }
-}

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 3.3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:28:43.553Z",
-  "updated": "2026-09-15T02:28:43.639Z",
+  "updated": "2026-09-15T03:42:14.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The MODEL already supports this and it was designed in on purpose. Sources/PhotonzCore/VectorPath.swift describes a corner as \"two independent sides\" and smooth as the promise that the two stay aligned, and alignHandles at :106 says in its own comment that \"a half-smooth anchor stays half-smooth rather than sprouting a handle nobody dragged\". So the gap is entirely in the gesture, and nothing in PhotonzCore should need rewriting.\n\nThis was called out as the case that would decide whether the model was right, in the notes on the original reshaping task. The model got it right; the way in was never built.\n\nOption-dragging a lever already breaks the pair, which is most of the way there. The question to answer is whether that is enough once it is discoverable, or whether the point needs a way to drop one side's handle entirely so the segment goes properly straight rather than merely unaligned. Those are different shapes and only one of them is what a person means by \"straight on this side\".\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
@@ -29,6 +29,31 @@
     {
       "t": "2026-09-15T02:28:43.638Z",
       "note": "seq 280 -> 3.3"
+    },
+    {
+      "t": "2026-09-15T03:08:51.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T03:10:01.477Z",
+      "note": "Adversarial review before building. What is already there: the MODEL is complete (PathAnchor holds either handle nil, isHalfSmooth answers it, PathEditing.clearHandle pulls one side in, makeSmooth sprouts the missing handle back), and ONE gesture already reaches it — Option clicking a lever end pulls that lever in (CanvasPathEdit.swift:136), walked since 2026-09-13 in path-reshape-walk step 12. So the question in the notes is answered: dropping a handle entirely is what is wanted and it is what clearHandle does; merely unaligning the pair is a different, wrong shape. Three real gaps remain. (1) NOTHING SAYS SO. The chip never mentions it and Option click on a lever is not a gesture anyone guesses. (2) THE POINT LIES ABOUT ITSELF. clearHandle sets kind = .corner, and refreshPathEditChrome draws every corner as a square, so a point that is curved on one side is drawn exactly like a hard corner. You cannot read what a point is off the canvas, which was the whole reason the square/circle distinction exists. (3) The chip's one-point line says 'Drag a lever to bend the curve' even when the picked point is a hard corner with no levers on it at all."
+    },
+    {
+      "t": "2026-09-15T03:42:14.209Z",
+      "note": "Built. Shipped, all in Next: (1) DOUBLE CLICK A LEVER pulls it in, so that side of the point runs straight while the other keeps its curve. It is the app's own idiom rather than a new one — two clicks already change what the thing under them is, on a point and on the outline — and the lever is the only one of the three targets that can name a SIDE, which is why straightening one side hangs on it and not on the point. A point asked to become half and half has no way to say which half, and a double click that guesses is a double click you undo. Option click a lever still does the same thing, untouched. (2) The dot. A half and half point now draws as a ROUNDED SQUARE, half way between the hard corner's square and the smooth bend's circle. (3) The chip now names the point you picked: a hard corner is told how to curve it instead of being told to drag a lever it has not got, a bend is told about its levers and about Option, and a half and half point says what it is and gives the way back in both directions. PathEditHint moved into PhotonzCore so which line applies is tested rather than guessed."
+    },
+    {
+      "t": "2026-09-15T03:42:14.253Z",
+      "note": "Review of the built thing, on the probe. The first glyph tried was a square half joined to a round half, turned so the flat side faced the straight neighbour — semantically exact, and at eight points across it read as a DIAMOND, a third mystery shape rather than anything nameable. Replaced with the orientation-free rounded square, which reads instantly and is honest: the outline already shows which side is straight, so the dot only has to say whether. The direction helper it needed (PathContent.straightSideDirection) was pulled back out rather than left as public API nothing calls. Second finding: the chip was saying 'drag a lever to bend the curve' about a point whose lever had just been pulled in, because a commit hands the canvas its own copy back through SwiftUI and the document a moment after a gesture is still the shape as it was. Fixed two ways — the gesture announces the shape it just committed, and refreshPathEditChrome announces too (deferred one runloop turn, since it also runs inside a view update and the chip is observed state) so an UNDO updates the chip as well."
+    },
+    {
+      "t": "2026-09-15T03:42:14.295Z",
+      "note": "Verified. Scripts/test.sh green, 6623 tests. New PhotonzCore tests written before the change: PathEditingTests covers a point curved on one side only in BOTH directions (arriving straight and leaving straight), joining each back up, straightening both sides down to a plain corner, moving/nudging/deleting one, and adding a point on its straight side without that side quietly acquiring a bend; VectorPathTests covers the save and reload in both directions, which is where a missing handle could turn into a zero nobody can tell from a handle dragged all the way in; SVGExportTests covers the two ways it is written to a file, a plain L where neither end has a handle and a C with its control point sitting on the anchor where one end does; PathEditHintTests covers which line the chip says. expectPath gained a halfSmooth claim so a walk can make this claim at all, with parse tests. path-reshape-walk gained six steps for the new gesture in both directions with real screen captures. Walks run: all 7 path walks, all 12 pen walks, both layer-pick expectBuilds walks — every one passes except turn-into-a-path-walk, which fails the same way on a clean stashed main and is folded into walks-that-fail-in-the-full-sweep. Asked for a sweep because the walk script decoder changed shape."
+    },
+    {
+      "t": "2026-09-15T03:42:14.337Z",
+      "note": "Left rough, not filed: (a) reaching a half and half point from a HARD corner still takes two gestures, curve the point then straighten the side you did not want — a person is guided through it by the chip and nothing is broken, so it does not clear the bar on its own; (b) the Pen's own chip still does not mention Option, which is how you lay one down while drawing — already written up as a known rough edge in docs/design/vector-paths.md; (c) the Pen draws every anchor it has placed as the same round dot, so while drawing you cannot tell corners from bends from half and half points, unlike the reshaping chrome. All three are in the audit's rough list where the user can turn any of them into a task."
     }
-  ]
+  ],
+  "started": "2026-09-15T03:08:51.134Z"
 }

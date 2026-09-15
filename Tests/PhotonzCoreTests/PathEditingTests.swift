@@ -171,6 +171,77 @@ struct PathEditingTests {
         #expect(abs(hypot(outHandle.x, outHandle.y) - 60) < 1e-9)
     }
 
+    /// The other direction: a curve ARRIVING and a straight edge LEAVING,
+    /// which is the far corner of every rounded rectangle.
+    @Test func theStraightSideCanBeEitherSideOfThePoint() {
+        var path = Self.smoothMiddle()
+        path.clearHandle(anchor: 1, side: .handleOut)
+        let anchor = path.anchors[1]
+        #expect(anchor.isHalfSmooth)
+        #expect(anchor.handleOut == nil)
+        #expect(anchor.handleIn == CGPoint(x: -30, y: 0))
+        #expect(anchor.kind == .corner)
+        // The run arriving still bends; the run leaving is straight.
+        #expect(!path.segments[0].isStraight)
+        #expect(path.segments[1].isStraight)
+    }
+
+    @Test func aPointCurvedOnlyOnTheWayOutCanBeJoinedBackUpToo() throws {
+        var path = Self.smoothMiddle()
+        path.clearHandle(anchor: 1, side: .handleOut)
+        let joined = path.toggleAnchorKind(at: 1)
+        #expect(joined == .smooth)
+        let anchor = path.anchors[1]
+        #expect(!anchor.isHalfSmooth)
+        let inHandle = try #require(anchor.handleIn)
+        let outHandle = try #require(anchor.handleOut)
+        let cross = inHandle.x * outHandle.y - inHandle.y * outHandle.x
+        #expect(abs(cross) < 1e-9)
+        #expect(abs(hypot(inHandle.x, inHandle.y) - 30) < 1e-9,
+                "the side that was already curved keeps the length it had")
+    }
+
+    /// Straightening the second side too leaves a plain hard corner, so the
+    /// same gesture twice walks a point all the way back rather than stopping
+    /// half way with a state nothing can undo.
+    @Test func straighteningBothSidesLeavesAPlainCorner() {
+        var path = Self.smoothMiddle()
+        path.clearHandle(anchor: 1, side: .handleIn)
+        path.clearHandle(anchor: 1, side: .handleOut)
+        let anchor = path.anchors[1]
+        #expect(!anchor.isHalfSmooth)
+        #expect(anchor.handleIn == nil && anchor.handleOut == nil)
+        #expect(anchor.kind == .corner)
+        #expect(path.segments.filter(\.isStraight).count == path.segments.count)
+    }
+
+    /// A half-and-half point is an ordinary point in every other respect: it
+    /// moves, it takes a new neighbour, and it can be taken out.
+    @Test func aHalfSmoothPointDragsNudgesAndDeletesLikeAnyOther() {
+        var path = Self.smoothMiddle()
+        path.clearHandle(anchor: 1, side: .handleIn)
+        path.moveAnchors([1], by: CGPoint(x: 10, y: -5))
+        #expect(Self.near(path.anchors[1].point, CGPoint(x: 110, y: -5)))
+        #expect(path.anchors[1].handleOut == CGPoint(x: 60, y: 0), "the curve travelled with it")
+        #expect(path.anchors[1].isHalfSmooth)
+        let taken = path.removeAnchors([1])
+        #expect(taken)
+        #expect(path.anchors.count == 2)
+    }
+
+    /// Adding a point on the straight side of a half-and-half point leaves two
+    /// straight runs: the side that was straight does not quietly acquire a
+    /// bend because a point landed on it.
+    @Test func aPointAddedOnTheStraightSideStaysStraight() {
+        var path = Self.smoothMiddle()
+        path.clearHandle(anchor: 1, side: .handleIn)
+        #expect(path.insertAnchor(onSegment: 0, at: 0.5) == 1)
+        #expect(path.segments[0].isStraight)
+        #expect(path.segments[1].isStraight)
+        #expect(path.anchors[2].isHalfSmooth, "and the half-and-half point is untouched")
+        #expect(path.anchors[2].handleOut == CGPoint(x: 60, y: 0))
+    }
+
     @Test func aPointWithNothingEitherSideOfItIsLeftAlone() {
         var path = PathContent(anchors: [PathAnchor(point: .zero)])
         path.makeSmooth(at: 0)

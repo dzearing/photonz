@@ -145,6 +145,26 @@ struct VectorPathTests {
         #expect(back.anchors[1].kind == .smooth)
     }
 
+    /// A point curved on one side only is a MISSING handle, and a missing
+    /// handle is the one thing a save can quietly turn into a zero nobody can
+    /// tell from a handle dragged all the way in. Both directions, because the
+    /// two are encoded by different keys.
+    @Test func aPointCurvedOnOneSideOnlySurvivesASaveAndAReload() throws {
+        var path = Self.bowedSquare()
+        path.anchors[1].handleIn = nil
+        path.anchors[2].handleOut = nil
+        let back = try JSONDecoder().decode(PathContent.self,
+                                            from: JSONEncoder().encode(path))
+        #expect(back == path)
+        #expect(back.anchors[1].handleIn == nil && back.anchors[1].handleOut != nil,
+                "arrives straight, leaves curving")
+        #expect(back.anchors[2].handleIn != nil && back.anchors[2].handleOut == nil,
+                "arrives curving, leaves straight")
+        #expect(back.anchors[1].isHalfSmooth && back.anchors[2].isHalfSmooth)
+        // ...and the shape it makes is the same shape, run for run.
+        #expect(back.segments.map(\.isStraight) == path.segments.map(\.isStraight))
+    }
+
     @Test func aPathLayerSurvivesASaveAndAReloadExactly() throws {
         let layer = PathBuilder.layer(Self.bowedSquare(), at: CGPoint(x: 20, y: 30))
         let data = try JSONEncoder().encode(layer)

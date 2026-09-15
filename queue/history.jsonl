@@ -3395,3 +3395,10 @@
 {"t":"2026-09-15T03:06:45.406Z","ev":"task_note","id":"the-points-keep-up-with-the-pointer-while-you-be"}
 {"t":"2026-09-15T03:06:45.448Z","ev":"task_note","id":"the-points-keep-up-with-the-pointer-while-you-be"}
 {"t":"2026-09-15T03:06:56.625Z","ev":"task_done","id":"the-points-keep-up-with-the-pointer-while-you-be","from":"in_progress","note":"The points and levers now follow the live shape every frame of a reshape drag. refreshPathEditChrome asks the in-flight drag for the shape instead of the document, which is stale for the whole gesture because a preview is rendered and never committed; the overlay pass right behind the drag was repainting the old points over the new ones. Verified by a new playtest step expectChrome that reads, every frame, how far the chrome is from the shape the canvas is drawing: 160.0pt with the fix backed out, 0.0pt with it in, across a lever drag, a point drag, two points together, and two other zooms. Scripts/test.sh green (6608 tests). Audit at queue/audits/2026-09-14-path-chrome-follows.json with mid-drag screen captures."}
+{"t":"2026-09-15T03:08:51.137Z","ev":"task_started","id":"one-side-of-a-point-can-curve-while-the-other-st","title":"One side of a point can curve while the other stays straight","priority":"p1-high"}
+{"t":"2026-09-15T03:10:01.479Z","ev":"task_note","id":"one-side-of-a-point-can-curve-while-the-other-st"}
+{"t":"2026-09-15T03:42:06.025Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T03:42:14.211Z","ev":"task_note","id":"one-side-of-a-point-can-curve-while-the-other-st"}
+{"t":"2026-09-15T03:42:14.255Z","ev":"task_note","id":"one-side-of-a-point-can-curve-while-the-other-st"}
+{"t":"2026-09-15T03:42:14.297Z","ev":"task_note","id":"one-side-of-a-point-can-curve-while-the-other-st"}
+{"t":"2026-09-15T03:42:14.339Z","ev":"task_note","id":"one-side-of-a-point-can-curve-while-the-other-st"}

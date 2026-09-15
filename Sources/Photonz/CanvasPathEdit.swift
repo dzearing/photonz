@@ -156,8 +156,16 @@ extension CanvasNSView {
         return true
     }
 
-    /// Two clicks on a point turn it from a hard corner into a smooth bend and
-    /// back; two clicks on the outline add a point exactly where they landed.
+    /// Two clicks change what the thing under them IS, which is one idiom
+    /// answering three questions: on a point, a hard corner becomes a smooth
+    /// bend and back; on a LEVER, that lever is pulled in, so that one side of
+    /// the point runs straight while the other keeps its curve; on the outline,
+    /// a new point lands exactly where they fell.
+    ///
+    /// The lever is the only one of the three that can name a SIDE, which is
+    /// why straightening one side is hung on it. A point cannot: asked to
+    /// become half-and-half it has no way to say which half, and a double
+    /// click that guesses is a double click you undo.
     private func pathEditDoubleClick(_ target: PathEditTarget,
                                      picked: (id: UUID, layer: Layer, content: PathContent)) -> Bool {
         var content = picked.content
@@ -165,8 +173,11 @@ extension CanvasNSView {
         case .anchor(let index):
             content.toggleAnchorKind(at: index)
             pathAnchorSelection = [index]
-        case .handle:
-            return true
+        case .handle(let index, let side):
+            content.clearHandle(anchor: index, side: side)
+            // The point stays picked, so its other lever is still on screen and
+            // the chip can say what this point has become.
+            pathAnchorSelection = [index]
         case .segment(let run, let at):
             guard let added = content.insertAnchor(onSegment: run, at: at) else { return false }
             pathAnchorSelection = [added]
@@ -281,18 +292,40 @@ extension CanvasNSView {
                                     width: box.width, height: box.height)
         onPathEditCommit(id, content)
         refreshPathEditChrome()
-        announcePathEditHint()
+        announcePathEditHint(showing: content)
         refreshOverlays()
     }
 
     /// Tells the chip what to say, and takes it down when no path is showing
     /// its points.
-    func announcePathEditHint() {
-        guard editablePath != nil else {
-            onPathEditHintChange(nil)
-            return
-        }
-        onPathEditHintChange(PathEditHint.line(picked: pathAnchorSelection.count))
+    ///
+    /// `showing` is the shape RIGHT NOW when the caller has one the document
+    /// has not caught up with yet: a commit hands the canvas its own copy back
+    /// through SwiftUI, so asking the document a moment after a gesture gives
+    /// the shape as it was before it. That is what left the chip saying "drag a
+    /// lever to bend the curve" about a point whose lever had just been pulled
+    /// in.
+    ///
+    /// The same words are never published twice, because this runs on every
+    /// overlay pass and the chip is a piece of observed state: setting it to
+    /// what it already says would rebuild the editor's chrome for nothing.
+    func announcePathEditHint(showing content: PathContent? = nil) {
+        let line = pathEditHintLine(showing: content)
+        guard line != pathEditHintShowing else { return }
+        pathEditHintShowing = line
+        onPathEditHintChange(line)
+    }
+
+    /// The words that belong on the chip right now, nil when no path is
+    /// showing its points.
+    private func pathEditHintLine(showing content: PathContent? = nil) -> String? {
+        guard let picked = editablePath else { return nil }
+        // The one point picked, where there is exactly one, so the chip can say
+        // what THAT point is rather than one line for every point there is.
+        let shape = content ?? picked.content
+        let only = pathAnchorSelection.count == 1 ? pathAnchorSelection.first : nil
+        let anchor = only.flatMap { shape.anchors.indices.contains($0) ? shape.anchors[$0] : nil }
+        return PathEditHint.line(picked: pathAnchorSelection.count, anchor: anchor)
     }
 
     // MARK: - The chrome
@@ -387,11 +420,26 @@ extension CanvasNSView {
             let r: CGFloat = isPicked ? 5 : 4
             let box = CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)
             // A smooth bend is round and a hard corner is square, so what a
-            // point IS can be read off the canvas rather than remembered.
+            // point IS can be read off the canvas rather than remembered. A
+            // point curved on ONE side is drawn half way between the two,
+            // which is what it is. Without a third dot it wears the hard
+            // corner's square — it IS a corner by kind, since its two sides
+            // are not tied together — and a rounded corner in an icon looks
+            // exactly like a sharp one until you drag something.
+            //
+            // The dot says WHETHER, not WHICH SIDE: the outline itself already
+            // shows which run is straight, and a glyph turned to face the
+            // straight side read as a diamond at eight points across rather
+            // than as anything anybody could name.
+            let into = isPicked ? pickedDots : dots
             if anchor.kind == .smooth {
-                (isPicked ? pickedDots : dots).addEllipse(in: box)
+                into.addEllipse(in: box)
+            } else if anchor.isHalfSmooth {
+                // Half way between the two, because that is what the point is.
+                into.addPath(CGPath(roundedRect: box, cornerWidth: r * 0.6,
+                                    cornerHeight: r * 0.6, transform: nil))
             } else {
-                (isPicked ? pickedDots : dots).addRect(box)
+                into.addRect(box)
             }
         }
         pathAnchorsLayer.path = dots
@@ -408,6 +456,22 @@ extension CanvasNSView {
 
         pathChromeShowing = content
         pathChromeOrigin = origin
+        // The chip is told from here as well, because this is the one place
+        // that runs whenever the shape changes for ANY REASON — an undo, a
+        // redo, a change made from a panel — rather than only after a gesture
+        // this file handled.
+        //
+        // Handed over on the next turn of the runloop, because this also runs
+        // inside the canvas's own update pass and the chip is observed state:
+        // setting it here and now would be a change made while the views that
+        // read it are being built. A gesture does not wait for this — it
+        // announces its own result as it commits — so the delay is only ever
+        // on a change that came from somewhere else.
+        let line = pathEditHintLine(showing: content)
+        if line != pathEditHintShowing {
+            pathEditHintShowing = line
+            DispatchQueue.main.async { [weak self] in self?.onPathEditHintChange(line) }
+        }
     }
 
     // MARK: - Is the chrome on the shape?

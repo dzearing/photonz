@@ -1,0 +1,30 @@
+{
+  "feature": "A point that curves on one side and runs straight on the other",
+  "epic": "icon-vector",
+  "summary": "Two clicks on a lever pull it in, so the line arrives at that point straight and still leaves on a curve, which is what every rounded corner in an icon is made of. The point draws itself as a rounded square, half way between the hard corner's square and the smooth bend's circle, and the chip under the canvas names what you have picked and how to get back.",
+  "setup": "Photonz Dev, Experiments window, release Next, with next-pen and next-reshape-a-path on. They are on by default.",
+  "try": [
+    { "do": "Press P, click once at the left of the canvas, then press and drag to the right to pull a curve out of the second point, then click a third point and click the first one again to close the shape." },
+    { "do": "Press Esc to put the Pen down. The shape stays picked and its points appear: squares for hard corners, a circle for the bend." },
+    { "do": "Click the round point. Its two levers appear and the chip says what they do.", "shot": "2026-09-15-half-smooth-0-both-levers.png" },
+    { "do": "Double click the END of one lever. That side of the line goes straight, the other keeps its curve, and the dot becomes a rounded square.", "shot": "2026-09-15-half-smooth-1-arrives-straight.png" },
+    { "do": "Read the chip: it now says the point curves on one side only, and names both ways back." },
+    { "do": "Double click the point itself. Both sides curve again." },
+    { "do": "Undo, then double click the OTHER lever instead, for the mirror of it: a curve arrives and a straight edge leaves.", "shot": "2026-09-15-half-smooth-2-leaves-straight.png" },
+    { "do": "Double click the one remaining lever. Both sides are straight now and the dot is a plain square again." }
+  ],
+  "evaluate": [
+    "Did you reach for a double click on the lever before reading the chip, or did you have to be told?",
+    "Can you tell a rounded square from a square at a glance, without zooming in?",
+    "Is it right that the dot says only WHETHER the point is half and half, leaving the outline to show which side is straight?",
+    "Getting there from a hard corner takes two gestures: curve the point, then straighten one side. Did that feel like a path or like a detour?",
+    "Does the chip change often enough to be useful, or often enough to be noise?"
+  ],
+  "rough": [
+    "From a HARD corner there is no single gesture. You double click the point to curve both sides, then double click the lever you did not want. The chip guides the first step but cannot name the second until there is a lever to name.",
+    "The Pen still needs Option to lay a half and half point down while you draw, and the Pen's own chip does not mention Option. The two tools now answer the same question in two different ways.",
+    "While the Pen is drawing it draws every anchor it has placed as the same round dot, so you cannot see which of them are corners, bends, or curved on one side. Only reshaping tells the three apart.",
+    "Option click on a lever still does the same thing as a double click and is not written down anywhere on screen. It was already there and it still works; the chip names the double click because that is the idiom the rest of this surface uses.",
+    "The first glyph tried was a square half joined to a round half, turned to face the straight side. At eight points across it read as a diamond rather than as anything nameable, so the dot now says whether rather than which side. The turned version is in this task's log if it is ever worth another look."
+  ]
+}
