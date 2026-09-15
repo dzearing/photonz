@@ -941,6 +941,16 @@ final class CanvasNSView: NSView {
     /// The ring round the anchor a click would land ON: the first one when it
     /// would close, the last one when it would finish.
     let penTargetLayer = CAShapeLayer()
+    /// The mark that says where a press would put the FIRST point of a shape,
+    /// drawn while you are still hovering (`CanvasDrawLanding`). An open ring
+    /// in the system accent, so it sits on the crossing it is pointing at
+    /// without covering it, with a white hairline just outside so it reads over
+    /// a photograph.
+    let drawLandingLayer = CAShapeLayer()
+    let drawLandingEdgeLayer = CAShapeLayer()
+    /// The document point that ring is on right now, nil when none is showing.
+    /// A scripted walk reads it through `liveDrawLanding`.
+    var drawLandingShown: CGPoint?
     /// Which points of the picked path are picked within it (Next,
     /// `next-reshape-a-path`). Canvas state, never in the document: what is
     /// picked is a fact about this window, like a marquee.
@@ -1924,6 +1934,7 @@ final class CanvasNSView: NSView {
         // top of it, then the handles, then the close ring, so the thing you
         // are aiming at is never buried under the thing you are drawing.
         setUpPenChrome()
+        setUpDrawLandingChrome()
         setUpMotionPivotChrome()
         setUpPathEditChrome()
 

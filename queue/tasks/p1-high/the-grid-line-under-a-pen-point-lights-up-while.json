@@ -5,14 +5,14 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T20:51:46.449Z",
-  "updated": "2026-09-15T14:35:07.598Z",
+  "updated": "2026-09-15T17:49:38.237Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Asked for by the user on 2026-09-15: \"when i use the pen tool and hover over the grid with it enabled, i'd love a little dot where the pen will land when i mouse down, similar to other tools that snap to a thing\", then immediately broadened: \"same with rects, lines, etc\".\n\nSo this is a rule about aiming, not a Pen feature. A tool that snaps knows where the press would land before the press; showing it is the difference between placing a point and discovering where it went.\n\nThis task was originally only the second half of the problem, lighting the grid line under a point WHILE drawing. That half stays in the acceptance list, but the hover mark is the more valuable half and comes first: it is the one that stops you undoing.\n\nSnapping itself already works and should not be rebuilt. 'A Pen point lands on the grid line you can see' is done, and the Snapping machinery, the canvasSnap settings and the snapGuide layer are all in place (Sources/Photonz/CanvasDisplay.swift around the snapGuideLayer, and Snapping in PhotonzCore). The question this task answers is only what is DRAWN before the press, so the answer should come from asking the existing snap where the point would go rather than working it out a second way. If the two ever disagree the mark is a lie, which is worse than no mark.\n\nReuse the existing vocabulary rather than inventing: the canvas already has a pointer cue system (CanvasPointerCue, and the done task 'every-handle-on-the-canvas-says-what-it-does-to-the') and a snap guide layer that lights lines during a drag. The measure tool also already previews where a caliper foot would land while hovering, which is the closest existing thing to what is being asked for here and worth reading first.\n\nPer-mouse-move cost is in the acceptance list on purpose: this runs on every hover frame, over a document that may be large, and the app has just been through a round of selection-cost work. Measure it rather than assuming it is free.",
+  "notes": "Asked for by the user on 2026-09-15: \"when i use the pen tool and hover over the grid with it enabled, i'd love a little dot where the pen will land when i mouse down, similar to other tools that snap to a thing\", then immediately broadened: \"same with rects, lines, etc\".\n\nSo this is a rule about aiming, not a Pen feature. A tool that snaps knows where the press would land before the press; showing it is the difference between placing a point and discovering where it went.\n\nThis task was originally only the second half of the problem, lighting the grid line under a point WHILE drawing. That half stays in the acceptance list, but the hover mark is the more valuable half and comes first: it is the one that stops you undoing.\n\nSnapping itself already works and should not be rebuilt. 'A Pen point lands on the grid line you can see' is done, and the Snapping machinery, the canvasSnap settings and the snapGuide layer are all in place (Sources/Photonz/CanvasDisplay.swift around the snapGuideLayer, and Snapping in PhotonzCore). The question this task answers is only what is DRAWN before the press, so the answer should come from asking the existing snap where the point would go rather than working it out a second way. If the two ever disagree the mark is a lie, which is worse than no mark.\n\nReuse the existing vocabulary rather than inventing: the canvas already has a pointer cue system (CanvasPointerCue, and the done task 'every-handle-on-the-canvas-says-what-it-does-to-the') and a snap guide layer that lights lines during a drag. The measure tool also already previews where a caliper foot would land while hovering, which is the closest existing thing to what is being asked for here and worth reading first.\n\nPer-mouse-move cost is in the acceptance list on purpose: this runs on every hover frame, over a document that may be large, and the app has just been through a round of selection-cost work. Measure it rather than assuming it is free.\n\n--- runner 2026-09-15 ---\nadversarial review BEFORE building. (1) A filled dot on the landing point covers the very crossing it is claiming, which acceptance forbids, so the mark is an OPEN RING: the measure tool's hover snap dot look (accent, white edge) with its middle taken out. (2) Showing the ring whenever a drawing tool is in hand would put a ring under the pointer forever on a plain canvas with no grid, where the point lands under the pointer anyway and the ring carries no news. Gate: the ring appears when the grid is pulling, or when the snap really would move the point (a border caught it on a screenshot). Command held = no ring, which is the honest answer since Command means exactly where I put it. (3) The Pen already rings the anchor a click would close or finish on (penTargetLayer); a second ring on the same point is not clearer, so the landing ring stands down there. (4) Lighting the grid lines on HOVER as well as during a drag would put a full-canvas cross under the pointer on every mouse move with the grid on, which is the noise refreshGridSnapLines was written to avoid. Lines light while the button is down only; the ring carries the hover.\n\nshortest version that delivers the value: one snap query per mouse move, one new file, two CAShapeLayers, no new settings. Text tool deliberately left out: it is not in the acceptance list, its landing is a block origin rather than a point, and a ring under the I-beam would read as something to click.\n\ncore: PenSession.landing(at:constrained:breaking:zoom:) -> Landing (.place/.close/.finish/.retract) and press() is now BUILT OUT OF IT, so the mark and the anchor cannot diverge. PenSession.pressGridLines says which grid lines the anchor under the hand stands on. 15 new tests in PenDrawingTests.",
   "acceptance": [
     "Hovering with the Pen over a canvas whose grid is on shows a small mark at the exact point a press would land, and it moves from crossing to crossing as the pointer moves",
     "The same is true of every other tool that starts a shape: rectangle, ellipse, line, arrow, highlight and frame, so this is one rule rather than a Pen feature",
@@ -53,6 +53,52 @@
     {
       "t": "2026-09-15T14:35:07.597Z",
       "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-15T17:16:21.499Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T17:25:03.860273Z",
+      "note": "adversarial review BEFORE building. (1) A filled dot on the landing point covers the very crossing it is claiming, which acceptance forbids, so the mark is an OPEN RING: the measure tool's hover snap dot look (accent, white edge) with its middle taken out. (2) Showing the ring whenever a drawing tool is in hand would put a ring under the pointer forever on a plain canvas with no grid, where the po"
+    },
+    {
+      "t": "2026-09-15T17:25:03.860273Z",
+      "note": "shortest version that delivers the value: one snap query per mouse move, one new file, two CAShapeLayers, no new settings. Text tool deliberately left out: it is not in the acceptance list, its landing is a block origin rather than a point, and a ring under the I-beam would read as something to click."
+    },
+    {
+      "t": "2026-09-15T17:25:03.860273Z",
+      "note": "core: PenSession.landing(at:constrained:breaking:zoom:) -> Landing (.place/.close/.finish/.retract) and press() is now BUILT OUT OF IT, so the mark and the anchor cannot diverge. PenSession.pressGridLines says which grid lines the anchor under the hand stands on. 15 new tests in PenDrawingTests."
+    },
+    {
+      "t": "2026-09-15T17:49:06.392Z",
+      "note": "post-build adversarial review, on the real window. The ring reads clearly on the grid and does not cover the crossing, at 100% and at 400%, under the Pen, the rectangle and the arrow. Two things I would change if I were the user and could not: (1) the ring is always on screen while the grid is on, which is one more thing following the pointer, and (2) Command makes it vanish rather than move, which reads as absence rather than as an answer. Both are in the audit's evaluate list for the user to settle rather than guessed at."
+    },
+    {
+      "t": "2026-09-15T17:49:06.443Z",
+      "note": "left rough: the Text tool does not get the mark. It drops a block rather than a point, its landing is a corner, and a ring under the I-beam would read as something to click. A caption still lands on the grid silently. Not filed: nobody has complained and it is not in this task's acceptance list."
+    },
+    {
+      "t": "2026-09-15T17:49:06.490Z",
+      "note": "left rough: hovering does NOT light the grid lines the mark is standing on, only the press does. Lighting them on every hover move would put a full canvas cross under the pointer the whole time the grid is on, which is exactly the noise refreshGridSnapLines was written to avoid. Put in the audit's evaluate list instead of decided here."
+    },
+    {
+      "t": "2026-09-15T17:49:06.533Z",
+      "note": "left rough: the ring's white outer hairline is there so it reads on a dark canvas and over a photograph, but every picture taken was of a white canvas, so that has not been looked at."
+    },
+    {
+      "t": "2026-09-15T17:49:06.575Z",
+      "note": "filed on-a-screenshot-a-drawing-tool-says-where-its-fi (p2): the grid-off screenshot case, blocked on the 2.4ms edge query, with the measurement in its notes."
+    },
+    {
+      "t": "2026-09-15T17:49:06.617Z",
+      "note": "not a bug after all: a walk reporting 'expectLanding is not a step' was a stale probe. Scripts/build-app.sh --probe had failed to compile (swift build alone does not build the playtest harness, which is behind PHOTONZ_PLAYTEST), and --no-build then reused the previous bundle. Nothing wrong with the tooling; do not run --no-build after a failed build."
+    },
+    {
+      "t": "2026-09-15T17:49:38.235Z",
+      "note": "With the grid on, every tool that starts a shape now draws a small open ring on the exact spot a press would put its first point, and it steps crossing to crossing as you hover. Core: PenSession.landing (press is built out of it, so the mark and the anchor cannot diverge) and PenSession.pressGridLines, 15 new tests. App: Sources/Photonz/CanvasDrawLanding.swift, flag next-where-the-point-will-land, on by default in Next. The Pen's anchor now lights the grid lines it lands on while the button is down, like a dragged box. New walk Scripts/playtest/landing-mark-walk.json with a new expectLanding step reading the same point the press uses. Scripts/test.sh green (6993 tests); the pen, grid, snap and arrow walk sets all pass. CAVEAT: the Mac's screen was locked throughout, so every walk run was forced with PHOTONZ_ALLOW_LOCKED_WALK=1 and by the repo's rule none of them counts as a pass; a sweep is requested. Cost measured in DrawLandingCostTests: 6us a mouse move on a drawn canvas, 0.5us for the Pen, and 2.4ms over a large screenshot, which is why the mark is gated on the grid. Audit: queue/audits/2026-09-15-draw-landing-mark.json."
     }
-  ]
+  ],
+  "started": "2026-09-15T17:16:21.498Z",
+  "completed": "2026-09-15T17:49:38.236Z"
 }

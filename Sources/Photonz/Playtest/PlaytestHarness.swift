@@ -1202,6 +1202,10 @@ private final class Run {
                      + "\(Self.round1(now))pt now, asked for \(Self.round1(within))pt",
                  state: describe())
 
+        case .expectLanding(let near, let within, let absent):
+            note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
+                 state: describe())
+
         case .expectHint(let contains):
             note(number, step.name, try checkHint(contains: contains), state: describe())
 
@@ -3170,6 +3174,44 @@ private final class Run {
     }
 
     /// The words the chip must be carrying right now.
+    /// What the canvas says a press would put the first point of a shape on:
+    /// the document point the hover mark is sitting on, or nothing at all.
+    ///
+    /// It reads `liveDrawLanding`, which is the same point the press uses, so a
+    /// walk that passes here has proved the mark and the press agree rather
+    /// than that a ring is drawn somewhere.
+    private func checkLanding(near: PlaytestPoint?, within: CGFloat,
+                              absent: Bool) throws -> String {
+        let canvas = try requireCanvas()
+        let landing = canvas.liveDrawLanding
+        if absent {
+            guard landing == nil else {
+                throw Failure(description: "nothing should be marking where a press would land "
+                    + "right now, and the canvas is marking \(short(landing!)). Either the "
+                    + "point really is being moved and the walk is wrong about it, or the mark is "
+                    + "outliving the thing that put it there.")
+            }
+            return "no mark: a press would land exactly where the pointer is"
+        }
+        guard let near else { return "nothing claimed" }
+        guard let landing else {
+            throw Failure(description: "nothing is marking where a press would land, and the walk "
+                + "expects a mark on \(short(near.point)). With the grid on, every tool that "
+                + "starts a shape marks its landing; check the grid is on, Snap to grid is on, and "
+                + "the pointer is over the canvas.")
+        }
+        let wanted = try documentPoint(near)
+        let off = hypot(landing.x - wanted.x, landing.y - wanted.y)
+        guard off <= within else {
+            throw Failure(description: "the mark says a press would land on "
+                + "\(short(landing)), and the walk expects \(short(wanted)): "
+                + "\(Self.round1(off)) document points away, further than the "
+                + "\(Self.round1(within)) asked for.")
+        }
+        return "a press would land on \(short(landing)), "
+            + "\(Self.round1(off))pt from the \(short(wanted)) claimed"
+    }
+
     private func checkHint(contains: String) throws -> String {
         let editor = try requireEditor()
         let reading = Self.hintReading(editor)

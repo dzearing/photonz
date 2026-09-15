@@ -854,4 +854,156 @@ struct PenDrawingTests {
         _ = click(&session, 20, 0)
         #expect(session.finish()?.strokeWidth == PathContent.defaultStrokeWidth)
     }
+
+    // MARK: Where the next press would land, asked before it happens
+
+    @Test func landingOnAnEmptyCanvasIsThePointerItself() {
+        // Nothing placed and nothing pulling: a press lands under the pointer,
+        // so that is what the canvas is told to mark.
+        let session = PenSession()
+        #expect(session.landing(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+                == .place(CGPoint(x: 37, y: 19)))
+    }
+
+    @Test func landingOnAGridIsTheCrossing() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        #expect(session.landing(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+                == .place(CGPoint(x: 32, y: 32)))
+    }
+
+    @Test func landingIsExactlyWhereThePressWouldPutIt() {
+        // The one claim that matters: the mark drawn before the press and the
+        // anchor the press puts down are the same point, or the mark is a lie.
+        var grid = PenSession()
+        grid.grid = NudgeGrid(spacing: 32, origin: CGPoint(x: 4, y: 4), axes: .columnsAndRows)
+        for point in [CGPoint(x: 37, y: 19), CGPoint(x: 0, y: 0), CGPoint(x: 501, y: 77)] {
+            var session = grid
+            guard case .place(let marked) = session.landing(at: point, constrained: false,
+                                                            zoom: 1) else {
+                Issue.record("a first press always places")
+                return
+            }
+            session.press(at: point, constrained: false, zoom: 1)
+            _ = session.release()
+            #expect(session.anchors.last?.point == marked)
+        }
+    }
+
+    @Test func landingIsFreeWhenCommandIsHeld() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        session.free = true
+        #expect(session.landing(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+                == .place(CGPoint(x: 37, y: 19)))
+    }
+
+    @Test func landingFollowsAConstrainedRunToItsAngle() {
+        // Shift owns the point, so the mark has to be on the 45 rather than on
+        // the crossing under the pointer.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        guard case .place(let marked) = session.landing(at: CGPoint(x: 100, y: 8),
+                                                        constrained: true, zoom: 1) else {
+            Issue.record("a second press on empty canvas places")
+            return
+        }
+        // The 45 keeps the distance travelled, as every constrained drag in
+        // the app does, so the mark is level rather than back at x = 100.
+        #expect(marked.y == 0)
+        #expect(abs(marked.x - hypot(100, 8)) < 0.001)
+    }
+
+    @Test func landingSaysWhenAPressWouldCloseTheShape() {
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        _ = click(&session, 100, 100)
+        #expect(session.landing(at: CGPoint(x: 2, y: 2), constrained: false, zoom: 1)
+                == .close(CGPoint(x: 0, y: 0)))
+    }
+
+    @Test func landingSaysWhenAPressWouldFinishTheLine() {
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        #expect(session.landing(at: CGPoint(x: 102, y: 1), constrained: false, zoom: 1)
+                == .finish(CGPoint(x: 100, y: 0)))
+    }
+
+    @Test func landingSaysWhenOptionWouldPullAHandleBackIn() {
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        #expect(session.landing(at: CGPoint(x: 101, y: 0), constrained: false,
+                                breaking: true, zoom: 1)
+                == .retract(CGPoint(x: 100, y: 0)))
+    }
+
+    @Test func askingWhereAPressWouldLandChangesNothing() {
+        // It is read on every mouse move, so it must not nudge the gesture:
+        // no pointer moved, no press opened, no anchor placed.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        let before = session
+        _ = session.landing(at: CGPoint(x: 400, y: 400), constrained: false, zoom: 1)
+        #expect(session.anchors == before.anchors)
+        #expect(session.pointer == before.pointer)
+        #expect(!session.isPressing)
+    }
+
+    // MARK: The grid lines under the point being placed
+
+    @Test func nothingIsLitWhenNoGridIsPulling() {
+        var session = PenSession()
+        session.press(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+        #expect(session.pressGridLines.x == nil)
+        #expect(session.pressGridLines.y == nil)
+    }
+
+    @Test func bothLinesAreLitUnderAPointOnACrossing() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        session.press(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+        #expect(session.pressGridLines.x == 32)
+        #expect(session.pressGridLines.y == 32)
+    }
+
+    @Test func nothingIsLitOnceCommandHasFreedThePoint() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        session.press(at: CGPoint(x: 37, y: 19), constrained: false, free: true, zoom: 1)
+        #expect(session.pressGridLines.x == nil)
+        #expect(session.pressGridLines.y == nil)
+    }
+
+    @Test func onlyTheAxisTheAngleLeftFreeIsLit() {
+        // A level run under ⇧ from a point already on a line ends on a
+        // crossing down one axis only, so only that line may claim it.
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        // The first point is put down with ⌘, so it sits BETWEEN rows: a level
+        // run from it stays between them, and only the column may claim it.
+        session.press(at: CGPoint(x: 0, y: 10), constrained: false, free: true, zoom: 1)
+        _ = session.release()
+        session.press(at: CGPoint(x: 100, y: 14), constrained: true, zoom: 1)
+        #expect(session.pressGridLines.x == 96)
+        #expect(session.pressGridLines.y == nil)
+    }
+
+    @Test func aGridOfColumnsLightsNothingAcross() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columns)
+        session.press(at: CGPoint(x: 37, y: 19), constrained: false, zoom: 1)
+        #expect(session.pressGridLines.x == 32)
+        #expect(session.pressGridLines.y == nil)
+    }
+
+    @Test func nothingIsLitBetweenClicks() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: .zero, axes: .columnsAndRows)
+        _ = click(&session, 37, 19)
+        #expect(session.pressGridLines.x == nil)
+        #expect(session.pressGridLines.y == nil)
+    }
 }

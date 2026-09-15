@@ -338,6 +338,10 @@ extension Experiments {
     /// flag off takes away a way IN, never a document's contents.
     var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
 
+    /// The mark under the pointer saying where a press would put the first
+    /// point of a shape (`CanvasDrawLanding`).
+    var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }
+
     /// `next-motion`: whether the Motion section exists under Effects, with the
     /// plus that tells a layer to change one of its properties over time, and
     /// whether the canvas plays it. The model is never flagged: a document that

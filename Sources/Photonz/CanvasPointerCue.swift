@@ -38,6 +38,11 @@ extension CanvasNSView {
                           event: event)
         }
         handleMeasureHover(event)
+        // Where a press would put the first point of a shape, marked while the
+        // hand is still only aiming (`CanvasDrawLanding`). Read after the
+        // modifiers so ⌘ and ⇧ are the ones being held right now.
+        pointerModifiers = event.modifierFlags
+        refreshDrawLanding()
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
@@ -46,6 +51,9 @@ extension CanvasNSView {
         hoverPoint = nil
         refreshNameLabelHover(at: nil)
         applyGrabCursor(nil)
+        // Nothing is being aimed at once the pointer is off the canvas, so
+        // nothing is left drawn on an idle window.
+        hideDrawLanding()
         if tool == .measure { refreshMeasureCreation(modifierFlags: event.modifierFlags) }
     }
 
@@ -328,12 +336,16 @@ extension CanvasNSView {
         // in the same breath, for the same reason: it takes the point off the
         // grid under a hand that is already still, so you can see the two
         // places it could land before choosing one.
-        if tool == .pen, penSession.isDrawing {
+        if tool == .pen {
             penSession.constrained = event.modifierFlags.contains(.shift)
             penSession.free = event.modifierFlags.contains(.command)
             penSession.grid = canvasNudgeGrid
-            refreshPenChrome()
+            if penSession.isDrawing { refreshPenChrome() }
         }
+        // ...and the mark saying where the next press lands moves with them,
+        // for exactly the same reason: ⌘ takes the point off the grid under a
+        // hand that is already still.
+        refreshDrawLanding()
         // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off
         // the edge live while held.
         refreshMeasureCreation(modifierFlags: event.modifierFlags)

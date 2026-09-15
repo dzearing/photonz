@@ -15,3 +15,8 @@ queue/manager/.objectives-seen
 # the dev app. Committed, it followed the repo onto the build machine and made
 # every CI run refuse to build the app bundle (2026-08-23 to 2026-09-13).
 queue/playtest.lock
+
+# A walk with no "out" of its own writes beside its script, which drops
+# megabytes of renders and captures into the repo. Everything under
+# Scripts/playtest belongs in /tmp; this is the net under that mistake.
+Scripts/playtest/out/

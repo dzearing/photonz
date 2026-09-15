@@ -1,0 +1,51 @@
+{
+  "feature": "See where a point will land before you press",
+  "epic": "icon-grid",
+  "summary": "With the grid on, a small ring now sits under the pointer on the exact spot a press would put the first point of a shape, and it steps from crossing to crossing as you move. It is there for the Pen, the rectangle, the ellipse, the line, the arrow, the highlighter, the zoom callout, the lens and the frame, so aiming is one rule rather than one tool's trick.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"See where a point will land before you press\" and it is on by default in Next. Open a blank canvas, pick Canvas in the layers list, and turn Show grid on.",
+  "try": [
+    {
+      "do": "Press P for the Pen and move the pointer slowly over the grid without clicking.",
+      "shot": "2026-09-15-landing-1-pen-aims-sc.png"
+    },
+    {
+      "do": "Watch the ring jump from crossing to crossing rather than follow the pointer."
+    },
+    {
+      "do": "Click where the ring is showing, and check the point landed inside the ring."
+    },
+    {
+      "do": "Hold Command and move again: the ring goes away, because the point would land exactly under the pointer."
+    },
+    {
+      "do": "Press R for the rectangle, then A for the arrow, and hover again: the same ring, on the same crossings.",
+      "shot": "2026-09-15-landing-2-rectangle-aims-sc.png"
+    },
+    {
+      "do": "Pinch right in to 400% and hover: the ring is the same few points across and still open in the middle.",
+      "shot": "2026-09-15-landing-4-zoomed-in-sc.png"
+    },
+    {
+      "do": "Turn Snap to grid off and hover: no ring, because nothing would move the point.",
+      "shot": "2026-09-15-landing-5-nothing-pulling-sc.png"
+    },
+    {
+      "do": "Press V for Select and move over the canvas: no ring, because nothing is being aimed."
+    }
+  ],
+  "evaluate": [
+    "Does the ring land where your eye already is, or do you find yourself looking down at it rather than at the shape you are about to draw?",
+    "Is a ring the right mark, or would you rather have a filled dot, even though a filled dot would cover the crossing it is claiming?",
+    "The ring is always there while the grid is on, following the pointer. Is that reassuring, or is it one more thing moving on screen?",
+    "Holding Command makes the ring disappear rather than move under the pointer. Does its absence read as \"it lands exactly here\", or as though something broke?",
+    "Drawing a shape lights the grid lines its ends came to rest on, but hovering does not. Would you want those lines lit while you aim too, or would a cross following the pointer be too much?"
+  ],
+  "rough": [
+    "The mark is the measure tool's own hover snap dot with its middle taken out: same system accent, same white edge that keeps it readable over a photograph, same place in the stack (CanvasNSView.snapDotLayer). It is open rather than filled because this one sits ON the crossing it is claiming, and a filled dot would hide the very line it is pointing at. The Pen's existing target ring, the one that says a click would close the shape, keeps its own job: where that ring is showing, the landing mark stands down rather than putting a second ring on the same point.",
+    "THE PICTURES WERE TAKEN WITH THE MAC'S SCREEN LOCKED. Every walk refuses to run in that state, so this one was forced with the harness's own override (PHOTONZ_ALLOW_LOCKED_WALK=1) to check the machinery. It passed all 83 steps and the window really was drawn and photographed, so the pictures above are real, but by the repo's rule a locked run is not a pass. A full sweep has been asked for and will run the walk properly once the screen is unlocked.",
+    "The ring only appears when the GRID is pulling. On a screenshot with the grid off, a drawing tool still quietly snaps its first point to a border it found in the picture, and there is still no warning before the press. That is the same complaint in a different mode and it is not fixed here. The reason is cost: asking the picture's borders where a point would land takes about 2.4ms per query on a 2560 by 1600 screenshot, whatever is in it, because the query walks a profile the full width of the picture. Paying that on every hover frame is not a trade worth making. Filed as its own task.",
+    "With the grid ON over a large screenshot, a hover move does pay that 2.4ms. On a canvas the app drew, which is what icon work is, the whole answer costs about 6 microseconds for a shape tool and half a microsecond for the Pen.",
+    "The Text tool is left out. It drops a block rather than a point, its landing is a corner rather than a spot, and a ring under the I-beam reads as something to click. A caption still lands on the grid silently.",
+    "The white hairline outside the ring is there so it reads over a dark canvas and a photograph, but every picture here is of a white canvas, so that has not actually been looked at."
+  ]
+}

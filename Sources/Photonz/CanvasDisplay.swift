@@ -135,6 +135,9 @@ extension CanvasNSView {
                 onRegionMoveCancel()
             }
             snapGuide = nil
+            // The mark that said where the last tool's point would land goes
+            // with the tool: nothing is being aimed any more.
+            hideDrawLanding()
             applyGrabCursor(nil, force: true)
             endpointDrag = nil
             cropDrag = nil
@@ -219,6 +222,7 @@ extension CanvasNSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             snapDotLayer.isHidden = true
+            hideDrawLanding()
             hideMeasureHoverReadout()
             handlesLayer.isHidden = true
             cornerRadiusHandlesLayer.isHidden = true
@@ -302,6 +306,10 @@ extension CanvasNSView {
         refreshDropLanding()
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
         refreshPenChrome()
+        // Kept right through a zoom or a pan as well as a mouse move: the ring
+        // marks a spot on the document, so the lines under it move when the
+        // picture does.
+        refreshDrawLanding()
         refreshPathEditChrome()
         refreshMotionPivotChrome()
     }
@@ -1149,7 +1157,7 @@ extension CanvasNSView {
     /// The moment a real edge wins on an axis, `gridX`/`gridY` go quiet for
     /// that axis and the yellow guide takes over, which is exactly the handover
     /// a person expects: the grid holds you until something better does.
-    private func refreshGridSnapLines(in viewport: Viewport) {
+    func refreshGridSnapLines(in viewport: Viewport) {
         let (x, y) = liveGridSnapLines
         guard canvasGridEnabled, x != nil || y != nil,
               bounds.width > 0.5, bounds.height > 0.5 else {
@@ -1184,8 +1192,13 @@ extension CanvasNSView {
         // end under the pointer is standing on them.
         let drawing = annotationDrag != nil || endpointDrag != nil
         let draw = drawing ? annotationGridSnap : (CGFloat?.none, CGFloat?.none)
-        return (move?.gridX ?? resize?.gridX ?? draw.0,
-                move?.gridY ?? resize?.gridY ?? draw.1)
+        // The Pen puts its point down with a press of its own rather than a
+        // drag, so it carries its own answer: the lines the anchor under the
+        // hand is standing on, lit for as long as the button is down.
+        let pen: (x: CGFloat?, y: CGFloat?) =
+            tool == .pen ? penSession.pressGridLines : (nil, nil)
+        return (move?.gridX ?? resize?.gridX ?? draw.0 ?? pen.x,
+                move?.gridY ?? resize?.gridY ?? draw.1 ?? pen.y)
     }
 
     /// A guide's reach, from canvas points into view points, with a few points

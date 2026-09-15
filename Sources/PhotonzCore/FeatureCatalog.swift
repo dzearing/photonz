@@ -130,6 +130,8 @@ public enum FeatureCatalog {
 
     public static let penFlag = "next-pen"
 
+    public static let drawLandingFlag = "next-where-the-point-will-land"
+
     public static let reshapePathFlag = "next-reshape-a-path"
 
     public static let turnIntoPathFlag = "next-turn-into-path"
@@ -506,6 +508,15 @@ public enum FeatureCatalog {
                     name: penFlag,
                     title: "Draw any shape with the Pen",
                     description: "Adds the Pen, P, at the end of the drawing tools. Click to drop a corner, or press and drag to pull a curve out of the point you are placing, so one outline can have hard edges and curves in it: a triangle, a teardrop, a rounded box, the sort of shape an icon is made of. The run between the last point and the pointer is drawn while you move, so you see the curve before you commit it. Click the first point to close the shape and it fills; Return finishes it as an open line; Escape throws the drawing away. Holding Shift puts the next point on one of the usual angles. With the grid on and Snap to grid on, a point lands on the nearest crossing of the lines you can see, the same lines a drag catches, and holding Command puts it exactly where the pointer is. Holding Option means the two sides of a point are not tied together, which is what lets a straight edge run into a curve: drag a point out with Option held and the edge arriving at it stays straight, and press Option on the point you just placed to pull its handle back in so the next edge leaves straight. That is how a rounded corner gets drawn. Command Z steps back one point at a time while you draw instead of losing the whole path. The colour the next path comes out in is the swatch on the tool bar, the same place every other drawing tool keeps its colour, so you choose it before you draw rather than repainting afterwards. What you get is an ordinary layer: move it, resize it, turn it, repaint its inside and its edge, give it a shadow, undo it. Off means no Pen tool and P does nothing; a path already in a document draws either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: drawLandingFlag,
+                    title: "See where a point will land before you press",
+                    description: "Every tool that starts a shape is magnetic: with the grid on, the first point goes to the nearest crossing of the lines you can see, and on a screenshot it goes to the border it is near. None of that showed until after the click, so placing a point was a press followed by finding out where it went, and the only way to correct it was undo. With this on, a small ring appears under the pointer on the exact spot the press would land, while you are still only hovering, and it steps from crossing to crossing as you move. It is there for the Pen, the rectangle, the ellipse, the line, the arrow, the highlighter, the zoom callout, the lens and the frame, because aiming is one rule rather than one tool's feature. The ring is open in the middle so it sits on the crossing without hiding it. Holding Command takes the point off the magnets, the way it does everywhere on the canvas, and the ring goes away to say so: with nothing pulling, the point lands exactly where the pointer is. With no grid on a plain canvas the ring stays away too, and appears only when something really would move the point. While the shape is being drawn the grid lines its ends came to rest on light up, the same as a dragged box. Off means the tools snap exactly as they do now, silently, and you find out where the point went after you press.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

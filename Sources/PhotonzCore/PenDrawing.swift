@@ -113,7 +113,7 @@ public struct PenSession: Equatable, Sendable {
 
     /// What a press was aiming at, decided at the moment it went down so the
     /// gesture cannot change its mind halfway through a drag.
-    private enum Intent: Equatable, Sendable {
+    enum Intent: Equatable, Sendable {
         /// Drop a new anchor here.
         case place
         /// Join back to the first anchor.
@@ -226,23 +226,93 @@ public struct PenSession: Equatable, Sendable {
         self.constrained = constrained
         self.free = free
         pointer = point
+        let aim = landing(at: point, constrained: constrained, breaking: breaking, zoom: zoom)
+        press = Press(origin: aim.point, raw: point, handle: nil, dragged: false,
+                      breaking: aim.isRetract ? true : breaking, intent: aim.intent)
+    }
+
+    // MARK: - Where the next press would land
+
+    /// What a press at this point WOULD do, asked before the button goes down.
+    ///
+    /// This is the answer the canvas marks under the pointer while you are
+    /// still just aiming. It exists so there is exactly one place that decides
+    /// where a point goes: `press` is built out of it, so the mark drawn before
+    /// the click and the anchor left by the click cannot disagree. Working the
+    /// landing out a second way is how a mark becomes a lie, which is worse
+    /// than no mark at all.
+    public enum Landing: Equatable, Sendable {
+        /// A new anchor, at this point: already on the grid, already held to
+        /// its angle if ⇧ is down.
+        case place(CGPoint)
+        /// Joining back to the first anchor, which is where this sits.
+        case close(CGPoint)
+        /// Ending the open line on the anchor already at this point.
+        case finish(CGPoint)
+        /// Pulling the last anchor's outgoing handle back in, so the next run
+        /// leaves straight. Its point is that anchor.
+        case retract(CGPoint)
+
+        /// Where it lands, whichever of the four it is.
+        public var point: CGPoint {
+            switch self {
+            case .place(let p), .close(let p), .finish(let p), .retract(let p): p
+            }
+        }
+
+        /// Whether the press would land on an anchor already on screen rather
+        /// than putting a new one down. The canvas already rings those, so it
+        /// does not mark them twice.
+        public var isOnAnExistingAnchor: Bool {
+            self != .place(point)
+        }
+
+        var isRetract: Bool { if case .retract = self { true } else { false } }
+
+        var intent: Intent {
+            switch self {
+            case .place: .place
+            case .close: .close
+            case .finish: .finish
+            case .retract: .retract
+            }
+        }
+    }
+
+    /// The GRID lines the point under the hand is standing on, while the
+    /// button is down. Nil on an axis nothing pulled it onto, and nil on both
+    /// between clicks.
+    ///
+    /// The canvas lights these the way a dragged box lights the lines its edge
+    /// came to rest on: a grid line says "you are on this line of the paper",
+    /// and the answer is the line already on screen rather than a second rule
+    /// laid over it. An axis ⇧ is holding at an angle is NOT lit, because the
+    /// angle owns that axis and the point is not on a line down it.
+    public var pressGridLines: (x: CGFloat?, y: CGFloat?) {
+        guard let origin = press?.origin, !free, let grid,
+              grid.spacing.isFinite, grid.spacing > 0 else { return (nil, nil) }
+        func line(_ value: CGFloat, countingFrom start: CGFloat) -> CGFloat? {
+            let quantized = Snapping.quantized(value, to: grid.spacing, from: start)
+            return abs(quantized - value) < 0.001 ? quantized : nil
+        }
+        return (line(origin.x, countingFrom: grid.origin.x),
+                grid.axes.drawsRows ? line(origin.y, countingFrom: grid.origin.y) : nil)
+    }
+
+    /// Where a press at `point` would land and what it would do. Reads nothing
+    /// but the session's own state, so it is safe to ask on every mouse move.
+    public func landing(at point: CGPoint, constrained: Bool,
+                        breaking: Bool = false, zoom: CGFloat) -> Landing {
         if breaking, let last = anchors.last, within(point, of: last.point, zoom: zoom) {
-            press = Press(origin: last.point, raw: point, handle: nil, dragged: false,
-                          breaking: true, intent: .retract)
-            return
+            return .retract(last.point)
         }
         if wouldClose(at: point, zoom: zoom), let first = anchors.first {
-            press = Press(origin: first.point, raw: point, handle: nil, dragged: false,
-                          breaking: breaking, intent: .close)
-            return
+            return .close(first.point)
         }
         if wouldFinish(at: point, zoom: zoom), let last = anchors.last {
-            press = Press(origin: last.point, raw: point, handle: nil, dragged: false,
-                          breaking: breaking, intent: .finish)
-            return
+            return .finish(last.point)
         }
-        press = Press(origin: place(point, constrained: constrained), raw: point,
-                      handle: nil, dragged: false, breaking: breaking, intent: .place)
+        return .place(place(point, constrained: constrained))
     }
 
     /// The pointer moved while the button is down.

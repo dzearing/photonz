@@ -49,6 +49,11 @@ extension CanvasNSView {
     /// as the same object.
     func refreshPenChrome() {
         if tool == .pen { refreshPenHint() }
+        // The lines the anchor under the hand is standing on, lit while the
+        // button is down, exactly as a dragged box lights the lines its edge
+        // came to rest on. The Pen places a point with a press of its own
+        // rather than with a drag, so nothing else on the canvas would ask.
+        if let viewport { refreshGridSnapLines(in: viewport) }
         guard tool == .pen, let viewport, let content = penSession.previewPath,
               !content.anchors.isEmpty else {
             for shape in [penPathLayer, penAnchorsLayer, penHandlesLayer, penTargetLayer] {

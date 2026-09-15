@@ -1561,6 +1561,22 @@ public enum PlaytestStep: Sendable, Equatable {
     /// holds at every zoom. Left off it is one point: the points are on the
     /// shape, not near it.
     case expectChrome(within: CGFloat)
+    /// Where the canvas says a press would put the first point of a shape,
+    /// which is the mark drawn under the pointer while you are only hovering
+    /// (`CanvasDrawLanding`).
+    ///
+    /// A picture cannot settle this. The mark is a ring a few points across
+    /// sitting on a grid crossing that is itself a line on screen, so reading
+    /// "the ring is on the right line" off a screenshot is counting pixels
+    /// between two things that are both chrome. This asks the canvas for the
+    /// document point the ring is on, which is the same point the press uses.
+    ///
+    /// `near` is where it should be, in document coordinates, with `within`
+    /// document points of slack (half a point unless said otherwise, because
+    /// the claim worth making is that it is EXACTLY on the crossing).
+    /// `absent: true` claims no mark at all, which is what ⌘ and a canvas with
+    /// nothing pulling must both give.
+    case expectLanding(near: PlaytestPoint?, within: CGFloat, absent: Bool)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1742,7 +1758,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
@@ -1795,6 +1811,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
+        case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
@@ -2132,6 +2149,19 @@ public enum PlaytestStep: Sendable, Equatable {
                                halfSmooth: halfSmooth.map { Int($0) },
                                width: width.map { CGFloat($0) }, fill: fill, ink: ink,
                                anchorAt: anchorAt)
+        case "expectLanding":
+            let absent = try f.optionalFlag("absent") ?? false
+            let near = fields["near"] == nil ? nil : try f.point("near")
+            guard absent != (near != nil) else {
+                throw f.invalid("near", "expectLanding claims one of two things: \"near\" with "
+                    + "the [x, y] the mark should be sitting on, or \"absent\": true for no mark "
+                    + "at all. It cannot claim both and it has to claim one")
+            }
+            let within = try f.optionalNumber("within") ?? 0.5
+            guard within >= 0 else {
+                throw f.invalid("within", "a distance is zero or more, not \(within)")
+            }
+            self = .expectLanding(near: near, within: CGFloat(within), absent: absent)
         case "expectChrome":
             let within = try f.optionalNumber("within") ?? 1
             guard within >= 0 else {

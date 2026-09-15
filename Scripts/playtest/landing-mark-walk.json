@@ -1,0 +1,103 @@
+{
+  "out": "/tmp/photonz-playtest/landing-mark-walk",
+  "setup": {
+    "forget": ["grid", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Show grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "grid-on-default", "note": "default grid at 100%: the canvas draws 32s, so a point lands on a multiple of 32 and the mark has to be sitting on one" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "move", "at": [140, 100] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [128, 96] },
+    { "do": "describe", "stage": "pen-aims", "note": "nothing pressed yet: the pointer is at 140,100 and the mark is on the crossing at 128,96, which is where the press would put the point" },
+    { "do": "snapshot", "name": "landing-1-pen-aims" },
+
+    { "do": "move", "at": [230, 175] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [224, 160] },
+    { "do": "describe", "stage": "pen-steps-crossings", "note": "the pointer moved and the mark stepped with it, from 128,96 to 224,160: crossing to crossing rather than following the pointer" },
+
+    { "do": "click", "at": [230, 175] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "move", "at": [345, 250] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [352, 256] },
+    { "do": "click", "at": [345, 250] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 2 },
+    { "do": "expectPath", "anchor": 0, "near": [224, 160], "within": 0.5 },
+    { "do": "expectPath", "anchor": 1, "near": [352, 256], "within": 0.5 },
+    { "do": "describe", "stage": "the-mark-was-not-lying", "note": "each click went down on the pointer position the mark had just been read at, and the two anchors landed on 224,160 and 352,256: the mark and the press agree, which is the whole claim" },
+
+    { "do": "move", "at": [400, 300], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "command-takes-the-mark-away", "note": "Command held means exactly where the pointer is, so there is no mark: nothing would move the point" },
+
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "move", "at": [420, 260] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [416, 256] },
+    { "do": "describe", "stage": "the-box-aims-too", "note": "the same mark under the rectangle tool, on the crossing at 416,256: this is a rule about aiming rather than a Pen feature" },
+    { "do": "snapshot", "name": "landing-2-rectangle-aims" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "move", "at": [620, 430] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [608, 416] },
+    { "do": "describe", "stage": "the-arrow-aims-too", "note": "and under the arrow: 620,430 marks 608,416" },
+    { "do": "snapshot", "name": "landing-3-arrow-aims" },
+
+    { "do": "pinch", "to": 4, "steps": 40 },
+    { "do": "move", "at": [448, 352] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [448, 352] },
+    { "do": "describe", "stage": "the-same-ring-at-400-percent", "note": "pinched right in, the ring is the same few points across rather than growing with the picture, and it is open, so the crossing it is claiming is still visible inside it" },
+    { "do": "snapshot", "name": "landing-4-zoomed-in" },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "move", "at": [-40, -40], "space": "view" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "the-pointer-left", "note": "the pointer is off the canvas view entirely: nothing is being aimed, so nothing is left drawn on an idle window" },
+
+    { "do": "move", "at": [620, 430] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [608, 416] },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "move", "at": [620, 430] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "nothing-is-being-aimed", "note": "Select starts no shape, so there is nothing to aim and nothing is drawn" },
+
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Snap to grid" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "move", "at": [300, 560] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "nothing-pulling-nothing-marked", "note": "Snap to grid off with the lines still drawn: the point lands exactly under the pointer, so there is no mark claiming otherwise" },
+    { "do": "snapshot", "name": "landing-5-nothing-pulling" },
+    { "do": "render", "name": "landing-6-final-render" }
+  ]
+}
