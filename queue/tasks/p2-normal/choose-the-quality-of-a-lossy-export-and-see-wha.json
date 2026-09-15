@@ -1,0 +1,37 @@
+{
+  "id": "choose-the-quality-of-a-lossy-export-and-see-wha",
+  "title": "Choose the quality of a lossy export and see what it will weigh",
+  "goal": "Exporting a JPEG or a HEIC gives you whatever quality the app picked, with no way to change it and no idea how big the file will be until it is on disk. Let the quality be set, and show what the file will weigh at that setting while you are still deciding, so choosing between a sharp large file and a small good enough one is one slider and one number rather than exporting three times and looking in Finder.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:40:25.475Z",
+  "updated": "2026-09-15T14:40:36.347Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-15: \"for formats which have variable qualities, i'd like to be able to adjust that and see the expected filesize.\"\n\nBOTH HALVES ARE ALREADY PART BUILT, so this is mostly exposing what is there.\n- Quality: Sources/PhotonzRender/ImageCodec.swift:33, encode(_:format:quality:) already takes a quality of 0 to 1, documented as applying to lossy formats and ignored by PNG, and passes it as kCGImageDestinationLossyCompressionQuality. Nothing in the dialog ever sets it, so every export goes out at the 0.9 default.\n- The size line: Sources/Photonz/ExportDialog.swift already holds a byteCount state, and its comment says it is 'worked out only for a drawing made of shapes'. So the dialog already knows how to show what a file will weigh; it only does it for SVG.\n\nTHE ONLY HONEST WAY to know what a lossy file will weigh is to encode it and count the bytes. There is no formula worth trusting across pictures: a screenshot of flat UI and a photograph of leaves at the same quality differ by an order of magnitude. So encode to memory, in the background, and show the real number. That makes the performance note in the acceptance list the real work: a 12 megapixel document re-encoded on every tick of a slider will make the dialog crawl. Debounce it, do it off the main actor, show the last known number while a new one is being worked out, and say in the audit what was measured.\n\nDo not let this grow into a general export rebuild. The scale row, the frame picker and the SVG handling in that dialog all work and are not part of this.\n\nRelated but separate, and NOT in this task: the user also asked for WebP export in the same message. That cannot be done the way these formats are done - ImageIO on macOS 26 cannot WRITE WebP, confirmed by CGImageDestinationCopyTypeIdentifiers which lists 22 writable types with no WebP among them - so it needs a bundled encoder and that is a decision about taking the project's first third party dependency. It is being put to the user separately. If WebP does arrive, it is a lossy format and belongs in this task's rule the moment it exists.",
+  "acceptance": [
+    "Exporting a format that has a quality offers one, and the control is absent rather than dead for a format that does not",
+    "The size the dialog shows is what the saved file actually weighs, checked by saving and comparing the bytes, not an estimate from a formula",
+    "The number keeps up while the quality is being changed, without the dialog stuttering: say in the audit how long a 12 megapixel document takes to weigh and what was done about it",
+    "Changing the scale changes the number too, since 2x is a different file",
+    "The quality you chose is remembered for next time, per format, so somebody who always wants eighty percent sets it once",
+    "What a quality setting costs is visible, not just its size: the audit shows the same picture at the extremes so the tradeoff is real rather than abstract",
+    "A quality that would produce something visibly broken is not reachable by accident, or the audit argues why the full range is right",
+    "PNG and SVG are unaffected: neither grows a control that means nothing for it",
+    "Audit under queue/audits/ with the dialog at several qualities and the saved sizes beside the shown ones, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:40:25.477Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T14:40:36.346Z",
+      "note": "seq 2680 -> 10"
+    }
+  ]
+}
