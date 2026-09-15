@@ -9,12 +9,12 @@
   /* icon-states-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
      rendered once, driven by the steps below. ONE scenario.
 
-     This is the case with NO TIME AXIS IN IT AT ALL. A toggle is two drawings
-     and a crossing. You are not authoring motion over a duration, you are
-     saying what the icon looks like when it is off, what it looks like when it
-     is on, and how long the change takes. So the canvas holds TWO artboards
-     side by side, neither of which ever animates, and the crossing is shown in
-     the preview where it belongs.
+     This is the case where the animation is NOT AUTHORED, it is DERIVED. A
+     toggle is two drawings and a crossing between them. You do not lay motion
+     out; you say what the icon looks like when it is off, what it looks like
+     when it is on, and the difference between those two drawings is the
+     animation. So the canvas holds TWO artboards side by side, neither of which
+     ever moves, and the crossing is shown in the preview where it belongs.
 
      If that sounds familiar it is because it IS familiar: it is a component
      with variants, which the app already has a shape for. The consolidation
@@ -24,9 +24,21 @@
      It is also the flow with the biggest hole in it, and the page says so: an
      SVG on its own cannot respond to a tap.
 
-     Page-local CSS is the two artboards, the bookmark artwork and the crossing
-     preview. Everything else is the shared DS. */
-  #icon-states-wt .win.shell{height:846px;min-height:0}
+     REBUILT 2026-09-15 onto the same two surfaces the bell pages use, so the
+     five icon animation pages stop showing two different pictures of one
+     feature. The earlier version said this flow had NO TIME AXIS AT ALL and put
+     Takes, Curve and Overshoot in one Crossing section in the side column. That
+     was wrong in a way you could see on the page: Overshoot was a bare
+     percentage with no when in it, so nothing said that the swell is still
+     settling after the colour has finished. Here the crossing is a Motion list
+     like everywhere else, and the strip shows the honest shape of it: the Fill
+     bar stops at 220 ms and the Scale bar runs on to 320. A toggle still has no
+     timeline. Its CROSSING does, and it is 320 milliseconds long.
+
+     Page-local CSS is the two artboards, the bookmark artwork, the crossing
+     preview, the motion list and the timing dock. Everything else is the
+     shared DS. */
+  #icon-states-wt .win.shell{height:940px;min-height:0}
   #icon-states-wt .canvas{--artboard-glow:620px 340px}
 
   /* ---------- TWO ARTBOARDS · the states themselves, which never move ------ */
@@ -58,16 +70,23 @@
   #icon-states-wt .ist-cross path{fill:none;stroke:var(--comp);stroke-width:1.4;
     stroke-linecap:round;stroke-linejoin:round}
 
-  /* ---------- THE CROSSING · only the preview ever animates ---------- */
+  /* ---------- THE CROSSING · only the preview ever animates ----------
+     Every percentage below is a millisecond figure over the 2000 ms preview
+     loop, which is what puts the preview and the strip in the dock on the same
+     numbers. The crossing starts at 680 ms (34%). FILL takes 220 ms and is
+     done at 45%. SCALE takes 320 ms and is not done until 50%, which is the
+     whole point of the page: the swell is still settling after the colour has
+     arrived, and that is five percent of a loop you would never have found in
+     a field called Overshoot. */
   @keyframes istCross{
     0%,34%  {opacity:0}
-    42%     {opacity:1}
+    45%     {opacity:1}
     84%,100%{opacity:0}
   }
   @keyframes istPop{
     0%,34%  {transform:scale(1)}
-    44%     {transform:scale(var(--ist-pop,1.14))}
-    56%,100%{transform:scale(1)}
+    40%     {transform:scale(var(--ist-pop,1.14))}
+    50%,100%{transform:scale(1)}
   }
   #icon-states-wt .ist-sz .ist-on{opacity:0;animation:istCross var(--ist-loop,2s) linear infinite;
     animation-play-state:paused}
@@ -142,6 +161,88 @@
      three buttons in a segmented control is not a vocabulary. */
   #icon-states-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
     color:var(--faint);white-space:nowrap}
+
+  /* ---------- THE MOTION LIST · an .efx list, because that is what it is ----
+     The same rows as Effects on the same layer: drag handle, switch, name,
+     curve sketch, value summary. What is different HERE, and it is the thing
+     this page is for, is where the entries come from. On every other animation
+     page you add all of them. On a toggle the first one arrives BY ITSELF the
+     moment the two drawings stop matching, because that difference IS the
+     animation. The plus is still there, and it is for the entry no difference
+     can produce: the little swell that is taste rather than state. */
+  #icon-states-wt .efx.mrow{flex-wrap:wrap;margin-bottom:var(--s1)}
+  #icon-states-wt .efx.mrow .nm{flex:1 1 auto;min-width:0}
+  #icon-states-wt .efx.mrow .emeta{flex:1 0 100%;margin:2px 0 0;padding-left:53px;
+    font-family:var(--mono);font-size:10px;color:var(--faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #icon-states-wt .efx.mrow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  #icon-states-wt .efx.mrow .crv{flex:none;width:18px;height:18px;border-radius:4px;
+    background:var(--panel-2);border:1px solid var(--line);display:block}
+  /* the badge that says nobody added this one */
+  #icon-states-wt .efx.mrow .frm{flex:none;font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;
+    font-weight:660;color:var(--comp);border:1px solid color-mix(in srgb,var(--comp) 40%,transparent);
+    background:color-mix(in srgb,var(--comp) 12%,transparent);border-radius:999px;padding:1px 6px}
+  #icon-states-wt .crv path{fill:none;stroke:var(--accent);stroke-width:2.6;
+    stroke-linecap:round;vector-effect:non-scaling-stroke}
+  #icon-states-wt .crv .cus{display:none}
+  #icon-states-wt .crv.custom .lin{display:none}
+  #icon-states-wt .crv.custom .cus{display:block}
+  #icon-states-wt .mset{padding:var(--gap-sm) 0 var(--s1)}
+  #icon-states-wt .mnone{display:flex;align-items:center;gap:var(--s2);padding:var(--pad-sm);
+    border:1px dashed var(--line-strong);border-radius:var(--r2);color:var(--faint);font-size:11.5px}
+  #icon-states-wt .mnone .ic{color:var(--faint);flex:none}
+
+  /* ---------- THE TIMING DOCK · 320 milliseconds of it ----------
+     The shortest strip in the set, and that is what it is for. A toggle is the
+     one flow where the whole animation fits inside a third of a second, so the
+     lane runs 0 to 400 ms and the two bars nearly fill it. Putting it beside
+     the badge's 1200 ms and the spinner's 800 is half the value; the other half
+     is that the two bars are NOT the same length, which is a fact about how the
+     crossing feels that no field in a column can tell you. */
+  #icon-states-wt .timeline{min-height:172px;padding-bottom:26px}
+  #icon-states-wt .tlbar{display:flex;align-items:center;gap:var(--s2);padding:0 0 var(--s2);
+    border-bottom:1px solid var(--edge-lo);margin-bottom:var(--s2)}
+  #icon-states-wt .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--faint);font-weight:660;white-space:nowrap}
+  #icon-states-wt .tlbar .now{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);
+    font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);
+    border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* a LAYER row is a labelled hairline: it groups the property rows under it
+     without pretending the layer itself occupies time. */
+  #icon-states-wt .track.ist-lt{margin:var(--s2) 0 1px}
+  #icon-states-wt .track.ist-lt .tl{color:var(--ink);width:58px;font-size:9.5px;
+    text-transform:none;letter-spacing:0;font-weight:660}
+  #icon-states-wt .ist-rule{flex:1;height:1px;background:var(--line)}
+  #icon-states-wt .track.ist-pt{margin:2px 0}
+  #icon-states-wt .track.ist-pt .tl{font-size:9.5px;text-transform:none;letter-spacing:0;
+    padding-left:var(--pad-sm);color:var(--dim)}
+  #icon-states-wt .track.ist-pt.ist-nolane .tl{color:var(--faint)}
+  #icon-states-wt .ist-lane{height:20px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:5px;position:relative;display:block;flex:1;overflow:visible}
+  #icon-states-wt .ist-bar{position:absolute;top:1px;bottom:1px;border-radius:4px;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--comp) 70%,transparent),color-mix(in srgb,var(--comp) 40%,transparent));
+    border:1px solid color-mix(in srgb,var(--comp) 80%,transparent);
+    display:flex;align-items:center;padding:0 6px;gap:5px;
+    font-size:8.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;cursor:grab}
+  #icon-states-wt .ist-bar.sel{box-shadow:0 0 0 2px var(--accent)}
+  #icon-states-wt .ist-bar .gr{position:absolute;top:2px;bottom:2px;width:5px;border-radius:2px;
+    background:rgba(255,255,255,.85)}
+  #icon-states-wt .ist-bar .gr.l{left:1px}
+  #icon-states-wt .ist-bar .gr.r{right:1px}
+  /* THE SETTLE. The distance the swell runs on after the colour has landed,
+     drawn as itself rather than left as a subtraction between two fields. */
+  #icon-states-wt .ist-over{position:absolute;top:-11px;height:9px;z-index:5;
+    border-left:1px solid var(--warn);border-right:1px solid var(--warn);
+    border-bottom:1px solid var(--warn)}
+  #icon-states-wt .ist-over .lb{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:8.5px;color:var(--warn);white-space:nowrap}
+  /* where the crossing is finished, on the same --t and the same lane geometry
+     the DS playhead takes, so it lands on the pixel the ruler says it should */
+  #icon-states-wt .ist-end{position:absolute;top:56px;bottom:10px;width:0;z-index:4;
+    border-left:1px dashed color-mix(in srgb,var(--accent) 70%,transparent);
+    left:calc(66px + 12px + (100% - 66px - 24px) * var(--t,.8))}
+  #icon-states-wt .ist-end .lb{position:absolute;bottom:-14px;left:4px;font-family:var(--mono);
+    font-size:8.5px;color:var(--accent);white-space:nowrap}
 </style>
 </head>
 <body class="page">
@@ -150,17 +251,18 @@
   <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Animate a toggle between two states</h2><span class="k">&#183; usage clickthrough &#183; one scenario</span></div>
 
   <p class="pglead">One job: the <b>bookmark</b> should fill in when you save something, and empty out when you unsave it.
-    This flow has <b>no time axis in it at all</b>. You are not authoring motion over a duration, you are saying what the
-    icon looks like when it is off, what it looks like when it is on, and how long the change between them takes. So the
-    canvas holds <b>two artboards</b>, neither of which ever moves, and the crossing is shown in the preview where it
-    belongs. It is also the flow with the biggest hole in it, because an SVG on its own cannot feel a tap, and the page
-    says so rather than drawing a control that would have to be invented. Seven real clicks on ONE screen, which never
-    re-renders below.</p>
+    This is the flow where the animation is <b>not authored, it is derived</b>. You say what the icon looks like when it is
+    off and what it looks like when it is on, and the difference between those two drawings <b>writes the motion entry for
+    you</b>. So the canvas holds <b>two artboards</b>, neither of which ever moves, and the crossing is shown in the preview
+    where it belongs. It uses the same Motion list and the same timing dock as every other animation flow, and the dock
+    is 320 milliseconds wide, the shortest in the set, because that is how long a toggle actually lasts. It is also the
+    flow with the biggest hole in it, because an SVG on its own cannot feel a tap, and the page says so rather than
+    drawing a control that would have to be invented. Seven real clicks on ONE screen, which never re-renders below.</p>
 
   <div class="ist-gap">
     <i class="ic sm ic-warning"></i>
     <p><b>The app has no answer for any of this yet.</b> A layer has no states, there is no transition between two
-      drawings of the same thing, and nothing exports SVG. The nearest thing that does exist is <b>component variants</b>,
+      drawings of the same thing, no timing surface of any kind, and nothing exports SVG. The nearest thing that does exist is <b>component variants</b>,
       which is the argument this page is really making: icon states and component states are the same idea and should not
       be built twice.</p>
   </div>
@@ -176,8 +278,8 @@
         <div class="popover menu pop cmdpop" id="cmdMenu">
           <div class="mlabel">States</div>
           <div class="menuitem"><i class="ic ic-layer-add"></i> Add a state&#8230; <span class="sc">&#8679;&#8984;N</span></div>
-          <div class="menuitem"><i class="ic ic-transition"></i> Edit the crossing</div>
-          <div class="menuitem"><i class="ic ic-pause"></i> Pause the preview <span class="sc">Space</span></div>
+          <div class="menuitem"><i class="ic ic-plus"></i> Animate a property&#8230; <span class="sc">&#8679;&#8984;M</span></div>
+          <div class="menuitem"><i class="ic ic-timeline"></i> Show the timing dock <span class="sc">&#8997;&#8984;T</span></div>
           <div class="menu-sep"></div>
           <div class="mlabel">Window</div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">&#8997;&#8984;L</span></div>
@@ -353,30 +455,16 @@
                   <div class="section">
                     <div class="sec-h">Appearance <span class="mut" id="pStateMut">in Off</span></div>
                     <div class="irow"><span class="rl">Fill</span>
-                      <span class="select" id="selFill" tabindex="0" role="button"><span class="lead" id="pFill">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <span class="select" id="selFill" tabindex="0" role="button" data-menu="#fillMenu"><span class="lead" id="pFill">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
                     <div class="irow"><span class="rl">Stroke</span><span class="field" style="width:100%"><span class="k">w</span><span class="v">1.75</span></span></div>
                     <p class="note" id="apNote">Everything in this section belongs to the state named above it. Change a value here and you have described that state, not the icon.</p>
                   </div>
 
-                  <div class="section wt-off" id="secCross">
-                    <div class="sec-h">Crossing <span class="mut" id="pCrossMut">Off &#8594; On</span></div>
-                    <div class="irow"><span class="rl">Takes</span>
-                      <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="0.22" aria-label="Seconds"></span>
-                    </div>
-                      <div class="irow"><span class="rl">Curve</span>
-                        <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                    <div class="irow"><span class="rl">Overshoot</span>
-                      <span class="stepper sm" style="width:100%"><span class="k">%</span><input id="pPop" value="0" aria-label="Overshoot"></span>
-                    </div>
-                    <p class="note" id="crNote">One crossing serves both directions. If going back should feel different from going forward, that is a second crossing, and most toggles do not want one.</p>
-                  </div>
-
                   <div class="section wt-off" id="secTrigger">
                     <div class="sec-h">Happens on <span class="mut" id="pTrigMut">nothing yet</span></div>
                     <div class="irow"><span class="rl">Trigger</span>
-                      <span class="select" id="selTrig" tabindex="0" role="button"><span class="lead" id="pTrig">Nothing &#183; the host decides</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <span class="select" id="selTrig" tabindex="0" role="button" data-menu="#trigMenu"><span class="lead" id="pTrig">Nothing &#183; the host decides</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
                     <div class="ist-caution wt-off" id="trigWarn">
                       <i class="ic sm ic-warning"></i>
@@ -389,9 +477,82 @@
               </div>
             </div>
 
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- EFFECTS · what you ADD. It sits here so the list below it can be
+                 read against it: same header, same plus, same rows. -->
+            <div class="dgrp" id="gEffects" data-grp="effects" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">what you add</span>
+                <button class="btn ghost icon sm" title="Add an effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                <div class="mnone"><i class="ic sm ic-effects"></i> Nothing added</div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="460"></div>
+
+            <!-- ====== MOTION, the list beside Effects ======
+                 Same header, same plus, same rows as every other page. The one
+                 thing this page does differently is where an entry comes from:
+                 the first one is written by the DIFFERENCE between the two
+                 states, not by you. -->
+            <div class="dgrp grow" id="gMotion" data-grp="motion" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Motion</span><span class="cnt" id="pMotMut">the crossing</span>
+                <button class="btn ghost icon sm" id="btnAddMotion" title="Animate a property across the crossing" data-menu="#propMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                <div id="motEmpty"><div class="mnone"><i class="ic sm ic-timeline"></i> Nothing crosses yet</div>
+                  <p class="note">The same list as on every other glyph, and on a toggle you mostly do not fill it in. <b>Make the two states differ and an entry appears here by itself</b>, because the difference is the animation. The plus is for what no difference can produce.</p>
+                </div>
+
+                <!-- written by the difference, not by you -->
+                <div class="efx mrow sel wt-off" id="mxFill">
+                  <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                  <span class="nm">Fill</span>
+                  <span class="frm">from states</span>
+                  <svg class="crv" id="crvFill" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C2 10 10 2 22 2"/></svg>
+                  <span class="emeta" id="mxFillMeta">none &#8594; same as the stroke</span>
+                </div>
+
+                <!-- added with the plus: taste, not state -->
+                <div class="efx mrow wt-off" id="mxScale">
+                  <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                  <span class="nm">Scale</span>
+                  <svg class="crv custom" id="crvScale" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C6 26 12 2 22 2"/></svg>
+                  <span class="emeta" id="mxScaleMeta">100% &#8594; 114% &#8594; 100%</span>
+                </div>
+
+                <div id="motSettings" class="mset wt-off">
+                  <div id="msFill" class="wt-off">
+                    <div class="grid2">
+                      <div class="field"><span class="k">In Off</span><span class="v">None</span></div>
+                      <div class="field"><span class="k">In On</span><span class="v">Ink</span></div>
+                    </div>
+                  </div>
+                  <div id="msScale" class="wt-off">
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">To</span><input id="pTo" value="114" aria-label="To, in percent"></span>
+                      <span class="stepper sm"><span class="k">Back to</span><input id="pBack" value="100" aria-label="Back to, in percent"></span>
+                    </div>
+                  </div>
+                  <div class="numgrid">
+                    <span class="stepper sm"><span class="k">Start</span><input id="pStart" value="0" aria-label="Start, in milliseconds"></span>
+                    <span class="stepper sm"><span class="k">Over</span><input id="pOver" value="220" aria-label="Duration, in milliseconds"></span>
+                  </div>
+                  <div class="irow"><span class="rl">Curve</span>
+                    <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Ease out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <p class="note" id="motNote">Both ends of this entry come from the two drawings, so there is nothing to type here except <b>when</b> and <b>how</b>. That is the shape of the whole flow: the states say what, the crossing says how long.</p>
+                </div>
+              </div>
+            </div>
+
             <div class="splitter h" data-min="120" data-max="420"></div>
 
-            <div class="dgrp grow collapsed" id="gLibrary">
+            <div class="dgrp collapsed" id="gLibrary">
               <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
                 <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
               </div>
@@ -436,14 +597,42 @@
             <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gStates" title="States"><i class="ic sm ic-transition"></i><span class="lb">States</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gMotion" title="Motion"><i class="ic sm ic-timeline"></i><span class="lb">Motion</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-              <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);top:396px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
+          <div class="popover menu pop" id="curveMenu" data-curve-menu style="position:absolute;right:var(--s4);top:430px;width:252px;max-height:320px;overflow:auto;z-index:11"></div>
+
+          <!-- ====== THE CUSTOM CURVE EDITOR ====== -->
+          <div class="popover pop" id="bezPop" data-curve-editor=".34,1.4,.5,1" style="position:absolute;right:288px;top:438px;width:236px;padding:var(--pad-sm);z-index:12"></div>
+
+          <!-- ====== THE PROPERTY MENU · built from what THIS layer has ====== -->
+          <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:300px;width:274px;z-index:11">
+            <div class="mlabel">Transform</div>
+            <div class="menuitem"><i class="ic ic-move"></i> Position <span class="pk">6, 4.4</span></div>
+            <div class="menuitem" id="miScale"><i class="ic ic-scale"></i> Scale <span class="pk">100%</span></div>
+            <div class="menuitem"><i class="ic ic-rotate-right"></i> Rotation <span class="pk">0&#176;</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Appearance</div>
+            <div class="menuitem"><i class="ic ic-opacity"></i> Opacity <span class="pk">100%</span></div>
+            <div class="menuitem disabled" aria-disabled="true"><i class="ic ic-fill"></i> Fill <span class="pk">already crossing</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Path &#183; only a drawn shape has these</div>
+            <div class="menuitem"><i class="ic ic-node"></i> Path points <span class="pk">7 points</span></div>
+            <div class="menuitem"><i class="ic ic-line"></i> Stroke width <span class="pk">1.75 pt</span></div>
+            <div class="menuitem"><i class="ic ic-border"></i> Dash <span class="pk">none</span></div>
+            <p class="mnote">The same list as on every other glyph, and <b>Fill</b> is greyed because the two states are already crossing it. Anything you pick here rides along with the crossing rather than starting a second animation. Same list on <button class="link" data-target="icon-animate-wt">Make a bell swing</button>.</p>
+          </div>
+
+          <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:356px;width:220px;z-index:11">
+            <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
+            <div class="menuitem"><i class="ic ic-blur"></i> Blur</div>
+            <div class="menuitem"><i class="ic ic-border"></i> Border</div>
+          </div>
 
           <div class="popover menu pop" id="fillMenu" style="position:absolute;right:var(--s4);top:404px;width:216px;z-index:11">
             <div class="menuitem">None</div>
-            <div class="menuitem" id="miFillInk"><i class="ic ic-fill"></i> Same as the stroke</div>
+            <div class="menuitem" id="miFillInk"><i class="ic ic-fill"></i> Same as stroke</div>
             <div class="menuitem"><i class="ic ic-swatch"></i> Pick a color&#8230;</div>
           </div>
 
@@ -463,6 +652,45 @@
             <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
           </div>
         </div>
+
+        <!-- ====== THE TIMING DOCK · a third of a second of it ======
+             The shortest strip in the set. It is here for one fact that a
+             column cannot hold: the two bars are DIFFERENT LENGTHS. The colour
+             is finished at 220 ms and the swell is still settling at 320, so
+             the crossing is longer than the number in the field that names it.
+             That was invisible when overshoot was a bare percentage, and it is
+             the difference between a toggle that lands and one that twitches. -->
+        <div class="timeline" id="timeline" data-tl-summary="Bookmark &#183; one state, nothing crosses yet">
+          <div class="tlbar">
+            <span class="lbl">The crossing</span>
+            <span class="now" id="tlNow"><i class="ic xs ic-transition"></i> <span id="tlLen">nothing yet</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" id="tlFit" title="Fit the crossing to the width"><i class="ic ic-zoom-fit"></i><span class="lb">Fit</span></button>
+          </div>
+          <div class="ruler"><span>0</span><span>100</span><span>200</span><span>300 ms</span></div>
+
+          <div class="track ist-lt"><span class="tl"><i class="ic xs ic-bezier"></i> Bookmark</span>
+            <span class="ist-rule"></span>
+          </div>
+          <div class="track ist-pt ist-nolane" id="trkFill"><span class="tl" id="trkFillLb">none</span>
+            <div class="ist-lane">
+              <div class="ist-bar sel wt-off" id="barFill" style="left:0%;width:55%" tabindex="0" role="button" aria-label="Bookmark, fill, start and duration">
+                <span class="gr l"></span><span id="barFillLb" style="padding-left:6px">0 &#8594; 220</span><span class="gr r"></span>
+              </div>
+            </div>
+          </div>
+          <div class="track ist-pt ist-nolane" id="trkScale"><span class="tl" id="trkScaleLb">none</span>
+            <div class="ist-lane">
+              <div class="ist-bar wt-off" id="barScale" style="left:0%;width:80%" tabindex="0" role="button" aria-label="Bookmark, scale, start and duration">
+                <span class="gr l"></span><span id="barScaleLb" style="padding-left:6px">0 &#8594; 320</span><span class="gr r"></span>
+              </div>
+              <span class="ist-over wt-off" id="overMark" style="left:55%;width:25%"><span class="lb">100 ms still settling</span></span>
+            </div>
+          </div>
+
+          <div class="ist-end wt-off" id="endMark" style="--t:.55"><span class="lb" id="endMarkLb">crossing done</span></div>
+          <div class="playhead" id="playhead" style="--t:0;top:56px"></div>
+        </div>
       </div>
     </div>
 
@@ -471,21 +699,21 @@
       <li class="wt-step"
           data-title="Select the glyph"
           data-cue="#lrMark" data-cue-label="Click the Bookmark layer" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-open="#gLayers,#gStates,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
           data-select="#lrMark" data-show="#istSel,#propsShape" data-hide="#propsEmpty"
           data-set="#propKind=Glyph">
         <div class="wt-cap comp">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Bookmark</b> layer</p>
           <p class="wt-where">the Layers group, at the top of the dock</p>
-          <p class="wt-res">Properties shows this glyph's <b>Appearance</b>, and the header above it says <b>in Off</b>. There is already exactly one state and it is the drawing you have: nothing has been added, the panel is just naming what was always true.</p>
+          <p class="wt-res">Properties shows this glyph&rsquo;s <b>Appearance</b>, and the header above it says <b>in Off</b>. There is already exactly one state and it is the drawing you have: nothing has been added, the panel is just naming what was always true. Below Properties sit the same two lists every other glyph has, <b>Effects</b> and <b>Motion</b>, and Motion is empty because one drawing cannot differ from itself.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Add the second state"
           data-cue="#btnAddState" data-cue-label="Click + on the States group" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-open="#gLayers,#gStates,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
           data-select="#lrMark" data-select-class="sel"
           data-show="#propsShape,#stOn,#istColOn,#lrMarkSt" data-hide="#istSel,#propsEmpty"
           data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=-ist-filled"
@@ -494,91 +722,97 @@
           <span class="wt-n">2</span>
           <p class="wt-do">the <b>+</b> on the <b>States</b> group, and name it <b>On</b></p>
           <p class="wt-where">the States group header</p>
-          <p class="wt-res">a <b>second artboard</b> appears beside the first, identical to it, and the panel now lists two states. The new one starts as a copy on purpose, so it can only ever differ where you make it differ. Nothing on screen is a track or a ruler: a toggle is two drawings.</p>
+          <p class="wt-res">a <b>second artboard</b> appears beside the first, identical to it, and the panel now lists two states. The new one starts as a copy on purpose, so it can only ever differ where you make it differ. <b>Motion is still empty</b>, and the strip below still says none, because two identical drawings have nothing to cross.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Draw what On looks like"
-          data-cue="#selFill" data-cue-label="Click Fill, choose Same as the stroke" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-title="Draw what On looks like, and watch the motion write itself"
+          data-cue="#selFill" data-cue-label="Click Fill, choose Same as stroke" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps,#gMotion" data-collapse="#gLibrary,#gEffects"
           data-select="#lrMark" data-pop="#fillMenu"
-          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt" data-hide="#istSel,#propsEmpty"
-          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled"
-          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#apNote=The fill changed in On and nothing changed in Off, because you were standing in On when you changed it. That is the whole rule.">
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#mxFill,#motSettings,#msFill,#barFill,#endMark"
+          data-hide="#istSel,#propsEmpty,#motEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#trkFill=-ist-nolane"
+          data-css="#barFill=left:0%;width:55%|#endMark=--t:.55"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#pStateMut=in On|#pFill=Same as stroke|#stOnDiff=1 difference|#pMotMut=1 crossing|#trkFillLb=Fill|#tlLen=220 ms|#chipCross=0.22 s|#apNote=The fill changed in On and nothing changed in Off, because you were standing in On when you changed it. That is the whole rule.|#motNote=Nobody added this entry. It is here because the two drawings stopped matching, and the moment they match again it goes. That is what makes a toggle different from everything else in this folder: you do not author the animation, you author the two ends and the app works out what moves.">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
-          <p class="wt-do">the <b>Fill</b> row, and choose <b>Same as the stroke</b></p>
+          <p class="wt-do">the <b>Fill</b> row, and choose <b>Same as stroke</b></p>
           <p class="wt-where">Properties, under Appearance</p>
-          <p class="wt-res">the right-hand artboard fills in and the left one does not, because you were standing in <b>On</b> when you changed it. The States list now reads <b>1 difference</b>, which is the honest count of what separates the two drawings and the thing you check when a toggle starts behaving oddly.</p>
+          <p class="wt-res">the right-hand artboard fills in and the left one does not, because you were standing in <b>On</b> when you changed it. Then look at the <b>Motion</b> list: <b>an entry appeared and you did not add it</b>. It is marked <i>from states</i>, and a bar for it has landed on the strip. This is the page&rsquo;s whole argument: on a toggle you do not author the animation, you author the two ends and the difference between them is the animation.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Say how long the change takes"
-          data-cue="#pDur" data-cue-label="Type 0.22 in Takes" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-cue="#pOver" data-cue-label="Type 220 in Over" data-cue-place="left"
+          data-open="#gLayers,#gMotion" data-collapse="#gStates,#gProps,#gLibrary,#gEffects"
           data-select="#lrMark"
-          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross" data-hide="#istSel,#propsEmpty"
-          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
-          data-css="#istWin=--ist-loop:2s"
-          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#istCrossLb=0.22s &#183; linear">
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#mxFill,#motSettings,#msFill,#istCross,#barFill,#endMark"
+          data-hide="#istSel,#propsEmpty,#motEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play|#trkFill=-ist-nolane"
+          data-css="#istWin=--ist-loop:2s|#barFill=left:0%;width:55%|#endMark=--t:.55"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22 s|#pStateMut=in On|#pFill=Same as stroke|#stOnDiff=1 difference|#pMotMut=1 crossing|#pOver=220|#trkFillLb=Fill|#tlLen=220 ms|#istCrossLb=0.22s &#183; ease out|#motNote=Both ends of this entry come from the two drawings, so there is nothing to type here except when and how. Ease out arrives on it rather than Linear, because a change of state that finishes at full speed reads as a glitch.">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
-          <p class="wt-do"><b>0.22</b> in the <b>Takes</b> field</p>
-          <p class="wt-where">Properties, in the new <b>Crossing</b> section</p>
-          <p class="wt-res">the number lands on the <b>arrow between the two artboards</b>, and the preview starts crossing back and forth at that rate. That arrow is the entire animation. There are no keys, because with two states and one duration there is nothing left to say.</p>
+          <p class="wt-do"><b>220</b> in the <b>Over</b> field</p>
+          <p class="wt-where">Motion, under the Fill entry</p>
+          <p class="wt-res">the number lands on the <b>arrow between the two artboards</b> and the preview starts crossing back and forth at that rate. It is the same <b>Over</b> field as every other animation page, holding the one number this flow has. The two artboards have not moved and never will: they are the drawings, and only the preview animates, which is what keeps them editable while the crossing is running.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Give it a snap"
-          data-cue="#easOut" data-cue-label="Click Curve, choose Ease out back" data-pop="#curveMenu" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
-          data-select="#lrMark" data-activate="#easOut"
-          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross" data-hide="#istSel,#propsEmpty"
-          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
-          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
-          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#istCrossLb=0.22s &#183; ease out|#crNote=Overshoot is the only piece of taste in the whole flow. Fourteen percent is the difference between a toggle that acknowledges you and one that just changes colour.">
+          data-title="Add the swell, and find out the crossing is longer than you said"
+          data-cue="#btnAddMotion" data-cue-label="Click the plus on Motion, choose Scale" data-cue-place="left"
+          data-open="#gLayers,#gMotion" data-collapse="#gStates,#gProps,#gLibrary,#gEffects"
+          data-select="#lrMark" data-pop="#propMenu"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#mxFill,#mxScale,#motSettings,#msScale,#istCross,#barFill,#barScale,#overMark,#endMark"
+          data-hide="#istSel,#propsEmpty,#motEmpty,#msFill"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play|#mxScale=sel|#mxFill=-sel|#barScale=sel|#barFill=-sel|#trkFill=-ist-nolane|#trkScale=-ist-nolane"
+          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.34,1.4,.5,1);--ist-pop:1.14|#barFill=left:0%;width:55%|#barScale=left:0%;width:80%|#endMark=--t:.8"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.32 s|#pStateMut=in On|#pFill=Same as stroke|#stOnDiff=1 difference|#pMotMut=2 crossing|#pOver=320|#curveVal=Ease out back|#trkFillLb=Fill|#trkScaleLb=Scale|#tlLen=320 ms|#endMarkLb=crossing done|#istCrossLb=0.32s &#183; settles|#motNote=This one is not a difference between the states, it is taste, which is why it is the one you have to add. It arrives on Ease out back over 320 rather than 220, because a swell that stops the instant the colour lands has not swelled, it has flinched.">
         <div class="wt-cap comp">
           <span class="wt-n">5</span>
-          <p class="wt-do"><b>Ease out</b>, then <b>14</b> in <b>Overshoot</b></p>
-          <p class="wt-where">Properties, in the Crossing section</p>
-          <p class="wt-res">the bookmark now swells slightly past full size and settles, which is the difference between a toggle that acknowledges you and one that merely changes colour. Those two controls are the only place taste enters this flow, and they are the two a person will actually fiddle with.</p>
+          <p class="wt-do">the <b>plus</b> on Motion, then <b>Scale</b>, and set <b>To</b> to <b>114</b></p>
+          <p class="wt-where">the Motion group header</p>
+          <p class="wt-res">the bookmark now swells slightly past full size and settles, which is the difference between a toggle that acknowledges you and one that merely changes colour. This entry is the opposite of the last one: no difference between the two drawings could have produced it, so it is the one you add. And now look at the strip, because this is the part a column could not have told you: <b>the two bars are not the same length</b>. The colour is finished at 220 and the swell is still settling at 320, so <b>the crossing is 0.32 seconds, not the 0.22 you typed</b>.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Ask for it to happen on a tap"
           data-cue="#selTrig" data-cue-label="Click Trigger, choose On tap" data-cue-place="left"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
-          data-select="#lrMark" data-activate="#easOut" data-pop="#trigMenu"
-          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross,#secTrigger,#trigWarn" data-hide="#istSel,#propsEmpty"
-          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
-          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
-          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.22s &#183; ease out">
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gStates,#gLibrary,#gEffects"
+          data-select="#lrMark" data-pop="#trigMenu"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#mxFill,#mxScale,#motSettings,#msScale,#istCross,#secTrigger,#trigWarn,#barFill,#barScale,#overMark,#endMark"
+          data-hide="#istSel,#propsEmpty,#motEmpty,#msFill"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play|#mxScale=sel|#mxFill=-sel|#barScale=sel|#barFill=-sel|#trkFill=-ist-nolane|#trkScale=-ist-nolane"
+          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.34,1.4,.5,1);--ist-pop:1.14|#barFill=left:0%;width:55%|#barScale=left:0%;width:80%|#endMark=--t:.8"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.32 s|#pStateMut=in On|#pFill=Same as stroke|#stOnDiff=1 difference|#pMotMut=2 crossing|#pOver=320|#curveVal=Ease out back|#trkFillLb=Fill|#trkScaleLb=Scale|#tlLen=320 ms|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.32s &#183; settles">
         <div class="wt-cap comp">
           <span class="wt-n">6</span>
           <p class="wt-do">the <b>Trigger</b> row, and choose <b>On tap</b></p>
           <p class="wt-where">Properties, under <b>Happens on</b></p>
-          <p class="wt-res"><b>This is the hole, and the app says so instead of pretending.</b> A picture dropped into an image tag has no events, so a tap-driven toggle can only be handed over as two states plus a class for the host to swap. Photonz can hand over the crossing; it cannot hand over the tap. Saying that here beats letting somebody discover it after the export.</p>
+          <p class="wt-res"><b>This is the hole, and the app says so instead of pretending.</b> A picture dropped into an image tag has no events, so a tap-driven toggle can only be handed over as two states plus a class for the host to swap. Photonz can hand over the crossing, both bars of it; it cannot hand over the tap. Saying that here beats letting somebody discover it after the export.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Watch the crossing at real size"
           data-cue="#sz16" data-cue-label="Look at the 16 point copy" data-cue-place="bottom"
-          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
-          data-select="#lrMark" data-activate="#easOut"
-          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross,#secTrigger,#trigWarn" data-hide="#istSel,#propsEmpty"
-          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
-          data-css="#istWin=--ist-loop:1.6s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
-          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.22s &#183; ease out">
+          data-open="#gLayers,#gProps,#gMotion" data-collapse="#gStates,#gLibrary,#gEffects"
+          data-select="#lrMark"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#mxFill,#mxScale,#motSettings,#msScale,#istCross,#secTrigger,#trigWarn,#barFill,#barScale,#overMark,#endMark"
+          data-hide="#istSel,#propsEmpty,#motEmpty,#msFill"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play|#mxScale=sel|#mxFill=-sel|#barScale=sel|#barFill=-sel|#trkFill=-ist-nolane|#trkScale=-ist-nolane"
+          data-css="#istWin=--ist-loop:1.6s;--ist-ease:cubic-bezier(.34,1.4,.5,1);--ist-pop:1.14|#barFill=left:0%;width:55%|#barScale=left:0%;width:80%|#endMark=--t:.8"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.32 s|#pStateMut=in On|#pFill=Same as stroke|#stOnDiff=1 difference|#pMotMut=2 crossing|#pOver=320|#curveVal=Ease out back|#trkFillLb=Fill|#trkScaleLb=Scale|#tlLen=320 ms|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.32s &#183; settles">
         <div class="wt-cap comp">
           <span class="wt-n">7</span>
           <p class="wt-do">at the <b>16</b> copy, crossing back and forth</p>
           <p class="wt-where">the Real size card</p>
-          <p class="wt-res">the two artboards never moved, and they should not: they are the drawings. <b>Only the preview animates</b>, which is what keeps the states editable while the crossing is running. At 16 the fill carries the whole message and the overshoot is barely visible, which is an argument for leaning on colour rather than on scale in small toggles.</p>
+          <p class="wt-res">the two artboards never moved, and they should not: they are the drawings. <b>Only the preview animates</b>, which is what keeps the states editable while the crossing is running. At 16 the fill carries the whole message and <b>the swell is barely visible</b>, which is worth knowing before you spend any more of the crossing on it: the longer of your two bars is the one doing the least work at the size this icon will be used.</p>
         </div>
       </li>
 
@@ -594,9 +828,11 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>A toggle is <b>two drawings and a crossing</b>. No keys, no cycle, no duration to lay out, because with two states and one number there is nothing left to describe. The artboards are the states and they never animate; the preview is the only thing that moves.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>A toggle is <b>two drawings and a crossing</b>. You never lay the motion out: make the drawings differ and the entry writes itself, marked <i>from states</i> so you can see it was not yours. The artboards are the states and they never animate; the preview is the only thing that moves.</p></div>
     <div class="c"><div class="lab g2">The consolidation worth having</div><p>This is <b>component variants</b> wearing an icon's clothes. The same list, the same "differs in this state" count, the same crossing. If the app builds icon states and component states separately it will have built the same feature twice and they will drift. See <button class="link" data-target="ui-variants">Variants &amp; properties</button>.</p></div>
     <div class="c"><div class="lab g2">What is missing, plainly</div><p>The <b>trigger</b>. An SVG in an image tag has no events, so the tap belongs to whoever receives the file. The app can export the two states and the crossing; it cannot export the tap, and any mock that draws a working On tap control is lying.</p></div>
+    <div class="c"><div class="lab g2">What the dock is earning here</div><p>One fact, and it is one no column could have held: <b>the two bars are different lengths</b>. The colour is done at 220 milliseconds and the swell is still settling at 320, so the crossing is longer than the field that names it. When overshoot was a bare percentage nothing on screen said that, and a swell that is out of step with the change it decorates is exactly what a twitchy toggle is.</p></div>
+
     <div class="c"><div class="lab g2">Open question</div><p>Should a crossing be <b>one number for both directions</b>, as drawn, or two? On is usually meant to feel quicker than off. Two numbers is more truthful and it doubles the controls on a surface whose whole appeal is that it has almost none.</p></div>
   </div>
 </section>

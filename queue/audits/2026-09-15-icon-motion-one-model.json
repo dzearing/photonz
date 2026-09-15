@@ -1,0 +1,30 @@
+{
+  "feature": "One motion model across all five icon animation pages",
+  "epic": "icon-svg",
+  "summary": "The spinner and the toggle now work the same way as the bell and the badge: Motion is a list you add entries to, sitting beside Effects in the dock, and the timing lives in a dock across the bottom with a bar per animated property on one ruler. Reading the five icon pages in order now shows one product rather than two.",
+  "setup": "The design study, not the app. The dashboard is already running on 127.0.0.1:8791. Open the Icons group in the left nav. 'Build a spinner that never stops' had fallen out of that nav on 2026-09-15 and is back.",
+  "try": [
+    { "do": "Open 'Build a spinner that never stops' and step to 3. Rotation lands in the Motion list and a bar lands on the strip, and the arc is deliberately wrong." },
+    { "do": "Step to 5 and type nothing, just watch: the bar shortens to 800 ms and the playhead speeds up. Judge whether you could have picked 800 from a number field alone." },
+    { "do": "Step to 7 and look at the right hand end of the strip. There is no end mark, only a dashed 'and again' line the playhead crosses and comes back from.", "shot": "2026-09-15-icon-motion-1-spinner.png" },
+    { "do": "Open 'Animate a toggle between two states' and step to 3. Watch the Motion list gain a Fill entry you did not add, badged 'from states'." },
+    { "do": "Step to 5. A second entry, Scale, is the one you DO add, and the two bars on the strip are different lengths.", "shot": "2026-09-15-icon-motion-2-toggle.png" },
+    { "do": "Read the last line of step 5: the crossing is 0.32 seconds, not the 0.22 you typed. Decide whether that is a useful thing to be told or a pedantic one." },
+    { "do": "Open 'Make a bell swing' and 'Draw a checkmark on' straight after, and check that nothing in the set now describes motion as one property picked from a row." }
+  ],
+  "evaluate": [
+    "Does the spinner earn a timing strip, or does one bar on a lane look like ceremony next to two fields?",
+    "The spinner's strip has no end on it, only a line where the cycle starts again and a playhead that crosses it. Does that read as a loop, or does it just look like a strip somebody forgot to finish?",
+    "On the toggle, an entry appears in the Motion list that you did not add. Is 'from states' enough to explain why it is there, or does an entry arriving by itself feel like the app doing something behind your back?",
+    "Is the toggle's 320 ms strip worth the space it takes, given its only job is to show that the swell outlasts the colour?",
+    "Read the five icon pages in order. Do they now read as one feature, and is each one still clearly about its own thing rather than a copy of the bell?"
+  ],
+  "rough": [
+    "These are browser screenshots of the design-study pages served from the dashboard, not app captures. The pages ARE the deliverable, so the picture is the real thing, but no Photonz build was launched and no walk was run for this task.",
+    "I found and fixed a bug in my own first version of both strips: a ruler with N labelled spans measures N times the step, not (N-1) times, so my bars were landing about 15 percent off where the ruler said. Both strips were re-measured in Chrome afterwards and the bar ends, the wrap line and the tick marks now agree to the millisecond.",
+    "Each step now opens only the dock groups it is about, because with Layers, States, Properties, Effects and Motion all open the Motion entry's own settings fell below the fold. That fixes the symptom the earlier audit reported, and it means the dock rearranges itself as you step, which is honest for a walkthrough and would be irritating in a real app.",
+    "The timing bar keeps white text on a purple gradient that fades out to the right, so in light theme the right hand grip is nearly invisible. That is the shared bar style the bell and badge pages already use, so it is one fix in one place rather than a thing wrong with these two pages.",
+    "The property menu markup is still duplicated per page rather than living in shared/components. I left it: the five menus differ in every row's value, in which rows exist, and in a closing note that argues each page's own point, so folding it would move the duplication into an attribute rather than remove it. The curve menu was worth sharing because the list is genuinely identical; this one is not.",
+    "I changed two sentences on 'One ruler or two' that my own rebuild made untrue, one saying a toggle has no duration to sit on and one saying the crossing has a single duration. The rest of that page's argument is unaffected and still stands."
+  ]
+}
