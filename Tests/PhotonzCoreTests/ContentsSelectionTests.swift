@@ -291,6 +291,58 @@ struct ContentsSelectionTests {
         #expect(contents.flowsDifferNote.hasPrefix("One pick reaches all."))
     }
 
+    // MARK: - Four sides, several groups
+
+    /// What the one Padding row and the four in its popout read when the sides
+    /// disagree BOTH ways at once: within one group, and between two groups.
+    ///
+    /// The row itself has no honest number in that case and says so. Each of
+    /// the four reads only its OWN side across the pick, so the two that do
+    /// agree still show their number: a popout saying Mixed four times over one
+    /// disagreement would be hiding three numbers it knows.
+    @Test("Sides that differ within a group and between groups each answer for themselves")
+    func fourSidesAcrossSeveralGroups() {
+        var f = fixture()
+        f.doc.setGroupLayout(ids: [f.left, f.right], kind: .stack)
+        f.doc.updateGroupLayout(id: f.left) {
+            $0.padding = GroupPadding(top: 10, right: 16, bottom: 24, left: 16)
+        }
+        f.doc.updateGroupLayout(id: f.right) {
+            $0.padding = GroupPadding(top: 10, right: 16, bottom: 8, left: 16)
+        }
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        // No one room for the row to show: uneven inside each, and different
+        // between the two.
+        #expect(contents.padding.isMixed)
+        #expect(contents.padding.value == nil)
+        // The three sides they agree on still read their number.
+        #expect(contents.padding(.top).value == 10)
+        #expect(contents.padding(.right).value == 16)
+        #expect(contents.padding(.left).value == 16)
+        // Only the one they disagree on says so.
+        #expect(contents.padding(.bottom).value == nil)
+        #expect(contents.padding(.bottom).isMixed)
+    }
+
+    /// And the way back: one number over the row levels every side of every
+    /// picked group, so the row goes back to showing that number on its own.
+    @Test("One number over the row levels every side of every picked group")
+    func oneNumberLevelsThemAll() {
+        var f = fixture()
+        f.doc.setGroupLayout(ids: [f.left, f.right], kind: .stack)
+        f.doc.updateGroupLayout(id: f.left) {
+            $0.padding = GroupPadding(top: 10, right: 16, bottom: 24, left: 16)
+        }
+        f.doc.updateGroupLayout(id: f.right) { $0.padding = GroupPadding(4) }
+        _ = f.doc.updateGroupLayout(ids: [f.left, f.right]) { layout, _ in layout.padding = GroupPadding(12) }
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        #expect(!contents.padding.isMixed)
+        #expect(contents.padding.value?.uniform == 12)
+        for side in GroupPadding.Side.allCases {
+            #expect(contents.padding(side).value == 12)
+        }
+    }
+
     @Test("With arrangements switched off nothing is arranging anything")
     func arrangementsOff() {
         var f = fixture()

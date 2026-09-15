@@ -24,7 +24,7 @@
     { "do": "type", "text": "50" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Twist", "in": "Corner Radius" },
+    { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "key", "key": "escape" },
     { "do": "waitFor", "condition": "tool", "value": "select" },

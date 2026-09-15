@@ -1,0 +1,30 @@
+{
+  "feature": "One row for a number that has four sides",
+  "epic": "ui-building",
+  "summary": "Padding and Corner Radius are each one row now: type a number and every side or corner takes it, and a small control beside the number opens the four in a popout over the row instead of folding four more rows into the panel. While they differ the row says Mixed, the word every other control in the dock says.",
+  "setup": "Photonz Dev, Experiments window, release Next. Auto layout and the Appearance/Effects split are on by default there. Nothing new to turn on.",
+  "try": [
+    { "do": "Draw two rectangles, pick both, and press Layer > Stack Selection." },
+    { "do": "Type 16 into Padding in the Layout section. Every side takes it, in one row." },
+    { "do": "Press the small chevron just right of the Padding box." },
+    { "do": "Type 24 into Bottom in the popout that comes out, then press Escape." },
+    { "do": "Read the Padding row, and rest the pointer on it." },
+    { "do": "Type 16 back into the Padding row." },
+    { "do": "Pick a single rectangle, pull Corner Radius part way, then press the chevron beside its readout and set Bottom Right and Bottom Left to 0." }
+  ],
+  "evaluate": [
+    "Is the popout the right place for the four, or did folding them into the panel make them easier to get back to?",
+    "The row now says Mixed where it used to say 10/16/10/16. You asked for Mixed. Having lived with it for a minute, do you miss being able to read the four numbers without opening anything, or is the tooltip enough?",
+    "The four are laid out in the shape they describe, a cross for sides and a square for corners, rather than as four rows named Top, Right, Bottom, Left. Does that read faster?",
+    "Is the chevron findable? It is a small glyph after the number box rather than a twist in front of the row's name.",
+    "Corner Radius no longer has a bold folding heading, so it reads like Opacity again. Is that the right weight for it?"
+  ],
+  "rough": [
+    "NOT SEEN RUNNING. The Mac's screen was locked for this whole task, so every walk returned status locked, no window was ever drawn and no picture of any kind could be taken. There are no screenshots in this audit, real or offscreen. A full sweep is requested and will run when the screen is unlocked.",
+    "One behaviour I could not check by hand: pressing the chevron a second time while the popout is open. Escape and a click away both shut it for certain; whether that press shuts it or shuts and reopens it depends on whether macOS hands the click to the button after dismissing, and no walk could run to find out. Every walk that had to close a popout now uses Escape rather than a second press.",
+    "The height claim: the four padding side rows cost a measured 108 points of the Layout section (measured by layout-fits-walk on 2026-09-06 and recorded in docs/design/ui-building.md). They now cost nothing at all, because the popout is a window of its own. The four corner rows were the same four fields at the same spacing plus a 4 point gap, so about 110 points; that figure is computed from the row metrics rather than separately measured, because no walk could run.",
+    "The row also got narrower at rest: the Padding box used to grow to 148 points to hold 10/16/10/16, and now stays at the 62 every other number box in the dock uses.",
+    "The same pattern applies in a third place and was done there too: the room knob on a copy of a component. Anywhere else a number turns out to have four of something should reach for FourSidedPopout rather than build a fifth grid of boxes.",
+    "Nothing became unreachable: every side and every corner is still typed, in fields with the same names, the same arrow keys and the same single undo step, and still reaches every picked layer at once. Setting all four back to one number returns the row to showing that number with nothing to close."
+  ]
+}

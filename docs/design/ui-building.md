@@ -2295,15 +2295,15 @@ room is four numbers, and one of them can still be typed once.
 **One field, and a chevron beside it.** The Layout section still shows a single
 **Padding** field, because the same room all round is what most things want:
 type 16 and every side gets 16. The chevron next to the word opens **Top**,
-**Right**, **Bottom** and **Left** underneath it, indented, each its own typed
-number with the same keys as every other. Clockwise from the top, the order
-anybody who has written a CSS shorthand already carries.
+**Right**, **Bottom** and **Left**, each its own typed number with the same keys
+as every other. Clockwise from the top, the order anybody who has written a CSS
+shorthand already carries. (They opened UNDERNEATH the row until 2026-09-15,
+when they moved into a popout over it: see "one row for a number that has four
+sides" below.)
 
-**Uneven room shows itself.** Arrive at a stack whose sides differ and the four
-are already open, because the single field has no honest number to put in that
-case: it goes empty and reads **Mixed**, with the four numbers in its tooltip,
-and typing one number there evens them all out again. Closing the four by hand
-is allowed and remembered until the selection moves on.
+**Uneven room shows itself.** A stack whose sides differ has no honest number to
+put in the single field, so it reads **Mixed**, with the four numbers in its
+tooltip, and typing one number there evens them all out again.
 
 **The box grows to hold it.** A stack that is as big as its contents adds the
 near edge's room where the contents start and the far edge's to the size, so
@@ -3808,3 +3808,65 @@ Model in `ExactPlacement.swift` (the subject, the heading, and where the popover
 points, all pure); the app layer in `EditorState+ExactPlacement.swift` and
 `ExactPlacementPopover.swift`. Walks open the numbers with
 `{ "do": "action", "action": "positionAndSize" }`.
+
+## Landed: one row for a number that has four sides (Next, 2026-09-15)
+
+> "Paddings should have a simplified way to set paddings with one row, like
+> maybe an input and a little dropdown next to it. type 14, you get 14 on all
+> sides, hit the dropdown and a popout lets you type individual values and input
+> shows mixed or something. But the panes are now completely cluttered and hard
+> to read and unpredictable."
+
+Room inside a group's edges and the rounding of a box are the same question
+asked twice: **one number nearly always, four numbers once in a while**. The
+panel answered it twice, differently, and both answers folded four more rows
+open underneath the row that asked. Padding's four cost a measured 108 points of
+the Layout section; Corner Radius's four cost about the same under Appearance;
+and the right hand panel already does not fit its own contents at any window
+size (`work-out-whether-the-right-hand-pane-is-carrying`, 2026-09-15: 1052
+points of sections against a 968 point viewport).
+
+**One row, always.** A number that means all four, and a small control beside it
+that opens the four **in a popout over the row**. The panel is exactly as tall
+with the four open as with them shut, so asking for room on one edge no longer
+pushes whatever you came to the panel for off the bottom of it.
+
+**The four are laid out in the shape they describe.** Room makes a cross around
+a little box — Top above, Left and Right either side, Bottom below. Rounding
+sits at the four corners of a square. Nobody has to already carry the clockwise
+order to know which number is which, which four stacked rows named Top, Right,
+Bottom, Left never told you.
+
+**The row says Mixed.** While the four differ it shows the one word every other
+control in the dock shows about a value that is not one value (`MixedValue`,
+`MixedLook`), at the one strength they are all drawn at. It used to show the
+four numbers run together, `10/16/10/16`, because the only other place they
+could be read was four rows that were usually shut; that reason is gone, since
+the four are one press away and the row's own tooltip names them in words. Type
+a number over the word and every side takes it.
+
+**It comes back to simple on its own.** Set all four to the same number and the
+row shows that number again. There is nothing to close and nothing to switch
+back.
+
+**Nothing became unreachable.** Every side and every corner is still typed, in
+the same fields, with the same arrow keys and the same single undo step, and
+still reaches every picked layer at once.
+
+**Where it lives.** `FourSidedNumber` in `PhotonzCore` holds the two rules that
+must not drift — the row's stand-in is the house word, and there is one sentence
+telling you how to get back to one number — and is tested in
+`FourSidedNumberTests`. `FourSidedPopout` and `FourSidedButton` in the app layer
+draw it. Three rows use it: **Padding** in the Layout section
+(`ArrangementInspector`), **Corner Radius** under Appearance
+(`AnnotationInspector`), and a **room knob on a copy of a component**
+(`ComponentPanel`). Walked by `Scripts/playtest/four-sided-popout-walk.json`,
+with `layout-fits-walk.json` reading the dock's offsets back to show the panel
+does not grow when the four open.
+
+**This is a pattern, not a control.** The next number that turns out to have
+four of something reaches for `FourSidedPopout` rather than building a fifth
+grid of boxes.
+
+Not in this slice: linking a side to a spacing token, dragging room out on the
+canvas, and a lock that ties opposite sides together while you type.

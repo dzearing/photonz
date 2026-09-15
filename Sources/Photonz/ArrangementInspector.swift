@@ -36,11 +36,11 @@ struct ArrangementInspector: View {
     /// document and no two rows can disagree about who they are about.
     let contents: ContentsSelection
 
-    /// Whether the four sides were opened or closed by hand, and nil while
-    /// nobody has said: room that already differs shows itself, and even room
-    /// stays one field. Forgotten when the selection moves on, so arriving at a
-    /// card with 24 at the bottom always shows the 24.
-    @State private var sidesOpen: Bool?
+    /// Whether the four sides are open in their popout. They open over the row
+    /// they belong to and shut again on Escape, on a click away, and whenever
+    /// the selection moves on: a popout is anchored to the row it came out of,
+    /// so it cannot be left hanging over a row that is now about something else.
+    @State private var sidesOpen = false
 
     /// Whether each axis' smallest and largest are showing, and nil while
     /// nobody has said: an axis that already carries one shows it. Forgotten
@@ -86,7 +86,7 @@ struct ArrangementInspector: View {
             }
         }
         .onChange(of: ids) {
-            sidesOpen = nil
+            sidesOpen = false
             widthLimitsOpen = nil
             heightLimitsOpen = nil
         }
@@ -447,14 +447,23 @@ struct ArrangementInspector: View {
 
     /// The room kept clear inside the edges.
     ///
-    /// One field, because one number all round is what most things want, and a
-    /// twist in front of it that opens the four sides for the things that do not:
-    /// a card 16 in from the left, 12 down from the top and 24 up from the
-    /// bottom is ordinary, and it used to be buildable only by nudging pieces
-    /// the stack then put back. The sides open themselves whenever they
-    /// disagree — one group's own four sides, or two groups against each other
-    /// — so room typed on one side is never hidden behind a chevron and never
-    /// shows as a single number that is not true.
+    /// ONE row, always: a number that means all four sides, and a small control
+    /// beside it that opens the four in a popout (`FourSidedPopout`). Typing 14
+    /// here gives every side 14, which is what somebody setting room means
+    /// nearly every time; the popout is for the card that is 16 in from the
+    /// left, 12 down from the top and 24 up from the bottom.
+    ///
+    /// The four used to fold open UNDERNEATH this row, four more rows of the
+    /// panel, which is the shape the user called the laziest possible UI and
+    /// which cost the Layout section about a hundred points of a panel that
+    /// does not fit its own contents at any window size. The popout costs the
+    /// panel nothing at all.
+    ///
+    /// While the sides differ the field says the house word, the one every
+    /// other control in the dock says about a value that is not one value, and
+    /// the four numbers are in this row's own tooltip in words and a press away
+    /// in the popout. Setting all four back to the same number puts the number
+    /// back in the box on its own, with nothing to close.
     ///
     /// Under it, one line saying what the number will DO to this group
     /// (`RoomAnswer`). Room has two honest answers that look like opposites: a
@@ -468,13 +477,11 @@ struct ArrangementInspector: View {
     private func padding() -> some View {
         let reading = contents.padding
         let room = reading.value ?? .none
-        let open = showsSides()
         HStack(spacing: 6) {
-            foldHead("Padding", isOpen: open,
-                     help: open
-                        ? "Hide the four sides and keep the room they were given."
-                        : "Give this \(noun) different room on each of its four sides.",
-                     control: "Each side", detail: "Layout") { sidesOpen = !open }
+            Text("Padding")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
             Spacer(minLength: 8)
             LayoutNumberField(
                 title: "Padding", value: reading.isMixed ? nil : room.uniform,
@@ -482,28 +489,39 @@ struct ArrangementInspector: View {
             ) { value in
                 editorState.updateArrangement(ids: ids) { $0.padding = GroupPadding(value) }
             }
-        }
-        .playtestField("Padding")
-        if open {
-            // Behind the rule an effect's settings sit behind, hung on the
-            // twist that opened them. A plain 20pt step said "these are
-            // further in" and nothing else: which row they belonged to was
-            // left for you to work out from the order.
-            OwnedSettings(owner: "Padding") {
-                ForEach(GroupPadding.Side.allCases, id: \.self) { side in
-                    number(side.title, reading: contents.padding(side),
-                           help: "The room kept clear inside the \(noun)'s \(side.title.lowercased()) edge.") { value in
-                        editorState.updateArrangement(ids: ids) { $0.padding[side] = value }
-                    }
-                }
+            FourSidedButton(
+                isOpen: $sidesOpen,
+                help: "Give this \(noun) different room on each of its four sides.",
+                control: "Each side", detail: "Layout"
+            ) {
+                FourSidedPopout(heading: "Padding", shape: .sides, numbers: sideNumbers())
             }
         }
+        .playtestField("Padding")
         if let answer = contents.roomAnswer {
             Text(answer.sentence)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
                 .playtestControl("Room answer", detail: answer.sentence)
+        }
+    }
+
+    /// The four sides as the popout takes them: clockwise from the top, each
+    /// reading the WHOLE pick on its own. Two cards that keep the same room
+    /// beside and different room above still show their beside numbers, because
+    /// a popout saying Mixed four times over one disagreement would be hiding
+    /// three numbers it knows.
+    private func sideNumbers() -> [FourSidedPopout.Number] {
+        GroupPadding.Side.allCases.map { side in
+            let reading = contents.padding(side)
+            return FourSidedPopout.Number(
+                title: side.title,
+                help: "The room kept clear inside the \(noun)'s \(side.title.lowercased()) edge.",
+                value: reading.value,
+                commit: { value in
+                    editorState.updateArrangement(ids: ids) { $0.padding[side] = value }
+                })
         }
     }
 
@@ -514,38 +532,19 @@ struct ArrangementInspector: View {
         }
         return room.isUniform
             ? "The room kept clear inside the \(noun)'s edges, on all four sides."
-            : "\(room.inWords). Type one number to give every side the same."
-    }
-
-    /// Whether the four sides are showing. Closed until somebody opens them.
-    ///
-    /// They used to open themselves whenever the sides differed, because the
-    /// single field said only "Mixed" and the 24 somebody typed at the bottom
-    /// was then nowhere on screen. That stopped being true on 2026-09-04: the
-    /// closed field reads the four numbers themselves, `10/16/10/16`, and
-    /// typing one number over it still gives every side the same. So the four
-    /// rows were spending 108 points of a 489 point section saying what the
-    /// row above them already says, which is what pushed everything below
-    /// Layout off the bottom of the panel.
-    private func showsSides() -> Bool {
-        sidesOpen ?? false
+            : "\(room.inWords). " + FourSidedNumber.levelUp(part: "side")
     }
 
     /// What stands in the single field while it has no one number to show.
     ///
-    /// With the sides OPEN it is the house word for a value that is not one
-    /// value, because the four numbers are already on the rows underneath and
-    /// writing them twice is noise. With them CLOSED and ONE group picked, the
-    /// field is the only place left on screen where the 24 somebody typed at
-    /// the bottom can be read, so it holds the four numbers themselves. Two
-    /// groups that keep different room have no four numbers in common either,
-    /// so that case is the word. Typing over any of them still gives every side
-    /// the same number.
+    /// The house word, always. It used to be the four numbers themselves,
+    /// `10/16/10/16`, because the four rows that held them were usually shut
+    /// and the field was then the only place a corner typed on its own could be
+    /// read. The popout took that job: the numbers are one press away, they are
+    /// in the tooltip in words, and the row goes back to saying what every
+    /// other control in the dock says (`FourSidedNumber`).
     private func standIn(_ reading: PlacementReading<GroupPadding>) -> String {
-        guard let room = reading.value, !showsSides(), !room.isUniform else {
-            return MixedValue.text
-        }
-        return room.shorthand
+        FourSidedNumber.standIn(uniform: reading.isMixed ? nil : reading.value?.uniform)
     }
 
     /// One axis' Hug-or-Fixed row, and behind a twist in front of its name, the

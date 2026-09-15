@@ -144,11 +144,28 @@
     {
       "do": "describe",
       "stage": "1-sides-differ",
-      "note": "the top has 24 points of room and the other three have none, so Padding has no one number and must say Mixed the way every other control does"
+      "note": "the top has 24 points of room and the other three have none, so Padding has no one number and must say Mixed the way every other control does. The popout is still open over it"
     },
     {
       "do": "snapshot",
       "name": "1-padding-mixed"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1b-shut",
+      "note": "the popout shut: the row is still one row and still says Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-padding-mixed-shut"
     },
     {
       "do": "focus",

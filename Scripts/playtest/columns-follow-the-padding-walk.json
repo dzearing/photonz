@@ -51,7 +51,9 @@
     { "do": "type", "text": "12" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-uneven-room", "note": "room that differs per side: 12 on the left, 40 everywhere else, and the columns honour each side" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-uneven-room", "note": "room that differs per side: 12 on the left, 40 everywhere else, and the columns honour each side. The popout is shut again and the Padding row says Mixed" },
     { "do": "panel", "stage": "uneven-room" },
     { "do": "snapshot", "name": "padding-3-uneven" }
   ]
