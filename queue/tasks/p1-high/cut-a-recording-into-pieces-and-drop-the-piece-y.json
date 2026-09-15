@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:21:21.119Z",
-  "updated": "2026-09-15T12:14:53.265Z",
+  "updated": "2026-09-15T13:10:18.083Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED ON A CARD ON PURPOSE: the video epic is staged later and this task exists so the question of whether video starts now has something to attach to. Do not build it until the card is answered.\n\nWhat exists today: PhotonzCore has Recording.swift and VideoEdit.swift (VideoTrim, in and out points, clamping, push semantics, VideoCrop), and the app has VideoEditorState, VideoEditorView, TrimTimeline and PlaybackScrubber. AppCoordinator.openRecording opens a recording in that editor; copyRecording exports mp4 or gif through the trim and crop. So one clip with two handles is real and shipped; a list of pieces is not, and the model change is the substance of the work.\n\nMock: docs/design/mocks/pages/video-cut-wt.html. Keep the cut list in PhotonzCore as a value type with tests (a recording plus an ordered list of kept ranges), the way VideoTrim already is, and leave the AVFoundation plumbing app-side.",
@@ -61,6 +61,44 @@
     {
       "t": "2026-09-15T12:14:53.264Z",
       "note": "seq 30 -> 50"
+    },
+    {
+      "t": "2026-09-15T12:40:02.780Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T12:41:19.378Z",
+      "note": "ADVERSARIAL REVIEW, before building. The mock (docs/design/mocks/pages/video-cut-wt.html) is an eight-step NLE walkthrough and building it literally would be building a different app. What it assumes the video editor cannot deliver: a multi-track timeline (today there is one clip and one scrubber), a right dock with Properties and Library (the video window has no dock at all, only a floating QuickTime-style controller), a Blade TOOL and a Select tool (the video window has no tool bar), drag-to-move clips with snapping, and detachable audio. Five of the eight steps are about machinery that does not exist. What I am cutting and why: (1) Detach audio as step 2 is a trap for the job the task names. Cutting a fumble out of a screen recording almost always wants the sound cut with it, and putting a new concept in front of the first cut means nobody gets to the cut. Dropped. (2) Blade as a modal tool costs three actions to make one cut: pick tool, click clip, pick Select again. The task asks for one key, which is also the shortest thing that delivers the value. B at the playhead, no tool, no mode. (3) Drag the piece left until it snaps is the mock's own open question, and it opens a GAP first, which on a single-recording timeline is a hole of black nobody wants. Because the model here is an ordered list of KEPT ranges, deleting a piece closes up by construction: there is never a gap to drag shut, so snapping has nothing to do. (4) A separate clip selection (Select tool, click the piece) is a second state to keep straight. Instead the selected piece is simply the piece the playhead is in, so clicking a piece selects it because clicking a time moves the playhead there, and Delete drops what you are looking at. Nothing to learn, nothing to get out of sync. First-time-user walk: play, hear the fumble, press B, see the strip split where you are, click the bad half, press Delete, play. Six actions, no new vocabulary."
+    },
+    {
+      "t": "2026-09-15T13:10:17.829Z",
+      "note": "BUILT. PhotonzCore VideoCutList (new, VideoCuts.swift): a source duration plus an ordered list of kept pieces, with split/removePiece/keep and the timeline-to-source mapping, 27 tests. VideoEdits gained a cuts field and VideoSaveState compares it; an UNCUT recording still travels as an ordinary VideoTrim, so the sidecar, the save-state comparison and both exporters are untouched until a recording actually has a cut in it. PhotonzMedia: VideoCompositionBuilder (new) plus exportMP4(cuts:) and exportAnimated(cuts:). App: VideoEditorState now holds a cut list instead of an applied window, B cuts at the playhead, Delete drops the piece the playhead is in, undo covers both; CutStrip (new) replaces PlaybackScrubber once there is more than one piece; Video menu gained Split at Playhead and Delete This Piece. Behind next-cut-a-recording, on by default in Next."
+    },
+    {
+      "t": "2026-09-15T13:10:17.872Z",
+      "note": "KEY DECISION, playback across a join: the player is fed an AVComposition of the kept pieces rather than being told to skip the dropped ones. A skipping player has to notice it has arrived, stop, seek and start again, and every one of those is a visible hitch at the exact moment the person is judging their cut. In a composition the frames either side of a cut are neighbours in one asset. A happy side effect: the composition's clock IS timeline time, which deleted the appliedIn/appliedOut offset bookkeeping the editor used to carry through every seek."
+    },
+    {
+      "t": "2026-09-15T13:10:17.915Z",
+      "note": "SECOND ADVERSARIAL REVIEW, on the built code. Three real things found and fixed before commit: (1) two composition rebuilds started close together (delete then undo) could finish in either order, leaving the player showing pieces the recording no longer had, so rebuilds now carry a generation and a stale one is dropped; (2) cutAtPlayhead was raising the trim guide's trimStartMoved event, which would have advanced a trim tutorial on a cut, removed; (3) VideoEdits.keptPieces took a sourceDuration it never used, removed."
+    },
+    {
+      "t": "2026-09-15T13:10:17.957Z",
+      "note": "left rough: a cut made DURING playback lands where currentTime reads, and the periodic observer updates that about 20 times a second, so it can sit up to 50ms behind the frame you reacted to. It is always early rather than late, which is the forgiving direction for cutting a fumble out, and pausing and stepping with the arrows is frame-exact. Did not earn a task."
+    },
+    {
+      "t": "2026-09-15T13:10:17.998Z",
+      "note": "left rough: deleting a piece pauses playback. Carrying on through the delete would stall while the player is re-pointed, so stopping on the join makes that a choice instead of a hitch, but it does cost a press of space after every delete. It is in the audit's evaluate list as a question for the user rather than filed as a defect."
+    },
+    {
+      "t": "2026-09-15T13:10:18.040Z",
+      "note": "FILED: keep-the-pieces-visible-while-trimming-a-recordi (p2) — opening the trim handles over a cut recording hides the pieces, because bottomRow shows TrimTimeline or CutStrip and never both. Not filed and not folded: the mock's detach-audio, blade tool, clip dragging and snapping, all of which the adversarial review argued out of this slice and which belong to later video-cutting work rather than to a defect."
+    },
+    {
+      "t": "2026-09-15T13:10:18.081Z",
+      "note": "PhotonzCore VideoCutList + composition playback + the piece strip + cut/delete keys, behind next-cut-a-recording (on by default in Next). Commit 3d6271c3. Verified by 32 new tests, full suite green at 6860: the media tests cut real MP4s and read the exported frames' brightness back to prove the dropped seconds are genuinely gone, the join is contiguous in the composition, saving bakes the pieces while keeping the original reversible, and a GIF samples no dropped frame. NOT verified on screen: the Mac's screen was locked for the whole task, so no walk could run and no capture was possible; the new walk Scripts/playtest/cut-a-recording-walk.json is written and a sweep is requested for it and the three video walks the playback change touches. Audit: queue/audits/2026-09-15-video-cutting.json."
     }
-  ]
+  ],
+  "started": "2026-09-15T12:40:02.779Z",
+  "completed": "2026-09-15T13:10:18.082Z"
 }

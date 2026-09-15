@@ -1,0 +1,27 @@
+{
+  "id": "keep-the-pieces-visible-while-trimming-a-recordi",
+  "title": "Keep the pieces visible while trimming a recording",
+  "goal": "Once you have cut a recording into pieces, opening the trim handles hides them: the line under the picture goes back to one plain bar, so you are dragging the start and end of something you can no longer see the shape of. Show the pieces while trimming, so a person can tell which of them a handle is about to eat into.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2640,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T13:10:09.639Z",
+  "updated": "2026-09-15T13:10:09.642Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the audit queue/audits/2026-09-15-video-cutting.json. Today Sources/Photonz/VideoEditorView.swift bottomRow shows TrimTimeline while state.isTrimming and CutStrip otherwise, so the two never appear together. The model side already composes correctly: VideoEditorState.applyTrim calls VideoCutList.keep(fromTimeline:toTimeline:), which narrows the pieces the window crosses and drops the rest (tested in VideoCutsTests keepTimelineRange). So this is entirely a drawing job: TrimTimeline needs to draw the piece blocks CutStrip draws, under its handles and dim mask.\n\nNOT VERIFIED ON SCREEN: the Mac was locked for the whole of the task that built cutting, so nobody has yet looked at either strip in a drawn window. Run Scripts/playtest/cut-a-recording-walk.json first.",
+  "acceptance": [
+    "Opening the trim handles on a recording with more than one piece still shows the pieces, not a single bar.",
+    "Dragging a handle past a join is legible: it is clear which pieces the kept window still covers and which are being dropped.",
+    "Pressing Done keeps exactly the pieces the handles were showing as kept."
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T13:10:09.641Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "feature": "Cut a recording into pieces and drop one",
+  "epic": "video-cutting",
+  "summary": "A recording used to have a start handle and an end handle, so losing something in the middle meant recording it again. Now one key puts a cut where the playhead is, the line under the picture becomes the pieces the recording is made of, and Delete throws away the one you are watching.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Cut a recording into pieces and drop the one you do not want\" (next-cut-a-recording), on by default. You need a recording: use the menu-bar recorder, or open any clip from the capture history.",
+  "try": [
+    { "do": "Open a recording from the capture history. It plays, and the line under the picture is the plain progress bar it has always been." },
+    { "do": "Let it play to somewhere in the middle and press B." },
+    { "do": "Look at the line: it is now two blocks meeting where you pressed, and the one the playhead is in is lit up." },
+    { "do": "Click the block you do not want. The playhead goes there and that block lights up instead." },
+    { "do": "Press Delete." },
+    { "do": "Press space and watch what is left play from end to end." },
+    { "do": "Press Command Z twice: once brings the piece back, once takes the cut back." },
+    { "do": "Make a cut, drop a piece, then press Command S and reopen the recording from history." }
+  ],
+  "evaluate": [
+    "Pressing B while it plays: did the cut land where you heard it, or noticeably behind?",
+    "When you played across the join, did you see or hear anything at the seam, or did it run straight through?",
+    "Was it obvious which piece Delete would take before you pressed it?",
+    "Deleting pauses playback and leaves the playhead on the join. Is that where you wanted to be, or did you want it to keep playing?",
+    "Two blocks with a gap between them: does that read as one recording cut in two, or as two separate clips?"
+  ],
+  "rough": [
+    "NOTHING HERE WAS PHOTOGRAPHED. The Mac's screen was locked for the whole of this task, so no walk could run and macOS refuses every capture. The strip, the highlight and the key handling are unverified on screen: what IS verified is the model and the files, by 32 tests that cut real MP4s and read the exported frames back to prove the dropped seconds are gone and the join is contiguous. A walk (cut-a-recording-walk.json) is written and a sweep is requested.",
+    "Trim mode does not show the pieces. Open the trim handles over a cut recording and the timeline goes back to one plain bar, so you lose sight of your cuts while trimming. Trimming across them works correctly, you just cannot see them.",
+    "The cut lands where the playhead reads, which updates about 20 times a second, so a cut made during playback can sit up to 50ms behind the frame you reacted to. It always lands slightly early rather than late, which is the forgiving direction, but it is not frame-exact from a moving playhead. Pausing first and stepping with the arrows is.",
+    "Deleting pauses. Rebuilding what the player shows is not instant, so carrying on playing through a delete would stall rather than flow; stopping on the join makes that a choice instead of a hitch. It does mean every delete costs a press of space afterwards.",
+    "I did not build most of the mock (docs/design/mocks/pages/video-cut-wt.html). It teaches eight steps: detach the audio, pick up a Blade tool, click the clip, pick the Select tool, drag an edge, drag the piece until it snaps. That needs a multi-track timeline, a right hand dock and a tool bar, none of which the recording window has. The bigger reason is that its last two steps open a gap and then drag it shut by hand, which the mock itself files as an open question; because a piece here is a KEPT range, dropping one closes up by construction and there is no gap to drag. Detaching audio first is also the wrong first move for a screen recording, where cutting the fumble almost always means cutting what was said over it."
+  ]
+}

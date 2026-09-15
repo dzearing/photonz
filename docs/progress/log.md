@@ -15463,3 +15463,40 @@ tasks in a row, so no walk has run since the timing strip landed;
 requested and pending.
 
 Next: slice 5 of the icon motion study, animated SVG export.
+
+## 2026-09-15 — Cutting a recording into pieces
+
+Video editing starts for real. A recording had a start handle and an end
+handle, so losing something in the middle meant recording it again. Now `B`
+puts a cut where the playhead is, the line under the picture becomes the
+pieces the recording is made of, and Delete drops the one you are watching.
+
+- `PhotonzCore/VideoCuts.swift`: `VideoCutList`, a source duration plus an
+  ordered list of kept `VideoPiece`s, with `split` / `removePiece` / `keep`
+  and the timeline↔source mapping. A `VideoTrim` is the same thing with one
+  piece, so an uncut recording still travels every existing path as a trim and
+  only a recording with a cut IN it carries a cut list.
+- `PhotonzMedia/VideoCompositionBuilder.swift` plus `exportMP4(cuts:)` and
+  `exportAnimated(cuts:)`. **The player plays an `AVComposition` of the kept
+  pieces** rather than being told to skip the dropped ones: a skipping player
+  has to notice it has arrived, stop, seek and start again, and each of those
+  is a visible hitch at the moment the person is judging their cut. The
+  composition's clock is timeline time, which deleted the `appliedIn`/
+  `appliedOut` offset bookkeeping `VideoEditorState` used to carry.
+- `CutStrip` replaces `PlaybackScrubber` only once there is more than one
+  piece, so an untouched recording looks exactly as it always did. There is no
+  separate clip selection: the piece under the playhead is the one Delete
+  takes.
+- Behind `next-cut-a-recording`, on by default in Next.
+
+**Not verified on screen.** The Mac's screen was locked for the whole session,
+so no walk could run and macOS refuses every capture. What is verified is the
+model and the files: 32 new tests, the media ones cutting real MP4s and
+reading the exported frames' brightness back to prove the dropped seconds are
+gone and the join is contiguous. `Scripts/playtest/cut-a-recording-walk.json`
+is written and a sweep is requested for it and for the three video walks the
+playback change touches.
+
+Next: run that sweep once the screen is unlocked, then
+`keep-the-pieces-visible-while-trimming-a-recordi` — opening the trim handles
+over a cut recording currently hides the pieces.
