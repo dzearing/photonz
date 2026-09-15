@@ -737,7 +737,7 @@ public enum TutorialGuides {
     //
     // Build a piece of UI once, fetch it as often as you like, and change one
     // copy without cutting it loose. Four guides in the order the job is done
-    // in: make one, use it, override one, and hold two looks under one name.
+    // in: make one, use it, override one, and give it the states it needs.
     //
     // The hard idea, and the reason the last two guides exist at all, is what a
     // copy OWNS. A copy's contents are not its own: they are refilled from the
@@ -921,74 +921,100 @@ public enum TutorialGuides {
                 prepare: [.showPanel, .revealTarget]),
         ])
 
-    /// A component holds more than one drawing of itself, and a copy picks
-    /// which one it shows.
+    /// The four states a button really has, all under one name.
     ///
     /// The looks are the options of the component's VARIANT property, which is
     /// one row of its Properties list (`ComponentVariantProperty`). The guide
     /// keeps its id, because an id is what a saved place in a track points at,
     /// and nobody reads it.
+    ///
+    /// Nothing in the model knows what hovering is, and this guide does not
+    /// pretend otherwise. A state is a CONVENTION: you give the component's own
+    /// question a name, and each look under it is named after a state. Both
+    /// halves of that are shipped controls, which is why the guide renames the
+    /// question to State in step four. Without that rename the guide would say
+    /// "state" seven times while the panel said Variant, which is the same
+    /// failure as teaching a word the app retired.
+    ///
+    /// Why four rather than two, which is what it taught until 2026-09-15: a
+    /// button with an on look and an off look makes the second look read as an
+    /// exception. Four makes it read as the set it is, and the thing you are
+    /// really being taught, which is that a state starts as an exact copy and
+    /// differs in one fact, only lands when it is done more than once.
+    ///
+    /// The eight steps are the whole budget the track's tests allow, so two
+    /// things that were in the first draft are said rather than done: pressing
+    /// Apply to Other Variants for real (it needs a piece selected INSIDE one
+    /// drawing and a difference to carry, or the row is dimmed), and a step of
+    /// its own for picking a copy before switching it.
     public static let componentVersions = TutorialGuide(
         id: "component-versions",
         track: .components,
-        title: "One name, two looks",
-        summary: "A button needs a disabled look too. Both live under one component.",
+        title: "A button in all its states",
+        summary: "Resting, hovered, pressed and disabled, all under one name so they cannot drift apart.",
         minutes: 3,
         sample: .componentCopies,
         requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.libraryFlag,
                    FeatureCatalog.componentsFlag],
         steps: [
             TutorialStep(
-                id: "pick-the-original",
+                id: "four-states",
                 anchor: .canvas,
-                title: "One button, two looks",
-                body: "A button needs a switched off look as well. Keeping both under one name stops the two drifting apart. Click the original to start.",
+                title: "A button is really four buttons",
+                body: "It has a resting look, a hovered look, a pressed look and a disabled look. One name for all four is what stops them drifting apart. Click the original.",
                 advance: .waitsFor(.layerSelected)),
             TutorialStep(
-                id: "add-a-version",
+                id: "add-a-look",
                 anchor: .panelSection("component"),
-                title: "Add a second drawing",
-                body: "Under Properties, open Add and pick A second look. A copy of this drawing lands beside it on clear page, and it is an ordinary drawing you can edit.",
+                title: "Add the second one",
+                body: "Under Properties, open Add and pick A second look. An exact copy of this drawing lands beside it on clear page, and every tool works on it.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "name-it",
                 anchor: .panelSection("component"),
-                title: "Name it",
-                body: "Its name is waiting to be typed over. Call it Disabled and press Return.",
+                title: "Call it Hover",
+                body: "Its name is waiting to be typed over. Type Hover and press Return. From here on a state is picked by its name.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
-                id: "grey-it-out",
-                anchor: .panelSection("color"),
-                title: "Make it look switched off",
-                body: "Double click the new drawing's box, clear of the words. Give it a grey here. The drawing you started with is untouched.",
-                side: .leading,
-                advance: .waitsFor(.editMade),
-                prepare: [.showPanel, .revealTarget]),
-            TutorialStep(
-                id: "pick-a-copy",
-                anchor: .canvas,
-                title: "Now pick a copy",
-                body: "Click one of the copies on the page.",
-                advance: .waitsFor(.layerSelected)),
-            TutorialStep(
-                id: "switch-it",
+                id: "call-the-question-state",
                 anchor: .panelSection("component"),
-                title: "Switch it to Disabled",
-                body: "Variant is the top row of a copy's properties. Choose Disabled and this copy redraws. The other one carries on as it was.",
+                title: "Call the question State",
+                body: "The box above the list says Variant. Type State over it. Every copy of this button now asks which State it is showing.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
-                id: "under-one-name",
-                anchor: .panelSection("library"),
-                title: "One tile, two looks",
-                body: "The shelf still holds one component. Every copy of it says which drawing it is showing, and you can change that any time.",
+                id: "change-only-what-differs",
+                anchor: .panelSection("color"),
+                title: "Change only what differs",
+                body: "Double click the Hover drawing's box, clear of the words, and give it a darker colour. The corner, the words and the size came across with the copy.",
                 side: .leading,
-                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "the-other-two",
+                anchor: .panelSection("component"),
+                title: "Now Pressed and Disabled",
+                body: "Click the first drawing, add a look called Pressed, then one more called Disabled. Each starts as a copy, so you change one thing rather than redraw.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "a-copy-picks-one",
+                anchor: .panelSection("component"),
+                title: "A copy picks its state",
+                body: "Click one of the copies under the original. Its State row lists all four, and picking one redraws that copy on its own.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "all-four-together",
+                anchor: .canvas,
+                title: "There they are, all four",
+                body: "Four drawings under one name, each labelled with its state. Change the words or a corner in one and the row under the list carries it to the rest."),
         ])
 
     // MARK: - Colours and Styles

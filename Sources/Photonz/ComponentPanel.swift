@@ -1038,6 +1038,9 @@ private struct ComponentVariantPropertyRow: View {
                     .nameFieldKeys(commit: commit, revert: { draft = property.name })
                     .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
                     .panelHelp("What this question is called on every copy. Call it State, or Type, or Size")
+                    // The states guide has you type State over it, and nothing
+                    // could check that landed while the box answered to nothing.
+                    .playtestField("Property name")
                 Text("variant")
                     .font(.caption2)
                     .foregroundStyle(.secondary)

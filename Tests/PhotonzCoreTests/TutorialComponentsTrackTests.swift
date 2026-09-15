@@ -19,7 +19,7 @@ struct TutorialComponentsTrackTests {
 
     // MARK: The track itself
 
-    @Test func theTrackRunsFromMakingOneToHoldingTwoLooksUnderOneName() {
+    @Test func theTrackRunsFromMakingOneToGivingItEveryState() {
         let ids = components.map(\.id)
         #expect(ids == ["make-a-component", "use-it-again-and-again",
                         "override-one-copy", "component-versions"])
@@ -255,12 +255,115 @@ struct TutorialComponentsTrackTests {
         #expect(guide.sample == .componentCopies)
     }
 
-    @Test func theVersionsGuideEndsOnACopyShowingTheSecondDrawing() throws {
-        let guide = try #require(TutorialCatalog.guide(id: "component-versions"))
+    // MARK: The states guide
+
+    /// Reached by its id, which is what a saved place in a track points at. The
+    /// guide was called "One name, two looks" until 2026-09-15; the id stays.
+    private func statesGuide() throws -> TutorialGuide {
+        try #require(TutorialCatalog.guide(id: "component-versions"))
+    }
+
+    @Test func theStatesGuideNamesTheFourStatesAButtonReallyHas() throws {
+        let guide = try statesGuide()
+        let copy = (guide.title + " " + guide.summary + " "
+                    + guide.steps.map { $0.title + " " + $0.body }.joined(separator: " ")).lowercased()
+        for state in ["resting", "hovered", "pressed", "disabled"] {
+            #expect(copy.contains(state), "the guide never mentions the \(state) state")
+        }
+    }
+
+    @Test func itIsCalledAfterWhatItIsForRatherThanAfterTheMechanism() throws {
+        let guide = try statesGuide()
+        // "Variant" is the panel's word for the machinery. A person choosing a
+        // guide off the hub is choosing a job, not a data structure.
+        #expect(!guide.title.lowercased().contains("variant"))
+        #expect(!guide.title.lowercased().contains("propert"))
+        #expect(guide.title.lowercased().contains("state")
+                || guide.title.lowercased().contains("button"))
+    }
+
+    @Test func itTeachesTheAppsOwnWordBeforeItTeachesTheJob() throws {
+        // The panel asks one question called Variant and lets the author rename
+        // it, with its own help saying to call it State. That rename is what
+        // lets the rest of the guide say "state" without teaching a word the
+        // app does not use, so it has to come before the steps that say it.
+        let guide = try statesGuide()
         let ids = guide.steps.map(\.id)
-        #expect(ids.firstIndex(of: "add-a-version")! < ids.firstIndex(of: "switch-it")!)
-        #expect(guide.steps.contains { $0.id == "switch-it" && $0.waits })
+        let rename = try #require(ids.firstIndex(of: "call-the-question-state"))
+        let renaming = guide.steps[rename]
+        #expect(renaming.body.contains("Variant"), "it never shows the word it is replacing")
+        #expect(renaming.body.contains("State"))
+        #expect(renaming.waits, "renaming it is something you do, not something you read")
+        #expect(rename < ids.firstIndex(of: "the-other-two")!)
+    }
+
+    @Test func itSaysWhatCarriesAcrossSoNobodyRedrawsTheButtonFourTimes() throws {
+        let guide = try statesGuide()
+        let differs = try #require(guide.steps.first { $0.id == "change-only-what-differs" })
+        #expect(differs.waits)
+        // The lesson is the sentence, not the colour: a new state arrives as an
+        // exact copy, so it is one change rather than a redraw.
+        let copy = guide.steps.map(\.body).joined(separator: " ").lowercased()
+        #expect(copy.contains("copy"), "it never says a new state starts as a copy")
+        #expect(copy.contains("redraw"), "it never says you do not redraw the button")
+    }
+
+    @Test func itSaysWhyTheStatesBelongUnderOneName() throws {
+        let guide = try statesGuide()
+        let copy = guide.steps.map { $0.title + " " + $0.body }.joined(separator: " ").lowercased()
+        #expect(copy.contains("drift"), "it never says what one name is protecting against")
+        // ...and the shipped way one edit reaches the others, which is a row
+        // under the list rather than something that happens by itself.
+        #expect(copy.contains("carries it") || copy.contains("carried"),
+                "it never says how a change made in one state reaches the rest")
+    }
+
+    @Test func itEndsWithEveryStateOnThePageRatherThanOnACard() throws {
+        let guide = try statesGuide()
+        let last = try #require(guide.steps.last)
+        #expect(last.anchor == .canvas, "it ends in the panel, away from the four drawings")
+        #expect(last.id == "all-four-together")
         #expect(guide.sample == .componentCopies)
+    }
+
+    @Test func everyStateItAddsLandsSomewhereYouCanSeeIt() throws {
+        // The guide's whole payoff is four drawings on screen at once. Each one
+        // is put down by the app, not by the person, so where they land is the
+        // app's answer and this is the test of it.
+        var document = PhotonzDocument(canvasSize: TutorialSampleScreen.canvasSize,
+                                       layers: TutorialSampleScreen.layers(for: .componentCopies))
+        document.syncComponentInstances()
+        let original = try #require(document.layers.first { $0.isMainComponent })
+        let componentID = try #require(original.componentID)
+        // The order the guide asks for: two states added from the first drawing,
+        // the last one from whichever you were standing on.
+        _ = document.addComponentVersion(componentID: componentID, name: "Hover")
+        let pressed = document.addComponentVersion(componentID: componentID, name: "Pressed")
+        _ = document.addComponentVersion(componentID: componentID, from: pressed, name: "Disabled")
+
+        let states = document.componentVersions(of: componentID)
+        #expect(states.map(\.name) == ["Default", "Hover", "Pressed", "Disabled"])
+        let boxes = states.compactMap { document.canvasBounds(of: $0.layerID) }
+        #expect(boxes.count == 4)
+        let canvas = CGRect(origin: .zero, size: TutorialSampleScreen.canvasSize)
+        for (state, box) in zip(states, boxes) {
+            #expect(canvas.contains(box), "\(state.name) lands off the canvas at \(box)")
+        }
+        // None of them lands on top of another, or the picture the guide ends on
+        // is three drawings and a pile.
+        for i in boxes.indices {
+            for j in boxes.indices where j > i {
+                #expect(!boxes[i].intersects(boxes[j]),
+                        "\(states[i].name) and \(states[j].name) overlap")
+            }
+        }
+        // ...nor on top of the copies that came with the sample.
+        for copy in document.layers.filter({ $0.isComponentInstance }) {
+            let copyBox = try #require(document.canvasBounds(of: copy.id))
+            for (state, box) in zip(states.dropFirst(), boxes.dropFirst()) {
+                #expect(!box.intersects(copyBox), "\(state.name) lands on a copy")
+            }
+        }
     }
 
     // MARK: The samples the track brings
@@ -323,12 +426,12 @@ struct TutorialComponentsTrackTests {
         }
     }
 
-    @Test func theVersionsGuideHasRoomOnThePageForASecondDrawing() {
-        // A new version lands beside the one it came from. A sample filling the
-        // canvas would push it somewhere nobody is looking.
+    @Test func theStatesGuideHasRoomOnThePageForTheStatesItAdds() {
+        // A new state lands beside the drawing it came from. A sample filling
+        // the canvas would push it somewhere nobody is looking.
         let layers = TutorialSampleScreen.layers(for: .componentCopies)
         let right = layers.map(\.frame.maxX).max() ?? 0
         #expect(TutorialSampleScreen.canvasSize.width - right >= 220,
-                "no room beside the original for the version the guide adds")
+                "no room beside the original for the states the guide adds")
     }
 }

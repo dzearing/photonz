@@ -1,0 +1,28 @@
+{
+  "feature": "Tutorial: a button in all its states",
+  "epic": "ui-components",
+  "summary": "The last guide of the Components track no longer teaches a button with an on look and an off look. It teaches the four states a button really has, has you rename the component's own question from Variant to State in the app's own words, and leaves all four drawings standing on the page.",
+  "setup": "Photonz Dev, Experiments window, release Next. Help then Tutorials then Components, the fourth guide, called A button in all its states. It brings its own desk, so nothing of yours is touched.",
+  "try": [
+    { "do": "Start the guide and click the button wearing four diamonds." },
+    { "do": "Under Properties, open Add and pick A second look, then type Hover and press Return." },
+    { "do": "Type State over the box that says Variant, and press Return." },
+    { "do": "Double click the Hover drawing's box, clear of the words, and give it a darker colour." },
+    { "do": "Click the first drawing, add a look called Pressed, then one more called Disabled.", "shot": "2026-09-15-states-guide-page.png" },
+    { "do": "Press Next, click one of the copies under the original, and pick another State for it." },
+    { "do": "Read the last card with all four drawings in front of you." }
+  ],
+  "evaluate": [
+    "Does A button in all its states tell you what you are about to learn better than One name, two looks did?",
+    "Typing State over Variant is the fourth step. Does renaming the question feel like part of the job, or like homework the app should have done?",
+    "The four states land where the app finds room: one on the left with the copies under it, three in a column on the right. Is that a set you can read, or a mess you would tidy by hand?",
+    "The guide never presses Apply to Other Variants, it only says the row is there. Is being told enough, or do you want to watch one change reach all four?",
+    "Four states in three minutes: too much to build in one sitting, or about right?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole run, so no walk could run at all and there is no picture of the app: the shot above is the page rendered straight out of the document, which is why it carries no state labels. The guide itself is covered by tests, and the walk that drives it end to end has not yet been run against a live window.",
+    "Seeing the four states together is left to wherever the app finds room. Nothing groups them and nothing says they belong to one component. Folded into make-a-button-with-states-and-properties-and-set, whose own checklist already asks for four looks side by side.",
+    "The guide says State seven times and the Add menu still says A second look. The rename fixes the question's name, not the menu that adds the answers.",
+    "Pressed and Disabled get one step between them, so the guide tells you to add two looks and lets you press Next when you are done rather than waiting for you. It is the one step in the guide that does not watch you do it."
+  ]
+}

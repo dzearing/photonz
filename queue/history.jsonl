@@ -3860,3 +3860,10 @@
 {"t":"2026-09-15T22:05:37.842Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
 {"t":"2026-09-15T22:05:37.883Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
 {"t":"2026-09-15T22:05:45.666Z","ev":"task_done","id":"cutting-a-recording-fails-its-own-test-on-the-bu","from":"in_progress","note":"The test was reading a frame's COLOUR and calling it a time; the app was writing the right frames. Reproduced the build machine's exact number locally (0.1343137 vs CI's 0.1343137254901961) by applying the test's own assertion to the untagged source clip. TestClip now paints each frame's number as ten black-and-white stripes, which survive any colour matrix, range or gamma handling, and the assertions are in seconds of the source +/- 0.1s. Mutation-tested against two broken exporters (cut does nothing; pieces six frames late) - both caught, and the six-frame one is a break the old test could not have seen. Run 35023843252: three attempts in a row green on the build machine. Commits 4b79df64, 3d7c68cd."}
+{"t":"2026-09-15T22:06:16.527Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T22:06:16.630Z","ev":"task_started","id":"tutorials-making-states-in-a-component","title":"Tutorials: making states in a component","priority":"p2-normal"}
+{"t":"2026-09-15T22:09:21.877Z","ev":"task_note","id":"tutorials-making-states-in-a-component"}
+{"t":"2026-09-15T22:09:21.921Z","ev":"task_note","id":"tutorials-making-states-in-a-component"}
+{"t":"2026-09-15T22:09:21.963Z","ev":"task_note","id":"tutorials-making-states-in-a-component"}
+{"t":"2026-09-15T22:17:57.854Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-15T22:17:57.900Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}

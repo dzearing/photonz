@@ -636,8 +636,8 @@ wrong.
 | --- | --- | --- |
 | Make a component | a button drawn as two loose layers | pick both, ⌘G, ⌥⌘K, name it, and where it lands on the shelf |
 | Use it again and again | the same button, already a component | the Components shelf, two copies placed, and one colour change reaching both |
-| Override one copy | the original with two copies on it | the original's Adjustable list, the knob a copy answers, and the way back |
-| One name, two looks | the same desk | Versions, a second drawing, and the Version row on a copy |
+| Override one copy | the original with two copies on it | the original's Properties list, the knob a copy answers, and the way back |
+| A button in all its states | the same desk | four states under one name, the component's own question renamed to State, and the State row on a copy |
 
 **The hard idea is what a copy OWNS**, and nothing on screen says it, so the
 guides do. A copy's contents are not its own: they are refilled from the
@@ -702,10 +702,24 @@ first appears in, and a focus asked for before the field is in the responder
 chain is dropped. Typing went to the canvas. The component's own Name field
 survives the same trick because its section is already standing.
 
-**It is called One name, two looks, not Variants.** The task that asked for the
-track named that guide Variants; the app has never used the word. A component
-holds VERSIONS, the panel says Versions, and a guide teaches what shipped. Same
-rule the Looks track settled over Outline, and a test enforces it.
+**The last guide teaches the word the panel says, and renames it in front of
+you.** It was called One name, two looks until 2026-09-15, when the user asked
+for the four states people actually build: resting, hovered, pressed and
+disabled. Nothing in the model knows what hovering is, so a state is a
+CONVENTION, and both halves of it are shipped controls. A component holds
+VARIANTS, and its variant PROPERTY can be called anything, with the panel's own
+help saying to call it State. So the guide's fourth step has you type State over
+Variant, and that is what lets the other seven say "state" without teaching a
+word the app does not use. Same rule the Looks track settled over Outline, and a
+test enforces it.
+
+**Four rather than two, because two makes the second look read as an
+exception.** The lesson underneath is that a new state arrives as an exact copy
+and differs in one fact, so you change one thing rather than redraw the button,
+and that only lands when it is done more than once. The guide leaves all four
+drawings standing on the page, each one labelled, which is also how you look at
+the button in every state: they are ordinary drawings, laid out by the app as it
+finds room.
 
 ## The Colours and Styles track
 

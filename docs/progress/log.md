@@ -15876,3 +15876,59 @@ build machine: run 35023843252, three attempts in a row, all green including
 "Run tests". CI on main is no longer red.
 
 **Next:** the WebP export walk still has never run on an unlocked screen.
+
+## 2026-09-15 — the Components track's last guide teaches four states, not two looks
+
+The user asked for it by name: the button tutorial's "2 states" thing should be
+"making states in a component", covering a button going from rest to hovered to
+pressed to disabled, and how to see the button in each of them.
+
+**What it teaches now.** The guide is called **A button in all its states**
+(`component-versions`, id kept: an id is what a saved place in a track points
+at). Eight steps, three minutes: pick the original, add a second look, call it
+Hover, **type State over the box that says Variant**, change only what differs,
+add Pressed and Disabled, watch a copy pick its state, and finish with all four
+drawings on the page.
+
+**The rename is load bearing, not decoration.** Nothing in the model knows what
+hovering is, so a state is a CONVENTION. Both halves of that convention are
+shipped controls: a component holds VARIANTS, and its variant property can be
+called anything, with the panel's own help already saying "Call it State, or
+Type, or Size". Typing State over Variant in step four is what lets the other
+seven steps say "state" without teaching a word the app does not use, which is
+the same rule the track already keeps over Versions and Adjustable. The variant
+property's name box now answers to a walk (`playtestField("Property name")`), so
+the rename can be checked; nothing could check it before.
+
+**Four rather than two**, because two makes the second look read as an
+exception. The lesson underneath is that a new state arrives as an exact copy
+and differs in one fact, so you change one thing rather than redraw the button,
+and that only lands when it is done more than once.
+
+**Measured rather than guessed.** The track's own tests cap a guide at eight
+steps and three minutes, and eight steps was the whole budget: pressing Apply to
+Other Variants for real was cut (it needs a piece selected inside one drawing
+AND a difference to carry, or the row is dimmed reading "Other Variants Already
+Match") and is said instead. Where the four drawings land was measured on the
+sample rather than hoped for: (88,88), (352,88), (352,164), (352,240) on a
+720x480 canvas, all inside it, none overlapping, none on a copy. A new test
+holds that.
+
+**What this walked into from the other side.** Seeing the four states together
+is left to wherever the app finds room: one drawing alone on the left with its
+copies under it, three in a column on the right, nothing saying the four belong
+together. That is a real gap and it is not a new task, because
+`make-a-button-with-states-and-properties-and-set` already asks for four looks
+side by side. The finding, with the measurements and the picture, is folded into
+that task.
+
+**Verified:** `Scripts/test.sh` green, 7152 tests in 572 suites.
+
+**Not verified:** the Mac's screen was locked for the whole task, so the
+rewritten walk never ran once. A sweep is requested and waits for an unlocked
+screen. The audit's picture is the page rendered straight out of the document,
+which is why it carries no state labels, and the audit says so in plain words.
+
+**Next:** run `tutorial-component-versions-walk` the moment the screen is
+unlocked, along with the WebP export walk that is still waiting on the same
+thing.
