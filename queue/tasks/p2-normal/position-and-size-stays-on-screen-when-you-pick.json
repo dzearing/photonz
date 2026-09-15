@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:37:13.565Z",
-  "updated": "2026-09-15T12:14:53.287Z",
+  "updated": "2026-09-15T13:50:21.811Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 on a probe built from HEAD 093c41da. Walk: Scripts/playtest/studies/side-pane-load-walk.json (a study walk: it measures and asserts nothing, so it lives in a subfolder the sweep's glob does not reach). It draws a text layer and a rectangle in a blank 900x600 document at three window sizes, picks the text, and reads the dock's own numbers back.\n\nWhat it printed, text picked, each time:\n  1000x640  viewport 608  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-891 | Position & Size 891-1021   inView: Layers, Text, Appearance\n  1200x720  viewport 688  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance\n  1680x1000 viewport 968  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance, Effects\nSo the dock wants 1052 points and the largest viewport on this display is 968. Position & Size is never in dockInView; at 1680x1000 its header is in dockHeadersInView and the section is not whole.\n\nMechanism, from Sources/Photonz/InspectorDockLayout.swift. Forms are paid at full height and never squeezed; only Layers, Measurements, Library and Effects may be shortened. Effects is shortenable but its floor is set by the open pane (listRoom read back 'Effects 299/299 needs 299'), so one open drop shadow pins 299 points and Layers alone gives way, from 160 down to its 112 floor. That is 48 points of slack against an 84 point shortfall at the largest size, and a 364 point shortfall on a laptop.\n\nCITES the done task the-properties-panel-fits-on-the-screen-it-has, whose acceptance included 'A section with more in it than fits scrolls inside itself rather than pushing the sections under it off the bottom'. That promise does not hold for Position & Size today. Worth reading its log before choosing an approach, and one-open-effect-fits-in-the-effects-list for why the Effects floor is what it is.\n\nFound while running work-out-whether-the-right-hand-pane-is-carrying, whose study page docs/design/mocks/pages/pane-load.html carries the full inventory.",
@@ -36,6 +36,15 @@
     {
       "t": "2026-09-15T12:14:53.286Z",
       "note": "seq 5 -> 20"
+    },
+    {
+      "t": "2026-09-15T13:47:21.242Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T13:50:21.810Z",
+      "note": "Adversarial review before building. The dock is not 84 points over, it is over by a FACTOR. Real offsets read back from two walk runs on disk (Scripts/playtest/out/log.json, 2026-09-14 20:27, and /tmp/photonz-playtest/dock-picked-first/log.json, 2026-09-15 00:25, both at 1200x720, viewport 688): a piece of text picked wants Layers 163 + Text 198 + Appearance 223 + Effects 332 + Measurements 87 + Position & Size 130 = 1139 in a 688 viewport. So no budget arithmetic fixes this: every list is already squeezed to its floor (Layers 211 natural -> 163) and the three forms alone come to 551. The only lever is WHICH sections are above the fold. Checked the alternatives: Position & Size left under Appearance lands 590-720 at 688 and 590-720 at 608, so it fails at every size; lowering the Layers floor from 112 to 80 buys 32 points, which still fails at 1000x640. Position & Size directly under the picked section is the only arrangement that fits at all three window sizes."
     }
-  ]
+  ],
+  "started": "2026-09-15T13:47:21.241Z"
 }

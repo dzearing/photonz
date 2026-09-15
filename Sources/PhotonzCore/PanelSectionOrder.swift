@@ -101,3 +101,63 @@ public enum PanelSectionOrder {
         return result
     }
 }
+
+public extension PanelSectionOrder {
+
+    /// One numbered, one-time move of a section that shipped in the wrong
+    /// place.
+    ///
+    /// Everybody who has ever run the app has an order saved, so a section
+    /// cannot be relocated by editing the list it is declared in: the saved
+    /// order wins. It reaches them as one of these instead — this group goes
+    /// there, once, and any arrangement they made by hand around it survives.
+    ///
+    /// `isEnabled` is how a move that belongs to ONE release stays out of the
+    /// other's way. A disabled move is skipped WITHOUT being counted as done,
+    /// so somebody who switches release later still gets every move they
+    /// missed, in order.
+    struct Migration: Sendable, Equatable {
+        public enum Placement: Sendable, Equatable { case before, after }
+
+        /// What the saved version has to be under for this to run. Unique, and
+        /// never reused: it is the only record that this move has happened.
+        public let version: Int
+        /// The sections that move, in the order they should end up in.
+        public let sections: [String]
+        public let placement: Placement
+        /// The section they land next to, which does not itself move.
+        public let anchor: String
+        public let isEnabled: Bool
+
+        public init(version: Int, sections: [String], _ placement: Placement, _ anchor: String,
+                    isEnabled: Bool = true) {
+            self.version = version
+            self.sections = sections
+            self.placement = placement
+            self.anchor = anchor
+            self.isEnabled = isEnabled
+        }
+    }
+
+    /// A saved order brought through every move it has not had yet, and the
+    /// version it is now at.
+    ///
+    /// The moves run in version order, lowest first, because each one is
+    /// written against the order the one before it left behind. A move whose
+    /// sections or anchor this order does not hold does nothing and is still
+    /// counted: it ran, and there was nothing for it to do.
+    static func upgrade(_ order: [String], from version: Int,
+                        through migrations: [Migration]) -> (order: [String], version: Int) {
+        var result = order
+        var at = version
+        for migration in migrations.sorted(by: { $0.version < $1.version })
+        where migration.isEnabled && migration.version > at {
+            result = switch migration.placement {
+            case .before: moving(migration.sections, before: migration.anchor, in: result)
+            case .after: moving(migration.sections, after: migration.anchor, in: result)
+            }
+            at = migration.version
+        }
+        return (result, at)
+    }
+}

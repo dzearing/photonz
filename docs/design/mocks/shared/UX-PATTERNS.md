@@ -318,10 +318,25 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   `queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.json`,
   built in the app as the panel's one rule, `Sources/Photonz/InspectorDockLayout.swift`).
   The section named after the thing you just clicked is the first thing under
-  the layers list, with Appearance and Effects directly under it and everything
-  general below them. Pick a piece of text and Text is what you are looking at;
-  pick a plain rectangle and nothing moves at all, because a rectangle has no
-  section of its own and Appearance was already there.
+  the layers list, then where it sits, then what it looks like: Position & Size
+  (with Arrange and Component beside it), then Appearance, then Effects, then
+  everything general. Pick a piece of text and Text is what you are looking at;
+  pick a plain rectangle and the X, Y, width and height boxes are what you are
+  looking at, because a rectangle has no section of its own.
+
+  **Where it sits comes before what it looks like** (2026-09-15). Position &
+  Size used to trail Appearance and Effects, and on a laptop window that put it
+  below the bottom edge: measured on 2026-09-15, a piece of text picked in a
+  three layer document asked the dock for 1052 points against the 688 a laptop
+  window gives and the 968 the largest window on this display gives, so the
+  plainest fact about a layer took a scroll to reach at EVERY window size. A
+  dock that over-subscribed cannot be fixed by sharing its height out
+  differently — the forms alone come to 551 points and every list is already
+  drawn at its floor — so the only question it answers is which sections are
+  above the fold. The cost is real and is the trade this made: Appearance drops
+  by the height of Position & Size, so with an arrow or a measurement picked its
+  last rows are below the fold on a laptop window where they used to be on
+  screen.
 
   **Because the order puts the pick on screen, there is no reveal on selection,
   at all.** That is the whole point of settling it: the panel used to fight

@@ -70,10 +70,70 @@ struct InspectorPanel: View {
     /// it on 2026-09-13 over a panel that scrolled itself to each pick, and it
     /// is why there is no longer any reveal on selection at all.
     private static let orderVersionPickedUnderLayers = 5
+    /// ...and then Position & Size, with Arrange and Component beside it, rose
+    /// above Appearance and Effects, so the plainest fact about a layer — where
+    /// it is and how big it is — no longer sits below the bottom edge.
+    ///
+    /// Measured on 2026-09-15: a piece of text picked in a three layer document
+    /// asked the dock for 1052 points against the 688 a laptop window gives and
+    /// the 968 the largest window on this display gives, so the X, Y, width and
+    /// height boxes were off the bottom at EVERY window size. The dock is over
+    /// by a factor rather than by a few points — the forms alone come to 551
+    /// and every list is already drawn at its floor — so nothing the budget can
+    /// do reaches this. The only question a dock that big answers is which
+    /// sections are above the fold, and this is the answer: what you picked,
+    /// then where it sits, then what it looks like. It is the order the
+    /// Component move (2) was already written for.
+    ///
+    /// The cost, and it is a real one: Appearance drops by the height of
+    /// Position & Size, so with an arrow or a measurement picked — the two
+    /// whose Appearance runs to 382 and 525 points — its last rows are below
+    /// the fold on a laptop window where they used to be on screen.
+    private static let orderVersionSizeAboveLook = 6
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
         [.annotation, .callout, .lens, .text, .measure, .collage, .canvas]
+    /// Where the picked thing SITS: its place on the canvas, what it is placed
+    /// against, and what it is a copy of. They travel together because they
+    /// answer one question at three scales, and because splitting them would
+    /// put Arrange below Effects on a multiple selection while the boxes it
+    /// aligns stayed above.
+    private static let placeSections: [InspectorSectionID] = [.arrange, .component, .geometry]
+
+    /// Every one-time move the dock's saved order has had, in the order they
+    /// were written. The ones marked for the split belong to the release that
+    /// has it: a move that is skipped is not counted as done, so turning the
+    /// release on later still runs it.
+    @MainActor private static func orderMigrations() -> [PanelSectionOrder.Migration] {
+        let split = Experiments.shared.shapePartsEnabled
+        return [
+            .init(version: orderVersionEffectsWithColor,
+                  sections: [InspectorSectionID.effects.rawValue],
+                  .after, InspectorSectionID.color.rawValue),
+            .init(version: orderVersionComponentAboveGeometry,
+                  sections: [InspectorSectionID.component.rawValue],
+                  .before, InspectorSectionID.geometry.rawValue),
+            .init(version: orderVersionPickedAboveGeometry,
+                  sections: pickedSections.map(\.rawValue),
+                  .before, InspectorSectionID.geometry.rawValue),
+            // Next only: it is the split that makes Appearance short enough to
+            // sit up here, so the release without the split keeps its order.
+            .init(version: orderVersionLookUnderLayers,
+                  sections: [InspectorSectionID.color.rawValue,
+                             InspectorSectionID.effects.rawValue],
+                  .after, InspectorSectionID.layers.rawValue, isEnabled: split),
+            // What you picked sits at the top: above Appearance and Effects,
+            // which the move before this one had just put under Layers.
+            .init(version: orderVersionPickedUnderLayers,
+                  sections: pickedSections.map(\.rawValue),
+                  .after, InspectorSectionID.layers.rawValue, isEnabled: split),
+            // ...and where it sits comes before what it looks like.
+            .init(version: orderVersionSizeAboveLook,
+                  sections: placeSections.map(\.rawValue),
+                  .before, InspectorSectionID.color.rawValue, isEnabled: split),
+        ]
+    }
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     /// The section currently in the reader's hand, and where it is being
     /// carried. See `sectionDragChanged`.
@@ -822,44 +882,14 @@ struct InspectorPanel: View {
         // A section that shipped in the wrong place has to reach the people who
         // already ran the app, and every one of them has an order saved (the
         // panel writes one on first launch). So each fix is a numbered, one-time
-        // move of that ONE section, leaving any arrangement they made by hand
-        // around it alone.
-        if orderVersion < Self.orderVersionEffectsWithColor {
-            merged = PanelSectionOrder.moving(InspectorSectionID.effects.rawValue,
-                                              after: InspectorSectionID.color.rawValue,
-                                              in: merged)
-            orderVersion = Self.orderVersionEffectsWithColor
-        }
-        if orderVersion < Self.orderVersionComponentAboveGeometry {
-            merged = PanelSectionOrder.moving(InspectorSectionID.component.rawValue,
-                                              before: InspectorSectionID.geometry.rawValue,
-                                              in: merged)
-            orderVersion = Self.orderVersionComponentAboveGeometry
-        }
-        if orderVersion < Self.orderVersionPickedAboveGeometry {
-            merged = PanelSectionOrder.moving(Self.pickedSections.map(\.rawValue),
-                                              before: InspectorSectionID.geometry.rawValue,
-                                              in: merged)
-            orderVersion = Self.orderVersionPickedAboveGeometry
-        }
-        // Next only: it is the split that makes Appearance short enough to sit
-        // up here, so the release without the split keeps its order.
-        if Experiments.shared.shapePartsEnabled, orderVersion < Self.orderVersionLookUnderLayers {
-            merged = PanelSectionOrder.moving(
-                [InspectorSectionID.color.rawValue, InspectorSectionID.effects.rawValue],
-                after: InspectorSectionID.layers.rawValue, in: merged)
-            orderVersion = Self.orderVersionLookUnderLayers
-        }
-        // What you picked sits at the top: above Appearance and Effects, which
-        // the move before this one had just put under Layers. Next only, for
-        // the same reason as that one — it is the Appearance/Effects split that
-        // makes this stack short enough to stand.
-        if Experiments.shared.shapePartsEnabled, orderVersion < Self.orderVersionPickedUnderLayers {
-            merged = PanelSectionOrder.moving(Self.pickedSections.map(\.rawValue),
-                                              after: InspectorSectionID.layers.rawValue,
-                                              in: merged)
-            orderVersion = Self.orderVersionPickedUnderLayers
-        }
+        // move of those sections, leaving any arrangement they made by hand
+        // around them alone. The list of moves, and what each one is for, is
+        // `orderMigrations` above; `PanelSectionOrder.upgrade` runs the ones
+        // this saved order has not had, in order, and says where it ended up.
+        let upgraded = PanelSectionOrder.upgrade(merged, from: orderVersion,
+                                                 through: Self.orderMigrations())
+        merged = upgraded.order
+        if orderVersion != upgraded.version { orderVersion = upgraded.version }
         let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
         if ids != order { order = ids }
     }

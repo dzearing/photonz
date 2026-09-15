@@ -4,11 +4,18 @@ import PhotonzCore
 import SwiftUI
 // MARK: - The one rule
 
-// **What you picked sits at the top.** The dock is ordered so the section
-// named after the thing you just clicked is the first thing under the layers
-// list, with Appearance and Effects directly under it, and everything general
-// below them. The user chose that on 2026-09-13 over three other answers, one
-// of which was the panel scrolling itself to the pick.
+// **What you picked sits at the top, then where it sits, then what it looks
+// like.** The dock is ordered so the section named after the thing you just
+// clicked is the first thing under the layers list, with Position & Size under
+// that, then Appearance and Effects, then everything general. The user chose
+// the first half on 2026-09-13 over three other answers, one of which was the
+// panel scrolling itself to the pick; the second half followed on 2026-09-15,
+// when Position & Size was measured below the bottom edge at every window size
+// this machine can open (1052 points of sections against a 968 point dock).
+// There is no arithmetic that fits a dock over-subscribed by that much, so the
+// only thing an ordering decides is which sections are above the fold, and the
+// X, Y, width and height boxes had earned their place over the last rows of
+// Appearance.
 //
 // It is one rule because it used to be three, each built on its own and each
 // undoing the others: the order the sections sat in, a scroll that chased

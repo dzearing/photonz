@@ -1,0 +1,29 @@
+{
+  "feature": "Where a layer sits is on screen the moment you pick it",
+  "epic": "ui-building",
+  "summary": "The right hand panel now puts Position & Size directly under the section named after the thing you clicked, above Appearance and Effects. The X, Y, width and height boxes used to be below the bottom edge in every window size this machine can open.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on. If you have ever dragged the panel's sections into an order of your own, that order is kept and only these three sections move.",
+  "try": [
+    { "do": "Open a blank document in a window about 1200 by 720." },
+    { "do": "Draw a piece of text, then draw a box beside it." },
+    { "do": "Click the text. Look at the right hand panel without touching the scroll wheel." },
+    { "do": "Read the X, Y, W and H boxes and drag the text a little; watch the numbers follow." },
+    { "do": "Scroll down to the Effects header and press the plus, then add a Border." },
+    { "do": "Click the box, then click the text again, and check the boxes are still there." },
+    { "do": "Make the window as tall as your screen allows and do the same, then make it 1000 by 640 and do it again." }
+  ],
+  "evaluate": [
+    "When you click a layer, is where it sits the thing your eye wants next, or did you want its colour first?",
+    "Appearance now starts lower down. On a laptop window its last row or two are below the fold: does that cost you more than the scroll it saved?",
+    "Pick an arrow or a measurement, whose Appearance section is the tallest. Is what you need still within reach?",
+    "Arrange and Component moved up with Position & Size, so a multiple selection puts the alignment buttons above Appearance too. Is that where you look for them?",
+    "Does the panel feel ordered now, or just differently disordered?"
+  ],
+  "rough": [
+    "NOT PHOTOGRAPHED AND NOT WALKED. The Mac's screen was locked for the whole of this task, so no scripted walk could run and no screenshot of any kind was possible. Everything below is argued from section offsets two earlier walks wrote to disk before the lock, plus unit tests; nothing here was seen running.",
+    "The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are above the fold.",
+    "Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel, which is seven points of room: one more row in Appearance and it stops fitting.",
+    "This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.",
+    "The Motion section is nowhere near Effects: a simulation of the panel's own ordering rules puts it eleven sections below, under Frame, Columns and Layout. Filed as its own task rather than folded in here, because it was never observed running."
+  ]
+}

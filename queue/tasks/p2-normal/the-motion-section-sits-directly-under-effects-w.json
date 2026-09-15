@@ -1,0 +1,27 @@
+{
+  "id": "the-motion-section-sits-directly-under-effects-w",
+  "title": "The Motion section sits directly under Effects, where its design says",
+  "goal": "Open a layer with the next release on and the Motion section is not beside Effects where everything else about how a layer looks and behaves lives. It is far down the panel, under Frame, Columns and Layout, so somebody animating an icon scrolls past every screen setting to reach it. Put it back under Effects.",
+  "epic": "icon-svg",
+  "priority": "p2-normal",
+  "seq": 2660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T13:57:28.830Z",
+  "updated": "2026-09-15T13:57:28.833Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "NOT REPRODUCED IN THE RUNNING APP: the Mac screen was locked all through 2026-09-15 06:47-07:10 so no walk could run (Scripts/playtest.sh exits 3, status locked). What I have is a simulation of the exact migration chain in Sources/Photonz/InspectorPanel.swift orderMigrations() against InspectorSectionID.allCases, which prints:\n  layers > annotation > callout > lens > text > measure > collage > canvas > arrange > component > geometry > color > effects > measureTool > wandTool > cropTool > calloutTool > lensTool > measurements > frame > columns > placement > motion > shadow > library > libraryItem\nMotion is eleven sections below Effects. The cause looks structural rather than accidental: motion is declared straight after effects in InspectorSectionID, but migration 4 moves color and effects up under layers and leaves motion behind, and PanelSectionOrder.merged splices a section the saved order has never seen at its CANONICAL rank, which for motion is between effects and shadow, and shadow is still down at the bottom. So both a fresh order and an upgraded one land it above shadow rather than below effects.\nThe fix is one more numbered migration in orderMigrations(), .init(version: 7, sections: [motion], .after, effects, isEnabled: split), plus a test in Tests/PhotonzCoreTests/PanelSectionOrderUpgradeTests.swift. FIRST STEP when the screen is unlocked: run Scripts/playtest.sh Scripts/playtest/position-and-size-on-screen-walk.json and read dockSections in its describe steps, which will say where Motion really lands.\nFound while moving Position & Size above Appearance (position-and-size-stays-on-screen-when-you-pick).",
+  "acceptance": [
+    "With a layer picked in the next release, the Motion section sits immediately below Effects in the right hand panel",
+    "A person who has never rearranged their panel sees that order on a fresh launch, and somebody who dragged sections by hand keeps their arrangement",
+    "A playtest walk reads the dock section order back and fails if Motion is not directly under Effects"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T13:57:28.832Z",
+      "note": "created (manual)"
+    }
+  ]
+}
