@@ -1,0 +1,38 @@
+{
+  "id": "tutorials-an-icons-track",
+  "title": "Tutorials: an Icons track",
+  "goal": "Drawing an icon is now one of the things this app is for, and there is no track teaching it. Add one, covering the journey somebody actually takes: set up a frame at the size the icon will really be used, draw the shape with the Pen, bend and reshape it until it is right, and get a clean SVG out the other end.\n\nThe guides in this track: Start on an icon frame; Draw it with the Pen; Reshape what you drew; Turn a shape into a path; Get a clean SVG out.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:49:46.787Z",
+  "updated": "2026-09-15T14:49:46.880Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "This is the half that can be written TODAY, and it is worth having on its own. Everything it teaches is shipped: the Pen, reshaping, the icon frame and its size, Turn Into Path, and clean SVG export all landed between 2026-09-13 and 2026-09-14.\n\nWrite it against what the app currently does rather than against the tasks that describe it, because several Pen fixes are in flight as this is written: how a tool hands back after drawing, what a path shows when you finish it, and closing a shape with two points are all being changed. Check the behaviour in a real build before writing a step that depends on it, and if a guide would have to teach something awkward, that is a finding to file rather than to document.\n\nThe curve guide is the one that matters most. The user could not find how to make curves at all on their first try, which is what filed a-path-you-drew-shows-you-what-you-can-do-to-it. A tutorial is not the fix for that, but it is the place somebody goes when they are stuck, so teach it plainly.\n\n---\nAsked for by the user on 2026-09-15: \"i would like the app to have a tutorial for making animated svg icons.\"\n\nThe tutorials system is built and has seven tracks - Basics, Redlining, Looks, Colours and Styles, Building UI, Components, Video (PhotonzCore/Tutorials.swift:312, TutorialTrack). There is no Icons track, and nothing queued for one, so this is a new shelf rather than a guide slotted into an existing one.\n\nThe framework itself needs nothing new: a guide is data in the catalogue, the menu and the hub window are generated from it, anchors are checked so a guide pointing at a control that no longer exists fails the build, and progress is remembered. Add data, not UI. Read docs/design/tutorials.md before writing a guide.",
+  "acceptance": [
+    "An Icons track exists with its guides, appearing under Help and in the hub window with no UI edited, because they are catalogue data",
+    "Every guide runs start to finish in the real app, pointing at real controls, each captured step by step in the audit",
+    "The track teaches a whole icon end to end rather than a tour of the Pen: somebody who follows it has an SVG file at the end that they drew themselves",
+    "Curves are taught properly, since that is where people get stuck: press and drag to pull a curve, double click a point to bend one that is already there",
+    "The icon frame and the grid are taught as what makes an icon land on whole pixels, not as decoration",
+    "Every guide is short enough to finish in the time its entry claims, and the claim is measured rather than guessed",
+    "Every step points at something visible at that moment: nothing points at a control that is scrolled away, disabled or behind a closed panel without opening it first",
+    "Copy obeys the repo rules: no em dashes, nothing about the tooling, plain short human sentences",
+    "The guides behave sensibly with the Pen flags off as well as on",
+    "Audit under queue/audits/ with each guide captured, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:49:46.789Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T14:49:46.879Z",
+      "note": "seq 290 -> 13"
+    }
+  ]
+}

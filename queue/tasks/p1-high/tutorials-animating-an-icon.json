@@ -1,0 +1,42 @@
+{
+  "id": "tutorials-animating-an-icon",
+  "title": "Tutorials: animating an icon",
+  "goal": "Teach somebody to make an icon move and hand it over as an animated SVG: pick what changes, set when it changes and how fast, watch it loop, and export a file that plays in a browser.\n\nThe guides in this track: Make something move; Get the timing right; Two parts, out of phase; Export it as an animated SVG.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:49:46.953Z",
+  "updated": "2026-09-15T14:49:47.046Z",
+  "deps": [
+    "tutorials-an-icons-track"
+  ],
+  "blockedBy": [],
+  "notes": "THIS CANNOT BE WRITTEN YET, and that is why it is a separate task rather than four more guides in the Icons track. Animating an icon does not exist in the app: the work is still at the mocks stage. A tutorial pointing at controls that have not been built would fail the anchor check, which is exactly what that check is for.\n\nWhat has to land first: the animation feature itself, on the model the user settled on 2026-09-15 by answering the decision card. Motion is a property of a layer, opening into a timing strip with a lane per moving part; there is no canned list of named motions; easing is real curves including a custom one; and two parts of one icon can carry the same motion out of phase. The mocks for that are done (mock-animating-any-property-of-a-layer-with-the) and the feature is not built.\n\nSo this task waits on the animation feature, not on the mocks. It is filed now so the tutorial is not forgotten the moment the feature lands, and so whoever builds the feature knows a guide will have to point at it.\n\nWhen it is written, the bell is the example to use rather than a checkmark or a spinner: the user named it themselves, it needs a rotation origin at the top, and its knob lagging the bell is the phase lesson in one picture. The checkmark example is being fixed separately (the-checkmark-example-animates-like-somebody-who) and its lesson - one idea at a time, with a delay between the parts - belongs in the timing guide.\n\n---\nAsked for by the user on 2026-09-15: \"i would like the app to have a tutorial for making animated svg icons.\"\n\nThe tutorials system is built and has seven tracks - Basics, Redlining, Looks, Colours and Styles, Building UI, Components, Video (PhotonzCore/Tutorials.swift:312, TutorialTrack). There is no Icons track, and nothing queued for one, so this is a new shelf rather than a guide slotted into an existing one.\n\nThe framework itself needs nothing new: a guide is data in the catalogue, the menu and the hub window are generated from it, anchors are checked so a guide pointing at a control that no longer exists fails the build, and progress is remembered. Add data, not UI. Read docs/design/tutorials.md before writing a guide.",
+  "acceptance": [
+    "The guides join the Icons track rather than starting a new shelf, and appear with no UI edited",
+    "Animating is taught the way the app actually works: you pick a PROPERTY to animate, not a named preset, and the guides use that vocabulary throughout",
+    "The rotation origin is taught, because it is the thing that makes motion look deliberate: a bell swings about its top, not its middle",
+    "Timing is taught as something you set, with a delay before a part starts, not as something that just happens",
+    "Two parts moving out of phase is taught, since that is the difference between something that moves and something that feels alive",
+    "The export guide ends with a file that actually plays in a browser, and the guide says how to check that",
+    "Each guide is short enough to finish in the time it claims, measured",
+    "Audit under queue/audits/ with each guide captured, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:49:46.955Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T14:49:47.041Z",
+      "note": "seq 290 -> 14"
+    },
+    {
+      "t": "2026-09-15T14:49:47.046Z",
+      "note": "deps: the Icons track first; and it also waits on the animation feature being built at all"
+    }
+  ]
+}
