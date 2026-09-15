@@ -1,0 +1,28 @@
+{
+  "feature": "One rule for when the motion loop plays",
+  "epic": "icon-animate",
+  "summary": "The motion preview now follows one rule instead of three: motion plays unless you stop it. Changing anything about how a layer moves plays it, including typing a number into a row while the preview is paused, which used to land the edit and leave the screen exactly as it was.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-motion on. Any document; a rectangle is enough.",
+  "try": [
+    { "do": "Draw a rectangle and click it with the Select tool." },
+    { "do": "In the Motion section, press the plus and choose Rotation. It starts swinging on its own." },
+    { "do": "Press the play button in the Motion section header to stop it." },
+    { "do": "Type 40 into the Rotation To field and press Return. It starts swinging again, from the top of the lap." },
+    { "do": "Stop it again, then drag the crosshair on the shape up above it. It plays while you drag." },
+    { "do": "Stop it again, then drag the shape itself across the canvas. It stays still." },
+    { "do": "With it still stopped, change the speed on the timing strip to 0.25x. It stays still." },
+    { "do": "Press play. That is the only thing that starts a loop nobody has changed." }
+  ],
+  "evaluate": [
+    "Is \"plays unless you stop it\" the right amount of eager, or would you rather press play yourself every time?",
+    "When you stop the preview to look at the drawing and then change a number on a motion row, is it right that it starts playing again, or should it have stayed still and shown you the change some other way?",
+    "Starting from the top of the lap after every change: does that help you judge the new number, or does it throw away the part of the lap you were watching?",
+    "Dragging the shape itself leaves the picture still. Is that the line you would have drawn between \"the drawing\" and \"the motion\"?",
+    "A document with motion in it now opens playing. Is that right for an icon you saved and came back to?"
+  ],
+  "rough": [
+    "There are no screenshots in this audit and none could be taken: the Mac's screen has been locked since 2026-09-14 20:46, so macOS does not draw the window at all and every walk refuses to run rather than report a pass. The walk that drives all three gestures is written (Scripts/playtest/motion-one-play-rule-walk.json) and parses, but it has never been watched running. Everything above is read off the code and the test suite, not off a screen.",
+    "Dragging inside the colour well on a Color motion writes a value continuously, and each one now starts the lap over, so the preview sits pinned at the top of the lap while your hand is in the colour wheel. It did the same before this change whenever the preview was already running; it is just reachable from stopped now too.",
+    "Undo and redo deliberately do not start the loop, on the grounds that they put back a picture you have already seen. That is the one place the rule could reasonably have gone the other way."
+  ]
+}

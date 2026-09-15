@@ -99,14 +99,14 @@ extension EditorState {
     func setMotionCycleMS(_ ms: Int) {
         guard document?.motionCycleMS != max(1, ms) else { return }
         perform { $0.motionCycleMS = max(1, ms) }
-        if isMotionPlaying { restartMotionPreview() }
+        motionChanged()
     }
 
     /// Back to following the longest motion.
     func clearMotionCycle() {
         guard document?.motionCycleMS != nil else { return }
         perform { $0.motionCycleMS = nil }
-        if isMotionPlaying { restartMotionPreview() }
+        motionChanged()
     }
 
     // MARK: Dragging a bar
@@ -124,6 +124,10 @@ extension EditorState {
         // are the numbers of the bar in your hand. Without this you would be
         // dragging one thing and reading another.
         if selectedLayerID != lane.layerID { selectLayer(lane.layerID) }
+        // The same thing grabbing the pivot does, for the same reason: a lag
+        // cannot be judged on a still picture, and the hand about to move this
+        // bar is asking what it looks like (`motionGestureBegan`).
+        motionGestureBegan()
         motionTimingDrag = MotionTimingDrag(
             motionID: motionID,
             layerID: lane.layerID,
@@ -180,11 +184,8 @@ extension EditorState {
                 drag: held, automatic: document.automaticMotionCycleLengthMS,
                 current: document.motionCycleMS)
         }
-        // Started if it was not already going, for the reason the pivot drag
-        // starts it: a lag cannot be judged on a still picture, and somebody
-        // who has just dragged a bar along a ruler of milliseconds is asking
-        // what it looks like.
-        playMotionPreview()
+        // The change has landed, so the lap starts over with the new lag in it.
+        motionChanged()
     }
 
     /// Escape, or a drag that went nowhere.

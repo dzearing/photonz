@@ -16176,3 +16176,49 @@ requested and runs them the moment the screen is unlocked. What IS verified:
 
 **Next:** run the two walks when the screen is unlocked. Audit at
 `queue/audits/2026-09-15-motion-strip-way-back.json`.
+
+## 2026-09-15 — One rule for when the motion loop plays
+
+`one-rule-for-what-starts-the-motion-loop-playing`. Three gestures answered one
+question three different ways, all shipped within eight hours of each other:
+adding a motion started the preview, grabbing the pivot started it only if it
+was stopped, and typing a number into a row while the preview was paused started
+nothing at all, so the edit landed, nothing on screen moved, and there was no way
+to tell whether it had taken. The person meeting them met all three in one
+sitting.
+
+The rule, written out in `docs/design/layer-motion.md` and at the top of
+`EditorState+Motion.swift`: **motion plays unless you stop it.** A document that
+arrives with motion in it arrives moving; anything you change about how the layer
+moves plays it from the top of the lap; a drag gets it running the moment you
+take hold and the change lands when you let go; only you stop it, or the motion
+running out. Two things deliberately do not start it, because neither is a
+change to the motion: working on the DRAWING rather than the motion (which is
+what pause is for), and the preview SPEED, which is how you are watching. Undo
+and redo go with them.
+
+In the code it is two calls, `motionChanged()` and `motionGestureBegan()`, and
+every gesture that could start the preview now goes through one of them: add,
+remove, the row switch, every number, the pivot, both strip drags, the lap
+length. Nothing else calls `playMotionPreview` except the play button and a
+document opening. The tutorial special case in `openTutorialSample` is gone,
+folded into `installDocument`, so a saved icon that moves opens moving the same
+way a guide's sample does.
+
+**Found while making the rule hold.** `canPlayMotion` asked whether a lap length
+existed, not whether anything was switched on. A lap dragged onto the strip stays
+written down after every row on it is switched off, so the play button stayed
+live over a picture where nothing moved — and under the new rule the next number
+typed would have started a loop of a still icon. It now asks
+`automaticMotionCycleLengthMS > 0`, which is the question about what is ON.
+
+**No picture of any of this either.** The Mac has been locked since 2026-09-14
+20:46, so `motion-one-play-rule-walk` (new, 56 steps: all three gestures plus
+both carve-outs, reading the transport back after each) parses and has never
+run. The sweep already pending runs it the moment the screen is unlocked. What
+IS verified: `swift build` clean and 7184 tests green.
+
+**Next:** run the walk when the screen is unlocked. Audit at
+`queue/audits/2026-09-15-motion-play-rule.json`, which asks the user the question
+this task deliberately did not decide for them: is "plays unless you stop it" the
+right amount of eager?

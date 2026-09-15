@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:14:25.561Z",
-  "updated": "2026-09-15T23:36:22.814Z",
+  "updated": "2026-09-15T23:36:35.986Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, both from today.\n\n1. The app. Sources/Photonz/MotionStripView.swift:117 is the x; it calls toggleMotionStrip(). Sources/Photonz/EditorView.swift:187 is `if editorState.isMotionStripShown { MotionStripView() }`, so closed means gone, nothing in its place. grep for toggleMotionStrip finds exactly two callers: that x, and the View menu item at EditorCommands.swift:781. The comment at EditorView.swift:192 states the principle the strip breaks, three lines above the code that breaks it: the side panel got its toggle in the title bar `so the way back never moves and never goes away with the thing it collapses`.\n\n2. The written rule. docs/design/mocks/shared/UX-PATTERNS.md D9 says every dock comes back to the size it had and `leaves a visible way back on screen the whole time it is away`, that a dock collapsed to a row states the selection rather than just the panel name, and it names this exact day: `The app has no bottom dock yet, so the row half of this rule is not yet owed; the day Next grows a timeline, this is what it has to do, including the summary, and it does not get a second collapse idiom to do it with.` Next grew a timeline today.\n\n3. The option the strip was built from promised it. queue/decisions/work-out-whether-the-right-hand-pane-is-carrying-when-you-animate-an-icon-where-s.json, option a, pro three: `One click on its close control shrinks it to a single row that still says what you are editing, and the canvas comes back`, and its mitigation says `It collapses to a 30 point row and remembers the height you left it at`. That is what was chosen and it is not what shipped.\n\nCannot be seen on a screen right now: the Mac has been locked since 2026-09-14 20:46:47, so no walk runs. The code and the rule are enough to file it; the walk that claims it needs an unlocked screen.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-15T23:36:22.813Z",
       "note": "Left rough, none of it clearing the follow-up bar on its own: the row says nothing about the preview, so a loop playing while the strip is away moves the canvas and leaves the row still (a playhead on the row was cut as decoration and may not be); 'comes back the size it had' is free rather than earned, because the strip is exactly as tall as its lanes and there is no height to drag yet, so the day it can be resized that height has to be stored. Both are in the audit's rough where the user can react to them."
+    },
+    {
+      "t": "2026-09-15T23:36:35.984Z",
+      "note": "The timing strip now collapses to one 30 point row instead of to nothing: MotionStripRailView across the bottom names the layer, what is moving on it and the lap length, and clicking it opens the strip again at the height it had. Words decided in PhotonzCore (MotionStripSummary, 8 tests written first); EditorState.motionStripPhase is the one switch EditorView reads; D9 in UX-PATTERNS.md records how the app pays the row half of the rule. Fixed in passing: motion.stripOpen was in no PlaytestMemory area so it was never restored between walks; there is now a 'motion' memory. Verified: swift build clean, Scripts/test.sh green at 7184 tests. NOT verified on a screen: the Mac has been locked since 2026-09-14 20:46, so the new motion-strip-way-back-walk and the updated motion-timing-strip-walk both report status 'locked' with zero of 53 steps run and no captures; a sweep is requested and runs both once the screen is unlocked. Audit: queue/audits/2026-09-15-motion-strip-way-back.json. Commit e46228ca, pushed."
     }
   ],
-  "started": "2026-09-15T23:24:18.749Z"
+  "started": "2026-09-15T23:24:18.749Z",
+  "completed": "2026-09-15T23:36:35.985Z"
 }

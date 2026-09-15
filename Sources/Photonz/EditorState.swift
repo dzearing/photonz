@@ -1043,17 +1043,6 @@ final class EditorState {
             let room = icon.frame.width / 3
             pendingFocusBox = icon.frame.insetBy(dx: -room, dy: -room)
         }
-        // A sample that arrives ALREADY MOVING arrives moving. Three of the
-        // Icons track's guides open on a bell that swings and say so on their
-        // first card, and a window that opened on a still picture would make
-        // that card a lie before anybody had pressed anything. This is a
-        // reveal, not an act on the person's behalf: no step of any guide asks
-        // for the play button, so nothing is being done for them.
-        //
-        // It is deliberately scoped to a guide's own sample rather than to
-        // opening any document that moves. What should start the loop in
-        // general is its own open question.
-        if document.hasMotion { playMotionPreview() }
     }
 
     /// The document as it was last opened or saved — the clean baseline for
@@ -1592,6 +1581,19 @@ final class EditorState {
         iconPreviews = [:]
         dragPreviewGeneration += 1
         rerender()
+        // A document that arrives with motion in it ARRIVES MOVING, which is
+        // the one rule for when the loop plays without being asked
+        // (`EditorState+Motion`, `docs/design/layer-motion.md`). Three of the
+        // Icons guides open on a bell that swings and say so on their first
+        // card; so does any icon somebody saved moving and opened again, and
+        // neither should have to press play to be told the truth.
+        //
+        // Stopped FIRST, for the picture going out: a preview left running
+        // would keep drawing frames of a document that may have nothing in it
+        // that moves, and `playMotionPreview` on a still document returns
+        // without cancelling anything.
+        pauseMotionPreview()
+        playMotionPreview()
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there
         // is no host window yet — the real sizing runs once one is available.

@@ -11,6 +11,49 @@ import PhotonzCore
 /// it is drawn (`displayDocument`).
 extension EditorState {
 
+    // MARK: THE ONE RULE for when the loop plays
+
+    /// **Motion plays unless you stop it.**
+    ///
+    /// Written out in `docs/design/layer-motion.md`. Every place in the app
+    /// that could start the preview comes through the two calls below, so
+    /// there is one rule rather than one habit per gesture. There used to be
+    /// three: adding a motion started the loop, grabbing the pivot started it
+    /// if it was stopped, and typing a number into a paused row started
+    /// nothing at all, so the edit landed with nothing on screen to show it
+    /// and you could not tell whether it had taken.
+    ///
+    /// - A document that arrives with motion in it arrives moving.
+    /// - Anything you change about HOW THE LAYER MOVES plays it, from the top
+    ///   of the lap: adding a motion, taking one off, the switch on a row, any
+    ///   number on a row, the pivot, a bar on the timing strip, the lap length.
+    /// - A drag gets the loop running the moment you take hold, so your hand
+    ///   can see its own work; the change itself lands when you let go.
+    /// - Only you stop it, with the play button or the space bar. It also
+    ///   stops on its own once nothing is moving any more.
+    /// - Two things deliberately do NOT start it, because neither is a change
+    ///   to the motion: working on the DRAWING rather than the motion, so
+    ///   pausing to edit the picture keeps the picture still, and the preview
+    ///   SPEED, which is how you are watching rather than what is moving. Undo
+    ///   and redo go with them: they put back a picture you have already seen.
+
+    /// A change to the motion landed. Play it, from the top of the lap,
+    /// whether or not it was running: a number you just changed is a thing you
+    /// want to SEE, and half a lap of the old timing is not it.
+    func motionChanged() {
+        playMotionPreview()
+    }
+
+    /// A hand took hold of something that moves the motion (the pivot on the
+    /// picture, a bar on the strip). Get the loop running so the drag can be
+    /// judged, but leave a lap already on screen where it is: nothing has
+    /// changed yet, and snapping to the top under the hand is a jolt rather
+    /// than an answer.
+    func motionGestureBegan() {
+        guard !isMotionPlaying else { return }
+        playMotionPreview()
+    }
+
     // MARK: What the section answers for
 
     /// The layer the Motion list is about.
@@ -62,7 +105,7 @@ extension EditorState {
         perform { document in
             document.updateLayer(id: layer.id) { $0.motions = ($0.motions ?? []) + [motion] }
         }
-        playMotionPreview()
+        motionChanged()
     }
 
     /// The cross on a row: takes the entry out. Different from the switch
@@ -72,6 +115,10 @@ extension EditorState {
         perform { document in
             document.updateLayer(id: layer.id) { $0.motions = ($0.motions ?? []).filter { $0.id != id } }
         }
+        // What is LEFT plays, so taking one motion off a layer that has three
+        // shows you the two. `stopIfNothingMoves` has the last word when that
+        // was the only one.
+        motionChanged()
         stopIfNothingMoves()
     }
 
@@ -87,13 +134,7 @@ extension EditorState {
                 edited.motions = motions
             }
         }
-        // A number you just typed is a thing you want to SEE, so the preview
-        // runs from the top of the cycle again rather than carrying on from
-        // wherever the old timing had got to. It does NOT start a preview that
-        // is stopped: somebody who pressed pause did it so they could look at
-        // the picture they drew, and a field that started it up again would
-        // take that away every time they typed.
-        if isMotionPlaying { restartMotionPreview() }
+        motionChanged()
     }
 
     /// The switch on a row.
@@ -141,10 +182,10 @@ extension EditorState {
     /// The pivot handle grabbed. The loop starts if it is not already running,
     /// because a pivot cannot be judged on a still picture: with the layer
     /// sitting at nought degrees, changing what it turns around changes
-    /// nothing you can see. Adding a motion already starts the preview, so
-    /// this is the same habit rather than a new one.
+    /// nothing you can see. Same call the timing strip's bar makes, and the
+    /// same rule (`motionGestureBegan`).
     func beginMotionPivotDrag() {
-        if !isMotionPlaying { playMotionPreview() }
+        motionGestureBegan()
     }
 
     /// The pivot under the hand: rendered straight away and kept out of
@@ -186,9 +227,15 @@ extension EditorState {
     // MARK: The preview
 
     /// Whether there is anything to play at all.
+    ///
+    /// Asked of what is SWITCHED ON, not of the written lap length. A lap
+    /// length dragged onto the strip stays written down after every row on it
+    /// has been switched off, and reading that would say yes to a picture where
+    /// nothing whatsoever moves: the play button would stay live and, under the
+    /// one rule, the next number typed would start a loop of a still icon.
     var canPlayMotion: Bool {
         guard Experiments.shared.motionEnabled, let document else { return false }
-        return document.hasMotion && document.motionCycleLengthMS > 0
+        return document.automaticMotionCycleLengthMS > 0
     }
 
     func toggleMotionPreview() {

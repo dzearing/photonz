@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T20:01:02.444Z",
+  "updated": "2026-09-15T23:45:37.911Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -84,6 +84,10 @@
     {
       "t": "2026-09-15T20:01:02.443Z",
       "note": "happened again on 2026-09-15: the export-quality task ran from about 12:45 to 13:05 with the Mac locked the whole time (ioreg CGSSessionScreenIsLocked true on every check), so Scripts/playtest.sh exited 3 with status \"locked\" and the new export-quality walk never ran once. The audit at queue/audits/2026-09-15-export-quality.json therefore ships no picture of the Export sheet at all; it ships real encoded files and their byte counts instead, produced without the window server. That is the second feature in two days audited without a photograph of the app."
+    },
+    {
+      "t": "2026-09-15T23:45:37.910Z",
+      "note": "Another audit shipped with no pictures in it for this reason: queue/audits/2026-09-15-motion-play-rule.json. Its whole subject is when the preview starts playing, which is the most visual claim a motion audit can make, and every line of it is read off the code and the test suite instead. The new walk (Scripts/playtest/motion-one-play-rule-walk.json, 56 steps) parses and has never run."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

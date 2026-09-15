@@ -1,0 +1,72 @@
+{
+  "out": "/tmp/photonz-playtest/motion-one-play-rule",
+  "seed": "One rule for when the motion loop plays without being asked: motion plays unless you stop it. Three gestures used to answer that question three different ways in one sitting — adding a motion started the loop, grabbing the pivot started it only if it was stopped, and typing a number into a row while the preview was paused started nothing at all, so the edit landed with nothing on screen to show it. This walk drives all three in one run and reads the transport back after each, then checks the two things that deliberately do NOT start it: working on the drawing rather than the motion, and changing the speed you are watching at.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 230], "to": [660, 380], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [600, 355] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-adding-plays-it", "note": "THE FIRST OF THREE. Adding a motion plays it, so the answer to \"did that do anything\" is on screen before you read a single field." },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "control": "Preview", "reads": "playing" },
+    { "do": "panel", "stage": "1-adding-plays-it" },
+    { "do": "snapshot", "name": "1-adding-a-motion-plays-it" },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+    { "do": "describe", "stage": "2-stopped", "note": "stopped, and the picture is the one you drew. Everything after this starts from here, because the whole question is what a stopped preview does next." },
+
+    { "do": "focus", "field": "Rotation To" },
+    { "do": "type", "text": "40" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-a-number-plays-it", "note": "THE SECOND, and the one that used to do nothing at all. A number typed into a row while the preview was paused landed in the document and left the screen exactly as it was, so there was no way to tell whether it had taken. It now plays, from the top of the lap, because a number you just changed is a thing you want to SEE." },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 40° over 0.9s" },
+    { "do": "expect", "control": "Preview", "reads": "playing" },
+    { "do": "panel", "stage": "3-a-number-plays-it" },
+    { "do": "snapshot", "name": "2-a-typed-number-plays-it" },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+
+    { "do": "drag", "from": [540, 305], "to": [540, 190], "steps": 14 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-the-pivot-plays-it", "note": "THE THIRD. The crosshair grabbed from a stopped preview starts the loop, because a pivot cannot be judged on a still picture: with the layer sitting at nought degrees, changing what it turns around changes nothing you can see. Same rule as the other two rather than a habit of its own." },
+    { "do": "expect", "control": "Preview", "reads": "playing" },
+    { "do": "panel", "stage": "4-the-pivot-plays-it" },
+    { "do": "snapshot", "name": "3-the-pivot-plays-it" },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+
+    { "do": "drag", "from": [600, 355], "to": [640, 395], "steps": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-the-drawing-does-not", "note": "THE CARVE-OUT, and it is what pause is FOR. Dragging the shape itself is working on the drawing rather than on the motion, so the picture stays exactly as still as you left it. A canvas quietly animating under a layer you are trying to move would be a canvas you cannot work on." },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+    { "do": "snapshot", "name": "4-moving-the-shape-leaves-it-still" },
+
+    { "do": "panelMenu", "menu": "Loop Speed", "choose": "0.25× · slow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-speed-does-not", "note": "and the other carve-out: the speed is how you are WATCHING, not what is moving, so it neither starts a stopped loop nor restarts a running one." },
+    { "do": "expect", "menu": "Loop Speed", "reads": "0.25×" },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-and-you-start-it", "note": "the only thing that starts a loop nobody has changed is you" },
+    { "do": "expect", "control": "Preview", "reads": "playing" },
+    { "do": "panel", "stage": "7-and-you-start-it" },
+    { "do": "snapshot", "name": "5-you-start-it-yourself" }
+  ]
+}

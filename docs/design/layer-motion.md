@@ -78,13 +78,13 @@ Three ways in, one value:
 | The **Around** menu | Its centre, Top centre, Bottom centre |
 | The **At** pair | two numbers on the canvas, for when a number is what you want |
 
-Grabbing the crosshair **starts the loop** if it is not already running, because
-a pivot cannot be judged on a still picture: with the layer sitting at nought
-degrees, changing what it turns around changes nothing you can see. Adding a
-motion already starts the preview, so it is the same habit rather than a new
-one. The whole drag is one step for undo, and the crosshair is drawn from the
-STORED layer, so while the bell swings it sits dead still underneath — which is
-both what makes it catchable and what teaches what a pivot is.
+Grabbing the crosshair **starts the loop**, because a pivot cannot be judged on
+a still picture: with the layer sitting at nought degrees, changing what it
+turns around changes nothing you can see. That is one case of the one rule
+below, not a habit of its own. The whole drag is one step for undo, and the
+crosshair is drawn from the STORED layer, so while the bell swings it sits dead
+still underneath — which is both what makes it catchable and what teaches what a
+pivot is.
 
 Three more places this deliberately leaves the mock:
 
@@ -97,6 +97,59 @@ Three more places this deliberately leaves the mock:
 3. **A fraction of the box, not canvas numbers.** The mock reads the pivot as
    `12, 4.4`, which is a place on the canvas; stored that way, dragging the bell
    tears the swing loose from it. The row still READS canvas numbers.
+
+## When the loop plays without being asked: one rule
+
+**Motion plays unless you stop it.**
+
+Settled on 2026-09-15. Before that there were three answers to one question,
+shipped within eight hours of each other: adding a motion started the loop,
+grabbing the pivot started it only if it was stopped, and typing a number into a
+row while the preview was paused started nothing at all — so the edit landed,
+nothing on screen moved, and there was no way to tell whether it had taken. The
+person meeting those met all three in one sitting.
+
+The rule in full:
+
+- **A document that arrives with motion in it arrives moving.** Three of the
+  Icons guides open on a bell that swings and say so on their first card, and so
+  does any icon somebody saved moving and opened again.
+- **Anything you change about how the layer moves plays it, from the top of the
+  lap**: adding a motion, taking one off, the switch on a row, any number on a
+  row, the pivot (dragged, named or typed), a bar on the timing strip, the lap
+  length. From the top rather than from wherever the old timing had got to,
+  because a number you just changed is a thing you want to see and half a lap of
+  the old one is not it.
+- **A drag gets the loop running the moment you take hold**, so your hand can
+  see its own work, and it does not snap a running lap back to the top to do it:
+  nothing has changed yet. The change itself lands when you let go, and *that*
+  plays it from the top.
+- **Only you stop it**, with the play button (three places: the Motion section,
+  the previews card, the timing strip) or the space bar. It also stops on its
+  own once nothing is moving any more, either because the motion has played
+  itself out or because the last thing that moved has been switched off or
+  removed.
+- **Two things deliberately do not start it**, because neither is a change to
+  the motion:
+  - **Working on the drawing rather than the motion.** Move the layer, repaint
+    it, drag a handle: the picture stays exactly as still as you left it. This
+    is what pause is *for* — stopped is the picture you drew, and that is what
+    you edit against.
+  - **The preview speed.** That is how you are watching, not what is moving, so
+    it neither starts the loop nor restarts it; a running lap carries on at the
+    new rate from where it had got to.
+  - Undo and redo go with them: they put back a picture you have already seen.
+
+In the code this is two calls, `motionChanged()` and `motionGestureBegan()` in
+`EditorState+Motion.swift`, and every gesture that could start the preview goes
+through one of them. Nothing else calls `playMotionPreview` except the play
+button itself and a document opening.
+
+The open question this leaves for the user, asked in the audit rather than
+decided here: is "plays unless you stop it" the right amount of eager, or would
+you rather press play yourself? Walked end to end by
+`Scripts/playtest/motion-one-play-rule-walk.json`, which drives the three
+gestures that used to disagree and reads the transport back after each.
 
 ## Three places the MOTION ITSELF leaves the mock
 
