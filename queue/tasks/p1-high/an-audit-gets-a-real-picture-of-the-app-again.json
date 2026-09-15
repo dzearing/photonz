@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T10:34:28.623Z",
+  "updated": "2026-09-15T11:02:09.763Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -60,6 +60,10 @@
     {
       "t": "2026-09-15T10:34:28.622Z",
       "note": "Everything that can be done on a locked screen is done and committed (aa9b1bd0). Acceptance two is met and verified. Acceptance one and three need one photograph of an unlocked window, which no runner can take: the Mac has been locked since 2026-09-14 20:46:47 and was still locked at 03:34 today, checked at the start of this run and again at the end.\n\nRather than leave a p1 for the next runner to rediscover the lock with, the proof is now automatic. A walk on an unlocked screen with the grant held either writes the -sc.png and names it on its own '==> Window captures:' line, or FAILS naming the step that went unphotographed. So the first walk anyone runs after the screen is unlocked settles this either way, and a sweep is already queued to be that walk.\n\nThis task is marked pending, not blocked: blocking with no decision card strands a task for good (queue-lib.mjs setStatus says so out loud), and the only real question here is already on the dashboard as the overnight-lock card against a-hundred-and-fifteen-walks-fail-on-code-that-pa. A second card would be its twin. Instead this task now DEPENDS on that one, so it is not claimable until the lock question is settled and a walk can run, and then it is a ten second check.\n\nTo close it by hand: unlock the screen, run Scripts/playtest.sh Scripts/playtest/toolbar-row-narrow-walk.json, and read the Window captures line."
+    },
+    {
+      "t": "2026-09-15T11:02:09.762Z",
+      "note": "Another one, 2026-09-15 ~04:00: the motion slice (a-layer-can-be-told-to-change-one-of-its-propert) shipped with no picture of the app at all. The screen was locked for the whole task, the probe launch printed 'Grants: probe Screen Recording granted · screen locked', and Scripts/playtest.sh exited on the locked check before running a single step. queue/audits/2026-09-15-layer-motion.json therefore carries two OFFSCREEN RENDERS of the swing instead of a window capture, and says so in its first rough line.\n\nLeft behind, ready to run the moment the screen is unlocked: Scripts/playtest/motion-swings-a-layer-walk.json. It parses (checked against PlaytestScript.decode) and it asks for five window captures, including a picture of the Add Motion menu showing the properties this layer has. Whoever unlocks the machine should run it before the Motion audit is trusted:\n  Scripts/playtest.sh Scripts/playtest/motion-swings-a-layer-walk.json --no-build"
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

@@ -1,0 +1,70 @@
+{
+  "out": "/tmp/photonz-playtest/motion-swings-a-layer-walk",
+  "seed": "Motion is a property of a layer, read the same way the Effects list above it is read. This walk draws one shape, opens the plus on the Motion header to show that the menu is built out of THAT LAYER (every property it actually has, with the number it is wearing right now), adds a Rotation, and checks the row that arrives: a switch, the name, the curve drawn small, and a summary a person can read back. It then photographs the canvas twice while the preview is running, to show the picture really is moving, stops it to show the picture goes back to the one you drew, and takes the whole thing back with undo and forward again with redo.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 230], "to": [660, 380], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [540, 305] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "describe", "stage": "1-picked", "note": "one shape picked. The panel has a Motion section directly under Effects, empty, with a plus on its header: the same header, the same plus, the same kind of rows." },
+    { "do": "expect", "field": "Motion Empty", "present": true },
+    { "do": "panel", "stage": "1-picked" },
+    { "do": "snapshot", "name": "1-motion-is-empty" },
+
+    { "do": "panelMenu", "menu": "Add Motion", "shot": "2-what-this-layer-has" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-the-plus", "note": "THE TEST: the plus is built out of the layer, not out of a fixed list. Every row names something this shape actually has and carries the value it is wearing right now, because that is what you would be animating away from. There is no Pulse and no Wiggle in here and there cannot be." },
+
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-added", "note": "one press, one row. It arrives ALREADY MOVING, which is the one place this leaves the mock: the mock seeds From and To at the value the layer has now, so its own row reads 0 degrees to 0 degrees and nothing happens on the first press." },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "control": "Switch", "in": "Rotation", "reads": "moving" },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
+    { "do": "expect", "control": "Preview", "reads": "playing" },
+    { "do": "panel", "stage": "3-added" },
+
+    { "do": "wait", "seconds": 0.15 },
+    { "do": "snapshot", "name": "4-swinging-one" },
+    { "do": "wait", "seconds": 0.35 },
+    { "do": "snapshot", "name": "4-swinging-two" },
+    { "do": "describe", "stage": "4-playing", "note": "THE TEST: two pictures of the window a third of a second apart while the preview runs. The shape is turned differently in each, which is the whole feature: the picture plays it." },
+
+    { "do": "render", "name": "a-document-is-untouched" },
+    { "do": "describe", "stage": "5-not-baked-in", "note": "and the DOCUMENT is not moving. This render is of what is stored, and it is the shape exactly as it was drawn: a motion is worked out at the moment the canvas is drawn, like a blur or a shadow, so the layer you can still drag is the layer you drew." },
+
+    { "do": "press", "control": "Preview" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Preview", "reads": "stopped" },
+    { "do": "describe", "stage": "6-stopped", "note": "stopped, and the picture is back to the one you drew. That is what you edit against: a canvas quietly animating under a layer you are trying to drag would be a canvas you cannot work on." },
+    { "do": "snapshot", "name": "6-stopped-is-the-picture-you-drew" },
+
+    { "do": "press", "control": "Switch", "in": "Rotation" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Rotation", "reads": "still" },
+    { "do": "describe", "stage": "7-switched-off", "note": "the switch stops it moving and keeps every number on it, which is the same bargain the eye on an effect strikes." },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Rotation", "reads": "moving" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-undone", "note": "and one more undo takes the whole motion back off the layer" },
+    { "do": "expect", "field": "Rotation", "present": false },
+    { "do": "expect", "field": "Motion Empty", "present": true },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "9-redone", "note": "redo puts it back, with every number it had" },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
+    { "do": "panel", "stage": "9-redone" },
+    { "do": "snapshot", "name": "9-redone" }
+  ]
+}

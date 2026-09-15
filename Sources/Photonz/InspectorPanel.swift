@@ -420,6 +420,12 @@ struct InspectorPanel: View {
             // section of its own with a switch nothing else has.
             if !Experiments.shared.shapePartsEnabled { set.insert(.shadow) }
         }
+        // What the picked layer has been told to change over time (Next,
+        // `next-motion`). ONE layer, unlike Effects above it, which speaks for
+        // everything picked: a motion carries the layer's own numbers in its
+        // From and To, so one row standing for five layers would have to hold
+        // five different pairs of values and could only ever show one of them.
+        if editorState.motionLayer != nil { set.insert(.motion) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -567,7 +573,7 @@ struct InspectorPanel: View {
     /// fact the original decides.
     private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
         .arrange, .geometry, .frame, .columns, .placement, .color, .effects, .shadow,
-        .annotation, .callout, .lens, .text, .measure, .collage,
+        .annotation, .callout, .lens, .text, .measure, .collage, .motion,
     ]
 
     private var orderedAvailableSections: [InspectorSectionID] {
@@ -588,6 +594,15 @@ struct InspectorPanel: View {
             // gesture that adds an effect may never be the thing you have to go
             // looking for.
             return AnyView(AddEffectButton())
+        case .motion:
+            // The plus that makes Motion a list you add to, and beside it the
+            // play button, because "does it look right" is a question you ask
+            // after every single change and it may never be the thing you have
+            // to go looking for.
+            return AnyView(HStack(spacing: 6) {
+                MotionPreviewButton()
+                AddMotionButton()
+            })
         case .measurements:
             return AnyView(MeasurementsSectionAccessory())
         case .library:
@@ -761,6 +776,8 @@ struct InspectorPanel: View {
             } else {
                 EffectsInspector()
             }
+        case .motion:
+            MotionListInspector()
         case .shadow:
             ShadowInspector()
         case .library:

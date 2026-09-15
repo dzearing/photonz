@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:02.559Z",
-  "updated": "2026-09-15T08:43:02.562Z",
+  "updated": "2026-09-15T11:02:09.811Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes straight from the study say-where-animating-an-icon-and-editing-a-video, answered by the user on 2026-09-15 (motion is a property of a layer, with a timing surface bigger than the property panel). Slice 1 of 5; nothing else in the set works until this does.\n\nMOCK: docs/design/mocks/pages/icon-animate-wt.html (Make a bell swing), steps 1 to 4 and 6 to 8. The Motion group is a dgrp next to Effects with the same .efx row shape (drag handle, switch, name, curve sketch, value summary). The property menu is built out of the layer: Position, Scale, Rotation, Opacity, Colour, and on a drawn path also Path points, Stroke width, Dash. There is NO canned list of named motions: the user rejected that explicitly as super weird and proprietary.\n\nENTRY FIELDS per motion: From, To, Start (ms), Over (ms), Curve, Repeat. Start and Over are the same two numbers the timeline bar carries in slice 3, so model them once.\n\nCURVES: named curves with the shape drawn beside each name plus a custom cubic-bezier(a,b,c,d). See the open task one-set-of-easing-curves-named-the-same-way-ever: settle the vocabulary there, use it here.\n\nWHERE: app work is Next only, Sources/Photonz/Releases/Next/ or behind a next-scoped flag. The model belongs in PhotonzCore (it has no notion of time today) and the sampling in PhotonzRender. Nothing is baked into pixels; motion is evaluated at render time like the other non-destructive styling.\n\nRULER: one cycle in milliseconds, NOT a document timeline. The study is explicit that an icon repeats and a video finishes and they cannot share a ruler.",
@@ -26,6 +26,19 @@
     {
       "t": "2026-09-15T08:43:02.561Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T10:43:53.264Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T10:45:49.306Z",
+      "note": "Adversarial review BEFORE building (walking the mock as a first-time user).\n\n1. THE MOCK'S DEFAULT IS A DEAD FIRST IMPRESSION. icon-animate-wt seeds From and To at the layer's current value, so its own row reads '0 deg -> 0 deg': you add a motion and nothing whatsoever happens. Building that literally means the first thing anyone sees is a feature that appears broken. Adding a motion will seed values that MOVE (rotation -12 to 12 over 900ms, the same example the acceptance list uses), and the preview starts on its own, so the answer to 'did that do anything' is on screen before you read a single field.\n\n2. A LOOP THAT DOES NOT COME BACK IS A JUMP CUT. The mock's own CSS swings the bell from -> to -> from inside one cycle (0%,100% from; 50% to) but the panel it draws has no field that says so: Repeat only offers Once / 3 times / Forever. A one-way ramp on Forever would snap the bell back to -12 every 900ms, which is not what the page shows and not what anybody wants from an icon. Rather than add a seventh field the task did not ask for, Repeat answers both, because both are answers to the same question 'what happens after it plays': Once, 3 times, Forever, and Forever there and back, which is the default. Flagged in the audit for the user to react to.\n\n3. CUT: THE DRAG HANDLE. The mock gives a motion row the Effects row's grip. Effects rows are ordered because order is what paints over what; two motions are on two different properties and their order changes nothing at all. This repo already names that failure ('a grip that changes nothing is a grip that lies', EffectKind.isPinned). The row keeps the switch, the name, the curve and the summary, and loses the grip.\n\n4. CUT, TO THEIR OWN SLICES: 'Around' (the pivot) is slice 2 and the cycle timeline is slice 3. Neither is in this task's ENTRY FIELDS list. Building either half here would mean building it twice.\n\n5. TWO MOTIONS ON ONE PROPERTY ARE TWO ANSWERS TO ONE QUESTION. The plus greys out any property the layer is already animating, the same way it refuses a second blur.\n\n6. WHAT DOES THE CANVAS SHOW WHEN IT IS NOT PLAYING? It has to show the layer as authored, or the document becomes uneditable (you would be dragging a shape that is somewhere else). So motion is applied in displayDocument only, never to the stored document: paused is rest, playing is animated, and nothing is ever baked in.\n\n7. SHORTEST VERSION THAT DELIVERS THE VALUE: the model in core, six properties read off the layer itself, the list beside Effects, and a preview that runs. No timeline, no pivot, no per-property keyframes."
+    },
+    {
+      "t": "2026-09-15T11:02:09.810Z",
+      "note": "Left rough, no task earned (each is written in the audit so the user can react to it, and none of them is broken):\n- Motion speaks for ONE layer while Effects directly above it speaks for the whole selection. Argued, not an oversight: a motion's From and To are that layer's own numbers.\n- Editing a field while the preview is paused does not start it; adding a motion does. Two rules, and somebody may expect one.\n- Colour From and To use the system colour panel, not this app's picker, so they do not reach the saved colours.\n- Path points and Dash are in the mock's property menu and are not built: both need a second value a number field cannot carry. Left for the pen work.\n\nFolded rather than filed: the locked screen went on the open task an-audit-gets-a-real-picture-of-the-app-again, with the walk to run when the machine is unlocked. The curve vocabulary went on one-set-of-easing-curves-named-the-same-way-ever, which is what that task asked somebody to settle.\n\nOne thing the harness gained on the way: a walk can now name a menu row by the START of its words, when no row matches exactly and exactly one row begins with it. The Motion plus builds rows like 'Rotation    0°', where the number is the whole point and changes the moment anything moves, so naming the row by its words was naming it by something that does not hold still."
     }
-  ]
+  ],
+  "started": "2026-09-15T10:43:53.263Z"
 }

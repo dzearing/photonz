@@ -1,0 +1,33 @@
+{
+  "feature": "Motion: a layer told to change one of its properties over time",
+  "epic": "icon-animate",
+  "summary": "Pick a layer and the panel now has a Motion list under Effects. The plus offers the properties that layer actually has, each showing the number it is wearing right now, and adding one gives a row that says what it goes from and to, how long that takes, on what curve and how often it repeats. The canvas plays it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-motion and it is on by default.",
+  "try": [
+    { "do": "Draw a rectangle on a blank canvas and click it with the Select tool." },
+    { "do": "Find Motion in the right hand panel, directly under Effects. Press the plus on its header and read the menu WITHOUT picking anything: every row is a property this shape has, with its current value beside it." },
+    { "do": "Pick Rotation. The shape starts swinging straight away.", "shot": "2026-09-15-layer-motion-swing-450ms.png" },
+    { "do": "Read the row back: Rotation, the curve drawn small, and -12° → 12° over 0.9s." },
+    { "do": "Open the row and change Over to 300, then to 2000, and watch the speed change." },
+    { "do": "Set Repeat to Once and watch it play once and stay; set it back to Forever, there and back." },
+    { "do": "Press the pause button on the Motion header. The picture goes back to the one you drew, and you can drag the shape." },
+    { "do": "Press Command Z twice: the switch goes back on and then the motion comes off the layer entirely. Command Shift Z puts it back." }
+  ],
+  "evaluate": [
+    "Adding a motion starts it playing on its own. Is that the right amount of eager, or do you want to press play yourself?",
+    "A rotation arrives as -12 to 12 over 0.9s rather than as 0 to 0, which is what the mock drew. Is a motion that already moves the right first impression?",
+    "Repeat says Once, 3 times, Forever, and Forever there and back. Does 'there and back' read as the thing that makes an icon loop without a jump?",
+    "The plus shows each property's current value beside its name. Is that the fact you want there, or would you rather see what it would become?",
+    "Stopping the preview puts the canvas back to the layer as drawn rather than leaving it mid-swing. Is that what you expect from pause?",
+    "The row shows the curve as a tiny drawing. Is it big enough to tell ease out from ease out back at a glance?"
+  ],
+  "rough": [
+    "NO PICTURE OF THE APP: the Mac's screen was locked for this whole task, so no walk could run and macOS refuses every capture. The two pictures beside this audit are OFFSCREEN RENDERS of the swing at 0ms and 450ms, not photographs of the window, and the panel has not been seen on a real screen. The walk that would take those pictures is written and parses: Scripts/playtest/motion-swings-a-layer-walk.json.",
+    "Three deliberate departures from the mock, each argued in the task log: a fresh motion already moves rather than reading 0° → 0°; Repeat carries 'there and back' so a loop is not a jump cut; and the row has no drag handle, because two motions on two different properties have no order that changes anything.",
+    "A motion speaks for ONE layer, unlike Effects, which speaks for everything picked. Pick two layers and the Motion section leaves. That is honest (the From and To are that layer's own numbers) but it is a difference from the section directly above it.",
+    "Editing a field while the preview is PAUSED does not start it: you press play. Adding a motion does start it. Those are two different rules and somebody may well expect one.",
+    "Colour From and To open the system colour panel rather than this app's own picker, so they do not offer the saved colours the rest of the panel does.",
+    "Path points and Dash are in the mock's property menu and are not here: both need a way to say what the second value IS that a number field cannot carry. Left for the pen work to settle.",
+    "The preview redraws the whole composite at 30 frames a second. On an icon that is nothing; on a twelve megapixel photograph with ten layers it is real work, and frames drop rather than queue."
+  ]
+}

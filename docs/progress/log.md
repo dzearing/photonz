@@ -15300,3 +15300,42 @@ Next: `a-layer-can-be-told-to-change-one-of-its-propert` is the first slice and
 nothing else in the set works until it lands. Open question for the user is on
 the audit: whether the timing strip should promise to serve video later or be
 allowed to be its own thing.
+
+## 2026-09-15 — Motion: a layer told to change one of its properties over time
+
+Slice 1 of the `icon-animate` set, Next only, behind `next-motion`.
+
+- **Model** in `PhotonzCore/LayerMotion.swift`, written test-first (38 tests):
+  `MotionProperty` built out of the layer rather than from a fixed list,
+  `MotionValue` (a number, a place or a colour), one named `EasingCurve` set
+  with a cubic-bezier solver, `MotionTiming` (start and duration as ONE type,
+  because the slice-3 strip draws the same two numbers), `MotionRepeat`, and
+  `LayerMotion` with `value(atMS:cycleMS:)`. `Layer.motions` is a new optional
+  field, so every document written before this reads back untouched.
+- **The picture at a moment** is `PhotonzDocument.moved(toMotionTimeMS:)`, a
+  copy. `EditorState.displayDocument` hands it to the renderer while the
+  preview runs and the stored document never moves: nothing is baked in, and
+  stopping the preview gives you back the picture you drew.
+- **Panel**: a Motion section directly under Effects with the same header, plus
+  and row shape (`MotionListInspector.swift`), a play/pause on the header, a
+  curve drawn small on every row and in the curve menu, and a cubic-bezier
+  editor with two draggable handles.
+- **Three departures from the mock**, each argued in the task log and in
+  `docs/design/layer-motion.md`: a fresh motion already moves; Repeat carries
+  "Forever, there and back" so a loop is not a jump cut; no drag handle on a
+  row.
+- **The curve vocabulary is settled for the app side** of
+  `one-set-of-easing-curves-named-the-same-way-ever`, mapped onto the design
+  language's own tokens and covered by a test.
+- **Verification**: 6725+ tests green, including five new render tests that put
+  the same document through `DocumentRenderer` at three moments and compare the
+  pixels. The screen was LOCKED for the whole task, so no walk could run and
+  there is no picture of the app: `Scripts/playtest/motion-swings-a-layer-walk.json`
+  is written and parses, and the finding is folded into
+  `an-audit-gets-a-real-picture-of-the-app-again`.
+- Audit: `queue/audits/2026-09-15-layer-motion.json`, shipping offscreen renders
+  and saying so.
+
+Next in the set: the pivot on the canvas (slice 2), then the cycle timing strip
+(slice 3). Open question for the user is on the audit: whether adding a motion
+should start the preview on its own.

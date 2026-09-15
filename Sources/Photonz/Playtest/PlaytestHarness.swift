@@ -4205,9 +4205,23 @@ private final class Run {
                 let wanted = PlaytestSteadyName.isSteady(choose)
                     ? (AddableEffect.steadyNamed(choose)?.title ?? choose)
                     : choose
-                if let index = menu?.items.firstIndex(where: {
+                // A row that carries a VALUE as well as a name — "Rotation
+                // 0°" on the Motion plus, where the number is the thing you
+                // would be animating away from — cannot be named by the words
+                // on it, because the words change the moment anything moves.
+                // So a name that matches no row exactly is tried as the start
+                // of one, and only accepted when exactly one row begins with
+                // it: an ambiguous name is still an error rather than a guess.
+                var landed = menu?.items.firstIndex {
                     PlaytestPanelMenu.readable($0.title) == wanted
-                }) {
+                }
+                if landed == nil, let items = menu?.items {
+                    let beginning = items.indices.filter {
+                        PlaytestPanelMenu.readable(items[$0].title).hasPrefix(wanted)
+                    }
+                    if beginning.count == 1 { landed = beginning[0] }
+                }
+                if let index = landed {
                     if menu?.items[index].isEnabled == true {
                         menu?.performActionForItem(at: index)
                         reading.chose = wanted

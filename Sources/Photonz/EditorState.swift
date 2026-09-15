@@ -673,6 +673,26 @@ final class EditorState {
     var lensAmountPreview: (id: UUID, amount: CGFloat)?
     /// Where that pull started, so the undo step spans the whole of it.
     var lensAmountBeforeDrag: CGFloat?
+
+    // MARK: Motion (`next-motion`)
+
+    /// How far into one cycle of the loop the canvas is drawing, in
+    /// milliseconds. Nought is the picture AS DRAWN, which is what you edit
+    /// against: a canvas showing a layer somewhere other than where the
+    /// document says it is would be a canvas you cannot drag anything on.
+    var motionPlayheadMS: Int = 0
+    /// Whether the preview is running. The play button on the Motion header
+    /// answers for this, and so does adding or changing a motion, because the
+    /// answer to "did that do anything" should be on screen without being
+    /// asked for.
+    var isMotionPlaying = false
+    /// The frame loop while the preview runs. Cancelled the moment the preview
+    /// stops, the document closes, or everything has finished moving: a clock
+    /// left running on a picture nobody is watching is a core spent on nothing.
+    @ObservationIgnored var motionTask: Task<Void, Never>?
+    /// When the running preview started, so the playhead is real time rather
+    /// than a count of frames that drifts whenever one is dropped.
+    @ObservationIgnored var motionStartedAt: Date?
     /// Bumped whenever the LENS TOOL's own memory changes, so the capsule over
     /// the tool bar and the panel's tool section redraw. The memory itself
     /// lives in UserDefaults, which nothing observes.
@@ -2695,6 +2715,14 @@ final class EditorState {
     /// Export paths rasterize the document itself and never come through here.
     private func displayDocument(_ document: PhotonzDocument) -> PhotonzDocument {
         var document = displayFiltered(document)
+        // ...and where in its loop the preview is, which is the same kind of
+        // fact: the motion is never stored, it is worked out at the moment the
+        // canvas is drawn, exactly like the blur and the shadow above it. Stop
+        // the preview and the picture is the picture you drew
+        // (`LayerMotion.swift`).
+        if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
+            document = document.moved(toMotionTimeMS: motionPlayheadMS)
+        }
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
             document.updateLayer(id: id) { $0.isVisible = false }
@@ -2790,7 +2818,11 @@ final class EditorState {
     func submit(_ document: PhotonzDocument) {
         let submitted = document
         let document = displayDocument(document)
-        defer { refreshCrispTile(showing: submitted) }
+        // Not while the motion preview is running. A sharp copy of a moving
+        // picture is stale before it lands, and asking for one thirty times a
+        // second would clear the tile thirty times a second, which every view
+        // reading it is told about whether or not the value changed.
+        defer { if !isMotionPlaying { refreshCrispTile(showing: submitted) } }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
                 await MainActor.run {

@@ -142,6 +142,8 @@ public enum FeatureCatalog {
 
     public static let newLayerViaCutFlag = "next-new-layer-via-cut"
 
+    public static let motionFlag = "next-motion"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -442,6 +444,15 @@ public enum FeatureCatalog {
                     name: newLayerViaCutFlag,
                     title: "Cut a piece onto its own layer and heal behind it",
                     description: "Draw a marquee round something in a picture, press Shift Command J, and that piece lifts onto a layer of its own while the space it came from fills in with the colours that were around it. Move the piece and what it came off still looks whole, instead of showing a hole or a second copy of the same thing sitting underneath. It works for any marquee: a box, an ellipse, or a selection made with the wand. Where the surroundings are one flat colour, the space comes back exactly that colour; where they ramp evenly, the ramp carries on through the space. Where they are too busy to read, it still cuts, because you asked it to, fills with the middle colour of what was around it, and says the fill was a guess. The new layer is the size of the piece and is picked afterwards, so you can drag it straight away, and one undo puts back the piece, the hole and the fill together. It also sits in the Layer menu under New Layer via Copy, which is the same command without the healing. Off means the row and the key are absent and Command J still copies a piece to a new layer as before.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: motionFlag,
+                    title: "Tell a layer to change one of its properties over time",
+                    description: "Adds Motion to the right hand panel, directly under Effects and read the same way: a list you add to with the plus on its header. An entry is one property of the layer you have picked that changes over time. The plus offers only what that layer actually has, each with the value it is wearing right now: where it sits, how big it is, how far it is turned, how see-through it is, what colour it is, and on a drawn line how thick that line is. There is no menu of canned motions with names like Pulse or Wiggle, because those are combinations of these and combinations are what you make. Each entry says what it goes from and to, how long after the start of the loop it begins, how long it takes, on which curve, and how often it repeats: once, three times, for ever, or for ever there and back, which is what an icon nearly always wants and what a new entry starts as. The curves are one named set with the shape drawn beside each name, from linear through the four standard eases to back, elastic and steps, plus one you draw yourself by dragging two handles. The picture plays it in the canvas, and the play button on the Motion header starts and stops the preview. Nothing is ever baked in: a motion is worked out at the moment the canvas is drawn, exactly like a blur or a shadow, so the layer you can still drag is the layer you drew, and every change is one step for undo. Off means no Motion section and nothing in any document moves.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

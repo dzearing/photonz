@@ -94,6 +94,13 @@ enum InspectorSectionID: String, CaseIterable {
     // per-kind section, which in a normal window put Corner Radius below the
     // bottom of the panel (reported 2026-09-03).
     case effects
+    // What this layer has been told to CHANGE over time (Next, `next-motion`).
+    // Directly under Effects, because it is the same list read the same way:
+    // a header with a plus, rows with a switch and a name and a summary,
+    // settings that unfold. The only difference is what a row means — an
+    // Effects row is something the layer paints, a Motion row is something
+    // about it that changes.
+    case motion
     // Shadow stays at the bottom. It is part of the same look family as Color
     // and Effects, but it is a switch you set once rather than a slider you
     // pull, and it is the tallest section in the panel: putting it above the
@@ -128,6 +135,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .collage: "Collage"
         case .canvas: "Canvas"
         case .effects: "Effects"
+        case .motion: "Motion"
         case .shadow: "Shadow"
         case .library: "Library"
         // Replaced at draw time by the scope's own noun; this is the fallback.

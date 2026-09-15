@@ -1502,6 +1502,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// box").
     public var heightChosenByHand: CGFloat?
 
+    /// What this layer has been told to CHANGE over time: one entry per
+    /// property that moves, read the same way the Effects list above it is
+    /// read (`LayerMotion.swift`). Nil is a layer that does not move, which is
+    /// every layer in every document written before this existed.
+    ///
+    /// Nothing here is ever baked into pixels. A motion is sampled at the
+    /// moment the canvas is drawn, exactly like the blur and the shadow, so
+    /// the layer stored here is always the one you can still drag.
+    public var motions: [LayerMotion]?
+
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
@@ -1543,6 +1553,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
         copy.effectStyleBindings = effectStyleBindings
+        // A copy of a layer does what the original does: copying the look and
+        // dropping the movement would be half a duplicate.
+        copy.motions = motions
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1572,6 +1585,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
         copy.effectStyleBindings = effectStyleBindings
+        copy.motions = motions
         map[id] = copy.id
         return copy
     }

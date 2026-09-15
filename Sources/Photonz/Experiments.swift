@@ -332,6 +332,16 @@ extension Experiments {
     /// flag off takes away a way IN, never a document's contents.
     var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
 
+    /// `next-motion`: whether the Motion section exists under Effects, with the
+    /// plus that tells a layer to change one of its properties over time, and
+    /// whether the canvas plays it. The model is never flagged: a document that
+    /// already holds a motion opens and reads correctly either way, because
+    /// turning a flag off takes away a way IN, never a document's contents. It
+    /// does take away the PLAYING, which is the one thing a way in cannot be:
+    /// a canvas quietly animating with no section to switch it off would be a
+    /// picture nobody could stop.
+    var motionEnabled: Bool { isEnabled(FeatureCatalog.motionFlag) }
+
     /// `next-reshape-a-path`: whether a selected path shows its anchors and
     /// lets them be dragged, converted, added and taken out. It needs the Pen,
     /// because without one there is no way to draw a path to reshape. A path
