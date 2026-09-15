@@ -21,6 +21,8 @@
     { "do": "expectPath", "anchors": 3, "closed": false, "width": 4 },
     { "do": "describe", "stage": "1-first", "note": "the first of two open paths, out of the Pen at the weight every new line ships with. Both are drawn BEFORE anything is rethickened, because the Pen now keeps the weight you last chose and the row below needs two lines that differ." },
 
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
     { "do": "click", "at": [240, 640] },
     { "do": "wait", "seconds": 0.2 },
     { "do": "click", "at": [400, 640] },

@@ -23,10 +23,11 @@ public enum PathEditHint {
     public static let opening = "Drag a point to reshape. Double click a point to curve it, "
         + "or the outline to add one."
 
-    /// The same moment, with the PEN still in hand, which is where a person
-    /// actually is the instant a shape lands: the Pen stays in your hand for
-    /// the next shape (`EditorState.addPath`), so this is the line that has to
-    /// do the teaching.
+    /// The same moment with the PEN in hand rather than Select: a finished
+    /// path picked up again by pressing P over it. A shape no longer lands
+    /// with the Pen still in hand (`EditorState.addPath` hands back to Select,
+    /// like every other tool that makes something), so this is the line for
+    /// somebody who chose the Pen over a shape that already exists.
     ///
     /// It offers three of the four gestures and NOT the outline double click,
     /// because the Pen cannot reach that one: the first of the two clicks

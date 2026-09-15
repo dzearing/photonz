@@ -46,6 +46,8 @@
     { "do": "snapshot", "name": "4-clicked-out" },
     { "do": "render", "name": "4-clicked-out-doc" },
 
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 3 },
     { "do": "click", "at": [352, 248] },
     { "do": "wait", "seconds": 0.3 },
     { "do": "drag", "from": [368, 248], "to": [368, 240], "steps": 10 },

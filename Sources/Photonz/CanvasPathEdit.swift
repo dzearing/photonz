@@ -61,14 +61,16 @@ extension CanvasNSView {
     /// The path whose points are on the canvas: one picked, with Select or the
     /// PEN in hand, in a release that can reshape one.
     ///
-    /// The Pen counts because the Pen STAYS IN HAND after a shape lands
-    /// (`EditorState.addPath`), so the moment somebody has just drawn a shape
-    /// and wants to round a corner is a moment spent holding the Pen. Asking
-    /// for Select there meant the points of the thing you had this second
-    /// finished did not exist, with nothing on screen saying why — the whole
-    /// of the report on 2026-09-14, "I don't understand how to make curved
-    /// shapes, don't know how to delete a point, add a point, reposition a
-    /// point".
+    /// The Pen counts because a shape gets picked up again with the Pen as
+    /// often as with Select: press P over a finished path and its points are
+    /// there to round a corner with. Asking for Select meant the points of a
+    /// shape under a drawing tool did not exist, with nothing on screen saying
+    /// why — the whole of the report on 2026-09-14, "I don't understand how to
+    /// make curved shapes, don't know how to delete a point, add a point,
+    /// reposition a point". It is NOT conditional on the Pen staying in hand
+    /// after a shape lands, which it no longer does (`EditorState.addPath`
+    /// hands back to Select like every other tool that makes something); it is
+    /// right on its own terms, so nobody who keeps the Pen is stranded.
     ///
     /// The two tools do not fight over the same pixels, because the Pen
     /// ALREADY treats a press on an existing anchor as acting on that anchor

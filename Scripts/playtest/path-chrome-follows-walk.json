@@ -16,8 +16,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "closed": true, "curves": 2, "smooth": 1 },
 
-    { "do": "key", "key": "escape" },
-    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
     { "do": "expectPicked", "layers": ["Path"] },
     { "do": "wait", "seconds": 0.4 },
 

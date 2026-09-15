@@ -35,8 +35,8 @@ extension EditorState {
     /// the moment a path is picked — which is the moment somebody needs to be
     /// told that the dots on it can be dragged at all.
     ///
-    /// The PEN counts as well as Select, because the Pen stays in hand after a
-    /// shape lands and that is precisely when somebody wants to round a corner
+    /// The PEN counts as well as Select, because pressing P over a finished
+    /// path is how somebody reaches for its points to round a corner
     /// (`CanvasNSView.editablePath`). A TURNED path counts too, where it used
     /// to be excluded: it cannot be reshaped, and the chip is the only thing
     /// that can say so instead of leaving the points quietly missing.

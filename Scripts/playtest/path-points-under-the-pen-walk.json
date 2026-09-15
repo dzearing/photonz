@@ -15,15 +15,20 @@
     { "do": "click", "at": [203, 503] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "describe", "stage": "1-drawn-and-handed-back", "note": "a triangle landed and the pointer came back with it picked, the way every tool that makes something ends (pen-hands-back-walk is the walk about that)" },
+
+    { "do": "key", "key": "p" },
     { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
     { "do": "expectPicked", "layers": ["Path"] },
-    { "do": "describe", "stage": "1-drawn-pen-still-in-hand", "note": "a triangle landed and the Pen is STILL in hand, which is the state the whole task is about" },
+    { "do": "describe", "stage": "2-pen-picked-up-over-it", "note": "P over the shape that was just drawn: the Pen comes back and the pick comes WITH it, which is the state the whole task is about. Picking the Pen up is how the anchors of a finished shape are reached" },
 
     { "do": "expectHint", "contains": "Drag a point to reshape this shape" },
     { "do": "expectHint", "contains": "Double click a point to curve it" },
     { "do": "expectHint", "contains": "draw another" },
     { "do": "snapshot", "name": "1-just-drawn-points-showing" },
-    { "do": "describe", "stage": "2-the-chip-says-it", "note": "the chip under the canvas has switched from the Pen's line to the path's: with the Pen still in hand it names dragging a point and double clicking one, and says a press anywhere else still draws the next shape" },
+    { "do": "describe", "stage": "3-the-chip-says-it", "note": "the chip under the canvas has switched from the Pen's line to the path's: with the Pen in hand it names dragging a point and double clicking one, and says a press anywhere else still draws the next shape" },
 
     { "do": "hover", "at": [450, 220] },
     { "do": "wait", "seconds": 0.4 },

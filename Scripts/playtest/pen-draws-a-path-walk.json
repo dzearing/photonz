@@ -32,8 +32,8 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "closed": true, "curves": 2 },
     { "do": "expectPicked", "layers": ["Path"] },
-    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
-    { "do": "describe", "stage": "5-closed", "note": "three anchors, closed, two curved runs; the new path is picked and the PEN IS STILL IN HAND, ready for the next shape (pen-stays-in-hand-walk is the walk about that)" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
+    { "do": "describe", "stage": "5-closed", "note": "three anchors, closed, two curved runs; the new path is picked and the POINTER is back, the way every tool that makes something ends (pen-hands-back-walk is the walk about that)" },
     { "do": "snapshot", "name": "5-path-closed" },
     { "do": "expectLayers", "count": 2 },
 

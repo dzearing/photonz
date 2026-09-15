@@ -124,11 +124,38 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// every tool change, the way it does in Photoshop, so an outline you
     /// placed by hand is never thrown away by a stray tool key (decided
     /// 2026-09-13, "It stays up"). Only a click on bare canvas or ⎋ clears it.
+    /// The PEN is on the list as well, for the same reason: a picked path's
+    /// points are live under the Pen (`CanvasNSView.editablePath`), so pressing
+    /// P over a shape is how its anchors are reached. Dropping the pick on the
+    /// way in would take the points off the canvas at the exact moment they
+    /// were asked for. Nothing else survives: the Pen's first anchor lets go of
+    /// whatever was picked (`penMouseDown`), so a pick only lasts as long as it
+    /// is being worked on.
     public var preservesLayerSelection: Bool {
-        self == .select || self == .fill || isRegionSelectionTool
+        self == .select || self == .fill || self == .pen || isRegionSelectionTool
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
+
+    /// Whether this tool MAKES something: finish the gesture and the document
+    /// has a layer in it that was not there before.
+    ///
+    /// It exists so the app's ending rule can be said over the whole set at
+    /// once — every tool that makes something hands you back to Select with
+    /// the new thing picked (`ArrowCaptionEntry.toolAfterLanding`) — instead of
+    /// each tool's own commit remembering to. A tool added later has to answer
+    /// here, so it cannot quietly become the exception.
+    ///
+    /// The other six act on what is already there: Select picks and moves,
+    /// Crop trims the picture, the bucket repaints a layer, and the marquee
+    /// pair and the wand sweep a region rather than adding to the stack.
+    public var createsLayers: Bool {
+        switch self {
+        case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
+             .zoomCallout, .lens, .measure, .frame, .pen: true
+        case .select, .crop, .fill, .rectSelect, .ellipseSelect, .wand: false
+        }
+    }
 
     /// What the tool bar's colour capsule carries for this tool.
     ///

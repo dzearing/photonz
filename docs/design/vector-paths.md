@@ -375,16 +375,27 @@ Command Z while drawing steps back ONE anchor. It is taken in the canvas's
 there is nothing left to step back through the pen stops answering and Command Z
 means what it always means.
 
-**The Pen stays in your hand.** Every other drawing tool hands back to Select
-the moment it has drawn its one thing, which is right for a tool that draws one
-thing per errand. An icon is five or six shapes in a row, so the Pen keeps
-itself: a finished path is added, and picked, and the Pen is still the tool in
-hand for the next shape. Escape with nothing being drawn is the way out — it
-puts the Pen down and hands back to Select with the shape just drawn still
-picked, so the old ending is one press away — and V, or any other tool button,
-puts it down as it always did. The chip's opening line carries that way out,
-because it is the line on screen between one shape and the next.
-`Scripts/playtest/pen-stays-in-hand-walk.json` is the walk that holds all of it.
+**The Pen ends like every other tool that makes something.** A finished path is
+added, picked, and the pointer comes back, so the arrow keys nudge the shape and
+the panels describe it without a trip to the tool bar. That is the rule for all
+eleven creating tools (`Tool.createsLayers`, `ArrowCaptionEntry.toolAfterLanding`)
+and the Pen has no exemption from it.
+
+It did have one, for two days. "The Pen stays in your hand for the next shape"
+was built on the reasoning that an icon is five or six shapes in a row, which is
+true, and the answer to it is the app's own: P puts the Pen straight back, the
+way R does for rectangles. Five shapes cost five presses of P, one per shape, and
+in exchange the Pen ends the way the other ten tools end. The user hit the
+inconsistency twice, the second time as "after i create a shape, it doesn't
+select it and switch to V tool" (2026-09-15), which is what retired it. Escape
+with nothing being drawn still puts the Pen down, for the Pen picked up and not
+used and for a path abandoned mid-draw, and V or any other tool button still
+puts it down as it always did.
+`Scripts/playtest/pen-hands-back-walk.json` is the walk that holds all of it.
+
+What the sticky Pen landed alongside stays: a picked path shows its points under
+the Pen as well as under Select, so pressing P over a finished shape reaches its
+anchors.
 
 A path arrives wearing what a new box wears — the redline red, 4pt of line,
 filled when it closed and no fill at all when it did not, because an open path

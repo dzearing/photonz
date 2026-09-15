@@ -3813,3 +3813,13 @@
 {"t":"2026-09-15T19:03:45.606Z","ev":"task_note","id":"tutorials-animating-an-icon"}
 {"t":"2026-09-15T19:03:45.649Z","ev":"task_note","id":"tutorials-animating-an-icon"}
 {"t":"2026-09-15T19:04:03.059Z","ev":"task_done","id":"tutorials-animating-an-icon","from":"in_progress","note":"Four guides added to the Icons track (Make something move, Get the timing right, Two parts out of phase, Export it as an animated SVG), all data in TutorialGuides.swift with no UI edited, plus TutorialAnchor.timingStrip on MotionStripView, 'motion' in knownPanelSections, four bell samples, and a tutorial sample that arrives moving now starts its loop. Committed as b64ca77b and pushed. Verified: full suite green at 7072 tests including the walk coverage check and the length claim check; the animated SVG was written and loaded in a real browser, where both parts turn and the clapper trails the body all the way round the lap, with the swing staying inside the 24 point box. NOT verified: the four new walks have never run, because the Mac's screen was locked for the whole task and every run reported status locked. Sweep requested. Audit at queue/audits/2026-09-15-tutorials-animating-an-icon.json, and it says in plain words that its only picture is the exported file in a browser rather than the app."}
+{"t":"2026-09-15T19:04:40.797Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T19:04:40.900Z","ev":"task_started","id":"every-tool-that-makes-something-hands-back-to-se","title":"Every tool that makes something hands back to Select with it picked","priority":"p2-normal"}
+{"t":"2026-09-15T19:14:52.763Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:52.808Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:52.850Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:52.892Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:52.934Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:52.977Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:53.019Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}
+{"t":"2026-09-15T19:14:53.060Z","ev":"task_note","id":"every-tool-that-makes-something-hands-back-to-se"}

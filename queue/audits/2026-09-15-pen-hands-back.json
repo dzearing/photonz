@@ -1,0 +1,28 @@
+{
+  "feature": "Every tool that makes something hands back to Select",
+  "epic": "icon-vector",
+  "summary": "Finish a path with the Pen and you are holding the pointer with that path picked, so the arrow keys move it and the panels describe it without a trip to the tool bar. The Pen was the last tool in the app that did not do this.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen and path reshaping are on by default in Next; nothing new to switch on.",
+  "try": [
+    { "do": "Press ⌘N for a blank document." },
+    { "do": "Press P, then click three corners and click the first one again to close the shape." },
+    { "do": "Look at the tool bar: the pointer is in hand, not the Pen, and the shape is picked." },
+    { "do": "Press the right arrow key four times without touching anything else, and watch the shape move." },
+    { "do": "Press P and draw a second shape the same way. One press of P per shape." },
+    { "do": "Press ⌘Z once and check the whole second shape goes in a single step." },
+    { "do": "Press P again while the first shape is picked: the Pen comes back and the shape's points stay on it, ready to drag." }
+  ],
+  "evaluate": [
+    "After closing a shape, does the pointer coming back feel like the drawing finished, or like the tool was taken off you?",
+    "Drawing an icon of five or six shapes: is one press of P per shape an acceptable price for the ending being the same as every other tool's?",
+    "Is the shape being picked the moment it lands what you want, or would you rather it landed with nothing picked?",
+    "Pressing P over a shape you already drew keeps it picked and shows its points. Is that the way you would reach for its anchors?",
+    "Does undo after drawing take back the right amount in one press?"
+  ],
+  "rough": [
+    "No pictures with this one: the Mac's screen was locked for the whole task, so macOS refuses every screen capture and a walk will not even run. The walks below were written and updated but not executed, and a sweep has been asked for so they run as soon as the screen is unlocked.",
+    "This reverses a decision that was taken on purpose two days ago. The Pen was made to keep itself in hand because an icon is five or six shapes in a row; that reasoning was real, and what beat it was consistency across eleven tools plus the user hitting the inconsistency twice. If drawing a run of shapes now feels slow, the thing to argue about is whether the Pen should be the app's one exception, not whether the hand-back works.",
+    "Picking the Pen up now keeps whatever layer was picked, where before it dropped it. That is what makes pressing P over a finished shape reach its points. The side effect is that picking the Pen up with a rectangle selected leaves the rectangle selected, invisibly: its handles are hidden under the Pen, and the first anchor of a new path lets it go.",
+    "The walk proves the arrow keys acted on the shape by undoing one step and checking the shape is still there, rather than by claiming a pixel position. A walk cannot read a layer's X and Y, so a nudge can only be shown indirectly. Step four of the try list above is the direct version, by eye."
+  ]
+}

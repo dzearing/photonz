@@ -54,6 +54,8 @@
     { "do": "render", "name": "pen-colour-5-drawn" },
     { "do": "snapshot", "name": "pen-colour-5-drawn" },
 
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
     { "do": "click", "at": [600, 480] },
     { "do": "wait", "seconds": 0.3 },
     { "do": "click", "at": [780, 480] },

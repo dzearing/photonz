@@ -51,9 +51,16 @@ public enum ArrowCaptionEntry {
 
     // MARK: Which tool is in hand
 
-    /// The tool after a drag-to-create lands. Only an arrow that is about to
-    /// offer its caption keeps the tool; everything else returns to Select with
-    /// the new object selected (user request 2026-08-21: nudge it right away).
+    /// The tool after something is created. Only an arrow that is about to
+    /// offer its caption keeps the tool; every other tool that makes something
+    /// returns to Select with the new object selected (user request
+    /// 2026-08-21: nudge it right away).
+    ///
+    /// EVERY creating tool comes through here, drag or not: the Pen's run of
+    /// clicks lands the same way a rectangle's one drag does (user request
+    /// 2026-09-15, "after i create a shape, it doesn't select it and switch to
+    /// V tool"). `Tool.createsLayers` is the list, and the test over it is
+    /// what stops a tool being added with an ending of its own.
     public static func toolAfterLanding(_ tool: Tool, offersCaption: Bool) -> Tool {
         tool == .arrow && offersCaption ? .arrow : .select
     }

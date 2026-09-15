@@ -15688,3 +15688,45 @@ run: the four new walks are written and have never been executed, and there are
 no pictures of the app anywhere in the audit. A sweep has been requested.
 
 Next: the sweep result on those four walks.
+
+## 2026-09-15 — Every tool that makes something hands back to Select
+
+The Pen was the last tool in the app that kept itself in hand after it had
+drawn something. Finish a path and you were still holding the Pen with nothing
+picked, so the next thing you did was a second shape rather than a move of the
+first. That was deliberate, taken two days earlier on the reasoning that an icon
+is five or six shapes in a row, and it is now retired: the user hit the
+inconsistency twice, the second time as "after i create a shape, it doesn't
+select it and switch to V tool". The app's own answer to a run of shapes is that
+the tool's key puts it straight back, which is what R already costs for five
+rectangles.
+
+- `Tool.createsLayers` names the eleven tools that make a layer, and a test over
+  that list asserts every one of them hands back through
+  `ArrowCaptionEntry.toolAfterLanding`. A tool added later cannot quietly ship an
+  ending of its own. The ten that were not the Pen already handed back: they all
+  take `finishCreating`'s default of `.select`.
+- `.pen` joins `select`, `fill` and the marquee family in
+  `Tool.preservesLayerSelection`. Without it, pressing P over a finished path
+  would drop the pick and the points-under-the-Pen work from 2026-09-14 would
+  have had no reachable state at all.
+- Nine walks touched, `pen-stays-in-hand-walk.json` renamed to
+  `pen-hands-back-walk.json`. Three of them drew a second path without pressing
+  P, which only worked because the Pen stayed in hand; two put the Pen down with
+  Escape after a shape landed, which under Select drops the selection instead.
+- Tutorial copy, `PathEditHint`, `PenDrawing.hint`'s doc and
+  `docs/design/vector-paths.md` all described the old ending and now describe
+  this one.
+
+**Verified:** `swift build` clean, `Scripts/test.sh` green (7074 tests, 565
+suites). **Not verified:** not one walk ran. The Mac's screen was locked for the
+whole session, so every walk reports `status: "locked"` with zero steps. A sweep
+was requested with the reason spelled out, so the nine touched walks run the
+moment the screen is unlocked.
+
+**Next:** read `queue/bin/sweep.sh status` once the screen is unlocked and pick
+up whatever the nine walks report.
+
+**Open question:** none blocking. The judgement worth revisiting is whether one
+press of P per shape is an acceptable price for the Pen ending like every other
+tool; the audit asks it directly.

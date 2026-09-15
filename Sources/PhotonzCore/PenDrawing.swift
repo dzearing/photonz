@@ -548,10 +548,11 @@ public struct PenSession: Equatable, Sendable {
     /// path and they do OPPOSITE things with it, so the difference is written
     /// down rather than left to be discovered by losing a drawing.
     ///
-    /// The FIRST line carries the way out. The Pen stays in hand after a shape
-    /// lands — an icon is several shapes in a row — so this is the line on
-    /// screen between one shape and the next, and nothing else on screen says
-    /// how to stop drawing.
+    /// The FIRST line carries the way out, for the Pen picked up and not yet
+    /// used: nothing else on screen says how to put it down again without a
+    /// trip to the tool bar. (A finished shape puts it down by itself —
+    /// `EditorState.addPath` hands back to Select — so this line is about the
+    /// gap before the first click, not the gap between one shape and the next.)
     public static func hint(for session: PenSession) -> String {
         if let reason = session.flatCloseReason { return reason }
         switch session.anchors.count {

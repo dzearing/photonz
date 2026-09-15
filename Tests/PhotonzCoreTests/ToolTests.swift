@@ -67,6 +67,11 @@ struct ToolTests {
         #expect(Tool.wand.preservesLayerSelection)
         #expect(Tool.fill.preservesLayerSelection)
         #expect(!Tool.crop.preservesLayerSelection)
+        // The Pen keeps it too, because the points of a picked path are live
+        // under the Pen: pressing P over a shape you drew is how you reach its
+        // anchors, and dropping the pick on the way in would empty the canvas
+        // of the very thing you picked the tool up for.
+        #expect(Tool.pen.preservesLayerSelection)
         #expect(!Tool.rectangle.preservesLayerSelection)
         #expect(!Tool.text.preservesLayerSelection)
         #expect(!Tool.measure.preservesLayerSelection)

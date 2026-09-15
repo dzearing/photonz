@@ -45,6 +45,33 @@ struct ArrowCaptionEntryTests {
         #expect(ArrowCaptionEntry.toolAfterLanding(.line, offersCaption: true) == .select)
     }
 
+    /// The house rule, said over every tool rather than over the handful this
+    /// file was written for: finish something and you are holding the pointer
+    /// with the new thing picked, so the arrow keys nudge it straight away
+    /// (user request 2026-08-21, and again 2026-09-15 after the Pen was made
+    /// to keep itself in hand). The Pen is in here on purpose: it was the one
+    /// exception and is not one any more.
+    @Test func everyToolThatCreatesSomethingHandsBackToSelect() {
+        for tool in Tool.allCases where tool.createsLayers {
+            #expect(ArrowCaptionEntry.toolAfterLanding(tool, offersCaption: false) == .select,
+                    "\(tool) must hand back to Select the moment its object exists")
+        }
+        #expect(Tool.pen.createsLayers)
+        #expect(ArrowCaptionEntry.toolAfterLanding(.pen, offersCaption: false) == .select)
+    }
+
+    /// Which tools make something, so the rule above cannot be satisfied by a
+    /// list that quietly leaves one out. Picking, cropping, painting an
+    /// existing layer and sweeping a marquee all act on what is already there.
+    @Test func theToolsThatCreateSomethingAreTheDrawingOnes() {
+        let creating = Set(Tool.allCases.filter(\.createsLayers))
+        #expect(creating == [.arrow, .line, .rectangle, .ellipse, .highlight,
+                             .text, .zoomCallout, .lens, .measure, .frame, .pen])
+        for tool in [Tool.select, .crop, .fill, .rectSelect, .ellipseSelect, .wand] {
+            #expect(!tool.createsLayers)
+        }
+    }
+
     /// Closing the field (Return, Esc, click-away) finishes the arrow: Select
     /// comes back. A tool the user picked meanwhile is left alone.
     @Test func closingTheFieldHandsBackFromArrowOnly() {

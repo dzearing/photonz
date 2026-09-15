@@ -306,10 +306,10 @@ struct EditorView: View {
                         // are not things anybody guesses at.
                         //
                         // It is read BEFORE the Pen's, and that order is the
-                        // whole fix: the Pen stays in hand after a shape lands,
-                        // so without this the one chip on screen at the exact
-                        // moment somebody wants to round a corner was still
-                        // talking about placing the next anchor. A path is only
+                        // whole fix: with the Pen in hand over a path picked up
+                        // again, the one chip on screen at the exact moment
+                        // somebody wants to round a corner was still talking
+                        // about placing the next anchor. A path is only
                         // picked here when the Pen is NOT mid-draw — the first
                         // anchor of a new shape lets the last one go
                         // (`penMouseDown`) — so the Pen's own line is never

@@ -1598,7 +1598,7 @@ public enum TutorialGuides {
                 id: "take-the-pen",
                 anchor: .tool(.pen),
                 title: "Take the Pen",
-                body: "Press P. It stays in your hand after each shape, because an icon is five or six shapes in a row.",
+                body: "Press P. One press draws one shape, then the pointer comes back with that shape picked, so P again starts the next.",
                 advance: .waitsFor(.toolPicked(.pen))),
             TutorialStep(
                 id: "the-line-underneath",
@@ -1615,13 +1615,13 @@ public enum TutorialGuides {
                 id: "pull-a-curve",
                 anchor: .canvas,
                 title: "Now pull a curve",
-                body: "Start another one. Click a point, then press where the next goes and drag before you let go. Close it on the first point.",
+                body: "Press P again and start another one. Click a point, then press where the next goes and drag before you let go. Close it on the first point.",
                 advance: .waitsFor(.editMade)),
             TutorialStep(
                 id: "each-shape-is-a-layer",
                 anchor: .panelSection("layers"),
                 title: "Each shape is a layer",
-                body: "A finished outline is its own layer, with a fill and a line you can repaint. Escape puts the Pen down again.",
+                body: "A finished outline is its own layer, with a fill and a line you can repaint. It is already picked, so the arrow keys nudge it.",
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
         ])

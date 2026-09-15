@@ -17,11 +17,10 @@
     { "do": "expectPath", "anchors": 3, "closed": true, "curves": 2, "smooth": 1 },
     { "do": "describe", "stage": "1-drawn", "note": "a closed shape drawn with the Pen: three points, one of them a smooth bend" },
 
-    { "do": "key", "key": "escape" },
-    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
     { "do": "expectPicked", "layers": ["Path"] },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "describe", "stage": "2-points-showing", "note": "the Pen is put down and the path is picked: its points are on it, square for a hard corner and round for a smooth bend, with the chip saying what they do" },
+    { "do": "describe", "stage": "2-points-showing", "note": "closing the shape put the Pen down on its own and left the path picked: its points are on it, square for a hard corner and round for a smooth bend, with the chip saying what they do" },
     { "do": "snapshot", "name": "1-points-showing" },
 
     { "do": "drag", "from": [700, 500], "to": [700, 620], "steps": 12 },
