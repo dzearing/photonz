@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:40:25.475Z",
-  "updated": "2026-09-15T20:01:05.766Z",
+  "updated": "2026-09-15T20:01:32.070Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15: \"for formats which have variable qualities, i'd like to be able to adjust that and see the expected filesize.\"\n\nBOTH HALVES ARE ALREADY PART BUILT, so this is mostly exposing what is there.\n- Quality: Sources/PhotonzRender/ImageCodec.swift:33, encode(_:format:quality:) already takes a quality of 0 to 1, documented as applying to lossy formats and ignored by PNG, and passes it as kCGImageDestinationLossyCompressionQuality. Nothing in the dialog ever sets it, so every export goes out at the 0.9 default.\n- The size line: Sources/Photonz/ExportDialog.swift already holds a byteCount state, and its comment says it is 'worked out only for a drawing made of shapes'. So the dialog already knows how to show what a file will weigh; it only does it for SVG.\n\nTHE ONLY HONEST WAY to know what a lossy file will weigh is to encode it and count the bytes. There is no formula worth trusting across pictures: a screenshot of flat UI and a photograph of leaves at the same quality differ by an order of magnitude. So encode to memory, in the background, and show the real number. That makes the performance note in the acceptance list the real work: a 12 megapixel document re-encoded on every tick of a slider will make the dialog crawl. Debounce it, do it off the main actor, show the last known number while a new one is being worked out, and say in the audit what was measured.\n\nDo not let this grow into a general export rebuild. The scale row, the frame picker and the SVG handling in that dialog all work and are not part of this.\n\nRelated but separate, and NOT in this task: the user also asked for WebP export in the same message. That cannot be done the way these formats are done - ImageIO on macOS 26 cannot WRITE WebP, confirmed by CGImageDestinationCopyTypeIdentifiers which lists 22 writable types with no WebP among them - so it needs a bundled encoder and that is a decision about taking the project's first third party dependency. The user decided on 2026-09-15: bundle libwebp, WebP and not AVIF. It is filed as 'export-as-webp'. WebP is a lossy format (and a lossless one), so it joins this task's rule the moment it exists; whichever of the two lands second follows the first rather than inventing a second quality control.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-15T20:01:05.765Z",
       "note": "left rough, not filed: (a) a preview of what a quality costs, inside the sheet. A person WILL want it, but it is a much bigger feature than this task and the audit's evaluate list asks the user directly whether the number alone is enough, so their answer becomes the task rather than my guess. (b) a size readout for PNG, cut on purpose for cost, also asked in the audit. (c) HEIC at 60 and JPEG at 60 are not the same picture and the sheet does not say so; the size line is the only thing that tells you, and it tells you honestly. None of these is broken, so none of them earned a task. Folded into existing tasks instead: the no-picture-of-the-app problem into an-audit-gets-a-real-picture-of-the-app-again, and how WebP inherits this control into export-as-webp."
+    },
+    {
+      "t": "2026-09-15T20:01:32.068Z",
+      "note": "Export offers a Quality slider for JPEG and HEIC and says exactly what the file will weigh at it, by really encoding the picture rather than estimating. New: PhotonzCore/ExportQuality.swift (the rules: 30-100 in fives, the plain word, one remembered number per format, how to say a size), PhotonzRender/ExportSizer.swift (an actor that renders and encodes off the main actor and keeps the render, so only the encode repeats as the slider moves), PhotonzDocument.exportTarget(frameID:) (one answer to what Export is writing, so what is weighed and what is saved cannot differ), the row and the per-format memory in ExportDialog.swift behind next-export-quality (on by default in Next). Verified: swift build clean with and without PHOTONZ_PLAYTEST, Scripts/test.sh green (7127 tests, 570 suites) including a render test that writes the file and asserts the bytes on disk equal the shown number; artifacts produced through the app's own encoder on a real 1800x1400 screenshot (191 KB at 30%, 369 KB at 60%, 1.3 MB at 100%, 3.6 MB at 100%/2x, each written and weighed). 12 MP timing: 65-173 ms first weigh, ~11 ms per quality after. NOT verified: no walk ran, the Mac's screen was locked for the whole task, so Scripts/playtest/export-quality-walk.json has never executed and the audit ships no picture of the Export sheet and says so; a sweep is requested. Audit: queue/audits/2026-09-15-export-quality.json"
     }
   ],
-  "started": "2026-09-15T19:46:08.760Z"
+  "started": "2026-09-15T19:46:08.760Z",
+  "completed": "2026-09-15T20:01:32.069Z"
 }
