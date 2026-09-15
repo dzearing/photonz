@@ -148,6 +148,8 @@ public enum FeatureCatalog {
 
     public static let animatedSVGExportFlag = "next-export-animated-svg"
 
+    public static let cutRecordingFlag = "next-cut-a-recording"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -466,6 +468,15 @@ public enum FeatureCatalog {
                     name: animatedSVGExportFlag,
                     title: "An animated icon leaves the app as an animated SVG",
                     description: "Export asks where the file is going before it asks for a format, because that is the question that decides whether the animation survives the trip and it is the one most people can answer. Four destinations: a web page, a README on a code host, a design tool and an app bundle. A web page gets an animated SVG, and the motion, the repeat, the curve and the colours are written into the file itself as text, so the icon keeps swinging in an image tag, stays sharp at every size and is small enough to read. The other three cannot run it: a code host cleans what it is given and gets a picture instead, and a design tool and an app take the shapes and draw their own motion. The sheet says which of those it is, and lists what makes the trip and what does not, including the one thing nothing carries: an icon in a page receives no clicks, so whatever it reacts to is the page's job. The format picker sits right where it always did and the destination simply moves it, so nothing is taken away from somebody who knows what they want. Needs SVG export and the Motion list, and a drawing with nothing moving in it exports exactly the file it did before. Off means Export never asks about the destination and an SVG is always a still one.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: cutRecordingFlag,
+                    title: "Cut a recording into pieces and drop the one you do not want",
+                    description: "A recording you have just made has a start handle and an end handle, so you can shorten it from either end and that is all. If the bit you want rid of is in the middle, the only answer today is to record the whole thing again. This puts a cut wherever the playhead is: press B while it plays, or pick Split at Playhead in the Video menu, and the one clip becomes two pieces that meet at that moment. The line under the picture stops being a plain progress bar and becomes the pieces themselves, one block each, sized by how long they last, with the one you are watching lit up. Press Delete and that piece goes, and everything after it slides up to meet what came before, so there is no hole to drag shut and no silence at the join: what is left plays straight through as one recording. Nothing is thrown away while you work, because a piece is a start and an end onto the same file rather than a copy of it, so Command Z puts a cut back or brings a piece back, and only saving or exporting writes the shortened version out. Off means the line under the picture is the progress bar it always was, B types nothing and Delete does nothing.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

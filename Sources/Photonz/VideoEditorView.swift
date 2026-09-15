@@ -89,6 +89,11 @@ struct VideoEditorView: View {
         // auto-hides while editing). Leaving a mode re-arms the fade.
         .onChange(of: state.isTrimming) { _, _ in reveal() }
         .onChange(of: state.isCropping) { _, _ in reveal() }
+        // A cut, or a piece dropped, has to be SEEN. The controller hides
+        // itself during playback and B is a key you press while playing, so
+        // without this the strip would split behind a fade-out and the person
+        // would be told nothing at all.
+        .onChange(of: state.cuts) { _, _ in reveal() }
         // A guide starting is the same kind of event as a mode opening: bring
         // the controller up, and `editing` keeps it up from there.
         .onChange(of: state.isTutorialRunning) { _, _ in reveal() }
@@ -204,7 +209,21 @@ struct VideoEditorView: View {
         case .rightArrow:
             state.stepForward()
             return .handled
+        case .delete, .deleteForward:
+            guard cuttingAvailable, press.phase == .down, state.canDeleteSelectedPiece else {
+                return .ignored
+            }
+            state.deleteSelectedPiece()
+            return .handled
         default:
+            // B puts a cut where the playhead is, the key every editor uses for
+            // it. Only on key-down: holding it would stack cuts a tenth of a
+            // second apart.
+            if cuttingAvailable, press.phase == .down,
+               press.characters.lowercased() == "b", press.modifiers.isEmpty {
+                state.cutAtPlayhead()
+                return .handled
+            }
             return .ignored
         }
     }
@@ -323,14 +342,23 @@ struct VideoEditorView: View {
         }
     }
 
-    /// Playback position line: current time · scrubber · total duration.
+    /// Playback position line: current time · scrubber · total duration. Once
+    /// the recording has a cut in it the scrubber becomes the pieces themselves
+    /// — same place, same job, now showing what the recording is made of.
     private var scrubberRow: some View {
         HStack(spacing: 10) {
             timecode(state.currentTime)
-            PlaybackScrubber(state: state)
+            if cuttingAvailable, state.cuts.isCut {
+                CutStrip(state: state)
+            } else {
+                PlaybackScrubber(state: state)
+            }
             timecode(state.duration)
         }
     }
+
+    /// Whether this release offers cutting at all.
+    private var cuttingAvailable: Bool { Experiments.shared.cutRecordingEnabled }
 
     private func timecode(_ seconds: TimeInterval) -> some View {
         Text(VideoTimecode.label(seconds))
@@ -345,6 +373,11 @@ struct VideoEditorView: View {
     private var statusLabels: some View {
         if state.isTrimming, state.trim.isTrimmed {
             Label(VideoTimecode.label(state.trim.effectiveDuration), systemImage: "scissors")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        if cuttingAvailable, state.cuts.isCut, !state.isTrimming, !state.isCropping {
+            Label("\(state.cuts.pieceCount) pieces", systemImage: "rectangle.split.3x1")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -368,6 +401,23 @@ struct VideoEditorView: View {
                 .buttonStyle(IconActionButtonStyle())
                 .help("Undo \(action)")
             }
+            if cuttingAvailable {
+                Button { state.cutAtPlayhead() } label: {
+                    Image(systemName: "rectangle.split.2x1")
+                }
+                .buttonStyle(IconActionButtonStyle())
+                .disabled(!state.canCutAtPlayhead)
+                .help("Split at Playhead (B)")
+
+                if state.canDeleteSelectedPiece {
+                    Button { state.deleteSelectedPiece() } label: {
+                        Image(systemName: "trash")
+                    }
+                    .buttonStyle(IconActionButtonStyle())
+                    .help("Delete This Piece (⌫)")
+                }
+            }
+
             Button { state.beginTrim() } label: {
                 Image(systemName: "scissors")
             }

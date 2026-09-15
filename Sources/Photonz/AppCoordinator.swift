@@ -270,7 +270,8 @@ final class AppCoordinator {
         // thing, not when the encoder finished.
         TutorialController.shared.note(.recordingCopied, from: state)
         let edits = state.exportEdits
-        copyRecording(sourceURL: url, as: format, trim: edits.trim, crop: edits.crop)
+        copyRecording(sourceURL: url, as: format, trim: edits.trim, crop: edits.crop,
+                      cuts: edits.cuts)
     }
 
     /// MP4 with no edits copies the source file directly; everything else
@@ -278,8 +279,9 @@ final class AppCoordinator {
     /// with a toast — re-encodes take a moment and the app may have no window
     /// up, so the user needs to see when the clipboard is actually ready.
     private func copyRecording(sourceURL: URL, as format: RecordingFormat,
-                               trim: VideoTrim?, crop: VideoCrop?) {
-        if format == .mp4, trim == nil, crop == nil {
+                               trim: VideoTrim?, crop: VideoCrop?,
+                               cuts: VideoCutList? = nil) {
+        if format == .mp4, trim == nil, crop == nil, cuts == nil {
             ClipboardWriter.writeFile(sourceURL)
             presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
             return
@@ -296,9 +298,10 @@ final class AppCoordinator {
                 let destination = Self.clipboardScratchURL(for: sourceURL, format: format)
                 if format == .mp4 {
                     let seconds = await VideoExporter.duration(of: sourceURL)
+                    let pieces = cuts ?? trim.map { VideoCutList(trim: $0) }
+                        ?? VideoCutList(duration: seconds)
                     try await VideoExporter.exportMP4(from: sourceURL, to: destination,
-                                                      trim: trim ?? VideoTrim(duration: seconds),
-                                                      crop: crop)
+                                                      cuts: pieces, crop: crop)
                     ClipboardWriter.writeFile(destination)
                     presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
                 } else {
@@ -314,7 +317,7 @@ final class AppCoordinator {
                     // bar doesn't sit at 100% while ImageIO writes the file.
                     try await VideoExporter.exportAnimated(
                         from: sourceURL, to: destination, format: format,
-                        trim: trim, crop: crop, targetFPS: targetFPS,
+                        trim: trim, crop: crop, cuts: cuts, targetFPS: targetFPS,
                         onProgress: { done, total in
                             Task { @MainActor in
                                 progress?.update(fraction: 0.95 * Double(done) / Double(max(1, total)))
@@ -382,7 +385,7 @@ final class AppCoordinator {
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        let trim = state.exportTrim
+        let cuts = state.exportCuts
         let crop = state.crop
         let edited = state.hasEdits
 
@@ -396,7 +399,7 @@ final class AppCoordinator {
             isExportingRecording = true
             Task {
                 do {
-                    try await VideoExporter.exportMP4(from: sourceURL, to: url, trim: trim, crop: crop)
+                    try await VideoExporter.exportMP4(from: sourceURL, to: url, cuts: cuts, crop: crop)
                 } catch {
                     reportExportFailure(error)
                 }
@@ -407,7 +410,7 @@ final class AppCoordinator {
             Task {
                 do {
                     try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
-                                                           trim: trim, crop: crop,
+                                                           crop: crop, cuts: cuts,
                                                            targetFPS: quality.targetFPS,
                                                            maxDimension: quality.maxDimension)
                 } catch {

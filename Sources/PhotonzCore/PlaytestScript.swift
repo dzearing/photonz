@@ -456,6 +456,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// clip, which is a real drag's outcome without a walk having to know how
     /// long the sample is.
     case videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone, videoCopyGIF
+    /// Open a recording window on the guides' sample clip WITHOUT a guide: a
+    /// fresh eight second MP4 with dead air at both ends and something
+    /// happening in the middle. What a cutting walk needs, since every other
+    /// way into a recording window depends on the person having recorded
+    /// something.
+    case openSampleRecording
+    /// Move the playhead to a fraction of what is left to watch, which is a
+    /// real scrub's outcome without a walk having to know how long the clip is.
+    case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
+    /// Cutting a recording into pieces: put a cut where the playhead is, throw
+    /// away the piece the playhead is in, and take the last one back.
+    case videoCut, videoDeletePiece, videoUndoEdit
+    /// Playback, driven the way space does.
+    case videoPlay, videoPause
 
     /// Whether this action drives the GUIDE rather than a window: pressing the
     /// callout's own button. A guide can be running over a recording's window,
@@ -472,7 +486,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// picture editor. What tells a walk which window to ask.
     public var drivesRecording: Bool {
         switch self {
-        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF: true
+        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF,
+             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
+             .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause: true
         default: false
         }
     }

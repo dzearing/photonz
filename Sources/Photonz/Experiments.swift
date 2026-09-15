@@ -342,6 +342,13 @@ extension Experiments {
     /// picture nobody could stop.
     var motionEnabled: Bool { isEnabled(FeatureCatalog.motionFlag) }
 
+    /// `next-cut-a-recording`: whether a recording can be cut into pieces at the
+    /// playhead and a piece thrown away. It takes away a way IN, never a
+    /// recording's contents: a recording already saved with a cut in it plays
+    /// its kept pieces either way, because by then the cut is baked into the
+    /// stored file and there is nothing left to switch off.
+    var cutRecordingEnabled: Bool { isEnabled(FeatureCatalog.cutRecordingFlag) }
+
     /// `next-motion-strip`: whether the timing strip runs across the bottom of
     /// the window. It NEEDS the Motion list, because with no way to tell a
     /// layer to move there is never anything to draw a bar for: a strip that

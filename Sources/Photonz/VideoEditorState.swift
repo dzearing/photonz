@@ -35,13 +35,24 @@ final class VideoEditorState {
     /// Full length of the source file in seconds (loaded asynchronously). Export
     /// maps the working window back onto this.
     private(set) var originalDuration: TimeInterval = 0
-    /// The working window into the source file, in original-file seconds. Apply
-    /// Trim narrows it; everything the UI shows (timeline, playhead, live trim) is
-    /// expressed relative to this window. Starts at the whole clip.
-    private(set) var appliedIn: TimeInterval = 0
-    private(set) var appliedOut: TimeInterval = 0
-    /// The working clip length the UI edits within — the applied window's span.
-    var duration: TimeInterval { max(0, appliedOut - appliedIn) }
+    /// What the recording has been cut into: the ordered list of kept pieces,
+    /// in original-file seconds. One piece covering the whole file is an
+    /// untouched recording; applying a trim narrows it; a cut splits a piece in
+    /// two; deleting drops one. Everything the UI shows (strip, playhead, live
+    /// trim) is expressed in TIMELINE time — the pieces played back to back —
+    /// and so is the player, because the player is fed a composition of exactly
+    /// these pieces.
+    private(set) var cuts = VideoCutList(duration: 0)
+    /// The working clip length the UI edits within — what is left to watch.
+    var duration: TimeInterval { cuts.timelineDuration }
+    /// The piece the playhead is sitting in. There is no separate clip
+    /// selection: the piece you are looking at IS the piece you are holding, so
+    /// clicking a piece selects it (clicking a time moves the playhead there)
+    /// and Delete drops what is on screen.
+    var selectedPieceIndex: Int? {
+        guard cuts.isCut else { return nil }
+        return cuts.pieceIndex(atTimeline: currentTime)
+    }
     /// Nominal frame rate (fps), for frame-accurate ←/→ stepping. Defaults to 30
     /// until metadata loads.
     private(set) var frameRate: Double = 30
@@ -164,8 +175,9 @@ final class VideoEditorState {
         let observer = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                // Player runs in original-file time; the UI works in window time.
-                let working = (time.seconds.isFinite ? time.seconds : self.appliedIn) - self.appliedIn
+                // The player is fed a composition of the kept pieces, so its
+                // clock IS timeline time: no offset bookkeeping.
+                let working = time.seconds.isFinite ? time.seconds : 0
                 self.currentTime = min(max(0, working), self.duration)
                 // Loop back to the in-point when playback runs past the out-point.
                 if self.isPlaying, self.currentTime >= self.trim.outPoint - 1e-3 {
@@ -195,19 +207,6 @@ final class VideoEditorState {
         cleanupEndObserver = endObserver
     }
 
-    /// Re-point the player at `source` (the preserved original, after the first
-    /// save turned the recording itself into the trimmed output), keeping the
-    /// playhead and play state.
-    private func rebindPlayer(to source: URL) {
-        guard let player else { return }
-        let wasPlaying = isPlaying
-        let resumeAt = currentTime
-        player.replaceCurrentItem(with: AVPlayerItem(url: source))
-        installEndObserver(on: player)
-        seek(to: resumeAt)
-        if wasPlaying { player.play() }
-    }
-
     private func loadMetadata(url: URL) async {
         let asset = AVURLAsset(url: url)
         let seconds = await VideoExporter.duration(of: url)
@@ -218,8 +217,7 @@ final class VideoEditorState {
         // holds its own.
         _ = asset
         self.originalDuration = seconds
-        self.appliedIn = 0
-        self.appliedOut = seconds
+        self.cuts = VideoCutList(duration: seconds)
         self.naturalSize = oriented
         self.poster = poster
         self.frameRate = fps
@@ -237,9 +235,8 @@ final class VideoEditorState {
         if let mediaURL = self.url {
             self.committedEdits = VideoSaveState.committedEdits(for: mediaURL)
             if let edits = VideoEditsSidecar.load(for: mediaURL) {
-                if let saved = edits.trim, saved.isTrimmed {
-                    self.appliedIn = saved.inPoint
-                    self.appliedOut = saved.outPoint
+                if let saved = edits.keptPieces, !saved.isWholeClip {
+                    self.cuts = saved
                     self.trim = VideoTrim(duration: duration)
                 }
                 self.crop = edits.crop
@@ -248,6 +245,12 @@ final class VideoEditorState {
         self.isReady = seconds > 0
         self.metadataDidLoad = true
         if isReady {
+            // A recalled edit means the player must show the PIECES, not the
+            // file; a fresh recording is already exactly its own composition,
+            // so it keeps the plain item it was seeded with.
+            if !cuts.isWholeClip {
+                await rebuildPlayerItem(resumeAt: 0, keepPlaying: false)
+            }
             // Autoplay from the top of the working clip, like a normal player.
             seek(to: 0)
             play()
@@ -329,12 +332,13 @@ final class VideoEditorState {
         seek(to: min(max(trim.inPoint, seconds), trim.outPoint))
     }
 
-    /// Seek to `seconds` in **working** time (frame-accurate within tolerance);
-    /// the player itself is offset into the applied window.
+    /// Seek to `seconds` in **timeline** time (frame-accurate within
+    /// tolerance). The player's item is the composition of the kept pieces, so
+    /// timeline time and player time are the same number.
     func seek(to seconds: TimeInterval) {
         guard let player else { return }
         let clamped = min(max(0, seconds), max(0, duration))
-        let time = CMTime(seconds: appliedIn + clamped, preferredTimescale: 600)
+        let time = CMTime(seconds: clamped, preferredTimescale: 600)
         player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         currentTime = clamped
     }
@@ -351,7 +355,15 @@ final class VideoEditorState {
     /// trim plus the crop, with no-op edits dropped. This is what a save
     /// commits, and what Export/Copy apply for edits not yet saved.
     var exportEdits: VideoEdits {
-        VideoEdits(trim: exportTrim, crop: crop).normalized(videoSize: naturalSize)
+        let pieces = exportCuts
+        // An uncut recording keeps travelling as an ordinary trim, so every
+        // path that already speaks `VideoTrim` — the sidecar, the save-state
+        // comparison, the exporters — is completely untouched by cutting
+        // existing. Only a recording with a cut IN it carries a cut list.
+        let edits = pieces.isCut
+            ? VideoEdits(crop: crop, cuts: pieces)
+            : VideoEdits(trim: pieces.singleTrim, crop: crop)
+        return edits.normalized(videoSize: naturalSize)
     }
 
     /// The edits the stored recording already has baked in — the clean
@@ -410,9 +422,10 @@ final class VideoEditorState {
                 // recording itself is the trimmed output, so keep editing (and
                 // playing) the original.
                 if plan.originalToPreserve != nil {
-                    let source = VideoOriginals.url(for: mediaURL)
-                    editSourceURL = source
-                    rebindPlayer(to: source)
+                    editSourceURL = VideoOriginals.url(for: mediaURL)
+                    // Re-point the player at the preserved original, keeping
+                    // the playhead and play state.
+                    rebuildPlayer(resumeAt: currentTime, keepPlaying: isPlaying)
                 }
                 isSaving = false
                 // The stored media changed: refresh the history thumbnail and
@@ -438,16 +451,14 @@ final class VideoEditorState {
 
     func revertToOriginal() {
         guard canRevertToOriginal else { return }
-        editUndo.append(EditStep(kind: .trim, appliedIn: appliedIn, appliedOut: appliedOut,
-                                 trim: trim, crop: crop))
-        appliedIn = 0
-        appliedOut = originalDuration
+        editUndo.append(EditStep(kind: .trim, cuts: cuts, trim: trim, crop: crop))
+        cuts = VideoCutList(duration: originalDuration)
         trim = VideoTrim(duration: originalDuration)
         crop = nil
         isTrimming = false
         isCropping = false
         pause()
-        seek(to: 0)
+        rebuildPlayer(resumeAt: 0, keepPlaying: false)
     }
 
     private func presentSaveFailure(_ error: Error) {
@@ -480,6 +491,120 @@ final class VideoEditorState {
         trim.setOut(seconds, duration: duration)
         seek(to: trim.outPoint)
         TutorialController.shared.note(.trimEndMoved, from: self)
+    }
+
+    // MARK: - Cutting a recording into pieces
+
+    /// True when a cut here would actually make two pieces — not at either end
+    /// of the recording, and not on a cut that is already there.
+    var canCutAtPlayhead: Bool {
+        isReady && !isCropping && cuts.canSplit(atTimeline: currentTime)
+    }
+
+    /// Put a cut where the playhead is. One piece becomes two that meet there,
+    /// and nothing is thrown away: both halves read the same recording with
+    /// different in and out points, which is why this costs nothing and undoes
+    /// cleanly. Playback carries straight on, because the pieces are still
+    /// every frame they were.
+    func cutAtPlayhead() {
+        guard canCutAtPlayhead else { return }
+        let at = currentTime
+        var next = cuts
+        guard next.split(atTimeline: at) else { return }
+        // A split changes no frames, so there is nothing to rebuild and nothing
+        // to interrupt: the strip simply grows a join.
+        editUndo.append(EditStep(kind: .cut, cuts: cuts, trim: trim, crop: crop,
+                                 playheadAfterUndo: at))
+        cuts = next
+    }
+
+    /// True when the piece under the playhead can be thrown away. The last one
+    /// cannot: a recording has to still be a recording afterwards.
+    var canDeleteSelectedPiece: Bool {
+        guard isReady, !isCropping, let index = selectedPieceIndex else { return false }
+        return cuts.canRemovePiece(at: index)
+    }
+
+    /// Throw away the piece the playhead is in. Everything after it slides up,
+    /// so the join closes with nothing in between — there is never a gap to
+    /// drag shut. The playhead stays where the join now is, so pressing play
+    /// shows you the cut you just made.
+    func deleteSelectedPiece() {
+        guard canDeleteSelectedPiece, let index = selectedPieceIndex else { return }
+        let landing = cuts.timelineStart(ofPiece: index)
+        var next = cuts
+        guard next.removePiece(at: index) else { return }
+        apply(next, kind: .deletePiece, playheadAt: min(landing, next.timelineDuration),
+              playheadAfterUndo: landing)
+    }
+
+    /// Record an undo step, move to the new pieces, re-point the player at them
+    /// and land the playhead. The one path every edit that changes what plays
+    /// goes through, so the player is never left showing frames that are no
+    /// longer in the recording.
+    private func apply(_ next: VideoCutList, kind: EditKind,
+                       playheadAt landing: TimeInterval,
+                       playheadAfterUndo: TimeInterval = 0) {
+        editUndo.append(EditStep(kind: kind, cuts: cuts, trim: trim, crop: crop,
+                                 playheadAfterUndo: playheadAfterUndo))
+        cuts = next
+        trim = VideoTrim(duration: next.timelineDuration)
+        // Move the playhead in the same breath as the pieces. Re-pointing the
+        // player is asynchronous, and a strip left for a frame showing the
+        // playhead inside a piece that is already gone is exactly the kind of
+        // flicker that makes an edit feel unsafe.
+        currentTime = min(max(0, landing), next.timelineDuration)
+        pause()
+        rebuildPlayer(resumeAt: currentTime, keepPlaying: false)
+    }
+
+    /// Re-point the player at whatever the cut list now says, keeping the
+    /// playhead where the caller wants it.
+    private func rebuildPlayer(resumeAt seconds: TimeInterval, keepPlaying: Bool) {
+        compositionGeneration &+= 1
+        let generation = compositionGeneration
+        Task { await rebuildPlayerItem(resumeAt: seconds, keepPlaying: keepPlaying,
+                                       generation: generation) }
+    }
+
+    /// Bumped by every rebuild. Building a composition has to load the source's
+    /// tracks, so two rebuilds started close together (delete, then undo) can
+    /// finish in either order; without this the slower, older one would land
+    /// last and leave the player showing pieces the recording no longer has.
+    @ObservationIgnored private var compositionGeneration = 0
+
+    /// Build the item the player shows: the file itself while the recording is
+    /// one uncut piece (nothing to compose, so nothing to pay for), and a
+    /// composition of the kept pieces once it is not.
+    ///
+    /// A composition is what makes the join seamless. A player told to skip a
+    /// dropped piece would have to notice it had arrived, stop, seek and start
+    /// again, and every one of those is a visible hitch at exactly the moment
+    /// the person is judging their cut. In a composition the frames either side
+    /// of a cut are neighbours in one asset, so playback runs straight through.
+    private func rebuildPlayerItem(resumeAt seconds: TimeInterval, keepPlaying: Bool,
+                                   generation: Int = 0) async {
+        guard let player, let source = editSourceURL else { return }
+        let item: AVPlayerItem
+        if cuts.isWholeClip {
+            item = AVPlayerItem(url: source)
+        } else if let composition = await VideoCompositionBuilder.composition(of: source, cuts: cuts) {
+            item = AVPlayerItem(asset: composition)
+        } else {
+            // Nothing readable to compose: leave what is playing alone rather
+            // than blanking the window.
+            return
+        }
+        // Something newer started while this one was loading; it wins.
+        guard generation == 0 || generation == compositionGeneration else { return }
+        player.replaceCurrentItem(with: item)
+        installEndObserver(on: player)
+        player.volume = Float(volume)
+        seek(to: seconds)
+        if keepPlaying {
+            player.play()
+            isPlaying = true
+        }
     }
 
     /// True when at least one applied edit can be undone this session.
@@ -533,13 +658,9 @@ final class VideoEditorState {
     /// on disk changes until a save — undo via `undoLastEdit` before then.
     func applyTrim() {
         guard trim.isTrimmed else { return }
-        editUndo.append(EditStep(kind: .trim, appliedIn: appliedIn, appliedOut: appliedOut,
-                                 trim: trim, crop: crop))
-        appliedOut = appliedIn + trim.outPoint
-        appliedIn += trim.inPoint
-        trim = VideoTrim(duration: duration)
-        pause()
-        seek(to: 0)
+        var next = cuts
+        guard next.keep(fromTimeline: trim.inPoint, toTimeline: trim.outPoint) else { return }
+        apply(next, kind: .trim, playheadAt: 0)
     }
 
     /// Undo the most recent applied edit, restoring the editable state captured
@@ -548,17 +669,27 @@ final class VideoEditorState {
     /// back without disturbing the working window or playback.
     func undoLastEdit() {
         guard let prev = editUndo.popLast() else { return }
-        appliedIn = prev.appliedIn
-        appliedOut = prev.appliedOut
+        let cutsChanged = prev.cuts != cuts
+        cuts = prev.cuts
         trim = prev.trim
         crop = prev.crop
-        if prev.kind == .trim {
+        switch prev.kind {
+        case .trim:
             pause()
             if trim.isTrimmed, !isCropping {
                 trimBeforeSession = trim
                 isTrimming = true
             }
-            seek(to: trim.inPoint)
+            rebuildPlayer(resumeAt: trim.inPoint, keepPlaying: false)
+        case .cut, .deletePiece:
+            // Land the playhead back on the cut that just came back, so what
+            // undo did is the thing you are looking at.
+            pause()
+            currentTime = min(max(0, prev.playheadAfterUndo), cuts.timelineDuration)
+            if cutsChanged { rebuildPlayer(resumeAt: currentTime, keepPlaying: false) }
+        case .crop:
+            // A crop never moves the pieces; only rebuild if one somehow did.
+            if cutsChanged { rebuildPlayer(resumeAt: currentTime, keepPlaying: isPlaying) }
         }
     }
 
@@ -601,8 +732,7 @@ final class VideoEditorState {
         isCropping = false
         if let c = crop, !c.isCropped(videoSize: naturalSize) { crop = nil }
         if crop != cropBeforeSession {
-            editUndo.append(EditStep(kind: .crop, appliedIn: appliedIn, appliedOut: appliedOut,
-                                     trim: trim, crop: cropBeforeSession))
+            editUndo.append(EditStep(kind: .crop, cuts: cuts, trim: trim, crop: cropBeforeSession))
         }
         cropBeforeSession = nil
     }
@@ -619,38 +749,50 @@ final class VideoEditorState {
         isCropping = false
     }
 
-    /// The trim to apply at export, in **source-file** seconds: the cumulative
-    /// applied window composed with any live (un-applied) trim.
+    /// The pieces to write at export, in **source-file** seconds: the applied
+    /// cuts composed with any live (un-applied) trim, so Export and Copy always
+    /// give back exactly what the window is playing.
+    var exportCuts: VideoCutList {
+        guard trim.isTrimmed else { return cuts }
+        var composed = cuts
+        composed.keep(fromTimeline: trim.inPoint, toTimeline: trim.outPoint)
+        return composed
+    }
+
+    /// The same thing as a trim window, for the paths that predate cutting.
+    /// Only meaningful while the recording is in one piece.
     var exportTrim: VideoTrim {
-        VideoTrim(inPoint: appliedIn + trim.inPoint,
-                  outPoint: appliedIn + trim.outPoint,
-                  duration: originalDuration)
+        exportCuts.singleTrim ?? VideoTrim(duration: originalDuration)
     }
 
     /// True when the recording has any edit that requires re-encoding on export.
     var hasEdits: Bool {
-        exportTrim.isTrimmed || (crop?.isCropped(videoSize: naturalSize) ?? false)
+        !exportCuts.isWholeClip || (crop?.isCropped(videoSize: naturalSize) ?? false)
     }
 
     /// The kind of applied edit an undo step reverts, carrying its user-facing
     /// name for the action-specific Undo tooltip.
     private enum EditKind {
-        case trim, crop
+        case trim, crop, cut, deletePiece
         var name: String {
             switch self {
             case .trim: "Trim"
             case .crop: "Crop"
+            case .cut: "Cut"
+            case .deletePiece: "Delete Piece"
             }
         }
     }
 
     /// A snapshot of the editable state before an applied edit, so `undoLastEdit`
-    /// can revert the most recent trim/crop one step at a time.
+    /// can revert the most recent trim/crop/cut one step at a time.
     private struct EditStep {
         let kind: EditKind
-        let appliedIn: TimeInterval
-        let appliedOut: TimeInterval
+        let cuts: VideoCutList
         let trim: VideoTrim
         let crop: VideoCrop?
+        /// Where to put the playhead after this step is undone, in the restored
+        /// timeline's own time.
+        var playheadAfterUndo: TimeInterval = 0
     }
 }

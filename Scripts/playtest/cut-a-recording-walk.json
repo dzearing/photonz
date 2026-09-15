@@ -1,0 +1,44 @@
+{
+  "out": "/tmp/photonz-playtest/cut-a-recording-walk",
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-one-piece", "note": "an eight second recording, uncut: the line under the picture is the plain progress bar it has always been, and the readout says nothing about pieces" },
+    { "do": "snapshot", "name": "1-one-piece" },
+
+    { "do": "action", "action": "videoPlay" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-two-pieces", "note": "one press of B in the middle: the bar has become two blocks meeting at the playhead, the one the playhead is in is lit, and the readout says 2 pieces. Nothing was thrown away, so the recording is still eight seconds long" },
+    { "do": "snapshot", "name": "2-two-pieces" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-first-piece-picked", "note": "clicking into the first block picks it, because the piece under the playhead IS the piece you are holding; the trash button appears beside the cut" },
+    { "do": "snapshot", "name": "3-first-piece-picked" },
+
+    { "do": "action", "action": "videoDeletePiece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-first-piece-dropped", "note": "Delete dropped the first half. What is left is one piece starting where the cut was, the recording is half as long, and the save button has appeared because there is now something to write" },
+    { "do": "snapshot", "name": "4-first-piece-dropped" },
+
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "5-plays-what-is-left", "note": "playing runs through what is left, from the cut to the end, with nothing before it" },
+    { "do": "snapshot", "name": "5-plays-what-is-left" },
+
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoUndoEdit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-piece-back", "note": "undo brings the dropped piece back: two pieces again, eight seconds again, playhead on the cut it came back to" },
+    { "do": "snapshot", "name": "6-piece-back" },
+
+    { "do": "action", "action": "videoUndoEdit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-cut-back", "note": "undoing again takes the cut itself back: one piece, the plain progress bar, and nothing left to save" },
+    { "do": "snapshot", "name": "7-cut-back" }
+  ]
+}

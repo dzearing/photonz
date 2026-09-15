@@ -279,6 +279,15 @@ struct EditorCommands: Commands {
                 .keyboardShortcut(.space, modifiers: [])
                 .disabled(!hasVideo)
             Divider()
+            if Experiments.shared.cutRecordingEnabled {
+                Button("Split at Playhead") { video?.cutAtPlayhead() }
+                    .keyboardShortcut("b", modifiers: [])
+                    .disabled(!(video?.canCutAtPlayhead ?? false))
+                Button("Delete This Piece") { video?.deleteSelectedPiece() }
+                    .keyboardShortcut(.delete, modifiers: [])
+                    .disabled(!(video?.canDeleteSelectedPiece ?? false))
+                Divider()
+            }
             Button("Set Trim Start to Playhead") {
                 if let video { video.setTrimIn(video.currentTime) }
             }

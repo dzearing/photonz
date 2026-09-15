@@ -66,7 +66,26 @@ public enum VideoSaveState {
 
     /// Whether committing `edits` would change the stored asset.
     public static func needsSave(edits: VideoEdits, committed: VideoEdits) -> Bool {
-        !sameTrim(edits.trim, committed.trim) || !sameCrop(edits.crop, committed.crop)
+        !sameTrim(edits.trim, committed.trim)
+            || !sameCrop(edits.crop, committed.crop)
+            || !sameCuts(edits.cuts, committed.cuts)
+    }
+
+    /// Cut lists match when they keep the same pieces, within the same
+    /// sub-frame tolerance a trim gets. A different NUMBER of pieces is always
+    /// a change, even when the joins happen to line up: two pieces meeting at a
+    /// cut and one piece spanning it play the same, but the user put that cut
+    /// there and saving has to keep it.
+    private static func sameCuts(_ a: VideoCutList?, _ b: VideoCutList?) -> Bool {
+        switch (a, b) {
+        case (nil, nil): return true
+        case let (lhs?, rhs?):
+            guard lhs.pieces.count == rhs.pieces.count else { return false }
+            return zip(lhs.pieces, rhs.pieces).allSatisfy {
+                abs($0.start - $1.start) <= timeTolerance && abs($0.end - $1.end) <= timeTolerance
+            }
+        default: return false
+        }
     }
 
     private static func sameTrim(_ a: VideoTrim?, _ b: VideoTrim?) -> Bool {

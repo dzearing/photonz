@@ -37,9 +37,11 @@ public enum VideoAssetCommit {
 
         if plan.requiresReencode {
             let seconds = await VideoExporter.duration(of: plan.source)
+            // Cuts and trims are the same question asked two ways; ask it once.
+            let cuts = plan.edits.keptPieces
+                ?? VideoCutList(duration: seconds)
             try await VideoExporter.exportMP4(from: plan.source, to: scratch,
-                                              trim: plan.edits.trim ?? VideoTrim(duration: seconds),
-                                              crop: plan.edits.crop)
+                                              cuts: cuts, crop: plan.edits.crop)
         } else {
             // No edits left: the stored file goes back to being the original.
             try fm.copyItem(at: plan.source, to: scratch)

@@ -79,6 +79,7 @@ public enum VideoExporter {
     public static func exportAnimated(from url: URL, to destination: URL,
                                format: RecordingFormat,
                                trim: VideoTrim? = nil, crop: VideoCrop? = nil,
+                               cuts: VideoCutList? = nil,
                                targetFPS: Double = 15, maxDimension: CGFloat = 800,
                                onProgress: (@Sendable (Int, Int) -> Void)? = nil) async throws {
         let asset = AVURLAsset(url: url)
@@ -86,9 +87,14 @@ public enum VideoExporter {
         let naturalSize = await orientedNaturalSize(of: url)
         let resolvedTrim = trim ?? VideoTrim(duration: seconds)
 
-        let plan = AnimatedExportPlanner.plan(trim: resolvedTrim, crop: crop,
-                                              sourceSize: naturalSize,
-                                              targetFPS: targetFPS, maxDimension: maxDimension)
+        // Cuts win when present: they can say everything a trim can, and a trim
+        // cannot say "drop the middle".
+        let plan = cuts.map {
+            AnimatedExportPlanner.plan(cuts: $0, crop: crop, sourceSize: naturalSize,
+                                       targetFPS: targetFPS, maxDimension: maxDimension)
+        } ?? AnimatedExportPlanner.plan(trim: resolvedTrim, crop: crop,
+                                        sourceSize: naturalSize,
+                                        targetFPS: targetFPS, maxDimension: maxDimension)
 
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -131,30 +137,49 @@ public enum VideoExporter {
     /// Video's bottom-left origin — then writes H.264/.mp4.
     public static func exportMP4(from url: URL, to destination: URL,
                           trim: VideoTrim, crop: VideoCrop?) async throws {
-        let asset = AVURLAsset(url: url)
         let seconds = await duration(of: url)
+        let (start, length) = trim.timeRange(duration: seconds)
+        let cuts = VideoCutList(pieces: [VideoPiece(start: start, end: start + length)],
+                                sourceDuration: seconds)
+        try await exportMP4(from: url, to: destination, cuts: cuts, crop: crop)
+    }
+
+    /// Re-export an MP4 of a recording that has been cut into pieces: every kept
+    /// stretch is inserted into one composition, in order, so the exported file
+    /// plays exactly what the editor plays — the dropped pieces simply are not
+    /// in it, and the joins are ordinary frame boundaries.
+    public static func exportMP4(from url: URL, to destination: URL,
+                          cuts: VideoCutList, crop: VideoCrop?) async throws {
+        let asset = AVURLAsset(url: url)
         guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else {
             throw ExportError.noVideoTrack
         }
         let preferred = (try? await videoTrack.load(.preferredTransform)) ?? .identity
         let natural = (try? await videoTrack.load(.naturalSize)) ?? .zero
 
-        let (start, length) = trim.timeRange(duration: seconds)
-        let range = CMTimeRange(start: CMTime(seconds: start, preferredTimescale: 600),
-                                duration: CMTime(seconds: length, preferredTimescale: 600))
-
         let composition = AVMutableComposition()
         guard let compVideo = composition.addMutableTrack(
             withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
             throw ExportError.noVideoTrack
         }
-        try compVideo.insertTimeRange(range, of: videoTrack, at: .zero)
-        // Audio for A/V sync, when present.
-        if let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first,
-           let compAudio = composition.addMutableTrack(
-            withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
-            try? compAudio.insertTimeRange(range, of: audioTrack, at: .zero)
+        // Audio for A/V sync, when present — cut at the same points as the
+        // picture, so sound never drifts off what is on screen.
+        let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first
+        let compAudio = audioTrack == nil ? nil : composition.addMutableTrack(
+            withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+
+        var cursor = CMTime.zero
+        for piece in cuts.sourceRanges {
+            let range = CMTimeRange(start: CMTime(seconds: piece.start, preferredTimescale: 600),
+                                    duration: CMTime(seconds: piece.length, preferredTimescale: 600))
+            guard range.duration.seconds > 0 else { continue }
+            try compVideo.insertTimeRange(range, of: videoTrack, at: cursor)
+            if let audioTrack, let compAudio {
+                try? compAudio.insertTimeRange(range, of: audioTrack, at: cursor)
+            }
+            cursor = CMTimeAdd(cursor, range.duration)
         }
+        guard cursor.seconds > 0 else { throw ExportError.exportFailed }
 
         // Oriented full size (after preferredTransform), and the render/crop size.
         let oriented = natural.applying(preferred)

@@ -170,19 +170,30 @@ public struct AnimatedExportPlan: Hashable, Sendable {
     /// in-point (0 for a full clip). Subsequent frames step by `frameDelay`
     /// from here, staying within the trimmed window (phase 13.5).
     public let trimStart: TimeInterval
+    /// The kept pieces, once the recording has been cut into more than one.
+    /// Frames are laid out evenly along what the person WATCHES, then mapped
+    /// back into the file, so a dropped piece contributes no frames and the
+    /// join lands between two neighbouring frames like any other.
+    public let cuts: VideoCutList?
 
     public init(frameCount: Int, frameDelay: TimeInterval, size: CGSize,
-                trimStart: TimeInterval = 0) {
+                trimStart: TimeInterval = 0, cuts: VideoCutList? = nil) {
         self.frameCount = frameCount
         self.frameDelay = frameDelay
         self.size = size
         self.trimStart = trimStart
+        self.cuts = cuts
     }
 
     /// The presentation time (seconds) to sample the i-th frame at: offset by
     /// the trim in-point, then spread by `frameDelay` across the trimmed window.
+    /// With cuts, the same even spread happens along the timeline and is mapped
+    /// through them into the file.
     public func sampleTime(_ index: Int) -> TimeInterval {
-        trimStart + Double(index) * frameDelay
+        if let cuts {
+            return cuts.sourceTime(forTimeline: Double(index) * frameDelay)
+        }
+        return trimStart + Double(index) * frameDelay
     }
 }
 
@@ -272,5 +283,22 @@ public enum AnimatedExportPlanner {
                             quality: VideoExportQuality) -> AnimatedExportPlan {
         plan(trim: trim, crop: crop, sourceSize: sourceSize,
              targetFPS: quality.targetFPS, maxDimension: quality.maxDimension)
+    }
+
+    /// Plan a GIF/HEIC re-encode of a recording that has been cut into pieces.
+    /// The frame count comes from what is left to watch, not from the file, so
+    /// dropping half a recording halves the file it exports to.
+    public static func plan(cuts: VideoCutList,
+                            crop: VideoCrop? = nil,
+                            sourceSize: CGSize,
+                            targetFPS: Double = 15,
+                            maxDimension: CGFloat = 800) -> AnimatedExportPlan {
+        let fps = max(1, targetFPS)
+        let delay = 1.0 / fps
+        let count = max(1, Int((max(0, cuts.timelineDuration) * fps).rounded()))
+        let baseSize = crop?.outputSize ?? sourceSize
+        let size = Geometry.downscaledToFit(baseSize, maxDimension: maxDimension)
+        return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
+                                  trimStart: cuts.pieces.first?.start ?? 0, cuts: cuts)
     }
 }

@@ -127,26 +127,45 @@ public struct VideoTrim: Codable, Sendable, Hashable {
 /// trim handles back where they were, so the edit can be widened, tightened, or
 /// cleared away entirely.
 public struct VideoEdits: Codable, Sendable, Hashable {
-    /// Kept window in source-file seconds; nil = whole clip.
+    /// Kept window in source-file seconds; nil = whole clip. Only ever set when
+    /// the recording is still in ONE piece — the shape every trim has had since
+    /// phase 13.3, kept exactly as it was so nothing that already understands a
+    /// trim has to learn about cuts.
     public var trim: VideoTrim?
     /// Kept region in natural-video pixels; nil = full frame.
     public var crop: VideoCrop?
+    /// The kept pieces once the recording has a cut in the middle of it; nil
+    /// while it is still one piece (where `trim` says the same thing). A cut
+    /// list can express a trim and a trim cannot express a cut, so this is the
+    /// one that wins when both are somehow present.
+    public var cuts: VideoCutList?
 
-    public init(trim: VideoTrim? = nil, crop: VideoCrop? = nil) {
+    public init(trim: VideoTrim? = nil, crop: VideoCrop? = nil, cuts: VideoCutList? = nil) {
         self.trim = trim
         self.crop = crop
+        self.cuts = cuts
     }
 
     /// True when there is nothing to apply at export.
-    public var isEmpty: Bool { trim == nil && crop == nil }
+    public var isEmpty: Bool { trim == nil && crop == nil && cuts == nil }
 
-    /// Drops a full-clip trim and a full-frame crop, so only *real* edits
-    /// persist (an empty result means the sidecar can be deleted). A zero
-    /// `videoSize` (metadata not loaded) leaves the crop untouched.
+    /// The kept stretches this edit describes, whichever way it stores them, or
+    /// nil when the whole clip is kept. One place for every consumer to ask, so
+    /// no exporter has to know which of the two fields was written.
+    public var keptPieces: VideoCutList? {
+        if let cuts { return cuts }
+        if let trim { return VideoCutList(trim: trim) }
+        return nil
+    }
+
+    /// Drops a full-clip trim, a full-frame crop and an uncut cut list, so only
+    /// *real* edits persist (an empty result means the sidecar can be deleted).
+    /// A zero `videoSize` (metadata not loaded) leaves the crop untouched.
     public func normalized(videoSize: CGSize) -> VideoEdits {
         var edits = self
         if let trim, !trim.isTrimmed { edits.trim = nil }
         if let crop, videoSize != .zero, !crop.isCropped(videoSize: videoSize) { edits.crop = nil }
+        if let cuts, cuts.isWholeClip { edits.cuts = nil }
         return edits
     }
 }

@@ -1589,6 +1589,25 @@ private final class Run {
                  "\(action.rawValue): \(TutorialController.shared.liveDescription(in: window))",
                  state: describe())
 
+        // A recording window with no guide in front of it, on the sample clip
+        // the video guides bring. The walk moves into it, exactly as it would
+        // into the window a guide opened.
+        case .action(let action) where action == .openSampleRecording:
+            guard let url = TutorialSampleRecording.fresh() else {
+                throw Failure(description: "couldn't write the sample recording")
+            }
+            coordinator.openWindow(.video(standardizing: url))
+            var opened: VideoEditorState?
+            try await poll("the sample recording to open", within: 20) {
+                opened = PlaytestHarness.readyRecordings.last {
+                    $0.url?.lastPathComponent == TutorialSampleRecording.fileName
+                }
+                return opened != nil
+            }
+            guard let opened else { throw Failure(description: "no recording window opened") }
+            try await adoptRecording(opened, step: step.name,
+                                     subject: "the sample recording", number: number)
+
         case .action(let action) where action.drivesRecording:
             let video = try requireRecording()
             switch action {
@@ -1597,13 +1616,31 @@ private final class Run {
             case .videoTrimEnd: video.setTrimOut(video.duration * 0.75)
             case .videoTrimDone: video.commitTrim()
             case .videoCopyGIF: coordinator.copyRecording(video, as: .gif)
+            case .videoSeekQuarter: video.scrub(to: video.duration * 0.25)
+            case .videoSeekMiddle: video.scrub(to: video.duration * 0.5)
+            case .videoSeekThreeQuarters: video.scrub(to: video.duration * 0.75)
+            case .videoCut: video.cutAtPlayhead()
+            case .videoDeletePiece: video.deleteSelectedPiece()
+            case .videoUndoEdit: video.undoLastEdit()
+            case .videoPlay: video.play()
+            case .videoPause: video.pause()
             default: break
             }
-            await sleep(0.3)
+            // Cutting re-points the player at a composition of the kept
+            // pieces, which is asynchronous, so give it longer to land than a
+            // trim handle move needs.
+            await sleep(action == .videoCut || action == .videoDeletePiece
+                        || action == .videoUndoEdit ? 1.2 : 0.3)
             note(number, step.name,
                  "\(action.rawValue): \(String(format: "%.2f", video.trim.inPoint)) to "
                  + "\(String(format: "%.2f", video.trim.outPoint)) of "
                  + "\(String(format: "%.2f", video.duration))s"
+                 + ", \(video.cuts.pieceCount) piece\(video.cuts.pieceCount == 1 ? "" : "s") ["
+                 + video.cuts.pieces.map { String(format: "%.2f-%.2f", $0.start, $0.end) }
+                        .joined(separator: " | ") + "]"
+                 + ", playhead \(String(format: "%.2f", video.currentTime))"
+                 + (video.selectedPieceIndex.map { ", piece \($0 + 1) picked" } ?? "")
+                 + (video.isPlaying ? ", playing" : "")
                  + (video.isTrimming ? ", trim open" : "")
                  + (video.hasUnsavedChanges ? ", unsaved" : ""),
                  state: describe())
@@ -2117,7 +2154,10 @@ private final class Run {
                 editor.isBlankCanvasDialogPresented = false
                 editor.isResizeDialogPresented = false
                 editor.isCanvasSizeDialogPresented = false
-            case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF:
+            case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF,
+                 .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
+                 .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
+                 .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
             }
             await sleep(0.2)
