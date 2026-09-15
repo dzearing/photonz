@@ -1,0 +1,36 @@
+{
+  "id": "position-and-size-leave-the-panel",
+  "title": "Position and size leave the panel",
+  "goal": "The panel gives four number boxes to X, Y, width and height, at the top, for every layer, forever. Moving something is what the pointer is for, and the numbers are wanted rarely and precisely. Take them out of the panel and put them where a precise answer is actually asked for, so the panel stops leading with the thing nobody came for.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T15:01:13.240Z",
+  "updated": "2026-09-15T15:01:13.331Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "SUPERSEDES a narrower fix. 'position-and-size-stays-on-screen-when-you-pick' (done, p2) made those boxes reachable because they were falling off the bottom of the panel. The user's answer is better: they are not worth the room at all. Log there that this task replaces the reasoning rather than leaving two answers to the same problem.\n\nThe user's words for where it goes: 'if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing.' So a right click on the layer is their suggestion. Weigh it against what the app already has - a layer row context menu that already exists, and the Layer menu - rather than inventing a fourth place. Whatever is chosen has to be findable by somebody who wants to type 240 into a width, because that person exists even if they are rare.\n\nThe measured prize is real: the pane runs 1052 points against a 968 point viewport, so removing the section that was never wholly on screen anyway buys back the overflow.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.",
+  "acceptance": [
+    "Position and size are no longer a section sitting open in the panel for every layer",
+    "There is a deliberate way to type an exact position or size when one is genuinely wanted, reached from the layer itself rather than from a permanent pane, and it is discoverable",
+    "Everything that could only be done through those boxes can still be done: say in the audit what each was and where it went",
+    "The panel is measurably shorter afterwards: give the before and after heights for the same selection, in the same window, in points",
+    "What is at the top of the panel when you pick something is now the thing you came for, and the audit shows that for a shape, a piece of text and a component copy",
+    "Nudging with the arrow keys, dragging, and the snapping are all untouched",
+    "The walks that read or set position and size are updated rather than deleted, and still prove the same behaviour through whatever replaces the boxes",
+    "Audit under queue/audits/ with the panel before and after, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T15:01:13.242Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T15:01:13.330Z",
+      "note": "seq 290 -> 2"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "every-pane-says-what-it-is-for-in-words-somebody",
+  "title": "Every pane says what it is for, in words somebody already knows",
+  "goal": "The panel's sections are named in words the app invented, so you have to open one to find out what it does and open it again next time because the name never told you. Somebody looking at a component sees Versions and Adjustable and can tell you what neither of them is for. Name every section for the job it does, using the words this kind of tool already uses, so the panel becomes predictable.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 1.9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T15:02:20.733Z",
+  "updated": "2026-09-15T15:02:20.820Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Said by the user on 2026-09-15 while looking at a component: \"i don't even know what 'Versions' is\", then \"what the hell is adjustable? Component properties? How is 'adjustable' different from anything? This is completely messy IA and ux\", and then the summary that should govern this task: \"panes purposes should be predictable and clear. It is neither now.\"\n\nTWO INVENTED NAMES WHERE STANDARD ONES EXIST, and the user guessed the right answer for one of them out loud.\n\n1. 'Adjustable' is this app's word for the things a copy can be given its own values for. Every other tool calls those properties or parameters. The user's own guess, 'Component properties?', is almost certainly the answer, and the fact that they had to guess is the bug. The word also fails on its own terms: everything in the panel is adjustable, so it does not distinguish anything, which is exactly what they said.\n\n2. 'Versions' is this app's word for what the rest of the industry calls variants. This is already recorded as a known divergence: the tutorial guide componentVersions carries a comment saying 'It is called Versions because that is what the panel calls it. The task that asked for this track said Variants, and a guide teaches what shipped rather than what the plan called it.' So the plan said variants, the panel said versions, and the tutorial had to follow the panel. Fix the panel and the rest lines up.\n\nThe deeper rule the user is asking for is predictability, so do not stop at two renames. Go through every section and ask whether its name answers 'what is this for'. Where a section needs a paragraph inside it to explain itself - and several do, Versions has three lines of prose under it in the screenshot - the paragraph is a symptom and the name is the disease.\n\nThis is the same complaint as the clutter tasks filed alongside it and should be read with them: position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter-and-you-ca, and a-copy-of-a-component-is-configured-not-authored. A shorter panel full of unclear names is still unpredictable, and clear names on a wall of sections are still a wall.\n\nRenaming is cheap to do and expensive to do halfway. The tutorials point at panel sections by name and there is a check that fails the build when a guide points at something that has gone, so a rename that misses a guide will be caught - but only if the guides are rebuilt, so run them.",
+  "acceptance": [
+    "Every section in the panel is named for what it is for, and the audit lists each name with the one sentence that justifies it",
+    "Versions and Adjustable in particular are renamed to what they actually are, using terms somebody who has used a design tool would recognise rather than terms this app coined",
+    "A section's name plus one short line is enough to know whether to open it, without opening it",
+    "The explanatory paragraphs currently sitting inside sections are cut back hard: a section that needs three lines of prose to explain itself is misnamed, and the audit says which ones were fixed by renaming rather than by rewording",
+    "The same names are used everywhere they appear: the panel, the menus, the tutorials and the tooltips do not use three words for one thing",
+    "Nothing is renamed without following it through: grep for the old word and fix the guides, walks and help text that used it, or the app teaches a word it no longer uses",
+    "A first-time check with somebody who has not seen it: they can say what each section is for from the name alone, and whatever they got wrong is written down",
+    "Audit under queue/audits/ with the panel before and after for a component original, a component copy and a plain shape, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T15:02:20.735Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T15:02:20.819Z",
+      "note": "seq 290 -> 1.9"
+    }
+  ]
+}

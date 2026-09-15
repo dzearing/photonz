@@ -1,0 +1,37 @@
+{
+  "id": "the-panel-shows-the-panes-that-matter-and-you-ca",
+  "title": "The panel shows the panes that matter, and you can say which",
+  "goal": "The panel now carries so many sections that it is hard to read and hard to predict, and some of them are almost never wanted. Let the panel show only what is worth showing: an automatic mode that offers the sections the thing you picked actually needs, and a way at the bottom to say which of the questionable ones you want to see.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T15:01:13.552Z",
+  "updated": "2026-09-15T15:01:13.640Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's words: 'I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation.'\n\nThis is the same instinct as the modes work ('work-out-whether-the-app-needs-project-types-at', where a mode is a preset of what is visible and you can always turn a hidden thing back on). Read that task: if modes land, per-pane visibility is part of what a mode IS, and these two must not grow separate machinery for one idea. Say in the log which way that was resolved.\n\nThe automatic rule is the part worth thinking hardest about, because 'relevant to the situation' is easy to say and easy to get wrong. A section that appears and disappears as the selection changes makes the panel unpredictable, which is one of the things the user is already complaining about. Hiding a rarely wanted section permanently is predictable; showing and hiding sections per selection may be worse than the clutter. Weigh that honestly rather than assuming automatic is better.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.",
+  "acceptance": [
+    "There is a way, at the foot of the panel, to choose which sections are shown, and it is unobtrusive rather than another section",
+    "An automatic mode shows the sections relevant to what is picked and leaves the rest out, and what counts as relevant is written down rather than decided case by case",
+    "Nothing becomes unreachable: a section that is hidden can be brought back without hunting, and the audit shows how",
+    "The choice is remembered between launches, and per release, the way other panel state already is",
+    "The Library section in particular is out of the way by default, since it is the clearest example of a section that is rarely wanted while a layer is selected",
+    "The panel is measurably shorter for a typical selection: before and after heights in points, for a shape, a piece of text and a component copy",
+    "It agrees with the rule about what opens when you pick something rather than fighting it: read 'picking-a-text-layer-leaves-its-settings-below-t' first, which is the open question about whether picking should move the panel at all",
+    "Somebody who hides everything is not left with an empty panel and no way back",
+    "Audit under queue/audits/ with the panel in automatic mode for three different selections, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T15:01:13.554Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T15:01:13.639Z",
+      "note": "seq 290 -> 2.2"
+    }
+  ]
+}

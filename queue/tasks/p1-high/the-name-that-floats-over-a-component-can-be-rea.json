@@ -1,0 +1,35 @@
+{
+  "id": "the-name-that-floats-over-a-component-can-be-rea",
+  "title": "The name that floats over a component can be read",
+  "goal": "The little label that floats over a component on the canvas, showing its name and which version it is, is dark grey text on a dark chip sitting over a blue shape. It cannot be read. It should be legible over whatever it happens to be sitting on.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 1.8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T15:02:20.890Z",
+  "updated": "2026-09-15T15:02:20.978Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-15 with a screenshot of a chip reading 'Button, rest' floating above a blue rectangle: \"i can't even read this, contrast is horrible\".\n\nThe chip carries the component's name and the version it is showing, which is the thing the shipped task 'a-copy-does-not-say-which-version-it-is-showing' added, so it is new and it arrived unreadable.\n\nThe app has solved this problem before for the same reason - a label that has to sit over a picture nobody chose. Measurement chips, caption pills and the name labels over screens all face it, and CanvasNameLabel exists in PhotonzCore. Find what those do and do that, rather than picking a lighter grey and hoping. The acceptance asks for the number because 'looks better' is how this shipped in the first place.\n\nWorth checking while in there whether the same chip is unreadable in light mode as well as dark, since the screenshot is dark and the failure may be the other way round elsewhere.",
+  "acceptance": [
+    "Reproduce it first and measure it: give the contrast ratio of the chip's text against its own background, and against the shapes it sits over",
+    "The label is legible over a light shape, a dark shape, a saturated one and a busy screenshot, each captured in the audit",
+    "It meets the contrast the rest of the app's canvas chrome is held to, and the audit gives the number rather than saying it looks better",
+    "The fix is the one the app already uses for canvas labels that sit over unknown content, rather than a new treatment invented here: say which one was reused",
+    "The version part of the label is as readable as the name part, since it is the part that changes and the part somebody is checking",
+    "It stays readable at every zoom and on a non-Retina display",
+    "Audit under queue/audits/ with the label over four different backgrounds, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T15:02:20.892Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T15:02:20.977Z",
+      "note": "seq 290 -> 1.8"
+    }
+  ]
+}
