@@ -971,6 +971,23 @@ selection latency (numbers from 2026-09-03 in its commit).
   `Scripts/probe-app.sh` prints a `Grants:` line on every launch saying whether
   the probe may record the screen, from the file the probe writes about itself
   at launch (`Sources/Photonz/Playtest/ProbeGrants.swift`).
+- **A capture that could have been taken and was not FAILS the walk.** Until
+  2026-09-15 a refused capture was a log line and nothing else: the walk stayed
+  green, the offscreen drawing was written under the name an audit copies, and
+  two mornings of audits shipped drawings of the window in place of the window
+  with nothing in the run to say so. Now every attempt is on the ledger
+  (`PlaytestCaptureLedger`, unit tested in PhotonzCore), and a refusal with no
+  excuse ends the walk `failed` naming the steps that went unphotographed. The
+  two excuses are the ones the app did not cause: the screen was locked, so
+  macOS refuses every capture there is, or the probe holds no Screen Recording
+  grant, which only a person can give. A refusal also DELETES any `<name>-sc.png`
+  an earlier run left, because the output folder is overwritten rather than
+  emptied and a stale photograph is worse than none.
+- **`done.json` says what got photographed.** `captures` lists the `-sc.png`
+  files by name and `capturesSaid` puts it in one sentence, which is what
+  `Scripts/playtest.sh` prints as its `Window captures:` line. Read that line
+  before writing an audit: it is the difference between shipping the app and
+  shipping a drawing of it.
 - Keep the probe quit when you finish. `Scripts/playtest.sh` does that unless
   you pass `--keep`.
 - Never point this at `dist/Photonz Dev.app`. It would not act on a script

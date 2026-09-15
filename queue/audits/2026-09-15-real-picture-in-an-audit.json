@@ -1,0 +1,25 @@
+{
+  "feature": "An audit answers for its own pictures",
+  "epic": "unmanned-loop",
+  "summary": "Every walk now ends with one line saying what it photographed of the real window, and a picture it could have taken and did not now fails the walk instead of passing in silence. Audits can no longer show a drawing of the window as if it were the window.",
+  "setup": "Nothing to install. Run any walk from a terminal: Scripts/playtest.sh Scripts/playtest/<name>.json. The Mac's screen has been locked since 2026-09-14 20:46, so today every walk will say so.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/toolbar-row-narrow-walk.json" },
+    { "do": "Read the line that starts \"==> Window captures:\" near the end." },
+    { "do": "Unlock the Mac and run the same walk again." },
+    { "do": "Read that line again: it should now name two .png files." },
+    { "do": "Open one of the named files from /tmp/photonz-playtest/toolbar-row-narrow and compare it with 1-narrow.png beside it." },
+    { "do": "Open queue/audits/2026-09-15-pane-load.json and 2026-09-15-path-line-style.json, the two audits written overnight with no picture in them." }
+  ],
+  "evaluate": [
+    "Is one line at the end of a walk enough for you to trust, or distrust, the pictures in an audit?",
+    "When the screen is locked, would you rather the loop skipped the audit entirely than wrote one with drawings in it?",
+    "A missing picture now turns a walk red, the same colour as a broken feature. Is that too loud, given a green walk is how the loop decides the app still works?",
+    "Is deleting an older picture of the same step the right call, or would you rather keep it and have the walk say it is old?"
+  ],
+  "rough": [
+    "The one thing this task set out to prove is still unproven: nobody has photographed the app since the Mac locked at 2026-09-14 20:46, so there is no picture in this audit either. The refusal path was walked end to end instead, and a sweep is queued that takes the real measurement the moment the screen is unlocked.",
+    "A capture that fails for a passing reason, if there is such a thing, will now turn a green walk red across 322 walks. There is no evidence of that happening while the screen was unlocked and the grant held, so no retry was built, but the queued sweep is the first thing that would show it.",
+    "A menu shot was the worse half of this: on 2026-09-15 00:43 a walk logged shot \"capture-menu-history-off-sc.png\" while its own note said the menu was not a window the screen recorder can see, and yesterday's picture of that menu was sitting in the folder under that exact name, ready to be copied into an audit. That is fixed, but it means some pictures in audits written on 14 and 15 September may be a day older than the audit claims."
+  ]
+}

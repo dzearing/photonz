@@ -67,6 +67,16 @@ if [[ -f "$OUT/done.json" ]]; then
 else
   echo "!! No done.json after ${TIMEOUT}s. The probe may still be running; its log so far:" >&2
 fi
+# What the run actually photographed. `<name>-sc.png` is the window as a person
+# would see it, and it is the only picture an audit may ship; the plain
+# `<name>.png` beside it is an offscreen drawing that gets some colours wrong.
+# Saying this in one line is what stops an audit quietly shipping the drawing.
+if [[ -f "$OUT/done.json" ]]; then
+  node -e '
+    const d = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    if (d.capturesSaid) console.log(`==> Window captures: ${d.capturesSaid}`);
+  ' "$OUT/done.json"
+fi
 if [[ -f "$OUT/log.json" ]]; then
   echo "==> Last log lines ($OUT/log.json):"
   node -e '

@@ -120,6 +120,10 @@ private final class Run {
     /// Seconds of sleeping the watched waits gave back over this walk, so the
     /// saving is on the record rather than inferred from a stopwatch.
     private var pacedAway: Double = 0
+    /// What every attempt to photograph the real window came back with, and
+    /// therefore whether this run has a picture an audit may ship. The rule it
+    /// is judged by lives in `PlaytestCaptureLedger`, where it is unit tested.
+    private var captures = PlaytestCaptureLedger()
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -320,6 +324,20 @@ private final class Run {
             error = PlaytestScreenState.lockedExplanation
                 + (error.map { " (what it had got to: \($0))" } ?? "")
         }
+        // A walk that asked for a photograph of the window, could have taken
+        // one, and did not, FAILS. Until 2026-09-15 a refused capture was a log
+        // line and nothing else: the walk stayed green, the offscreen drawing
+        // was written under the name the audit copies, and two mornings of
+        // audits carried drawings of the window in place of the window with
+        // nothing in the run to say so. Withheld in the two cases where no
+        // picture was ever possible — the screen was locked, or this copy of
+        // the app holds no Screen Recording grant — because neither is
+        // something the app did wrong, and both already say so out loud.
+        let granted = CGPreflightScreenCaptureAccess()
+        if status == "ok", let missed = captures.failure(screenLocked: locked, granted: granted) {
+            status = "failed"
+            error = missed
+        }
         // Anything the setup lent goes back first, so a walk that failed
         // halfway leaves nothing of its own in a person's Screenshots folder.
         if let returned = setupRunner.returnCaptures() { note(steps, "setup", returned) }
@@ -339,6 +357,12 @@ private final class Run {
         ]
         if let error { done["error"] = error }
         if locked { done["screenLocked"] = true }
+        // What this run photographed, by file name, plus the one line that says
+        // it in words, so whoever writes the audit can see at a glance whether
+        // there is a real picture of the app to ship or only a drawing of one.
+        done["captures"] = captures.written
+        done["capturesSaid"] = captures.report(screenLocked: locked, granted: granted)
+        if !captures.refusals.isEmpty { done["capturesRefused"] = captures.refusals }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
         write(json: done, to: "done.json")
     }
@@ -3782,6 +3806,12 @@ private final class Run {
         menu.update()
         let shotURL = out.appendingPathComponent("\(shotName)-sc.png")
         let noteURL = out.appendingPathComponent("menu-shot.txt")
+        // Both go before the picture is taken, so that afterwards the file
+        // being THERE is proof this run wrote it. The folder is overwritten
+        // rather than emptied between runs, and a menu shot that failed used
+        // to leave yesterday's picture under today's name for an audit to
+        // copy, while the step reported the file name either way.
+        try? FileManager.default.removeItem(at: shotURL)
         try? FileManager.default.removeItem(at: noteURL)
         var rows: [String] = []
         // Not "ticked": the parameter of that name is what the step REQUIRES,
@@ -3807,7 +3837,6 @@ private final class Run {
                     finished.signal()
                 }
                 _ = finished.wait(timeout: .now() + 3)
-                shot = shotURL.lastPathComponent
             } else {
                 try? Data("the menu opened in no window this app can see".utf8).write(to: noteURL)
             }
@@ -3831,8 +3860,16 @@ private final class Run {
             await sleep(0.1)
         }
         try? FileManager.default.removeItem(at: noteURL)
-        // The picture is the deliverable, but a picture nobody checks proves
-        // nothing, so the rows the step named are held to what they wore.
+        // The picture is the deliverable, so whether there IS one is answered
+        // by the file rather than by the step's good intentions.
+        if FileManager.default.fileExists(atPath: shotURL.path) {
+            captures.photographed(shotName)
+            shot = shotURL.lastPathComponent
+        } else {
+            captureFailed(shotName, outcome)
+        }
+        // A picture nobody checks proves nothing, so the rows the step named
+        // are held to what they wore.
         // Read off what the OPEN menu was wearing, not off the menu now that it
         // has closed: closing it is another event, and another chance for the
         // words to change under the reading.
@@ -3909,6 +3946,9 @@ private final class Run {
         }
         let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
         let noteURL = out.appendingPathComponent("row-menu-shot.txt")
+        // The old picture goes FIRST, so afterwards the file being there is
+        // proof this run wrote it (see `menuShot`).
+        if let shotURL { try? FileManager.default.removeItem(at: shotURL) }
         try? FileManager.default.removeItem(at: noteURL)
         var reading = PlaytestMenuReading()
 
@@ -3927,7 +3967,6 @@ private final class Run {
                     finished.signal()
                 }
                 _ = finished.wait(timeout: .now() + 3)
-                reading.shot = shotURL.lastPathComponent
             } else if shotURL != nil {
                 reading.problem = "it showed in no window this app can see, so there is no picture"
             }
@@ -3968,6 +4007,14 @@ private final class Run {
                 await sleep(0.1)
             }
             try? FileManager.default.removeItem(at: noteURL)
+        }
+        if let shotURL, let askedFor = shot {
+            if FileManager.default.fileExists(atPath: shotURL.path) {
+                captures.photographed(askedFor)
+                reading.shot = shotURL.lastPathComponent
+            } else {
+                captureFailed(askedFor, outcome)
+            }
         }
         if let problem = reading.problem {
             throw Failure(description: "the menu on \"\(target.name)\" opened but \(problem)")
@@ -4114,6 +4161,9 @@ private final class Run {
         }
         let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
         let noteURL = out.appendingPathComponent("panel-menu-shot.txt")
+        // The old picture goes FIRST, so afterwards the file being there is
+        // proof this run wrote it (see `menuShot`).
+        if let shotURL { try? FileManager.default.removeItem(at: shotURL) }
         try? FileManager.default.removeItem(at: noteURL)
         var reading = PlaytestMenuReading()
 
@@ -4141,7 +4191,6 @@ private final class Run {
                     finished.signal()
                 }
                 _ = finished.wait(timeout: .now() + 3)
-                reading.shot = shotURL.lastPathComponent
             } else if shotURL != nil {
                 reading.problem = "the menu opened but showed in no window this app can see, so there is no picture"
             }
@@ -4201,6 +4250,14 @@ private final class Run {
                 await sleep(0.1)
             }
             try? FileManager.default.removeItem(at: noteURL)
+        }
+        if let shotURL, let askedFor = shot {
+            if FileManager.default.fileExists(atPath: shotURL.path) {
+                captures.photographed(askedFor)
+                reading.shot = shotURL.lastPathComponent
+            } else {
+                captureFailed(askedFor, outcome)
+            }
         }
         if let problem = reading.problem {
             throw Failure(description: "the \"\(name)\" menu opened but \(problem)")
@@ -6019,13 +6076,14 @@ private final class Run {
     /// logs that it skipped and the walk goes on.
     private func screenCapture(_ window: NSWindow, name: String) async {
         guard CGPreflightScreenCaptureAccess() else {
+            captures.skippedUngranted()
             note(0, "capture", "no Screen Recording grant; skipped")
             return
         }
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
             guard let scWindow = content.windows.first(where: { $0.windowID == CGWindowID(window.windowNumber) }) else {
-                note(0, "capture", "window \(window.windowNumber) not in shareable content")
+                captureFailed(name, "window \(window.windowNumber) not in shareable content")
                 return
             }
             let scale = window.backingScaleFactor
@@ -6044,15 +6102,35 @@ private final class Run {
             let filter = SCContentFilter(desktopIndependentWindow: scWindow)
             let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
             let rep = NSBitmapImageRep(cgImage: image)
-            if let png = rep.representation(using: .png, properties: [:]) {
-                try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
-                let hung = family.count - 1
-                note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
-                    + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : ""))
+            guard let png = rep.representation(using: .png, properties: [:]) else {
+                captureFailed(name, "the window came back but would not encode as a PNG")
+                return
             }
+            try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
+            captures.photographed(name)
+            let hung = family.count - 1
+            note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
+                + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : ""))
         } catch {
-            note(0, "capture", "failed: \(error)")
+            captureFailed(name, "\(error)")
         }
+    }
+
+    /// A picture that was asked for and not taken, recorded and — this is the
+    /// point — with any older picture of the same step deleted.
+    ///
+    /// An audit ships `<name>-sc.png` by file name, copied out of the walk's
+    /// output folder, and a walk overwrites rather than empties that folder. So
+    /// a run whose capture failed used to leave yesterday's photograph sitting
+    /// under today's name, ready to be copied into an audit as if it were this
+    /// build. Stale evidence is worse than none.
+    private func captureFailed(_ name: String, _ reason: String) {
+        captures.refused(name)
+        let stale = out.appendingPathComponent("\(name)-sc.png")
+        let hadStale = FileManager.default.fileExists(atPath: stale.path)
+        if hadStale { try? FileManager.default.removeItem(at: stale) }
+        note(0, "capture", "failed: \(reason)"
+            + (hadStale ? "; deleted the \(name)-sc.png an earlier run left, so nothing stale gets shipped as this one" : ""))
     }
 
     // MARK: - State

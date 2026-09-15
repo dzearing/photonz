@@ -43,11 +43,20 @@ The machine you run on is the user's. Anything you start, you finish.
 
 - **Read the `Grants:` line every launch prints, and believe it.** It says whether the probe may record the screen and whether this terminal may drive other apps:
   ```
-  ==> Grants: probe Screen Recording granted · Ghoztty Accessibility denied
+  ==> Grants: probe Screen Recording granted · Ghoztty Accessibility denied · screen unlocked
   ```
-  With the Screen Recording grant, a `snapshot` step in a playtest writes `<name>-sc.png` beside its offscreen `<name>.png`: that file is the window exactly as a person would see it, shadow, toast, menu bar and all. **That is the picture an audit gets.** The offscreen render resolves some colors wrong (a plain tool button came out black on the dark bar), so anything judged by color, weight or layering reads the capture instead.
+  With the Screen Recording grant AND an unlocked screen, a `snapshot` step in a playtest writes `<name>-sc.png` beside its offscreen `<name>.png`: that file is the window exactly as a person would see it, shadow, toast, menu bar and all. **That is the picture an audit gets.** The offscreen render resolves some colors wrong (a plain tool button came out black on the dark bar), so anything judged by color, weight or layering reads the capture instead.
 
-  Without it there are no real screenshots at all, only offscreen renders, and the audit must say so in `rough` in plain words. Never write "verified live" when the line said denied. Neither grant ever prompts you: the probe raises the system dialog at most once per launch and only while the grant is undetermined, so if one is missing, print the fix and move on rather than trying to force it.
+  Without the grant there are no real screenshots at all, only offscreen renders, and the audit must say so in `rough` in plain words. Never write "verified live" when the line said denied. Neither grant ever prompts you: the probe raises the system dialog at most once per launch and only while the grant is undetermined, so if one is missing, print the fix and move on rather than trying to force it.
+
+  **`screen locked` means no picture is possible, grant or not**, because macOS stops drawing the app entirely; a walk will not even run. Nothing can unlock the Mac, so do not try. Say it in `rough` in one plain sentence and ship the offscreen renders.
+
+  You do not have to work any of this out yourself. Every walk now ends with one line saying what it photographed:
+  ```
+  ==> Window captures: 2 real pictures of the window: 1-narrow-sc.png, 2-narrow-shape-tool-sc.png
+  ==> Window captures: none. The screen was locked, so macOS refuses every one.
+  ```
+  Read it before you write the audit. A capture that could have been taken and was not now FAILS the walk, so a green walk with pictures in that line really did photograph the app.
 
 - **Run the walks you touched, never the whole sweep.** There are two checks and
   they are not interchangeable. While you build, run the one or few walks your
@@ -228,7 +237,7 @@ Rules that keep it usable:
 
 - **`try` is five to eight steps.** If it needs more, the feature is too big to playtest in one sitting: audit the slice that is ready.
 - **Every step is one action.** No paragraphs, no background, no justification.
-- **Ship a real screenshot when the loop is allowed to take one.** If the `Grants:` line said Screen Recording is granted, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. If the grant was denied, say that in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.
+- **Ship a real screenshot when the loop is allowed to take one.** If the walk's `Window captures:` line named real pictures, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. If that line said none — the grant was denied, or the screen was locked — say which in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.
 - **`evaluate` asks real questions**, three to five. "Does the readout land where your eye already is?" not "evaluate the readout".
 - **`rough` is honest.** This is where you admit what you could not fix, and where the mock was wrong. Writing it here is not the same as filing it: each rough item either clears the follow-up bar and becomes a task, or gets folded into the task that already covers it, or stays in your task's log. Say which in your log.
 
