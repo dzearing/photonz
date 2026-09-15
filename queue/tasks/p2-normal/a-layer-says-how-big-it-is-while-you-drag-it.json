@@ -4,18 +4,19 @@
   "goal": "While you drag or resize something on the canvas, and while you sweep a selection box, nothing on screen says how big it is or where it is. The numbers used to sit in the right hand panel and follow the drag; they are now something you ask for, so the live half of that reading has nowhere to go. Put a small readout on the canvas that follows the drag and disappears when you let go.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2690,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T16:14:53.606Z",
-  "updated": "2026-09-15T16:14:53.609Z",
+  "updated": "2026-09-15T22:32:54.636Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Created by position-and-size-leave-the-panel on 2026-09-15. The Position & Size section followed a drag in flight (GeometryInspector reads previewedFrame, and EditorState.regionGeometry gave a live marquee its four numbers). Taking the section out of the panel kept the typing but lost the watching: the popover is a place a thing happens, and a canvas click dismisses it, so it cannot be the live readout. This is the feature that ought to replace that half, and it is better than what it replaces because it is where the eye already is. The measure tool already draws pill readouts on the canvas (AnnotationStyles, LabelPlate, CanvasNameLabel) so the drawing is not new.",
+  "notes": "Created by position-and-size-leave-the-panel on 2026-09-15. The Position & Size section followed a drag in flight (GeometryInspector reads previewedFrame, and EditorState.regionGeometry gave a live marquee its four numbers). Taking the section out of the panel kept the typing but lost the watching: the popover is a place a thing happens, and a canvas click dismisses it, so it cannot be the live readout. This is the feature that ought to replace that half, and it is better than what it replaces because it is where the eye already is. The measure tool already draws pill readouts on the canvas (AnnotationStyles, LabelPlate, CanvasNameLabel) so the drawing is not new.\n\nFolded in from the-size-readout-keeps-up-while-you-reshape-a-pa (dropped 2026-09-15): PATH RESHAPES NEED EXTRA PLUMBING that layer moves and resizes do not.\n\nA layer move or resize writes EditorState.previewMoves[id], and everything that reads a live box goes through previewedFrame(of:)/canvasFrame(of:) (EditorState.swift:2253-2320), which read that dictionary first. A readout built on those is automatically right for move and resize.\n\nA path point or lever drag does NOT write previewMoves. EditorState.previewPath (EditorState+PathEdit.swift:17) builds the reshaped document and hands it only to the render scheduler via submit(); it never writes editorState.document and never touches previewMoves. So previewedFrame returns the PRE-DRAG box for the whole gesture, and a readout built the obvious way would sit frozen through every path reshape.\n\nThe live box is already computed, just on the AppKit side: CanvasPathEdit.swift:239 and :322 set the canvas view's own selectedLayerFrame from content.bounds each frame. Either push that into previewMoves (or a sibling preview store) from previewPath, or have the readout read the canvas value for path drags. The first is preferable: one door, and the Position and Size popover reads right too.\n\nEvidence the old symptom was real, from the 2026-09-14 run of Scripts/playtest/path-chrome-follows-walk.json: mid-drag capture 6-mid-two-anchor-drag-sc.png read X 200 Y 192 W 580 H 448 while the shot right after release, 7-after-two-anchor-drag-sc.png, read X 260 Y 189 W 580 H 381. That was the panel section, which no longer exists, but the stale source behind those numbers is unchanged.",
   "acceptance": [
     "Dragging a layer shows its position, and resizing one shows its size, next to what is being dragged, updating as it moves",
     "Sweeping a selection box shows the box size the whole time it is being swept",
+    "Dragging a point or a lever on a path shows the shape as it is under the pointer, and the numbers do not jump when the button is released",
     "The readout disappears the moment the pointer is released, and never covers the thing it is describing",
     "Nothing is added to the right hand panel to do it"
   ],
@@ -23,6 +24,14 @@
     {
       "t": "2026-09-15T16:14:53.608Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T22:32:45.307Z",
+      "note": "Folded in the-size-readout-keeps-up-while-you-reshape-a-pa, which was dropped as superseded. Added path point and lever drags as an acceptance case, and put the plumbing note in working detail: path reshapes never write previewMoves, so previewedFrame is stale for the whole gesture and a readout built the obvious way would freeze on every path drag. The live box already exists on the AppKit side at CanvasPathEdit.swift:239 and :322."
+    },
+    {
+      "t": "2026-09-15T22:32:54.635Z",
+      "note": "seq 2690 -> 50"
     }
   ]
 }

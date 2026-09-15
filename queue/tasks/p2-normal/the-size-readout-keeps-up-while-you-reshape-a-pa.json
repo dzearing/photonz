@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T03:06:37.510Z",
-  "updated": "2026-09-15T16:15:00.124Z",
+  "updated": "2026-09-15T22:32:58.661Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-14 with Scripts/playtest/path-chrome-follows-walk.json. Mid-drag screen capture 6-mid-two-anchor-drag-sc.png shows Position & Size reading X 200 Y 192 W 580 H 448; the shot taken right after the release, 7-after-two-anchor-drag-sc.png, reads X 260 Y 189 W 580 H 381. Both are in /tmp/photonz-playtest/path-chrome-follows-walk and the mid-drag one is copied to queue/audits/2026-09-14-path-chrome-mid-two-anchor-drag.png.\n\nCause is the same one behind the chrome lag that was just fixed: EditorState.previewPath (Sources/Photonz/EditorState+PathEdit.swift:17) builds the reshaped document and hands it ONLY to the render scheduler via submit(); it never writes editorState.document, so everything that reads the document — the panel included — sees the pre-drag shape for the whole gesture. CanvasPathEdit.swift keeps selectedLayerFrame up to date during the drag, which is what the canvas chrome uses, so the live box IS already known; the panel just is not reading it. \"Resizing a frame shows what you are getting while you drag\" (done) is the pattern to follow.\n\nThe blue selection box is a separate, deliberate thing: CanvasDisplay.swift:935 hides it during a path drag on purpose, so it is not chasing the shape. Worth asking the user about together with this.",
@@ -35,6 +35,31 @@
     {
       "t": "2026-09-15T16:15:00.123Z",
       "note": "The premise moved on 2026-09-15: Position & Size is no longer a section in the panel at all (position-and-size-leave-the-panel), so 'the numbers in the panel stay frozen while you drag' has no panel to be about. What is left of this is real and is now the live readout on the canvas, filed as a-layer-says-how-big-it-is-while-you-drag-it; whoever picks that up should make the path point and lever drags one of the cases it covers, and this task should probably fold into it."
+    },
+    {
+      "t": "2026-09-15T22:31:39.937Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T22:32:50.485Z",
+      "note": "Verified the premise is dead rather than taking the earlier note's word for it. Every acceptance item on this task says 'the panel', and the panel no longer has those numbers: InspectorPanel.swift:449 says 'Position & Size is NOT here any more, and its absence is the feature', availableSections never offers .geometry, and InspectorPanel.swift:808 marks the case unreachable, kept only so saved section orders keep decoding. The same fields now live in ExactPlacementPopover, opened from Layer > Position and Size or a right click on the layer's row. A popover is transient: the mouse-down that starts a path drag on the canvas dismisses it, so there is no longer any way to watch a number go stale mid-drag. No user-visible symptom left to reproduce."
+    },
+    {
+      "t": "2026-09-15T22:32:50.529Z",
+      "note": "Could not run a walk to photograph any of this: the Mac's screen was locked. Scripts/playtest.sh Scripts/playtest/path-chrome-follows-walk.json reported status locked and exited without a pass or a failure ('the Mac's screen was locked while this walk ran, so the window it drives was never drawn on screen'). No real captures were taken this run. The code evidence above does not need one."
+    },
+    {
+      "t": "2026-09-15T22:32:50.572Z",
+      "note": "The underlying defect the notes identified IS still real and is unchanged: previewPath submits only to the render scheduler, so previewedFrame/canvasFrame return the pre-drag box for the whole gesture. It has no visible face today, so it is not a bug to file; it is a trap for the task that replaces this one. Folded it into a-layer-says-how-big-it-is-while-you-drag-it with the file and line numbers and the 2026-09-14 capture evidence, and added path point and lever drags to that task's acceptance so a runner cannot call it done while path reshapes sit frozen."
+    },
+    {
+      "t": "2026-09-15T22:32:50.616Z",
+      "note": "Left rough, not filed: CanvasDisplay.swift:935 hides the blue selection box during a path drag on purpose, so the shape's outline never chases the points while you reshape it. The notes suggested asking the user about it. Not opening a decision from a dropped task, and it will read better as a real question once the canvas readout exists and there is something to compare it against, so it is recorded here for whoever builds that."
+    },
+    {
+      "t": "2026-09-15T22:32:58.660Z",
+      "note": "Superseded, verified rather than assumed. Every acceptance item is about numbers in the right hand panel, and Position & Size is no longer a section there (InspectorPanel.swift:449 and :808; availableSections never offers it). The fields moved into a transient popover that the mouse-down starting a path drag dismisses, so there is no surface left on which a number can go stale mid-drag. The real plumbing defect underneath (previewPath never writes previewMoves, so previewedFrame is the pre-drag box for the whole gesture) is unchanged and is folded into a-layer-says-how-big-it-is-while-you-drag-it, which gained a path point and lever drag acceptance item and this task's seq 50 slot."
     }
-  ]
+  ],
+  "started": "2026-09-15T22:31:39.936Z"
 }
