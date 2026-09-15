@@ -1,0 +1,208 @@
+import Foundation
+import PhotonzCore
+
+/// The timing strip across the bottom of the window (`next-motion-strip`,
+/// `MotionStrip.swift`).
+///
+/// Everything here is a thin layer over the pure arithmetic in `PhotonzCore`.
+/// The strip reads the WHOLE document rather than the picked layer, which is
+/// the whole reason it exists: the Motion list in the side column speaks for
+/// one layer, and a lag is a relationship between two.
+extension EditorState {
+
+    // MARK: Whether there is a strip at all
+
+    /// True where this document has something moving in it and the feature is
+    /// switched on. A still document has no strip, not an empty one: a bar of
+    /// chrome saying "nothing here" costs canvas and tells you what you already
+    /// know by looking at the picture.
+    var hasMotionStrip: Bool {
+        guard Experiments.shared.motionStripEnabled, let document else { return false }
+        return document.hasMotion
+    }
+
+    /// Whether it is on screen right now: there is one, and it has not been
+    /// put away.
+    var isMotionStripShown: Bool { hasMotionStrip && isMotionStripOpen }
+
+    /// The lanes, grouped under the layer each belongs to.
+    var motionStripGroups: [MotionStripGroup] {
+        guard let document else { return [] }
+        var groups = document.motionStrip()
+        // A bar under the hand is drawn where the hand has it, not where the
+        // document still says it is, which is the same bargain the pivot
+        // crosshair and the lens slider strike.
+        if let drag = motionTimingDrag {
+            for group in groups.indices {
+                for lane in groups[group].lanes.indices
+                where groups[group].lanes[lane].motionID == drag.motionID {
+                    groups[group].lanes[lane].timing = drag.timing
+                }
+            }
+        }
+        return groups
+    }
+
+    /// How long one lap is, as the strip is drawing it.
+    ///
+    /// While a bar is being dragged this is the length the lap had when it was
+    /// GRABBED. A lap that grew to fit the bar being dragged would rescale the
+    /// ruler under the hand doing the dragging, and the bar would chase the
+    /// pointer instead of following it.
+    var motionStripCycleMS: Int {
+        if let drag = motionTimingDrag { return drag.heldCycleMS }
+        return max(1, document?.motionCycleLengthMS ?? 1)
+    }
+
+    /// The ruler the strip is drawn against.
+    var motionStripRuler: MotionStripRuler { MotionStripRuler(cycleMS: motionStripCycleMS) }
+
+    /// Whether the lap simply follows the longest motion.
+    var motionCycleIsAutomatic: Bool { document?.motionCycleIsAutomatic ?? true }
+
+    // MARK: Putting it away and bringing it back
+
+    func toggleMotionStrip() { isMotionStripOpen.toggle() }
+
+    // MARK: How long one lap is
+
+    /// The lap length typed into the strip's own readout. One undo step, like
+    /// every other number in the app.
+    func setMotionCycleMS(_ ms: Int) {
+        guard document?.motionCycleMS != max(1, ms) else { return }
+        perform { $0.motionCycleMS = max(1, ms) }
+        if isMotionPlaying { restartMotionPreview() }
+    }
+
+    /// Back to following the longest motion.
+    func clearMotionCycle() {
+        guard document?.motionCycleMS != nil else { return }
+        perform { $0.motionCycleMS = nil }
+        if isMotionPlaying { restartMotionPreview() }
+    }
+
+    // MARK: Dragging a bar
+
+    /// A bar taken hold of.
+    ///
+    /// The lap length is held for the length of the drag and the timing is
+    /// worked out from where the bar was when it was grabbed, so neither the
+    /// ruler nor the bar can creep while the hand is moving.
+    func beginMotionTimingDrag(motionID: UUID, grab: MotionStripDrag.Grab) {
+        guard let document,
+              let lane = document.motionStrip().flatMap(\.lanes).first(where: { $0.motionID == motionID })
+        else { return }
+        // Picking the bar picks its layer, so the numbers in the side column
+        // are the numbers of the bar in your hand. Without this you would be
+        // dragging one thing and reading another.
+        if selectedLayerID != lane.layerID { selectLayer(lane.layerID) }
+        motionTimingDrag = MotionTimingDrag(
+            motionID: motionID,
+            layerID: lane.layerID,
+            grab: MotionStripDrag(grab: grab, timing: lane.timing,
+                                  others: document.motionStripEdges(excluding: motionID),
+                                  snapWithinMS: Self.motionSnapMS(cycleMS: document.motionCycleLengthMS)),
+            timing: lane.timing,
+            heldCycleMS: max(1, document.motionCycleLengthMS),
+            snappedTo: nil,
+            gap: nil)
+    }
+
+    /// The hand moved. Nothing is written to the document: the strip and the
+    /// side column both read the preview, so the numbers follow at once and the
+    /// whole drag is still one step to undo.
+    func updateMotionTimingDrag(byMS delta: Int) {
+        guard var drag = motionTimingDrag else { return }
+        let landing = drag.grab.landing(byMS: delta)
+        drag.timing = landing.timing
+        drag.snappedTo = landing.snappedTo
+        // The lag, drawn as itself: how far this bar starts from the nearest
+        // end of any other, with that other one named.
+        drag.gap = MotionStripGap(startMS: landing.timing.startMS,
+                                  others: drag.grab.others.filter { $0.name != MotionStripCopy.topOfTheLap })
+        motionTimingDrag = drag
+        // The preview keeps RUNNING while the bar moves. The canvas is handed
+        // the timing under the hand rather than the one written down
+        // (`displayDocument`), so the lag you are making plays as you make it,
+        // which is the only way to judge whether ninety milliseconds is the
+        // right ninety milliseconds.
+        rerender()
+    }
+
+    /// Let go: one step for undo covering the whole drag.
+    func commitMotionTimingDrag() {
+        guard let drag = motionTimingDrag else { return }
+        motionTimingDrag = nil
+        guard drag.timing != drag.grab.timing else {
+            rerender()
+            return
+        }
+        let held = drag.heldCycleMS
+        perform { document in
+            document.updateLayer(id: drag.layerID) { layer in
+                guard var motions = layer.motions,
+                      let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
+                motions[index].timing = drag.timing
+                layer.motions = motions
+            }
+            // What the drag did to the LAP, in the same step, so undo takes
+            // both back together. The rule itself is in `MotionStripCycle`,
+            // where it is tested.
+            document.motionCycleMS = MotionStripCycle.after(
+                drag: held, automatic: document.automaticMotionCycleLengthMS,
+                current: document.motionCycleMS)
+        }
+        // Started if it was not already going, for the reason the pivot drag
+        // starts it: a lag cannot be judged on a still picture, and somebody
+        // who has just dragged a bar along a ruler of milliseconds is asking
+        // what it looks like.
+        playMotionPreview()
+    }
+
+    /// Escape, or a drag that went nowhere.
+    func cancelMotionTimingDrag() {
+        guard motionTimingDrag != nil else { return }
+        motionTimingDrag = nil
+        rerender()
+    }
+
+    /// How near a drop has to land to catch on another bar's end, in
+    /// milliseconds. Deliberately tiny — a fortieth of the lap, so about
+    /// twenty milliseconds on a nine hundred millisecond loop — because the job
+    /// this strip exists for is putting one bar ninety milliseconds behind
+    /// another, and a snap wide enough to be helpful for lining things up would
+    /// swallow exactly that.
+    static func motionSnapMS(cycleMS: Int) -> Int { max(2, cycleMS / 40) }
+
+    // MARK: What the side column reads while a bar is dragged
+
+    /// The timing to show for this motion: the one under the hand where there
+    /// is a hand on it, and the one in the document otherwise.
+    ///
+    /// The Start and Over fields in the side column go through here, which is
+    /// the whole of "one model, two views": drag the bar and the numbers move
+    /// with it, type in the numbers and the bar moves with them.
+    func motionTiming(of motion: LayerMotion) -> MotionTiming {
+        if let drag = motionTimingDrag, drag.motionID == motion.id { return drag.timing }
+        return motion.timing
+    }
+}
+
+/// A bar under a hand: what it was when it was grabbed, what it is now, and
+/// what it caught on to get there.
+///
+/// Kept out of the document for the reason the pivot drag is: the whole drag
+/// has to be one step to undo rather than forty.
+struct MotionTimingDrag {
+    let motionID: UUID
+    let layerID: UUID
+    /// The arithmetic, holding the timing the bar had when it was taken hold
+    /// of and the ends of every other bar it can catch on.
+    let grab: MotionStripDrag
+    var timing: MotionTiming
+    /// How long the lap was when the drag started, held for its length so the
+    /// ruler cannot rescale under the hand.
+    let heldCycleMS: Int
+    var snappedTo: MotionStripEdge?
+    var gap: MotionStripGap?
+}

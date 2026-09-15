@@ -698,6 +698,27 @@ final class EditorState {
     /// When the running preview started, so the playhead is real time rather
     /// than a count of frames that drifts whenever one is dropped.
     @ObservationIgnored var motionStartedAt: Date?
+
+    // MARK: The timing strip (`next-motion-strip`)
+
+    /// Whether the strip across the bottom is open (`EditorState+MotionStrip`).
+    /// Kept apart from whether there IS one: a document with nothing moving
+    /// shows no strip whatever this says, and putting one away stays put for
+    /// the next document that has something moving in it.
+    var isMotionStripOpen = EditorState.motionStripOpenDefault {
+        didSet { UserDefaults.standard.set(isMotionStripOpen, forKey: Self.motionStripOpenKey) }
+    }
+    static let motionStripOpenKey = "motion.stripOpen"
+    /// Open the first time, because a strip that had to be found before it
+    /// could be seen would be a surface nobody knows is there. Putting it away
+    /// is remembered.
+    static var motionStripOpenDefault: Bool {
+        UserDefaults.standard.object(forKey: motionStripOpenKey) as? Bool ?? true
+    }
+    /// The bar under a hand on the strip: kept out of the document so the whole
+    /// drag is one step to undo, and read by BOTH the strip and the Start and
+    /// Over fields in the side column so the two can never disagree.
+    var motionTimingDrag: MotionTimingDrag?
     /// Bumped whenever the LENS TOOL's own memory changes, so the capsule over
     /// the tool bar and the panel's tool section redraw. The memory itself
     /// lives in UserDefaults, which nothing observes.
@@ -2725,6 +2746,20 @@ final class EditorState {
         // canvas is drawn, exactly like the blur and the shadow above it. Stop
         // the preview and the picture is the picture you drew
         // (`LayerMotion.swift`).
+        // A bar under a hand on the timing strip, first: the canvas has to play
+        // the timing the HAND has, not the one still written down, or dragging
+        // a bar while the preview runs would show you the lag you had before
+        // you started moving it (`EditorState+MotionStrip`). The held lap comes
+        // with it, so the loop does not change length mid-drag either.
+        if Experiments.shared.motionStripEnabled, let drag = motionTimingDrag {
+            document.updateLayer(id: drag.layerID) { layer in
+                guard var motions = layer.motions,
+                      let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
+                motions[index].timing = drag.timing
+                layer.motions = motions
+            }
+            document.motionCycleMS = drag.heldCycleMS
+        }
         if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
         }

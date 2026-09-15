@@ -342,6 +342,15 @@ extension Experiments {
     /// picture nobody could stop.
     var motionEnabled: Bool { isEnabled(FeatureCatalog.motionFlag) }
 
+    /// `next-motion-strip`: whether the timing strip runs across the bottom of
+    /// the window. It NEEDS the Motion list, because with no way to tell a
+    /// layer to move there is never anything to draw a bar for: a strip that
+    /// could only ever be empty is a strip that never appears, which is worse
+    /// than no strip at all because the switch for it would look broken.
+    var motionStripEnabled: Bool {
+        motionEnabled && isEnabled(FeatureCatalog.motionStripFlag)
+    }
+
     /// `next-reshape-a-path`: whether a selected path shows its anchors and
     /// lets them be dragged, converted, added and taken out. It needs the Pen,
     /// because without one there is no way to draw a path to reshape. A path

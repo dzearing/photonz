@@ -764,14 +764,31 @@ extension PhotonzDocument {
         allLayers.contains { $0.hasMotion }
     }
 
-    /// How long one cycle of the loop is, in milliseconds: as long as the last
-    /// thing to finish.
+    /// How long one cycle of the loop is, in milliseconds: whatever has been
+    /// written down for this document, and otherwise as long as the last thing
+    /// to finish.
     ///
     /// ONE CYCLE, not a document timeline. An icon repeats and a video
     /// finishes, and the study is explicit that the two cannot share a ruler.
+    ///
+    /// The written length is what lets a bar run PAST the point the lap starts
+    /// over, which is what a lag in something that loops IS: with the lap
+    /// always growing to fit its longest motion, nothing could ever overrun it
+    /// (`MotionStrip.swift`).
     public var motionCycleLengthMS: Int {
+        if let motionCycleMS { return max(1, motionCycleMS) }
+        return automaticMotionCycleLengthMS
+    }
+
+    /// How long the lap would be if nobody had written one down: as long as the
+    /// last thing to finish. Nought where nothing moves.
+    public var automaticMotionCycleLengthMS: Int {
         allLayers.map(\.motionEndMS).max() ?? 0
     }
+
+    /// Whether the lap simply follows the longest motion, which is what it does
+    /// until somebody says otherwise.
+    public var motionCycleIsAutomatic: Bool { motionCycleMS == nil }
 
     /// The whole picture as it looks `ms` into the preview, groups and all.
     ///

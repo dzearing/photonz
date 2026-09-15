@@ -770,6 +770,18 @@ struct EditorCommands: Commands {
                     }))
                 .disabled(!hasDocument)
             }
+            // The timing strip across the bottom (Next, `next-motion-strip`).
+            // Next to the panel because it is the same kind of thing: a surface
+            // the window can show or put away. Dimmed with nothing moving,
+            // because there is no strip for a still picture and a row that
+            // would open an empty one is a row that lies.
+            if Experiments.shared.motionStripEnabled {
+                Toggle(MenuToggleNames.timingStrip, isOn: Binding(
+                    get: { editor?.isMotionStripShown ?? false },
+                    set: { _ in editor?.toggleMotionStrip() }))
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                .disabled(!(editor?.hasMotionStrip ?? false))
+            }
             Button("Zoom In") { editor?.zoomIn() }
                 .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
                 .disabled(!hasDocument)

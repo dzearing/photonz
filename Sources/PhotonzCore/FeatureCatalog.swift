@@ -144,6 +144,8 @@ public enum FeatureCatalog {
 
     public static let motionFlag = "next-motion"
 
+    public static let motionStripFlag = "next-motion-strip"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -453,6 +455,15 @@ public enum FeatureCatalog {
                     name: motionFlag,
                     title: "Tell a layer to change one of its properties over time",
                     description: "Adds Motion to the right hand panel, directly under Effects and read the same way: a list you add to with the plus on its header. An entry is one property of the layer you have picked that changes over time. The plus offers only what that layer actually has, each with the value it is wearing right now: where it sits, how big it is, how far it is turned, how see-through it is, what colour it is, and on a drawn line how thick that line is. There is no menu of canned motions with names like Pulse or Wiggle, because those are combinations of these and combinations are what you make. Each entry says what it goes from and to, how long after the start of the loop it begins, how long it takes, on which curve, and how often it repeats: once, three times, for ever, or for ever there and back, which is what an icon nearly always wants and what a new entry starts as. The curves are one named set with the shape drawn beside each name, from linear through the four standard eases to back, elastic and steps, plus one you draw yourself by dragging two handles. The picture plays it in the canvas, and the play button on the Motion header starts and stops the preview. Nothing is ever baked in: a motion is worked out at the moment the canvas is drawn, exactly like a blur or a shadow, so the layer you can still drag is the layer you drew, and every change is one step for undo. Off means no Motion section and nothing in any document moves.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: motionStripFlag,
+                    title: "See every moving part on one strip across the bottom",
+                    description: "Adds a strip across the bottom of the window showing one lap of the animation, measured in milliseconds, with a bar for every moving property grouped under the layer it belongs to. It is there only while something in the document moves. The side column can say what changes and by how much; what it cannot say is how two parts of one drawing sit against each other in time, because that is a comparison and a comparison needs width. Drag a bar sideways to change when that motion starts, drag either end to change how long it takes, and while you drag, the gap to the nearest other bar is drawn as a bracket with the number on it, named after the layer it is measured from, so a lag is a distance you can see rather than a number you have to hold in your head. The bars and the Start and Over fields in the side column are the same two numbers: move one and the other follows at once. A dashed line marks where the lap starts over, and a bar is allowed to run past it, which is what a lag in something that loops is. The lap's length is on the strip and can be typed, and until it is, it simply follows the longest motion. Picking a bar picks its layer. Option Command T puts the strip away and brings it back. Needs the Motion list to be on, because without a motion there is nothing to draw.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

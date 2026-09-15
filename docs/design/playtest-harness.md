@@ -408,6 +408,37 @@ What they do NOT do is start the drag. They begin with the payload already in
 the air, which proves everything that happens from there and nothing about the
 tile ever leaving the shelf.
 
+### The timing strip's bars
+
+`dragTiming` drags one bar on the timing strip across the bottom of the window
+(`next-motion-strip`). It names a bar the way the strip labels it, layer then
+property, and moves it in MILLISECONDS rather than in points, because that is
+what the strip is measured in and it is what the walk actually means.
+
+```json
+{ "do": "dragTiming", "bar": "Knob Rotation", "grab": "body", "byMS": 90,
+  "hold": "3-the-gap-while-you-drag" }
+{ "do": "dragTiming", "bar": "Knob Rotation", "grab": "end", "byMS": -300 }
+{ "do": "dragTiming", "bar": "Knob Rotation", "grab": "body", "byMS": 400, "cancel": true }
+```
+
+`grab` is `body` (the bar moves, keeping its length), `start` or `end` (that
+end moves and the other stays put); it defaults to `body`. `hold` photographs
+the window with the bar still in hand, which is the only moment the gap bracket
+is on screen. `cancel` lets go without committing and FAILS the walk if the bar
+did not go back exactly where it started.
+
+It drives the strip's own drag rather than posting mouse events, for the reason
+written on `PanelAreaHandleProbe`: SwiftUI gestures do not answer synthesized
+ones. Everything the drag DECIDES is real and is in the log line — where the bar
+landed, what it caught on, what the gap read, and whether the lap held its
+length so the bar could overrun the restart. What it does not prove is the
+pointer that would have started it.
+
+Whether the whole drag is ONE step to undo is not checked here on purpose: a
+walk says that better itself, with an `undo` and a `redo` either side of a
+`panel` listing, the way `motion-timing-strip-walk` does.
+
 ### Does a tile really come away in your hand? Yes, and here is the proof
 
 This was the open question behind three audits on 2026-09-09, each of which

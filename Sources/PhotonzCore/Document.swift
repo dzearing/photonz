@@ -44,6 +44,16 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         set { storedGridOrigin = newValue.x.isFinite && newValue.y.isFinite ? newValue : .zero }
     }
     private var storedGridOrigin: CGPoint
+    /// How long one lap of the animation is, in milliseconds, or nil while
+    /// nobody has said: the far commoner case, where the lap is simply as long
+    /// as the last thing to finish (`MotionStrip.swift`).
+    ///
+    /// It has to be sayable, because a lap that always grew to fit its longest
+    /// motion could never have a bar running PAST the point it starts over —
+    /// and a bar overrunning the restart is precisely what a lag in something
+    /// that loops is. It also means the ruler holds still while a bar is
+    /// dragged along it, instead of rescaling under the hand that is dragging.
+    public var motionCycleMS: Int?
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -61,7 +71,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
-        case gridOriginX, gridOriginY
+        case gridOriginX, gridOriginY, motionCycleMS
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -80,6 +90,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             try c.encode(gridOrigin.x, forKey: .gridOriginX)
             try c.encode(gridOrigin.y, forKey: .gridOriginY)
         }
+        // A lap nobody has written down is not written down: a document whose
+        // cycle simply follows its longest motion saves byte for byte as it did
+        // before laps could be written down at all.
+        if let motionCycleMS { try c.encode(motionCycleMS, forKey: .motionCycleMS) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -104,6 +118,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         let x = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginX) ?? 0
         let y = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginY) ?? 0
         storedGridOrigin = x.isFinite && y.isFinite ? CGPoint(x: x, y: y) : .zero
+        // Nothing written means the lap follows the longest motion, which is
+        // what every document written before this did.
+        motionCycleMS = try c.decodeIfPresent(Int.self, forKey: .motionCycleMS)
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

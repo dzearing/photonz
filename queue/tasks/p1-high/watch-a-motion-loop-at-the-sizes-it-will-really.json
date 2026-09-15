@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:16.696Z",
-  "updated": "2026-09-15T08:43:19.692Z",
+  "updated": "2026-09-15T11:51:56.202Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-15T08:43:19.692Z",
       "note": "deps set: the motion model lands first, then this"
+    },
+    {
+      "t": "2026-09-15T11:51:56.201Z",
+      "note": "The timing strip landed (next-motion-strip) and it makes the loop-speed control from this slice matter more than it did: a 90 ms lag between two bars is under six frames, so the strip lets you SET a lag that nobody can then judge at full speed. The mock's own answer (icon-phase-wt step 6) is a speed control on the Real size card, and it is explicitly what replaces scrubbing for something that loops. The strip has no playhead scrubbing on purpose for the same reason. Please make the speed control reach the strip's playhead too, so a slowed loop is slow on the ruler as well as on the picture."
     }
   ]
 }

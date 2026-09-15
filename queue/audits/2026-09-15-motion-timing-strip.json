@@ -1,0 +1,32 @@
+{
+  "feature": "A strip across the bottom shows every moving part on one cycle",
+  "epic": "icon-animate",
+  "summary": "Every moving property in the document is now a bar on one ruler across the bottom of the window, so you can drag one part of a drawing later than another and see the lag instead of typing it. The side column could always say what changes and by how much; it could never say how two parts sit against each other in time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Two flags, both on by default: \"Tell a layer to change one of its properties over time\" and \"See every moving part on one strip across the bottom\". THE MAC'S SCREEN WAS LOCKED for this whole build, so nothing below was photographed and no walk was run: see rough.",
+  "try": [
+    { "do": "Draw a rectangle, pick it, and add a Rotation from the plus on the Motion header." },
+    { "do": "Look at the bottom of the window: the strip appears with one bar, and the lap says 900 ms and that it follows the longest motion." },
+    { "do": "Draw a second shape underneath, pick it, and add a Rotation to it too. A second bar lands exactly under the first, and the two move as one stamped shape." },
+    { "do": "Drag the second bar to the right until its label reads about 90 ms after the first layer." },
+    { "do": "Watch the canvas while you drag: the preview keeps running, so the lag you are making plays as you make it." },
+    { "do": "Let go, and look at Start in the side column: it is the number you dragged to." },
+    { "do": "Look at the dashed repeats line: the second bar now runs past it, because it is still finishing when the loop has already begun again." },
+    { "do": "Press Option Command T twice to put the strip away and bring it back." }
+  ],
+  "evaluate": [
+    "Does the strip appearing on its own, the first time something moves, feel like help or like the window jumping?",
+    "While you drag a bar, is the bracket with \"90 ms after Rectangle\" on it the number you wanted, or were you measuring against something else?",
+    "The lap holds its length when you drag a bar past the end, so the bar overruns the dashed line rather than the lap growing. Does that read as correct, or as the strip refusing to resize?",
+    "Is dragging the ends of a bar to change its duration discoverable, or did you only find it by hunting?",
+    "Ninety milliseconds is under six frames. Can you actually judge the lag at full speed, or does this need the loop slowed down before the strip is useful?",
+    "The bars are the only place the timing is comparable, but Start and Over are still in the side column too. Does having both feel like one model in two views, or like two places to look?"
+  ],
+  "rough": [
+    "NOT PHOTOGRAPHED AND NOT RUN. The Mac's screen was locked for the whole of this task, so macOS never drew the app and every walk refuses to run in that state. There are no screenshots and no offscreen renders in this audit, and the new walk (Scripts/playtest/motion-timing-strip-walk.json) has never been executed once. What IS verified: 37 tests over the strip's arithmetic in PhotonzCore, and the full suite of 6783 tests green. A whole-set sweep has been requested so the loop runs the walk as soon as the screen is unlocked.",
+    "You cannot press Escape to call off a bar drag. The app knows how to (it is what an interrupted drag uses) but there is nothing listening for the key on the strip, so a drag you regret has to be undone afterwards.",
+    "You cannot drag the playhead to scrub. The mock argues against it, on the grounds that nobody can usefully scrub 900 ms and the answer is to slow the loop instead, and the loop speed control is not built yet either. So right now the only way to inspect a particular moment is to watch it go past.",
+    "Left out of the mock deliberately: its Fit button. With the ruler always one lap plus a third it always fits, so Fit would be a button that does nothing.",
+    "Changed from the mock deliberately: the mock draws the lag as one bracket from the left edge of the strip, which only reads as a lag because in its example the first bar happens to start at nought. With more than two bars that number means nothing, so the bracket here measures to the nearest end of any other bar and says which layer it is measured from.",
+    "The strip takes its height from the canvas rather than floating over it. With six or more moving properties it stops growing and scrolls, which has not been looked at on a short window."
+  ]
+}

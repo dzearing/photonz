@@ -1024,6 +1024,17 @@ public enum PlaytestHandleExpectation: String, CaseIterable, Hashable, Codable, 
 }
 
 /// How far a carried dock section travels before the walk lets go of it.
+/// Which part of a bar on the timing strip a `dragTiming` step takes hold of.
+public enum PlaytestTimingGrab: String, CaseIterable, Hashable, Codable, Sendable {
+    /// The bar itself: it moves, keeping its length, so WHEN the motion starts
+    /// changes and how long it takes does not.
+    case body
+    /// Its left hand end: the start moves and the finish stays put.
+    case start
+    /// Its right hand end: the finish moves and the start stays put.
+    case end
+}
+
 public enum PlaytestSectionStop: String, CaseIterable, Hashable, Codable, Sendable {
     /// Past the middle of the section named, which is the line it moves aside
     /// on.
@@ -1346,6 +1357,23 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the reason written on `PanelAreaHandleProbe`: SwiftUI gestures do not
     /// answer synthesized ones.
     case dragHandle(area: String, by: CGFloat, expect: PlaytestHandleExpectation, hold: String?)
+    /// Drag one bar on the timing strip across the bottom of the window
+    /// (`next-motion-strip`). `bar` names it the way the strip labels it,
+    /// layer then property: "Bell body Rotation". `grab` says which part of it
+    /// is taken hold of — the bar itself, which moves it, or either end, which
+    /// changes how long it takes — and `byMS` how far the hand travels, in the
+    /// milliseconds the strip is measured in rather than in points, so a walk
+    /// says the thing it means. `hold` names a picture taken with the bar still
+    /// in hand, which is the only moment the gap bracket is on screen, and
+    /// `cancel` lets go of it without committing.
+    ///
+    /// It drives the strip's own drag rather than posting mouse events, for the
+    /// reason written on `PanelAreaHandleProbe`: SwiftUI gestures do not answer
+    /// synthesized ones. Everything the drag DECIDES is real — the snapping,
+    /// the gap readout, the lap being held, the single undo step — and only the
+    /// pointer that would have started it is not.
+    case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
+                    hold: String?, cancel: Bool)
     /// Click a row in the layers list by the name it shows, the way a person
     /// picks a layer out of the list rather than off the picture. `modifiers`
     /// read as they do under a pointer: shift ranges from the anchor row,
@@ -1673,7 +1701,8 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
-        "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
+        "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
+        "dropComponent",
         "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
@@ -1717,6 +1746,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragRow: "dragRow"
         case .dragColor: "dragColor"
         case .dragSection: "dragSection"
+        case .dragTiming: "dragTiming"
         case .dragHandle: "dragHandle"
         case .selectRow: "selectRow"
         case .press: "press"
@@ -1949,6 +1979,16 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragSection(section: try f.string("section"), past: try f.string("past"),
                                 stop: stop, hold: try f.optionalString("hold"),
                                 cancel: try f.optionalFlag("cancel") ?? false)
+        case "dragTiming":
+            let grab: PlaytestTimingGrab = if fields["grab"] == nil {
+                .body
+            } else {
+                try f.enumValue("grab", PlaytestTimingGrab.self)
+            }
+            self = .dragTiming(bar: try f.string("bar"), grab: grab,
+                               byMS: Int(try f.number("byMS").rounded()),
+                               hold: try f.optionalString("hold"),
+                               cancel: try f.optionalFlag("cancel") ?? false)
         case "selectRow":
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "press":

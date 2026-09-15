@@ -36,6 +36,12 @@ public enum MenuToggleNames {
     /// carries: one switch covers every icon frame in every window. Named for
     /// the thing icon designers already call it.
     public static let iconKeylines = "Show Icon Keylines"
+    /// The timing strip across the bottom (`next-motion-strip`). On the View
+    /// menu with the panel and the keylines, because like them it is chrome
+    /// rather than anything a document carries. Dimmed with nothing moving:
+    /// there is no strip to show, and a row that would put up an empty one is
+    /// a row that lies.
+    public static let timingStrip = "Show Timing"
 
     // MARK: Layer menu
 

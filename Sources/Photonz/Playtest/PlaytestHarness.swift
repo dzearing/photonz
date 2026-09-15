@@ -1118,6 +1118,10 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
+        case .dragTiming(let bar, let grab, let byMS, let hold, let cancel):
+            try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold,
+                                 cancel: cancel, number: number)
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")
@@ -2363,6 +2367,84 @@ private final class Run {
     /// resize — where the pointer is, what the area decides to be, what gets
     /// remembered — and the one thing it does not cover is the six lines of
     /// gesture that turn a press into those calls.
+    /// One bar on the timing strip, dragged (`next-motion-strip`).
+    ///
+    /// It drives the strip's own drag rather than posting mouse events, for the
+    /// reason written on `PanelAreaHandleProbe`: SwiftUI gestures do not answer
+    /// synthesized ones. Everything the drag DECIDES is real — where the bar
+    /// lands, what it caught on, what the gap reads, whether the lap was held
+    /// so the bar could overrun it, and that the whole thing is one step to
+    /// undo — and only the pointer that would have started it is not.
+    private func dragTiming(_ bar: String, grab: PlaytestTimingGrab, byMS: Int,
+                            hold: String?, cancel: Bool, number: Int) async throws {
+        let editor = try requireEditor()
+        guard editor.hasMotionStrip else {
+            throw Failure(description: "there is no timing strip: either nothing in this document "
+                + "moves, or next-motion-strip is off")
+        }
+        guard editor.isMotionStripShown else {
+            throw Failure(description: "the timing strip is put away, so its bars are not on "
+                + "screen to be dragged. Show it with \u{2325}\u{2318}T first.")
+        }
+        let lanes = editor.motionStripGroups.flatMap { group in
+            group.lanes.map { (name: "\(group.layerName) \($0.title)", lane: $0) }
+        }
+        guard let found = lanes.first(where: {
+            $0.name.compare(bar, options: .caseInsensitive) == .orderedSame
+        }) else {
+            throw Failure(description: "there is no bar called \"\(bar)\" on the timing strip; "
+                + "there is \(lanes.isEmpty ? "none at all" : lanes.map(\.name).joined(separator: ", "))")
+        }
+        let before = found.lane.timing
+        let heldCycle = editor.document?.motionCycleLengthMS ?? 0
+
+        editor.beginMotionTimingDrag(motionID: found.lane.motionID, grab: grab.grab)
+        // Carried in a handful of moves rather than one jump, the way a hand
+        // does it, so anything that only shows up mid-drag — the bracket, the
+        // preview pausing, the side column following — really happens.
+        for fraction in [0.35, 0.7, 1.0] {
+            editor.updateMotionTimingDrag(byMS: Int((Double(byMS) * fraction).rounded()))
+            await sleep(0.05)
+        }
+        let inHand = editor.motionTimingDrag
+        if let hold, let window = try? requireWindow(), let content = window.contentView {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+        }
+        if cancel {
+            editor.cancelMotionTimingDrag()
+            await sleep(0.3)
+            let after = editor.motionStripGroups.flatMap(\.lanes)
+                .first { $0.motionID == found.lane.motionID }?.timing
+            guard after == before else {
+                throw Failure(description: "the drag was called off and \(bar) did not go back: "
+                    + "it started at \(before.startMS)-\(before.endMS) ms and is now at "
+                    + "\(after.map { "\($0.startMS)-\($0.endMS)" } ?? "gone")")
+            }
+            note(number, "dragTiming",
+                 "\(bar) carried \(byMS) ms and called off; it is back at "
+                 + "\(before.startMS) to \(before.endMS) ms",
+                 state: describe())
+            return
+        }
+        editor.commitMotionTimingDrag()
+        await sleep(0.4)
+        guard let after = editor.motionStripGroups.flatMap(\.lanes)
+            .first(where: { $0.motionID == found.lane.motionID })?.timing else {
+            throw Failure(description: "\(bar) is not on the strip any more after the drag")
+        }
+        let cycle = editor.document?.motionCycleLengthMS ?? 0
+        var said = "\(bar) \(grab.rawValue) dragged \(byMS) ms: "
+            + "\(before.startMS)-\(before.endMS) ms became \(after.startMS)-\(after.endMS) ms"
+        if let snap = inHand?.snappedTo { said += "; caught on \(snap.name) at \(snap.ms) ms" }
+        if let gap = inHand?.gap { said += "; gap read \"\(gap.reading)\"" }
+        said += "; one cycle \(heldCycle) ms became \(cycle) ms"
+            + (editor.motionCycleIsAutomatic ? " (follows the longest)" : " (held)")
+        if after.endMS > cycle { said += "; the bar runs \(after.endMS - cycle) ms past the restart" }
+        if let hold { said += "; held \(hold).png" }
+        note(number, "dragTiming", said, state: describe())
+    }
+
     private func dragHandle(_ area: String, by: CGFloat,
                             expect: PlaytestHandleExpectation,
                             hold: String?, number: Int) async throws {
@@ -6785,6 +6867,18 @@ private struct SnapGuideTally {
     var reading: String {
         "\(label) caught \(caught), let go \(released), changed \(changes), "
             + "went back on themselves \(reversals), last \(distinct.last ?? "-")"
+    }
+}
+
+/// Which part of a bar a walk said it was taking hold of, in the strip's own
+/// terms.
+extension PlaytestTimingGrab {
+    var grab: MotionStripDrag.Grab {
+        switch self {
+        case .body: .body
+        case .start: .start
+        case .end: .end
+        }
     }
 }
 #endif

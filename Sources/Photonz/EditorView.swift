@@ -72,6 +72,12 @@ struct EditorView: View {
             let inspectorShown = editorState.isInspectorShown
             // Width the canvas (and thus the floating toolbar) actually gets.
             let canvasWidth = geo.size.width - (inspectorShown ? panelWidth + 1 : 0)
+            // Canvas and side column side by side, and the timing strip ACROSS
+            // THE BOTTOM of both (`next-motion-strip`). It spans the whole
+            // window on purpose: a lag is a relationship between two bars, so
+            // it needs every bar on one ruler, and a ruler squeezed into the
+            // canvas column would be the same crowding the column already has.
+            VStack(spacing: 0) {
             HStack(spacing: 0) {
                 canvas
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -178,6 +184,11 @@ struct EditorView: View {
                     .transition(.move(edge: .trailing))
                 }
             }
+            if editorState.isMotionStripShown {
+                MotionStripView()
+            }
+            }
+            .animation(.spring(duration: 0.28), value: editorState.isMotionStripShown)
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a

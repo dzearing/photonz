@@ -2,6 +2,63 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-15 — a strip across the bottom shows every moving part on one cycle
+
+Slice 3 of icon-animate, Next only, behind `next-motion-strip` (which needs
+`next-motion`). Every moving property in the document is now a bar on one ruler
+across the bottom of the window. The side column could always say WHAT changes
+and BY HOW MUCH; what it could never say is how two parts of one drawing sit
+against each other in time, because that is a comparison and a comparison needs
+width.
+
+Drag a bar to move when it starts, drag either end to change how long it takes.
+While you drag, the gap to the nearest end of any other bar is a bracket with
+the number and that layer's name on it, and the preview keeps RUNNING, so the
+lag plays as you make it. A dashed line marks where the lap starts over and a
+bar is allowed to run past it. `⌥⌘T`, on the View menu, dimmed with nothing
+moving. A document with nothing moving has no strip at all.
+
+The model is `PhotonzCore/MotionStrip.swift`, written test-first (37 tests):
+lanes and their edges, the ruler, the drag with its clamps and its snapping, and
+the gap readout. `PhotonzDocument` gained `motionCycleMS: Int?` — nil meaning
+the lap follows the longest motion, written to disk only when set, so every
+document saved before this reads back byte for byte.
+
+**The one rule worth reading** is `MotionStripCycle.after(drag:automatic:current:)`:
+a bar dragged past the end of the lap HOLDS the lap where it was and overruns
+it; a bar dragged back inside hands the lap back to following the longest
+motion. Without the first half nothing could ever overrun the restart, because
+the lap would simply grow to swallow it — and a bar still finishing while the
+loop has already begun again is exactly what a lag in something that repeats
+looks like.
+
+Three departures from the mock, each argued in the task log: no Fit button (the
+ruler is always one lap plus a third, so it always fits); the lag bracket
+measures to the nearest end of ANY other bar and names it, rather than running
+from the left edge of the strip, which only reads as a lag in the mock's own
+two-bar example; and no playhead scrubbing in this slice.
+
+`dragTiming` is a new walk step, documented in `docs/design/playtest-harness.md`.
+It drives the strip's own drag rather than posting mouse events, because SwiftUI
+gestures do not answer synthesized ones.
+
+**What is NOT verified: anything on screen.** The Mac's screen was locked for
+the whole of this session, so macOS never drew the app and every walk refuses to
+run in that state. `Scripts/playtest/motion-timing-strip-walk.json` is written
+and has never executed once, and the audit has no pictures in it. What is
+verified is the arithmetic: 37 tests over the strip and the full suite of 6783
+green. A whole-set sweep is requested, because the editor's body is now wrapped
+in a `VStack` so a dock can sit under it and every walk's window goes through
+that.
+
+**Next:** run that walk the moment the screen is unlocked; the remaining
+icon-animate slices are the looping preview at real sizes (which owes the strip
+a loop-speed control, folded into that task) and animated SVG export.
+
+**Open question for the user, in the audit:** ninety milliseconds is under six
+frames. The strip lets you SET a lag nobody can judge at full speed, which is
+what makes the loop-speed control the next thing that matters.
+
 ## 2026-09-14 — a capture in the history strip is never stretched and never a mile wide
 
 The reported bug: a very wide capture ran on for most of the history strip, and

@@ -578,7 +578,9 @@ enum MotionEntry {
 /// follows (`NumberFieldEntry`): a number typed and then abandoned is the most
 /// common way a person loses an edit. Text that is not a number snaps back to
 /// what the motion really says rather than being guessed at.
-private struct MotionNumberField: View {
+/// Shared with the timing strip's own lap-length readout, so the two number
+/// fields that mean milliseconds behave identically.
+struct MotionNumberField: View {
     let text: String
     let label: String
     let suffix: String?

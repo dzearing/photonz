@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/motion-timing-strip-walk",
+  "seed": "The timing strip across the bottom of the window. Everything on the previous motion walk could have been done in the side column. A LAG cannot: it is a relationship between two parts of one drawing in time, so it needs both of them drawn on one ruler at once. This walk draws two shapes, gives each of them the same rotation, and then drags the second one's bar ninety milliseconds later, which is the exact thing the column cannot do. It checks that the numbers in the side column follow the bar at once, that the gap is drawn as a number with the other layer's name on it, that the lap holds its length so the late bar runs PAST the dashed line where the loop starts over, that the whole drag is one step to undo, and that the strip can be put away and brought back with its own key.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "0-still", "note": "nothing moves yet, so there is no strip across the bottom at all. A still document does not get a bar of chrome telling it that it is still." },
+    { "do": "expect", "control": "Timing Bar", "present": false },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 120], "to": [560, 320], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [430, 220] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "1-one-bar", "note": "one moving property, so the strip is there with one lane in it. The lap is 900ms because that is how long the only motion takes, and it says so: it FOLLOWS the longest until somebody says otherwise." },
+    { "do": "panel", "stage": "1-one-bar" },
+    { "do": "snapshot", "name": "1-the-strip-arrives" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [340, 340], "to": [460, 450], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [400, 395] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "2-two-bars", "note": "a second lane, under its own layer heading. Both bars start at the top of the lap and are exactly the same length, which is the thing that LOOKS WRONG: two parts of one drawing moving in perfect step read as one stamped shape being waved." },
+    { "do": "panel", "stage": "2-two-bars" },
+    { "do": "snapshot", "name": "2-two-bars-in-step" },
+
+    { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "body", "byMS": 90,
+      "hold": "3-the-gap-while-you-drag" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-lagged", "note": "THE TEST, and the step that is not possible in a column of numbers. The second bar starts 90ms after the first, the gap was drawn as a bracket with the number and the other layer's name on it while the hand was moving, and the lap HELD its 900ms so the late bar now runs past the dashed line where the loop starts over. That overrun is not a mess to tidy up: it is the motion still finishing while the next lap has already begun, which is what a lag in something that repeats IS." },
+    { "do": "snapshot", "name": "3-the-lag" },
+
+    { "do": "describe", "stage": "4-column-followed", "note": "and the Start field in the side column is the same number. One model, two views: drag the bar and the numbers follow, type the numbers and the bar follows." },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s, after 0.09s" },
+    { "do": "panel", "stage": "4-column-followed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone", "note": "one undo takes the WHOLE drag back, not one frame of it, and it takes the held lap back with it in the same step." },
+    { "do": "panel", "stage": "5-undone" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-redone", "note": "redo puts the lag back with every number it had" },
+    { "do": "panel", "stage": "6-redone" },
+
+    { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "end", "byMS": -300 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-shorter", "note": "dragging the RIGHT HAND END changes how long the motion takes and leaves the start where it was, so the knob now swings faster than the bell and still starts late." },
+    { "do": "panel", "stage": "7-shorter" },
+    { "do": "snapshot", "name": "7-shorter" },
+
+    { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "body", "byMS": 400, "cancel": true },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-called-off", "note": "a drag called off leaves the bar exactly where it found it" },
+
+    { "do": "shortcut", "key": "t", "modifiers": ["command", "option"], "menuItem": "Show Timing" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "9-put-away", "note": "the strip goes away on its own key and the canvas takes the room back" },
+    { "do": "expect", "control": "Timing Bar", "present": false },
+    { "do": "snapshot", "name": "9-put-away" },
+
+    { "do": "shortcut", "key": "t", "modifiers": ["command", "option"], "menuItem": "Show Timing" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "10-back", "note": "and comes back with both bars where they were" },
+    { "do": "panel", "stage": "10-back" },
+    { "do": "snapshot", "name": "10-back" }
+  ]
+}

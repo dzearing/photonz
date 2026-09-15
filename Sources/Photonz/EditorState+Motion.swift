@@ -28,7 +28,20 @@ extension EditorState {
     }
 
     /// The entries in the list, top to bottom.
-    var motionRows: [LayerMotion] { motionLayer?.motions ?? [] }
+    ///
+    /// A bar being dragged on the timing strip is shown here as the hand has
+    /// it, not as the document still stores it, which is the whole of "one
+    /// model, two views": drag the bar and Start and Over follow it at once,
+    /// type into Start and Over and the bar follows them
+    /// (`EditorState+MotionStrip`).
+    var motionRows: [LayerMotion] {
+        var rows = motionLayer?.motions ?? []
+        if let drag = motionTimingDrag,
+           let index = rows.firstIndex(where: { $0.id == drag.motionID }) {
+            rows[index].timing = drag.timing
+        }
+        return rows
+    }
 
     /// What the plus offers: the properties this layer actually has, each with
     /// the value it is wearing right now.
