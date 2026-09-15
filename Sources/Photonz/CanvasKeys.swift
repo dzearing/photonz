@@ -213,6 +213,19 @@ extension CanvasNSView {
             // Points picked inside a path let go first, so Escape steps back
             // out of reshaping before it steps out of the selection.
             if pathEditEscape() { return }
+            // The pivot crosshair, let go of part way: the mount goes back
+            // where it was and the swing goes back with it. Before everything
+            // else here because a crosshair in hand owns the gesture, the same
+            // way it owns the press that started it.
+            if motionPivotDrag != nil {
+                motionPivotDrag = nil
+                motionPivotCancelled = true
+                applyGrabCursor(nil)
+                onMotionPivotCancel() // nothing was written down; this puts the picture back
+                refreshMotionPivotChrome()
+                refreshOverlays()
+                return
+            }
             if let drag = cropDrag {
                 cropDrag = nil
                 cropRect = drag.startRect

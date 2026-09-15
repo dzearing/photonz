@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import PhotonzCore
 
@@ -138,6 +139,31 @@ extension EditorState {
             heldCycleMS: max(1, document.motionCycleLengthMS),
             snappedTo: nil,
             gap: nil)
+        watchForMotionTimingEscape()
+    }
+
+    /// Escape, for as long as there is a bar in hand.
+    ///
+    /// A key WATCH rather than a key binding, for the reason the dock's
+    /// carried section has one: the strip never holds the keyboard during a
+    /// drag — whatever had it before still does — and SwiftUI hands a gesture
+    /// no key events at all, so a bar taken hold of could only be let go of by
+    /// finishing the drag and undoing it.
+    private func watchForMotionTimingEscape() {
+        guard motionTimingEscapeWatch == nil else { return }
+        motionTimingEscapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard event.keyCode == 53, let self, motionTimingDrag != nil else { return event }
+            cancelMotionTimingDrag()
+            // Swallowed: the press called this drag off and must not go on to
+            // clear the selection behind it.
+            return nil
+        }
+    }
+
+    private func stopWatchingForMotionTimingEscape() {
+        guard let watch = motionTimingEscapeWatch else { return }
+        NSEvent.removeMonitor(watch)
+        motionTimingEscapeWatch = nil
     }
 
     /// The hand moved. Nothing is written to the document: the strip and the
@@ -163,6 +189,7 @@ extension EditorState {
 
     /// Let go: one step for undo covering the whole drag.
     func commitMotionTimingDrag() {
+        stopWatchingForMotionTimingEscape()
         guard let drag = motionTimingDrag else { return }
         motionTimingDrag = nil
         guard drag.timing != drag.grab.timing else {
@@ -190,6 +217,7 @@ extension EditorState {
 
     /// Escape, or a drag that went nowhere.
     func cancelMotionTimingDrag() {
+        stopWatchingForMotionTimingEscape()
         guard motionTimingDrag != nil else { return }
         motionTimingDrag = nil
         rerender()

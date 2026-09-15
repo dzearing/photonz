@@ -355,6 +355,17 @@ private struct MotionStripBar: View {
     let layerName: String
     let laneWidth: CGFloat
 
+    /// Whether this bar is the one in hand. Kept beside the drag itself rather
+    /// than read off it, because the two differ in exactly the case that
+    /// matters: a drag called off by Escape is gone from `editorState` while
+    /// the button is still down and the gesture is still reporting.
+    @State private var carrying = false
+    /// Escape happened part way through. Every report the gesture makes from
+    /// here is ignored until the hand lifts: without this the next one would
+    /// find no drag in flight and cheerfully start the whole thing again, so
+    /// the bar would snap back and then leap to the pointer.
+    @State private var calledOff = false
+
     /// How wide the grab zone at each end is. Narrower than this and the ends
     /// are a thing you hunt for; wider and a short bar is nothing BUT ends.
     private static let gripWidth: CGFloat = 7
@@ -431,14 +442,35 @@ private struct MotionStripBar: View {
     private func drag(width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 1)
             .onChanged { value in
+                guard !calledOff else { return }
                 if editorState.motionTimingDrag?.motionID != lane.motionID {
+                    // Carrying already, and yet no drag: Escape took it
+                    // (`watchForMotionTimingEscape`). The hand is still down,
+                    // so the rest of this gesture is dropped on the floor.
+                    guard !carrying else {
+                        calledOff = true
+                        return
+                    }
+                    carrying = true
                     editorState.beginMotionTimingDrag(motionID: lane.motionID,
                                                       grab: grab(at: value.startLocation.x,
                                                                  width: width))
+                    // A bar the strip will not give up — it went away between
+                    // the press and now — leaves nothing to drag.
+                    guard editorState.motionTimingDrag?.motionID == lane.motionID else {
+                        calledOff = true
+                        return
+                    }
                 }
                 editorState.updateMotionTimingDrag(byMS: ms(value.translation.width))
             }
             .onEnded { value in
+                let carried = carrying && !calledOff
+                carrying = false
+                calledOff = false
+                // Letting go of a drag that was already called off writes
+                // nothing down: that is the whole point of calling it off.
+                guard carried, editorState.motionTimingDrag?.motionID == lane.motionID else { return }
                 editorState.updateMotionTimingDrag(byMS: ms(value.translation.width))
                 editorState.commitMotionTimingDrag()
             }

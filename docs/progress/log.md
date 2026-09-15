@@ -16222,3 +16222,33 @@ IS verified: `swift build` clean and 7184 tests green.
 `queue/audits/2026-09-15-motion-play-rule.json`, which asks the user the question
 this task deliberately did not decide for them: is "plays unless you stop it" the
 right amount of eager?
+
+## 2026-09-15 — Escape calls off a drag on the timing strip and on the pivot
+
+Changed: a bar being dragged on the timing strip and the pivot crosshair on the
+canvas both answer Escape now. The thing goes back where it started, the canvas
+preview goes back with it, nothing lands in the undo history, and the rest of
+the gesture — the button is still down — does nothing. The strip hears the key
+through a watch armed only for the length of the drag
+(`EditorState+MotionStrip.watchForMotionTimingEscape`), because SwiftUI hands a
+gesture no key events; the pivot is handled at the top of the canvas's own
+Escape chain, where it used to fall through and clear the selection mid-drag.
+Both carry a latch so a called-off drag cannot restart itself or fall through to
+the shape underneath.
+
+The walk harness gained two ways to say it: `dragTiming` takes
+`"cancelBy": "escape"` (a real key posted into the app, rather than the strip's
+own call-off) and `drag` takes `"cancel": true` (Escape half way along the
+travel, then carry on and let go). `motion-timing-strip-walk` and
+`motion-pivot-walk` both use them.
+
+Verified: `swift build`, `Scripts/test.sh` green at 7188 tests, and a standalone
+AppKit measurement that a key posted with `NSApp.postEvent` really does reach a
+local monitor while one handed to a window does not.
+
+NOT verified on a screen: the Mac has been locked since 2026-09-14 20:46, so
+every walk refuses to run. A sweep was already pending and runs both walks once
+the screen is unlocked.
+
+Next: whatever the queue holds. Open question: the locked screen is now three
+runner passes old and is the reason two audits in a row carry no picture.

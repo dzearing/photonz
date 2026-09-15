@@ -643,7 +643,7 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
-                   let readout, let wobble):
+                   let readout, let wobble, let cancel):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -679,6 +679,17 @@ private final class Run {
                 guides.record(canvas.liveSnapGuides)
                 gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
+                // Changing your mind half way, with the button still down.
+                // Handed to the canvas the way AppKit hands a key to whatever
+                // holds the keyboard, and then the travel CARRIES ON, because
+                // half of what Escape promises is that the rest of the drag
+                // does nothing.
+                if cancel, i == max(1, steps / 2),
+                   let window = canvas.window,
+                   let key = keyEvent(.escape, flags: [], down: true, in: window) {
+                    canvas.keyDown(with: key)
+                    await sleep(0.05)
+                }
             }
             // Anything that lives only while the button is down — the yellow
             // snap guide, a live preview — has to be photographed here.
@@ -709,7 +720,8 @@ private final class Run {
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said), "
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)"
+                     + "\(cancel ? ", called off with Escape half way and carried on to the end" : ""), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
 
@@ -1171,8 +1183,8 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
-        case .dragTiming(let bar, let grab, let byMS, let hold, let cancel):
-            try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold,
+        case .dragTiming(let bar, let grab, let byMS, let hold, let cancel, let cancelBy):
+            try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
                                  cancel: cancel, number: number)
 
         case .panel(let stage):
@@ -2514,8 +2526,24 @@ private final class Run {
     /// lands, what it caught on, what the gap reads, whether the lap was held
     /// so the bar could overrun it, and that the whole thing is one step to
     /// undo — and only the pointer that would have started it is not.
+    /// One Escape, put into the app's own event queue and left to arrive the
+    /// way every other key does: dequeued by the run loop, offered to whatever
+    /// is watching, then dispatched. A key handed straight to a window skips
+    /// the watching part, which is exactly the part a cancel has to prove.
+    private func postEscapeThroughTheApp() async throws {
+        let window = try keyTarget()
+        guard let down = keyEvent(.escape, flags: [], down: true, in: window),
+              let up = keyEvent(.escape, flags: [], down: false, in: window) else {
+            throw Failure(description: "could not build an Escape press")
+        }
+        NSApp.postEvent(down, atStart: false)
+        NSApp.postEvent(up, atStart: false)
+        await sleep(0.2)
+    }
+
     private func dragTiming(_ bar: String, grab: PlaytestTimingGrab, byMS: Int,
-                            hold: String?, cancel: Bool, number: Int) async throws {
+                            hold: String?, cancelBy: PlaytestTimingCancel,
+                            cancel: Bool, number: Int) async throws {
         let editor = try requireEditor()
         guard editor.hasMotionStrip else {
             throw Failure(description: "there is no timing strip: either nothing in this document "
@@ -2551,17 +2579,31 @@ private final class Run {
             await screenCapture(window, name: hold)
         }
         if cancel {
-            editor.cancelMotionTimingDrag()
+            switch cancelBy {
+            case .strip:
+                editor.cancelMotionTimingDrag()
+            case .escape:
+                // A real press, posted into the app rather than handed to a
+                // view, because what is being tested is whether ANYTHING is
+                // listening: the strip's watch sits on the app's own event
+                // stream, which is where a key off a keyboard arrives.
+                try await postEscapeThroughTheApp()
+            }
             await sleep(0.3)
             let after = editor.motionStripGroups.flatMap(\.lanes)
                 .first { $0.motionID == found.lane.motionID }?.timing
+            let how = cancelBy == .escape ? "Escape" : "the strip's own call-off"
+            guard editor.motionTimingDrag == nil else {
+                throw Failure(description: "\(how) did not let go of \(bar): it is still in hand "
+                    + "at \(editor.motionTimingDrag?.timing.startMS ?? -1) ms")
+            }
             guard after == before else {
-                throw Failure(description: "the drag was called off and \(bar) did not go back: "
-                    + "it started at \(before.startMS)-\(before.endMS) ms and is now at "
-                    + "\(after.map { "\($0.startMS)-\($0.endMS)" } ?? "gone")")
+                throw Failure(description: "the drag was called off with \(how) and \(bar) did "
+                    + "not go back: it started at \(before.startMS)-\(before.endMS) ms and is "
+                    + "now at \(after.map { "\($0.startMS)-\($0.endMS)" } ?? "gone")")
             }
             note(number, "dragTiming",
-                 "\(bar) carried \(byMS) ms and called off; it is back at "
+                 "\(bar) carried \(byMS) ms and called off with \(how); it is back at "
                  + "\(before.startMS) to \(before.endMS) ms",
                  state: describe())
             return

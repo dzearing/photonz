@@ -276,6 +276,10 @@ public struct PlaytestKey: Hashable, Sendable {
         self.init(name: trimmed, characters: named.characters, keyCode: named.keyCode)
     }
 
+    /// Escape, by name, for the steps that press it themselves rather than
+    /// reading it out of a script: calling off a drag half way through.
+    public static let escape = PlaytestKey(name: "escape", characters: "\u{1B}", keyCode: 53)
+
     private init(name: String, characters: String, keyCode: UInt16) {
         self.name = name
         self.characters = characters
@@ -1072,6 +1076,17 @@ public enum PlaytestHandleExpectation: String, CaseIterable, Hashable, Codable, 
 }
 
 /// How far a carried dock section travels before the walk lets go of it.
+/// How a `dragTiming` step lets go of a bar without keeping the change.
+public enum PlaytestTimingCancel: String, CaseIterable, Hashable, Codable, Sendable {
+    /// Through the strip's own call-off, the way every other probe reaches a
+    /// SwiftUI gesture. It proves the bar goes back; it says nothing about
+    /// what a person would press to make that happen.
+    case strip
+    /// A real Escape press, posted into the app so everything watching for a
+    /// key sees it exactly as it sees one off a keyboard.
+    case escape
+}
+
 /// Which part of a bar on the timing strip a `dragTiming` step takes hold of.
 public enum PlaytestTimingGrab: String, CaseIterable, Hashable, Codable, Sendable {
     /// The bar itself: it moves, keeping its length, so WHEN the motion starts
@@ -1225,9 +1240,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// anything about a reading that exists solely mid-gesture, and a walk that
     /// passes it has proved the number kept up with the pointer rather than
     /// that a pill was drawn somewhere.
+    /// `cancel` presses Escape half way along the travel and then carries on
+    /// to the end and lets go, which is a hand changing its mind: a walk that
+    /// passes it has proved both that the drag went back AND that the rest of
+    /// the gesture did nothing, since the button is still down for all of it.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
-              hold: String?, readout: String?, wobble: CGFloat)
+              hold: String?, readout: String?, wobble: CGFloat, cancel: Bool)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -1440,8 +1459,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// synthesized ones. Everything the drag DECIDES is real — the snapping,
     /// the gap readout, the lap being held, the single undo step — and only the
     /// pointer that would have started it is not.
+    /// `cancelBy` says HOW it is called off when `cancel` is set: `strip`
+    /// calls the strip's own call-off straight, and `escape` posts a real
+    /// Escape key into the app the way a keyboard does, which is the only way
+    /// to prove the key is wired to anything at all.
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
-                    hold: String?, cancel: Bool)
+                    hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
     /// Click a row in the layers list by the name it shows, the way a person
     /// picks a layer out of the list rather than off the picture. `modifiers`
     /// read as they do under a pointer: shift ranges from the anchor row,
@@ -1950,7 +1973,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          halfway: try f.optionalModifiers("halfway"),
                          hold: try f.optionalString("hold"),
                          readout: try f.optionalString("readout"),
-                         wobble: CGFloat(try f.optionalNumber("wobble") ?? 0))
+                         wobble: CGFloat(try f.optionalNumber("wobble") ?? 0),
+                         cancel: try f.optionalFlag("cancel") ?? false)
         case "expectReadout":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent") ?? false
@@ -2107,10 +2131,16 @@ public enum PlaytestStep: Sendable, Equatable {
             } else {
                 try f.enumValue("grab", PlaytestTimingGrab.self)
             }
+            let cancelBy: PlaytestTimingCancel = if fields["cancelBy"] == nil {
+                .strip
+            } else {
+                try f.enumValue("cancelBy", PlaytestTimingCancel.self)
+            }
             self = .dragTiming(bar: try f.string("bar"), grab: grab,
                                byMS: Int(try f.number("byMS").rounded()),
                                hold: try f.optionalString("hold"),
-                               cancel: try f.optionalFlag("cancel") ?? false)
+                               cancel: try f.optionalFlag("cancel") ?? false,
+                               cancelBy: cancelBy)
         case "selectRow":
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "press":

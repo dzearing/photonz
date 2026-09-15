@@ -181,6 +181,14 @@ extension CanvasNSView {
     /// The button up: one undo step for the whole drag, and none at all for a
     /// press that went nowhere.
     func motionPivotMouseUp() {
+        // The release after Escape. The pivot went back where it was mounted
+        // the moment the key was pressed, so all that is left is to forget
+        // the gesture ever happened.
+        if motionPivotCancelled {
+            motionPivotCancelled = false
+            applyGrabCursor(nil)
+            return
+        }
         guard let drag = motionPivotDrag else { return }
         motionPivotDrag = nil
         applyGrabCursor(nil)

@@ -55,6 +55,21 @@
     { "do": "describe", "stage": "6-redone", "note": "redo puts the lag back with every number it had" },
     { "do": "panel", "stage": "6-redone" },
 
+    { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "body", "byMS": 400, "cancel": true, "cancelBy": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6b-escaped", "note": "CHANGING YOUR MIND, the way a person does it: the bar is carried 400ms and a real Escape is pressed with the hand still down. The bar has to be back at 90ms and nothing may be left in hand. Only a real key press can say this — calling the strip's own call-off would pass whether or not anything is listening for Escape at all." },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s, after 0.09s" },
+    { "do": "snapshot", "name": "6b-back-where-it-was" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6c-nothing-of-its-own", "note": "and the called-off drag left NOTHING to undo: one undo here takes back the 90ms lag from stage 3, which is the step before it. Had Escape written anything down, this undo would have spent itself on that and the lag would still be here." },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s, after 0.09s" },
+
     { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "end", "byMS": -300 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "7-shorter", "note": "dragging the RIGHT HAND END changes how long the motion takes and leaves the start where it was, so the knob now swings faster than the bell and still starts late." },

@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T11:51:56.252Z",
-  "updated": "2026-09-15T12:14:53.364Z",
+  "updated": "2026-09-15T23:59:50.732837Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorState.cancelMotionTimingDrag() already does the whole job and is covered by the walks own cancel path; nothing is listening for the key. The strips bar is a SwiftUI DragGesture in MotionStripView.MotionStripBar, and SwiftUI gives a gesture no key events, so this needs a local monitor armed while motionTimingDrag is non-nil, the way another in-flight drag in the app does it. Worth checking at the same time whether the pivot crosshair drag (CanvasMotionPivot) answers Escape, since cancelMotionPivot exists for the same reason and may have the same hole.",
@@ -26,6 +26,43 @@
     {
       "t": "2026-09-15T12:14:53.363Z",
       "note": "seq 2640 -> 90"
+    },
+    {
+      "t": "2026-09-15T23:47:25.964Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "before building: walked the flow as a first-time user. Escape on a drag is not a feature anyone reads about, it is a reflex, so the whole bar for this is that it is silent and total: the thing goes back, nothing is written down, and the rest of the gesture does nothing. The last of those three is the one the obvious fix misses, and it is the one that makes it feel broken."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "the strip's bar: a SwiftUI DragGesture gets no key events, so Escape is heard by a local keyDown watch armed for the length of the drag (EditorState+MotionStrip.watchForMotionTimingEscape) and taken down again by commit and by cancel. Same idiom as the dock's carried section (InspectorPanel), for the same stated reason: the strip never holds the keyboard during a drag."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "the second half, and the part that would have felt broken: the button is still down when Escape lands, so the gesture keeps reporting. Without a latch the very next onChanged finds no drag in flight and starts the whole thing over, so the bar would snap back and immediately leap to the pointer. MotionStripBar now carries `carrying`/`calledOff` and ignores the rest of the gesture."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "the pivot crosshair had the same hole and a worse symptom: Escape fell through to the canvas's own Escape chain and cleared the SELECTION while the pivot was still in hand. Now handled at the top of that chain (CanvasKeys), with a motionPivotCancelled latch so the rest of the press cannot fall through to the shape underneath and start moving the layer. The latch is cleared at the top of every mouseDown, so a release that never arrives cannot leave the canvas swallowing drags."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "proving it rather than asserting it: `dragTiming` gained `cancelBy` (`strip`, the old direct call-off, or `escape`, a real key posted into the app) and `drag` gained `cancel` (presses Escape half way along the travel and then carries on to the end and lets go, which tests the latch as well as the cancel). motion-timing-strip-walk and motion-pivot-walk both use them."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "the one mechanism this rests on, measured rather than assumed: a local monitor only sees events the run loop DEQUEUES, so the harness's usual window.sendEvent path would walk straight past the watch. Checked in a standalone AppKit program that installs a monitor, posts an Escape with NSApp.postEvent and pumps the loop: the monitor sees it. That is why the step posts rather than sends."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "NOT VERIFIED ON A SCREEN. The Mac has been locked since 2026-09-14 20:46, so no walk can run at all: motion-timing-strip-walk reports status locked and exits 3. What is green is swift build, Scripts/test.sh (7188 tests, including four new ones for the two script fields), and the monitor measurement above. A sweep was already pending before this task started and runs both walks the moment the screen is unlocked."
+    },
+    {
+      "t": "2026-09-15T23:59:50.732837Z",
+      "note": "left rough: if SwiftUI ever ends a strip drag without calling onEnded, `carrying` stays set and that one bar refuses to be dragged again. Same exposure the dock's carried section has shipped with since 2026-09-05; not worth a second mechanism until it is seen."
     }
-  ]
+  ],
+  "started": "2026-09-15T23:47:25.963Z"
 }

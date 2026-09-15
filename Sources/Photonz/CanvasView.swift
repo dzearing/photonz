@@ -976,6 +976,11 @@ final class CanvasNSView: NSView {
     var motionPivot: MotionPivotHandle?
     /// That point, while it is under the hand.
     var motionPivotDrag: MotionPivotDrag?
+    /// Escape called the pivot drag off while the button was still down. The
+    /// rest of that gesture belongs to nobody: without this it would fall
+    /// through to the shape underneath and start moving the layer the pivot
+    /// was sitting on.
+    var motionPivotCancelled = false
     /// The crosshair in its ring, its white rim, and the word for what it is.
     let motionPivotLayer = CAShapeLayer()
     let motionPivotHaloLayer = CAShapeLayer()

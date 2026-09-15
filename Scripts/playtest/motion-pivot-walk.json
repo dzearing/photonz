@@ -38,6 +38,14 @@
     { "do": "expect", "field": "Rotation", "present": true },
     { "do": "expect", "control": "Around", "reads": "Its centre" },
 
+    { "do": "drag", "from": [540, 305], "to": [540, 460], "steps": 14, "cancel": true },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4b-escaped", "note": "CHANGING YOUR MIND on the crosshair: it is dragged down below the shape, Escape is pressed half way with the button still down, and the drag carries on to the end and lets go. The mount has to be back on Its centre and stay there — Escape both puts the pivot back AND takes the rest of the gesture away, so the release cannot write the place the pointer happened to finish." },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "control": "Around", "reads": "Its centre" },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "snapshot", "name": "4b-pivot-back-in-the-middle" },
+
     { "do": "panelMenu", "menu": "Around", "choose": "Top centre" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "5-by-name", "note": "the second way in: the spots worth a name, for the times the top of the box is exactly where it hangs from" },

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T23:45:37.911Z",
+  "updated": "2026-09-15T23:59:43.912Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -88,6 +88,10 @@
     {
       "t": "2026-09-15T23:45:37.910Z",
       "note": "Another audit shipped with no pictures in it for this reason: queue/audits/2026-09-15-motion-play-rule.json. Its whole subject is when the preview starts playing, which is the most visual claim a motion audit can make, and every line of it is read off the code and the test suite instead. The new walk (Scripts/playtest/motion-one-play-rule-walk.json, 56 steps) parses and has never run."
+    },
+    {
+      "t": "2026-09-15T23:59:43.911Z",
+      "note": "still true on 2026-09-15 23:5x: the screen has been locked since 2026-09-14 20:46, so the Escape-calls-off-a-drag task shipped with no walk run and no picture at all. Its audit (queue/audits/2026-09-15-escape-calls-off-a-drag.json) says so in rough. Two walks now carry new steps that have never been watched running: motion-timing-strip-walk (a real Escape mid-drag) and motion-pivot-walk (Escape mid-drag on the crosshair)."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

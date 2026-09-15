@@ -14,6 +14,11 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // A fresh press, so whatever Escape called off belongs to the last
+        // gesture. Cleared here rather than where the pivot is grabbed, so a
+        // release that never arrived cannot leave the canvas swallowing every
+        // drag after it.
+        motionPivotCancelled = false
         // Adjusting the grid owns the whole canvas: nothing on it can be picked
         // up, selected or edited by accident. A press means one of three
         // things, in this order — grab the zero point by its knob or its two
@@ -680,7 +685,10 @@ extension CanvasNSView {
             penMouseDragged(to: p, event: event)
             return
         }
-        if motionPivotDrag != nil {
+        // The cancelled case belongs here too: after Escape the pivot has
+        // given the drag back, and this keeps the rest of the gesture from
+        // falling through to the shape the crosshair was sitting on.
+        if motionPivotDrag != nil || motionPivotCancelled {
             motionPivotMouseDragged(to: p, event: event)
             return
         }
@@ -1034,7 +1042,7 @@ extension CanvasNSView {
                        event: event)
             return
         }
-        if motionPivotDrag != nil {
+        if motionPivotDrag != nil || motionPivotCancelled {
             motionPivotMouseUp()
             return
         }

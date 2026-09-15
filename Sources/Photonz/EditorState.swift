@@ -757,6 +757,11 @@ final class EditorState {
     /// drag is one step to undo, and read by BOTH the strip and the Start and
     /// Over fields in the side column so the two can never disagree.
     var motionTimingDrag: MotionTimingDrag?
+    /// The Escape watch armed for exactly as long as a bar is in hand
+    /// (`EditorState+MotionStrip`). Held here because the strip is rebuilt on
+    /// every move of the drag and a watch owned by a view that comes and goes
+    /// would be armed twice and disarmed never.
+    @ObservationIgnored var motionTimingEscapeWatch: Any?
     /// Bumped whenever the LENS TOOL's own memory changes, so the capsule over
     /// the tool bar and the panel's tool section redraw. The memory itself
     /// lives in UserDefaults, which nothing observes.

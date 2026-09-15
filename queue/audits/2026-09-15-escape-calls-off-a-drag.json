@@ -1,0 +1,27 @@
+{
+  "feature": "Escape calls off a drag on the timing strip and on the pivot",
+  "epic": "icon-animate",
+  "summary": "A bar you have started dragging on the timing strip, and the pivot crosshair on the canvas, can both be let go of with Escape: the thing goes back where it started, the picture goes back with it, and nothing lands in the undo history. Before this, Escape did nothing on either of them and the only way out was to finish the drag and undo it.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-motion and next-motion-strip on. Any document; two shapes is enough.",
+  "try": [
+    { "do": "Draw two rectangles, click the first with the Select tool, and add a Rotation from the Motion section's plus." },
+    { "do": "Click the second and give it a Rotation too. The timing strip appears across the bottom with a bar for each." },
+    { "do": "Press on the second bar and drag it to the right, WITHOUT letting go. The bar follows, and a bracket shows the gap you are making." },
+    { "do": "Press Escape with the button still down. The bar snaps back to where it started and the shapes go back to moving in step." },
+    { "do": "Let go of the button. Nothing moves, and undo takes back whatever you did BEFORE the drag, not the drag." },
+    { "do": "Now drag the crosshair on the picked shape away from its middle, again without letting go, and press Escape. The mount goes back to the middle." },
+    { "do": "Let go. The Around row still reads Its centre, so the release did not write the place your pointer happened to stop." }
+  ],
+  "evaluate": [
+    "Does Escape feel like the way out you reached for, or were you expecting to drag the bar back by hand?",
+    "When the bar snaps back, is it clear enough that nothing was kept, or would you want the strip to say so?",
+    "Escape while dragging used to clear the selection instead. Do you ever want that DURING a drag, or is calling the drag off always the right answer?",
+    "After calling a drag off, does the preview carry on playing the way you would want, or should it go back to sitting still?"
+  ],
+  "rough": [
+    "There are no screenshots in this audit and none could be taken: the Mac's screen has been locked since 2026-09-14 20:46, so macOS does not draw the window and every walk refuses to run rather than report a pass or a failure. Both walks that cover this are written and parse (motion-timing-strip-walk presses a real Escape mid-drag, motion-pivot-walk presses one mid-drag on the crosshair), and neither has been watched running. The sweep is already pending and runs them the moment the screen is unlocked.",
+    "What WAS checked without a screen: the whole test suite (7188 tests) is green, and the one mechanism this rests on — whether a key posted into the app reaches a watch the way a key off a keyboard does — was measured in a standalone AppKit program and does.",
+    "Escape on the strip is heard by a watch armed only while a bar is in hand, because SwiftUI hands a gesture no key events at all. That means Escape does nothing different anywhere else on the strip, which is right, but it also means a bar dragged while some OTHER window has the keyboard is still called off by the key. That seemed better than the alternative of not answering at all.",
+    "The rest of the gesture after Escape is deliberately dropped: the button is usually still down, and without that the next twitch of the hand would start the whole drag over from the bar's old position."
+  ]
+}
