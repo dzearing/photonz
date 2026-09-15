@@ -126,13 +126,13 @@
   #time-compare .tmc-lrow span:nth-child(2),#time-compare .tmc-lrow span:nth-child(3){
     font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right}
   #time-compare .tmc-lanes{border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;background:var(--panel)}
-  #time-compare .tmc-lane{display:grid;grid-template-columns:76px 1fr;gap:var(--gap-sm);align-items:center;
+  #time-compare .tmc-lane{display:grid;grid-template-columns:100px 1fr;gap:var(--gap-sm);align-items:center;
     padding:4px var(--pad-sm);border-bottom:1px solid var(--line-soft)}
   #time-compare .tmc-lane:last-child{border-bottom:0}
   #time-compare .tmc-lane>span:first-child{font-size:10.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #time-compare .tmc-track{position:relative;height:14px;background:var(--panel-2);border-radius:4px}
   #time-compare .tmc-bar{position:absolute;top:3px;height:8px;border-radius:4px;background:var(--comp);opacity:.85}
-  #time-compare .tmc-lanehd{display:grid;grid-template-columns:76px 1fr;gap:var(--gap-sm);
+  #time-compare .tmc-lanehd{display:grid;grid-template-columns:100px 1fr;gap:var(--gap-sm);
     padding:5px var(--pad-sm);background:var(--panel-2);border-bottom:1px solid var(--line-soft)}
   #time-compare .tmc-lanehd .tmc-ax{margin:0}
 
@@ -151,26 +151,57 @@
   #time-compare .tmc-step.tmc-later::before{background:var(--panel-2);color:var(--faint);border:1px solid var(--line)}
   #time-compare .tmc-step b{color:var(--ink);font-weight:620}
   #time-compare .tmc-jump{display:flex;flex-wrap:wrap;gap:var(--gap-sm)}
+
+  /* ---- 2026-09-15 revision: the timing surface, drawn the same way for both
+     sides so neither is flattered by its own page's styling. The marks are
+     a dashed "repeats" line (icon: the cycle starts again here), a solid end
+     cap (video: there is no frame after this), and a measured gap between two
+     bars (the 90 ms the knob lags the bell by). ---- */
+  #time-compare .tmc-rep{position:absolute;top:-3px;bottom:-3px;width:0;
+    border-left:1px dashed var(--warn)}
+  #time-compare .tmc-endl{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--crit)}
+  #time-compare .tmc-gap{position:absolute;top:4px;height:6px;border-top:1px solid var(--warn);
+    border-left:1px solid var(--warn);border-right:1px solid var(--warn)}
+  #time-compare .tmc-gap .lb{position:absolute;left:50%;top:-13px;transform:translateX(-50%);
+    font-family:var(--mono);font-size:8.5px;color:var(--warn);white-space:nowrap}
+  #time-compare .tmc-bar.tmc-kn{background:var(--warn)}
+  #time-compare .tmc-code{font-family:var(--mono);font-size:10px;color:var(--faint);
+    background:var(--panel-2);border:1px solid var(--line-soft);border-radius:var(--r2);
+    padding:6px 8px;line-height:1.6;display:block;overflow-x:auto;white-space:nowrap}
+  #time-compare .tmc-was{font-size:11px;line-height:1.55;color:var(--faint);margin:0;
+    padding:var(--pad-sm);border:1px dashed var(--line);border-radius:var(--r3)}
+  #time-compare .tmc-was b{color:var(--dim);font-weight:600}
+  /* The quoted Motion row carries the icon page's curve sketch. That sketch is
+     sized and stroked by page-local CSS over there, so quoting the markup
+     without quoting the rule rendered an 18px sketch as a full-width black
+     blade. Same numbers, copied from icon-animate-wt. */
+  #time-compare .efx.mrow .crv{flex:none;width:18px;height:18px;border-radius:4px;
+    background:var(--panel-2);border:1px solid var(--line);display:block}
+  #time-compare .crv path{fill:none;stroke:var(--accent);stroke-width:2.6;
+    stroke-linecap:round;vector-effect:non-scaling-stroke}
+  #time-compare .efx.mrow .nm{flex:1;font-weight:600;color:var(--ink)}
+  #time-compare .efx.mrow .emeta{font-family:var(--mono);font-size:10px;color:var(--faint)}
 </style>
 </head>
 <body class="page">
 <main class="stage">
 <section class="screen on" id="time-compare">
-
   <div class="scen-head"><span class="pip" style="background:var(--warn)"></span><h2>Animating an icon and editing a video</h2><span class="k">· study · are they the same job?</span></div>
 
-  <p class="tmc-lede">Fifteen clickthroughs now exist for these two jobs: <b>five for animating an icon</b> and <b>ten for editing a video</b>. This page puts them beside each other, step for step, and says where they are genuinely one experience and where they only look like one. The short answer: <b>they share three things and nothing else</b>, the three they share are small and worth building once, and the one thing everybody assumes they share, a ruler you scrub a playhead along, is the thing they cannot share at all. Every claim below is shown rather than argued: each cell names the page and the step it came from, and you can open it.</p>
+  <p class="tmc-lede">Sixteen clickthroughs now exist for these two jobs: <b>six for animating an icon</b> and <b>ten for editing a video</b>. This page puts them beside each other, job for job, and says where they are genuinely one experience and where they only look like one. The short answer: <b>they share four things</b>, and the fourth one is the surprise, because it is the timing surface itself. What they still cannot share is the thing most people mean when they say "one timeline": the <b>ruler</b>. An icon repeats and a video finishes, and that one fact still drives every remaining difference between them. Every claim below is shown rather than argued: each cell names the page and the step it came from, and you can open it.</p>
+
+  <p class="tmc-was"><b>Revised 15 September 2026.</b> The first version of this page compared a set of animation mocks that offered a short menu of canned motions, Pulse and Spin and Draw on, and it concluded that icon timing was one typed number and that a list of parts beat a track. That premise was rejected: you animate <b>a property</b> of a layer, the way you add an effect to one, and the timing needs a surface with real width. The mocks were rebuilt on that model as <span class="tmc-src" style="display:inline" data-target="icon-animate-wt">Make a bell swing</span> and <span class="tmc-src" style="display:inline" data-target="icon-phase-wt">Make the knob lag the bell</span>, and this page is rewritten against them. The rebuild moved <b>three rows of the table towards video</b> and left the crux exactly where it was.</p>
 
   <div class="tmc-tiles">
     <div class="tmc-tile tmc-same">
-      <span class="tmc-n">3</span>
+      <span class="tmc-n">4</span>
       <h4>Genuinely the same control</h4>
-      <p>Select a layer and its motion is a section in Properties. Easing named on a segment. An export sheet that asks where the file is going before it asks for a format, which is the sheet rather than the export: what comes out of it could hardly be more different.</p>
+      <p>Motion is a list on the selected layer, built out of the row an effect already uses. The curve is a named shape you can also draw. The timing surface is one component with tracks, bars and a playhead. And a hand-off sheet that asks where the file is going before it asks for a format.</p>
     </div>
     <div class="tmc-tile tmc-near">
       <span class="tmc-n">5</span>
-      <h4>Surfaces that look shared</h4>
-      <p>Five of them, and not one survives a close look: the ruler, the front door to animating anything, the preview, the way several moving things get ordered, and the export itself.</p>
+      <h4>Surfaces that only look shared</h4>
+      <p>The ruler itself, how long something takes, what a shape turns around, how you judge whether it is any good, and what actually comes out at the end. Each one looks like a small difference and is not.</p>
     </div>
     <div class="tmc-tile tmc-diff">
       <span class="tmc-n">13</span>
@@ -185,7 +216,7 @@
        number it was read from, and the citation is a link.
        ================================================================== -->
   <div class="tmc-blk">
-    <div class="tmc-blk-h"><span class="tmc-kind">Side by side</span><h3>The same eight jobs, done both ways</h3><span class="tmc-sub">Every cell cites a real step. Click a citation to open that flow.</span></div>
+    <div class="tmc-blk-h"><span class="tmc-kind">Side by side</span><h3>The same nine jobs, done both ways</h3><span class="tmc-sub">Every cell cites a real step. Click a citation to open that flow.</span></div>
     <div class="tmc-blk-b">
       <div class="tmc-sbs">
         <div class="tmc-hd">The job</div>
@@ -194,75 +225,81 @@
         <div class="tmc-hd">Verdict</div>
 
         <div class="tmc-job">Pick the thing that moves<small>How you say what this is about</small></div>
-        <div class="tmc-cell">Click the layer. Properties fills in with its geometry and a <b>Motion</b> section under it, currently None. No mode was entered.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · step 1</span></div>
+        <div class="tmc-cell">Click the layer. Properties fills in with three lists that read the same way: <b>Appearance</b> is what it is, <b>Effects</b> is what you added, <b>Motion</b> is what changes. Nothing about animating is a mode you enter.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · step 1</span></div>
         <div class="tmc-cell">Click the clip. Properties fills in with its transform and an <b>Animate</b> section under it, currently no keys. No mode was entered.<span class="tmc-src" data-target="video-move-wt">video-move-wt · step 1</span></div>
         <div class="tmc-v"><span class="tmc-chip tmc-s">Same</span></div>
 
-        <div class="tmc-job">Say what it should do<small>The front door to motion</small></div>
-        <div class="tmc-cell">Open the Motion row and pick a <b>named motion</b>: Pulse, Wiggle, Bounce, Spin, Breathe, Draw on. Keys exist underneath, but nobody starts there.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 2 to 3</span></div>
-        <div class="tmc-cell">Click the <b>diamond</b> on the property row you want to move. There is no list of named moves anywhere in the ten video flows: the key is the front door.<span class="tmc-src" data-target="video-move-wt">video-move-wt · step 3</span></div>
-        <div class="tmc-v"><span class="tmc-chip tmc-l">Looks the same</span></div>
+        <div class="tmc-job">Say what changes<small>The front door to motion</small></div>
+        <div class="tmc-cell">The <b>plus</b> on Motion opens <b>this layer's own properties</b> with their current values: Position, Scale, Rotation, Opacity, Colour, and on a drawn path also Path points, Stroke width and Dash. Picking one adds an entry.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 2 and 3</span></div>
+        <div class="tmc-cell">Click the <b>diamond</b> on the property row you want to move, in the section that already lists Position, Scale and Opacity.<span class="tmc-src" data-target="video-move-wt">video-move-wt · step 3</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-s">Same job</span></div>
 
-        <div class="tmc-job">Say how long it takes<small>The number that sets the pace</small></div>
-        <div class="tmc-cell">One field, <b>Over 0.9s</b>, or on a loop <b>Per turn 0.9s</b>. It is the length of one pass, and it is typed, never dragged.<span class="tmc-src" data-target="icon-loop-wt">icon-loop-wt · step 5</span></div>
-        <div class="tmc-cell">You do not type it. You <b>move the playhead to 0:08</b> and change the value there, and the distance between two keys is the duration.<span class="tmc-src" data-target="video-move-wt">video-move-wt · steps 2 and 4</span></div>
-        <div class="tmc-v"><span class="tmc-chip tmc-d">Different</span></div>
+        <div class="tmc-job">Say when, and for how long<small>The two numbers under every motion</small></div>
+        <div class="tmc-cell"><b>Start</b> and <b>Over</b>, in milliseconds. They are a pair of fields in the entry <i>and</i> a bar on the timeline below, and they are the same two numbers: move either and the other follows.<span class="tmc-src" data-target="icon-phase-wt">icon-phase-wt · step 4</span></div>
+        <div class="tmc-cell">You never type it. You move the <b>playhead to 0:08</b>, change the value there, and the distance between two keys is the duration.<span class="tmc-src" data-target="video-move-wt">video-move-wt · steps 2 and 4</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-l">Nearly</span></div>
 
         <div class="tmc-job">Shape the curve<small>How the value travels</small></div>
-        <div class="tmc-cell">An <b>Easing</b> row of named curves on the Motion section.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · step 5</span></div>
-        <div class="tmc-cell">An <b>Easing</b> row of named curves under Between the keys.<span class="tmc-src" data-target="video-zoom-wt">video-zoom-wt · step 7</span></div>
-        <div class="tmc-v"><span class="tmc-chip tmc-s">Same</span></div>
+        <div class="tmc-cell">A <b>Curve</b> row opening a list with <b>each shape drawn beside its name</b>, ending in <b>Draw a curve</b>: two handles and a <code>cubic-bezier(.45, 0, .55, 1)</code> readout.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 6 and 7</span></div>
+        <div class="tmc-cell">An <b>Easing</b> row: two buttons in a segmented control, Linear and Ease in-out, and nothing else anywhere in ten flows.<span class="tmc-src" data-target="video-zoom-wt">video-zoom-wt · step 7</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-s">Same, drifting</span></div>
+
+        <div class="tmc-job">Relate two moving parts<small>What sits against what, in time</small></div>
+        <div class="tmc-cell">Copy the bell's motion onto the knob, then <b>drag the knob's bar 90 ms to the right</b> and read the gap between the two bars. The knob is still finishing when the bell starts again.<span class="tmc-src" data-target="icon-phase-wt">icon-phase-wt · steps 3, 4 and 7</span></div>
+        <div class="tmc-cell">Lanes. A lane per animated property under the clip it belongs to, all on one ruler, with a playhead that crosses every lane at once.<span class="tmc-src" data-target="video-move-wt">video-move-wt · steps 3 and 5</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-s">Same widget</span></div>
+
+        <div class="tmc-job">Say what it turns around<small>The point the motion pivots on</small></div>
+        <div class="tmc-cell">A <b>pivot on the canvas</b>, there from the moment Rotation exists. Dragged from the middle of the bell to its mount, it turns a bobblehead into a bell without a number changing.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 4 and 5</span></div>
+        <div class="tmc-cell">There is no pivot in any of the ten video flows. A graphic moves, scales and fades about its own centre and nobody asks for anything else.<span class="tmc-src" data-target="video-move-wt">video-move-wt · the whole flow</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-d">Only icons</span></div>
 
         <div class="tmc-job">Say whether it ends<small>The question underneath everything</small></div>
-        <div class="tmc-cell"><b>Repeat: Forever</b> is the normal answer. A spinner is one turn plus forever; a notification pulse runs while there is something new.<span class="tmc-src" data-target="icon-loop-wt">icon-loop-wt · the whole flow</span></div>
+        <div class="tmc-cell"><b>Repeat: Forever</b> is the normal answer, and a dashed <b>repeats</b> line lands on the ruler where this cycle hands over to the next one. A bar is allowed to run past it.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · step 8</span></div>
         <div class="tmc-cell">It always ends. The document has a last frame, every clip has an in and an out, and after its final key a property just holds.<span class="tmc-src" data-target="video-zoom-wt">video-zoom-wt · step 8</span></div>
         <div class="tmc-v"><span class="tmc-chip tmc-d">Different</span></div>
 
-        <div class="tmc-job">Order several moving things<small>What happens when</small></div>
-        <div class="tmc-cell">An <b>Order</b> section: two rows with a start and an overlap, Ring at 0.00, Check at 0.50. A list, not a track.<span class="tmc-src" data-target="icon-drawon-wt">icon-drawon-wt · steps 5 and 6</span></div>
-        <div class="tmc-cell">Tracks. A lane per property under the clip it belongs to, all on one ruler, and a playhead that crosses every lane at once.<span class="tmc-src" data-target="video-move-wt">video-move-wt · steps 3 and 5</span></div>
-        <div class="tmc-v"><span class="tmc-chip tmc-l">Looks the same</span></div>
-
         <div class="tmc-job">Judge whether it is any good<small>The review that decides</small></div>
-        <div class="tmc-cell">Watch it <b>loop at 0.25×</b> on four copies at 16, 24, 32 and 48 points at once. A pulse that reads at 48 is a shimmer at 16 and has to be made bigger.<span class="tmc-src" data-target="icon-animate-wt">icon-animate-wt · steps 7 and 8</span></div>
+        <div class="tmc-cell">Watch it <b>loop at 0.25×</b> on four copies at 16, 24, 32 and 48 points at once, lag included. Ninety milliseconds is under six frames and nobody can judge it at full speed.<span class="tmc-src" data-target="icon-phase-wt">icon-phase-wt · step 6</span></div>
         <div class="tmc-cell"><b>Scrub the playhead</b> to 0:06 and read the interpolated value. One frame, one size, and nothing renders first.<span class="tmc-src" data-target="video-move-wt">video-move-wt · step 8</span></div>
         <div class="tmc-v"><span class="tmc-chip tmc-d">Different</span></div>
 
         <div class="tmc-job">Hand it over<small>How it leaves the app</small></div>
         <div class="tmc-cell">The sheet asks <b>where it is going</b>, then says what survives. The motion is text: 1.2 KB, sharp at every size, stripped entirely by a code host.<span class="tmc-src" data-target="icon-export-anim-wt">icon-export-anim-wt · steps 2 to 6</span></div>
         <div class="tmc-cell">Render to <b>demo-run.mp4</b>. Frames are encoded, the result is pixels at one resolution, and it plays anywhere that plays video.<span class="tmc-src" data-target="video-entry-wt">video-entry-wt · step 8</span></div>
-        <div class="tmc-v"><span class="tmc-chip tmc-l">Looks the same</span></div>
+        <div class="tmc-v"><span class="tmc-chip tmc-l">Same sheet</span></div>
       </div>
 
-      <p class="tmc-verdict"><b>What the table is really saying.</b> The two flows agree at the ends and disagree in the middle. Picking the thing and shaping the curve are identical. Everything between them, how long, whether it ends, how several things are ordered, and how you judge it, is different, and it is different because of one fact: an icon animation repeats and a video finishes.</p>
+      <p class="tmc-verdict"><b>What the table is saying now.</b> The two jobs agree about <i>what a motion is</i>: a property of a layer, changing from one value to another, over a stretch of time, on a curve, shown as a bar in a lane. They disagree about <i>what the time is</i>. Everything still marked different comes from that one disagreement, and the rebuild did not soften it: a bar that runs past the end of the cycle, which is the whole point of the lag on the bell, is a sentence an absolute ruler cannot say.</p>
     </div>
   </div>
 
   <!-- ==================================================================
-       2 · THE THREE THINGS THAT ARE ONE THING, SHOWN WORKING IN BOTH.
+       2 · THE FOUR THINGS THAT ARE ONE THING, SHOWN WORKING IN BOTH.
        The bar for this page is that a "could be one thing" claim is
-       proved by both flows using that one thing, so each of the three
-       is quoted twice at its real markup.
+       proved by both flows using that one thing, so each is quoted twice.
        ================================================================== -->
   <div class="tmc-blk">
-    <div class="tmc-blk-h"><span class="tmc-kind">Proof</span><h3>Three things that really are one thing</h3><span class="tmc-sub">Each one quoted twice, at the markup it has on its own page</span></div>
+    <div class="tmc-blk-h"><span class="tmc-kind">Proof</span><h3>Four things that really are one thing</h3><span class="tmc-sub">Each one quoted twice, at the markup it has on its own page</span></div>
     <div class="tmc-blk-b">
 
       <!-- PROOF 1 -->
       <div>
-        <div class="mlabel">One · motion is a section on the selected layer</div>
+        <div class="mlabel">One · motion is a list on the selected layer, wearing the row an effect already uses</div>
         <div class="tmc-pair">
           <div class="tmc-quote">
             <div class="tmc-quote-h"><i class="ic ic-bezier"></i>Bell, an icon layer<span class="tmc-from" data-target="icon-animate-wt">icon-animate-wt</span></div>
             <div class="tmc-quote-b">
               <div class="section">
-                <div class="sec-h">Motion <span class="mut">pulse</span></div>
-                <div class="irow"><span class="rl">Motion</span>
-                  <span class="select" tabindex="-1" aria-hidden="true"><span class="lead">Pulse</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                <div class="sec-h">Motion <span class="mut">what changes</span></div>
+                <div class="efx mrow" aria-hidden="true">
+                  <span class="drag"><i class="ic sm ic-more"></i></span>
+                  <button class="en" aria-pressed="true" tabindex="-1" aria-label="Turn this motion off"></button>
+                  <span class="nm">Rotation</span>
+                  <svg class="crv" viewBox="0 0 24 24" aria-hidden="true"><path class="cus" d="M2 22C10 22 14 2 22 2"/></svg>
+                  <span class="emeta">-12° → 12° · loop</span>
                 </div>
-                <div class="irow"><span class="rl">Grows to</span>
-                  <span class="stepper sm" style="width:100%"><span class="k">%</span><input value="124" aria-label="Grows to" readonly tabindex="-1"></span>
-                </div>
+                <p class="note">Drag handle, switch, name, the curve drawn small, the values on the right. It is the Effects row, unchanged.</p>
               </div>
             </div>
           </div>
@@ -279,24 +316,65 @@
             </div>
           </div>
         </div>
-        <p class="tmc-verdict">Same shell, same place, same rule: <b>you never enter an animate mode</b>, you select a layer and motion is one more section in Properties. This already holds in the app today, because the selection model and the inspector are shared, so keeping it costs nothing. What differs is only what the section contains, and that is the next two rows of this page.</p>
+        <p class="tmc-verdict">Same shell, same place, same rule: <b>you never enter an animate mode</b>, you select a layer and what moves is one more list in Properties. The two differ in one detail worth settling once: the icon side <b>adds an entry</b> to a list, so a motion is a thing you can copy, paste, switch off and reorder, while the video side <b>marks a property row</b> that is already there. The list form is the stronger one, because copying an entry is exactly how the knob gets the bell's swing.</p>
       </div>
 
-      <!-- PROOF 2 -->
+      <!-- PROOF 2 · the new one. -->
       <div>
-        <div class="mlabel">Two · easing is a named curve on a segment</div>
+        <div class="mlabel">Two · the timing surface is one component, not two</div>
         <div class="tmc-pair">
           <div class="tmc-quote">
-            <div class="tmc-quote-h"><i class="ic ic-bezier"></i>On the icon's Motion section<span class="tmc-from" data-target="icon-animate-wt">icon-animate-wt</span></div>
+            <div class="tmc-quote-h"><i class="ic ic-bezier"></i>One cycle, in milliseconds<span class="tmc-from" data-target="icon-phase-wt">icon-phase-wt</span></div>
+            <div class="tmc-quote-b">
+              <div class="tmc-lanes">
+                <div class="tmc-lanehd"><span></span><div class="tmc-ax"><span>0</span><span>400</span><span>800 ms</span></div></div>
+                <div class="tmc-lane"><span>Bell · Rotation</span><div class="tmc-track">
+                  <span class="tmc-bar" style="left:0;width:75%"></span>
+                  <span class="tmc-rep" style="left:75%"></span>
+                </div></div>
+                <div class="tmc-lane"><span>Knob · Rotation</span><div class="tmc-track">
+                  <span class="tmc-bar tmc-kn" style="left:7.5%;width:75%"></span>
+                  <span class="tmc-rep" style="left:75%"></span>
+                  <span class="tmc-gap" style="left:0;width:7.5%"><span class="lb">90 ms</span></span>
+                </div></div>
+              </div>
+              <p class="note" style="margin-top:6px">The dashed line is where the cycle starts again. The knob's bar crosses it.</p>
+            </div>
+          </div>
+          <div class="tmc-quote">
+            <div class="tmc-quote-h"><i class="ic ic-video"></i>A document, in seconds<span class="tmc-from" data-target="video-move-wt">video-move-wt</span></div>
+            <div class="tmc-quote-b">
+              <div class="tmc-lanes">
+                <div class="tmc-lanehd"><span></span><div class="tmc-ax"><span>0s</span><span>9s</span><span>18s</span></div></div>
+                <div class="tmc-lane"><span>Gfx · clip</span><div class="tmc-track">
+                  <span class="tmc-bar" style="left:22%;width:28%"></span>
+                  <span class="tmc-endl" style="left:100%"></span>
+                </div></div>
+                <div class="tmc-lane"><span>Gfx · Position</span><div class="tmc-track">
+                  <span class="tmc-bar tmc-kn" style="left:22%;width:22%"></span>
+                  <span class="tmc-endl" style="left:100%"></span>
+                </div></div>
+              </div>
+              <p class="note" style="margin-top:6px">The red line is the last frame. Nothing can be drawn to the right of it.</p>
+            </div>
+          </div>
+        </div>
+        <span class="tmc-code">shared/components/inspector.css &nbsp;·&nbsp; .timeline &nbsp; .ruler &nbsp; .track &gt; .tl + .lane &nbsp; .playhead</span>
+        <p class="tmc-verdict"><b>This is the finding the rebuild produced, and it was not true a day ago.</b> Both pages build their timing surface out of the <i>same</i> shared component: a docked strip, a ruler, a label column, a lane per thing, a bar you drag, a playhead. The two drawings above are this page's own, at the same scale for both, so neither is flattered by its own styling, and the class list underneath is where that component is defined once. So the <b>widget</b> should be built once and used twice, and this is the single largest piece of shared work the study found. What must not be shared is what the widget is <i>measuring</i>, which is the next block.</p>
+      </div>
+
+      <!-- PROOF 3 -->
+      <div>
+        <div class="mlabel">Three · the curve is a named shape, and one side has already settled it</div>
+        <div class="tmc-pair">
+          <div class="tmc-quote">
+            <div class="tmc-quote-h"><i class="ic ic-bezier"></i>On the icon's Motion entry<span class="tmc-from" data-target="icon-animate-wt">icon-animate-wt</span></div>
             <div class="tmc-quote-b">
               <div class="section">
-                <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
-                  <span class="seg pseg" role="group" aria-label="Easing, icon">
-                    <button tabindex="-1">Linear</button>
-                    <button class="on" tabindex="-1">Ease in-out</button>
-                    <button tabindex="-1">Spring</button>
-                  </span>
+                <div class="irow"><span class="rl">Curve</span>
+                  <span class="select" tabindex="-1" aria-hidden="true"><span class="lead">Custom</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                 </div>
+                <p class="note">A list with the shape drawn beside every name, ending in Draw a curve. Readout: <code>cubic-bezier(.45, 0, .55, 1)</code>.</p>
               </div>
             </div>
           </div>
@@ -314,12 +392,12 @@
             </div>
           </div>
         </div>
-        <p class="tmc-verdict tmc-warnbar"><b>Same control, and it has already drifted.</b> Four different vocabularies across six pages: Linear / Ease in-out / Spring on the pulse and the spinner, Linear / <b>Ease out</b> / Spring on the toggle, Linear / Ease out / Ease in-out on the draw-on, and Linear / Ease in-out on both video flows. Nobody decided that; it happened because six pages were drawn by different hands with nothing to share. This is the clearest argument on the page for building one easing vocabulary once, and it is also a small piece of work: it is a list of names and a curve for each.</p>
+        <p class="tmc-verdict tmc-warnbar"><b>Same control, and the drift is now one-sided.</b> It used to be four vocabularies across six pages, drawn by different hands with nothing to share. The icon pages have since settled on one list, with the shape drawn beside each name and a curve you can draw yourself, and the video pages still carry two buttons in a segmented control. That is no longer a disagreement, it is a gap with a known answer: the video side adopts what the icon side settled. It is also small work, a list of names and a curve for each, and it is already a task in the queue.</p>
       </div>
 
-      <!-- PROOF 3 -->
+      <!-- PROOF 4 -->
       <div>
-        <div class="mlabel">Three · the export sheet asks where it is going before it asks for a format</div>
+        <div class="mlabel">Four · the export sheet asks where it is going before it asks for a format</div>
         <div class="tmc-pair">
           <div class="tmc-quote">
             <div class="tmc-quote-h"><i class="ic ic-bezier"></i>Handing over the animated bell<span class="tmc-from" data-target="icon-export-anim-wt">icon-export-anim-wt</span></div>
@@ -346,33 +424,35 @@
             </div>
           </div>
         </div>
-        <p class="tmc-verdict tmc-warnbar"><b>This is the one claim on the page that is not yet proved in both mocks.</b> The destination-first sheet exists on the icon side and nowhere on the video side: all ten video flows export with one button and no questions. It is listed here as the third shared thing because the reasoning transfers exactly, a person knows their destination and does not know their formats, but it is a proposal until a video flow is drawn with it. Treat it as the weakest of the three.</p>
+        <p class="tmc-verdict tmc-warnbar"><b>This is still the one claim on the page that is not proved on both sides.</b> The destination-first sheet exists on the icon side and nowhere on the video side: all ten video flows export with one button and no questions. It is listed as shared because the reasoning transfers exactly, a person knows their destination and does not know their formats, but it is a proposal until a video flow is drawn with it. Treat it as the weakest of the four.</p>
       </div>
 
     </div>
   </div>
 
   <!-- ==================================================================
-       3 · THE RULER. The thing everybody assumes is shared.
+       3 · THE RULER. The thing everybody assumes is shared, and the one
+       thing that survived the rebuild unchanged.
        ================================================================== -->
   <div class="tmc-blk">
-    <div class="tmc-blk-h"><span class="tmc-kind">The crux</span><h3>The ruler is the thing they cannot share</h3><span class="tmc-sub">Same shape on screen, two different measures, and only one of them has an end</span></div>
+    <div class="tmc-blk-h"><span class="tmc-kind">The crux</span><h3>The ruler is the thing they cannot share</h3><span class="tmc-sub">One component, two measures, and only one of them has an end</span></div>
     <div class="tmc-blk-b">
       <div class="tmc-pair">
         <div>
-          <div class="mlabel">An icon: one cycle, in percent, no end</div>
+          <div class="mlabel">An icon: one cycle, and then it happens again</div>
           <div class="tmc-rwrap">
             <div class="tmc-ruler tmc-open">
-              <span class="tmc-kseg" style="left:4%;width:92%"></span>
+              <span class="tmc-kseg" style="left:4%;width:74%"></span>
               <span class="tmc-kd" style="left:4%"></span>
-              <span class="tmc-kd" style="left:62%"></span>
-              <span class="tmc-kd" style="left:96%"></span>
+              <span class="tmc-kd" style="left:41%"></span>
+              <span class="tmc-kd" style="left:78%"></span>
+              <span class="tmc-rep" style="left:78%"></span>
               <span class="tmc-head" style="left:30%"></span>
             </div>
             <span class="tmc-forever"><i class="ic ic-loop"></i>and again</span>
           </div>
-          <div class="tmc-ax"><span><span>0%</span><span>62%</span><span>100% = 0%</span></span><span>forever</span></div>
-          <p class="tmc-cell" style="margin-top:8px">The last key and the first key are <b>the same key</b>. That is not a convention, it is the only thing a repeating animation must get right, and it is what the app can check for you. There is no absolute time anywhere on this strip, which is exactly what a CSS keyframe block and a SMIL <code>keyTimes</code> list are: percentages of a cycle. Changing "one pass takes 0.9s" stretches the whole strip and every key keeps its place.</p>
+          <div class="tmc-ax"><span><span>0</span><span>450</span><span>900 ms · repeats</span></span><span>forever</span></div>
+          <p class="tmc-cell" style="margin-top:8px">The ruler is <b>one cycle</b>, not a document. It reads in milliseconds because that is what a person setting a swing thinks in, but what it measures is a lap: at the dashed line the same motion starts over, and the value there is the value it started at. That is not a convention, it is the only thing a repeating animation must get right, and it is what the app can check for you. On the way out these become <b>percentages of a cycle</b>, which is literally what a CSS keyframe block and a SMIL <code>keyTimes</code> list are.</p>
         </div>
         <div>
           <div class="mlabel">A video: absolute seconds, and a last frame</div>
@@ -387,20 +467,20 @@
           <p class="tmc-cell" style="margin-top:8px">A key is at 0:04 and it means 0:04. After the last key the value holds to the end of the document, and the red cap on the right is that end. Every video flow leans on it: a trim moves an out point, a transition is paid for with spare frames either side of a cut, a freeze inserts three seconds and the document grows to 0:21.</p>
         </div>
       </div>
-      <p class="tmc-verdict tmc-critbar"><b>These cannot be one ruler, and the reason is not technical.</b> Three of the four icon scenarios have no end in them at all. A spinner is one turn plus the word forever. A notification pulse runs while there is something new. A toggle is two drawings and a crossing between them, with no duration to sit on until you tap it. A ruler whose whole grammar is "this is where it stops" cannot draw any of those, and stretching one to try produces a document that is four seconds long for no reason anybody can explain. Only the draw-on badge has an order in it, and that is the case the next block is about.</p>
+      <p class="tmc-verdict tmc-critbar"><b>These cannot be one ruler, and the rebuild made the case sharper rather than weaker.</b> The clearest proof is now a single step: the knob's bar <b>runs past the line where the cycle restarts</b>, because the knob is still finishing its swing while the bell has already begun the next one. That is not a mistake to tidy away, it is what a lag <i>is</i> in something that loops, and there is no way to draw it on a ruler whose grammar is "this is where it stops". Underneath, three of the four icon scenarios have no end in them at all: a spinner is one turn plus the word forever, a notification pulse runs while there is something new, and a toggle is two drawings and a crossing with no duration to sit on until somebody taps it. Stretching a document ruler over those produces a document that is nine hundred milliseconds long for no reason anybody can explain.</p>
     </div>
   </div>
 
   <!-- ==================================================================
-       4 · THE GAP THE MOCKS LEFT. The multi-part case, both ways.
+       4 · THE CASE THAT SETTLED IT, AND THE CASE BEYOND IT.
        ================================================================== -->
   <div class="tmc-blk">
-    <div class="tmc-blk-h"><span class="tmc-kind">The open case</span><h3>The case that decides whether a strip earns its place</h3><span class="tmc-sub">A six-part logo drawing itself on, in the two forms it could take</span></div>
+    <div class="tmc-blk-h"><span class="tmc-kind">The open case</span><h3>What proved the strip, and what is still unproved</h3><span class="tmc-sub">Two parts, shown working. Six parts, still drawn rather than walked</span></div>
     <div class="tmc-blk-b">
-      <p class="tmc-cell">The five animation flows all stop at two moving parts, and at two parts a numbered list is plainly enough. Nothing showed a whole set moving together, and that omission is doing work: it is where a list would stop being readable and something time-shaped would start to earn its keep. So here is that case. Six strokes of a wordmark draw themselves on in order, each leaning into the one before it. Same six parts, same six numbers, drawn twice.</p>
+      <p class="tmc-cell">The first round of mocks stopped at one moving part, and at one part a column of fields is plainly enough. <b>Two parts is where that stops being true</b>, and two parts is now walked end to end: the bell swings, the knob carries the same motion ninety milliseconds later, and the only way to set that is to drag one bar against another and read the gap. A relationship cannot be read in a column of numbers. Beyond two, the question is whether anything changes again, so here is the case nobody has walked: six strokes of a wordmark drawing themselves on in order, each leaning into the one before it.</p>
       <div class="tmc-pair">
         <div>
-          <div class="mlabel">As a list, the way the draw-on flow does it today</div>
+          <div class="mlabel">As a list, the way the draw-on flow still does it today</div>
           <div class="tmc-listform">
             <div class="tmc-lrow tmc-lhd"><span>Part</span><span>Starts</span><span>Takes</span></div>
             <div class="tmc-lrow"><span>Stroke 1</span><span>0.00</span><span>0.30</span></div>
@@ -410,12 +490,12 @@
             <div class="tmc-lrow"><span>Underline</span><span>0.62</span><span>0.40</span></div>
             <div class="tmc-lrow"><span>Glow</span><span>0.84</span><span>0.30</span></div>
           </div>
-          <p class="tmc-cell" style="margin-top:8px">Precise, typable, and diffable. It is also the point where a person stops being able to answer the only question they have: <b>does the dot land while the underline is still drawing?</b> You can work it out, 0.62 is inside 0.58 plus 0.14, but working it out is the problem. Nudging the wordmark to feel right means reading twelve numbers and imagining the result.</p>
+          <p class="tmc-cell" style="margin-top:8px">Precise, typable, and diffable. It is also the point where a person stops being able to answer the only question they have: <b>does the dot land while the underline is still drawing?</b> You can work it out, 0.62 is inside 0.58 plus 0.14, but working it out is the problem. <span class="tmc-src" style="display:inline" data-target="icon-drawon-wt">icon-drawon-wt</span> still carries this Order list, and rebuilding it onto the strip is already a task in the queue.</p>
         </div>
         <div>
-          <div class="mlabel">As lanes on one cycle, still in percent, still no end</div>
+          <div class="mlabel">As lanes on one cycle, the surface the bell and knob already use</div>
           <div class="tmc-lanes">
-            <div class="tmc-lanehd"><span></span><div class="tmc-ax"><span>0%</span><span>50%</span><span>100%</span></div></div>
+            <div class="tmc-lanehd"><span></span><div class="tmc-ax"><span>0</span><span>450</span><span>900 ms</span></div></div>
             <div class="tmc-lane"><span>Stroke 1</span><div class="tmc-track"><span class="tmc-bar" style="left:0%;width:24%"></span></div></div>
             <div class="tmc-lane"><span>Stroke 2</span><div class="tmc-track"><span class="tmc-bar" style="left:18%;width:24%"></span></div></div>
             <div class="tmc-lane"><span>Stroke 3</span><div class="tmc-track"><span class="tmc-bar" style="left:35%;width:21%"></span></div></div>
@@ -423,10 +503,10 @@
             <div class="tmc-lane"><span>Underline</span><div class="tmc-track"><span class="tmc-bar" style="left:50%;width:32%"></span></div></div>
             <div class="tmc-lane"><span>Glow</span><div class="tmc-track"><span class="tmc-bar" style="left:67%;width:24%"></span></div></div>
           </div>
-          <p class="tmc-cell" style="margin-top:8px">The overlap is the answer to the question, and you get it without reading a number. This is unmistakably timeline-shaped, and it is still <b>not the video timeline</b>: the axis is 0 to 100% of one cycle, there is no right-hand end, there are no clips, no media, no audio and nothing to trim. It is a picture of the same six numbers in the list beside it.</p>
+          <p class="tmc-cell" style="margin-top:8px">The overlap is the answer to the question, and you get it without reading a number. This is unmistakably timeline-shaped, and it is still <b>not the video timeline</b>: the axis is one cycle, there is no right-hand end, there are no clips, no media, no audio and nothing to trim. It is the same strip the bell and the knob sit on, with four more lanes in it.</p>
         </div>
       </div>
-      <p class="tmc-verdict"><b>The honest reading.</b> A whole icon SET does not animate together, because icons animate on their own triggers in whatever app they end up in, so there is no case for a shared ruler across a library. What does happen is ONE icon with several parts, and the list holds up to about three of them and stops. So the lanes are worth building, and they are worth building <b>second</b>: the list is what the first four scenarios need, the lanes are a view of the same numbers, and adding the view later changes nothing above it. Building the lanes first would mean drawing a timeline before a single icon can pulse, which is the order this study exists to avoid.</p>
+      <p class="tmc-verdict"><b>The honest reading, and what changed in it.</b> A whole icon SET does not animate together, because icons animate on their own triggers in whatever app they end up in, so there is still no case for a shared ruler across a library. What does happen is ONE icon with several parts, and the number of parts where a list stops working turned out to be <b>two</b>, not four. That is why the strip is no longer a "later, on evidence" item: the evidence is the flagship flow. What is still unproved is everything past two parts, in particular whether six lanes want grouping, and that is a question for the first person who animates a wordmark, not a reason to wait.</p>
     </div>
   </div>
 
@@ -453,20 +533,20 @@
           <div class="mlabel">Only icons need it, and video never will</div>
           <div class="tmc-uniq">
             <span class="tmc-u">Review at 16, 24, 32 and 48 points at once</span>
-            <span class="tmc-u">Stroke length, so a path can draw itself on</span>
+            <span class="tmc-u">Stroke length and dash, so a path can draw itself on</span>
             <span class="tmc-u">The point a shape turns around</span>
-            <span class="tmc-u">Two states and a crossing between them</span>
+            <span class="tmc-u">A bar that runs past the end of the cycle</span>
             <span class="tmc-u">A trigger the file cannot carry</span>
-            <span class="tmc-u">Closing the loop: last key equals first key</span>
+            <span class="tmc-u">Closing the loop: the last value is the first value</span>
           </div>
         </div>
       </div>
 
-      <p class="tmc-verdict tmc-critbar"><b>What video would have to become.</b> Video in Photonz today is <b>a separate editor, not a document</b>. It is its own window with its own state, it holds one clip, and what it can do to that clip is trim it, crop it and export it: the whole stored model is an in point, an out point and a crop rectangle. The layer document has no notion of time at all, and there is no keyframe anywhere in the engine. So "share a timeline with video" does not mean connecting two things that exist. It means first rewriting video into a multi-clip, multi-track document with audio, a playhead in the render path and a compositor that samples media per frame, and only then having something to share. That is the whole video feature, built before an icon can pulse, and the icon side gets nothing from it: no part of codecs, audio or frame scheduling teaches you how to emit a SMIL keyframe block.</p>
+      <p class="tmc-verdict tmc-critbar"><b>What video would have to become.</b> Video in Photonz today is <b>a separate editor, not a document</b>. It is its own window with its own state, it holds one clip, and what it can do to that clip is trim it, crop it and export it: the whole stored model is an in point, an out point and a crop rectangle. The layer document has no notion of time at all, and there is no keyframe anywhere in the engine. So "share a timeline with video" does not mean connecting two things that exist. It means first rewriting video into a multi-clip, multi-track document with audio, a playhead in the render path and a compositor that samples media per frame, and only then having something to share. That is the whole video feature, built before an icon can swing, and the icon side gets nothing from it: no part of codecs, audio or frame scheduling teaches you how to emit a keyframe block as text.</p>
 
-      <p class="tmc-verdict"><b>The asymmetry, stated plainly.</b> Doing animation first genuinely helps video later: video inherits a settled easing vocabulary, a tested idea of a key as a value on a property at a moment, and a hand-off sheet that asks about the destination. Doing video first helps animation not at all. That is not a surprise and this page is not presenting it as one; it is the expected answer, and the evidence above is what makes it safe to act on rather than assume.</p>
+      <p class="tmc-verdict"><b>The asymmetry, stated plainly.</b> Doing animation first genuinely helps video later: video inherits a settled curve vocabulary, a tested idea of a motion as an entry on a property, and the timing strip itself, tracks, bars, playhead and all, which is now the same component either job would use. Doing video first helps animation not at all. That is not a surprise and this page is not presenting it as one; it is the expected answer, and the evidence above is what makes it safe to act on rather than assume.</p>
 
-      <p class="tmc-verdict tmc-warnbar"><b>And the consolidation actually worth having is not this one.</b> The toggle flow's States group, a named list of states, a count of how many things differ between them, and one duration for the crossing, is structurally the same surface as component variants on the UI side. Those two are both live work right now, unlike video, and if they are built separately they will drift exactly the way the four easing vocabularies above drifted. Compare <span class="tmc-src" style="display:inline" data-target="icon-states-wt">icon-states-wt</span> with <span class="tmc-src" style="display:inline" data-target="ui-variants">ui-variants</span> and the overlap is closer than anything on this page.</p>
+      <p class="tmc-verdict tmc-warnbar"><b>And there is a second consolidation, still worth more than this one.</b> The toggle flow's States group, a named list of states, a count of how many things differ between them, and one duration for the crossing, is structurally the same surface as component variants on the UI side. Those two are both live work right now, unlike video, and if they are built separately they will drift the way the curve controls drifted. Compare <span class="tmc-src" style="display:inline" data-target="icon-states-wt">icon-states-wt</span> with <span class="tmc-src" style="display:inline" data-target="ui-variants">ui-variants</span> and the overlap is closer than anything on this page.</p>
     </div>
   </div>
 
@@ -474,17 +554,19 @@
        6 · THE RECOMMENDATION.
        ================================================================== -->
   <div class="tmc-blk">
-    <div class="tmc-blk-h"><span class="tmc-kind">Recommendation</span><h3>What to build first</h3><span class="tmc-sub">Four slices. The first three are the feature; the fourth waits for evidence.</span></div>
+    <div class="tmc-blk-h"><span class="tmc-kind">Recommendation</span><h3>What to build first</h3><span class="tmc-sub">Five slices, in this order. Each one is judgeable on its own.</span></div>
     <div class="tmc-blk-b">
       <div class="tmc-steps">
-        <div class="tmc-step"><b>Motion is a property of a layer.</b> Select a glyph, pick a named motion from a short list, and set how much, how long one pass takes, which curve, whether it repeats, and what it turns around. No playhead, no ruler, no tracks. This is the whole of the pulse flow and the whole of the spinner flow.</div>
-        <div class="tmc-step"><b>The preview is the review.</b> The icon preview strip that already exists in the app runs the motion, at every size at once, with a speed control so you can slow it to a quarter and actually see it. This is what replaces scrubbing, and without it nobody can tell whether the motion is any good.</div>
-        <div class="tmc-step"><b>It leaves as an animated SVG, and the sheet asks where it is going.</b> The motion exports as text alongside the static export that is already planned, and the sheet says in plain words what survives the trip.</div>
-        <div class="tmc-step tmc-later"><b>Later, and only on evidence: the cycle strip.</b> One horizontal strip, 0 to 100% of a cycle, a lane per animated part. It is a second view of numbers that already exist, so it changes nothing above it, and it earns its place the first time somebody animates four parts of one icon and cannot read the list.</div>
+        <div class="tmc-step"><b>A property of a layer can change over one cycle.</b> Motion is a list in Properties with a plus that offers this layer's own properties. One entry carries from, to, start, over, curve and repeat, and the icon plays in the canvas. Nothing else in this list works until this does.</div>
+        <div class="tmc-step"><b>Rotation says what it turns around.</b> A pivot you drag on the canvas, there from the moment a rotation exists. Without it the flagship motion is a bobblehead, and that is not a polish item: it is the difference between a swinging bell and a broken one.</div>
+        <div class="tmc-step"><b>The timing strip across the bottom.</b> One cycle, a lane per animated property, a bar you drag, a dashed line where it repeats, and a bar allowed to cross that line. This is what makes a second moving part possible, and it is the surface video would inherit unchanged.</div>
+        <div class="tmc-step"><b>The loop is the review.</b> Play it at 16, 24, 32 and 48 points at once with a speed control, because ninety milliseconds is under six frames. This replaces scrubbing, and without it nobody can tell whether the motion is any good.</div>
+        <div class="tmc-step"><b>It leaves as an animated SVG.</b> The motion exports as text alongside the static SVG export already planned, and the sheet says in plain words what survives the trip and what does not.</div>
       </div>
-      <p class="tmc-verdict"><b>What this does not include, on purpose.</b> No project type picker. The two jobs already live in separate windows, so nothing needs hiding from anything, and the surface can keep following the document the way it does today: a document with a duration gets a transport, a document with a repeating motion gets a cycle strip, and neither has to ask the person which kind of thing they are making before they start.</p>
+      <p class="tmc-verdict"><b>What this does not include, on purpose.</b> Video does not move. It stays the separate editor it is today, and it inherits the curve list and the timing strip when it is its turn, by using the same components rather than by being rewritten first. And there is <b>no project type picker</b>: the two jobs already live in separate windows, so nothing needs hiding from anything, and the surface can keep following the document, which is a document with a duration getting a transport and a document with a repeating motion getting a cycle strip.</p>
       <div class="tmc-jump">
-        <span class="backchip" data-target="icon-animate-wt"><i class="ic ic-arrow-right"></i>Make an icon pulse</span>
+        <span class="backchip" data-target="icon-animate-wt"><i class="ic ic-arrow-right"></i>Make a bell swing</span>
+        <span class="backchip" data-target="icon-phase-wt"><i class="ic ic-arrow-right"></i>Make the knob lag the bell</span>
         <span class="backchip" data-target="icon-loop-wt"><i class="ic ic-arrow-right"></i>A spinner that never stops</span>
         <span class="backchip" data-target="icon-drawon-wt"><i class="ic ic-arrow-right"></i>Draw a checkmark on</span>
         <span class="backchip" data-target="icon-states-wt"><i class="ic ic-arrow-right"></i>Animate a toggle</span>

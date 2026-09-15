@@ -1,0 +1,34 @@
+{
+  "id": "watch-a-motion-loop-at-the-sizes-it-will-really",
+  "title": "Watch a motion loop at the sizes it will really be used at",
+  "goal": "A swing that reads beautifully on a big canvas is a shimmer at the size an icon is actually used, and a tenth of a second lag is six frames that nobody can see at full speed. So the way you judge a motion is to watch it loop side by side at the real sizes, with a speed you can slow right down.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T08:43:16.696Z",
+  "updated": "2026-09-15T08:43:19.692Z",
+  "deps": [
+    "a-layer-can-be-told-to-change-one-of-its-propert"
+  ],
+  "blockedBy": [],
+  "notes": "Slice 4 of 5 from the answered study. This is what replaces scrubbing a playhead: the review for something that loops is watching it loop.\n\nMOCK: docs/design/mocks/pages/icon-phase-wt.html step 6 (0.25x, lag included) and icon-animate-wt steps 7 and 8.\n\nThere is already an IconPreviewsStrip in the app showing an icon at several sizes; this is that strip learning to play. Check whether it is Next only before touching it, and keep current-release behaviour unchanged.\n\nPERF: the preview redraws continuously, so it touches the composite path. Measure and put a perf note in the commit per the repo rules.",
+  "acceptance": [
+    "The preview strip plays the motion, looping, at 16, 24, 32 and 48 points at once",
+    "A speed control slows it to a quarter, and everything including the lag between parts slows with it",
+    "Play and pause is one control and also the space bar",
+    "The preview keeps up while a motion is being edited, without stuttering the rest of the app"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T08:43:16.698Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T08:43:19.692Z",
+      "note": "deps set: the motion model lands first, then this"
+    }
+  ]
+}

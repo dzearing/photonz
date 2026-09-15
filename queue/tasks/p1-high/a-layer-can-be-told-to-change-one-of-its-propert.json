@@ -1,0 +1,31 @@
+{
+  "id": "a-layer-can-be-told-to-change-one-of-its-propert",
+  "title": "A layer can be told to change one of its properties over time",
+  "goal": "Make one thing in a picture move. You pick a layer, add a motion to it the same way you add an effect, choose which of its properties changes (where it is, how big it is, how far it is turned, how see-through it is, what colour it is), say what it goes from and to, how long that takes and on what curve, and the picture plays it.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T08:43:02.559Z",
+  "updated": "2026-09-15T08:43:02.562Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes straight from the study say-where-animating-an-icon-and-editing-a-video, answered by the user on 2026-09-15 (motion is a property of a layer, with a timing surface bigger than the property panel). Slice 1 of 5; nothing else in the set works until this does.\n\nMOCK: docs/design/mocks/pages/icon-animate-wt.html (Make a bell swing), steps 1 to 4 and 6 to 8. The Motion group is a dgrp next to Effects with the same .efx row shape (drag handle, switch, name, curve sketch, value summary). The property menu is built out of the layer: Position, Scale, Rotation, Opacity, Colour, and on a drawn path also Path points, Stroke width, Dash. There is NO canned list of named motions: the user rejected that explicitly as super weird and proprietary.\n\nENTRY FIELDS per motion: From, To, Start (ms), Over (ms), Curve, Repeat. Start and Over are the same two numbers the timeline bar carries in slice 3, so model them once.\n\nCURVES: named curves with the shape drawn beside each name plus a custom cubic-bezier(a,b,c,d). See the open task one-set-of-easing-curves-named-the-same-way-ever: settle the vocabulary there, use it here.\n\nWHERE: app work is Next only, Sources/Photonz/Releases/Next/ or behind a next-scoped flag. The model belongs in PhotonzCore (it has no notion of time today) and the sampling in PhotonzRender. Nothing is baked into pixels; motion is evaluated at render time like the other non-destructive styling.\n\nRULER: one cycle in milliseconds, NOT a document timeline. The study is explicit that an icon repeats and a video finishes and they cannot share a ruler.",
+  "acceptance": [
+    "Selecting a layer shows a Motion list in the right hand panel, empty, with a plus on its header, sitting below Effects and wearing the same header, plus and rows",
+    "The plus offers only the properties that layer actually has, each showing the value it has right now",
+    "Adding one gives a row with a switch, the property name, the curve drawn small and a summary a person can read back, for example Rotation -12 to 12 degrees over 0.9s",
+    "The motion plays in the canvas, and with Repeat set to forever it keeps going",
+    "Undo takes back adding a motion and each later change to it, and redo puts it back",
+    "The model lives in PhotonzCore with tests written before the implementation, is Codable and Sendable, and imports nothing from AppKit, SwiftUI or CoreImage",
+    "Nothing in the current release changes: this is Next only"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T08:43:02.561Z",
+      "note": "created (manual)"
+    }
+  ]
+}

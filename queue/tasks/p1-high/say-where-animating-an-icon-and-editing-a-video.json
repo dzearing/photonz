@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 18,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.611Z",
-  "updated": "2026-09-15T08:25:58.381Z",
+  "updated": "2026-09-15T08:43:59.013Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon"
   ],
@@ -70,7 +70,20 @@
     {
       "t": "2026-09-15T08:25:58.380Z",
       "note": "2026-09-15 the premise this card is built on has been rejected by the user and the mocks it cites have been rebuilt. Recommended option a is 'pick a named motion like Pulse or Spin or Draw on', and the whole first round of icon animation mocks framed motion that way. The user's critique on 2026-09-14 called that 'super weird and proprietary'. The replacement is icon-animate-wt (Make a bell swing) and icon-phase-wt (Make the knob lag the bell): you animate a PROPERTY, the timing sits on a bottom dock with real width, and a lag between two parts is set by dragging one bar against another. ALSO: pages/time-compare.html, which is the evidence this card leans on, still argues the old model (icon timing is 'one field, typed, never dragged'; an Order list beats a track) and now contradicts the two new pages. It needs redoing before this card can be answered honestly. Do not resolve this card against the current option text."
+    },
+    {
+      "t": "2026-09-15T08:38:21.871Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T08:43:54.092Z",
+      "note": "ADVERSARIAL REVIEW of the study, before rewriting it. The trap this task was warned about (a tidy answer produced by drawing both flows vaguely) got MORE dangerous with the rebuilt mocks, not less: the icon side now has a bottom strip with a ruler, lanes, bars and a playhead, so \"look, one timeline\" is now visually plausible in a way it was not yesterday. Three checks kept it honest. (1) I reproduced both timing surfaces at the SAME scale with this page's own scaffolding, so neither side is flattered by its own page CSS; the shape really does match. (2) I looked for what the shared shape cannot carry, and found it in one step: the knob's bar runs PAST the dashed line where the cycle restarts (icon-phase-wt step 7). An absolute ruler with a last frame cannot express that, so the crux survives the rebuild intact. (3) I checked whether the icon strip is scrubbed like a video one. It is not: icon-phase-wt step 6 says in as many words that watching it loop at 0.25x is what replaces scrubbing. So the preview row stays Different. Where the rebuild genuinely moved the answer I said so rather than keeping the old verdict: three rows moved towards video.\n\nWHAT SHIPPED. docs/design/mocks/pages/time-compare.html rewritten: nine jobs side by side with a verdict per row and every cell citing its page and step; four proof pairs (motion as a list on the layer, THE TIMING SURFACE as one component, the curve control, the export sheet); the two rulers; the multi-part case as a list and as lanes; the bill; five numbered build slices. docs/design/animation-vs-video.md rewritten to match. Header note on the page says plainly what changed from the first version and why, so a reader is not left wondering which answer is current.\n\nFIVE BUILD TASKS FILED against icon-animate, in order, with deps so the model lands first: a-layer-can-be-told-to-change-one-of-its-propert (seq 20), a-turning-layer-says-what-it-turns-around-and-yo (21), a-strip-across-the-bottom-shows-every-moving-par (22), watch-a-motion-loop-at-the-sizes-it-will-really (23), an-animated-icon-leaves-the-app-as-an-animated-s (24, epic icon-export). objectives.json: icon-animate moved from later to now, citing the answered decision, because the staging rule forbids open tasks on a later epic and the user's answer is what promoted it.\n\nVERIFIED: all seven mock gates pass (check-reserved, check-a11y-names, check-fieldwrap, check-states, check-selection, check-elevation, check-shortcuts). The page serves 200 and loads inside the dashboard shell with its nav entry active. Driven in Chrome at 1240 and at 880 wide with no horizontal overflow. Two things were found by looking at the built page and fixed: the quoted Motion row's curve sketch rendered as a full-width black blade, because quoting the markup does not quote the icon page's own sizing rule for .crv (18px box, stroked path), and the lane label column at 76px truncated \"Knob · Rotation\" in the one drawing whose whole point is comparing two lanes.\n\nNO Sources/ CHANGE, so no swift build, no Scripts/test.sh, no walks, and no sweep request. Nothing was launched, so nothing was left running.\n\nLEFT ROUGH, not filed: (1) the audit's screenshots are browser captures of the mock page rather than app captures, which is unavoidable on a task that changes no app code, and it is said plainly in the audit's rough list; (2) the page is long, and the length is the deliverable, since nine rows, four proof pairs, two rulers and two forms of the multi-part case are each an acceptance item. FOLDED rather than filed: one-set-of-easing-curves-named-the-same-way-ever (the drift is now one-sided, icon settled, video has not adopted); rebuild-the-spinner-toggle-and-draw-on-flows-on (the six-lane wordmark drawing is the target for that rebuild); work-out-whether-the-app-needs-project-types-at (the study still answers no, and the rebuilt mocks strengthen it)."
+    },
+    {
+      "t": "2026-09-15T08:43:59.011Z",
+      "note": "Study rewritten against the rebuilt property-first mocks and turned into five build tasks. docs/design/mocks/pages/time-compare.html now compares nine jobs with four proof pairs, the new one showing the timing strip is the same shared component on both sides; the crux holds, because the knob's bar runs past the line where the cycle restarts and an absolute ruler cannot say that. Long form at docs/design/animation-vs-video.md, audit at queue/audits/2026-09-15-animation-vs-video.json. Filed: the motion model, the canvas pivot, the timing strip, the looping preview at real sizes, animated SVG export, with deps so the model lands first; icon-animate moved to now in objectives.json. Verified: all seven mock gates pass, page serves 200 in the shell, driven in Chrome at 1240 and 880 with no overflow, two rendering faults found by looking and fixed. No Sources change, so no build, tests or walks were needed."
     }
   ],
-  "started": "2026-09-14T15:15:38.397Z"
+  "started": "2026-09-15T08:38:21.870Z",
+  "completed": "2026-09-15T08:43:59.012Z"
 }

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-14T04:57:15.550Z",
+  "updated": "2026-09-15T08:43:22.148Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -176,8 +176,8 @@
         {
           "id": "icon-animate",
           "title": "Animate SVG properties on the timeline, keyframes like any layer",
-          "note": "",
-          "stage": "later",
+          "note": "Moved to now on 2026-09-15 by the decision \"Animating an icon and editing a video: one surface or two?\", answered \"Motion is a property, and it opens into a cycle strip\". Five build tasks are filed against it: the motion model, the pivot, the timing strip, the looping preview at real sizes, and animated SVG export. Video is explicitly NOT moving; it inherits the curve list and the strip later.",
+          "stage": "now",
           "children": []
         },
         {

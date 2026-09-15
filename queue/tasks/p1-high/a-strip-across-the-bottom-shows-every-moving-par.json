@@ -1,0 +1,35 @@
+{
+  "id": "a-strip-across-the-bottom-shows-every-moving-par",
+  "title": "A strip across the bottom shows every moving part on one cycle",
+  "goal": "When two parts of one drawing move, the question is how they sit against each other in time, and that cannot be read in a column of numbers. So the timing lives in a strip across the bottom of the window: one lap of the motion, a bar for every moving property, and you drag one bar against another to set the lag between them.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 22,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T08:43:10.107Z",
+  "updated": "2026-09-15T08:43:19.692Z",
+  "deps": [
+    "a-layer-can-be-told-to-change-one-of-its-propert"
+  ],
+  "blockedBy": [],
+  "notes": "Slice 3 of 5 from the answered study, and the part the user asked for in their own words: the timing should be on a surface bigger than the property panel.\n\nMOCK: docs/design/mocks/pages/icon-phase-wt.html (Make the knob lag the bell), steps 3, 4 and 7. Step 4 is the test the mock set itself: dragging the knob 90 ms later is impossible in a column. Step 7 shows the knob still finishing when the bell restarts, which is what the dashed repeats line is for.\n\nSHARED WIDGET: the study found this is the same component the video timeline uses (docs/design/mocks/shared/components/inspector.css defines .timeline, .ruler, .track > .tl + .lane, .playhead, and both the icon and video mocks build from it). Build it so video can take it later without a rewrite. What must NOT be shared is what the ruler measures: an icon strip is one cycle with no end, a video strip is a document with a last frame.\n\nStart and Over on a bar are the same two numbers as the fields in the Motion entry. One model, two views.\n\nNext release only.",
+  "acceptance": [
+    "A strip across the bottom shows one cycle, measured in milliseconds, with a lane for each moving property grouped under the layer it belongs to",
+    "Dragging a bar sideways changes when that motion starts, dragging its ends changes how long it takes, and the numbers in the right hand panel follow at once",
+    "The gap between two bars is shown as a number while you drag one against the other",
+    "A dashed line marks where the cycle starts again, and a bar is allowed to carry on past it",
+    "The strip can be hidden and shown again, and a document with nothing moving does not show it at all"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T08:43:10.109Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T08:43:19.692Z",
+      "note": "deps set: the motion model lands first, then this"
+    }
+  ]
+}

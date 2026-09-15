@@ -1,11 +1,19 @@
 # Animating an icon and editing a video: where they are the same job
 
-Written 2026-09-14, from the fifteen clickthroughs that now exist: five for
-animating an icon (`icon-animate-wt`, `icon-loop-wt`, `icon-states-wt`,
-`icon-drawon-wt`, `icon-export-anim-wt`) and ten for editing a video
-(`video-entry-wt`, `video-cut-wt`, `video-move-wt`, `video-zoom-wt`,
-`video-transition-wt`, `video-freeze-wt`, `video-title-wt`, `video-captions`,
-`video-compositing`, `video-speed`).
+Written 2026-09-14. **Rewritten 2026-09-15**, after the first round of animation
+mocks was rejected and rebuilt. The first version compared a set of flows that
+offered a short menu of canned motions (Pulse, Spin, Draw on) and concluded that
+icon timing was one typed number and that a list of parts beat a track. That
+premise is gone: you animate **a property** of a layer, the way you add an effect
+to one, and the timing needs a surface with real width. Everything below is read
+off the rebuilt pages.
+
+Sixteen clickthroughs: six for animating an icon (`icon-animate-wt`,
+`icon-phase-wt`, `icon-loop-wt`, `icon-states-wt`, `icon-drawon-wt`,
+`icon-export-anim-wt`) and ten for editing a video (`video-entry-wt`,
+`video-cut-wt`, `video-move-wt`, `video-zoom-wt`, `video-transition-wt`,
+`video-freeze-wt`, `video-title-wt`, `video-captions`, `video-compositing`,
+`video-speed`).
 
 The side-by-side this summarises is a page, not a table in a document:
 <http://127.0.0.1:8791/index.html#time-compare>. Read it first. Everything below
@@ -13,66 +21,74 @@ is the short form.
 
 ## The answer in one paragraph
 
-They are one experience in three narrow places and two experiences everywhere
-else. The three shared things are small and worth building once. The thing
-everybody assumes is shared, a ruler you scrub a playhead along, is the one
-thing they cannot share, because an icon animation repeats and a video finishes,
-and that single fact drives every other difference between them.
+They are one experience in four places and two experiences everywhere else. The
+rebuild moved three rows of the comparison towards video, and the fourth shared
+thing is the surprise: **the timing surface itself**, tracks, bars, playhead and
+all, which both sides already draw out of the same component. What they still
+cannot share is the thing most people mean by "one timeline": the **ruler**. An
+icon repeats and a video finishes, and that single fact drives every remaining
+difference between them.
 
 ## What is genuinely the same job
 
-1. **Motion is a section on the selected layer.** Both flows do exactly the
-   same thing at step 1: click a layer, Properties fills in, and a Motion
-   (icon) or Animate (video) section is already there. Neither has an animate
-   mode to enter. This already holds in the app, because the selection model
-   and the inspector are shared, so it costs nothing to keep.
-2. **Easing is a named curve on a segment.** Both put an Easing row in the
-   same place with the same meaning: how a value gets from one value to the
-   next. **And it has already drifted**: four different vocabularies across six
-   mock pages (Linear / Ease in-out / Spring on the pulse and spinner; Linear /
-   Ease out / Spring on the toggle; Linear / Ease out / Ease in-out on the
-   draw-on; Linear / Ease in-out on both video flows). Nobody decided that. It
-   is the clearest argument on the page for building one easing vocabulary
-   once, and it is a small piece of work: a list of names and a curve for each.
-3. **A hand-off sheet that asks where the file is going before it asks for a
-   format.** This is the weakest of the three: it exists on the icon side and
+1. **Motion is a list on the selected layer, wearing the row an effect already
+   uses.** Both flows click a layer and find what moves as one more list in
+   Properties; neither has an animate mode to enter. One detail is worth
+   settling once: the icon side **adds an entry**, so a motion can be copied,
+   pasted, switched off and reordered, while the video side **marks a property
+   row** that is already there. The list form is the stronger one, because
+   copying an entry is exactly how the knob gets the bell's swing.
+2. **The timing surface is one component, not two.** Both pages build it from
+   the same shared parts (`.timeline`, `.ruler`, `.track > .tl + .lane`,
+   `.playhead` in `shared/components/inspector.css`): a docked strip, a label
+   column, a lane per thing, a bar you drag. This is the single largest piece of
+   shared work the study found, and it was not true a day ago.
+3. **The curve is a named shape, and the drift is now one-sided.** It used to be
+   four vocabularies across six pages. The icon pages have settled on one list
+   with the shape drawn beside each name plus a curve you can draw yourself
+   (`cubic-bezier(.45, 0, .55, 1)`); the video pages still carry two buttons in
+   a segmented control. That is no longer a disagreement, it is a gap with a
+   known answer, and it is already a task in the queue.
+4. **A hand-off sheet that asks where the file is going before it asks for a
+   format.** Still the weakest of the four: it exists on the icon side and
    nowhere on the video side, where all ten flows export with one button and no
-   questions. The reasoning transfers exactly (people know their destination and
-   do not know their formats) but it is a proposal until a video flow is drawn
-   with it.
+   questions. The reasoning transfers exactly, but it is a proposal until a
+   video flow is drawn with it.
 
 ## What looks the same and is not
 
-- **The ruler.** Icon keys are percentages of one cycle (0%, 50%, 100%, where
-  the last key IS the first key). Video keys are absolute seconds on a document
-  with a last frame. The percentage form is not a simplification, it is
+- **The ruler.** The icon strip measures **one cycle**; the video strip measures
+  **a document**. The clearest proof is one step of `icon-phase-wt`: the knob's
+  bar runs past the dashed line where the cycle restarts, because the knob is
+  still finishing its swing while the bell has already begun the next one. A
+  ruler whose grammar is "this is where it stops" cannot say that sentence. On
+  the way out the icon's milliseconds become percentages of a cycle, which is
   literally what a CSS keyframe block and a SMIL `keyTimes` list are.
-- **The front door to animating anything.** Icons open a list of named motions
-  (Pulse, Wiggle, Bounce, Spin, Breathe, Draw on) and the keys are the room
-  behind it. Video has no named motions anywhere in ten flows: the keyframe
-  diamond is the front door.
-- **How long it takes.** Icons type one number (Over 0.9s, or Per turn 0.9s on
-  a loop). Video never types it: you move the playhead and the distance between
-  two keys is the duration.
-- **The preview.** Icons loop the motion at 0.25x across four copies at 16, 24,
-  32 and 48 points, because a pulse that reads at 48 is a shimmer at 16.
-  Video scrubs the playhead to one instant at one size. Neither review is any
-  use for the other job: you cannot scrub 600 milliseconds, and a video at 16
-  points means nothing.
+- **How long something takes.** Icons carry Start and Over as a pair of fields
+  *and* as a bar; the two are the same numbers. Video never types it: the
+  distance between two keys is the duration. Same surface, different hand.
+- **What a shape turns around.** Rotation on an icon puts a **pivot on the
+  canvas** from the moment it exists, and dragging it from the middle of the
+  bell to its mount turns a bobblehead into a bell without a number changing.
+  There is no pivot anywhere in ten video flows.
+- **The preview.** Icons loop at 0.25x across four copies at 16, 24, 32 and 48
+  points, lag included, because ninety milliseconds is under six frames. Video
+  scrubs the playhead to one instant at one size. Neither review is any use for
+  the other job.
 - **The export.** Icons emit text: 1.2 KB of animated SVG, sharp at every size,
   and stripped entirely by a code host. Video encodes frames: pixels at one
-  resolution, playable anywhere. The same motion as a GIF is 74 KB.
+  resolution, playable anywhere.
 
 ## What only one of them will ever need
 
-Only video: audio detached from the picture, blade and split, in and out
-points, transitions paid for with spare frames either side of a cut, freeze
-frame, speed and retiming, codecs and a render wait.
+Only video: audio detached from the picture, blade and split, in and out points,
+transitions paid for with spare frames either side of a cut, freeze frame, speed
+and retiming, codecs and a render wait.
 
-Only icons: review at 16/24/32/48 points at once, stroke length so a path can
-draw itself on, the point a shape turns around, two states and a crossing
-between them, a trigger the exported file cannot carry, and closing the loop so
-the last key equals the first.
+Only icons: review at 16/24/32/48 points at once, stroke length and dash so a
+path can draw itself on, the point a shape turns around, a bar that runs past the
+end of the cycle, a trigger the exported file cannot carry, and closing the loop
+so the last value is the first value.
 
 ## What consolidating would cost
 
@@ -87,44 +103,52 @@ So "share a timeline with video" does not mean connecting two things that
 exist. It means first rewriting video into a multi-clip, multi-track document
 with audio, a playhead in the render path and a compositor that samples media
 per frame, and only then having something to share. That is the whole video
-feature, built before an icon can pulse, and the icon side gets nothing from
-it: no part of codecs, audio or frame scheduling teaches you how to emit a SMIL
-keyframe block.
+feature, built before an icon can swing, and the icon side gets nothing from
+it: no part of codecs, audio or frame scheduling teaches you how to emit a
+keyframe block as text.
 
 The asymmetry runs one way, and it is the expected direction rather than a
-surprise. Animation first genuinely helps video later (a settled easing
-vocabulary, a tested idea of a key as a value on a property at a moment, a
-destination-first hand-off sheet). Video first helps animation not at all.
+surprise. Animation first genuinely helps video later: a settled curve
+vocabulary, a tested idea of a motion as an entry on a property, and the timing
+strip itself. Video first helps animation not at all.
 
-## The gap the mocks left, and what it decides
+## The case that settled the strip, and the case beyond it
 
-None of the five animation flows shows more than two moving parts, and at two
-parts the numbered Order list in `icon-drawon-wt` is plainly enough. The
-`time-compare` page draws the case they skipped: six strokes of a wordmark
-drawing themselves on in sequence, as a list of twelve numbers and as six lanes
-on one cycle.
+At one moving part a column of fields is enough. **Two parts is where that stops
+being true**, and two parts is now walked end to end: the bell swings, the knob
+carries the same motion ninety milliseconds later, and the only way to set that
+is to drag one bar against another and read the gap. That is why the strip is no
+longer a "later, on evidence" item; the evidence is the flagship flow.
 
-The honest reading: **a whole icon SET does not animate together**, because
-icons animate on their own triggers in whatever app they end up in, so there is
-no case for a shared ruler across a library. What does happen is ONE icon with
-several parts, and the list holds up to about three of them and stops. So the
-lanes are worth building, and worth building **second**: they are a second view
-of numbers that already exist, so adding them later changes nothing above them.
+What is still unproved is everything past two parts: six strokes of a wordmark
+drawing themselves on, where the question becomes whether lanes want grouping.
+`icon-drawon-wt` still carries the old numbered Order list, and rebuilding it
+onto the strip is already filed.
+
+A whole icon SET does not animate together, because icons animate on their own
+triggers in whatever app they end up in, so there is still no case for a shared
+ruler across a library.
 
 ## What to build first
 
-1. **Motion is a property of a layer.** Named motion list, plus how much, how
-   long one pass takes, which curve, whether it repeats, what it turns around.
-   No playhead, no ruler, no tracks. This is the whole pulse flow and the whole
-   spinner flow.
-2. **The preview is the review.** The icon preview strip already in the app
-   (`IconPreviewsStrip.swift`) runs the motion at every size at once, with a
-   speed control. Without it nobody can judge whether the motion is any good.
-3. **It leaves as an animated SVG**, alongside the static SVG export already
+1. **A property of a layer can change over one cycle.** Motion is a list in
+   Properties with a plus that offers this layer's own properties; one entry
+   carries from, to, start, over, curve and repeat, and the icon plays in the
+   canvas. Nothing else works until this does.
+2. **Rotation says what it turns around**, with a pivot you drag on the canvas.
+   Without it the flagship motion is a bobblehead.
+3. **The timing strip across the bottom**: one cycle, a lane per animated
+   property, a bar you drag, a dashed line where it repeats, and a bar allowed
+   to cross that line. This is what makes a second moving part possible, and it
+   is the surface video would inherit unchanged.
+4. **The loop is the review**: play it at 16, 24, 32 and 48 points at once with
+   a speed control. This replaces scrubbing.
+5. **It leaves as an animated SVG**, alongside the static SVG export already
    planned, with the destination-first sheet.
-4. **Later, and only on evidence: the cycle strip.** 0 to 100% of a cycle, a
-   lane per animated part. It earns its place the first time somebody animates
-   four parts of one icon and cannot read the list.
+
+**Video does not move.** It stays the separate editor it is today and inherits
+the curve list and the timing strip when it is its turn, by using the same
+components rather than by being rewritten first.
 
 **No project type picker.** The two jobs already live in separate windows, so
 nothing needs hiding from anything. The surface can keep following the document:
@@ -137,6 +161,6 @@ before you start.
 The toggle flow's States group (a named list of states, a count of how many
 things differ between them, one duration for the crossing) is structurally the
 same surface as component variants on the UI side. Both are live work right now,
-unlike video, and built separately they will drift exactly the way the four
-easing vocabularies drifted. Compare `icon-states-wt` with `ui-variants`: the
-overlap is closer than anything between icons and video.
+unlike video, and built separately they will drift the way the curve controls
+drifted. Compare `icon-states-wt` with `ui-variants`: the overlap is closer than
+anything between icons and video.

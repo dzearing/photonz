@@ -1,0 +1,29 @@
+{
+  "feature": "Animation and video: where they are the same job (study, revised)",
+  "epic": "icon-animate",
+  "summary": "The study that compares animating an icon with editing a video has been rewritten against the rebuilt animation mocks, and the answer moved: the two jobs now share four things rather than three, including the timing strip itself, and they still cannot share the ruler. It ends with five build slices in order, which are now five tasks in the queue.",
+  "setup": "Nothing to install. Open the design dashboard at http://127.0.0.1:8791/index.html#time-compare, under Icons, 'Animation vs video: the same job?'. No app change, so nothing to build or launch.",
+  "try": [
+    { "do": "Read the first paragraph and the grey box under it. Stop there if the answer is wrong.", "shot": "2026-09-15-time-compare-1.png" },
+    { "do": "Scan the Verdict column of the nine-row table, top to bottom, without reading the cells." },
+    { "do": "Open one citation, say icon-phase-wt step 4, and check the cell against the step it claims." },
+    { "do": "Look at the two timing strips under 'the timing surface is one component, not two'.", "shot": "2026-09-15-time-compare-2.png" },
+    { "do": "Look at the two rulers under 'The ruler is the thing they cannot share'.", "shot": "2026-09-15-time-compare-3.png" },
+    { "do": "Read the five numbered slices at the bottom, in order.", "shot": "2026-09-15-time-compare-4.png" },
+    { "do": "Open the five new tasks in the queue and check each one is the slice it says it is." }
+  ],
+  "evaluate": [
+    "The page says the timing strip should be built once and used by video later. Is that a promise worth making now, or should the icon strip be allowed to be its own thing?",
+    "The build order puts the pivot second, ahead of the strip. Would you rather see two parts moving out of phase before a rotation knows what it turns around?",
+    "The strip is drawn with no right-hand end, only a dashed line where the cycle repeats. Does that read as a timeline to you, or as something unfinished?",
+    "Video is told to stay where it is. Does leaving it a separate window still feel right, or does seeing the shared strip make you want it moved sooner?",
+    "The study says a whole icon set never animates together, only one icon with several parts. Does that match how you would use it?"
+  ],
+  "rough": [
+    "The screenshots are browser captures of the mock page, not captures of the app. This task changed nothing under Sources, so there was no build to photograph and no playtest walk to take a -sc.png from.",
+    "The export sheet is still the one 'these could be one thing' claim that is not proved on both sides: it exists on the icon side and nowhere on the video side, and the page says so in place rather than hiding it.",
+    "The page is long. Nine comparison rows, four proof pairs, two rulers and two forms of the multi-part case are each an acceptance item, but the answer is in the first paragraph and everything after it is evidence.",
+    "icon-drawon-wt still carries the old numbered Order list, which now contradicts the strip. That rebuild is already a task and this page links to it rather than pretending it is done.",
+    "The video mocks still carry two easing buttons while the icon mocks have a full curve list. The drift is now one-sided with a known answer, which is folded into the existing easing task."
+  ]
+}

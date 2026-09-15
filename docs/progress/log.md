@@ -15269,3 +15269,34 @@ Next: `rebuild-the-spinner-toggle-and-draw-on-flows-on` brings those three onto
 the full model, and `pages/time-compare.html` still argues the first round's
 premise, which blocks an honest answer to the open decision card about animating
 an icon versus editing a video.
+
+## 2026-09-15 — Animation vs video: the study rewritten, and five build slices filed
+
+The decision "Animating an icon and editing a video: one surface or two?" came
+back answered (motion is a property of a layer, opening into a strip with real
+width), but the evidence behind the card still argued the rejected model: it
+said icon timing was one typed number and that a numbered Order list beat a
+track. Rewrote it against the rebuilt mocks.
+
+- `docs/design/mocks/pages/time-compare.html` rewritten. Nine jobs done both
+  ways, each cell citing the page and step it was read from. Four proof pairs
+  instead of three: the new one is the timing surface, shown to be the same
+  shared component on both sides (`.timeline`, `.ruler`, `.track > .tl + .lane`,
+  `.playhead` in `shared/components/inspector.css`), drawn at the same scale for
+  both so neither is flattered by its own styling.
+- The answer moved on three rows and held on the crux. Icons now drag bars on a
+  horizontal strip like video does, so "how long" and "relate two moving parts"
+  are near-shared rather than different. The ruler still cannot be shared: the
+  knob's bar runs past the line where the cycle restarts, which is a sentence an
+  absolute ruler cannot say.
+- `docs/design/animation-vs-video.md` rewritten to match.
+- Five build tasks filed against `icon-animate`, in order: the motion model, the
+  pivot on the canvas, the timing strip, the looping preview at real sizes, and
+  animated SVG export. `icon-animate` moved to `now` in `objectives.json`,
+  citing the answered decision.
+- Audit: `queue/audits/2026-09-15-animation-vs-video.json`.
+
+Next: `a-layer-can-be-told-to-change-one-of-its-propert` is the first slice and
+nothing else in the set works until it lands. Open question for the user is on
+the audit: whether the timing strip should promise to serve video later or be
+allowed to be its own thing.

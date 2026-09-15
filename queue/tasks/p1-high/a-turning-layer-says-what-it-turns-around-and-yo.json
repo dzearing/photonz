@@ -1,0 +1,35 @@
+{
+  "id": "a-turning-layer-says-what-it-turns-around-and-yo",
+  "title": "A turning layer says what it turns around, and you drag that point on the picture",
+  "goal": "A bell that swings hangs from its mount, not from its middle. So when a layer is set to turn, the point it turns around shows up on the picture as a handle you can drag, and dragging it is what turns a wobbling blob into a swinging bell.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T08:43:10.049Z",
+  "updated": "2026-09-15T08:43:19.690Z",
+  "deps": [
+    "a-layer-can-be-told-to-change-one-of-its-propert"
+  ],
+  "blockedBy": [],
+  "notes": "Slice 2 of 5 from the answered study. Depends on the motion model landing first.\n\nMOCK: docs/design/mocks/pages/icon-animate-wt.html steps 4 and 5. Step 4 deliberately shows the WRONG thing: with the pivot at the layer centre the bell rocks like a bobblehead. Step 5 drags the pivot to the mount and it becomes a bell. That repair is the argument for the feature, so build the handle, not a hidden field.\n\nThe Around row in the Motion entry carries the named spots and the numbers; the handle carries the drag. Both write the same value.\n\nNext release only.",
+  "acceptance": [
+    "Adding a turn to a layer puts a visible pivot handle on the picture straight away, at the middle of that layer",
+    "Dragging the handle moves what the layer turns around, and the motion updates while you drag",
+    "The same point can be set by name (its centre, top centre, bottom centre) or by typing two numbers, for the times a number is what you want",
+    "Undo takes back a pivot move",
+    "The pivot is stored with the motion in PhotonzCore, tested first, and the renderer turns the layer about it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T08:43:10.051Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T08:43:19.691Z",
+      "note": "deps set: the motion model lands first, then this"
+    }
+  ]
+}
