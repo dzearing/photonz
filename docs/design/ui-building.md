@@ -3655,3 +3655,58 @@ is already placed by hand and the word would mean nothing.
 Read by `SurfaceCommand` and `PieceRole` in the core, placed by `GroupFlow`.
 Tested in `FloatingPieceTests`, walked by
 `Scripts/playtest/badge-on-a-corner-walk.json`.
+
+## Landed: the name over a component sits on a plate you can read it against (Next, `next-components`, 2026-09-15)
+
+Reported by the user with a screenshot of a chip reading "Button · rest" floating
+above a blue rectangle: "i can't even read this, contrast is horrible". They were
+right, and the number is worse than it looks. The name was violet letters drawn
+STRAIGHT ON THE PICTURE, and the picture is whatever happens to be open:
+
+| the label, as shipped | against | reads at |
+| --- | --- | --- |
+| violet `#9A5CFF` | the white canvas | 3.9:1 |
+| violet `#9A5CFF` | the Accent blue `#3B7DF5` a starter button is painted in | **1.0:1** |
+| the accent, on the live chip's old plate `#303030` | its own plate | 3.2:1 |
+
+1.0:1 is not a hard-to-read label, it is no label. And no choice of letter colour
+could have fixed it: a name hanging over an unknown picture has no safe ink.
+
+**So the name moved onto the plate the app already had.** The measure readout and
+the arrow caption have always been the same capsule — a solid plate in the owning
+object's own colour taken down until white text reads on it, white text on it,
+and a soft drop shadow (`MeasureRoleColors.sizeDefault`: "red ink, solid
+darker-red chip, white numbers"). That rule lived inside
+`AnnotationContent.captionChipColor`; it is `LabelPlate` now, so the canvas name
+chips are the SAME treatment rather than a second one invented beside them. It is
+also the design system's own canvas badge, `.cbadge` in `canvas.css`: a solid
+violet pill with white wording above the box's top left corner.
+
+- **Every chip that draws ink draws its plate**, not only the one you are
+  pointing at. A copy's bare diamond faced the same picture the letters did and
+  was just as lost on it; it now rides a small pill of its own.
+- **One number, whatever is underneath.** The component plate is `#513085` and
+  white on it reads **9.9:1 (AAA)**, measured off real window captures over four
+  different backgrounds — plain light canvas, a saturated shape, a deep crimson
+  shape, and a real screenshot — and identical on all four, which IS the point:
+  the plate makes the background stop mattering.
+- **Live is still the accent**, run through the same rule: the plate lifts to the
+  Mac's accent darkened until white reads on it (`#00438C` on the default blue,
+  9.6:1 measured). A fixed white-on-accent pair would have lost a light accent
+  colour; this one cannot.
+- **The version part is the name part.** Same ink, same plate, same font, so
+  "Button · Pressed" is one label and not a readable half and a guessable half.
+- **The same in both themes.** The plate is a fixed violet, not a theme colour,
+  because the thing under it does not follow the theme either.
+
+`Scripts/playtest/name-chip-reads-anywhere-walk.json` is the walk: four
+components on four backgrounds, the version word, and the same labels at 200% and
+50%.
+
+Left rough: the plate's own edge against a dark picture is only 1.4:1 (deep
+crimson), so what tells the pill from the picture there is its shadow and its
+hue, not its lightness. It reads, but a component sitting on a near-black
+screenshot is the case to look at again. And a SCREEN's name is still bare grey
+letters straight on the picture — the same disease on the same strip. Put a
+screen inside a crimson shape and its name reads at 1.9:1, photographed and
+filed separately.

@@ -1,0 +1,28 @@
+{
+  "id": "a-screen-s-name-can-be-read-over-whatever-it-sit",
+  "title": "A screen's name can be read over whatever it sits on",
+  "goal": "The name that hangs above a screen on the canvas is plain grey lettering painted straight onto the picture. Over anything mid-toned it disappears: put a screen inside a crimson shape and the word is barely there. The component name beside it was fixed on 2026-09-15 by putting it on a plate; a screen's name should be as readable as its neighbour.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2680,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T15:28:42.799Z",
+  "updated": "2026-09-15T15:28:42.802Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-15 while fixing the-name-that-floats-over-a-component-can-be-rea.\n\nRun: drew a rectangle, painted it crimson (paintSelectionColor, #B0184A), drew a second rectangle inside it, Layer > frame the selection, captured the window. Walk kept at /tmp/chipwork/screen-name-evidence-walk.json (throwaway, not checked in - it is four steps to rewrite).\n\nMeasured off the capture, converted to sRGB: the name renders #868485 (L=0.2326) on the crimson #AF184A (L=0.1026), which is 1.9:1. WCAG fail. On plain white it is 4.8:1, which is why nobody noticed.\n\nThe code: Sources/Photonz/CanvasFrames.swift refreshFrameChrome() paints the label CGColor(gray: 0.45, alpha: 1) with no plate, and its own comment already argues the case (a neutral grey, NOT a theme label color, because the text sits on the picture). A neutral grey is still an ink on an unknown picture, which is the thing that cannot work.\n\nThe fix that landed next door is Sources/PhotonzCore/LabelPlate.swift: the measure/caption pill rule, an opaque plate in the object own colour taken down until white reads on it, plus CanvasNameLabels.plateBox. A screen has no colour of its own, so the open question is what its plate is painted - graphite, or the app chrome grey - and that is a look question worth the user seeing before it ships. Deliberately NOT done inside the component fix: a plate under every frame label changes the look of every canvas.",
+  "acceptance": [
+    "A screen name over a light shape, a dark shape, a saturated one and a busy screenshot is legible in all four, each captured",
+    "The audit gives the contrast ratio rather than saying it looks better, and it is at least the 9.9:1 the component chip now reads at",
+    "Whatever treatment lands, a screen name and a component name read as the same family of label rather than two unrelated ones",
+    "A canvas of several screens does not become noisier than it is worth: say what it looks like with six screens on it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T15:28:42.801Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -3661,3 +3661,51 @@
 {"t":"2026-09-15T14:28:56.597Z","ev":"task_note","id":"the-pen-keeps-the-thickness-you-last-chose"}
 {"t":"2026-09-15T14:28:56.638Z","ev":"task_note","id":"the-pen-keeps-the-thickness-you-last-chose"}
 {"t":"2026-09-15T14:29:07.670Z","ev":"task_done","id":"the-pen-keeps-the-thickness-you-last-chose","from":"in_progress","note":"The Pen now starts at the weight you last set on a path's Thickness row. AnnotationStyles.penStrokeWidth in PhotonzCore beside the pen's ink, armed by rememberAnnotationDefaults whenever the Thickness row reaches a path, read back through EditorState.armedPenStrokeWidth and handed to the canvas so the draft under your hand is the weight that lands. An icon frame still thins a Pen that has never been rethickened and no longer overrides one that has. Verified: the new pen-remembers-its-thickness-walk fails on stashed Sources with '4 px thick - not the 9 px claimed' and passes after (56 steps, 3 real window captures); Scripts/test.sh green at 6903 tests; playtest-all pen 14 ok, plus path, svg and thickness. Audit at queue/audits/2026-09-15-pen-thickness.json. Commit e3f91261."}
+{"t":"2026-09-15T14:31:06.149Z","ev":"task_created","id":"every-tool-that-makes-something-hands-back-to-se","priority":"p2-normal","title":"Every tool that makes something hands back to Select with it picked"}
+{"t":"2026-09-15T14:31:16.385Z","ev":"task_resequenced","id":"every-tool-that-makes-something-hands-back-to-se","from":2680,"to":3}
+{"t":"2026-09-15T14:35:07.552Z","ev":"task_resequenced","id":"the-grid-line-under-a-pen-point-lights-up-while","from":590,"to":8}
+{"t":"2026-09-15T14:35:07.599Z","ev":"task_reprioritized","id":"the-grid-line-under-a-pen-point-lights-up-while","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-15T14:36:38.462Z","ev":"task_created","id":"several-shapes-turn-into-one-path-joined-where-t","priority":"p2-normal","title":"Several shapes turn into one path, joined where their ends meet"}
+{"t":"2026-09-15T14:36:51.732Z","ev":"task_resequenced","id":"several-shapes-turn-into-one-path-joined-where-t","from":2680,"to":9}
+{"t":"2026-09-15T14:36:51.780Z","ev":"task_note","id":"two-shapes-become-one-join-them-cut-one-out-keep"}
+{"t":"2026-09-15T14:40:25.479Z","ev":"task_created","id":"choose-the-quality-of-a-lossy-export-and-see-wha","priority":"p2-normal","title":"Choose the quality of a lossy export and see what it will weigh"}
+{"t":"2026-09-15T14:40:36.348Z","ev":"task_resequenced","id":"choose-the-quality-of-a-lossy-export-and-see-wha","from":2680,"to":10}
+{"t":"2026-09-15T14:44:45.917Z","ev":"task_created","id":"a-saved-colour-goes-wherever-that-colour-belongs","priority":"p1-high","title":"A saved colour goes wherever that colour belongs"}
+{"t":"2026-09-15T14:44:46.006Z","ev":"task_resequenced","id":"a-saved-colour-goes-wherever-that-colour-belongs","from":290,"to":11}
+{"t":"2026-09-15T14:44:46.078Z","ev":"task_created","id":"copy-the-look-of-one-shape-onto-another","priority":"p1-high","title":"Copy the look of one shape onto another"}
+{"t":"2026-09-15T14:44:46.167Z","ev":"task_resequenced","id":"copy-the-look-of-one-shape-onto-another","from":290,"to":12}
+{"t":"2026-09-15T14:47:32.890Z","ev":"task_created","id":"export-as-webp","priority":"p2-normal","title":"Export as WebP"}
+{"t":"2026-09-15T14:47:47.606Z","ev":"task_resequenced","id":"export-as-webp","from":2680,"to":10.5}
+{"t":"2026-09-15T14:49:46.791Z","ev":"task_created","id":"tutorials-an-icons-track","priority":"p1-high","title":"Tutorials: an Icons track"}
+{"t":"2026-09-15T14:49:46.881Z","ev":"task_resequenced","id":"tutorials-an-icons-track","from":290,"to":13}
+{"t":"2026-09-15T14:49:46.957Z","ev":"task_created","id":"tutorials-animating-an-icon","priority":"p1-high","title":"Tutorials: animating an icon"}
+{"t":"2026-09-15T14:49:47.043Z","ev":"task_resequenced","id":"tutorials-animating-an-icon","from":290,"to":14}
+{"t":"2026-09-15T14:51:15.227Z","ev":"task_created","id":"tutorials-making-states-in-a-component","priority":"p2-normal","title":"Tutorials: making states in a component"}
+{"t":"2026-09-15T14:51:26.221Z","ev":"task_resequenced","id":"tutorials-making-states-in-a-component","from":2680,"to":12.5}
+{"t":"2026-09-15T15:01:13.244Z","ev":"task_created","id":"position-and-size-leave-the-panel","priority":"p1-high","title":"Position and size leave the panel"}
+{"t":"2026-09-15T15:01:13.332Z","ev":"task_resequenced","id":"position-and-size-leave-the-panel","from":290,"to":2}
+{"t":"2026-09-15T15:01:13.403Z","ev":"task_created","id":"one-row-for-a-number-that-has-four-sides","priority":"p1-high","title":"One row for a number that has four sides"}
+{"t":"2026-09-15T15:01:13.484Z","ev":"task_resequenced","id":"one-row-for-a-number-that-has-four-sides","from":290,"to":2.1}
+{"t":"2026-09-15T15:01:13.556Z","ev":"task_created","id":"the-panel-shows-the-panes-that-matter-and-you-ca","priority":"p1-high","title":"The panel shows the panes that matter, and you can say which"}
+{"t":"2026-09-15T15:01:13.641Z","ev":"task_resequenced","id":"the-panel-shows-the-panes-that-matter-and-you-ca","from":290,"to":2.2}
+{"t":"2026-09-15T15:01:13.714Z","ev":"task_created","id":"a-copy-of-a-component-is-configured-not-authored","priority":"p1-high","title":"A copy of a component is configured, not authored"}
+{"t":"2026-09-15T15:01:13.802Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":290,"to":2.3}
+{"t":"2026-09-15T15:02:20.737Z","ev":"task_created","id":"every-pane-says-what-it-is-for-in-words-somebody","priority":"p1-high","title":"Every pane says what it is for, in words somebody already knows"}
+{"t":"2026-09-15T15:02:20.821Z","ev":"task_resequenced","id":"every-pane-says-what-it-is-for-in-words-somebody","from":290,"to":1.9}
+{"t":"2026-09-15T15:02:20.894Z","ev":"task_created","id":"the-name-that-floats-over-a-component-can-be-rea","priority":"p1-high","title":"The name that floats over a component can be read"}
+{"t":"2026-09-15T15:02:20.979Z","ev":"task_resequenced","id":"the-name-that-floats-over-a-component-can-be-rea","from":290,"to":1.8}
+{"t":"2026-09-15T15:02:35.101Z","ev":"task_note","id":"position-and-size-stays-on-screen-when-you-pick"}
+{"t":"2026-09-15T15:03:35.093Z","ev":"task_created","id":"make-a-button-with-states-and-properties-and-set","priority":"p2-normal","title":"Make a button with states and properties, and set them on a copy"}
+{"t":"2026-09-15T15:03:46.630Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":2680,"to":2.4}
+{"t":"2026-09-15T15:03:57.206Z","ev":"loop_started","pid":44685}
+{"t":"2026-09-15T15:03:57.405Z","ev":"task_started","id":"the-name-that-floats-over-a-component-can-be-rea","title":"The name that floats over a component can be read","priority":"p1-high"}
+{"t":"2026-09-15T15:06:18.267Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:42.803Z","ev":"task_created","id":"a-screen-s-name-can-be-read-over-whatever-it-sit","priority":"p2-normal","title":"A screen's name can be read over whatever it sits on"}
+{"t":"2026-09-15T15:28:54.939Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:54.983Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:55.025Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:55.067Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:55.108Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:55.150Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:28:55.191Z","ev":"task_note","id":"the-name-that-floats-over-a-component-can-be-rea"}
+{"t":"2026-09-15T15:30:28.597Z","ev":"task_done","id":"the-name-that-floats-over-a-component-can-be-rea","from":"in_progress","note":"The canvas name chip now sits on the label plate the measure readout and arrow caption already used (LabelPlate in PhotonzCore, lifted out of AnnotationContent.captionChipColor so there is one rule). White on the component plate #503186 reads 9.88:1 AAA, measured off real window captures and identical over a light canvas, a saturated shape, a crimson shape and a real screenshot; live chips use the accent through the same rule at 9.63:1. Was 1.0:1 on the blue a starter button is painted in. Scripts/test.sh green (6910, 7 new), component/version/name/caption walk families green, new walk name-chip-reads-anywhere-walk.json. Audit: queue/audits/2026-09-15-canvas-name-chip.json."}

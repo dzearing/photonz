@@ -1,0 +1,28 @@
+{
+  "feature": "The name that floats over a component can be read",
+  "epic": "ui-components",
+  "summary": "The name and version above a component on the canvas now sit on a solid plate instead of being violet letters painted straight onto whatever picture is open. White on the plate reads at 9.9:1 on any background, where the old violet letters read at 1.0:1 on the blue a starter button is painted in.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on (it is on by default). Any document.",
+  "try": [
+    { "do": "Open the Library, Comps shelf, and drag the Button tile onto the blank canvas.", "shot": "2026-09-15-chip-1-four-backgrounds-sc.png" },
+    { "do": "Draw a rectangle and drag the Button so its name sits over the rectangle." },
+    { "do": "Drop a screenshot on the canvas and drag the Button so its name sits over that." },
+    { "do": "Rest the pointer on the Button: the name spells out in full on the plate.", "shot": "2026-09-15-chip-3-spelled-out-sc.png" },
+    { "do": "In the Component section press Add under Versions, name it Pressed, and read both labels." },
+    { "do": "Zoom to 50% and then 200% and read the labels again.", "shot": "2026-09-15-chip-5-at-50-sc.png" },
+    { "do": "Switch the Mac between light and dark appearance and read them once more." }
+  ],
+  "evaluate": [
+    "Over a busy screenshot, does the label read as a label sitting on top rather than as part of the picture?",
+    "Is a canvas of four components with four violet pills on it quieter or noisier than you want?",
+    "A copy now wears a small violet pill around its single diamond instead of a bare diamond. On a screen built from a dozen copies, is that too much?",
+    "When a component is selected its plate turns the Mac's accent colour. Does that still read as 'this name answers a click'?",
+    "Is the version half of 'Button · Pressed' as easy to read as the name half?"
+  ],
+  "rough": [
+    "The plate's own edge against a DARK picture is only 1.4:1 (measured on a deep crimson shape), so what separates the pill from the picture there is its drop shadow and its hue rather than its lightness. The words inside are unaffected at 9.9:1, but a component sitting on a near-black screenshot is the case worth looking at again.",
+    "A SCREEN's name is still bare grey letters straight on the picture, which is the same fault on the same strip: put a screen inside a crimson shape and its name reads at 1.9:1, photographed. It was left alone because putting a plate under every frame label changes the look of every canvas, and that is a call worth making on purpose rather than as a side effect of this fix. Filed separately.",
+    "Two versions of one component land about 34pt apart, so their drawings and their labels pile up on each other until you move them. That is where versions are placed, not how they are drawn, and it is unchanged by this work, but the plates make the pile easier to see.",
+    "The plate is the component violet darkened until white reads on it, which is a deeper violet than the #9A5CFF the mocks paint components in. Same hue, same saturation, less light. If the violet matters more than the contrast number, that is the knob to turn."
+  ]
+}

@@ -66,8 +66,49 @@ extension CanvasNSView {
         for chip in chips where chip.spelledOut { drawNameChip(chip) }
     }
 
-    /// One chip drawn into the strip: its mark, and the word it is saying right
-    /// now, on a plate when the word only appeared because you are looking.
+    /// The plate a name is drawn on at rest: the component violet, taken down
+    /// until white reads on it (`LabelPlate`, the rule the measure readout and
+    /// the arrow caption have always used). It is still recognisably the
+    /// component violet, so the chip goes on saying which kind of thing this is.
+    static let componentPlateColor = CanvasNSView.plateColor(hex: ComponentPaint.violetHex)
+
+    /// The plate a LIVE name is drawn on: the same rule applied to the app's
+    /// accent, so "this word answers a click" survives the move onto a plate
+    /// and the words stay readable whatever accent colour the Mac is set to —
+    /// including a light one, which a fixed white-on-accent pair would lose.
+    var livePlateColor: CGColor {
+        var accent = NSColor.controlAccentColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            accent = NSColor.controlAccentColor
+        }
+        guard let srgb = accent.usingColorSpace(.sRGB) else { return Self.componentPlateColor }
+        return Self.plateColor(from: RGBA(r: Double(srgb.redComponent),
+                                          g: Double(srgb.greenComponent),
+                                          b: Double(srgb.blueComponent)))
+    }
+
+    private static func plateColor(hex: String) -> CGColor {
+        plateColor(from: RGBA(hex: hex) ?? RGBA(r: 0, g: 0, b: 0))
+    }
+
+    private static func plateColor(from color: RGBA) -> CGColor {
+        let tone = LabelPlate.tone(from: color)
+        return CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b, alpha: 1)
+    }
+
+    /// The words and the mark on that plate. White, because the plate is always
+    /// dark enough for white — which is the whole reason there is a plate.
+    static let plateInkColor = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+
+    /// One chip drawn into the strip: its mark and the word it is saying right
+    /// now, on the plate that lets both be read.
+    ///
+    /// **Everything here is drawn ON the plate.** A name hangs over whatever
+    /// picture happens to be open and cannot know what is under it, so before
+    /// this the violet letters read at 1.3:1 on the blue a starter button is
+    /// painted in and were simply not there. An opaque plate takes that
+    /// question away: the only contrast left is white on the plate, which is
+    /// fixed and tested (`LabelPlateTests`).
     private func drawNameChip(_ chip: CanvasNameChip) {
         let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
         let renaming = chip.layer.id == canvasRenameID
@@ -80,28 +121,31 @@ extension CanvasNSView {
         // two words is being renamed is plain before anything is typed.
         let printed = renaming ? canvasRenamePrefix(of: chip.layer.id) : chip.word
 
-        // A name that is only there because you are looking gets something to
-        // be read against. Where the names sit was decided by what they say at
-        // REST, so this one is wider than the room it was given and may reach
-        // over a neighbour's mark; a plate under it means it lands as a chip on
-        // top rather than as a smear.
-        if chip.spelledOut, let word = printed {
-            let text = CanvasNameLabels.box(for: chip.label)
-            let plate = CALayer()
-            plate.frame = CGRect(x: strip.minX - 4, y: strip.minY - 1,
-                                 width: (text.minX - strip.minX) + Self.captionWidth(word) + 8,
-                                 height: strip.height + 2)
-            plate.cornerRadius = 4
-            // Resolved through the canvas's own appearance rather than
-            // whatever happens to be current: a light plate behind violet
-            // letters in a dark app would be a flare on the picture.
-            var backing = NSColor.controlBackgroundColor.withAlphaComponent(0.92).cgColor
-            effectiveAppearance.performAsCurrentDrawingAppearance {
-                backing = NSColor.controlBackgroundColor.withAlphaComponent(0.92).cgColor
-            }
-            plate.backgroundColor = backing
-            componentChromeLayer.addSublayer(plate)
-        }
+        // The plate, under the mark and the letters both. Its width follows
+        // what is actually being printed, so a name with an open field over
+        // half of it does not stretch a pill out under the field.
+        // A copy's version is the one word somebody is checking, so a chip
+        // that is only saying its mark still gets the plate: a mark nobody can
+        // see is as much use as a name nobody can read.
+        let plate = CALayer()
+        plate.frame = CanvasNameLabels.plateBox(
+            for: chip.label, printing: Self.captionWidth(printed))
+        plate.cornerRadius = 4
+        // The screen's own scale, so the pill's rounded corner is cut at the
+        // pixels it will be shown with rather than at one-to-one and softened
+        // up by the compositor.
+        plate.contentsScale = window?.backingScaleFactor ?? 2
+        plate.backgroundColor = !renaming && chip.kind == .component
+            && isNameLabelLive(chip.layer.id)
+            ? livePlateColor
+            : Self.componentPlateColor
+        // The same soft shadow the label pill carries, so the plate's own edge
+        // still reads when it lands on something its own colour.
+        plate.shadowColor = CGColor(gray: 0, alpha: 1)
+        plate.shadowOpacity = 0.35
+        plate.shadowRadius = 2
+        plate.shadowOffset = CGSize(width: 0, height: 1)
+        componentChromeLayer.addSublayer(plate)
 
         // The mark stays put through a rename: it says what kind of thing
         // this is, and that does not change while you are typing.
@@ -114,7 +158,8 @@ extension CanvasNSView {
         glyph.path = chip.kind == .component
             ? ComponentGlyph.path(in: box)
             : ComponentGlyph.instancePath(in: box)
-        glyph.fillColor = ComponentGlyph.cgColor
+        glyph.fillColor = Self.plateInkColor
+        glyph.contentsScale = window?.backingScaleFactor ?? 2
         glyph.frame = layer?.bounds ?? strip
         componentChromeLayer.addSublayer(glyph)
 
@@ -124,23 +169,8 @@ extension CanvasNSView {
         // renamed with nothing kept in front of the field draws nothing either:
         // the field is standing exactly where the word was.
         guard let word = printed else { return }
-
-        // The component violet at rest, the selection accent when the word is
-        // live: the mark in front of it goes on saying "component", so the word
-        // is free to say "selected, or under your pointer" the same way a
-        // screen's name does. Neither is a theme label color: this text sits on
-        // top of whatever picture is open.
-        // A copy's version is a caption rather than a handle, so it stays in the
-        // component violet however the copy is picked and the accent goes on
-        // meaning "this word answers a click".
-        // Words kept in front of an open field stay violet however the drawing
-        // is picked: the accent means "this answers a click", and right now the
-        // thing answering is the box, not the name standing beside it.
-        let ink = !renaming && chip.kind == .component && isNameLabelLive(chip.layer.id)
-            ? NSColor.controlAccentColor.cgColor
-            : ComponentGlyph.cgColor
         componentChromeLayer.addSublayer(nameTextLayer(
-            word, color: ink, frame: CanvasNameLabels.box(for: chip.label)))
+            word, color: Self.plateInkColor, frame: CanvasNameLabels.box(for: chip.label)))
     }
 
     /// The one word of canvas chrome above a drawing, drawn the same way for a

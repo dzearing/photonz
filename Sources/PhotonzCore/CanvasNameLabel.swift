@@ -267,6 +267,35 @@ public enum CanvasNameLabels {
                       width: label.leadingInset + letters, height: strip.height)
     }
 
+    /// How far the plate reaches past the ink on either side.
+    ///
+    /// Half the daylight two names are kept apart by, so a plate can never
+    /// reach into its neighbour's: two violet pills touching would read as one
+    /// long bar, which is the very thing the names are stacked to avoid.
+    public static let platePadding: CGFloat = clearance / 2
+
+    /// The plate a name is drawn ON so it can be read over whatever the
+    /// picture happens to be: its ink, plus a little air all round.
+    ///
+    /// **This is why a canvas name is legible at all.** A name hanging over a
+    /// screenshot cannot know what is under it, so no choice of text colour is
+    /// safe — the violet it used to be drawn in reads at 1.3:1 on the blue a
+    /// starter button is painted in. The plate takes the question away, and the
+    /// only contrast left is the plate against its own words, which is fixed
+    /// (`LabelPlate`).
+    /// `printing` is how wide the letters ACTUALLY going down measure, for the
+    /// one case where that is not the name's own width: a name being typed
+    /// prints only the words the typing will not replace, and the plate has to
+    /// stop where they do rather than stretching out under the open field.
+    public static func plateBox(for label: CanvasNameLabel,
+                                printing inkWidth: CGFloat? = nil) -> CGRect {
+        var ink = chipBox(for: label)
+        if let inkWidth {
+            ink.size.width = label.leadingInset + min(inkWidth, box(for: label).width)
+        }
+        return ink.insetBy(dx: -platePadding, dy: -1)
+    }
+
     /// The same names, moved up onto clear lines where they would otherwise
     /// have printed on top of each other.
     ///

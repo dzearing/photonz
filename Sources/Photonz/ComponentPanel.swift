@@ -16,8 +16,10 @@ enum ComponentGlyph {
     /// The violet the mocks paint components in. A fixed color, NOT the theme
     /// accent: the canvas mark sits on top of whatever picture is open, and the
     /// accent is already spoken for by selection.
-    static let color = Color(red: 0x9A / 255, green: 0x5C / 255, blue: 0xFF / 255)
-    static let cgColor = CGColor(red: 0x9A / 255, green: 0x5C / 255, blue: 0xFF / 255, alpha: 1)
+    /// One definition, in `PhotonzCore` where the plate rule can read it too.
+    static let rgba = RGBA(hex: ComponentPaint.violetHex) ?? RGBA(r: 0.604, g: 0.361, b: 1)
+    static let color = Color(red: rgba.r, green: rgba.g, blue: rgba.b)
+    static let cgColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 1)
 
     /// Four diamonds on the compass points of `rect`, each a quarter of its
     /// short side, which is the shape at any size the app asks for.

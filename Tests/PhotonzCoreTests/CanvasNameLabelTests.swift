@@ -561,3 +561,42 @@ struct CanvasNameFieldBoxTests {
         #expect(long.width == CanvasNameLabels.maximumWidth)
     }
 }
+
+/// The plate a canvas name sits on so it can be read over whatever the picture
+/// happens to be.
+@Suite("Canvas name plates")
+struct CanvasNamePlateTests {
+
+    private let frame = CGRect(x: 100, y: 200, width: 300, height: 400)
+
+    @Test("The plate wraps the mark and the letters, and nothing else")
+    func plateWrapsTheInk() {
+        let label = CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 60,
+                                    leadingInset: 14)
+        let ink = CanvasNameLabels.chipBox(for: label)
+        let plate = CanvasNameLabels.plateBox(for: label)
+        #expect(plate.minX == ink.minX - CanvasNameLabels.platePadding)
+        #expect(plate.maxX == ink.maxX + CanvasNameLabels.platePadding)
+        #expect(plate.height == ink.height + 2)
+        #expect(plate.midY == ink.midY)
+    }
+
+    @Test("Two plates side by side never touch")
+    func platesNeverOverlap() {
+        // Two names in the same strip are kept `clearance` apart before either
+        // has to climb; the plate's padding has to fit inside that gap or the
+        // two pills merge into one bar.
+        #expect(CanvasNameLabels.platePadding * 2 <= CanvasNameLabels.clearance)
+    }
+
+    @Test("A bare mark gets the same plate, hugging the diamond alone")
+    func bareMarkKeepsItsPlate() {
+        // A copy of the first version wears its mark and no word. The mark is
+        // the same violet the letters were, so it faces the same picture and
+        // needs the same plate; it just has nothing to say beside it.
+        let bare = CanvasNameLabel(id: UUID(), frameRect: frame, textWidth: 0,
+                                   leadingInset: 10)
+        let plate = CanvasNameLabels.plateBox(for: bare)
+        #expect(plate.width == 10 + CanvasNameLabels.platePadding * 2)
+    }
+}

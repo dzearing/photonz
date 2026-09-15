@@ -440,21 +440,14 @@ extension AnnotationContent {
     /// the whole point of the change: the pill's colours are chosen, and this
     /// is only where the choosing starts from so that nobody has to make one.
     public var captionChipColor: RGBA {
-        let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        var tone = RGBA(r: rgba.r * 0.55, g: rgba.g * 0.55, b: rgba.b * 0.55)
-        // White text sits on the chip, so a light ink (white, yellow) keeps
-        // darkening until the chip is dark enough for it to read.
-        let luminance = tone.relativeLuminance
-        if luminance > Self.captionChipMaxLuminance {
-            let k = Self.captionChipMaxLuminance / luminance
-            tone = RGBA(r: tone.r * k, g: tone.g * k, b: tone.b * k)
-        }
-        return tone
+        // `LabelPlate` IS this rule, lifted out so the canvas name chips can
+        // sit on the same plate rather than on a second one invented beside it.
+        LabelPlate.tone(from: RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19))
     }
 
     /// The lightest a caption chip gets: dark enough that white text reads on
     /// it. The default red pair (#8C201A) sits just under this.
-    public static let captionChipMaxLuminance: Double = 0.24
+    public static let captionChipMaxLuminance: Double = LabelPlate.maximumLuminance
 
     /// The pill's fill opacity — as solid as the measure chip. It used to be
     /// 92%, which read as a softer, different control beside a caliper's
