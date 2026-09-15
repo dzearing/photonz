@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:16.755Z",
-  "updated": "2026-09-15T12:37:22.953Z",
+  "updated": "2026-09-15T12:37:44.443Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-15T12:37:22.952Z",
       "note": "left rough (not filed, no person would hit it): a turn on a layer that is ALSO flipped or skewed is dropped rather than turning about the wrong thing, and so is a colour or width change on an inside/outside line, which the file draws in two halves. Both are named on the Export sheet before you save."
+    },
+    {
+      "t": "2026-09-15T12:37:44.441Z",
+      "note": "An icon that moves now exports as an SVG that moves: SVGMotionExport.swift writes every motion as SMIL inside ONE shared lap, stated as fractions of it, and SVGHandoff.swift + the Export sheet ask where the file is going before the format and list what survives. Verified: 6828 tests green (27 new writer/hand-off tests, plus the file rendered back through the system's own SVG reader and matched against the canvas at the top of the lap), and the real file played in Chrome in an img tag and inline, whose angles match the app's own numbers at ten moments of a lap to within a fifth of a degree. The Mac's screen was locked for the whole task, so no walk could run and nothing in the app is photographed; the walk is written (Scripts/playtest/icon-export-animated-walk.json) and a sweep is requested. Audit: queue/audits/2026-09-15-icon-export-animated.json. Filed: a-shape-told-to-grow-does-not-grow (reproduced)."
     }
   ],
-  "started": "2026-09-15T12:16:33.202Z"
+  "started": "2026-09-15T12:16:33.202Z",
+  "completed": "2026-09-15T12:37:44.442Z"
 }
