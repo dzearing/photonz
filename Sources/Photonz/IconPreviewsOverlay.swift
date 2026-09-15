@@ -19,8 +19,13 @@ struct IconPreviewsOverlay: View {
     var body: some View {
         let tiles = editorState.iconPreviewTiles
         if !tiles.isEmpty {
-            IconPreviewsStrip(tiles: tiles)
+            IconPreviewsStrip(tiles: tiles, showsTransport: editorState.iconPreviewsPlayable)
                 .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewFrameID)
+                // The transport row arrives the moment the first motion is
+                // added, and the card grows to hold it. Faded in for the same
+                // reason the card itself is: a row of chrome that appeared
+                // between two frames would read as a glitch.
+                .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewsPlayable)
         }
     }
 }

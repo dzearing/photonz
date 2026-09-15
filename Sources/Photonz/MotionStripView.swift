@@ -108,6 +108,12 @@ struct MotionStripView: View {
                 .foregroundStyle(.tertiary)
             cycleField
             Spacer(minLength: 0)
+            // How fast the playhead below crosses this ruler. It belongs on the
+            // strip as well as on the previews card because motion is on every
+            // layer, not only on icons: a lag dragged out on this ruler has to
+            // be judgeable in a document that has no icon frame to preview.
+            MotionSpeedMenu(name: "Loop Speed")
+                .disabled(!editorState.canPlayMotion)
             Button { editorState.toggleMotionStrip() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 9, weight: .semibold))

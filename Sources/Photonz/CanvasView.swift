@@ -184,6 +184,13 @@ struct CanvasView: NSViewRepresentable {
     let onMotionPivotMove: (CGPoint) -> Void
     let onMotionPivotCommit: () -> Void
     let onMotionPivotCancel: () -> Void
+    /// Space: watch it loop, or stop watching. Answered by the canvas rather
+    /// than by a menu because the only other Space in the app belongs to the
+    /// video transport, in a window this one never shares.
+    let onMotionPlayToggle: () -> Void
+    /// Whether there is anything to play, so Space is left alone in a still
+    /// document rather than swallowed by a preview that cannot start.
+    let canPlayMotion: Bool
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -348,6 +355,8 @@ struct CanvasView: NSViewRepresentable {
         view.onMotionPivotMove = onMotionPivotMove
         view.onMotionPivotCommit = onMotionPivotCommit
         view.onMotionPivotCancel = onMotionPivotCancel
+        view.onMotionPlayToggle = onMotionPlayToggle
+        view.canPlayMotion = canPlayMotion
         view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
@@ -465,6 +474,8 @@ final class CanvasNSView: NSView {
     var onMotionPivotMove: ((CGPoint) -> Void) = { _ in }
     var onMotionPivotCommit: (() -> Void) = {}
     var onMotionPivotCancel: (() -> Void) = {}
+    var onMotionPlayToggle: (() -> Void) = {}
+    var canPlayMotion = false
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }

@@ -46,10 +46,35 @@ extension EditorState {
     /// time.
     var iconPreviewTiles: [IconPreviewTile] {
         guard let frameID = iconPreviewFrameID, let document,
-              let frame = document.layer(id: frameID) else { return [] }
-        return IconPreviews.sides(forFrameSize: frame.frame.size).map { side in
-            IconPreviewTile(side: side, image: iconPreview(of: frame, side: side))
+              let authored = document.layer(id: frameID) else { return [] }
+        // The sizes come off the frame AS DRAWN, never off the moving one. A
+        // frame with a scale motion on it is a different size every frame, and
+        // a row that added and dropped a column thirty times a second would be
+        // unreadable at exactly the moment it is being watched.
+        let sides = IconPreviews.sides(forFrameSize: authored.frame.size)
+        guard !sides.isEmpty else { return [] }
+        let source = iconPreviewSource(document, frameID: frameID)
+        let frame = source.layer(id: frameID) ?? authored
+        return sides.map { side in
+            IconPreviewTile(side: side, image: iconPreview(of: frame, in: source, side: side))
         }
+    }
+
+    /// The picture the previews are drawn from: the one you drew, or where the
+    /// loop has got to while the preview runs.
+    ///
+    /// This is what makes the strip the REVIEW rather than a still life. The
+    /// icon moves in the four chips at the sizes it will really be used, which
+    /// is the only place a swing that reads beautifully on a 512 point canvas
+    /// can be caught being a shimmer at 16.
+    ///
+    /// Only this frame is worked out, not the whole document: the strip shows
+    /// one frame and nothing else, and moving a picture it is not drawing would
+    /// be a copy of every layer in it, thirty times a second.
+    private func iconPreviewSource(_ document: PhotonzDocument, frameID: UUID) -> PhotonzDocument {
+        let document = withDraggedMotionTiming(document)
+        guard Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion else { return document }
+        return document.moved(layerID: frameID, toMotionTimeMS: motionPlayheadMS)
     }
 
     /// One preview, from the cache or ordered up.
@@ -59,11 +84,14 @@ extension EditorState {
     /// nothing else does. While a fresh one is being drawn the last one stays
     /// on screen: a strip that blinked empty on every stroke would be worse
     /// than one a frame behind.
-    private func iconPreview(of frame: Layer, side: CGFloat) -> CGImage? {
+    private func iconPreview(of frame: Layer, in document: PhotonzDocument, side: CGFloat) -> CGImage? {
         let key = IconPreviewKey(frameID: frame.id, side: Int(side))
+        // The hash is of the frame the picture will be made FROM, which while
+        // the loop runs is the frame at this moment of it. So a moving icon
+        // orders a fresh picture per frame and a still one orders none, with no
+        // second rule for the running case.
         let hash = frame.hashValue
         if let cached = iconPreviews[key], cached.hash == hash { return cached.image }
-        guard let document else { return iconPreviews[key]?.image }
         if !iconPreviewsInFlight.contains(key) {
             let renderer = previewRenderer
             let store = store
@@ -89,15 +117,33 @@ extension EditorState {
     /// laid out by SwiftUI, so its exact size is not knowable here, and
     /// over-reserving only makes the other thing step aside a little sooner.
     var iconPreviewsReservedRect: CGRect? {
-        let tiles = iconPreviewTiles
-        guard !tiles.isEmpty else { return nil }
-        let chips = tiles.map { IconPreviews.chipSide(for: $0.side) }
-        let width = chips.reduce(0, +) + CGFloat(tiles.count - 1) * IconPreviewsStrip.gap
+        // The sides, not the tiles: this is a measurement, and asking for the
+        // tiles would order a batch of pictures to find out how wide a row of
+        // them is.
+        guard let frameID = iconPreviewFrameID, let document,
+              let frame = document.layer(id: frameID) else { return nil }
+        let sides = IconPreviews.sides(forFrameSize: frame.frame.size)
+        guard !sides.isEmpty else { return nil }
+        let chips = sides.map { IconPreviews.chipSide(for: $0) }
+        let width = chips.reduce(0, +) + CGFloat(sides.count - 1) * IconPreviewsStrip.gap
             + IconPreviewsStrip.padding * 2
         let height = (chips.max() ?? 0) + IconPreviewsStrip.labelHeight
             + IconPreviewsStrip.padding * 2
+            + (iconPreviewsPlayable ? IconPreviewsStrip.headerHeight : 0)
         let inset = EditorChromeLayout.cornerInset
         return CGRect(x: inset, y: inset, width: width, height: height)
+    }
+
+    /// Whether the previews card carries a transport.
+    ///
+    /// Only when something in THIS frame moves. A play button over four still
+    /// pictures is a control that does nothing, and the card is chrome sitting
+    /// on somebody's canvas: with a still icon it stays exactly the row of
+    /// pictures it has always been.
+    var iconPreviewsPlayable: Bool {
+        guard canPlayMotion, let frameID = iconPreviewFrameID,
+              let frame = document?.layer(id: frameID) else { return false }
+        return frame.hasMotionInside
     }
 }
 

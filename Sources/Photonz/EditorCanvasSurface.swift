@@ -105,6 +105,8 @@ struct EditorCanvasSurface: View {
                    onMotionPivotMove: { editorState.previewMotionPivot(at: $0) },
                    onMotionPivotCommit: { editorState.commitMotionPivot() },
                    onMotionPivotCancel: { editorState.cancelMotionPivot() },
+                   onMotionPlayToggle: { editorState.toggleMotionPreview() },
+                   canPlayMotion: editorState.canPlayMotion,
                    onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                    onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                    onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },

@@ -675,6 +675,16 @@ extension Layer {
     /// Whether anything about this layer is moving.
     public var hasMotion: Bool { !(motions ?? []).isEmpty }
 
+    /// Whether this layer or anything inside it moves.
+    ///
+    /// An icon frame almost never moves itself: what swings is the shapes drawn
+    /// in it. So the question "does this frame have anything to play" has to
+    /// reach all the way down, and `hasMotion` on the frame alone would answer
+    /// no for every icon anybody makes.
+    public var hasMotionInside: Bool {
+        hasMotion || (group?.children.contains { $0.hasMotionInside } ?? false)
+    }
+
     /// The longest any motion on this layer runs, measured from the top of the
     /// cycle. Nought when nothing on it moves.
     var motionEndMS: Int {
@@ -799,6 +809,23 @@ extension PhotonzDocument {
         guard cycle > 0 else { return self }
         var moved = self
         moved.layers = layers.map { $0.movedTree(toMotionTimeMS: ms, cycleMS: cycle) }
+        return moved
+    }
+
+    /// The same, for ONE layer and everything inside it.
+    ///
+    /// What the previews strip needs: it draws one icon frame at four small
+    /// sizes, thirty times a second, and moving every layer of a document it is
+    /// not showing would be a copy of the whole picture per frame for a picture
+    /// of one frame. Everything outside `layerID` comes back exactly as it was
+    /// drawn.
+    public func moved(layerID: UUID, toMotionTimeMS ms: Int) -> PhotonzDocument {
+        let cycle = motionCycleLengthMS
+        guard cycle > 0 else { return self }
+        var moved = self
+        moved.updateLayer(id: layerID) { layer in
+            layer = layer.movedTree(toMotionTimeMS: ms, cycleMS: cycle)
+        }
         return moved
     }
 

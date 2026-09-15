@@ -48,6 +48,17 @@ extension CanvasNSView {
         // The Pen owns Return and Escape while a path is being laid down: one
         // keeps what you drew as an open line, the other throws it away.
         if penKeyDown(event) { return }
+        // Space: watch it loop, or stop watching (`next-motion`). Nothing in an
+        // image window wants Space otherwise — the app's only other one is the
+        // video transport, in a window this code never runs in — and a preview
+        // that loops is a thing you start and stop far oftener than you reach
+        // for a button. With nothing moving the key is left alone, so it stays
+        // available to whatever wants it next.
+        if canPlayMotion, event.keyCode == 49,
+           event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty {
+            onMotionPlayToggle()
+            return
+        }
         // Size mode: [ shrinks the pick, ] grows it. A flat screenshot has no
         // element tree, so the first guess is a guess — these two keys are what
         // make a wrong guess a half-second correction instead of a dead end.

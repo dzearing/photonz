@@ -173,3 +173,113 @@ struct IconPreviewRenderTests {
         #expect(renderer.iconPreview(for: frame.id, in: document, store: store, side: 0) == nil)
     }
 }
+
+/// What one frame of the looping previews costs (`next-motion`).
+///
+/// The strip stops being a still life when the preview runs: every one of its
+/// chips is redrawn thirty times a second, from the frame as it looks at that
+/// moment of the loop. That is a real cost on a real canvas, so it gets a
+/// budget like any other repeating render.
+///
+/// The number to beat is 33ms, which is one frame at the rate the preview loop
+/// runs at. A whole strip of four comes in around 5ms of that on the machine
+/// these baselines were recorded on, and it is spent off the main actor, so the
+/// canvas composite still has its own frame to itself. What the main actor pays
+/// is the second test here: working out where the frame's contents are, which
+/// is three hundredths of a millisecond.
+@Suite("Previewing a moving icon, frame after frame")
+struct IconPreviewMotionPerfTests {
+
+    /// A 48 point icon of ten small shapes, five of them swinging: about as
+    /// much as anybody draws on an icon grid, and more than the bell-and-knob
+    /// the feature was designed around.
+    private func movingIcon() -> PhotonzDocument {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 600, height: 600))
+        let frame = document.addFrame(origin: CGPoint(x: 100, y: 100),
+                                      size: CGSize(width: 48, height: 48))
+        document.updateLayer(id: frame.id) { holder in
+            for index in 0..<10 {
+                let x = CGFloat(4 + (index % 5) * 8)
+                let y = CGFloat(6 + (index / 5) * 18)
+                var shape = AnnotationContent(shape: .rectangle, strokeWidth: 1,
+                                              start: .zero, end: CGPoint(x: 7, y: 12),
+                                              fillColorHex: "#2050c0")
+                shape.strokePosition = .inside
+                var layer = Layer(name: "Part \(index)", content: .annotation(shape),
+                                  frame: CGRect(x: x, y: y, width: 7, height: 12))
+                if index % 2 == 0 {
+                    layer.motions = [LayerMotion(
+                        property: .rotation, from: .number(-12), to: .number(12),
+                        timing: MotionTiming(startMS: index * 45, durationMS: 900),
+                        curve: .easeInOut, repeats: .foreverThereAndBack)]
+                }
+                holder.children.append(layer)
+            }
+        }
+        return document
+    }
+
+    @Test("A whole strip of moving previews fits inside one frame of the loop")
+    func aFrameOfTheStripMeetsBudget() {
+        let renderer = DocumentRenderer()
+        let store = ImageStore()
+        let document = movingIcon()
+        let id = document.frames.first!.id
+        let sides = IconPreviews.sides(forFrameSide: 48)
+        #expect(sides == [16, 24, 32, 48])
+        #expect(document.motionCycleLengthMS == 1260)
+
+        // One frame of the loop is: work out where this frame's contents are at
+        // this moment, then draw the whole row of chips from it. Exactly what
+        // `EditorState+IconPreviews` does, and timed together because they only
+        // ever happen together.
+        func strip(atMS ms: Int) {
+            let moved = document.moved(layerID: id, toMotionTimeMS: ms)
+            for side in sides {
+                _ = renderer.iconPreview(for: id, in: moved, store: store, side: side)
+            }
+        }
+        strip(atMS: 0)
+
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for round in 0..<20 {
+            let duration = clock.measure { strip(atMS: round * 54) }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] moving icon previews, whole strip of 4 — "
+              + "median \(String(format: "%.2f", median))ms, "
+              + "min \(String(format: "%.2f", samples[0]))ms, "
+              + "max \(String(format: "%.2f", samples[samples.count - 1]))ms "
+              + "over \(samples.count) frames")
+        MachineSpeed.check("moving icon previews, whole strip of 4",
+                           medianMS: median, baselineMS: 5)
+    }
+
+    /// Working out where one frame's contents are is the part that happens on
+    /// the main actor, in the middle of a view body. The pictures themselves
+    /// are made off it, so this number is the one that can stutter the app.
+    @Test("Moving one frame costs next to nothing beside drawing it")
+    func movingTheFrameIsCheap() {
+        let document = movingIcon()
+        let id = document.frames.first!.id
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for round in 0..<50 {
+            let duration = clock.measure {
+                _ = document.moved(layerID: id, toMotionTimeMS: round * 27)
+            }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] one icon frame moved to a moment — "
+              + "median \(String(format: "%.3f", median))ms over \(samples.count) frames")
+        MachineSpeed.check("one icon frame moved to a moment",
+                           medianMS: median, baselineMS: 0.05)
+    }
+}

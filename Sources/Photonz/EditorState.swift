@@ -698,6 +698,12 @@ final class EditorState {
     /// When the running preview started, so the playhead is real time rather
     /// than a count of frames that drifts whenever one is dropped.
     @ObservationIgnored var motionStartedAt: Date?
+    /// How fast the preview runs (`MotionSpeed.swift`). One rate for the whole
+    /// window, because everything moving reads the one playhead: slow the clock
+    /// and the LAG between two parts slows by the same factor, which is the
+    /// only way ninety milliseconds can be judged at all. Not in the document
+    /// and not remembered: how fast you watched something is not part of it.
+    var motionSpeed: MotionSpeed = .full
 
     // MARK: The timing strip (`next-motion-strip`)
 
@@ -2751,15 +2757,7 @@ final class EditorState {
         // a bar while the preview runs would show you the lag you had before
         // you started moving it (`EditorState+MotionStrip`). The held lap comes
         // with it, so the loop does not change length mid-drag either.
-        if Experiments.shared.motionStripEnabled, let drag = motionTimingDrag {
-            document.updateLayer(id: drag.layerID) { layer in
-                guard var motions = layer.motions,
-                      let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
-                motions[index].timing = drag.timing
-                layer.motions = motions
-            }
-            document.motionCycleMS = drag.heldCycleMS
-        }
+        document = withDraggedMotionTiming(document)
         if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
         }

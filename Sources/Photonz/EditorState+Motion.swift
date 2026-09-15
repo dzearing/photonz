@@ -217,7 +217,11 @@ extension EditorState {
                 try? await Task.sleep(for: frame)
                 guard !Task.isCancelled, let self, self.isMotionPlaying,
                       let document = self.document, let started = self.motionStartedAt else { return }
-                let elapsed = Int(Date().timeIntervalSince(started) * 1000)
+                // Real time through the speed, so a quarter rate is a quarter
+                // of the loop per second and everything in the picture, the
+                // lags between its parts included, slows together.
+                let elapsed = self.motionSpeed.motionMS(
+                    afterRealSeconds: Date().timeIntervalSince(started))
                 self.motionPlayheadMS = elapsed
                 self.submit(document)
                 // Once nothing is moving any more the preview stops on its own
@@ -241,6 +245,20 @@ extension EditorState {
         isMotionPlaying = false
         motionPlayheadMS = 0
         rerender()
+    }
+
+    /// The speed control, on the previews card and on the timing strip.
+    ///
+    /// A running preview is NOT started over. The loop is wherever it is, and
+    /// the only thing changing is how long it now takes to leave there, so the
+    /// clock is re-anchored to the moment this playhead would have been reached
+    /// at the new rate. Snapping back to the top would throw away the half of
+    /// the lap you were watching, every time you reached for the control.
+    func setMotionSpeed(_ speed: MotionSpeed) {
+        guard speed != motionSpeed else { return }
+        motionSpeed = speed
+        guard isMotionPlaying else { return }
+        motionStartedAt = Date().addingTimeInterval(-speed.realSeconds(forMotionMS: motionPlayheadMS))
     }
 
     /// Called after anything that could have taken the last moving thing away.

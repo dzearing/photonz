@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/motion-loop-preview-walk",
+  "seed": "Watching a motion loop at the sizes it will really be used. An icon is drawn at 512 and used at 16, so a swing that reads beautifully on the canvas can be a shimmer where it counts, and the only way to find that out is to watch it at those sizes. This walk draws two shapes inside an icon frame, gives each of them a rotation, puts the second ninety milliseconds behind the first, and then works the previews card: it checks that the card grows a transport only once something moves, that the play button and the space bar are the same switch, that the speed control on the card and the one on the timing strip are one setting, and that dropping to a quarter leaves the loop running rather than starting it over.",
+  "setup": { "forget": ["tools", "panel", "shapes", "frames"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "512", "in": "Icons" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "describe", "stage": "0-still", "note": "an icon frame, so the previews card is in the top left showing every size an icon is really used at. Nothing moves yet, so the card is exactly the row of pictures it has always been: no Real size title, no play button, and no hit testing at all, so a drag that starts over it reaches the canvas." },
+    { "do": "expect", "control": "Icon preview 16", "present": true },
+    { "do": "expect", "control": "Real Size Preview", "present": false },
+    { "do": "snapshot", "name": "1-no-transport-on-a-still-icon" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 370], "to": [980, 730], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "describe", "stage": "1-playing", "note": "THE TEST. One shape turning, and the card has grown a transport: Real size, a pause button because adding a motion starts the loop on its own, and the rate it is running at. Every chip is redrawn from where the loop has got to, so the icon swings at 16, 24, 32, 48 and 64 at once." },
+    { "do": "expect", "control": "Real Size Preview", "reads": "playing" },
+    { "do": "expect", "menu": "Preview Speed", "reads": "1×" },
+    { "do": "snapshot", "name": "2-the-card-plays" },
+
+    { "do": "click", "at": [800, 550] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-space-stops", "note": "the space bar is the same switch as the button. Stopped is the picture AS DRAWN, which is what you edit against: a canvas quietly animating under a layer you are trying to drag would be a canvas you cannot work on." },
+    { "do": "expect", "control": "Real Size Preview", "reads": "stopped" },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-space-starts", "note": "and the same key starts it again" },
+    { "do": "expect", "control": "Real Size Preview", "reads": "playing" },
+
+    { "do": "press", "control": "Real Size Preview" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-button-stops", "note": "the button on the card stops it too, which is the thing the card had to be made to take a click for. While it has a transport the card takes clicks, the way the zoom bar does; with a still icon it takes none at all." },
+    { "do": "expect", "control": "Real Size Preview", "reads": "stopped" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [700, 450], "to": [860, 610], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "dragTiming", "bar": "Ellipse Rotation", "grab": "body", "byMS": 90 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "describe", "stage": "5-a-lag-nobody-can-see", "note": "two parts now, the second starting ninety milliseconds behind the first. At full speed that is under six frames: a lag you can set on the ruler and cannot judge on the picture." },
+    { "do": "snapshot", "name": "3-a-lag-at-full-speed" },
+
+    { "do": "panelMenu", "menu": "Preview Speed", "shot": "4-the-speeds" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Preview Speed", "choose": "0.25× · slow" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "6-quarter", "note": "a quarter rate, and the loop is still running: the lap it was in the middle of carries on from where it had got to rather than snapping back to the top. The lag slows with everything else, because a lag is not a thing of its own in the model, it is the distance between two starts on the one ruler this rate scales." },
+    { "do": "expect", "menu": "Preview Speed", "reads": "0.25×" },
+    { "do": "expect", "control": "Real Size Preview", "reads": "playing" },
+    { "do": "snapshot", "name": "5-a-quarter-rate" },
+
+    { "do": "describe", "stage": "7-one-setting", "note": "and the speed control on the timing strip says the same thing, because there is one rate rather than two. The strip carries its own because motion is on every layer, not only on icons: a document with no icon frame in it has no previews card to reach for." },
+    { "do": "expect", "menu": "Loop Speed", "reads": "0.25×" },
+    { "do": "panel", "stage": "7-one-setting" },
+
+    { "do": "panelMenu", "menu": "Loop Speed", "choose": "1×" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-back-to-life", "note": "set from the strip, read on the card: one setting with two places to reach it" },
+    { "do": "expect", "menu": "Preview Speed", "reads": "1×" },
+    { "do": "snapshot", "name": "6-back-to-full-speed" }
+  ]
+}

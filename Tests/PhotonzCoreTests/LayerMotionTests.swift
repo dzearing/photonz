@@ -321,6 +321,67 @@ struct LayerMotionTests {
         #expect(document.layer(id: layer.id)?.transform.rotation == 0)
     }
 
+    /// An icon frame almost never moves itself: what swings is the shapes drawn
+    /// inside it. The previews card asks this before it offers a play button.
+    @Test func aFrameKnowsWhetherAnythingInsideItMoves() {
+        var child = Self.shape()
+        child.motions = [Self.rotationMotion(from: 0, to: 90, over: 900, repeats: .forever)]
+        let still = Layer(name: "Icon", content: .group(GroupContent(children: [Self.shape()])),
+                          frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+        let moving = Layer(name: "Icon", content: .group(GroupContent(children: [child])),
+                           frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+        #expect(still.hasMotionInside == false)
+        #expect(moving.hasMotionInside)
+        // The frame itself does not move in either case, which is the whole
+        // reason the plain question is not enough.
+        #expect(moving.hasMotion == false)
+    }
+
+    /// The previews strip draws ONE frame, four times, thirty times a second.
+    /// Moving the whole document for that would be a copy of every layer in a
+    /// picture it is not showing, so it can ask for one.
+    @Test func oneLayerCanBeMovedWithoutTouchingTheRest() {
+        var moving = Self.shape()
+        moving.motions = [Self.rotationMotion(from: 0, to: 90, over: 1000, repeats: .once)]
+        var alsoMoving = Self.shape()
+        alsoMoving.motions = [Self.rotationMotion(from: 0, to: 90, over: 1000, repeats: .once)]
+        let document = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100),
+                                       layers: [moving, alsoMoving])
+
+        let picture = document.moved(layerID: moving.id, toMotionTimeMS: 500)
+        #expect(abs((picture.layer(id: moving.id)?.transform.rotation ?? 0) - .pi / 4) < 1e-6)
+        // The other one is exactly as it was drawn, cycle and all.
+        #expect(picture.layer(id: alsoMoving.id)?.transform.rotation == 0)
+        // ...and so is the document, because motion is never baked in.
+        #expect(document.layer(id: moving.id)?.transform.rotation == 0)
+    }
+
+    /// The same reach as the whole-document walk: an icon frame is a group, and
+    /// what moves in it is the shapes inside it rather than the frame itself.
+    @Test func movingOneLayerReachesInsideIt() {
+        var child = Self.shape()
+        child.motions = [LayerMotion(property: .opacity, from: .number(100), to: .number(0),
+                                     timing: MotionTiming(startMS: 0, durationMS: 1000),
+                                     curve: .linear, repeats: .once)]
+        let childID = child.id
+        let group = Layer(name: "Icon", content: .group(GroupContent(children: [child])),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100), layers: [group])
+
+        let faded = document.moved(layerID: group.id, toMotionTimeMS: 500)
+        #expect(abs((faded.layer(id: childID)?.style.opacity ?? 1) - 0.5) < 1e-6)
+    }
+
+    /// A still document is handed back as it is rather than copied: asked for
+    /// a layer that is not there, or with nothing moving at all, nothing
+    /// happens.
+    @Test func movingOneLayerOfAStillPictureChangesNothing() {
+        let layer = Self.shape()
+        let document = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100), layers: [layer])
+        #expect(document.moved(layerID: layer.id, toMotionTimeMS: 500) == document)
+        #expect(document.moved(layerID: UUID(), toMotionTimeMS: 500) == document)
+    }
+
     /// A motion on a layer INSIDE a group moves with the rest of them: the
     /// walk has to reach all the way down or half an icon would animate.
     @Test func aMotionInsideAGroupIsFoundAndApplied() {

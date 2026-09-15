@@ -174,6 +174,27 @@ extension EditorState {
     /// swallow exactly that.
     static func motionSnapMS(cycleMS: Int) -> Int { max(2, cycleMS / 40) }
 
+    // MARK: What a bar under the hand does to the picture
+
+    /// `document` with the bar being dragged written into it, held lap and all.
+    ///
+    /// Read by the canvas and by the previews strip, so both play the timing
+    /// the HAND has rather than the one still written down: dragging a bar
+    /// while the preview runs would otherwise show you the lag you had before
+    /// you started moving it, at every size at once.
+    func withDraggedMotionTiming(_ document: PhotonzDocument) -> PhotonzDocument {
+        guard Experiments.shared.motionStripEnabled, let drag = motionTimingDrag else { return document }
+        var document = document
+        document.updateLayer(id: drag.layerID) { layer in
+            guard var motions = layer.motions,
+                  let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
+            motions[index].timing = drag.timing
+            layer.motions = motions
+        }
+        document.motionCycleMS = drag.heldCycleMS
+        return document
+    }
+
     // MARK: What the side column reads while a bar is dragged
 
     /// The timing to show for this motion: the one under the hand where there
