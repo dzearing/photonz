@@ -16143,3 +16143,36 @@ themes. All eight mock gates plus `audit-keyboard` pass and all 100 pages return
 
 **Next:** nothing is blocked on this. Audit at
 `queue/audits/2026-09-15-icon-motion-one-model.json`.
+
+## 2026-09-15 — Putting the timing strip away leaves a way back
+
+`closing-the-timing-strip-leaves-no-way-back-on-t`. The strip across the bottom
+closed to NOTHING: once away, the screen said neither that it existed nor how to
+get it back, and the only ways were the View menu and knowing ⌥⌘T. Every other
+pushed-aside surface in the app keeps a control on screen the whole time it is
+away, and `UX-PATTERNS.md` D9 had named this exact day in advance.
+
+It now collapses to one 30 point row (`MotionStripRailView`) that opens the
+strip again when clicked. The row states the **selection**, not the surface's
+name: `Rectangle · Rotation · 900 ms`, falling back to `2 layers moving · 900 ms`
+when the picked layer is not one of the movers, because naming one of two would
+be picking a side. The words are decided in `PhotonzCore`
+(`MotionStripSummary`, 8 tests) so the view stays a shell. No second collapse
+idiom: the × on the surface's own header, one visible control back, the same
+bargain the side dock strikes with its title bar toggle. Coming back at the
+height it had is free, the strip being exactly as tall as its lanes.
+
+**Found and fixed in passing, in the harness.** `motion.stripOpen` belonged to
+no `PlaytestMemory` area, so it was neither snapshotted nor restorable: a walk
+that put the strip away and failed before putting it back would have handed
+every later walk a window with no strip in it and no way to know why. There is
+now a `motion` memory; both timing strip walks declare it.
+
+**No picture of any of this.** The Mac has been locked since 2026-09-14 20:46,
+so `motion-strip-way-back-walk` (new, 53 steps) and `motion-timing-strip-walk`
+(updated) both report `status: "locked"` and neither has run. A sweep is
+requested and runs them the moment the screen is unlocked. What IS verified:
+`swift build` clean and 7184 tests green, including the new summary tests.
+
+**Next:** run the two walks when the screen is unlocked. Audit at
+`queue/audits/2026-09-15-motion-strip-way-back.json`.

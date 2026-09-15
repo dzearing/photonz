@@ -249,6 +249,11 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// way. A walk that photographs the Tutorials window forgets this first, or
     /// it photographs whatever the last run happened to leave behind.
     case tutorials
+    /// Whether the timing strip across the bottom is open or put away to its
+    /// row. It lasts across launches, so without it in this list a walk that
+    /// put the strip away and did not put it back would hand every later walk
+    /// a window with no strip in it, and no walk could say why.
+    case motion
 }
 
 /// A key the script can press, named the way a person would type it: a single

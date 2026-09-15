@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-timing-strip-walk",
-  "seed": "The timing strip across the bottom of the window. Everything on the previous motion walk could have been done in the side column. A LAG cannot: it is a relationship between two parts of one drawing in time, so it needs both of them drawn on one ruler at once. This walk draws two shapes, gives each of them the same rotation, and then drags the second one's bar ninety milliseconds later, which is the exact thing the column cannot do. It checks that the numbers in the side column follow the bar at once, that the gap is drawn as a number with the other layer's name on it, that the lap holds its length so the late bar runs PAST the dashed line where the loop starts over, that the whole drag is one step to undo, and that the strip can be put away and brought back with its own key.",
-  "setup": { "forget": ["tools", "panel"] },
+  "seed": "The timing strip across the bottom of the window. Everything on the previous motion walk could have been done in the side column. A LAG cannot: it is a relationship between two parts of one drawing in time, so it needs both of them drawn on one ruler at once. This walk draws two shapes, gives each of them the same rotation, and then drags the second one's bar ninety milliseconds later, which is the exact thing the column cannot do. It checks that the numbers in the side column follow the bar at once, that the gap is drawn as a number with the other layer's name on it, that the lap holds its length so the late bar runs PAST the dashed line where the loop starts over, that the whole drag is one step to undo, and that the strip can be put away and brought back with its own key, leaving the row that says what is moving behind while it is away.",
+  "setup": { "forget": ["tools", "panel", "motion"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
     { "do": "wait", "seconds": 1 },
@@ -67,8 +67,9 @@
 
     { "do": "shortcut", "key": "t", "modifiers": ["command", "option"], "menuItem": "Show Timing" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "9-put-away", "note": "the strip goes away on its own key and the canvas takes the room back" },
+    { "do": "describe", "stage": "9-put-away", "note": "the strip goes away on its own key and the canvas takes the room back, down to the one row that says what is still moving and opens it again (motion-strip-way-back-walk)" },
     { "do": "expect", "control": "Timing Bar", "present": false },
+    { "do": "expect", "control": "Show Timing", "present": true },
     { "do": "snapshot", "name": "9-put-away" },
 
     { "do": "shortcut", "key": "t", "modifiers": ["command", "option"], "menuItem": "Show Timing" },

@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:14:25.561Z",
-  "updated": "2026-09-15T12:14:53.353Z",
+  "updated": "2026-09-15T23:36:22.814Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, both from today.\n\n1. The app. Sources/Photonz/MotionStripView.swift:117 is the x; it calls toggleMotionStrip(). Sources/Photonz/EditorView.swift:187 is `if editorState.isMotionStripShown { MotionStripView() }`, so closed means gone, nothing in its place. grep for toggleMotionStrip finds exactly two callers: that x, and the View menu item at EditorCommands.swift:781. The comment at EditorView.swift:192 states the principle the strip breaks, three lines above the code that breaks it: the side panel got its toggle in the title bar `so the way back never moves and never goes away with the thing it collapses`.\n\n2. The written rule. docs/design/mocks/shared/UX-PATTERNS.md D9 says every dock comes back to the size it had and `leaves a visible way back on screen the whole time it is away`, that a dock collapsed to a row states the selection rather than just the panel name, and it names this exact day: `The app has no bottom dock yet, so the row half of this rule is not yet owed; the day Next grows a timeline, this is what it has to do, including the summary, and it does not get a second collapse idiom to do it with.` Next grew a timeline today.\n\n3. The option the strip was built from promised it. queue/decisions/work-out-whether-the-right-hand-pane-is-carrying-when-you-animate-an-icon-where-s.json, option a, pro three: `One click on its close control shrinks it to a single row that still says what you are editing, and the canvas comes back`, and its mitigation says `It collapses to a 30 point row and remembers the height you left it at`. That is what was chosen and it is not what shipped.\n\nCannot be seen on a screen right now: the Mac has been locked since 2026-09-14 20:46:47, so no walk runs. The code and the rule are enough to file it; the walk that claims it needs an unlocked screen.",
@@ -28,6 +28,27 @@
     {
       "t": "2026-09-15T12:14:53.352Z",
       "note": "seq 2650 -> 80"
+    },
+    {
+      "t": "2026-09-15T23:24:18.750Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T23:35:58.281Z",
+      "note": "Adversarial review before building. (1) The mock's answer (dock.js .tlrail) is right and the app owed it: D9 already named this exact day. (2) A rail of tabs like the side dock's .drail would be a second idiom for one surface, so the row is the whole affordance. (3) Cut from the mock's row: nothing, it is already one line. Kept its trailing 'click to open' because the complaint being answered is precisely that nothing on screen said the strip could come back; flagged in the audit as a thing to disagree with. (4) The one real question was whether putting the strip away should stay remembered across documents. Acceptance item 4 can be read as asking for the strip to re-open itself next time. I kept the memory: it was written when away meant GONE and its stated reason was that nobody would know the strip existed, which the row now answers, and re-opening over somebody who just closed it is the app overriding them. The strip still opens on its own the first time something moves (unchanged default). Recorded in the audit's rough so the user can overrule it."
+    },
+    {
+      "t": "2026-09-15T23:36:22.728Z",
+      "note": "Shipped. MotionStripRailView in Sources/Photonz/MotionStripView.swift is the 30 point row; MotionStripSummary in Sources/PhotonzCore/MotionStrip.swift decides its words (8 new tests); EditorState.motionStripPhase is the one switch EditorView reads; D9 in UX-PATTERNS.md now records how the app pays the row half of the rule. Found and fixed in passing: motion.stripOpen was in no PlaytestMemory area, so it was never snapshotted or restored between walks and a walk that put the strip away and failed before putting it back would have left every later walk with no strip and no explanation. There is now a 'motion' memory (PlaytestScript.swift, PlaytestSetupRunner.swift, harness doc table, and both timing strip walks declare it)."
+    },
+    {
+      "t": "2026-09-15T23:36:22.770Z",
+      "note": "Verification, honestly. swift build clean and Scripts/test.sh green at 7184 tests, including the new summary tests. NOT verified on a screen: the Mac has been locked since 2026-09-14 20:46:47, so Scripts/playtest.sh Scripts/playtest/motion-strip-way-back-walk.json returns status 'locked' with 0 of 53 steps run and 'Window captures: none. The screen was locked, so macOS refuses every one.' The walk parses (53 steps, release next) but has never been run, and neither has the updated motion-timing-strip-walk. A sweep is requested with that as the reason and will run both the moment the screen is unlocked; if either fails it comes back as a task naming the walk."
+    },
+    {
+      "t": "2026-09-15T23:36:22.813Z",
+      "note": "Left rough, none of it clearing the follow-up bar on its own: the row says nothing about the preview, so a loop playing while the strip is away moves the canvas and leaves the row still (a playhead on the row was cut as decoration and may not be); 'comes back the size it had' is free rather than earned, because the strip is exactly as tall as its lanes and there is no height to drag yet, so the day it can be resized that height has to be stored. Both are in the audit's rough where the user can react to them."
     }
-  ]
+  ],
+  "started": "2026-09-15T23:24:18.749Z"
 }

@@ -1740,9 +1740,23 @@ at the width it had. That satisfies the rule — a way out, a visible way back,
 and real room reclaimed — by a different spelling from the pages, and it is fine
 as long as the dock is one column: a rail earns its keep when there are several
 groups you want to jump straight back into, not when there is one thing to
-re-open. The app has no bottom dock yet, so the row half of this rule is not yet
-owed; the day Next grows a timeline, this is what it has to do, including the
-summary, and it does not get a second collapse idiom to do it with.
+re-open.
+
+The bottom dock arrived on 2026-09-15 and owes the row half of the rule, which
+it now pays (checked against `Sources/Photonz/MotionStripView.swift`). The
+timing strip's × puts it away to ONE 30 point row across the bottom
+(`MotionStripRailView`) which opens the strip again when it is clicked, so the
+way back is on screen the whole time it is away rather than only in the View
+menu and on ⌥⌘T. The row states the selection, not the surface's name: it reads
+`Rectangle · Rotation · 900 ms`, the layer you are on, what is moving on it and
+how long a lap is, and it falls back to `2 layers moving · 900 ms` when the
+layer you have picked is not one of the movers, because naming one of two would
+be picking a side. The words are decided in `PhotonzCore`
+(`MotionStripSummary`), where they are tested. It comes back to the height it
+had for free, the strip being exactly as tall as the lanes it holds; the day
+that height can be dragged, it has to be stored. No second collapse idiom was
+invented for it: the × on the surface's own header, one visible control back,
+same as the dock above.
 
 ---
 

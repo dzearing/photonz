@@ -118,14 +118,16 @@ struct MotionStripView: View {
             // be judgeable in a document that has no icon frame to preview.
             MotionSpeedMenu(name: "Loop Speed")
                 .disabled(!editorState.canPlayMotion)
+            // The same × the side dock's header wears, and it puts the strip
+            // away the same way: down to the one row below, never to nothing.
             Button { editorState.toggleMotionStrip() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 9, weight: .semibold))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .accessibilityLabel("Hide the timing strip")
-            .panelHelp("Hide the timing strip (⌥⌘T)")
+            .accessibilityLabel("Put the timing strip away")
+            .panelHelp("Put the timing strip away (⌥⌘T)")
             .playtestControl("Hide Timing", detail: "Timing strip")
         }
         .padding(.horizontal, Self.inset)
@@ -160,6 +162,88 @@ struct MotionStripView: View {
         }
         .panelReadout("cycle \(editorState.motionStripCycleMS) ms"
                       + (editorState.motionCycleIsAutomatic ? " (automatic)" : " (set)"))
+    }
+}
+
+// MARK: - The row it leaves behind
+
+/// **The strip put away**: one row across the bottom saying what is still
+/// moving, and opening the strip again when it is clicked.
+///
+/// The strip used to close to NOTHING. Once it was away the screen said neither
+/// that it existed nor how to get it back, so the only ways were the View menu
+/// and knowing ⌥⌘T — and a way back you have to already know is not a way back.
+/// Every other thing in this app that can be pushed aside leaves a control on
+/// screen the whole time it is away: the side dock's toggle sits in the title
+/// bar so it cannot go away with the dock it collapses. The bottom of the
+/// window has no title bar to put one in, so the dock leaves a row instead,
+/// which is what `UX-PATTERNS.md` D9 asks a bottom dock for.
+///
+/// It is the SAME collapse idiom as the dock above it and deliberately not a
+/// second one: the × on the surface's own header puts it away, one visible
+/// control brings it back, and it comes back the size it was. That last one is
+/// free here, because the strip is exactly as tall as the lanes it holds
+/// (`bodyHeight`), so reopening it can only produce the height it left with.
+///
+/// The row leads with WHAT IS MOVING rather than with the strip's name,
+/// because the reason you put the strip away was to look at the picture, so
+/// the question you have while it is away is "what am I still editing".
+struct MotionStripRailView: View {
+    @Environment(EditorState.self) private var editorState
+    @State private var isPointedAt = false
+
+    /// One row, and the row is the whole height: a collapse that gives no
+    /// canvas back is theatre. Thirty points is what the mock's own collapsed
+    /// timeline is and what the decision this strip was built from promised.
+    static let height: CGFloat = 30
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider()
+            Button { editorState.toggleMotionStrip() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                    Text(MotionStripCopy.stripName.uppercased())
+                        .font(.system(size: 10, weight: .semibold))
+                        .kerning(0.7)
+                        .foregroundStyle(.tertiary)
+                    Text(editorState.motionStripSummary)
+                        .font(.system(size: 10.5, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 8)
+                    Text(MotionStripCopy.showAgain)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(height: Self.height)
+            .background(isPointedAt ? AnyShapeStyle(.quaternary.opacity(0.5))
+                                    : AnyShapeStyle(.clear))
+            .onHover { isPointedAt = $0 }
+            .accessibilityLabel("Open the timing strip: \(editorState.motionStripSummary)")
+            .panelHelp("Open the timing strip (⌥⌘T)")
+            // What the row SAYS is what a walk claims, so the summary is the
+            // detail rather than a note about where the row lives: there is
+            // only one of these and it is across the bottom of the window.
+            .playtestControl("Show Timing", detail: editorState.motionStripSummary)
+        }
+        .background(.regularMaterial)
+        // A tutorial that points at the timing strip has something to point at
+        // either way round, rather than losing its anchor the moment somebody
+        // puts the strip away.
+        .tutorialAnchor(.timingStrip)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .panelReadout("timing put away: \(editorState.motionStripSummary)")
     }
 }
 

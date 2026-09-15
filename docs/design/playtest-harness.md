@@ -182,6 +182,8 @@ The memories a walk can forget, by the word it uses:
 | `panel` | Whether the dock and the Library are showing, how wide the dock is, which shelf the Library is on, and the order and collapsed state of the dock's sections. |
 | `grid` | Whether the canvas grid is on, how far apart its lines are, how often one is stronger, and whether it draws rows as well as columns. |
 | `frames` | The size a new frame is offered at, which is the last one made. |
+| `tutorials` | Which guides have been finished, and where you stopped in any left part way. |
+| `motion` | Whether the timing strip across the bottom is open or put away to its row. |
 
 A walk that reads a setting it never set is the one to think about here. Drawing
 a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,

@@ -58,6 +58,8 @@ extension PlaytestMemory {
             [EditorState.lastFrameSizeKey, IconKeylinesStore.defaultsKey]
         case .tutorials:
             [TutorialController.progressKey]
+        case .motion:
+            [EditorState.motionStripOpenKey]
         }
     }
 }

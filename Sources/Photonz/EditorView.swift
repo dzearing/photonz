@@ -184,11 +184,17 @@ struct EditorView: View {
                     .transition(.move(edge: .trailing))
                 }
             }
-            if editorState.isMotionStripShown {
-                MotionStripView()
+            // The bottom dock: the strip, or the one row it leaves behind when
+            // it is put away, or nothing at all where nothing moves. Putting it
+            // away has to leave a way back ON SCREEN — `UX-PATTERNS.md` D9, and
+            // the same rule the panel toggle three lines below follows.
+            switch editorState.motionStripPhase {
+            case .open: MotionStripView()
+            case .row: MotionStripRailView()
+            case .none: EmptyView()
             }
             }
-            .animation(.spring(duration: 0.28), value: editorState.isMotionStripShown)
+            .animation(.spring(duration: 0.28), value: editorState.motionStripPhase)
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a

@@ -422,4 +422,80 @@ struct MotionStripTests {
         #expect(!edges.contains { $0.ms == 90 })
         #expect(!edges.contains { $0.ms == 990 })
     }
+
+    // MARK: - What the row says while the strip is put away
+
+    @Test("The row names the layer you have picked, what is moving on it, and how long a lap is")
+    func theRowNamesThePickedLayer() {
+        let document = Self.bellAndKnob()
+        let bell = document.layers[0]
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: bell.id,
+                                        cycleMS: 900) == "Bell body · Rotation · 900 ms")
+    }
+
+    @Test("Two properties on the picked layer are both named")
+    func twoPropertiesAreBothNamed() {
+        var bell = Self.shape("Bell body")
+        bell.motions = [Self.rotation(start: 0, over: 900), Self.opacity(start: 100, over: 300)]
+        let document = PhotonzDocument(canvasSize: CGSize(width: 240, height: 240), layers: [bell])
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: bell.id,
+                                        cycleMS: 900) == "Bell body · Rotation, Opacity · 900 ms")
+    }
+
+    @Test("Past two properties the row counts the rest rather than growing a list nobody reads")
+    func manyPropertiesAreCounted() {
+        var bell = Self.shape("Bell body")
+        bell.motions = [Self.rotation(start: 0, over: 900),
+                        Self.opacity(start: 100, over: 300),
+                        LayerMotion(property: .scale, from: .number(1), to: .number(2),
+                                    timing: MotionTiming(startMS: 0, durationMS: 200))]
+        let document = PhotonzDocument(canvasSize: CGSize(width: 240, height: 240), layers: [bell])
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: bell.id,
+                                        cycleMS: 900) == "Bell body · Rotation and 2 more · 900 ms")
+    }
+
+    @Test("With one thing moving and nothing picked, the row still names that one thing")
+    func theLoneMoverIsNamedWithNothingPicked() {
+        var bell = Self.shape("Bell body")
+        bell.motions = [Self.rotation(start: 0, over: 900)]
+        let document = PhotonzDocument(canvasSize: CGSize(width: 240, height: 240), layers: [bell])
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: nil,
+                                        cycleMS: 900) == "Bell body · Rotation · 900 ms")
+    }
+
+    @Test("A layer that is picked but does not move cannot speak for the strip, so the row counts")
+    func aStillPickedLayerFallsBackToTheCount() {
+        var document = Self.bellAndKnob()
+        document.layers.append(Self.shape("Rim"))
+        let rim = document.layers[2]
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: rim.id,
+                                        cycleMS: 900) == "2 layers moving · 900 ms")
+    }
+
+    @Test("With several movers and nothing picked, the row says how many are moving")
+    func severalMoversAreCounted() {
+        let document = Self.bellAndKnob()
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: nil,
+                                        cycleMS: 900) == "2 layers moving · 900 ms")
+    }
+
+    @Test("Nothing moving has nothing to say, and there is no row to say it on")
+    func nothingMovingSaysNothing() {
+        #expect(MotionStripSummary.text(groups: [], selectedLayerID: nil, cycleMS: 900).isEmpty)
+    }
+
+    @Test("The lap in the row is the lap the ruler was drawn against")
+    func theLapIsTheOneOnTheRuler() {
+        let document = Self.bellAndKnob()
+        let bell = document.layers[0]
+        #expect(MotionStripSummary.text(groups: document.motionStrip(),
+                                        selectedLayerID: bell.id,
+                                        cycleMS: 1200).hasSuffix("1200 ms"))
+    }
 }

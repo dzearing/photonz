@@ -60,8 +60,36 @@ extension EditorState {
     /// Whether the lap simply follows the longest motion.
     var motionCycleIsAutomatic: Bool { document?.motionCycleIsAutomatic ?? true }
 
+    /// True where the strip has been put away and the row it left behind is
+    /// on screen in its place.
+    ///
+    /// A document with nothing moving has neither, which is the same rule the
+    /// strip itself follows: a row saying "nothing is moving" is a row telling
+    /// you what the picture already told you.
+    var isMotionStripCollapsed: Bool { hasMotionStrip && !isMotionStripOpen }
+
+    /// Which of the three states the bottom of the window is in. One value so
+    /// the view has one switch and the animation has one thing to watch.
+    var motionStripPhase: MotionStripPhase {
+        guard hasMotionStrip else { return .none }
+        return isMotionStripOpen ? .open : .row
+    }
+
+    /// What the row says while the strip is away: the layer you are working
+    /// on, what is moving on it, and how long a lap is
+    /// (`MotionStripSummary`).
+    var motionStripSummary: String {
+        MotionStripSummary.text(groups: motionStripGroups,
+                                selectedLayerID: selectedLayerID,
+                                cycleMS: motionStripCycleMS)
+    }
+
     // MARK: Putting it away and bringing it back
 
+    /// The × on the strip and the row it leaves behind are the same one
+    /// switch, and so is ⌥⌘T. Putting it away is remembered, which it can
+    /// safely be now that away means a row rather than nothing: the strip can
+    /// no longer come back to a document that gives no sign it exists.
     func toggleMotionStrip() { isMotionStripOpen.toggle() }
 
     // MARK: How long one lap is
@@ -226,4 +254,10 @@ struct MotionTimingDrag {
     let heldCycleMS: Int
     var snappedTo: MotionStripEdge?
     var gap: MotionStripGap?
+}
+
+/// What the bottom of the window is showing: nothing, the row a put-away strip
+/// leaves behind, or the strip itself.
+enum MotionStripPhase: Equatable {
+    case none, row, open
 }

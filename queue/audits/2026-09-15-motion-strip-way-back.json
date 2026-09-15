@@ -1,0 +1,28 @@
+{
+  "feature": "The timing strip leaves a way back",
+  "epic": "icon-animate",
+  "summary": "Putting the timing strip away no longer closes it to nothing. It collapses to one row across the bottom that names the layer you are on, what is moving on it and how long a lap is, and clicking that row opens the strip again. Before this the only ways back were the View menu and knowing the chord.",
+  "setup": "Photonz Dev, Experiments window, release Next, with Motion and the timing strip switched on. Any document works: the strip only exists once something in it moves.",
+  "try": [
+    { "do": "Draw a rectangle, then pick it with the Select tool." },
+    { "do": "In the side column choose Add Motion, then Rotation. The strip opens across the bottom on its own." },
+    { "do": "Click the x at the right hand end of the strip's header." },
+    { "do": "Read the row left behind at the bottom: it should say \"Rectangle · Rotation · 900 ms\"." },
+    { "do": "Click that row anywhere. The strip comes back at the height it had." },
+    { "do": "Draw a second shape, give it a Rotation too, put the strip away again, then click each shape on the canvas in turn and watch the row change." },
+    { "do": "Press ⌥⌘T twice, to check the chord opens and closes the very same thing the row and the x do." }
+  ],
+  "evaluate": [
+    "Does the row read as something you can click, or did you go looking for a button on it?",
+    "Is \"Rectangle · Rotation · 900 ms\" the thing you want to know while the strip is away, or would you rather it said something else?",
+    "Is one 30 point row the right rent for a way back, or would you rather the bottom of the window went completely clear?",
+    "Does \"click to open\" at the right hand end earn its place, or is it noise the second time you see it?",
+    "With two shapes moving and a third picked that is not, the row reads \"2 layers moving · 900 ms\". Is refusing to name one of the two the right call?"
+  ],
+  "rough": [
+    "There is no picture of any of this. The Mac's screen has been locked since 2026-09-14 20:46, so no walk can run and macOS refuses every screen capture. The two timing strip walks were written and neither has been run; a full sweep is requested and will run them the moment the screen is unlocked. Everything claimed here is from the code, the unit tests and a clean build, not from watching it.",
+    "Putting the strip away is still remembered for the next document that has something moving in it. That memory was written when away meant gone, and the argument for dropping it was that nobody would know the strip existed. The row answers that, so I kept the memory rather than making the strip reappear over somebody who just put it away. Worth disagreeing with if it feels wrong.",
+    "The row says nothing about the preview. If the loop is playing while the strip is away, the canvas moves and the row sits still. A playhead or an elapsed number on the row was cut as decoration, and it may not be.",
+    "\"Comes back the size it had\" is free rather than earned: the strip is exactly as tall as the lanes it holds, so there is no height to remember and none to drag. The day the strip can be resized by hand, that has to be stored."
+  ]
+}

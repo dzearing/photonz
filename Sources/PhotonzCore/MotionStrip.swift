@@ -131,6 +131,64 @@ extension PhotonzDocument {
 public enum MotionStripCopy {
     public static let topOfTheLap = "the start"
     public static let title = "One cycle"
+    /// What the strip is called when it is not open: the name on the row left
+    /// behind, so a person who put it away can see what they put away.
+    public static let stripName = "Timing"
+    /// What the row says it will do, because the whole complaint it answers is
+    /// that there was nothing on screen saying the strip could come back.
+    public static let showAgain = "click to open"
+}
+
+// MARK: - What the row says while the strip is put away
+
+/// The one line a put-away strip leaves on screen.
+///
+/// The reason you pushed the strip down was to look at the picture, so the
+/// question you have while it is away is "what am I still editing", not "is
+/// there a timing strip". So the row leads with the ANSWER — the layer and the
+/// properties moving on it — and the strip's own name is only the label in
+/// front of it.
+public enum MotionStripSummary {
+
+    /// Past this many properties the row counts the rest. A row is one line
+    /// and it is read at a glance; a list of five property names on it is a
+    /// list nobody finishes.
+    static let namedLimit = 2
+
+    /// `Bell body · Rotation · 900 ms`, or `2 layers moving · 900 ms` when no
+    /// one layer can speak for the strip.
+    ///
+    /// Empty when nothing moves, because then there is no strip and no row.
+    public static func text(groups: [MotionStripGroup],
+                            selectedLayerID: UUID?,
+                            cycleMS: Int) -> String {
+        guard !groups.isEmpty else { return "" }
+        let lap = "\(max(1, cycleMS)) ms"
+        guard let group = spokenFor(groups: groups, selectedLayerID: selectedLayerID) else {
+            return "\(groups.count) layers moving · \(lap)"
+        }
+        return "\(group.layerName) · \(properties(of: group)) · \(lap)"
+    }
+
+    /// The one layer the row can speak for: the picked one where it is moving,
+    /// and the only mover where there is only one. Several movers and a pick
+    /// that is not among them leaves nobody entitled to the row, so it counts
+    /// instead — naming one of two would be picking a side.
+    static func spokenFor(groups: [MotionStripGroup],
+                          selectedLayerID: UUID?) -> MotionStripGroup? {
+        if let selectedLayerID,
+           let picked = groups.first(where: { $0.layerID == selectedLayerID }) {
+            return picked
+        }
+        return groups.count == 1 ? groups[0] : nil
+    }
+
+    /// `Rotation`, `Rotation, Opacity`, `Rotation and 2 more`.
+    static func properties(of group: MotionStripGroup) -> String {
+        let titles = group.lanes.map(\.title)
+        guard titles.count > namedLimit else { return titles.joined(separator: ", ") }
+        return "\(titles[0]) and \(titles.count - 1) more"
+    }
 }
 
 // MARK: - The ruler
