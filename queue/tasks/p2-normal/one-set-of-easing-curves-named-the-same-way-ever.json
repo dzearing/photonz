@@ -4,12 +4,12 @@
   "goal": "Four different lists of easing options are on screen across the mock pages right now, so the same control offers you Spring on one screen and not on the next, with no reason a person could see. Settle one short list of named curves and make every page that lets you shape a motion offer that list, so the icon motion work about to be built starts from one vocabulary instead of inheriting four.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 2640,
+  "seq": 9,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T15:20:32.315Z",
-  "updated": "2026-09-15T08:43:40.319Z",
+  "updated": "2026-09-15T08:53:40.240Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while comparing the animation and video flows (task say-where-animating-an-icon-and-editing-a-video). Reproduced, not read:\n\n  $ cd docs/design/mocks\n  $ for f in pages/icon-animate-wt.html pages/icon-loop-wt.html pages/icon-states-wt.html pages/icon-drawon-wt.html pages/video-move-wt.html pages/video-zoom-wt.html; do echo \"--- $f\"; grep -A6 'aria-label=\"Easing\"' $f | grep -o '>[A-Za-z ][A-Za-z -]*</button>' | sed 's/>//;s;</button>;;'; done\n  --- pages/icon-animate-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-loop-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-states-wt.html\n  Linear / Ease out / Spring\n  --- pages/icon-drawon-wt.html\n  Linear / Ease out / Ease in-out\n  --- pages/video-move-wt.html\n  Linear / Ease in-out\n  --- pages/video-zoom-wt.html\n  Linear / Ease in-out\n\nThe design language already has exactly three curves and names them in tokens.css: --ease-standard cubic-bezier(.4,0,.2,1), --ease-decel cubic-bezier(0,0,.2,1), --ease-spring cubic-bezier(.34,1.4,.5,1), documented on pages/lang-motion.html. None of the six user-facing controls above maps cleanly onto those three names. Deciding the mapping (which label means --ease-decel: \"Ease out\"?) is the substance of the task.\n\nWhy it matters beyond tidiness: easing is one of only three things the animation and video flows genuinely share (see docs/design/animation-vs-video.md and the time-compare page). It is the cheapest consolidation on offer and it has already drifted in mocks alone, before a line of app code exists.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-15T08:43:40.318Z",
       "note": "The revised animation-vs-video study (docs/design/mocks/pages/time-compare.html, proof three) reproduces both sides at their real markup: the icon pages now carry one curve list with the shape drawn beside each name plus a drawn cubic-bezier, and the video pages still carry a two-button segmented control (Linear / Ease in-out, video-zoom-wt step 7). So the drift is no longer four vocabularies disagreeing, it is one settled vocabulary and a video side that has not adopted it. The remaining work on this task is the video side."
+    },
+    {
+      "t": "2026-09-15T08:53:40.239Z",
+      "note": "seq 2640 -> 9"
     }
   ]
 }

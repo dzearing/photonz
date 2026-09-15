@@ -4,12 +4,12 @@
   "goal": "While you drag a point or a lever on a path, the width, height and position shown in the panel stay frozen at whatever they were before you started, and snap to the new numbers only when you let go. So the one place that tells you how big the shape is becoming is the one place that will not tell you until it is too late to aim.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 2690,
+  "seq": 8,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T03:06:37.510Z",
-  "updated": "2026-09-15T03:06:37.513Z",
+  "updated": "2026-09-15T08:53:40.200Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-14 with Scripts/playtest/path-chrome-follows-walk.json. Mid-drag screen capture 6-mid-two-anchor-drag-sc.png shows Position & Size reading X 200 Y 192 W 580 H 448; the shot taken right after the release, 7-after-two-anchor-drag-sc.png, reads X 260 Y 189 W 580 H 381. Both are in /tmp/photonz-playtest/path-chrome-follows-walk and the mid-drag one is copied to queue/audits/2026-09-14-path-chrome-mid-two-anchor-drag.png.\n\nCause is the same one behind the chrome lag that was just fixed: EditorState.previewPath (Sources/Photonz/EditorState+PathEdit.swift:17) builds the reshaped document and hands it ONLY to the render scheduler via submit(); it never writes editorState.document, so everything that reads the document — the panel included — sees the pre-drag shape for the whole gesture. CanvasPathEdit.swift keeps selectedLayerFrame up to date during the drag, which is what the canvas chrome uses, so the live box IS already known; the panel just is not reading it. \"Resizing a frame shows what you are getting while you drag\" (done) is the pattern to follow.\n\nThe blue selection box is a separate, deliberate thing: CanvasDisplay.swift:935 hides it during a path drag on purpose, so it is not chasing the shape. Worth asking the user about together with this.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-15T03:06:37.512Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T08:53:40.199Z",
+      "note": "seq 2690 -> 8"
     }
   ]
 }

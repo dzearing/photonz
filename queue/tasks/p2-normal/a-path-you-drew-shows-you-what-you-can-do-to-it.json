@@ -2,14 +2,14 @@
   "id": "a-path-you-drew-shows-you-what-you-can-do-to-it",
   "title": "A path you drew shows you what you can do to it",
   "goal": "Everything you need to reshape a path is built and switched on, and none of it can be found. Draw a path and you are still holding the Pen, so the path shows no points at all; nothing says to switch tools, nothing says a double click bends a point, nothing says a double click on the line adds one, and nothing says Delete takes one out. A person who has just drawn a shape should be able to see and reach its points without being told.",
-  "epic": "",
+  "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 3,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:15:55.465Z",
-  "updated": "2026-09-15T02:16:06.995Z",
+  "updated": "2026-09-15T08:53:52.425Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-14, having just tried it: \"the pen... i can't seem to do curves, select a point, I don't understand how to make circular, curved shapes, don't know how to delete a point, add a point, reposition a point\".\n\nNothing is missing and nothing is broken. All of it is built and enabled: the user's dev app is on Next with next-pen and next-reshape-a-path both on by default, and Sources/Photonz/CanvasPathEdit.swift already implements drag to move, double click a point to convert between corner and smooth, double click a segment to insert, Shift click to extend the selection, Delete to remove picked points, arrow keys to nudge, and Option to break a lever. This is entirely a discoverability failure, so do not rebuild any of it.\n\nTHE CAUSE, and it is one line. CanvasPathEdit.swift:71, the editablePath property, requires `tool == .select`. The points only exist when the Select tool is in hand. Meanwhile a shipped task, 'the-pen-stays-in-your-hand-for-the-next-shape', deliberately leaves the PEN in your hand after a path is finished, so the moment a person finishes drawing they are in the one state where the path they just made shows nothing. Nothing on screen bridges those two facts. That is the whole report.\n\nThe file's own header says the intent was the opposite: \"A path shows its points the moment it is picked, rather than hiding them behind a mode you have to know about.\" It does do that, but only for a tool the person is not holding yet.\n\nTwo honest options and the runner should weigh them rather than assume: show the points while the Pen is still in hand (which risks the Pen's own click-to-add-a-point gesture fighting the reshape gestures over the same pixels, so say how that is resolved), or hand back to Select once a path is finished the way other tools hand back, which contradicts the shipped stay-in-hand behaviour and so needs saying out loud. A third answer, saying it in the hint line, is weaker than both and should only win if it is argued for.\n\nThe second silent failure in the same check: `layer.transform.isIdentity`. Rotate a path and its points disappear with no explanation at all. Whatever else changes, that should say something.\n\nThe acceptance item about a first-time check is the one that matters most here. This feature passed a task whose acceptance already asked for gestures 'discoverable without reading anything', and it shipped undiscoverable, which means the check was not really made. Make it for real and write down what confused them.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-15T02:16:06.994Z",
       "note": "seq 2690 -> 3"
+    },
+    {
+      "t": "2026-09-15T08:53:52.424Z",
+      "note": "Epic set to icon-vector by the 2026-09-15 manager pass: it was filed with the field blank, so it showed on the dashboard under no objective at all while sitting first in the p2 queue."
     }
   ]
 }

@@ -3,13 +3,13 @@
   "title": "An audit gets a real picture of the app again",
   "goal": "The loop photographs the app for every audit the user reads, and right now every one of those pictures is an offscreen drawing of the window rather than the window itself. The app says it is allowed to record the screen and then fails every time it tries, so nobody reading an audit is seeing what the app actually looks like: colours, shadows and anything layered over the window are all missing.",
   "epic": "unmanned-loop",
-  "priority": "p2-normal",
-  "seq": 2700,
+  "priority": "p1-high",
+  "seq": 12,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T08:37:23.777Z",
+  "updated": "2026-09-15T08:50:00.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-14 23:13 and again at 23:54 and 00:20, three separate probe launches. Scripts/probe-app.sh prints \"==> Grants: probe Screen Recording granted\" and every snapshot step then logs:\n\n  [0 capture] failed: Error Domain=com.apple.ScreenCaptureKit.SCStreamErrorDomain Code=-3811 \"Failed to start stream due to audio/video capture failure\"\n\nso <name>.png (the offscreen render) is written and <name>-sc.png never is. Run any walk with a snapshot step to see it, for example Scripts/playtest.sh Scripts/playtest/path-line-style-walk.json, then look in /tmp/photonz-playtest/path-line-style: four .png files, no -sc.png, and the error above six times in log.json.\n\nIt WAS working the day before: Scripts/playtest/out/ in the repo still holds panel-says-less-three-picked-sc.png and panel-says-less-arrange-reference-sc.png written at 2026-09-14 20:27 by the previous task. So something between then and now stopped it, which is the thing to find. Candidates worth checking in order: whether the probe bundle was re-signed with a different identity (the grant is pinned to the code identity, and CLAUDE.md records this exact failure mode for the dev app: \"the app shows as granted/on in System Settings but still can not capture\"); whether SCShareableContent is being asked for while the probe is not frontmost; and whether the grant check the Grants line prints is asking a different question from the one the capture needs (CGPreflightScreenCaptureAccess says undetermined-or-granted, which is not the same as granted).\n\nThe fix of last resort is documented in CLAUDE.md and needs a person: tccutil reset ScreenCapture com.dzearing.photonz.probe, relaunch, re-grant. A runner cannot do that, so if that is the answer the task is to make the Grants line SAY so instead of claiming the grant.\n\nFound while auditing a-path-says-what-its-colour-paints-how-thick-its, whose audit had to ship offscreen renders and say so.",
@@ -26,6 +26,18 @@
     {
       "t": "2026-09-15T08:37:23.776Z",
       "note": "still happening 2026-09-15 on a probe built from HEAD 093c41da. Ran /tmp study walk with four snapshot steps; every one logged [0 capture] failed: SCStreamErrorDomain Code=-3811 \"Failed to start stream due to audio/video capture failure\", and /tmp/photonz-playtest/side-pane-load holds four .png offscreen renders and no -sc.png. So the side pane study's audit ships mock screenshots and offscreen renders, and says so in rough."
+    },
+    {
+      "t": "2026-09-15T08:50:00.771Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-15T08:50:00.814Z",
+      "note": "seq 2700 -> 12"
+    },
+    {
+      "t": "2026-09-15T08:50:00.855Z",
+      "note": "Still broken on 2026-09-15: both audits written overnight say so in their own rough lists (queue/audits/2026-09-15-pane-load.json and queue/audits/2026-09-15-path-line-style.json), so two of the three audits the user has to read this morning have no real picture of the app in them. Raised to p1 and moved to the front by the manager pass: an audit with no photograph is the loop reporting on itself. Probably the same root cause as the walk regression filed the same pass, because the last good -sc.png (2026-09-14 20:27) and the last sweep with the walks green (2026-09-14 16:19) bracket the same evening, and both failures look like the probe window having no real presence on screen."
     }
   ]
 }

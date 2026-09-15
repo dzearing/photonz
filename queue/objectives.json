@@ -199,14 +199,14 @@
     {
       "id": "video-editing",
       "title": "Make Photonz the best tool for creating and editing video",
-      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
-      "stage": "later",
+      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it. Promoted to now on 2026-09-15 by the manager pass, acting on the user's answer to \"You moved video editing up the list this morning, above redlining. Should the loop start building it?\", which was \"Start video now\": the loop builds video editing in the app, beginning with cutting a recording into pieces, while icon and redlining work keep going around it.",
+      "stage": "now",
       "children": [
         {
           "id": "video-cutting",
           "title": "Cutting and arranging: blade, trim, and place clips with confidence",
-          "note": "",
-          "stage": "later",
+          "note": "Promoted to now on 2026-09-15 with its parent: the answered card names cutting a recording into pieces as where video starts.",
+          "stage": "now",
           "children": []
         },
         {

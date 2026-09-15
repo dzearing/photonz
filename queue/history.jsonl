@@ -3441,3 +3441,26 @@
 {"t":"2026-09-15T08:43:40.361Z","ev":"task_note","id":"rebuild-the-spinner-toggle-and-draw-on-flows-on"}
 {"t":"2026-09-15T08:43:40.402Z","ev":"task_note","id":"work-out-whether-the-app-needs-project-types-at"}
 {"t":"2026-09-15T08:43:59.014Z","ev":"task_done","id":"say-where-animating-an-icon-and-editing-a-video","from":"in_progress","note":"Study rewritten against the rebuilt property-first mocks and turned into five build tasks. docs/design/mocks/pages/time-compare.html now compares nine jobs with four proof pairs, the new one showing the timing strip is the same shared component on both sides; the crux holds, because the knob's bar runs past the line where the cycle restarts and an absolute ruler cannot say that. Long form at docs/design/animation-vs-video.md, audit at queue/audits/2026-09-15-animation-vs-video.json. Filed: the motion model, the canvas pivot, the timing strip, the looping preview at real sizes, animated SVG export, with deps so the model lands first; icon-animate moved to now in objectives.json. Verified: all seven mock gates pass, page serves 200 in the shell, driven in Chrome at 1240 and 880 with no overflow, two rendering faults found by looking and fixed. No Sources change, so no build, tests or walks were needed."}
+{"t":"2026-09-15T08:50:00.773Z","ev":"task_reprioritized","id":"an-audit-gets-a-real-picture-of-the-app-again","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-15T08:50:00.816Z","ev":"task_resequenced","id":"an-audit-gets-a-real-picture-of-the-app-again","from":2700,"to":12}
+{"t":"2026-09-15T08:50:00.857Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-15T08:50:11.093Z","ev":"objectives_updated","by":"manager","change":"video-editing and video-cutting promoted later -> now, acting on the user answering \"Start video now\" to the card about whether the loop should begin building video editing"}
+{"t":"2026-09-15T08:50:11.140Z","ev":"task_reprioritized","id":"cut-a-recording-into-pieces-and-drop-the-piece-y","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-15T08:50:11.184Z","ev":"task_resequenced","id":"cut-a-recording-into-pieces-and-drop-the-piece-y","from":600,"to":30}
+{"t":"2026-09-15T08:50:11.226Z","ev":"task_note","id":"cut-a-recording-into-pieces-and-drop-the-piece-y"}
+{"t":"2026-09-15T08:50:15.305Z","ev":"task_note","id":"a-decision-card-that-no-longer-needs-an-answer-c"}
+{"t":"2026-09-15T08:53:15.829Z","ev":"task_created","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","priority":"p1-high","title":"A hundred and fifteen walks fail on code that passed this afternoon"}
+{"t":"2026-09-15T08:53:20.329Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":280,"to":10}
+{"t":"2026-09-15T08:53:20.372Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T08:53:40.078Z","ev":"task_resequenced","id":"position-and-size-stays-on-screen-when-you-pick","from":2720,"to":5}
+{"t":"2026-09-15T08:53:40.119Z","ev":"task_resequenced","id":"the-pen-keeps-the-thickness-you-last-chose","from":2680,"to":6}
+{"t":"2026-09-15T08:53:40.160Z","ev":"task_resequenced","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca","from":2670,"to":7}
+{"t":"2026-09-15T08:53:40.201Z","ev":"task_resequenced","id":"the-size-readout-keeps-up-while-you-reshape-a-pa","from":2690,"to":8}
+{"t":"2026-09-15T08:53:40.241Z","ev":"task_resequenced","id":"one-set-of-easing-curves-named-the-same-way-ever","from":2640,"to":9}
+{"t":"2026-09-15T08:53:40.281Z","ev":"task_resequenced","id":"rebuild-the-spinner-toggle-and-draw-on-flows-on","from":2710,"to":12}
+{"t":"2026-09-15T08:53:40.320Z","ev":"task_resequenced","id":"picking-a-layer-lands-within-a-frame-in-a-long-l","from":2660,"to":14}
+{"t":"2026-09-15T08:53:40.361Z","ev":"task_resequenced","id":"a-playtest-walk-leaves-its-pictures-in-the-repo","from":2650,"to":16}
+{"t":"2026-09-15T08:53:43.241Z","ev":"task_note","id":"position-and-size-stays-on-screen-when-you-pick"}
+{"t":"2026-09-15T08:53:52.426Z","ev":"task_note","id":"a-path-you-drew-shows-you-what-you-can-do-to-it"}
+{"t":"2026-09-15T08:54:23.172Z","ev":"manager","filed":1,"readyBefore":81,"readyAfter":82,"report":"queue/manager/2026-09-15-0155.md"}
+{"t":"2026-09-15T08:54:25.979Z","ev":"manager","filed":1,"readyBefore":81,"readyAfter":82,"report":"queue/manager/2026-09-15-0155.md"}

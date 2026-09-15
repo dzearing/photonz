@@ -9,7 +9,7 @@
   "release": "next",
   "area": "tools",
   "created": "2026-09-09T12:21:41.545Z",
-  "updated": "2026-09-12T12:02:46.284Z",
+  "updated": "2026-09-15T08:50:15.304Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, which hit exactly this. Two cards were open asking the same question about where a picked thing's settings belong: picking-a-text-layer-leaves-its-settings-below-t (2026-09-08) and two-panel-walks-are-failing-on-main (2026-09-09). The second task closed as done, and its card is still pending and moot, because queue.mjs has resolve but nothing else, and answering it myself would put words in the user's mouth.\n\nWhere it goes: readDecisions/resolveDecision in queue/bin/queue-lib.mjs, the pending filter is status === 'pending' so a third status is most of the work; queue/bin/decision-drill.mjs is the test; the dashboard reads decisions.pending out of aggregateState.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-12T12:02:46.283Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-15T08:50:15.303Z",
+      "note": "A live instance as of the 2026-09-15 manager pass: the card 'When you animate an icon, where should the timing of the motion appear?' was opened at 08:36Z, six hours after the user had already answered 'Animating an icon and editing a video: one surface or two?' with the strip. Their answer note says it in their own words, that motion should sit on 'a timeline that is bigger than the property panel', and option a of the new card is that same strip. So the user is being asked to decide something they decided, and the p1 task that builds the strip sits claimable behind it. This is what the task is for: a card whose question has been settled elsewhere should be takeable down without the user having to answer it to make it go away."
     }
   ]
 }
