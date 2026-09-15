@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 14,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:49:46.953Z",
-  "updated": "2026-09-15T19:03:45.648Z",
+  "updated": "2026-09-15T19:04:03.058Z",
   "deps": [
     "tutorials-an-icons-track"
   ],
@@ -61,7 +61,12 @@
     {
       "t": "2026-09-15T19:03:45.647Z",
       "note": "Left rough, none of it clearing the follow-up bar. (1) The bell is red, because that is the colour a freshly drawn path wears; it looks like something you just drew, which is the point, but a bell is not usually red. (2) The timing guide's last card sends you to the loop speed on the previews card and cannot ring it: that card is drawn over the canvas and has no anchor of its own, so the step points at the canvas and describes it in words. Worth an anchor if another guide ever needs one, not worth one for a single card. (3) Nothing teaches the curve you draw yourself or the lap length, both cut deliberately. The one rough item that DID need recording went into one-rule-for-what-starts-the-motion-loop-playing rather than becoming a near-twin task."
+    },
+    {
+      "t": "2026-09-15T19:04:03.056Z",
+      "note": "Four guides added to the Icons track (Make something move, Get the timing right, Two parts out of phase, Export it as an animated SVG), all data in TutorialGuides.swift with no UI edited, plus TutorialAnchor.timingStrip on MotionStripView, 'motion' in knownPanelSections, four bell samples, and a tutorial sample that arrives moving now starts its loop. Committed as b64ca77b and pushed. Verified: full suite green at 7072 tests including the walk coverage check and the length claim check; the animated SVG was written and loaded in a real browser, where both parts turn and the clapper trails the body all the way round the lap, with the swing staying inside the 24 point box. NOT verified: the four new walks have never run, because the Mac's screen was locked for the whole task and every run reported status locked. Sweep requested. Audit at queue/audits/2026-09-15-tutorials-animating-an-icon.json, and it says in plain words that its only picture is the exported file in a browser rather than the app."
     }
   ],
-  "started": "2026-09-15T18:46:42.079Z"
+  "started": "2026-09-15T18:46:42.079Z",
+  "completed": "2026-09-15T19:04:03.057Z"
 }
