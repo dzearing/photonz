@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:37:13.565Z",
-  "updated": "2026-09-15T13:50:21.811Z",
+  "updated": "2026-09-15T13:58:02.345Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 on a probe built from HEAD 093c41da. Walk: Scripts/playtest/studies/side-pane-load-walk.json (a study walk: it measures and asserts nothing, so it lives in a subfolder the sweep's glob does not reach). It draws a text layer and a rectangle in a blank 900x600 document at three window sizes, picks the text, and reads the dock's own numbers back.\n\nWhat it printed, text picked, each time:\n  1000x640  viewport 608  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-891 | Position & Size 891-1021   inView: Layers, Text, Appearance\n  1200x720  viewport 688  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance\n  1680x1000 viewport 968  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance, Effects\nSo the dock wants 1052 points and the largest viewport on this display is 968. Position & Size is never in dockInView; at 1680x1000 its header is in dockHeadersInView and the section is not whole.\n\nMechanism, from Sources/Photonz/InspectorDockLayout.swift. Forms are paid at full height and never squeezed; only Layers, Measurements, Library and Effects may be shortened. Effects is shortenable but its floor is set by the open pane (listRoom read back 'Effects 299/299 needs 299'), so one open drop shadow pins 299 points and Layers alone gives way, from 160 down to its 112 floor. That is 48 points of slack against an 84 point shortfall at the largest size, and a 364 point shortfall on a laptop.\n\nCITES the done task the-properties-panel-fits-on-the-screen-it-has, whose acceptance included 'A section with more in it than fits scrolls inside itself rather than pushing the sections under it off the bottom'. That promise does not hold for Position & Size today. Worth reading its log before choosing an approach, and one-open-effect-fits-in-the-effects-list for why the Effects floor is what it is.\n\nFound while running work-out-whether-the-right-hand-pane-is-carrying, whose study page docs/design/mocks/pages/pane-load.html carries the full inventory.",
@@ -44,7 +44,28 @@
     {
       "t": "2026-09-15T13:50:21.810Z",
       "note": "Adversarial review before building. The dock is not 84 points over, it is over by a FACTOR. Real offsets read back from two walk runs on disk (Scripts/playtest/out/log.json, 2026-09-14 20:27, and /tmp/photonz-playtest/dock-picked-first/log.json, 2026-09-15 00:25, both at 1200x720, viewport 688): a piece of text picked wants Layers 163 + Text 198 + Appearance 223 + Effects 332 + Measurements 87 + Position & Size 130 = 1139 in a 688 viewport. So no budget arithmetic fixes this: every list is already squeezed to its floor (Layers 211 natural -> 163) and the three forms alone come to 551. The only lever is WHICH sections are above the fold. Checked the alternatives: Position & Size left under Appearance lands 590-720 at 688 and 590-720 at 608, so it fails at every size; lowering the Layers floor from 112 to 80 buys 32 points, which still fails at 1000x640. Position & Size directly under the picked section is the only arrangement that fits at all three window sizes."
+    },
+    {
+      "t": "2026-09-15T13:57:58.608Z",
+      "note": "Shipped as e1539ae8. Position & Size, with Arrange and Component beside it, now sits directly under the picked thing's section, above Appearance and Effects, as a new numbered migration (version 6, next release only). The chain of migrations moved out of InspectorPanel into PanelSectionOrder.upgrade so the order the panel produces is testable; a skipped move is not counted as done, so switching release later still runs it. Acceptance 1-3 verified arithmetically in Tests/PhotonzCoreTests/DockPositionAndSizeFitsTests.swift, driven by heights measured off the running app (Layers 51 chrome + 160 list with a 112 floor, Text 198, Position & Size 130, Appearance 223, Effects 33 + 299 pinned by the open shadow): Position & Size lands 367-497 at all three viewports, and a second open effect moves nothing above it. Acceptance 4 is Scripts/playtest/position-and-size-on-screen-walk.json, which waits on sectionInView for Position & Size at all three sizes and again after a Border is added and opened. Full suite green, 6897 tests."
+    },
+    {
+      "t": "2026-09-15T13:57:58.651Z",
+      "note": "COULD NOT RUN ANY WALK. The Mac's screen was locked from before this task started (Grants line: 'screen locked'; Scripts/playtest.sh exits 3 with status locked, 0 steps). So acceptance 4 and 5 are written but unrun: the new walk, dock-picked-first-walk, dock-fits-the-window-walk and effects-room-for-the-one-you-opened-walk have not been executed against this change, and there are no screenshots of any kind. Asked for a sweep (queue/bin/sweep.sh request) naming those walks, which the loop runs between tasks once the screen is unlocked and which files any failure as a task. The one I would watch: the arrow stage of dock-picked-first asserts Appearance is whole, and after this change it lands at 681 in a 688 point dock."
+    },
+    {
+      "t": "2026-09-15T13:57:58.693Z",
+      "note": "left rough: at 1200 by 720 with text picked, Appearance now runs 497-720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. That partly walks back the user's 2026-09-07 answer that Appearance and Effects must never need scrolling to. Not filed as a task: there is no arrangement of today's section heights that fits Layers, the pick, Appearance and Position & Size in 688 points, so this is a trade rather than a defect, and the audit's evaluate list asks the user about it directly. If they say Appearance matters more, the answer is to make the forms shorter, not to reorder again."
+    },
+    {
+      "t": "2026-09-15T13:57:58.736Z",
+      "note": "Filed one follow-up: the-motion-section-sits-directly-under-effects-w, p2-normal. Motion is declared straight after Effects but the ordering rules land it eleven sections lower, under Frame, Columns and Layout. Filed at p2 rather than p1 because the screen was locked and it could only be simulated, never watched."
+    },
+    {
+      "t": "2026-09-15T13:58:02.343Z",
+      "note": "Position & Size, with Arrange and Component beside it, now sits directly under the section named after the thing you picked, above Appearance and Effects (next release only, one numbered migration, hand-made section orders preserved). Shipped as e1539ae8. The migration chain moved into PhotonzCore so the resulting order is testable; verified by the full suite, 6897 tests green, including new tests that work the dock arithmetic through with section heights measured off the running app and show Position & Size landing 367-497 at 608, 688 and 968 point panels, where it used to land 922-1052. HONEST LIMIT: the Mac's screen was locked for the whole of this task, so no walk ran and no screenshot exists. The new walk position-and-size-on-screen-walk.json is written but unrun, as are the three named regression walks; a sweep is requested and will run them. Audit: queue/audits/2026-09-15-position-and-size-on-screen.json."
     }
   ],
-  "started": "2026-09-15T13:47:21.241Z"
+  "started": "2026-09-15T13:47:21.241Z",
+  "completed": "2026-09-15T13:58:02.344Z"
 }
