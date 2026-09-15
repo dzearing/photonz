@@ -4,12 +4,12 @@
   "goal": "Turn a picture of a label into real text and the layers row still says what it said before, and retyping the words on the canvas does not change it either. So a row reading General can hold the word Appearance, and a screenshot that has just been taken apart gives you rows called Text 1 to Text 142 when the app now knows exactly what each one says. A text layer should be named after its own words until somebody names it something else by hand.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 480,
+  "seq": 520,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:46.726Z",
-  "updated": "2026-09-14T12:54:46.607Z",
+  "updated": "2026-09-15T12:14:53.844Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Named in audit 2026-09-13-turn-into-text, rough note three: \"Retyping a label does not rename its layer. The row still says General after you have typed Appearance into it. That is how every text layer in the app already behaves, so it was left alone rather than changed here, but it looks wrong on a row this command just named after its words.\"\n\nThe same audit and 2026-09-13-separate-into-layers both call the naming the weakest part of Separate into Layers: \"a list of nine identical-looking names is not what a person would have written\". Turn into Text is the moment the app learns the characters, so it is the moment the name can stop being a number.\n\nNote the ordering: this does not need text recognition. It only needs the names to follow the words the app already has.",
@@ -48,6 +48,10 @@
     {
       "t": "2026-09-14T12:54:46.606Z",
       "note": "seq 450 -> 480"
+    },
+    {
+      "t": "2026-09-15T12:14:53.843Z",
+      "note": "seq 480 -> 520"
     }
   ]
 }

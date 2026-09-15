@@ -4,12 +4,12 @@
   "goal": "Dragging something in the app and then changing your mind should be one key away. On the timing strip across the bottom, a bar you have started dragging cannot be let go of: Escape does nothing, so the only way out is to finish the drag and then undo it.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 2640,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T11:51:56.252Z",
-  "updated": "2026-09-15T11:51:56.255Z",
+  "updated": "2026-09-15T12:14:53.364Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorState.cancelMotionTimingDrag() already does the whole job and is covered by the walks own cancel path; nothing is listening for the key. The strips bar is a SwiftUI DragGesture in MotionStripView.MotionStripBar, and SwiftUI gives a gesture no key events, so this needs a local monitor armed while motionTimingDrag is non-nil, the way another in-flight drag in the app does it. Worth checking at the same time whether the pivot crosshair drag (CanvasMotionPivot) answers Escape, since cancelMotionPivot exists for the same reason and may have the same hole.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-15T11:51:56.254Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T12:14:53.363Z",
+      "note": "seq 2640 -> 90"
     }
   ]
 }

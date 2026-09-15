@@ -4,12 +4,12 @@
   "goal": "Most scripted walks do not say what remembered settings they need cleared before they run, so they start from whatever the last walk on the machine happened to leave behind: the shape style, which panel sections are open, how wide the dock is. They pass or fail on history rather than on the app. Give each of them the one line that asks for a clean machine, so a walk means the same thing on any machine on any day.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 560,
+  "seq": 600,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T23:39:04.437Z",
-  "updated": "2026-09-14T12:54:47.165Z",
+  "updated": "2026-09-15T12:14:53.933Z",
   "deps": [],
   "blockedBy": [],
   "notes": "225 of the 405 walks have no setup.forget block (counted 2026-09-13). `\"forget\": [\"all\"]` landed in the same commit as the press-settles work and expands to every PlaytestMemory area; see docs/design/playtest-harness.md, \"Where a walk starts from\".\n\nNOT done in that task on purpose: flipping 225 walks needs a full sweep to verify, and a runner cannot run one (322+ walks, ~52 min, past the 600s ceiling). Do it in batches the runner CAN verify -- add the line to one pattern of walks, run `Scripts/playtest-all.sh --no-build <pattern>`, and ask for a sweep at the end.\n\nThe risk to watch: forgetting `panel` resets whether the Library shelf is showing and how tall the layers list is, so a walk that quietly relied on the Library being open will start failing. That failure is the point -- it was relying on history -- but it needs fixing in the walk rather than reverting the line.",
@@ -36,6 +36,10 @@
     {
       "t": "2026-09-14T12:54:47.164Z",
       "note": "seq 540 -> 560"
+    },
+    {
+      "t": "2026-09-15T12:14:53.932Z",
+      "note": "seq 560 -> 600"
     }
   ]
 }

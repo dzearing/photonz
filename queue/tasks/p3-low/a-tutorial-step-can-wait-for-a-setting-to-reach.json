@@ -4,12 +4,12 @@
   "goal": "A guide can ask you to pull a slider up until something is hidden, but it moves on the moment you touch the slider at all, however far you pulled it. Let a step wait for the setting to really reach the value it is asking for, so a guide can teach how strong is strong enough rather than just how to find the control.",
   "epic": "ui-building",
   "priority": "p3-low",
-  "seq": 100,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:38:46.256Z",
-  "updated": "2026-09-14T12:54:47.950Z",
+  "updated": "2026-09-15T12:14:54.043Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Looks track (2026-09-13). The lens guide step blur-what-is-underneath/how-hard says \"Pull Strength up until the address cannot be read at all\" and waits on TutorialTrigger.editMade, which is raised at EditorState.perform for ANY change to the document. Reproduced in Scripts/playtest/tutorial-blur-what-is-underneath-walk.json: the walk pulls the slider with the pullLensAmount action and the step advances, but so would a one point nudge.\n\nEvery waiting trigger today is an event (a tool picked, an edit made, a copy taken). This is the first want for a trigger about a VALUE. The framework rule to keep is the one in docs/design/tutorials.md: nothing advances on a timer and nothing may claim you did something you did not, so a value trigger has to read the real document rather than a guess. TutorialRun.stepWasAlreadyTrue already has the shape of the answer for a state that holds when the step comes up (TutorialController.isAlreadyTrue), so a value trigger is the same question asked continuously.\n\nWorth deciding whether it is worth it at all: the alternative is that a guide never asks for a threshold and simply says what the control does.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-09-14T12:54:47.949Z",
       "note": "seq 110 -> 100"
+    },
+    {
+      "t": "2026-09-15T12:14:54.042Z",
+      "note": "seq 100 -> 90"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Pick a piece of text in a document with three layers in it and the X, Y, width and height boxes are below the bottom edge of the right hand panel, so the plainest fact about a layer needs a scroll to reach. It happens on a small window, on a laptop window and on the largest window this machine can give, because one open drop shadow takes a third of the panel's height and nothing above it can give way. Make the panel fit what it is showing, or make what it shows fit the panel.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 5,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:37:13.565Z",
-  "updated": "2026-09-15T08:53:43.240Z",
+  "updated": "2026-09-15T12:14:53.287Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 on a probe built from HEAD 093c41da. Walk: Scripts/playtest/studies/side-pane-load-walk.json (a study walk: it measures and asserts nothing, so it lives in a subfolder the sweep's glob does not reach). It draws a text layer and a rectangle in a blank 900x600 document at three window sizes, picks the text, and reads the dock's own numbers back.\n\nWhat it printed, text picked, each time:\n  1000x640  viewport 608  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-891 | Position & Size 891-1021   inView: Layers, Text, Appearance\n  1200x720  viewport 688  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance\n  1680x1000 viewport 968  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance, Effects\nSo the dock wants 1052 points and the largest viewport on this display is 968. Position & Size is never in dockInView; at 1680x1000 its header is in dockHeadersInView and the section is not whole.\n\nMechanism, from Sources/Photonz/InspectorDockLayout.swift. Forms are paid at full height and never squeezed; only Layers, Measurements, Library and Effects may be shortened. Effects is shortenable but its floor is set by the open pane (listRoom read back 'Effects 299/299 needs 299'), so one open drop shadow pins 299 points and Layers alone gives way, from 160 down to its 112 floor. That is 48 points of slack against an 84 point shortfall at the largest size, and a 364 point shortfall on a laptop.\n\nCITES the done task the-properties-panel-fits-on-the-screen-it-has, whose acceptance included 'A section with more in it than fits scrolls inside itself rather than pushing the sections under it off the bottom'. That promise does not hold for Position & Size today. Worth reading its log before choosing an approach, and one-open-effect-fits-in-the-effects-list for why the Effects floor is what it is.\n\nFound while running work-out-whether-the-right-hand-pane-is-carrying, whose study page docs/design/mocks/pages/pane-load.html carries the full inventory.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-15T08:53:43.239Z",
       "note": "Moved from seq 2720 to seq 5 by the 2026-09-15 manager pass: it was filed last night and stranded behind sixty older p2 tasks, and it is the only measured panel defect in the queue. The audit that measured it is queue/audits/2026-09-15-pane-load.json, whose own rough list puts it plainer than the goal does: the panel wants 1052 points with three layers and one piece of text picked, the tallest window this machine gives is 968, so Position and Size is below the bottom edge at EVERY window size tested, not just small ones. That audit also notes the Motion section is about to be added to the same panel, which makes this worse before anything fixes it."
+    },
+    {
+      "t": "2026-09-15T12:14:53.286Z",
+      "note": "seq 5 -> 20"
     }
   ]
 }

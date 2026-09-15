@@ -4,12 +4,12 @@
   "goal": "The one offer of the guided tour waits until the macOS permissions are sorted, because the app cannot capture anything until then. But Photonz is now also a place to build UI, and somebody who never intends to take a screenshot never reaches that moment, so they are never offered a look round at all. Work out whether that is the right trade and change it if it is not.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 390,
+  "seq": 430,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T00:04:48.521Z",
-  "updated": "2026-09-14T12:54:45.979Z",
+  "updated": "2026-09-15T12:14:53.744Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while building the first run offer on 2026-09-12. FirstRunOffer.showsChoice (Sources/PhotonzCore/FirstRunOffer.swift) requires screenRecordingGranted and no pending restart. Both guards are there for good reasons, written down in that file: the grant only takes effect in a fresh process, so a tour offered before the restart is a tour the restart kills.\n\nThe gap is real but so is the reason. Note that this person is already in a loop today, independently of tutorials: WelcomeController presents the setup window at every launch while welcome.setupCompleted is false, which it stays until the window is closed with the grant in place. So the honest version of this question is probably the bigger one, what the app should do for somebody who wants Photonz without giving it the screen, and the tour offer is one line of that answer.\n\nSeen, not reproduced as a failure: it is a deliberate rule, not a bug.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-14T12:54:45.978Z",
       "note": "seq 360 -> 390"
+    },
+    {
+      "t": "2026-09-15T12:14:53.743Z",
+      "note": "seq 390 -> 430"
     }
   ]
 }

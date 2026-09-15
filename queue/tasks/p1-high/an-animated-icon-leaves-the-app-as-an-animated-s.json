@@ -4,12 +4,12 @@
   "goal": "An icon that swings is only useful if it still swings when somebody drops it into a web page. Exporting one writes a small SVG file that carries the motion as text, stays sharp at every size, and the hand-off sheet says in plain words what survives the trip and what does not.",
   "epic": "icon-export",
   "priority": "p1-high",
-  "seq": 24,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:16.755Z",
-  "updated": "2026-09-15T08:43:19.692Z",
+  "updated": "2026-09-15T12:14:53.253Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-15T08:43:19.692Z",
       "note": "deps set: the motion model lands first, then this"
+    },
+    {
+      "t": "2026-09-15T12:14:53.252Z",
+      "note": "seq 24 -> 40"
     }
   ]
 }

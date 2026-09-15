@@ -4,12 +4,12 @@
   "goal": "The loop photographs the app for every audit the user reads, and right now every one of those pictures is an offscreen drawing of the window rather than the window itself. The app says it is allowed to record the screen and then fails every time it tries, so nobody reading an audit is seeing what the app actually looks like: colours, shadows and anything layered over the window are all missing.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 12,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T11:20:30.571Z",
+  "updated": "2026-09-15T12:14:53.227Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -68,6 +68,10 @@
     {
       "t": "2026-09-15T11:20:30.570Z",
       "note": "still locked, 2026-09-15 04:22Z. The pivot slice (a-turning-layer-says-what-it-turns-around-and-yo) hit exactly what the motion slice hit six hours ago: 'Grants: probe Screen Recording granted · this terminal Accessibility denied · screen locked', every run of Scripts/playtest/motion-pivot-walk.json comes back status locked with zero steps, and the audit ships offscreen renders instead of a picture of the window. That is now two consecutive feature slices in the same epic whose handle, crosshair and panel row nobody has seen drawn. The walk is written and parses."
+    },
+    {
+      "t": "2026-09-15T12:14:53.226Z",
+      "note": "seq 12 -> 20"
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

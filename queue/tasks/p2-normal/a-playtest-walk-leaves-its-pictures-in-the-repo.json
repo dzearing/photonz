@@ -4,12 +4,12 @@
   "goal": "One of the scripted walks writes its screenshots into the project folder rather than a temporary one, so after it runs there are several megabytes of pictures sitting in the working copy that nobody asked for and that could get committed by accident. It should put them where every other walk puts them.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 16,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T15:37:30.969Z",
-  "updated": "2026-09-15T10:43:07.816Z",
+  "updated": "2026-09-15T12:14:53.385Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/playtest/panel-says-less-walk.json is the only walk with no \"out\" key, so the harness defaults to `out` beside the script, which is inside the repo. Every other walk names an absolute /tmp/photonz-playtest/<name> path.\n\nREPRODUCTION, run on 2026-09-14:\n\n  $ rm -rf Scripts/playtest/out\n  $ Scripts/playtest.sh Scripts/playtest/panel-says-less-walk.json --no-build\n  ...\n  panel-says-less-arrange-reference-sc.png\n  panel-says-less-arrange-reference.png\n  panel-says-less-three-picked-sc.png\n  panel-says-less-three-picked.png\n  panel-three-picked.json\n  ==> Probe quit.\n  $ git status --short | grep playtest\n  ?? Scripts/playtest/out/\n  $ du -sh Scripts/playtest/out\n  2.6M\n\nFix is one line: give the walk an \"out\" of /tmp/photonz-playtest/panel-says-less like its neighbours. Worth also checking whether the harness should refuse a default that lands inside the repo at all, since the next walk written without an \"out\" repeats this.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-15T10:43:07.815Z",
       "note": "Still happening on 2026-09-15: Scripts/playtest/out/ was sitting untracked at the top of git status at the start of an unrelated study task (done.json, log.json, and four panel-says-less PNGs including two -sc.png captures). It is not in .gitignore either, so a 'git add -A' sweeps it into the commit. That nearly happened here and was caught by reading the staged list. Worth covering both halves: put the pictures in the scratch folder, and ignore the path so a stray run cannot be committed by accident."
+    },
+    {
+      "t": "2026-09-15T12:14:53.384Z",
+      "note": "seq 16 -> 110"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Every setting in the Effects list is a slider you drag: a shadow blur, a border width, a border offset, a glow size. There is nowhere to type an exact number, so a border offset of exactly 12 is a matter of nudging the knob until the readout says 12. Let the readout beside each slider be typed into, the way X and Y in Position and Size already are.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 190,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-15T00:56:37.248Z",
+  "updated": "2026-09-15T12:15:30.905Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -44,6 +44,14 @@
     {
       "t": "2026-09-15T00:56:37.247Z",
       "note": "Also wanted in Appearance, not just Effects: a path drawn with the Pen now has a Thickness slider there (2026-09-14) and on a 24 pixel icon frame the useful weights are 1, 2 and 3 while the slider covers 1 to 40, so the whole icon range is the first few pixels of travel and picking 2 rather than 3 is a fight. Same for Opacity and an arrow's Head Size. Added an acceptance item for it."
+    },
+    {
+      "t": "2026-09-15T12:14:53.519Z",
+      "note": "seq 190 -> 230"
+    },
+    {
+      "t": "2026-09-15T12:15:30.904Z",
+      "note": "DESIGN REVIEW 2026-09-15: do not write a fourth number box for this. The app already has three, each hand-rolled and each knowing something the others do not (GeometryInspector.swift:291, ArrangementInspector.swift:836, and MotionListInspector.swift:583 added today). The extraction is filed as one-number-box-everywhere-a-number-is-typed-into and this task is its fourth customer: an Effects slider that can be typed into should be that box, so it inherits what happens when a layer refuses part of the number and what the box says when several picked layers disagree, rather than rediscovering both."
     }
   ]
 }

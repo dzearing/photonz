@@ -4,12 +4,12 @@
   "goal": "Three icon animation walkthroughs were half-updated when the animation model changed. They no longer offer a menu of canned effects and they use the new curve control, but they still show motion as one property chosen from a single row rather than a list you add entries to, and none of them has the timing surface across the bottom that the two bell pages use. Someone reading the icon pages in order meets two different pictures of the same feature. Bring all three onto the one model so the set reads as one product.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 12,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:25:58.425Z",
-  "updated": "2026-09-15T08:53:40.280Z",
+  "updated": "2026-09-15T12:14:53.342Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pages: docs/design/mocks/pages/icon-loop-wt.html, icon-states-wt.html, icon-drawon-wt.html. Reference implementation: icon-animate-wt.html and icon-phase-wt.html (2026-09-15). What those two do that these do not: a .dgrp id=gMotion sibling to gEffects, .efx rows for entries, a .timeline bottom dock with .track.bl-lt layer rows and .track.bl-pt property rows, bars positioned as percentages of a 1200ms lane with the cycle end marked. The curve menu and the property menu are already correct on all three and should be left alone. The property menu markup is duplicated per page; folding it into shared/components is in scope if it is cleaner. Raised in queue/audits/2026-09-15-motion-property-first.json.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-15T08:53:40.279Z",
       "note": "seq 2710 -> 12"
+    },
+    {
+      "t": "2026-09-15T12:14:53.341Z",
+      "note": "seq 12 -> 70"
     }
   ]
 }

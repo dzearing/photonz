@@ -4,12 +4,12 @@
   "goal": "Double clicking bare canvas maximises the window. That is helpful when you are looking at a picture and wrong when you are drawing on it: two quick clicks a few points apart are how you draw a short edge, and the window jumping to full screen in the middle of it is not something you can recover from gracefully. The Pen was carved out of this by hand last week. Make the rule the shape it should have been, so the next click-to-place tool does not have to be carved out too.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:41:01.954Z",
-  "updated": "2026-09-14T12:54:44.144Z",
+  "updated": "2026-09-15T12:14:53.441Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/CanvasPointerDrags.swift:97 reads `if event.clickCount == 2, tool != .pen, document?.canvasHitTest(p, zoom: viewport.zoom) == nil { performWindowTitleBarAction() }`. The `tool != .pen` is a list of exemptions with one name in it, added on 2026-09-13 with the reproduction in the comment above it: 1280x900 to 1728x1028 on the second click, the anchor never landed.\n\nWhat is NOT reproduced, and the runner reproduces it before changing anything: whether the same collision actually bites any other tool today. Sources/PhotonzCore/Tools.swift:36 says the Pen is the one tool that draws over several clicks rather than in one drag, so the honest claim is that this is a rule with the wrong shape rather than a bug you can hit right now. The reason to fix it before it is a bug is the very next queued task, a-path-can-be-reshaped-after-you-draw-it: anchor editing is click-based, and double clicking a point to swap it between a corner and a curve is what every other vector tool does with that gesture.\n\nWhere the fork is: the drawing tools are arrow, line, rectangle, ellipse, highlight, text, zoomCallout, lens, measure, fill, frame and pen. Select, crop and the marquee trio are the ones where a double click on nothing plausibly means the window. Text and crop already own a double click of their own further down the same function. Keep the behaviour for Select and take it away from the tools that draw; say in the audit which tools changed and why.\n\nThis is a change to a gesture people may already be using, so the audit names it plainly and the walk that covers window zoom on a double click gets updated rather than deleted.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-14T12:54:44.143Z",
       "note": "seq 90 -> 120"
+    },
+    {
+      "t": "2026-09-15T12:14:53.440Z",
+      "note": "seq 120 -> 160"
     }
   ]
 }

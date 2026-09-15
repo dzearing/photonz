@@ -4,12 +4,12 @@
   "goal": "Most icons people use every day are drawn as lines rather than filled shapes, and what makes them look like a set is that every line ends in the same shape and every corner turns the same way. Photonz can set how thick an outline is and whether it sits inside or outside the shape, but not what its ends and corners look like, so a line drawing comes out with hard chopped ends. Give an outline those two settings.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-15T07:07:08.728Z",
+  "updated": "2026-09-15T12:14:53.464Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-15T07:07:08.727Z",
       "note": "Also left rough by that task and belonging here: a sharp corner's point can be sliced off by the edge of the shape's own bitmap. PathContent.strokeOutset works the reach out from the line's ENDS and the stroke position only, so a miter that carries the point further than half a line width past the outline has nowhere to be drawn. It was always true (sharp has always been the default) and choosing Sharp now makes it a choice somebody made. Widening the outset to the real miter reach changes every existing path's bitmap and its selection chrome, which is why it was left: PathRenderingTests has a test asserting a 130x100 shape with a 10pt line comes out 140x110, and that number moves."
+    },
+    {
+      "t": "2026-09-15T12:14:53.463Z",
+      "note": "seq 140 -> 180"
     }
   ]
 }

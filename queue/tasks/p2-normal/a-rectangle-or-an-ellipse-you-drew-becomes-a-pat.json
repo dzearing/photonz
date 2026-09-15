@@ -4,12 +4,12 @@
   "goal": "Nobody starts an icon with the Pen. They drop a rectangle or a circle because it is quick and exact, and then they want to pull one corner out or flatten one side. Today that is a dead end: a rectangle stays a rectangle for ever. Let any shape you drew be turned into a path, so it keeps exactly the outline it had and every point on it becomes yours to move.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:07.324Z",
-  "updated": "2026-09-14T12:54:44.074Z",
+  "updated": "2026-09-15T12:14:53.430Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "a-path-can-be-reshaped-after-you-draw-it"
@@ -41,6 +41,10 @@
     {
       "t": "2026-09-14T12:54:44.073Z",
       "note": "seq 80 -> 110"
+    },
+    {
+      "t": "2026-09-15T12:14:53.429Z",
+      "note": "seq 110 -> 150"
     }
   ]
 }

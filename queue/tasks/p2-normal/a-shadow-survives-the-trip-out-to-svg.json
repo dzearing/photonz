@@ -4,12 +4,12 @@
   "goal": "Today a shape wearing a shadow, a blur or a glow leaves the app as a flat picture instead of as a shape, because the SVG writer has no answer for those three. That is the fallback people will hit most, since a shadow is the commonest thing to put on an icon. Make a shadow and a blur come out as themselves, so the exported file is still shapes you can edit.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 530,
+  "seq": 570,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:33.122Z",
-  "updated": "2026-09-14T12:54:46.957Z",
+  "updated": "2026-09-15T12:14:53.900Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SVG has feDropShadow and feGaussianBlur, both in a <filter> in <defs>, referenced with filter=url(#...). The reach: a filter region defaults to -10%/+10% of the bounding box, which clips a long shadow, so x/y/width/height on the filter have to be set from the shadows own reach (LayerStyle.previewPadding already knows it). Spread has no direct answer: feMorphology dilate is the usual trick. The decision to write down in docs/design/svg-export.md is which of those are exact and which are approximations, because the render-back check holds everything to one part in 255. Where it is written: Sources/PhotonzCore/SVGExport.swift, styleReason() is what currently sends these layers to a picture.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-14T12:54:46.956Z",
       "note": "seq 500 -> 530"
+    },
+    {
+      "t": "2026-09-15T12:14:53.899Z",
+      "note": "seq 530 -> 570"
     }
   ]
 }

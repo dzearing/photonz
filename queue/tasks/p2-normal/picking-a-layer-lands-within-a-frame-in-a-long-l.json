@@ -4,12 +4,12 @@
   "goal": "Clicking a layer row is faster than it was but still not instant: on a two row document it takes about three frames, and in a list of eighteen rows it takes about seven, with the list sliding under you while you wait. Everything left is in the right hand panel: the panel re-measures itself on every click, and the list animates to follow the row you picked even when that row was already on screen.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 14,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T16:18:21.555Z",
-  "updated": "2026-09-15T08:53:40.319Z",
+  "updated": "2026-09-15T12:14:53.374Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from clicking-a-layer-is-instant-whichever-layer-it-i (2026-09-14), which found and fixed the big one: picking a layer wrote EditorState.history (the selection snapshot rides the undo stack), and document is computed from history, so every view in the window was invalidated and the whole editor re-laid out. That is fixed; EditorView.body no longer rebuilds on a pick and there is a walk asserting it.\n\nWHAT IS LEFT, all measured on the probe on 2026-09-14 with Scripts/playtest/layer-pick-latency-walk.json and layer-pick-at-scale-walk.json, numbers from the walks own log.json (mainBusy is main thread work over the click and its settle):\n\n1. The dock. Two rows, dock open: pick costs 49-64ms. Same click with the dock CLOSED (press the panel toggle first): 10-27ms. So ~35ms per click is the dock re-measuring. It rebuilds twice per pick now (was four). A sample of the probe under a storm of picks puts the time under GraphHost.flushTransactions in a deep StackLayout / ScrollView / _FlexFrameLayout recursion, plus about a quarter of the busy time in SwiftUI accessibility focus (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder -> MultiViewResponder.visit), which runs twice per pick and walks the whole tree. Smaller tree = less of both.\n\n2. The list following the pick. Eighteen rows: a pick costs 107-160ms over 100-146 runloop passes, with layersList bodies 6-12 and layersRow bodies 19-28. The pass count says animation, not layout: EditorState+LayersPanel.revealInLayersList writes layersListReveal behind the layersFollowPick flag, and LayersListView.onChange(of: layersListReveal) scrolls via follow(). follow() is documented to do nothing when the row is whole on screen; the numbers say something still runs. Start by checking whether follow() really no-ops, and whether settlingReveal (a @State written on every reveal and cleared 0.3s later) is worth two extra list rebuilds per pick.\n\nTOOLS ALREADY THERE: Sources/Photonz/Playtest/EditorReadWatch.swift says which of the editors properties a step actually wrote, which is how the first root cause was found; ViewBuildMeter counts editorBody / inspectorPanel / layersList / layersRow / layerThumbnail bodies; selectRow and action steps report mainBusy and the body counts; InspectorPanel logs one trace line per dock pass with the sections and budget it drew at; expectBuilds is the walk step that turns a body count into a pass or a fail.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-09-15T08:53:40.318Z",
       "note": "seq 2660 -> 14"
+    },
+    {
+      "t": "2026-09-15T12:14:53.373Z",
+      "note": "seq 14 -> 100"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Scripted playtests can right click a measurement row to open its menu, but cannot simply click one to select it. That leaves the most ordinary thing a person does with that list unproved, and a tutorial step that says click a row has to be demonstrated through the Layers list instead.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 70,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:12:00.434Z",
-  "updated": "2026-09-14T12:54:47.740Z",
+  "updated": "2026-09-15T12:14:54.010Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). selectRow only looks in EditorState.panelRows (the layers list) and press only finds NSControl press targets, so neither reaches a Measurements row; rightClick does, because rightClickTarget falls back to panelTargets(), where the rows register as .row. The likely fix is for selectRow to fall back the same way and press the row with real mouse events. Walk to update afterwards: Scripts/playtest/tutorial-measurements-panel-walk.json, the step with the describe note explaining the workaround.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-14T12:54:47.739Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-09-15T12:14:54.009Z",
+      "note": "seq 70 -> 60"
     }
   ]
 }

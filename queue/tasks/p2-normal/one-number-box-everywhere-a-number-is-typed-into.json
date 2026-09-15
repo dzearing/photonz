@@ -1,0 +1,34 @@
+{
+  "id": "one-number-box-everywhere-a-number-is-typed-into",
+  "title": "One number box, everywhere a number is typed into a panel",
+  "goal": "Every panel that lets you type a number has built its own box for it, three times so far, and each one learned a different lesson the hard way. Typing a number should behave the same wherever you do it: what happens when the thing refuses part of what you typed, what the box says when several things disagree, what emptying it means, and what the arrow keys step by. Make one box that knows all of it, and put the panels on it, so the fourth panel that needs one inherits the answers instead of rediscovering them.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 225,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T12:15:25.894Z",
+  "updated": "2026-09-15T12:15:30.862Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the design review of 2026-09-15, counting what the motion work hand-rolled.\n\nThree implementations today:\n  Sources/Photonz/GeometryInspector.swift:291  GeometryNumberField\n  Sources/Photonz/ArrangementInspector.swift:836  LayoutNumberField\n  Sources/Photonz/MotionListInspector.swift:583  MotionNumberField   (new, 2026-09-15)\n\nThe key handling is ALREADY shared, as the .numberFieldKeys modifier, so the hard part is not the keys. What is not shared is everything each one learned:\n\n- GeometryNumberField knows a layer can refuse part of what was typed and that the box has to show what was TAKEN, not what was asked for, or the next arrow key steps from a number nothing has. Its own comment says this was worked out after the change rather than before it.\n- LayoutNumberField knows Mixed has to be the field TEXT and not its placeholder so it is drawn at the one strength every other Mixed in the dock is drawn at. Its own comment says this made it the fifth answer to the same question, and points at MixedLook.swift. It also knows the difference between a box that is empty and a box standing in for several values that disagree, and when emptying means something.\n- MotionNumberField, written today, has none of that.\n\nThe fourth is already queued: type-a-number-into-any-effects-slider-not-just-d asks for typing on Effects sliders, which have no box at all. Doing that task before this one makes a fourth hand-roll.",
+  "acceptance": [
+    "There is one number box used by the geometry, arrangement and motion panels, and the two behaviours only one of them knew (a value the layer refused, and Mixed drawn as text at the dock strength) are true in all three",
+    "What emptying a box means is a property of the box the panel sets, not something each panel re-decides",
+    "Arrow key stepping, including the coarse step, is the same everywhere",
+    "No panel regresses: the geometry walks, the arrangement walks and the motion walks all pass unchanged",
+    "type-a-number-into-any-effects-slider-not-just-d can be done by using this box rather than writing a fourth one, and its task log says so",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T12:15:25.896Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T12:15:30.861Z",
+      "note": "seq 2640 -> 225"
+    }
+  ]
+}

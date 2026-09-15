@@ -1,0 +1,33 @@
+{
+  "id": "closing-the-timing-strip-leaves-no-way-back-on-t",
+  "title": "Closing the timing strip leaves no way back on the screen",
+  "goal": "The strip of timing bars across the bottom of the window has an x on it that puts it away. Once it is away nothing on the screen says it exists or how to get it back: the only way is the View menu, or knowing the chord. Every other thing in the app that can be pushed aside leaves a control on screen the whole time it is away, so a person who closes the strip to look at their icon can get it back without hunting.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T12:14:25.561Z",
+  "updated": "2026-09-15T12:14:53.353Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, both from today.\n\n1. The app. Sources/Photonz/MotionStripView.swift:117 is the x; it calls toggleMotionStrip(). Sources/Photonz/EditorView.swift:187 is `if editorState.isMotionStripShown { MotionStripView() }`, so closed means gone, nothing in its place. grep for toggleMotionStrip finds exactly two callers: that x, and the View menu item at EditorCommands.swift:781. The comment at EditorView.swift:192 states the principle the strip breaks, three lines above the code that breaks it: the side panel got its toggle in the title bar `so the way back never moves and never goes away with the thing it collapses`.\n\n2. The written rule. docs/design/mocks/shared/UX-PATTERNS.md D9 says every dock comes back to the size it had and `leaves a visible way back on screen the whole time it is away`, that a dock collapsed to a row states the selection rather than just the panel name, and it names this exact day: `The app has no bottom dock yet, so the row half of this rule is not yet owed; the day Next grows a timeline, this is what it has to do, including the summary, and it does not get a second collapse idiom to do it with.` Next grew a timeline today.\n\n3. The option the strip was built from promised it. queue/decisions/work-out-whether-the-right-hand-pane-is-carrying-when-you-animate-an-icon-where-s.json, option a, pro three: `One click on its close control shrinks it to a single row that still says what you are editing, and the canvas comes back`, and its mitigation says `It collapses to a 30 point row and remembers the height you left it at`. That is what was chosen and it is not what shipped.\n\nCannot be seen on a screen right now: the Mac has been locked since 2026-09-14 20:46:47, so no walk runs. The code and the rule are enough to file it; the walk that claims it needs an unlocked screen.",
+  "acceptance": [
+    "Putting the timing strip away leaves a row on screen that says what is moving, and clicking that row brings the strip back at the height it had",
+    "The collapsed row uses the same collapse idiom as the side dock rather than a second one invented for the strip",
+    "A walk closes the strip, finds the way back without using a menu or a chord, and reopens it",
+    "The strip still opens on its own the first time something moves, and closing it does not stop that from being true next time",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T12:14:25.563Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T12:14:53.352Z",
+      "note": "seq 2650 -> 80"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "Place two copies of a component and the layers list shows three rows with the same name on them, because every copy carries its original name. The violet mark on each row is the only difference and it is nine points wide. Somebody scanning the list for the thing they can edit has to squint at three identical rows.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 410,
+  "seq": 450,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T03:36:30.090Z",
-  "updated": "2026-09-14T12:54:46.114Z",
+  "updated": "2026-09-15T12:14:53.766Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Components tutorial track on 2026-09-13. Reproduce: Help > Tutorials > Components > Override one copy, then open the Layers list. Three rows reading Save Button. Captured in queue/audits/2026-09-13-components-track-4-overridden.png, top right.\n\nThe track works round it: no guide in it sends anybody into the layers list, and a test enforces that (TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem). That workaround costs the guides the one single-click way to reach a piece inside an original, so they use a canvas double click instead, which is why the sample button had to be widened to 240 so a double click can land clear of its label.\n\nOptions worth weighing rather than picking here: a quiet suffix on a copy row, the version name already printed beside the mark being extended to plain copies, or a stronger mark. This is a UX call.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-14T12:54:46.113Z",
       "note": "seq 380 -> 410"
+    },
+    {
+      "t": "2026-09-15T12:14:53.765Z",
+      "note": "seq 410 -> 450"
     }
   ]
 }

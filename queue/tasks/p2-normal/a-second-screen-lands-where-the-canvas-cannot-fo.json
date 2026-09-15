@@ -4,12 +4,12 @@
   "goal": "Ask for a new frame while one is already on the canvas and the new one is put to the right of it, past the edge of the canvas itself. The canvas will not scroll that far, so the screen you just asked for is somewhere you can never look at. It is in the layers list and it is on the picture, but you cannot get to it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 570,
+  "seq": 610,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T01:59:27.378Z",
-  "updated": "2026-09-14T12:54:47.235Z",
+  "updated": "2026-09-15T12:14:53.944Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-13 on the probe, and it has nothing to do with icon sizes: it happens with two plain Desktop screens.\n\nWalk (temporary, /tmp/offcanvas-walk.json): blank canvas 1600 x 1100 in a 1240 x 900 window, then Layer > New Frame > Desktop > Add Frame, twice.\n\n  Scripts/playtest.sh /tmp/offcanvas-walk.json --no-build\n\nWhat the log said at the end (log.json, `describe` step \"two\"):\n\n  second desktop screen, placed to the right of the first | zoom 64 | centre (843, 550)\n      Background [image] (0.0, 0.0, 1600.0, 1100.0)\n      Frame [frame] (80.0, 38.0, 1440.0, 1024.0)\n      Frame 2 [frame] (1600.0, 38.0, 1440.0, 1024.0)\n\nFrame 2 starts at x = 1600 on a canvas that is 1600 wide, so all 1440 points of it are outside the canvas. The camera could not follow: the view centre moved from (800, 550) to (843, 550) and stopped.\n\nWhere it comes from: PhotonzDocument.placementForNewFrame in Sources/PhotonzCore/Frames.swift puts every frame after the first at rightmost.maxX + frameGutter with no regard for canvasSize, and Viewport.clamped() in Sources/PhotonzCore/Viewport.swift pins the camera inside the document, so nothing outside the canvas can ever be scrolled to. Both are older than this report.\n\nTwo plausible answers, and picking between them is a product call: place the new frame somewhere the canvas already covers (wrapping to a second row when the first is full), or grow the canvas to take in the frames on it. The second is probably what a person expects from a document that is a wall of screens, but it changes what Canvas means, so it may deserve a decision card.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-14T12:54:47.234Z",
       "note": "seq 550 -> 570"
+    },
+    {
+      "t": "2026-09-15T12:14:53.943Z",
+      "note": "seq 570 -> 610"
     }
   ]
 }

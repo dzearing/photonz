@@ -1,22 +1,24 @@
 {
   "id": "find-out-what-corner-radius-should-say-over-a-gr",
-  "title": "Find out what Corner Radius should say over a group whose contents are round",
-  "goal": "Pick a group, or the original of a component, that holds a rounded box inside it. The panel says Corner Radius 0 with the slider at the far left while the thing on the canvas is visibly round. The number is true of the group box, which is invisible, and it may be the wrong thing to be showing.",
+  "title": "Pulling Corner Radius on a group rounds what is inside it",
+  "goal": "Pick a group that holds a rounded box with room around it, pull the Corner Radius slider, and nothing on the picture changes except the dashed selection outline. The user has settled what should happen: the row rounds what is inside the group. Make the pull reach through to the contents rather than stopping at an invisible box that has nothing against its edges.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:19:55.263Z",
-  "updated": "2026-09-15T02:36:08.852Z",
+  "updated": "2026-09-15T12:14:53.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
   "acceptance": [
-    "A written answer to whether Corner Radius over a group should read the group box, read what is drawn, or not be there at all",
-    "If the answer is a change, the panel makes it and a walk claims it",
-    "Picking a plain rounded rectangle is unaffected"
+    "Pulling Corner Radius on a group whose contents sit away from its edges visibly rounds those contents, not just the selection outline",
+    "The row still reads the curve that is on screen and its track still starts there, which already shipped and must not regress",
+    "Picking a plain rounded rectangle is unaffected",
+    "A walk claims it on a group with padding, the case this task was filed from, with a before and after capture",
+    "audit written under queue/audits/"
   ],
   "log": [
     {
@@ -86,6 +88,10 @@
     {
       "t": "2026-09-15T02:36:08.851Z",
       "note": "decision \"Pick a group holding a rounded box and the panel says Corner Radius 0 while what you see is round. What should it say?\" resolved: The row says what it clips"
+    },
+    {
+      "t": "2026-09-15T12:14:53.406Z",
+      "note": "seq 60 -> 130"
     }
   ],
   "started": "2026-09-12T10:58:58.645Z"

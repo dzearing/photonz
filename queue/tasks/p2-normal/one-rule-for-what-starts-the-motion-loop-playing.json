@@ -1,0 +1,33 @@
+{
+  "id": "one-rule-for-what-starts-the-motion-loop-playing",
+  "title": "One rule for what starts the motion loop playing",
+  "goal": "Three things you can do to a motion answer the question does this start it playing in three different ways. Adding a motion starts the loop on its own. Grabbing the pivot on the picture starts it if it was stopped. Changing a number on a motion row while it is paused does not start it, so the edit lands and nothing on screen moves and you cannot tell whether it took. Settle one rule for when the app plays without being asked, and make all three follow it.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T12:15:03.625Z",
+  "updated": "2026-09-15T12:15:05.625Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the design review of 2026-09-15. Three audits from the same day, each stating its own behaviour and none able to cite the other two:\n\nqueue/audits/2026-09-15-layer-motion.json, rough item four: \"Editing a field while the preview is PAUSED does not start it: you press play. Adding a motion does start it. Those are two different rules and somebody may well expect one.\"\n\nqueue/audits/2026-09-15-layer-motion.json, evaluate item one: \"Adding a motion starts it playing on its own. Is that the right amount of eager, or do you want to press play yourself?\"\n\nqueue/audits/2026-09-15-motion-pivot.json, evaluate item three: \"Grabbing the pivot starts the loop if it is stopped, because a still picture cannot show you a pivot. Is that helpful or is it the app taking over?\"\n\nEach of the three was argued honestly on its own and each is defensible alone. Together they are three answers to one question, shipped within eight hours of each other, and the person meeting them is meeting all three in one sitting. The pivot case has the strongest argument for starting the loop (a still picture cannot show you a pivot), so it is the one to reason from rather than the one to change first.\n\nNot seen on a screen: the Mac has been locked since 2026-09-14 20:46:47, so none of the three was ever run in a walk. The behaviours are read from the audits the runners wrote from their own code, not from watching the app.",
+  "acceptance": [
+    "There is one written rule for when the motion loop starts without being asked, and it is in the audit or the design doc rather than only in the code",
+    "Adding a motion, grabbing the pivot, and editing a number on a paused motion all follow that one rule",
+    "Editing a number while paused never leaves a change that landed with nothing on screen to show it, whatever the rule turns out to be",
+    "A walk drives all three in one run and reads back whether the loop is playing after each",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T12:15:03.627Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T12:15:05.624Z",
+      "note": "seq 2640 -> 85"
+    }
+  ]
+}

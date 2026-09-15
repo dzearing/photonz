@@ -4,12 +4,12 @@
   "goal": "Set a drawn shape to a thinner line and the next thing you draw with the Pen comes back at the old thickness anyway, so drawing five strokes of an icon at the same weight means fixing all five afterwards. Every other drawing tool in the app starts at the weight you last picked for it; the Pen should too.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 6,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T00:56:28.202Z",
-  "updated": "2026-09-15T08:53:40.118Z",
+  "updated": "2026-09-15T12:14:53.298Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe 2026-09-14 on main plus the path Thickness row. Walk (/tmp/pen-remember-check.json): blank 1600x1100, tool pen, three clicks, Return, tool select, action dragThickness (commits 9), expectPath width 9 passes, then tool pen, three more clicks, Return, expectPath width 9 fails with: step 20 (expectPath): Path: 3 anchors, open, 0 curved runs, 4 px thick - not the 9 px claimed.\n\nWhy: EditorState.commitOutlineWidth calls rememberAnnotationDefaults, which loops over doc.layer(id:)?.annotation?.shape and writes AnnotationStyles.setStrokeWidth(_:forShape:). A path has no AnnotationShape, so nothing is written, and there is nowhere for a pen width to be written to: PenSession.startingStrokeWidth is only ever handed PathContent.defaultStrokeWidth (4) through Sources/Photonz/StartingStrokeWidth.swift and CanvasPen.swift:190. A line remembers because its shape is a key in AnnotationStyles.\n\nCare needed on the second acceptance item: IconStrokeWeight.startingWidth only thins a line whose armed width is still AnnotationContent.defaultStrokeWidth, so once the Pen remembers 9 an icon frame stops thinning it, which is the rule it already follows for lines and is intended. Found while shipping a-line-drawn-with-the-pen-can-be-made-thicker-or.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-15T08:53:40.117Z",
       "note": "seq 2680 -> 6"
+    },
+    {
+      "t": "2026-09-15T12:14:53.297Z",
+      "note": "seq 6 -> 30"
     }
   ]
 }

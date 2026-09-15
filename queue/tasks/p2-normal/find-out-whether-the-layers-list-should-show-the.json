@@ -1,22 +1,24 @@
 {
   "id": "find-out-whether-the-layers-list-should-show-the",
-  "title": "Find out whether the Layers list should show the pieces Select What Uses This picked",
-  "goal": "Saving a colour as a style and then pressing Select What Uses This picks every layer wearing it, and that includes the pieces inside every copy of a component. The Layers list then says 4 layers selected while showing rows for only two of them, because a copy has no twist and its pieces have no rows. It is not clear whether that reads as the app quietly picking things you cannot see, or as the right amount of detail about copies you were not editing.",
+  "title": "The Layers list says how many of the things it picked are inside copies",
+  "goal": "Save a colour as a style, press Select What Uses This, and the Layers list says 4 layers selected while showing only two rows, because the other two are pieces inside copies of a component and copies have no rows to open. The user has settled it: the list should say how many of the picked things are inside copies, so the number and the rows stop disagreeing without anything being hidden.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 320,
+  "seq": 360,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:21:46.712Z",
-  "updated": "2026-09-15T02:36:03.782Z",
+  "updated": "2026-09-15T12:14:53.666Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12 with Scripts/playtest/style-users-walk.json (run it with --no-build). The walk paints one rectangle, saves its fill as the style Accent, groups it with a second rectangle, makes a component and drops one copy. The style then reads 4 colors use this and Select What Uses This picks Rectangle, Rectangle 2, Rectangle, Rectangle 2 - the originals two children and the copys two pieces. See /tmp/photonz-playtest/style-users/styleusers-4-selected-sc.png and the earlier capture at /tmp/photonz-playtest/style-piece/stylepiece-5-typed-sc.png, which shows the list reading 4 layers selected over two visible rows.\\n\\nThe numbers themselves are honest: Position & Size shows over that mixed selection (the section is only taken away when a piece is picked ON ITS OWN, InspectorPanel.swift:791), and typing 900 into X moved the original with the copy following, so nothing on screen ended up saying two different things. This is about what the selection LOOKS like, not about a wrong number. Found while answering find-out-whether-position-and-size-takes-numbers.",
   "acceptance": [
-    "There is a plain answer, written into this task, about what a person should see in the Layers list when the selection includes pieces they cannot see rows for",
-    "If the count should change, the list says a number that matches the rows it is showing",
-    "If the pieces should not be picked at all, the button picks only the layers a person can see and the task says why"
+    "After Select What Uses This picks pieces inside copies, the Layers list says both numbers: how many were picked in total and how many of those are inside copies",
+    "The number the list shows never disagrees with the rows it is showing without saying why",
+    "A selection with nothing inside a copy reads exactly as it does today, with no extra words",
+    "A walk claims it on the case this was filed from: a saved colour, Select What Uses This, two rows and four picked",
+    "audit written under queue/audits/"
   ],
   "log": [
     {
@@ -42,6 +44,10 @@
     {
       "t": "2026-09-15T02:36:03.781Z",
       "note": "decision \"Select What Uses This picks pieces inside copies, so the Layers list says four selected over two rows. What should it say?\" resolved: Say how many are inside copies"
+    },
+    {
+      "t": "2026-09-15T12:14:53.665Z",
+      "note": "seq 320 -> 360"
     }
   ]
 }

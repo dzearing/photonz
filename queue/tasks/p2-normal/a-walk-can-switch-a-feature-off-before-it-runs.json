@@ -4,12 +4,12 @@
   "goal": "A tutorial guide, and plenty of other features, behave differently depending on what somebody has switched on in the Experiments window. Today a scripted playtest can only run the app as it comes, so nobody can show what a feature looks like switched off without editing settings by hand and remembering to put them back. This serves the ui-building focus: every tutorials track task is accepted on \"checked with the features it teaches flagged off as well as on\", and the Building UI track had to fall back to a unit test for that half (audit 2026-09-13-tutorials-building-ui-track, rough note four), so the flags-off half of the focus feature is not proved in the real app.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 400,
+  "seq": 440,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:11:54.576Z",
-  "updated": "2026-09-14T12:54:46.047Z",
+  "updated": "2026-09-15T12:14:53.755Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). The acceptance item there asked for every guide to be checked with its feature flagged off as well as on, and there was no way to do it in a walk: the flags live in UserDefaults as a JSON blob under experiments.next.flags (ExperimentsStore.settingsKey), so the check was done by hand with defaults write against com.dzearing.photonz.probe and then undone. A walk written for it passed either way, which is worse than no walk, so it was deleted rather than left in the sweep.\n\nShape: PlaytestSetup already takes forget/captures/scratch (Sources/PhotonzCore/PlaytestScript.swift, knownKeys); add flags, applied and restored by PlaytestSetupRunner the way forget already is. Every later tutorials track task wants this for the same acceptance item.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-09-14T12:54:46.046Z",
       "note": "seq 370 -> 400"
+    },
+    {
+      "t": "2026-09-15T12:14:53.754Z",
+      "note": "seq 400 -> 440"
     }
   ]
 }

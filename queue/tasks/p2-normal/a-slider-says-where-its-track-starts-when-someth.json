@@ -4,12 +4,12 @@
   "goal": "Corner Radius over a group now reads the curve you can actually see, which is right, but the knob sits hard at the far left and will not go any lower, and nothing on the row says why. That looks exactly like the old broken row, where the knob sat at the far left reading nought. The same thing happens on a pill shape, where the slider quietly switches itself off because there is nothing left to round: it looks identical to a slider you simply have not touched yet. A person should be able to tell, without hovering, that the track starts partway along and what decided that.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 170,
+  "seq": 210,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:08.148Z",
-  "updated": "2026-09-14T22:32:54.455Z",
+  "updated": "2026-09-15T12:14:53.497Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-12 design review in queue/audits/2026-09-12-corner-over-a-group.json, which says it plainly in its own rough notes:\n\n  \"The knob at the far left reading 18 looks exactly like the old knob at the far left reading 0. The number is right and the pull works from the first nudge, but nothing on the row itself says the track starts at 18. Only the tooltip does.\"\n  \"A group whose contents are already as round as the box goes, like a pill, has nothing left to pull, so the slider turns itself off. That is honest but silent: it looks the same as a slider you simply have not grabbed yet.\"\n\nUX-PATTERNS.md section 4 already rules that a control that cannot act must never explain itself with a hover tip alone: pressing it puts the reason in the line under the section straight away. That line under the section is section 4's own surface and is the obvious place for this. What the rule does NOT have is a row for a control that CAN act, but only over part of its range, which is what a clamped slider is. Filed alongside the scrub task for that gap.\n\nThis is separate from find-out-what-corner-radius-should-say-over-a-gr, which is blocked on a decision about a group with padding. This task is about the case that already shipped and works.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-14T22:32:54.454Z",
       "note": "The rule you were waiting for now exists: UX-PATTERNS section 4, 'A control that can only act over part of its range' (v1.9, 2026-09-14). The answer for your two states, so nothing has to be invented on the row: (1) floor of 18 — the refused stretch of track from 0 to 18 is drawn FILLED in neutral ink, not as empty groove and not dimmed, and the accent fill STARTS at the wall, so a knob resting on 18 shows no fill at all. That is what makes it different from the old knob at 0, which had a live empty track in front of it. (2) pill with nothing left — the whole track is spent, the thumb sits at the wall and stops taking the pointer, the row is NOT dimmed and NOT removed. (3) The number beside it keeps its box and still takes the keyboard: typing 5 against a floor of 18 lands on 18 and says why in the line under the section (the ANSWER register). Settling in silence is the one thing it must not do. (4) The words: the wall on the track is the 'who owns this' half, on screen with no pointer; clicking the row puts the sentence in the line under the section, and the hover tip carries the same sentence from the same constant. (5) Drawing the wall REPLACES a permanent caption line about the limit, never both. Drawn in a mock as .slider.clamped / .clamped.spent, shared/components/slider.css, specimen at pages/comp-sliders.html block 05 with a screenshot in queue/audits/2026-09-14-clamped-range-rule-specimen.png. Note the mock's greys are not the app's: check the given stretch against the real panel, especially in the light theme."
+    },
+    {
+      "t": "2026-09-15T12:14:53.496Z",
+      "note": "seq 170 -> 210"
     }
   ]
 }

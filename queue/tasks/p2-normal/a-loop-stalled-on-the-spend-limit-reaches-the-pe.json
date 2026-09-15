@@ -4,12 +4,12 @@
   "goal": "The build loop sat still for sixty two hours because the monthly spend limit was reached, and the only thing that can clear it is a person raising the limit. The loop handled it correctly in every other way, but it says so only in the terminal window it runs in and in the dashboard hero, so unless somebody happens to be looking at one of those, the stall is silent for days. Nothing shipped for two and a half days and two daily digests were never written. Make the loop tell the person who can act, once, so a stall costs hours instead of days. This serves the ui-building focus by buying back the days the focus loses when nobody knows the loop has stopped: the last stall cost sixty two hours of focus work.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 150,
+  "seq": 190,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:20.316Z",
-  "updated": "2026-09-14T12:54:44.351Z",
+  "updated": "2026-09-15T12:14:53.475Z",
   "deps": [
     "a-runner-that-talks-about-the-spend-limit-is-not"
   ],
@@ -50,6 +50,10 @@
     {
       "t": "2026-09-14T12:54:44.350Z",
       "note": "seq 120 -> 150"
+    },
+    {
+      "t": "2026-09-15T12:14:53.474Z",
+      "note": "seq 150 -> 190"
     }
   ]
 }

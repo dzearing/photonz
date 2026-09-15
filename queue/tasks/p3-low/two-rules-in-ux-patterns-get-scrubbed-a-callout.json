@@ -1,15 +1,15 @@
 {
   "id": "two-rules-in-ux-patterns-get-scrubbed-a-callout",
-  "title": "Three rules in UX-PATTERNS get scrubbed, all bent by something that shipped this week",
-  "goal": "Two written rules were bent this week, both because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
+  "title": "Scrub the UX-PATTERNS rules that shipped work has bent",
+  "goal": "Several written rules in the shared patterns document have been bent by things that shipped, each time because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 90,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-14T12:54:47.879Z",
+  "updated": "2026-09-15T12:14:54.032Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -21,7 +21,10 @@
     "No rule is rewritten to describe what the app happens to do today where that is the thing that was wrong",
     "D16 says what a guide does when it has to share the canvas with the selection outline, which is not a guide and is not covered today, and the answer is a difference of kind rather than a different dash rhythm",
     "D16 (or D14) gains a home for canvas chrome that is neither a guide nor an annotation, the icon previews strip being the case that found it, and says what gives way when two pieces of canvas chrome want the same corner",
-    "Each scrub cites the audit it came from, and anything already shipped that disagrees with the new wording is filed rather than quietly rewritten"
+    "Each scrub cites the audit it came from, and anything already shipped that disagrees with the new wording is filed rather than quietly rewritten",
+    "D9 says what a bottom dock owes when it is pushed away that a side dock does not, since D9 accepted the side dock keeping its way back in the title bar and that reasoning does not carry to a dock across the bottom",
+    "D10 says which surfaces show a catalogue of what can be animated and which show only what is, and what decides that, since a video clip and a layer in a document now answer it in opposite ways and both are shipped",
+    "There is a rule for a setting that has two homes: what has to be true before a second door is allowed, and what the two doors owe each other, because three slices on 2026-09-15 each shipped one and each had to ask the user instead of citing the document"
   ],
   "log": [
     {
@@ -43,6 +46,14 @@
     {
       "t": "2026-09-14T12:54:47.878Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-09-15T12:14:32.306Z",
+      "note": "DESIGN REVIEW 2026-09-15. Next grew a bottom dock today (the motion timing strip), and it walked straight into two rules that do not answer it. Both need a scrub in this same pass.\n\nD9 (every dock can be pushed away, and it always says how to get back). D9 already names this day: 'The app has no bottom dock yet, so the row half of this rule is not yet owed; the day Next grows a timeline, this is what it has to do, including the summary.' What shipped closes to nothing at all (EditorView.swift:187), with the View menu as the only way back. The BEHAVIOUR half is filed as closing-the-timing-strip-leaves-no-way-back-on-t. The RULE half is here, and the gap is bigger than one missing row: D9 accepted the side dock's spelling (a title bar toggle, no rail) on the grounds that a rail earns its keep only when there are several groups to jump back into. That reasoning was written about a side dock and was read across to a bottom dock, where it does not hold, and nothing in D9 says so. It should say what a bottom dock owes that a side dock does not, and why.\n\nD10 (a property list shows what CAN be animated, not what is). The motion list that shipped does the opposite: it lists only what IS animated, and the catalogue of what could be lives behind the plus. That is not a slip, it is the answered model (decision say-where-animating-an-icon-and-editing-a-video, resolved b with the user's correction: motion is a property applied like an effect, and there is no canned list). D10 was written for a video clip inspector with keyframe diamonds, and its canonical page is still pages/video.html, which has not moved. So the document now carries one rule that two shipped surfaces answer in opposite ways, with nothing saying which applies where. D10 should say which model belongs to a clip on a timeline and which to a layer in a document, and what makes the difference, rather than being quietly wrong about half the app.\n\nThird gap, no rule at all today: ONE SETTING WITH TWO DOORS. Three slices in one day each shipped the same setting in two places, each argued honestly in its own audit and none of them able to cite a rule. Loop speed is on the previews card AND on the timing strip header (2026-09-15-motion-loop-preview, evaluate item five asks the user outright: 'Two speed controls, one on the card and one on the strip, showing the same rate. Is that one setting with two doors, or two controls too many?'). Start and Over are in the side column AND draggable as bars (2026-09-15-motion-timing-strip, evaluate item six asks the same question in different words). The pivot's Around menu is duplicated by the At row directly beneath it (2026-09-15-motion-pivot, rough item six). Three authors reasoned it out from scratch and all three ended up asking the user rather than the document. That is the definition of a missing rule: when a setting may have a second home, what has to be true, and what the two homes owe each other."
+    },
+    {
+      "t": "2026-09-15T12:14:54.031Z",
+      "note": "seq 90 -> 80"
     }
   ]
 }

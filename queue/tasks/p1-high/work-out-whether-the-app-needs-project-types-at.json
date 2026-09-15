@@ -4,12 +4,12 @@
   "goal": "A document today is a canvas with a size, and every tool in the app is offered on it whether or not it makes sense. If somebody is drawing a 24 point icon they do not need video trimming, and if they are cutting a recording they do not need an icon grid. Work out whether the app should know what kind of thing you are making, and if so what each kind shows and hides, or whether that is a worse idea than it looks.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 19,
+  "seq": 30,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-15T10:43:22.949Z",
+  "updated": "2026-09-15T12:14:53.241Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -62,6 +62,10 @@
     {
       "t": "2026-09-15T10:43:22.948Z",
       "note": "Study delivered in full; waiting on the user's answer to the decision card 'Should Photonz ask what you are making, and should the answer change what you can see?'. All eight acceptance items are met: the page is at http://127.0.0.1:8791/index.html#project-kinds, the long form at docs/design/project-kinds.md, the evidence in Tests/PhotonzCoreTests/DocumentHasNoKindTests.swift, the audit at queue/audits/2026-09-15-project-kinds.json. Recommended option a: ask what you are making, keep every tool. Option d declines the whole task."
+    },
+    {
+      "t": "2026-09-15T12:14:53.240Z",
+      "note": "seq 19 -> 30"
     }
   ],
   "started": "2026-09-15T10:35:16.383Z"

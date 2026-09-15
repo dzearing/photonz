@@ -4,12 +4,12 @@
   "goal": "Several tools share one button in the tool bar (Line, Rectangle and Ellipse are one slot, and on a narrow window the last tools move behind a more affordance). A tutorial cannot point at one of those tools while it is hidden, so a guide that wants to teach the Ellipse has no way to show you where it is.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 370,
+  "seq": 410,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T21:18:08.950Z",
-  "updated": "2026-09-14T12:54:45.836Z",
+  "updated": "2026-09-15T12:14:53.722Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today the family slot answers to whichever member it is wearing: EditorView.groupButton hangs .tutorialAnchor(.tool(editorState.lastTool(in: group))). So .tool(.rectangle) resolves when Rectangle is the remembered member and silently does not when it is not, which lands the callout in the middle of the window (the honest fallback, but not a good tutorial).\n\nEvidence: Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json logs where every anchor resolved to; the family slot only ever reports one tool. See docs/design/tutorials.md, \"What this framework deliberately does not do\".",
@@ -39,6 +39,10 @@
     {
       "t": "2026-09-14T12:54:45.835Z",
       "note": "seq 340 -> 370"
+    },
+    {
+      "t": "2026-09-15T12:14:53.721Z",
+      "note": "seq 370 -> 410"
     }
   ]
 }
