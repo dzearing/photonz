@@ -1,0 +1,30 @@
+{
+  "feature": "A component has properties, and a variant is one of them",
+  "epic": "ui-components",
+  "summary": "The Component section had two lists called Versions and Adjustable. It now has one list called Properties: a variant is a row in it, with a name you can change to State or Type, and its looks underneath.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag next-components on. Drag the Button off the Library's Components shelf.",
+  "try": [
+    { "do": "Click the Button original on the canvas and read the Component section top to bottom." },
+    { "do": "Open the Add beside Properties. The first thing in it is Variant, then A second look." },
+    { "do": "Pick A second look, type Disabled, press Return." },
+    { "do": "Read the Variant row: its name is a field. Type State over it and press Return." },
+    { "do": "Click one of the copies. The top row of its Properties now says State, not Version." },
+    { "do": "Choose Disabled on that copy and watch only that one redraw." },
+    { "do": "Open Layer in the menu bar and read Add Variant and Apply to Other Variants." }
+  ],
+  "evaluate": [
+    "Reading Properties and nothing else, can you say what goes in it before you open Add?",
+    "Is Variant the right word for the row, given you said Variants was no better as a section name?",
+    "The variant row has a name field and so does the look under it. Do the two read as different things, or do they collide?",
+    "Making a second look now takes two clicks (Add, then A second look) where it used to take one. Is one predictable list worth the extra click?",
+    "On a copy, does the top row wearing the author's own word (State) read better than a fixed word?"
+  ],
+  "rough": [
+    "NO PICTURE OF THE NEW PANEL. The Mac's screen locked at about 08:53 and stayed locked, so macOS refuses to draw the window and no walk can run; the before pictures in this audit were taken at 08:30 while it was unlocked, and the after ones do not exist. A sweep is requested and will photograph it as soon as the screen is unlocked.",
+    "Before, for comparison: 2026-09-15-component-properties-before-original.png (the original, with Versions and Adjustable) and 2026-09-15-component-properties-before-copy.png (a copy, with its Version row).",
+    "The paragraph under Versions was three lines explaining what a version is. It is gone, fixed by the name rather than reworded: a row called Variant with its looks under it does not need telling.",
+    "The Share across documents paragraph was shortened rather than renamed, because that name was already right. It now reads 'In this document only.' or one sentence when shared.",
+    "The code and the file still spell it version (ComponentVersion, versionID, versionName). Renaming a coding key rewrites the saved format for nobody's benefit, so the old spelling stays where only an agent reads it.",
+    "The model holds a LIST of variant properties but can only ever produce one today. A button wanting a Type AND a State at once is the next piece of this, and it is not built."
+  ]
+}
