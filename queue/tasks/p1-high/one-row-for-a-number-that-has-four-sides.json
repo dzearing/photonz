@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2.1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:01:13.399Z",
-  "updated": "2026-09-15T16:32:35.661Z",
+  "updated": "2026-09-15T16:35:35.169Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's design, in their words: 'Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows mixed or something.'\n\nDo not invent the mixed vocabulary. The app already has a settled answer for a control speaking for values that disagree - the shipped tasks 'mixed-reads-the-same-way-in-every-control' and 'a-switch-says-mixed-the-way-every-other-control-does' established it, and MixedLook exists in the app layer. Reuse it exactly.\n\nCorner radius is in the acceptance list because it is the identical problem and already went the other way: 'each-corner-of-a-shape-can-be-rounded-on-its-own' shipped four corners, and CornerRadii carries a uniform value with a largest fallback, so the one-number-usually case is already modelled. If the pattern works for padding it should work there too, and having two different answers to one shape of question is how the panel got cluttered.\n\nThis is a PATTERN, not one control. Say in the audit where else it applies so the next four-box grid does not get built by hand.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.",
@@ -44,7 +44,20 @@
     {
       "t": "2026-09-15T16:32:35.660Z",
       "note": "Adversarial review of the BUILT thing, as far as a locked screen allows. Fixed while reviewing: the chevron's hit area was 14x14, meaner than the twist it replaces because that twist shared one press with the row's name, so it is now 18x20 of hit with the same small glyph. The popout no longer carries a hardcoded width that a change of field width could start clipping; it takes the width its four boxes need with a floor of 178. The corner words needed their own slot: 'Bottom Right' is 63 points at caption2 and the box is 62, so corners sit in a 70 point slot and the two words along the bottom keep a gap. Geometry checked by rendering the same layout offscreen with ImageRenderer (/tmp/four-sided-check.swift, throwaway, not committed): the cross and the square both come out as intended. That is a check of my arithmetic, not a picture of the app."
+    },
+    {
+      "t": "2026-09-15T16:35:31.813Z",
+      "note": "left rough: pressing the chevron a SECOND time while the popout is open. Escape and a click away both shut it for certain; whether that press shuts it or shuts and reopens it turns on whether macOS hands the click to the button after dismissing the popover, and the screen was locked so no walk could find out. Not filed: there is no evidence it is broken, and an unreproduced problem does not earn a slot at the top of the queue. Every walk that had to close a popout now uses Escape rather than a second press, so the sweep will not be confused by it either way, and if a walk does come back failing on it the answer is to set isOpen true rather than toggle it."
+    },
+    {
+      "t": "2026-09-15T16:35:31.855Z",
+      "note": "left rough: Scripts/playtest/out/ is 5 MB of walk output (log.json, done.json, six PNGs, all stamped 2026-09-15 08:40) sitting untracked in the source tree, left by an earlier runner that ran a walk with a relative out path. No walk in the repo declares one, so it is a one-off. It shows up in every git status from now on. Not mine and not broken, so left alone rather than deleted or filed."
+    },
+    {
+      "t": "2026-09-15T16:35:35.167Z",
+      "note": "Padding, Corner Radius and a component copy's room knob are each ONE row now: a number that means all four, and a small control beside it that opens the four in a popout OVER the row, laid out in the shape they describe (a cross round a box for sides, the corners of a square for corners). The panel is exactly as tall with them open as shut, where the padding four cost a measured 108 points and the corner four about the same. While the four differ the row says Mixed, the house word, not the 10/16/10/16 shorthand; the numbers are one press away and in the tooltip in words, and setting all four back to one number returns the row on its own with nothing to close. New FourSidedNumber in PhotonzCore (4 tests) holds the rules; FourSidedPopout/FourSidedButton draw it; ContentsSelectionTests gained 2 tests for sides differing within a group AND between groups. swift build clean, 6943 unit tests green, docs/design/ui-building.md has the landed section, committed and pushed (a0724439). NOT SEEN RUNNING: the Mac's screen was locked for the whole task, so all nine updated walks plus the new four-sided-popout-walk returned status locked and there are no pictures of any kind. A full sweep is requested. Audit: queue/audits/2026-09-15-one-row-four-sides.json"
     }
   ],
-  "started": "2026-09-15T16:21:14.860Z"
+  "started": "2026-09-15T16:21:14.860Z",
+  "completed": "2026-09-15T16:35:35.168Z"
 }

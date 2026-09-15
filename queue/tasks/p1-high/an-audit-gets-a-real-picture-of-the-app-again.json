@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T13:42:36.143Z",
+  "updated": "2026-09-15T16:35:31.769Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -76,6 +76,10 @@
     {
       "t": "2026-09-15T13:42:36.142Z",
       "note": "Still true at 2026-09-15 06:42 local: the screen was locked for the whole of the 'a-path-you-drew-shows-you-what-you-can-do-to-it' run, so that audit ships with NO pictures at all, not even offscreen ones. The feature it audits is canvas chrome (the points on a path, the pointer over them, the chip under the canvas), and an offscreen render does not draw any of that, so the fallback earlier runners used today (render the document straight from the renderer) has nothing to show either. Screen Recording is granted to the probe; the lock alone is what stopped it. queue/bin/sweep.sh status confirms a sweep is already pending for the same reason."
+    },
+    {
+      "t": "2026-09-15T16:35:31.768Z",
+      "note": "Third audit in a row with no picture, and this time not the grant: the Mac's screen was locked for the whole of one-row-for-a-number-that-has-four-sides (2026-09-15 16:21 to 17:0x), so every walk returned status locked, the walk never started, and not even an offscreen render was produced. Whatever this task does about the grant, the locked case is a different one: the loop can keep building but it cannot show the user anything for hours at a stretch, and three features have now shipped on tests and reasoning alone."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"
