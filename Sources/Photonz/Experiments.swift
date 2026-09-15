@@ -300,6 +300,11 @@ extension Experiments {
     /// catalog, so Current never offers the command.
     var newLayerViaCutEnabled: Bool { isEnabled(FeatureCatalog.newLayerViaCutFlag) }
 
+    /// Copy Look and Paste Look, in the Layer menu and on a layer's right
+    /// click menu (Next, `next-copy-a-look`). Exists only in the Next
+    /// release's catalog, so Current never offers the commands.
+    var copyALookEnabled: Bool { isEnabled(FeatureCatalog.copyALookFlag) }
+
     /// `next-blank-canvas`: whether an empty window offers Blank canvas
     /// alongside open, capture and paste. Exists only in the Next release's
     /// catalog, so Current always reads false and its empty window is

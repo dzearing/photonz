@@ -115,6 +115,16 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// not justify is the opposite: it looks exactly like a repair, and
         /// nobody can tell the two apart without being told.
         case cutToOwnLayer(PatchHeal)
+        /// The look of one layer was picked up, ready to be put on another
+        /// (`LayerLook.swift`). NOTHING on screen changes when a look is
+        /// copied — the layer it came off is untouched — so without a word
+        /// there is no way to tell the key was taken, which is the same reason
+        /// Copy as Spec List has a pill.
+        case lookCopied(layer: String)
+        /// A look was put on some layers. It says how far it reached and what
+        /// did not fit, because a look is best effort by design: a result that
+        /// is not quite a match has to be explained rather than mysterious.
+        case lookPasted(LookPaste)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -171,7 +181,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
-             .separatedIntoLayers, .turnedIntoText: return Self.breakLifetime
+             .separatedIntoLayers, .turnedIntoText, .lookPasted: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -213,6 +223,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return outcome.reading == nil ? "Still a picture" : "Turned into text"
         case .cutToOwnLayer:
             return "Cut to its own layer"
+        case .lookCopied: return "Copied"
+        case .lookPasted(let report): return report.title
         }
     }
 
@@ -321,6 +333,10 @@ public struct CopyConfirmation: Hashable, Sendable {
             case .cleared:
                 return "There was nothing around it to read, so the space it came from is empty"
             }
+        case .lookCopied(let layer):
+            return layer.isEmpty ? "The look of that layer" : "The look of \(layer)"
+        case .lookPasted(let report):
+            return report.detail
         }
     }
 

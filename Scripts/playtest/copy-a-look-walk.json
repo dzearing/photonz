@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/copy-a-look",
+  "setup": { "forget": ["shapes", "color", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [260, 140], "to": [460, 340] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Slider", "in": "@border, Width", "across": 0.25 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-circle",
+      "note": "a filled circle wearing a thick ring. The ring is a Border in its Effects list, which is where every shape that is not a line keeps its edge" },
+    { "do": "panel", "stage": "1-circle" },
+    { "do": "render", "name": "1-circle" },
+    { "do": "snapshot", "name": "1-circle" },
+
+    { "do": "tool", "tool": "line" },
+    { "do": "drag", "from": [560, 420], "to": [820, 420] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-line",
+      "note": "a thin line in the line tool's own ink, nothing like the circle's ring. Matching them by hand means reading the ring's colour and width off the circle and typing both into the line" },
+    { "do": "panel", "stage": "2-line" },
+    { "do": "render", "name": "2-line" },
+    { "do": "snapshot", "name": "2-line" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Ellipse" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "option", "shift"], "menuItem": "Copy Look" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-copied",
+      "note": "move one of two. Nothing on the canvas changes, so the pill at the bottom is the only thing that says the key was taken: Copied, the look of Ellipse" },
+    { "do": "snapshot", "name": "3-copied" },
+
+    { "do": "selectRow", "row": "Line" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "shortcut", "key": "v", "modifiers": ["command", "option", "shift"], "menuItem": "Paste Look" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-pasted",
+      "note": "move two of two. The line is now the circle's ring: same ink, same weight. It did NOT grow a rectangle round its own box, and the pill says the fill was skipped because a line has nothing to fill" },
+    { "do": "panel", "stage": "4-pasted" },
+    { "do": "render", "name": "4-pasted" },
+    { "do": "snapshot", "name": "4-pasted" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone",
+      "note": "one undo puts the line back exactly as it was, however much of the look reached it" },
+    { "do": "panel", "stage": "5-undone" },
+    { "do": "render", "name": "5-undone" },
+    { "do": "snapshot", "name": "5-undone" }
+  ]
+}

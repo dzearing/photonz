@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:44:46.074Z",
-  "updated": "2026-09-15T18:05:10.575Z",
+  "updated": "2026-09-15T18:21:34.573Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15, in the same breath as the saved-colour problem: \"Also i wish there was some way to just copy the format of one shape and best effort apply it to the properties of another shape.\"\n\nThis is the general answer to the problem the other task fixes narrowly. Both are worth having: saved colours are for a colour you use over and over and want to change in one place, and copying a look is for making this one thing match that one thing right now. Do not let either be closed as a duplicate of the other.\n\nNothing like it exists today. There is a clipboard (EditorState+Clipboard.swift) but it carries layers, not looks, and the style machinery (ColorStyles, TextStyles, EffectStyles) is about NAMED styles you save and reuse rather than an unnamed one you carry for a moment.\n\nThe model to copy from is already settled and should be reused rather than re-derived: docs/design/shape-parts.md says a part has a switch, a colour and its own settings, and that Appearance is what a shape HAS while Effects is a list you ADD to. A copied look is therefore exactly: the state of the target's parts, plus the list of effects. That also answers the best-effort rule cleanly, because a target simply has the parts it has.\n\nThe interesting decision is the one in the acceptance list about saved styles: if the source's fill was wearing a saved colour called Accent, the target should end up wearing Accent too rather than a loose copy of that colour, or the link everybody just built is lost at exactly the moment it is most useful.\n\nWorth checking before choosing keys: this app defaults new keybindings to Photoshop's, where copying and pasting layer style live on the layer's context menu rather than on keys, while Figma uses Command Option C and Command Option V. Pick deliberately and say why.",
@@ -36,6 +36,35 @@
     {
       "t": "2026-09-15T18:05:10.574Z",
       "note": "Half of 'make a line match a circle's border' now has an answer that is not this task: every colour row's saved-colours menu grew a second section, 'Copy a color from another style', which offers the colour held inside a saved border, shadow, glow or way of setting text, plus any saved colour kept for other parts and any saved ramp flattened to fit. So matching JUST the colour is save-the-border, pick-the-line, pick-it-out-of-the-menu. This task is still the whole-look answer (width, rounding, opacity, effects) and its acceptance item about a colour arriving still wearing its saved style is the thing the new menu deliberately does NOT do: a borrowed colour paints the colour and no name, because a line cannot follow a border. See Sources/PhotonzCore/BorrowedColors.swift."
+    },
+    {
+      "t": "2026-09-15T18:07:06.598Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T18:21:34.358Z",
+      "note": "Adversarial review BEFORE building. Walked it as somebody who has never seen it. (1) The mock does not exist for this, so the model came from docs/design/shape-parts.md, which already says a layer IS its parts plus a list of what was added. That definition makes the best-effort rule fall out rather than needing special cases. (2) The trap: if a look carries the source's Effects list wholesale, then pasting a circle onto a line drops the circle's Border into the line's Effects list and the line wears a RECTANGLE round its bounding box while its own ink never changes. That is the exact opposite of the task's headline promise. So the edge is lifted OUT of the list and carried on its own, then put back wherever the target keeps its edge, using outlineSlot/outlineWidth/outlinePaint/setOutlineWidth which OutlineWidth.swift already had. (3) Cut as decorative: nothing about a look's own UI. No panel, no palette of saved looks, no preview. Two menu rows and a pill is the whole surface, which is the shortest version that delivers the value. (4) What the mock-shaped instinct would have added and should not: carrying position or size 'because it is a copy'."
+    },
+    {
+      "t": "2026-09-15T18:21:34.404Z",
+      "note": "Built. Core: Sources/PhotonzCore/LayerLook.swift (LayerLook, Layer.look, PhotonzDocument.applyLook, LookPaste), 23 tests in Tests/PhotonzCoreTests/LayerLookTests.swift. App: Sources/Photonz/EditorState+Look.swift (copyLook/pasteLook plus row variants, and LookPasteboard on a named board of its own so an ordinary Copy on the way to the target does not take the look away and a look crosses windows), two rows in the Layer menu and on a layer's right click menu, two new CopyConfirmation subjects for the pill. Flag next-copy-a-look, on by default in Next. Design note appended to docs/design/shape-parts.md."
+    },
+    {
+      "t": "2026-09-15T18:21:34.445Z",
+      "note": "Keys, decided rather than guessed. Photoshop keeps Copy Layer Style and Paste Layer Style on the layer's right click menu with NO key, so nothing Photoshop-shaped is displaced and there is no key to inherit. Figma, Sketch and the Mac's own Copy Style in Pages and TextEdit all use Option Command C and V, which is what a person tries first, but Option Command C is already Canvas Size, which IS Photoshop's, and the house rule is Photoshop parity wins a tie. So the look took the shifted pair, Option Shift Command C and V, which nothing in the app binds. The audit asks the user whether to overrule that and take Option Command C."
+    },
+    {
+      "t": "2026-09-15T18:21:34.487Z",
+      "note": "Could NOT verify in the real app: the Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true, locked since before the run). Scripts/playtest.sh reported status locked and exit 3 with no captures and no offscreen renders. Scripts/playtest/copy-a-look-walk.json is written and committed and needs one run on an unlocked screen. Sweep requested saying so. Everything else is verified: swift build clean, the 23 new core tests green, and the whole suite green."
+    },
+    {
+      "t": "2026-09-15T18:21:34.530Z",
+      "note": "Adversarial review of the BUILT thing, as far as a locked screen allows. Fixed one thing it found: the pill said 'Skipped the fill, which they do not have' over a single layer. It now says 'which it does not have' when it reached one. Left rough and written into the audit rather than filed: a look does not carry typography (face, size, weight), does not carry what kind of line a line is (dash, an arrow's ending and head size), and Copy Look silently takes the topmost of a multi-selection."
+    },
+    {
+      "t": "2026-09-15T18:21:34.572Z",
+      "note": "Full suite: 7028 tests, 2 failures, both timing budgets under full-suite load and neither anywhere near this change (IconPreviewRenderTests 'A whole strip of moving previews fits inside one frame of the loop', DrawLandingCostTests.aGridOverALargeScreenshotPaysForTheBorderQuery). Both pass on their own: 'Scripts/test.sh --filter DrawLandingCostTests --filter IconPreviewRenderTests' -> 10 tests in 3 suites passed. An earlier full run of the same tree passed all 7027. Filed as two-timing-tests-only-fail-when-the-whole-suite (p2), with both commands and both outputs in its notes."
     }
-  ]
+  ],
+  "started": "2026-09-15T18:07:06.597Z"
 }

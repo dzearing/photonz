@@ -3784,3 +3784,12 @@
 {"t":"2026-09-15T18:05:22.731Z","ev":"task_note","id":"a-saved-colour-goes-wherever-that-colour-belongs"}
 {"t":"2026-09-15T18:05:22.774Z","ev":"task_note","id":"a-saved-colour-goes-wherever-that-colour-belongs"}
 {"t":"2026-09-15T18:05:37.982Z","ev":"task_done","id":"a-saved-colour-goes-wherever-that-colour-belongs","from":"in_progress","note":"Every colour row now offers the colours held inside saved borders, shadows, glows and text styles, plus saved colours kept for other parts (saying which) and saved ramps flattened to fit, under 'Copy a color from another style'. PhotonzCore/BorrowedColors.swift + 12 tests written first; ColorStylePanel and the component knob both show it; the drag now names the parts a colour is kept for so menu and drag agree. Full suite 7006 green, committed 6b3deb32 and pushed. NOT verified in the app: the Mac's screen was locked all session, so the new walk colour-out-of-any-style-walk.json has never run and no screenshot exists. Sweep requested. Audit: queue/audits/2026-09-15-colour-out-of-any-style.json"}
+{"t":"2026-09-15T18:07:06.494Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T18:07:06.600Z","ev":"task_started","id":"copy-the-look-of-one-shape-onto-another","title":"Copy the look of one shape onto another","priority":"p1-high"}
+{"t":"2026-09-15T18:20:47.043Z","ev":"task_created","id":"two-timing-tests-only-fail-when-the-whole-suite","priority":"p2-normal","title":"Two timing tests only fail when the whole suite runs"}
+{"t":"2026-09-15T18:21:34.360Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:34.406Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:34.447Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:34.489Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:34.532Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}
+{"t":"2026-09-15T18:21:34.574Z","ev":"task_note","id":"copy-the-look-of-one-shape-onto-another"}

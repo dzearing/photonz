@@ -146,6 +146,8 @@ public enum FeatureCatalog {
 
     public static let newLayerViaCutFlag = "next-new-layer-via-cut"
 
+    public static let copyALookFlag = "next-copy-a-look"
+
     public static let motionFlag = "next-motion"
 
     public static let motionStripFlag = "next-motion-strip"
@@ -463,6 +465,15 @@ public enum FeatureCatalog {
                     name: newLayerViaCutFlag,
                     title: "Cut a piece onto its own layer and heal behind it",
                     description: "Draw a marquee round something in a picture, press Shift Command J, and that piece lifts onto a layer of its own while the space it came from fills in with the colours that were around it. Move the piece and what it came off still looks whole, instead of showing a hole or a second copy of the same thing sitting underneath. It works for any marquee: a box, an ellipse, or a selection made with the wand. Where the surroundings are one flat colour, the space comes back exactly that colour; where they ramp evenly, the ramp carries on through the space. Where they are too busy to read, it still cuts, because you asked it to, fills with the middle colour of what was around it, and says the fill was a guess. The new layer is the size of the piece and is picked afterwards, so you can drag it straight away, and one undo puts back the piece, the hole and the fill together. It also sits in the Layer menu under New Layer via Copy, which is the same command without the healing. Off means the row and the key are absent and Command J still copies a piece to a new layer as before.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: copyALookFlag,
+                    title: "Copy the look of one shape onto another",
+                    description: "Pick a shape, choose Copy Look, pick one or several others and choose Paste Look, and they end up looking like the first one. It takes across the colour of every part the shape paints, the line round it and how thick that line is, how round its corners are, how see through it is, how it mixes, and everything in its Effects list. It takes across nothing about where the shape is, how big it is, which way round it is, or what it actually is, so a line pasted from a circle is still a line. It is best effort: the line round a circle lands as the line a line IS, so making a line match a circle's border is two moves, and a part the shape you paste onto does not have is skipped rather than refused. Nothing ever fails because one setting did not fit, and a line at the bottom of the canvas says what was skipped so a result that is not quite a match is explained. A colour that was wearing a saved style arrives still wearing it, so the link survives the moment it is most useful. However many shapes it reaches, one undo puts them all back. Both rows sit in the Layer menu and on a layer's right click menu, on Option Shift Command C and Option Shift Command V. Off means neither row is anywhere and the keys do nothing.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

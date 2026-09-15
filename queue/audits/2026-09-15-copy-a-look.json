@@ -1,0 +1,29 @@
+{
+  "feature": "Copy the look of one shape onto another",
+  "epic": "ui-building",
+  "summary": "Pick a shape, copy its look, pick one or several others and paste it, and they end up looking like the first one. The line round a circle lands as the line a line IS, so making a line match a circle's border is two moves instead of reading every setting off one and typing it into the other.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is called \"Copy the look of one shape onto another\" and it is on by default there.",
+  "try": [
+    { "do": "Pick the Ellipse tool and drag out a circle." },
+    { "do": "In Effects, press the plus, choose Border, then pull its Width out to about 10." },
+    { "do": "Pick the Line tool and drag a thin line beside the circle." },
+    { "do": "Click the circle, then press Option Shift Command C (Layer then Copy Look)." },
+    { "do": "Click the line, then press Option Shift Command V (Layer then Paste Look)." },
+    { "do": "Read the pill at the bottom of the canvas before it fades." },
+    { "do": "Press Command Z once." }
+  ],
+  "evaluate": [
+    "Does the line come out matching the circle's ring, both the ink and the weight, or does it only half match?",
+    "Is being told the fill was skipped useful, or is it noise you would rather not read every time?",
+    "Are Copy Look and Paste Look the right names for these two rows, or would you call them something else?",
+    "Option Shift Command C and V is a reach. Would you rather have Option Command C and V, which is what Figma and the Mac's own Copy Style use, and move Canvas Size off that key?",
+    "Pasting replaces the whole Effects list rather than adding to it, so a blur on the shape you paste onto goes away. Is replacing what you expect from matching one shape to another?"
+  ],
+  "rough": [
+    "There are no screenshots with this audit at all. The Mac's screen was locked for the whole of this task, so no walk could run: macOS stops drawing the window and refuses every capture, and the offscreen renders a walk usually leaves behind are never produced either. The walk is written and committed as Scripts/playtest/copy-a-look-walk.json and needs one run on an unlocked screen.",
+    "A look does not carry typography. Copy the look of one piece of text onto another and the colour, the effects and the opacity arrive but the face, the size and the weight do not. That is deliberate scope, not an oversight, but it is the first thing anybody will try on two labels.",
+    "It does not carry what KIND of line a line is either: a dashed path pasted onto a plain one stays plain, and an arrow's ending and head size stay as they were. Those sit on the line between a look and what the shape is, and they were left on the far side of it.",
+    "Copy Look takes the look of the topmost shape when several are picked, without saying that is what it did beyond naming it in the pill. Nothing offers to copy the look of a selection as a whole, because there is no such thing.",
+    "The keys are the shifted pair rather than Option Command C and V, because Option Command C already belongs to Canvas Size, which is Photoshop's. That is a rule being followed rather than a judgement, and the fourth question above is the place to overrule it."
+  ]
+}

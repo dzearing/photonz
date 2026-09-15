@@ -436,6 +436,24 @@ struct EditorCommands: Commands {
             // duplicate-selected-layer case when no region is marqueed).
             Button("Duplicate Layer") { editor?.duplicateSelectedLayers() }
                 .disabled(!hasLayerSelection)
+            // Photoshop keeps Copy Layer Style and Paste Layer Style on the
+            // layer's own right click menu with NO key at all, so nothing
+            // Photoshop-shaped is being displaced here and there is no key to
+            // inherit. Figma, Sketch and the Mac's own Copy Style in Pages and
+            // TextEdit all use Option Command C and V, which is what a person
+            // reaches for first — but Option Command C already belongs to
+            // Canvas Size, which IS Photoshop's, so it stays where it is and
+            // the look takes the shifted pair one step along. They sit under
+            // Duplicate Layer, and on the layer's right click menu too, which
+            // is where somebody coming from Photoshop looks for them.
+            if Experiments.shared.copyALookEnabled {
+                Button("Copy Look") { editor?.copyLook() }
+                    .keyboardShortcut("c", modifiers: [.command, .option, .shift])
+                    .disabled(!(editor?.canCopyLook ?? false))
+                Button("Paste Look") { editor?.pasteLook() }
+                    .keyboardShortcut("v", modifiers: [.command, .option, .shift])
+                    .disabled(!(editor?.canPasteLook ?? false))
+            }
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))

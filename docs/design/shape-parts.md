@@ -1051,3 +1051,81 @@ words are then sitting on the picture and nothing in the model can see that.
 - **The grip's drag is still not scriptable.** A synthesized press cannot start a
   SwiftUI drag, so a walk reorders through the row's own menu (Move Up, Move
   Down, Remove), which calls exactly what the grip calls.
+
+## A look is the parts, carried whole (2026-09-15)
+
+Once a layer IS its parts plus a list of what was added, "make this one look
+like that one" has an exact answer, and it is the one the user asked for on
+2026-09-15:
+
+> Also i wish there was some way to just copy the format of one shape and best
+> effort apply it to the properties of another shape.
+
+**A look is: the colour of every part, the one line round the layer, the three
+properties laid over the whole of it (opacity, corner rounding, how it mixes),
+and the Effects list.** It is NOT where the layer is, how big it is, which way
+round it is, or what it is. A line pasted from a circle is still a line.
+
+That definition is what makes it best effort without a pile of special cases: a
+target simply has the parts it has, so a part it has no room for is skipped, and
+nothing fails because one setting did not fit. What was skipped is counted and
+said in the notice pill, because a result that is not quite a match has to be
+explained rather than mysterious.
+
+### The edge travels apart from the rest
+
+A circle wears its edge as a **Border in the Effects list**; a line **IS** its
+edge. Those are one thing to a person and two things underneath, which is
+exactly the distinction `OutlineWidth.swift` already draws (`outlineSlot`,
+`outlineWidth`, `outlinePaint`, `setOutlineWidth`). So a look holds "the edge"
+ONCE, taken out of the Effects list on the way in and put back wherever the
+target keeps its own edge on the way out.
+
+This is the whole reason the headline case works in two moves. Without it,
+pasting a circle onto a line would drop the circle's Border into the line's
+Effects list, and the line would wear a **rectangle round its bounding box**
+while its own ink stayed the colour it always was — the opposite of matching.
+
+A ring pasted onto another box keeps its side of the edge, its distance off it,
+and its place among whatever else was added, because the whole `BorderEffect`
+travels rather than a width and a colour.
+
+### The rest of the rules
+
+- **The Effects list is REPLACED, not merged.** Effects is what was ADDED, and
+  matching one shape to another means it ends up wearing what that one wears.
+- **A part switched off is an opinion.** A box with no fill makes the box you
+  paste it onto empty, rather than leaving its fill alone.
+- **A colour wearing a saved style arrives still wearing it.** Otherwise the
+  link everybody just built is lost at exactly the moment it is most useful. A
+  name this document has never heard of (a look carried in from another window)
+  arrives as the colour and no name.
+- **A line keeps its own line when the look has no edge.** A line of no width is
+  not a setting, it is a delete.
+- **Locked layers sit out**, and the pill says how many did.
+- **One undo step**, however many shapes it reached.
+
+### The keys
+
+Photoshop keeps Copy Layer Style and Paste Layer Style on the layer's own right
+click menu with **no key at all**, so nothing Photoshop-shaped is displaced here
+and there is no key to inherit. Figma, Sketch, and the Mac's own Copy Style in
+Pages and TextEdit all use ⌥⌘C and ⌥⌘V, which is what a person reaches for
+first — but ⌥⌘C already belongs to **Canvas Size**, which IS Photoshop's, and
+Photoshop parity wins a tie by house rule. So the look takes the shifted pair
+one step along, ⌥⇧⌘C and ⌥⇧⌘V, and both rows also sit on the layer's right click
+menu, which is where somebody coming from Photoshop looks for them.
+
+### Where it lives
+
+- `PhotonzCore/LayerLook.swift` — `LayerLook`, `Layer.look`,
+  `PhotonzDocument.applyLook(_:to:)` and `LookPaste`, the report the pill reads.
+  Tested in `Tests/PhotonzCoreTests/LayerLookTests.swift`.
+- `Photonz/EditorState+Look.swift` — `copyLook`, `pasteLook`, the row variants,
+  and `LookPasteboard`: a pasteboard of its OWN, so an ordinary Copy on the way
+  to the shape you want does not take the look away, and so a look crosses
+  windows.
+- `Photonz/EditorCommands.swift` and `Photonz/LayersRow.swift` — the two rows,
+  in the Layer menu and on a layer's right click menu.
+- `Scripts/playtest/copy-a-look-walk.json` — a line matched to a circle's
+  border, in the two moves it promises.

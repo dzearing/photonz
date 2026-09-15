@@ -15566,3 +15566,34 @@ been requested with that reason.
 
 **Next.** Run the sweep once the screen is unlocked; the new walk is the first
 thing it should prove.
+
+## 2026-09-15 — Copy the look of one shape onto another
+
+**What changed.** A shape's look can now be picked up and put on other shapes.
+`PhotonzCore/LayerLook.swift` defines what a look IS — the colour of every part,
+the one line round the layer, opacity, corner rounding, blend mode, and the
+Effects list — and `applyLook(_:to:)` puts it on, best effort, reporting what it
+skipped in `LookPaste`. The app side is `Photonz/EditorState+Look.swift`: Copy
+Look and Paste Look in the Layer menu on ⌥⇧⌘C and ⌥⇧⌘V, the same two rows on a
+layer's right click menu, and a pasteboard of the look's own so an ordinary Copy
+on the way to the shape you want does not take the look away. Behind
+`next-copy-a-look`, on by default in Next.
+
+The interesting part is that **the edge travels apart from the Effects list**. A
+circle wears its edge as a Border in that list and a line IS its edge; carrying
+the list wholesale would have put a rectangle round the line's bounding box and
+left its ink untouched, which is the opposite of matching. See the new section
+at the end of `docs/design/shape-parts.md`.
+
+**Verified.** `swift build` clean, 23 new tests in
+`Tests/PhotonzCoreTests/LayerLookTests.swift`, whole suite green.
+
+**Not verified.** The Mac's screen was locked for the whole session, so no walk
+could run and no picture of the app exists.
+`Scripts/playtest/copy-a-look-walk.json` is written and needs one run on an
+unlocked screen; a sweep was requested saying so.
+
+**Open questions**, all in `queue/audits/2026-09-15-copy-a-look.json` for the
+user to react to: whether a look should carry typography, whether pasting should
+replace the Effects list or add to it, and whether to take ⌥⌘C off Canvas Size
+so the look can have the pair everybody actually reaches for.

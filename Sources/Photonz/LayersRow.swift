@@ -362,6 +362,14 @@ struct LayersRow: View, Equatable {
     private var menu: some View {
         Button("Duplicate") { editorState.duplicateLayer(id: id) }
             .keyboardShortcut("d", modifiers: .command)
+        // Where Photoshop keeps them, under the names it uses for the same
+        // pair, so the two moves that make one shape match another are one
+        // right click away (`EditorState+Look.swift`).
+        if Experiments.shared.copyALookEnabled {
+            Button("Copy Look") { editorState.copyLookOfRow(id: id) }
+            Button("Paste Look") { editorState.pasteLookOntoRow(id: id) }
+                .disabled(!editorState.canPasteLookOntoRow(id: id))
+        }
         Button("Select Pixels") { editorState.selectLayerPixels(id: id) }
         Button("Merge Down") { editorState.mergeDown(id: id) }
             .keyboardShortcut("e", modifiers: .command)
