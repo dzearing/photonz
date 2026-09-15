@@ -1202,6 +1202,9 @@ private final class Run {
                      + "\(Self.round1(now))pt now, asked for \(Self.round1(within))pt",
                  state: describe())
 
+        case .expectHint(let contains):
+            note(number, step.name, try checkHint(contains: contains), state: describe())
+
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
@@ -3140,6 +3143,34 @@ private final class Run {
     /// hundred layers has to be asked of the document. The failure says the
     /// number it found and the first few names, because "138, not at least
     /// 150" is a different bug from "1, not at least 150".
+    /// The chip under the canvas as one line, read in the ORDER the editor
+    /// stacks them (`EditorView.canvas`), so what a walk reads is what is on
+    /// screen rather than the first one that happens to be true.
+    static func hintReading(_ editor: EditorState) -> String {
+        if editor.showsMeasureHint {
+            return "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)"
+        }
+        if editor.showsPathEditHint {
+            return "\(PathEditHint.title) · \(editor.pathEditHintText)"
+        }
+        if editor.showsPenHint {
+            return "\(PenSession.hintTitle) · \(editor.penHintText)"
+        }
+        return "none"
+    }
+
+    /// The words the chip must be carrying right now.
+    private func checkHint(contains: String) throws -> String {
+        let editor = try requireEditor()
+        let reading = Self.hintReading(editor)
+        guard reading.contains(contains) else {
+            throw Failure(description: reading == "none"
+                ? "no chip is up under the canvas, so it cannot be saying \"\(contains)\""
+                : "the chip says \"\(reading)\", which does not carry \"\(contains)\"")
+        }
+        return "the chip says \"\(reading)\", carrying \"\(contains)\" as claimed"
+    }
+
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -6353,14 +6384,7 @@ private final class Run {
         let layers = document?.layers ?? []
         // The chip under the canvas, in the order the editor stacks the two
         // that exist: the Measure hint wins, the Pen's is next.
-        let hintReport: String
-        if editor.showsMeasureHint {
-            hintReport = "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)"
-        } else if editor.showsPenHint {
-            hintReport = "\(PenSession.hintTitle) · \(editor.penHintText)"
-        } else {
-            hintReport = "none"
-        }
+        let hintReport = Self.hintReading(editor)
         let measures = layers.compactMap { layer -> String? in
             guard let measure = layer.measure, let document else { return nil }
             let flags = "\(measure.role.rawValue)\(measure.alignment != nil ? ", alignment" : "")"

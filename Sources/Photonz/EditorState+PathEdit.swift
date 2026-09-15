@@ -28,24 +28,40 @@ extension EditorState {
         perform { $0.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) } }
     }
 
-    /// The line on the chip under the canvas while a path's points are on show.
-    /// Live state, never in the document.
-    var pathEditHintText: String {
-        pathEditHint ?? PathEditHint.opening
-    }
-
-    /// Whether that chip is up: a path picked, with the Select tool in hand,
-    /// in a release that can reshape one.
+    /// The picked path layer the chip is about, whatever state it is in, or
+    /// nil when no chip belongs on screen.
     ///
     /// Asked of the DOCUMENT rather than waiting to be told, so the chip is up
     /// the moment a path is picked — which is the moment somebody needs to be
     /// told that the dots on it can be dragged at all.
-    var showsPathEditHint: Bool {
-        guard Experiments.shared.reshapePathEnabled, activeTool == .select,
+    ///
+    /// The PEN counts as well as Select, because the Pen stays in hand after a
+    /// shape lands and that is precisely when somebody wants to round a corner
+    /// (`CanvasNSView.editablePath`). A TURNED path counts too, where it used
+    /// to be excluded: it cannot be reshaped, and the chip is the only thing
+    /// that can say so instead of leaving the points quietly missing.
+    private var pathEditChipLayer: Layer? {
+        guard Experiments.shared.reshapePathEnabled,
+              activeTool == .select || (activeTool == .pen && Experiments.shared.penEnabled),
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
-              layer.path != nil, !layer.isLocked, layer.transform.isIdentity else {
-            return false
-        }
-        return true
+              layer.path != nil, !layer.isLocked else { return nil }
+        return layer
     }
+
+    /// The line on the chip under the canvas while a path's points are on show.
+    /// Live state, never in the document.
+    ///
+    /// The turned case is read HERE rather than taken from the canvas, because
+    /// a turned path has no points and so the canvas has nothing to announce:
+    /// the line it last pushed is about the shape as it was before the turn.
+    var pathEditHintText: String {
+        guard let layer = pathEditChipLayer else { return PathEditHint.opening }
+        guard layer.transform.isIdentity else { return PathEditHint.turned }
+        return pathEditHint
+            ?? PathEditHint.line(picked: 0, penInHand: activeTool == .pen)
+    }
+
+    /// Whether that chip is up: a path picked, with Select or the Pen in hand,
+    /// in a release that can reshape one.
+    var showsPathEditHint: Bool { pathEditChipLayer != nil }
 }

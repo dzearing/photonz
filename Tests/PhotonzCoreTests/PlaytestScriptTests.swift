@@ -1499,6 +1499,31 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// The chip under the canvas is the app's one place for saying what the
+    /// thing in your hand can do, and nothing could claim it until now.
+    @Test("An expectHint step claims the words on the chip")
+    func expectHintClaimsTheChip() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectHint", "contains": "Double click a point to curve it" } ] }
+        """)
+        guard case .expectHint(let contains) = script.steps[0] else {
+            Issue.record("expectHint"); return
+        }
+        #expect(contains == "Double click a point to curve it")
+        #expect(script.steps[0].name == "expectHint")
+        #expect(PlaytestStep.names.contains("expectHint"))
+    }
+
+    /// An empty claim would pass against every chip and against no chip, which
+    /// is a walk that looks green and reads nothing.
+    @Test func expectHintRefusesAnEmptyClaim() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectHint", "contains": "  " } ] }
+            """)
+        }
+    }
+
     @Test("An expectPicked step names the layers that must be picked")
     func expectPickedNamesTheLayers() throws {
         let script = try decode("""

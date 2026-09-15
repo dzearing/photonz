@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/path-points-under-the-pen-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "expectHint", "contains": "Click to place a corner" },
+    { "do": "describe", "stage": "0-pen-picked", "note": "the Pen is in hand and its chip says how to draw" },
+
+    { "do": "click", "at": [200, 500] },
+    { "do": "click", "at": [450, 220] },
+    { "do": "click", "at": [700, 500] },
+    { "do": "click", "at": [203, 503] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "describe", "stage": "1-drawn-pen-still-in-hand", "note": "a triangle landed and the Pen is STILL in hand, which is the state the whole task is about" },
+
+    { "do": "expectHint", "contains": "Drag a point to reshape this shape" },
+    { "do": "expectHint", "contains": "Double click a point to curve it" },
+    { "do": "expectHint", "contains": "draw another" },
+    { "do": "snapshot", "name": "1-just-drawn-points-showing" },
+    { "do": "describe", "stage": "2-the-chip-says-it", "note": "the chip under the canvas has switched from the Pen's line to the path's: with the Pen still in hand it names dragging a point and double clicking one, and says a press anywhere else still draws the next shape" },
+
+    { "do": "hover", "at": [450, 220] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-pointer-over-a-point", "note": "the pointer over the top corner: the cue reads grab, so the open hand says this dot is a different press from the shape it sits on, with the Pen in hand" },
+
+    { "do": "drag", "from": [450, 220], "to": [450, 140], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "anchor": 1, "near": [450, 140], "within": 8 },
+    { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "4-moved-with-the-pen-in-hand", "note": "the top point was dragged with the PEN in hand: it moved, the Pen is still the tool, and nothing new was drawn (still two layers)" },
+    { "do": "snapshot", "name": "2-point-moved-under-the-pen" },
+
+    { "do": "click", "at": [450, 140], "count": 2 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "smooth": 1 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectHint", "contains": "Drag a lever to bend the curve" },
+    { "do": "describe", "stage": "5-curved-with-the-pen-in-hand", "note": "two clicks on that point turned the hard corner into a smooth bend, with the Pen in hand and no shape started. The chip has moved on to what the picked point can do next" },
+    { "do": "snapshot", "name": "3-corner-curved-under-the-pen" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 2 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "6-delete-takes-the-point", "note": "Backspace with a point picked takes THAT point out rather than the whole shape: two anchors left, still two layers" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 3, "smooth": 1 },
+
+    { "do": "click", "at": [820, 180] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "expectHint", "contains": "Click the next point" },
+    { "do": "describe", "stage": "7-a-press-off-the-points-still-draws", "note": "a press away from the points starts the next shape exactly as before: the triangle is let go, the Pen's own chip is back, and one anchor is down" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
+    { "do": "click", "at": [450, 350] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "expectHint", "contains": "or the outline to add one" },
+    { "do": "describe", "stage": "8-select-offers-the-fourth-gesture", "note": "with Select in hand the chip offers the one gesture the Pen cannot reach: double click the outline to add a point" },
+
+    { "do": "click", "at": [450, 500], "count": 2 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expectPath", "anchors": 4 },
+    { "do": "describe", "stage": "9-a-point-added-under-select", "note": "two clicks on the BOTTOM edge, which runs between two hard corners and so is straight, added a fourth point: the Select-only half of the job still working" },
+    { "do": "snapshot", "name": "4-point-added-under-select" }
+  ]
+}

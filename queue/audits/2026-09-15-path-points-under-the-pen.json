@@ -1,0 +1,32 @@
+{
+  "feature": "A path you drew shows you what you can do to it",
+  "epic": "icon-vector",
+  "summary": "Draw a shape with the Pen and its points are now on it straight away, while the Pen is still in your hand. Drag one to move it, double click one to curve it, press Delete to take one out, and the chip under the canvas says all three. Before this, the points only existed once you knew to press V, and nothing on screen said so.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-pen and next-reshape-a-path are both on by default, so nothing needs turning on.",
+  "try": [
+    { "do": "Press P and click three corners, then click the first one again to close the shape." },
+    { "do": "Look at the shape without pressing anything: its points should be on it, and the chip under the canvas should say what they do." },
+    { "do": "Rest the pointer on one of the points and watch the cursor." },
+    { "do": "Drag that point somewhere else." },
+    { "do": "Double click it to turn the hard corner into a curve, then drag one of the two levers that appear." },
+    { "do": "Press Delete to take that point out, then Undo." },
+    { "do": "Click on empty canvas and draw a second shape, to check the Pen still draws." },
+    { "do": "Press V, then double click on the outline between two points to add one." }
+  ],
+  "evaluate": [
+    "At step 2, before reading the chip: did you already know the dots were something you could grab?",
+    "Did the points appearing under a drawing tool make you think the tool had changed under you, or did it read as the shape simply being editable?",
+    "Is the chip's line the one you wanted at that moment, or did you want it to name something else first?",
+    "Could you round a corner without being told anything, and how long did it take?",
+    "Adding a point needs Select, because under the Pen the first of the two clicks starts a new shape. Did you miss it under the Pen, or did you not reach for it?",
+    "Turn a path with the A field in Position & Size: does the line about it explain the missing points well enough, or would you rather a turned path could be reshaped at all?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this run, so NOTHING here was photographed and no walk could be run: macOS stops drawing the window entirely under a lock, so a walk is not a pass and not a failure. There are no pictures of the app in this audit, not even offscreen ones, because what this feature changes is canvas chrome (the dots, the cursor, the chip) which an offscreen render does not draw. The 6882 unit tests are green and the code builds; the walk that checks every gesture is written and has never run.",
+    "So the first-time check the task asked for did not happen with a person or with the app. That is the biggest gap in this slice and the questions above are written to get it done properly.",
+    "Adding a point by double clicking the outline does NOT work with the Pen in hand, and this is by design rather than an oversight: the first of the two clicks starts a new path and lets the finished one go before the second arrives. The chip under the Pen therefore does not offer it. Whether that gap is worth closing by making the Pen modal is a question for the user, not a defect.",
+    "You cannot start a new path within about 8 screen points of a point of the path still picked: that press grabs the point instead. It is the smallest surface the change could have taken and it matches what the Pen already does with its own anchors, but drawing a second shape that shares a vertex with the first now needs a click elsewhere first.",
+    "A turned path still cannot be reshaped. It now says why and names the field that undoes it, which is the whole of what this task asked for, but reshaping a turned path is still not possible.",
+    "The pointer cue over a path's points used to be read AFTER the canvas's own boundary handles, which is the opposite of the order the press itself uses. Moving it fixed that mismatch as a side effect; nothing was ever reported about it."
+  ]
+}

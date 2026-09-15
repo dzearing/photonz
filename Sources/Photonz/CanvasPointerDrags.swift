@@ -667,16 +667,21 @@ extension CanvasNSView {
             return
         }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        // A point of a path taken hold of owns the rest of the gesture, even
+        // with the Pen in hand: the Pen shows a picked path its points now, so
+        // the press that started this drag was a press on a point rather than
+        // the first anchor of a new shape. Read before the Pen, or the drag
+        // would be handed to a session that never began.
+        if pathAnchorDrag != nil {
+            pathEditMouseDragged(to: p, event: event)
+            return
+        }
         if tool == .pen {
             penMouseDragged(to: p, event: event)
             return
         }
         if motionPivotDrag != nil {
             motionPivotMouseDragged(to: p, event: event)
-            return
-        }
-        if pathAnchorDrag != nil {
-            pathEditMouseDragged(to: p, event: event)
             return
         }
         if var drag = cropDrag {
@@ -1016,6 +1021,14 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // The release of a path-point drag, before the Pen, for the same reason
+        // its `mouseDragged` is: with the Pen in hand this drag belongs to the
+        // points, and `pathEditMouseUp` answers nothing when no such drag is in
+        // flight, so the Pen still gets every press that was really its own.
+        if pathEditMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
+                           event: event) {
+            return
+        }
         if tool == .pen {
             penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
                        event: event)
@@ -1023,10 +1036,6 @@ extension CanvasNSView {
         }
         if motionPivotDrag != nil {
             motionPivotMouseUp()
-            return
-        }
-        if pathEditMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
-                           event: event) {
             return
         }
         // The measure tool advances its placement on mouse-up (click/click) or on

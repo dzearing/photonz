@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T12:14:53.227Z",
+  "updated": "2026-09-15T13:42:36.143Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -72,6 +72,10 @@
     {
       "t": "2026-09-15T12:14:53.226Z",
       "note": "seq 12 -> 20"
+    },
+    {
+      "t": "2026-09-15T13:42:36.142Z",
+      "note": "Still true at 2026-09-15 06:42 local: the screen was locked for the whole of the 'a-path-you-drew-shows-you-what-you-can-do-to-it' run, so that audit ships with NO pictures at all, not even offscreen ones. The feature it audits is canvas chrome (the points on a path, the pointer over them, the chip under the canvas), and an offscreen render does not draw any of that, so the fallback earlier runners used today (render the document straight from the renderer) has nothing to show either. Screen Recording is granted to the probe; the lock alone is what stopped it. queue/bin/sweep.sh status confirms a sweep is already pending for the same reason."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

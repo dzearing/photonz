@@ -58,21 +58,51 @@ extension CanvasNSView {
 
     // MARK: - What is showing
 
-    /// The path whose points are on the canvas: one picked, with the Select
-    /// tool in hand, in a release that can reshape one.
+    /// The path whose points are on the canvas: one picked, with Select or the
+    /// PEN in hand, in a release that can reshape one.
+    ///
+    /// The Pen counts because the Pen STAYS IN HAND after a shape lands
+    /// (`EditorState.addPath`), so the moment somebody has just drawn a shape
+    /// and wants to round a corner is a moment spent holding the Pen. Asking
+    /// for Select there meant the points of the thing you had this second
+    /// finished did not exist, with nothing on screen saying why — the whole
+    /// of the report on 2026-09-14, "I don't understand how to make curved
+    /// shapes, don't know how to delete a point, add a point, reposition a
+    /// point".
+    ///
+    /// The two tools do not fight over the same pixels, because the Pen
+    /// ALREADY treats a press on an existing anchor as acting on that anchor
+    /// rather than placing a fresh one: clicking the first anchor closes the
+    /// shape, clicking the last one finishes it, and a ring says so before you
+    /// press (`refreshPenTarget`). A press on a POINT or a LEVER reshapes; a
+    /// press anywhere else, the outline included, starts the next shape
+    /// exactly as it did before (`CanvasNSView.mouseDown` runs
+    /// `pathEditMouseDown` first, and it answers nothing off a point).
+    ///
+    /// What that costs, said out loud: double clicking the OUTLINE to add a
+    /// point cannot work under the Pen, because the first of the two clicks
+    /// starts a new path and lets this one go before the second arrives. That
+    /// one gesture stays a Select gesture, and the chip under the Pen does not
+    /// offer it (`PathEditHint.penOpening`).
     ///
     /// A path inside a copy offers nothing, like every other layer that offers
     /// no handles (`offersOwnHandles`). Neither does one on a SLANT: reshaping
     /// moves the box the shape sits in, a turn is measured about the middle of
     /// that box, and a point dragged out on a turned path would therefore swing
     /// the whole shape round under the hand. Straighten it with the A field and
-    /// the points come back.
+    /// the points come back — which the chip now SAYS rather than leaving the
+    /// points quietly missing (`PathEditHint.turned`).
     var editablePath: (id: UUID, layer: Layer, content: PathContent)? {
-        guard Experiments.shared.reshapePathEnabled, tool == .select,
+        guard Experiments.shared.reshapePathEnabled, toolCanReshapeAPath,
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
               let content = layer.path, offersOwnHandles(layer),
               layer.transform.isIdentity else { return nil }
         return (id, layer, content)
+    }
+
+    /// Whether the tool in hand is one that shows a picked path its points.
+    var toolCanReshapeAPath: Bool {
+        tool == .select || (tool == .pen && Experiments.shared.penEnabled)
     }
 
     /// A press in the layer's own coordinates, measured from its corner.
@@ -325,7 +355,8 @@ extension CanvasNSView {
         let shape = content ?? picked.content
         let only = pathAnchorSelection.count == 1 ? pathAnchorSelection.first : nil
         let anchor = only.flatMap { shape.anchors.indices.contains($0) ? shape.anchors[$0] : nil }
-        return PathEditHint.line(picked: pathAnchorSelection.count, anchor: anchor)
+        return PathEditHint.line(picked: pathAnchorSelection.count, anchor: anchor,
+                                 penInHand: tool == .pen)
     }
 
     // MARK: - The chrome

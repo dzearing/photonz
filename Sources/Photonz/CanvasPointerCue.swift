@@ -68,10 +68,11 @@ extension CanvasNSView {
     /// read it through — the whole answer the pointer gives, for every handle
     /// on the canvas rather than just the ones you drag with a hand.
     ///
-    /// The order MIRRORS `mouseDown`: the canvas's own boundary handles are
-    /// captured before anything else, then the selected layer's handles in
-    /// `CanvasPointer`'s order. A cue that ran ahead of the press would be
-    /// confidently wrong about the one thing it exists to answer.
+    /// The order MIRRORS `mouseDown`: a picked path's own points first (they
+    /// are read there before anything document-shaped), then the canvas's own
+    /// boundary handles, then the selected layer's handles in `CanvasPointer`'s
+    /// order. A cue that ran ahead of the press would be confidently wrong
+    /// about the one thing it exists to answer.
     private func pointerCue(at p: CGPoint) -> (cue: CanvasPointerCue, transform: LayerTransform)? {
         guard Experiments.shared.grabCueEnabled, let viewport else { return nil }
         // Crop is its own mode with its own pointer, and its crosshair keeps
@@ -84,6 +85,13 @@ extension CanvasNSView {
                                          edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
                 .map { ($0, .identity) }
         }
+        // A picked path's points and levers say what they are under EVERY tool
+        // that shows them, which now includes the Pen: the hand is the only
+        // thing on screen saying that the dot under the pointer is a different
+        // press from the shape it sits on. Read before the Select-only gate,
+        // because the whole point of showing the points under the Pen is that
+        // they behave like points there too.
+        if let grab = pathPointCue(at: p) { return grab }
         guard tool == .select else { return nil }
         if isCanvasSelected,
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
@@ -93,18 +101,6 @@ extension CanvasNSView {
         }
         guard let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
-        // A path's points and levers are grabs of their own, and they are read
-        // first because they sit ON the outline, where a press would otherwise
-        // pick the whole shape up.
-        if let picked = editablePath {
-            let local = CGPoint(x: p.x - picked.layer.frame.minX,
-                                y: p.y - picked.layer.frame.minY)
-            switch picked.content.editTarget(at: local, zoom: viewport.zoom,
-                                             handlesShowing: pathAnchorSelection) {
-            case .anchor, .handle: return (.grab, .identity)
-            case .segment, nil: break
-            }
-        }
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
         let cue = CanvasPointer.cue(at: p, layer: layer,
@@ -121,6 +117,25 @@ extension CanvasNSView {
         // `mouseDown` reads it.
         if cue == nil, motionPivotHit(at: p) != nil { return (.grab, .identity) }
         return cue.map { ($0, layer.transform) }
+    }
+
+    /// The open hand over a picked path's own points and levers, or nil
+    /// anywhere else.
+    ///
+    /// They are grabs of their own, read before every other cue because they
+    /// sit ON the outline, where a press would otherwise pick the whole shape
+    /// up — and, with the Pen in hand, where a press would otherwise start the
+    /// next shape.
+    private func pathPointCue(at p: CGPoint) -> (cue: CanvasPointerCue,
+                                                 transform: LayerTransform)? {
+        guard let viewport, let picked = editablePath else { return nil }
+        let local = CGPoint(x: p.x - picked.layer.frame.minX,
+                            y: p.y - picked.layer.frame.minY)
+        switch picked.content.editTarget(at: local, zoom: viewport.zoom,
+                                         handlesShowing: pathAnchorSelection) {
+        case .anchor, .handle: return (.grab, .identity)
+        case .segment, nil: return nil
+        }
     }
 
     /// Whether this event asks for the drag to leave the original behind and

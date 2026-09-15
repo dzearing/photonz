@@ -51,4 +51,42 @@ struct PathEditHintTests {
     @Test func onePointWithNoAnchorNamedFallsBackToTheGeneralLine() {
         #expect(PathEditHint.line(picked: 1) == PathEditHint.bendPicked)
     }
+
+    /// The Pen stays in hand after a shape lands, so the chip somebody reads at
+    /// the exact moment they want to curve a corner is the one shown WITH THE
+    /// PEN. It cannot offer the one gesture the Pen cannot do.
+    @Test func withThePenInHandItOffersOnlyWhatThePenCanDo() {
+        let line = PathEditHint.line(picked: 0, penInHand: true)
+        #expect(line == PathEditHint.penOpening)
+        #expect(line.contains("Drag a point"), "moving a point")
+        #expect(line.contains("Double click"), "curving one")
+        #expect(!line.contains("outline"),
+                "the outline double click adds a point, and the Pen cannot reach it")
+    }
+
+    /// With the Pen in hand a press off the points still starts another shape,
+    /// so the chip says so rather than leaving somebody thinking the tool has
+    /// changed under them.
+    @Test func thePenLineSaysThePenStillDraws() {
+        #expect(PathEditHint.penOpening.lowercased().contains("draw another"))
+    }
+
+    /// A point picked says the same things whichever tool is in hand: the
+    /// gestures on a POINT are the same ones.
+    @Test func aPickedPointSaysTheSameWithEitherToolInHand() {
+        #expect(PathEditHint.line(picked: 1, anchor: Self.corner, penInHand: true)
+                == PathEditHint.cornerPicked)
+        #expect(PathEditHint.line(picked: 3, penInHand: true) == PathEditHint.severalPicked)
+    }
+
+    /// A turned path cannot be reshaped, and until now it said nothing at all:
+    /// the points simply were not there. The line has to name the way back.
+    @Test func aTurnedPathSaysWhyItsPointsAreNotThere() {
+        #expect(PathEditHint.turned.contains("turned"))
+        #expect(PathEditHint.turned.contains("Set A back to 0"),
+                "the field that straightens it")
+        #expect(PathEditHint.turned.contains("Position & Size"),
+                "spelled the way the panel spells it (LayerSection.geometry)")
+        #expect(PathEditHint.turned != PathEditHint.opening)
+    }
 }

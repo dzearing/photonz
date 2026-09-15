@@ -1498,6 +1498,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// exactly as the log spells it, "400,300 200x100"; `present` claims only
     /// whether there is one at all, and `false` is the useful half.
     case expectRegion(reads: String?, present: Bool?)
+    /// The words on the chip under the canvas right now must contain `contains`.
+    ///
+    /// The chip is the app's one place for saying what the thing you are
+    /// holding can do, and until now nothing could claim it: `describe` wrote
+    /// it into the log and no walk read it back. That is how a path shipped
+    /// with every reshape gesture working and the chip, at the one moment
+    /// anybody needed it, talking about something else (2026-09-15). A
+    /// substring rather than the whole line, so a walk claims the PROMISE the
+    /// chip makes rather than breaking on a comma.
+    case expectHint(contains: String)
     /// What the path the Pen just drew is actually made of: how many anchors it
     /// has, whether it closed, and how many of its runs are curves.
     ///
@@ -1725,7 +1735,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
@@ -1778,6 +1788,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
+        case .expectHint: "expectHint"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
@@ -2129,6 +2140,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectHint":
+            let contains = try f.string("contains")
+            guard !contains.trimmingCharacters(in: .whitespaces).isEmpty else {
+                throw f.invalid("contains", "expectHint has to say which words the chip must "
+                    + "carry; an empty claim passes against every chip and against no chip")
+            }
+            self = .expectHint(contains: contains)
         case "expectRegion":
             let reads = try f.optionalString("reads")
             let present = fields["present"] as? Bool

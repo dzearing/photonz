@@ -299,6 +299,23 @@ struct EditorView: View {
                                          action: notice.action)
                     } else if editorState.showsMeasureHint {
                         measureHintChip
+                    } else if editorState.showsPathEditHint {
+                        // The same chip, for the other half of the job: with a
+                        // path picked it says what its points do, because
+                        // double clicking a point and Option dragging a lever
+                        // are not things anybody guesses at.
+                        //
+                        // It is read BEFORE the Pen's, and that order is the
+                        // whole fix: the Pen stays in hand after a shape lands,
+                        // so without this the one chip on screen at the exact
+                        // moment somebody wants to round a corner was still
+                        // talking about placing the next anchor. A path is only
+                        // picked here when the Pen is NOT mid-draw — the first
+                        // anchor of a new shape lets the last one go
+                        // (`penMouseDown`) — so the Pen's own line is never
+                        // covered up while it is the one that matters.
+                        canvasNoticeChip(title: PathEditHint.title,
+                                         detail: editorState.pathEditHintText)
                     } else if editorState.showsPenHint {
                         // The Pen's chip stays up the whole time the tool is in
                         // hand, rather than fading like the Measure one: it is
@@ -307,13 +324,6 @@ struct EditorView: View {
                         // picked the tool up.
                         canvasNoticeChip(title: PenSession.hintTitle,
                                          detail: editorState.penHintText)
-                    } else if editorState.showsPathEditHint {
-                        // The same chip, for the other half of the job: with a
-                        // path picked it says what its points do, because
-                        // double clicking a point and Option dragging a lever
-                        // are not things anybody guesses at.
-                        canvasNoticeChip(title: PathEditHint.title,
-                                         detail: editorState.pathEditHintText)
                     }
                 }
                 .overlay(alignment: .bottom) {
