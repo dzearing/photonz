@@ -1,0 +1,38 @@
+{
+  "id": "tutorials-making-states-in-a-component",
+  "title": "Tutorials: making states in a component",
+  "goal": "The Components track teaches versions with a button that has an on look and an off look, which undersells what somebody is really doing. A button has a resting look, a hovered look, a pressed look and a disabled look, and the reason to keep them under one name is so all four stay in step. Rewrite that guide to teach the four states people actually build, and to show how to see the button in each of them.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 12.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:51:15.223Z",
+  "updated": "2026-09-15T14:51:26.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-15: the button component tutorial's \"2 states\" thing should be \"Making states in a component\", covering \"a button transitioning from rest, hovered, pressed, disabled, and how to preview the button in its different states\".\n\nThe guide to rewrite is componentVersions in Sources/PhotonzCore/TutorialGuides.swift, id 'component-versions', currently titled \"One name, two looks\" with the summary \"A button needs a disabled look too. Both live under one component.\" It teaches adding a second version under the Versions panel. So the mechanism it teaches is right; the story around it is thin.\n\nWHAT THE APP ACTUALLY HAS, checked: components hold VERSIONS, a copy picks which version it shows, versions can be named, and the canvas says which version a copy is showing. There is no notion of an interaction state anywhere in the model - no hover, no pressed, no disabled - confirmed by grepping ComponentInstances and ComponentStyle. So states are a CONVENTION built on versions: you name four versions after the four states. That is exactly how designers work in other tools, and it is honest to teach it that way. Do not invent a states feature inside a tutorial.\n\nThat also means the previewing half needs care. 'See the button in each state' with what exists means placing four copies and pointing each at a different version, which is a real and useful thing to teach. If that turns out clumsy - if there is no quick way to flip one copy through its versions, or no way to see them together without arranging copies by hand - that is a genuine feature gap the user has just walked into from the other direction, and it belongs in a task of its own rather than being smoothed over in the guide's words. The acceptance list asks for exactly that.\n\nKeep the existing guide's own rule, which is already written in its comment: it is called Versions because that is what the panel calls it, and a guide teaches what shipped rather than what the plan called it. If the guide's TITLE changes to talk about states, the steps must still name the Versions panel the person is looking at.",
+  "acceptance": [
+    "The guide is called something that says what it is for, in the app's plain voice, rather than naming the mechanism",
+    "It teaches the four states a button really has: resting, hovered, pressed and disabled",
+    "It shows how to look at the button in each state, and the audit captures all four side by side as the guide leaves them",
+    "It says why they belong under one name: change the label or the corner and every state follows, so they cannot drift apart",
+    "It teaches what stays the same and what differs between states, so somebody does not redraw the button four times",
+    "It still teaches what actually shipped rather than what a plan called it, which is the rule the existing guide already follows",
+    "It is short enough to finish in the time its entry claims, measured rather than guessed",
+    "Every step points at something visible at that moment, and the guide behaves sensibly with the component flags off as well as on",
+    "If seeing all four states at once is awkward or impossible with what exists, that is written up as a finding and filed as its own task rather than worked around silently in the guide",
+    "Audit under queue/audits/ with the guide captured step by step, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:51:15.225Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T14:51:26.219Z",
+      "note": "seq 2680 -> 12.5"
+    }
+  ]
+}
