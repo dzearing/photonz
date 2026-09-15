@@ -892,6 +892,11 @@ final class CanvasNSView: NSView {
     /// that draws over several clicks, so its state outlives a single press;
     /// every decision it makes lives in `PenSession` and is tested there.
     var penSession = PenSession()
+    /// The last line handed to the chip under the canvas. The line is worked
+    /// out on every mouse move now that it answers what is under the pointer,
+    /// and handing SwiftUI the same sentence sixty times a second would redraw
+    /// the editor for nothing.
+    var lastPenHint: String?
     /// The run of the path already placed, plus the run to the pointer, drawn
     /// the way the finished shape will be drawn (filled once it would close).
     let penPathLayer = CAShapeLayer()

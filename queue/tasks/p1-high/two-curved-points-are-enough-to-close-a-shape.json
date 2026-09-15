@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 3.1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:28:43.251Z",
-  "updated": "2026-09-15T02:30:16.587Z",
+  "updated": "2026-09-15T02:49:21.837Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The rule is one line: Sources/PhotonzCore/PenDrawing.swift:158, `guard anchors.count >= 3, let first = anchors.first else { return false }`. Three is the right floor for straight runs, because two straight points enclose nothing, and it is wrong the moment the segments curve.\n\nSo the fix is not to lower the number to two, it is to ask the real question: does closing this path enclose an area. Two anchors whose segments both bow outward do; two anchors on a straight line do not. Say in the audit what test was used.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
@@ -33,7 +33,28 @@
     {
       "t": "2026-09-15T02:30:16.586Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T02:49:12.557Z",
+      "note": "Adversarial review before building. The one-line fix (count >= 3 becomes >= 2) was rejected: it lets two straight points close into a layer that paints no pixels and can only be found by hunting the layer list. Instead the Pen now asks the real question, does joining this up leave an inside, via a new PathContent.enclosedArea. Second finding: the gate cannot sit on the PRESS, because the press itself can create the inside - pulling off the first anchor bows the run home and turns a flat pair into a half moon. So the ring shows on the first anchor from the second point on (acceptance 3, same cue as at three points) and the answer is settled on release. Third finding: the old code did not just refuse, it silently dropped a third anchor exactly on top of the first, so clicking again could never close either. That is the 'goes quiet' in the report and it is fixed by refusing to place."
+    },
+    {
+      "t": "2026-09-15T02:49:12.600Z",
+      "note": "What shipped. PhotonzCore: PathContent.enclosedArea / .enclosesAnArea, the exact integral of 0.5*oint(x dy - y dx) over each cubic run rather than a flattened sample, so an outline doubling back along itself gives a clean zero (Bezier.sweep/powers). PenSession.wouldClose now asks about AIM (>= 2 anchors, pointer on the first), release() gates on closingEnclosesAnArea and returns a new .refused outcome that leaves the path untouched, and hint(for:) gained the line the chip shows while you stand on the first anchor of a flat path. App: CanvasPen routes every chip update through refreshPenHint(), which dedupes because the line now depends on what is under the pointer and is worked out on every mouse move."
+    },
+    {
+      "t": "2026-09-15T02:49:12.640Z",
+      "note": "Verified. Tests first, then the change: 6599 tests in 532 suites green (Scripts/test.sh). New core tests cover a square, a four-anchor circle to within 0.1 percent of pi r squared, two straight points, three collinear points, two curved points, one curved point and one corner, a refused close leaving no handle behind, the two hint lines, SVG export of a leaf as two C runs and a Z, reshaping a leaf (pick up either point, add a point on the run HOME, move a point) and a Codable round trip. In the real app: new walk Scripts/playtest/pen-two-points-make-a-shape-walk.json passes, and all 9 pen walks pass. The walk log confirms the chip really says 'These points are in a line, so joining them up has no inside...' on the running app, and the screenshots in the audit are -sc.png captures (Screen Recording was granted this run)."
+    },
+    {
+      "t": "2026-09-15T02:49:21.791Z",
+      "note": "left rough, none of it earning its own task: (1) a refused click gives nothing at the instant of the click, no flash and no sound; the chip is already showing the reason before and after, so it is never silent, but somebody clicking without reading gets no reaction. (2) the refusal line is the longest thing the Pen chip ever says. (3) three or more points in one straight line now refuse to close too, which they did not before; closing them made an invisible layer, so it is the same fix, but it is a behaviour change past the two point case and it is in the audit for the user to react to. (4) Scripts/playtest/out/ is 5MB of walk output sitting untracked in the repo, left by somebody running panel-says-less-walk with an --out override; it is not mine to delete and it is not a defect in any walk, but it is noise in every git status. (5) no sweep asked for: the change is the Pen and an additive computed property on PathContent, all 9 pen walks pass, and walks-that-fail-in-the-full-sweep already has a sweep queued behind another task."
+    },
+    {
+      "t": "2026-09-15T02:49:21.835Z",
+      "note": "Two points close when joining them up leaves an inside. PhotonzCore gained PathContent.enclosedArea (the exact integral over each cubic run, so a doubled-back outline is a clean zero) and PenSession settles closing on release rather than on a head count, with a new .refused outcome that leaves the path untouched and a chip line that says why before the click that would fail. Verified: 6599 tests green, new walk pen-two-points-make-a-shape-walk plus all 9 pen walks pass, audit at queue/audits/2026-09-14-pen-two-point-shape.json with two real -sc.png captures."
     }
   ],
-  "started": "2026-09-15T02:30:16.585Z"
+  "started": "2026-09-15T02:30:16.585Z",
+  "completed": "2026-09-15T02:49:21.836Z"
 }

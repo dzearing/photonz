@@ -48,6 +48,7 @@ extension CanvasNSView {
     /// the system accent, so the shape and the scaffolding round it never read
     /// as the same object.
     func refreshPenChrome() {
+        if tool == .pen { refreshPenHint() }
         guard tool == .pen, let viewport, let content = penSession.previewPath,
               !content.anchors.isEmpty else {
             for shape in [penPathLayer, penAnchorsLayer, penHandlesLayer, penTargetLayer] {
@@ -216,14 +217,17 @@ extension CanvasNSView {
     func penMouseUp(at p: CGPoint, event: NSEvent) {
         guard tool == .pen else { return }
         switch penSession.release() {
-        case .placed, .retracted, .nothing:
+        // A refused close changed nothing, so it is handled exactly like a
+        // press that placed nothing. The chip is already saying why, because
+        // it has been saying it since the pointer landed on the anchor.
+        case .placed, .retracted, .refused, .nothing:
             penSession.pointer = p
             penSession.free = event.modifierFlags.contains(.command)
             refreshPenChrome()
         case .closed(let content), .finished(let content):
             commitPen(content)
         }
-        onPenHintChange(PenSession.hint(for: penSession))
+        refreshPenHint()
     }
 
     /// The pointer moved with the Pen in hand and no button down: the run to
@@ -280,7 +284,7 @@ extension CanvasNSView {
             // the canvas's own delete while a path is being drawn.
             guard penSession.undoLastAnchor() else { return true }
             refreshPenChrome()
-            onPenHintChange(PenSession.hint(for: penSession))
+            refreshPenHint()
             return true
         default:
             return false
@@ -306,14 +310,14 @@ extension CanvasNSView {
               event.charactersIgnoringModifiers?.lowercased() == "z",
               penSession.undoLastAnchor() else { return false }
         refreshPenChrome()
-        onPenHintChange(PenSession.hint(for: penSession))
+        refreshPenHint()
         return true
     }
 
     private func commitPen(_ content: PathContent) {
         penSession.discard()
         refreshPenChrome()
-        onPenHintChange(PenSession.hint(for: penSession))
+        refreshPenHint()
         onPathCommit(content)
     }
 
@@ -322,6 +326,20 @@ extension CanvasNSView {
     func endPenSession() {
         penSession.discard()
         refreshPenChrome()
-        onPenHintChange(PenSession.hint(for: penSession))
+        refreshPenHint()
+    }
+
+    /// Hands the chip its line, once per change.
+    ///
+    /// The line now depends on what is under the pointer, not only on how many
+    /// points are down: standing on the first anchor of a flat pair, it says
+    /// why joining up there will not make a shape. So it is worked out on
+    /// every move, and the comparison here is what keeps that from redrawing
+    /// the editor on every move with it.
+    func refreshPenHint() {
+        let hint = PenSession.hint(for: penSession)
+        guard hint != lastPenHint else { return }
+        lastPenHint = hint
+        onPenHintChange(hint)
     }
 }

@@ -360,4 +360,95 @@ struct VectorPathHitTests {
         #expect(!turned.contains(canvasPoint: above))
         #expect(turned.contains(canvasPoint: beside))
     }
+
+    // MARK: Whether an outline has an inside
+
+    @Test func aSquareEnclosesItsOwnArea() {
+        let square = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 10, y: 0)),
+            PathAnchor(point: CGPoint(x: 10, y: 10)),
+            PathAnchor(point: CGPoint(x: 0, y: 10))
+        ], isClosed: true)
+        #expect(abs(square.enclosedArea.magnitude - 100) < 1e-9)
+        #expect(square.enclosesAnArea)
+    }
+
+    @Test func aCircleDrawnWithFourAnchorsEnclosesAboutPiRSquared() {
+        // The usual four-anchor circle: handles 0.5523 of the radius long.
+        // It is a hair under a true circle, which is exactly what the number
+        // has to show for the maths to be the real integral rather than the
+        // box round the control points.
+        let r: CGFloat = 50
+        let k = r * 0.552284749831
+        let circle = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: -r), handleIn: CGPoint(x: -k, y: 0),
+                       handleOut: CGPoint(x: k, y: 0), kind: .smooth),
+            PathAnchor(point: CGPoint(x: r, y: 0), handleIn: CGPoint(x: 0, y: -k),
+                       handleOut: CGPoint(x: 0, y: k), kind: .smooth),
+            PathAnchor(point: CGPoint(x: 0, y: r), handleIn: CGPoint(x: k, y: 0),
+                       handleOut: CGPoint(x: -k, y: 0), kind: .smooth),
+            PathAnchor(point: CGPoint(x: -r, y: 0), handleIn: CGPoint(x: 0, y: k),
+                       handleOut: CGPoint(x: 0, y: -k), kind: .smooth)
+        ], isClosed: true)
+        let exact = CGFloat.pi * r * r
+        #expect(abs(circle.enclosedArea.magnitude - exact) / exact < 0.001)
+    }
+
+    @Test func anOpenPathEnclosesNothingBecauseItHasNoInside() {
+        var line = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 10, y: 0)),
+            PathAnchor(point: CGPoint(x: 10, y: 10))
+        ], isClosed: false)
+        #expect(!line.enclosesAnArea)
+        line.isClosed = true
+        #expect(line.enclosesAnArea)
+    }
+
+    @Test func twoPointsJoinedWithStraightRunsEncloseNothing() {
+        // There and back along the same line. It is closed, and it still has
+        // no inside, which is the whole reason the Pen cannot close it.
+        let flat = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 0))
+        ], isClosed: true)
+        #expect(flat.enclosedArea == 0)
+        #expect(!flat.enclosesAnArea)
+    }
+
+    @Test func threePointsOnOneStraightLineAlsoEncloseNothing() {
+        let flat = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: 50, y: 0)),
+            PathAnchor(point: CGPoint(x: 100, y: 0))
+        ], isClosed: true)
+        #expect(!flat.enclosesAnArea)
+    }
+
+    @Test func twoPointsWithCurvesOnThemEncloseALeaf() {
+        // A lens: one run bows above the line between the two points and the
+        // other bows below it by the same amount, so the inside is real and
+        // the two halves are the same size.
+        let leaf = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0), handleIn: CGPoint(x: -30, y: -40),
+                       handleOut: CGPoint(x: 30, y: 40), kind: .smooth),
+            PathAnchor(point: CGPoint(x: 100, y: 0), handleIn: CGPoint(x: -30, y: 40),
+                       handleOut: CGPoint(x: 30, y: -40), kind: .smooth)
+        ], isClosed: true)
+        #expect(leaf.enclosesAnArea)
+        #expect(leaf.enclosedArea.magnitude > 100)
+    }
+
+    @Test func oneCurvedPointAndOneCornerStillEncloseALens() {
+        // Only the FIRST point was dragged. Its two handles mirror each other,
+        // so the run out bows one way and the run home bows the other: the
+        // cheapest two point shape there is.
+        let lens = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0), handleIn: CGPoint(x: 0, y: -40),
+                       handleOut: CGPoint(x: 0, y: 40), kind: .smooth),
+            PathAnchor(point: CGPoint(x: 100, y: 0))
+        ], isClosed: true)
+        #expect(lens.enclosesAnArea)
+    }
 }

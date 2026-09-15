@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:19:55.263Z",
-  "updated": "2026-09-14T12:54:43.726Z",
+  "updated": "2026-09-15T02:36:08.852Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
@@ -82,6 +82,10 @@
     {
       "t": "2026-09-14T12:54:43.725Z",
       "note": "seq 50 -> 60"
+    },
+    {
+      "t": "2026-09-15T02:36:08.851Z",
+      "note": "decision \"Pick a group holding a rounded box and the panel says Corner Radius 0 while what you see is round. What should it say?\" resolved: The row says what it clips"
     }
   ],
   "started": "2026-09-12T10:58:58.645Z"

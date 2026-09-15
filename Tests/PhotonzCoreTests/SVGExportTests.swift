@@ -19,6 +19,17 @@ struct SVGExportTests {
         ], isClosed: true)
     }
 
+    /// A leaf: two points and two curves, the smallest closed shape there is.
+    /// The run out bows one way and the run home bows the other.
+    static func leaf() -> PathContent {
+        PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 50), handleIn: CGPoint(x: -30, y: -40),
+                       handleOut: CGPoint(x: 30, y: 40), kind: .smooth),
+            PathAnchor(point: CGPoint(x: 100, y: 50), handleIn: CGPoint(x: 30, y: 40),
+                       handleOut: CGPoint(x: -30, y: -40), kind: .smooth)
+        ], isClosed: true)
+    }
+
     static func pathLayer(_ content: PathContent = bowedSquare(),
                           at origin: CGPoint = CGPoint(x: 20, y: 30)) -> Layer {
         Layer(name: "Shape", content: .path(content),
@@ -375,5 +386,16 @@ struct SVGExportTests {
         let rest = svg[start.upperBound...]
         guard let end = rest.firstIndex(of: "\"") else { return "" }
         return String(rest[..<end])
+    }
+
+    @Test func aTwoPointLeafIsWrittenAsTwoCurvesAndAClose() {
+        // The smallest closed shape there is. It has to come out as a real
+        // outline rather than as a line that happens to double back.
+        let data = SVGExport.pathData(Self.leaf())
+        #expect(data.hasPrefix("M0 50"))
+        #expect(data.hasSuffix("Z"))
+        // Two runs, both curved: out along one side and home along the other.
+        #expect(data.filter { $0 == "C" }.count == 2)
+        #expect(!data.contains("L"))
     }
 }

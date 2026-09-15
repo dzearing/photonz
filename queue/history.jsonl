@@ -3349,3 +3349,38 @@
 {"t":"2026-09-15T00:56:28.206Z","ev":"task_created","id":"the-pen-keeps-the-thickness-you-last-chose","priority":"p2-normal","title":"The Pen keeps the thickness you last chose"}
 {"t":"2026-09-15T00:56:37.249Z","ev":"task_note","id":"type-a-number-into-any-effects-slider-not-just-d"}
 {"t":"2026-09-15T00:56:37.315Z","ev":"task_note","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca"}
+{"t":"2026-09-15T00:57:06.339Z","ev":"task_done","id":"a-line-drawn-with-the-pen-can-be-made-thicker-or","from":"done","note":"Thickness row on a path drawn with the Pen, under its colour in Appearance. Core: hasOutlineThickness answers for a path, setOutlineWidth writes its stroke, new OutlineThicknessSelection is what the row reads. 14 new core tests; Scripts/test.sh 6584 pass; new walk pen-path-thickness-walk plus the five other Thickness walks pass. Audit queue/audits/2026-09-14-path-thickness.json with two real captures. Pushed as 6a2dc6f1."}
+{"t":"2026-09-15T01:52:13.775Z","ev":"task_created","id":"mock-animating-any-property-of-a-layer-with-the","priority":"p1-high","title":"Mock animating any property of a layer, with the bell as the test"}
+{"t":"2026-09-15T01:52:13.860Z","ev":"task_resequenced","id":"mock-animating-any-property-of-a-layer-with-the","from":280,"to":5}
+{"t":"2026-09-15T01:52:13.927Z","ev":"task_created","id":"work-out-whether-the-right-hand-pane-is-carrying","priority":"p1-high","title":"Work out whether the right hand pane is carrying too much"}
+{"t":"2026-09-15T01:52:14.008Z","ev":"task_resequenced","id":"work-out-whether-the-right-hand-pane-is-carrying","from":280,"to":6}
+{"t":"2026-09-15T01:52:27.756Z","ev":"task_note","id":"say-where-animating-an-icon-and-editing-a-video"}
+{"t":"2026-09-15T02:15:55.469Z","ev":"task_created","id":"a-path-you-drew-shows-you-what-you-can-do-to-it","priority":"p2-normal","title":"A path you drew shows you what you can do to it"}
+{"t":"2026-09-15T02:16:06.996Z","ev":"task_resequenced","id":"a-path-you-drew-shows-you-what-you-can-do-to-it","from":2690,"to":3}
+{"t":"2026-09-15T02:28:43.255Z","ev":"task_created","id":"two-curved-points-are-enough-to-close-a-shape","priority":"p1-high","title":"Two curved points are enough to close a shape"}
+{"t":"2026-09-15T02:28:43.340Z","ev":"task_resequenced","id":"two-curved-points-are-enough-to-close-a-shape","from":280,"to":3.1}
+{"t":"2026-09-15T02:28:43.411Z","ev":"task_created","id":"the-points-keep-up-with-the-pointer-while-you-be","priority":"p1-high","title":"The points keep up with the pointer while you bend a curve"}
+{"t":"2026-09-15T02:28:43.488Z","ev":"task_resequenced","id":"the-points-keep-up-with-the-pointer-while-you-be","from":280,"to":3.2}
+{"t":"2026-09-15T02:28:43.557Z","ev":"task_created","id":"one-side-of-a-point-can-curve-while-the-other-st","priority":"p1-high","title":"One side of a point can curve while the other stays straight"}
+{"t":"2026-09-15T02:28:43.640Z","ev":"task_resequenced","id":"one-side-of-a-point-can-curve-while-the-other-st","from":280,"to":3.3}
+{"t":"2026-09-15T02:28:43.711Z","ev":"task_created","id":"a-path-says-what-its-colour-paints-how-thick-its","priority":"p1-high","title":"A path says what its colour paints, how thick its line is, and what kind of line it is"}
+{"t":"2026-09-15T02:28:43.794Z","ev":"task_resequenced","id":"a-path-says-what-its-colour-paints-how-thick-its","from":280,"to":3.4}
+{"t":"2026-09-15T02:30:16.382Z","ev":"loop_started","pid":34944}
+{"t":"2026-09-15T02:30:16.588Z","ev":"task_started","id":"two-curved-points-are-enough-to-close-a-shape","title":"Two curved points are enough to close a shape","priority":"p1-high"}
+{"t":"2026-09-15T02:31:54.423Z","ev":"decision_resolved","id":"say-where-animating-an-icon-and-editing-a-video-animating-an-icon-and-editing-a","taskId":"say-where-animating-an-icon-and-editing-a-video","choice":"b"}
+{"t":"2026-09-15T02:31:54.442Z","ev":"task_unblocked","id":"say-where-animating-an-icon-and-editing-a-video","decision":"say-where-animating-an-icon-and-editing-a-video-animating-an-icon-and-editing-a"}
+{"t":"2026-09-15T02:35:55.657Z","ev":"decision_resolved","id":"an-icon-frame-shows-the-shapes-a-set-is-drawn-to-an-icon-frame-now-shows-the-marg","taskId":"an-icon-frame-shows-the-shapes-a-set-is-drawn-to","choice":"two"}
+{"t":"2026-09-15T02:35:55.673Z","ev":"task_unblocked","id":"an-icon-frame-shows-the-shapes-a-set-is-drawn-to","decision":"an-icon-frame-shows-the-shapes-a-set-is-drawn-to-an-icon-frame-now-shows-the-marg"}
+{"t":"2026-09-15T02:36:03.767Z","ev":"decision_resolved","id":"find-out-whether-the-layers-list-should-show-the-select-what-uses-this-picks-piec","taskId":"find-out-whether-the-layers-list-should-show-the","choice":"says"}
+{"t":"2026-09-15T02:36:03.783Z","ev":"task_unblocked","id":"find-out-whether-the-layers-list-should-show-the","decision":"find-out-whether-the-layers-list-should-show-the-select-what-uses-this-picks-piec"}
+{"t":"2026-09-15T02:36:08.838Z","ev":"decision_resolved","id":"find-out-what-corner-radius-should-say-over-a-gr-pick-a-group-holding-a-rounded-b","taskId":"find-out-what-corner-radius-should-say-over-a-gr","choice":"says"}
+{"t":"2026-09-15T02:36:08.853Z","ev":"task_unblocked","id":"find-out-what-corner-radius-should-say-over-a-gr","decision":"find-out-what-corner-radius-should-say-over-a-gr-pick-a-group-holding-a-rounded-b"}
+{"t":"2026-09-15T02:37:19.510Z","ev":"decision_resolved","id":"cut-a-recording-into-pieces-and-drop-the-piece-y-you-moved-video-editing-up-the-l","taskId":"cut-a-recording-into-pieces-and-drop-the-piece-y","choice":"video"}
+{"t":"2026-09-15T02:37:19.539Z","ev":"task_unblocked","id":"cut-a-recording-into-pieces-and-drop-the-piece-y","decision":"cut-a-recording-into-pieces-and-drop-the-piece-y-you-moved-video-editing-up-the-l"}
+{"t":"2026-09-15T02:49:06.602Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T02:49:06.645Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T02:49:12.559Z","ev":"task_note","id":"two-curved-points-are-enough-to-close-a-shape"}
+{"t":"2026-09-15T02:49:12.602Z","ev":"task_note","id":"two-curved-points-are-enough-to-close-a-shape"}
+{"t":"2026-09-15T02:49:12.642Z","ev":"task_note","id":"two-curved-points-are-enough-to-close-a-shape"}
+{"t":"2026-09-15T02:49:21.793Z","ev":"task_note","id":"two-curved-points-are-enough-to-close-a-shape"}
+{"t":"2026-09-15T02:49:21.838Z","ev":"task_done","id":"two-curved-points-are-enough-to-close-a-shape","from":"in_progress","note":"Two points close when joining them up leaves an inside. PhotonzCore gained PathContent.enclosedArea (the exact integral over each cubic run, so a doubled-back outline is a clean zero) and PenSession settles closing on release rather than on a head count, with a new .refused outcome that leaves the path untouched and a chip line that says why before the click that would fail. Verified: 6599 tests green, new walk pen-two-points-make-a-shape-walk plus all 9 pen walks pass, audit at queue/audits/2026-09-14-pen-two-point-shape.json with two real -sc.png captures."}

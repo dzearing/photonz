@@ -28,6 +28,11 @@ public struct PenSession: Equatable, Sendable {
         /// The last anchor's handle was pulled back in, so the run leaving it
         /// goes straight. The path is still being drawn.
         case retracted
+        /// A press aimed at the first anchor, but joining up there would have
+        /// left a shape with no inside, so nothing happened and the path is
+        /// exactly as it was. `hint(for:)` says why while the pointer is still
+        /// sitting on the anchor.
+        case refused
         /// Nothing happened (a release with no press behind it).
         case nothing
     }
@@ -151,12 +156,32 @@ public struct PenSession: Equatable, Sendable {
     /// being dragged out from the anchors already sitting there.
     public var isPressing: Bool { press != nil }
 
-    /// Whether the click that is happening now would CLOSE the path: the
-    /// pointer is on the first anchor and there are enough anchors for the
-    /// result to have an inside.
+    /// Whether the click that is happening now is AIMED at closing the path:
+    /// the pointer is on the first anchor and there is more than one anchor to
+    /// join up.
+    ///
+    /// It asks about aim, not about the result. Whether joining up actually
+    /// makes a shape is settled when the button comes up, because the press
+    /// itself can decide it: pulling off the first anchor bows the run home,
+    /// and that is what turns a flat pair of points into a leaf.
     public func wouldClose(at point: CGPoint, zoom: CGFloat) -> Bool {
-        guard anchors.count >= 3, let first = anchors.first else { return false }
+        guard anchors.count >= 2, let first = anchors.first else { return false }
         return within(point, of: first.point, zoom: zoom)
+    }
+
+    /// Whether joining the path up right now would leave a shape with an
+    /// inside, the pending closing curve included.
+    ///
+    /// The real question behind closing, and it is not a count. Two points
+    /// with a curve on them are a leaf, a petal, an eye or a lens, and they
+    /// close; two points on a straight line, or twenty of them, enclose
+    /// nothing however they are joined, and they do not.
+    public var closingEnclosesAnArea: Bool {
+        guard anchors.count >= 2 else { return false }
+        var pending: CGPoint?
+        if let press, press.intent == .close, press.dragged { pending = press.handle }
+        return content(Self.closed(anchors, arrivingOn: pending), closed: true)
+            .enclosesAnArea
     }
 
     /// Whether the click that is happening now would END the open path: the
@@ -254,8 +279,12 @@ public struct PenSession: Equatable, Sendable {
             anchors[anchors.count - 1].kind = .corner
             return .retracted
         case .close:
-            applyClosingHandle(press.handle)
-            let content = content(anchors, closed: true)
+            let joined = Self.closed(anchors, arrivingOn: press.handle)
+            let content = content(joined, closed: true)
+            // Nothing is taken away when the answer is no: the path stays open
+            // and untouched, down to the handle the refused drag would have
+            // left on the first anchor.
+            guard content.enclosesAnArea else { return .refused }
             anchors = []
             return .closed(content)
         case .finish:
@@ -271,13 +300,16 @@ public struct PenSession: Equatable, Sendable {
     /// Only that side is touched. The other side is the run to the second
     /// anchor, drawn several clicks ago, and closing a path is no reason to
     /// change a curve that is already on screen.
-    private mutating func applyClosingHandle(_ handle: CGPoint?) {
-        guard let handle, !anchors.isEmpty else { return }
-        anchors[0].handleIn = CGPoint(x: -handle.x, y: -handle.y)
+    private static func closed(_ anchors: [PathAnchor],
+                               arrivingOn handle: CGPoint?) -> [PathAnchor] {
+        guard let handle, !anchors.isEmpty else { return anchors }
+        var joined = anchors
+        joined[0].handleIn = CGPoint(x: -handle.x, y: -handle.y)
         // Intent, not geometry: it is only a promise to keep two handles in
         // line when there are two of them. Arriving curved and leaving straight
         // is a half-smooth corner and stays one.
-        if anchors[0].handleOut != nil { anchors[0].kind = .smooth }
+        if joined[0].handleOut != nil { joined[0].kind = .smooth }
+        return joined
     }
 
     /// Return: keep what has been drawn as an open path. Nil when there is not
@@ -334,9 +366,9 @@ public struct PenSession: Equatable, Sendable {
             }
             return retracted.isEmpty ? nil : content(retracted, closed: false)
         case .close:
-            var closing = self
-            closing.applyClosingHandle(press.dragged ? press.handle : nil)
-            return content(closing.anchors, closed: true)
+            return content(Self.closed(anchors,
+                                       arrivingOn: press.dragged ? press.handle : nil),
+                           closed: true)
         case .finish:
             return anchors.isEmpty ? nil : content(anchors, closed: false)
         }
@@ -451,17 +483,37 @@ public struct PenSession: Equatable, Sendable {
     /// screen between one shape and the next, and nothing else on screen says
     /// how to stop drawing.
     public static func hint(for session: PenSession) -> String {
+        if let reason = session.flatCloseReason { return reason }
         switch session.anchors.count {
         case 0:
             return "Click to place a corner, or press and drag for a curve. "
                 + "Esc puts the Pen down."
         case 1:
             return "Click the next point, or press and drag for a curve. Esc starts over."
-        case 2:
-            return "Keep clicking points. Return finishes the line, Esc discards it."
         default:
-            return "Click the first point to close the shape. "
-                + "Return finishes it open, Esc discards it."
+            // Not a count. Two points with a curve on them can close and the
+            // line says so; twenty points in a row cannot and it does not
+            // offer something that will be refused.
+            return session.closingEnclosesAnArea
+                ? "Click the first point to close the shape. "
+                    + "Return finishes it open, Esc discards it."
+                : "Keep clicking points. Return finishes the line, Esc discards it."
         }
+    }
+
+    /// Why joining up here will not work, said while the pointer is sitting on
+    /// the first anchor of a path that closing would leave flat.
+    ///
+    /// It arrives BEFORE the click that would be refused rather than after it,
+    /// which is the difference between an app that explains itself and one
+    /// that goes quiet. It also names the way out, because pulling off the
+    /// anchor instead of clicking it bows the run home and makes the shape
+    /// that was missing.
+    var flatCloseReason: String? {
+        guard let pointer, let first = anchors.first, anchors.count >= 2 else { return nil }
+        guard within(pointer, of: first.point, zoom: zoom) else { return nil }
+        guard !closingEnclosesAnArea else { return nil }
+        return "These points are in a line, so joining them up has no inside. "
+            + "Drag off this point to curve the shape closed, or click a point off the line."
     }
 }

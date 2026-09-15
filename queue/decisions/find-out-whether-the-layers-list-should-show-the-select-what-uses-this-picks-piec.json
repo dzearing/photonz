@@ -61,6 +61,11 @@
     }
   ],
   "recommended": "says",
-  "status": "pending",
-  "created": "2026-09-14T05:21:53.206Z"
+  "status": "resolved",
+  "created": "2026-09-14T05:21:53.206Z",
+  "answer": {
+    "choice": "says",
+    "note": "",
+    "resolved": "2026-09-15T02:36:03.766Z"
+  }
 }

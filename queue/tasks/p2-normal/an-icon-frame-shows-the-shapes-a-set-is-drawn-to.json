@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 610,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T11:16:55.818Z",
-  "updated": "2026-09-14T12:54:47.542Z",
+  "updated": "2026-09-15T02:35:55.672Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The live area and the center lines landed in Sources/PhotonzCore/IconKeylines.swift and Sources/Photonz/CanvasIconKeylines.swift; the shapes go in the same two files, as more entries on IconKeylineGuides and more subpaths on the same CGPath, so they inherit the casing, the ink and the switch for free. The mock (docs/design/mocks/pages/icon-draw-wt.html) draws an 18x18 square and a 17.2 circle inside a 24 unit artboard; Material Design uses 18x18 square, 20 circle, and 20x16 and 16x20 rectangles. Walk to extend: Scripts/playtest/icon-keylines-walk.json. Blocked on the decision card until the user answers.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-14T12:54:47.541Z",
       "note": "seq 600 -> 610"
+    },
+    {
+      "t": "2026-09-15T02:35:55.671Z",
+      "note": "decision \"An icon frame now shows the margin a glyph has to stay inside. Which shapes should it show as well?\" resolved: Just the square and the circle"
     }
   ]
 }

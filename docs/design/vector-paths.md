@@ -194,12 +194,44 @@ the first anchor the preview shows the shape CLOSED and faintly filled, so what
 the click would give you is on screen before you commit to it.
 
 **Finishing is said out loud.** A chip under the canvas stays up the whole time
-the Pen is in hand and its line changes as the path grows; at three anchors it
-reads "Click the first point to close the shape. Return finishes it open, Esc
-discards it." Return and Escape do OPPOSITE things and that is the only place a
-person is told so. Clicking the last anchor again also finishes, for anyone who
-never thinks to press Return — which also means a double click ends a path, for
-free, since the second click of one lands on the anchor the first just placed.
+the Pen is in hand and its line changes as the path grows; once the path can be
+closed it reads "Click the first point to close the shape. Return finishes it
+open, Esc discards it." Return and Escape do OPPOSITE things and that is the
+only place a person is told so. Clicking the last anchor again also finishes,
+for anyone who never thinks to press Return — which also means a double click
+ends a path, for free, since the second click of one lands on the anchor the
+first just placed.
+
+### Two points are enough, when they make a shape
+
+**Closing is not a head count.** The Pen used to refuse to join a path up until
+it had three anchors, on the grounds that two points cannot enclose anything.
+That is true of two points joined by straight runs and false the moment either
+run bends: a leaf, a petal, an eye and a lens are all two points and two curves,
+and they were unbuildable (reported 2026-09-14, first real drawing session).
+
+So the question the Pen asks is the real one: **would joining this path up leave
+a shape with an inside?** `PathContent.enclosedArea` answers it exactly rather
+than by sampling, integrating ½∮(x dy − y dx) along each cubic run, so an
+outline that doubles back along its own line works out to a clean zero. Two
+points with a curve on them enclose a leaf and close; two points on a straight
+line enclose nothing and do not, and neither do three or twenty in a row.
+
+**The aim and the answer are separate.** The ring under the pointer appears on
+the first anchor from the SECOND point on, exactly as it does at three, because
+a press there is aimed at closing however it turns out. Whether it makes a shape
+is settled when the button comes up, and the press itself can decide it: pulling
+off the first anchor bows the run home, which is what turns a flat pair into a
+half moon. A press that cannot make a shape is refused and changes nothing, down
+to the handle the refused drag would have left behind.
+
+**The refusal explains itself before it happens.** Standing on the first anchor
+of a flat path, the chip stops offering the close and says instead: "These
+points are in a line, so joining them up has no inside. Drag off this point to
+curve the shape closed, or click a point off the line." It arrives before the
+click that would be refused rather than after it, and it names the way out.
+Before this the click silently dropped a third anchor exactly on top of the
+first, which left junk in the path and never closed anything.
 
 ### Option: the rule that makes an icon drawable
 

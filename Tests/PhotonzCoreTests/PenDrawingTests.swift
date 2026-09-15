@@ -158,16 +158,6 @@ struct PenDrawingTests {
 
     // MARK: Closing
 
-    @Test func theFirstAnchorIsACloseTargetOnceThereAreThreeOfThem() {
-        var session = PenSession()
-        _ = click(&session, 0, 0)
-        _ = click(&session, 100, 0)
-        #expect(!session.wouldClose(at: CGPoint(x: 2, y: 2), zoom: 1))
-        _ = click(&session, 50, 80)
-        #expect(session.wouldClose(at: CGPoint(x: 2, y: 2), zoom: 1))
-        #expect(!session.wouldClose(at: CGPoint(x: 40, y: 40), zoom: 1))
-    }
-
     @Test func clickingTheFirstAnchorClosesThePath() {
         var session = PenSession()
         _ = click(&session, 0, 0)
@@ -211,15 +201,159 @@ struct PenDrawingTests {
         #expect(content.anchors[0].isHalfSmooth)
     }
 
-    @Test func twoAnchorsCannotClose() {
-        // A closed path needs three corners to have an inside.
+    // MARK: Two points are enough, when they make a shape
+
+    @Test func twoCurvedPointsClose() {
+        // A leaf, a petal, an eye, a lens: two points and two curves. Both
+        // points are dragged, so the run out bows one way and the run home
+        // bows the other, and the inside between them is real.
+        var session = PenSession()
+        dragOut(&session, from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 40))
+        dragOut(&session, from: CGPoint(x: 100, y: 0), to: CGPoint(x: 130, y: -40))
+        #expect(session.wouldClose(at: CGPoint(x: 2, y: 2), zoom: 1))
+        session.press(at: CGPoint(x: 2, y: 2), constrained: false, zoom: 1)
+        guard case .closed(let content) = session.release() else {
+            Issue.record("two curved points should close into a shape")
+            return
+        }
+        #expect(content.isClosed)
+        #expect(content.anchors.count == 2)
+        // It is a shape, so it is filled. A line would not be.
+        #expect(content.fill != nil)
+        #expect(content.enclosesAnArea)
+        #expect(!session.isDrawing)
+    }
+
+    @Test func oneCurvedPointAndOneCornerCloseToo() {
+        // Only the first point was dragged. Its handles mirror, so the two
+        // runs bow opposite ways and the pair still has an inside.
+        var session = PenSession()
+        dragOut(&session, from: CGPoint(x: 0, y: 0), to: CGPoint(x: 0, y: 40))
+        _ = click(&session, 100, 0)
+        #expect(session.closingEnclosesAnArea)
+        session.press(at: CGPoint(x: 1, y: 1), constrained: false, zoom: 1)
+        guard case .closed(let content) = session.release() else {
+            Issue.record("a curved point and a corner should close")
+            return
+        }
+        #expect(content.anchors.count == 2)
+        #expect(content.enclosesAnArea)
+    }
+
+    @Test func twoStraightPointsStillCannotClose() {
+        // There and back along the same line encloses nothing, so there is no
+        // shape to make. The path is left exactly as it was: no fourth anchor
+        // dropped on top of the first, which is what used to happen.
         var session = PenSession()
         _ = click(&session, 0, 0)
         _ = click(&session, 100, 0)
-        #expect(!session.wouldClose(at: .zero, zoom: 1))
+        #expect(!session.closingEnclosesAnArea)
         let outcome = click(&session, 0, 0)
-        #expect(outcome == .placed)
+        #expect(outcome == .refused)
+        #expect(session.anchors.count == 2)
+        #expect(session.anchors[0].point == CGPoint(x: 0, y: 0))
+        #expect(session.isDrawing)
+    }
+
+    @Test func threePointsOnOneStraightLineCannotCloseEither() {
+        // The rule is the same at every count: closing has to leave an
+        // inside. Three points in a row do not.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 50, 0)
+        _ = click(&session, 100, 0)
+        #expect(!session.closingEnclosesAnArea)
+        #expect(click(&session, 0, 0) == .refused)
         #expect(session.anchors.count == 3)
+    }
+
+    @Test func theFirstAnchorIsACloseTargetFromTheSecondPointOn() {
+        // The ring under the pointer is the same at two points as at three:
+        // it says a press here aims at the start. Whether the press makes a
+        // shape is settled when the button comes up.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        #expect(!session.wouldClose(at: CGPoint(x: 2, y: 2), zoom: 1))
+        _ = click(&session, 100, 0)
+        #expect(session.wouldClose(at: CGPoint(x: 2, y: 2), zoom: 1))
+        #expect(!session.wouldClose(at: CGPoint(x: 40, y: 40), zoom: 1))
+    }
+
+    @Test func draggingOffTheFirstAnchorCurvesTwoStraightPointsClosed() {
+        // The way out of the flat case, and the reason the ring still shows
+        // on a straight pair: press the first point and pull, and the run
+        // home bows into a lens.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        session.press(at: CGPoint(x: 1, y: 0), constrained: false, zoom: 1)
+        session.drag(to: CGPoint(x: 30, y: 40), constrained: false, zoom: 1)
+        // The chip stops saying it cannot be done the moment the curve gives
+        // the pair an inside.
+        #expect(session.closingEnclosesAnArea)
+        guard case .closed(let content) = session.release() else {
+            Issue.record("a drag off the first anchor should close the pair")
+            return
+        }
+        #expect(content.anchors.count == 2)
+        #expect(content.enclosesAnArea)
+    }
+
+    @Test func aRefusedCloseLeavesThePathUntouched() {
+        // A drag that stays on the line is still flat, so it is refused too,
+        // and it does not leave a handle behind on the first anchor.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        session.press(at: CGPoint(x: 0, y: 0), constrained: false, zoom: 1)
+        session.drag(to: CGPoint(x: -30, y: 0), constrained: false, zoom: 1)
+        #expect(session.release() == .refused)
+        #expect(session.anchors.count == 2)
+        #expect(session.anchors[0].handleIn == nil)
+        #expect(session.anchors[0].handleOut == nil)
+    }
+
+    @Test func aTwoPointShapeCanStillBeFinishedOpen() {
+        // Refusing to close must not take the line away: Return still keeps
+        // the two point line, and clicking the last anchor still ends it.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        #expect(session.wouldFinish(at: CGPoint(x: 101, y: 1), zoom: 1))
+        let content = session.finish()
+        #expect(content?.isClosed == false)
+        #expect(content?.anchors.count == 2)
+    }
+
+    @Test func theChipSaysWhyAStraightPairWillNotClose() {
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        // Away from the start, the chip is getting on with the drawing.
+        session.pointer = CGPoint(x: 60, y: 60)
+        #expect(!PenSession.hint(for: session).contains("no inside"))
+        // On the start, where the press that fails would go, it says why and
+        // what to do instead.
+        session.pointer = CGPoint(x: 1, y: 1)
+        let hint = PenSession.hint(for: session)
+        #expect(hint.contains("no inside"))
+        #expect(hint.contains("Drag"))
+    }
+
+    @Test func theChipOffersTheCloseAsSoonAsTwoPointsCanMakeOne() {
+        // Two straight points have nothing to close, so the chip does not
+        // offer it...
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        session.pointer = CGPoint(x: 60, y: 60)
+        #expect(!PenSession.hint(for: session).contains("close the shape"))
+        // ...but two curved ones do.
+        var curved = PenSession()
+        dragOut(&curved, from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 40))
+        dragOut(&curved, from: CGPoint(x: 100, y: 0), to: CGPoint(x: 130, y: -40))
+        curved.pointer = CGPoint(x: 60, y: 60)
+        #expect(PenSession.hint(for: curved).contains("close the shape"))
     }
 
     // MARK: Finishing an open path

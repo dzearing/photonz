@@ -46,6 +46,11 @@
     }
   ],
   "recommended": "video",
-  "status": "pending",
-  "created": "2026-09-14T05:21:25.999Z"
+  "status": "resolved",
+  "created": "2026-09-14T05:21:25.999Z",
+  "answer": {
+    "choice": "video",
+    "note": "",
+    "resolved": "2026-09-15T02:37:19.509Z"
+  }
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-15T00:46:27.084Z",
+  "updated": "2026-09-15T02:49:06.644Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -166,6 +166,14 @@
     {
       "t": "2026-09-15T00:46:27.083Z",
       "note": "sweep 2026-09-15T00:46:26Z: 5 failing (container-too-small-walk, icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk); stopped failing: layers-lazy-rows-walk"
+    },
+    {
+      "t": "2026-09-15T02:49:06.600Z",
+      "note": "turn-into-a-path-walk is failing now and it is not in the last sweep's list, so it broke after 2026-09-15T00:46Z. It fails the same way three times out of three, and it fails on a CLEAN main too (stashed everything, rebuilt the probe, same result), so it is somebody's landed change rather than a flake: 'Scripts/playtest.sh Scripts/playtest/turn-into-a-path-walk.json' -> '[42 expectPath] FAILED: no path in the document; the layers are: Background, Rectangle'. Step 36 chooses Turn Into Path... from the layer row menu and step 40 presses Return on the sheet; the rectangle is still a rectangle afterwards."
+    },
+    {
+      "t": "2026-09-15T02:49:06.643Z",
+      "note": "effects-room-for-the-one-you-opened-walk is a FLAKE, not a break: same probe binary, one run passed and the next failed with '[18 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, open\", not \"Border, shut\"'. Four runs today: ok, FAILED, ok, FAILED. It is not in the last sweep's failing list either, which fits a walk that fails about half the time."
     }
   ]
 }

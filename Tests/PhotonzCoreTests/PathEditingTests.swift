@@ -361,4 +361,52 @@ struct PathEditingTests {
         #expect(Self.near(run.point(at: 1), CGPoint(x: 100, y: 0)))
         #expect(Self.near(run.point(at: 0.5), CGPoint(x: 50, y: 0)))
     }
+
+    // MARK: The smallest shape reshapes like any other
+
+    static func leaf() -> PathContent {
+        PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 50), handleIn: CGPoint(x: -30, y: -40),
+                       handleOut: CGPoint(x: 30, y: 40), kind: .smooth),
+            PathAnchor(point: CGPoint(x: 100, y: 50), handleIn: CGPoint(x: 30, y: 40),
+                       handleOut: CGPoint(x: -30, y: -40), kind: .smooth)
+        ], isClosed: true)
+    }
+
+    @Test func bothPointsOfALeafCanBePickedUp() {
+        let leaf = Self.leaf()
+        #expect(leaf.editTarget(at: CGPoint(x: 1, y: 51), zoom: 1,
+                                handlesShowing: []) == .anchor(0))
+        #expect(leaf.editTarget(at: CGPoint(x: 99, y: 49), zoom: 1,
+                                handlesShowing: []) == .anchor(1))
+    }
+
+    @Test func draggingALeafPointOpensItUp() {
+        var leaf = Self.leaf()
+        let before = leaf.enclosedArea.magnitude
+        leaf.moveAnchors([1], by: CGPoint(x: 60, y: 0))
+        #expect(leaf.anchors[1].point == CGPoint(x: 160, y: 50))
+        // It is still a shape, and a bigger one: the handles travelled with
+        // the point rather than being left behind.
+        #expect(leaf.enclosesAnArea)
+        #expect(leaf.enclosedArea.magnitude > before)
+    }
+
+    @Test func aPointCanBeAddedToEitherRunOfALeaf() {
+        // Including the run HOME, which is the one a two point shape has that
+        // an open path does not.
+        var leaf = Self.leaf()
+        #expect(leaf.insertAnchor(onSegment: 1, at: 0.5) == 2)
+        #expect(leaf.anchors.count == 3)
+        #expect(leaf.enclosesAnArea)
+    }
+
+    @Test func aLeafSurvivesBeingWrittenOutAndReadBack() {
+        let leaf = Self.leaf()
+        let data = try! JSONEncoder().encode(leaf)
+        let back = try! JSONDecoder().decode(PathContent.self, from: data)
+        #expect(back == leaf)
+        #expect(back.isClosed)
+        #expect(back.enclosesAnArea)
+    }
 }

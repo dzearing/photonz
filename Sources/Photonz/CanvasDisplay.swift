@@ -105,7 +105,7 @@ extension CanvasNSView {
             // document, so there is nothing to undo; the chrome just goes.
             if penSession.isDrawing {
                 penSession.discard()
-                onPenHintChange(PenSession.hint(for: penSession))
+                refreshPenHint()
             }
             refreshPenChrome()
             measurePlacement = nil

@@ -1,0 +1,28 @@
+{
+  "feature": "Two points are enough to close a shape",
+  "epic": "icon-vector",
+  "summary": "A path of two points now closes whenever joining it up leaves a shape with an inside, so a leaf, a petal, an eye or a lens is one drag and one click. Two points on a straight line still cannot close, and the chip under the canvas says so before you try rather than going quiet.",
+  "setup": "Photonz Dev, Experiments window, release Next, with next-pen on. Any document with room to draw.",
+  "try": [
+    { "do": "Press P to pick up the Pen." },
+    { "do": "Press at a point on the left and drag straight up about a finger's width, then let go." },
+    { "do": "Click once well over to the right. That is the second and last point." },
+    { "do": "Move the pointer back onto the first point: it wears a ring and the leaf is already drawn, filled.", "shot": "2026-09-14-pen-two-point-shape-1.png" },
+    { "do": "Click the first point. The leaf lands as one layer, and one undo takes the whole thing away." },
+    { "do": "Now press P again and click two points in a straight line, then move the pointer back onto the first one.", "shot": "2026-09-14-pen-two-point-shape-2.png" },
+    { "do": "Read the chip, then do what it says: press that first point and PULL away from the line instead of clicking it." }
+  ],
+  "evaluate": [
+    "When you pull a curve out of one point and click a second, is the shape you get the one you pictured?",
+    "Standing on the first point of a flat pair, does the chip tell you enough to get unstuck without guessing?",
+    "The ring still shows on the first point of a flat pair, and clicking it does nothing. Does that read as a broken promise, or as the app pointing at where to press and drag?",
+    "Is the refusal line too long for a chip under the canvas?",
+    "Are there two point shapes you expected to be able to draw and still cannot?"
+  ],
+  "rough": [
+    "A refused click gives nothing at the moment of the click: no flash, no sound. The chip is already showing the reason, before and after, so it is never silent, but someone clicking without reading gets no reaction at all.",
+    "The refusal line is the longest thing the Pen chip ever says, a full line across the canvas. It earns the length by naming the way out, but it is worth a look.",
+    "Three or more points in one straight line now refuse to close too, which they did not before. Closing them made an invisible layer you could only find in the layer list, so this is the same fix, but it is a behaviour change beyond the two point case.",
+    "The two shapes in the picture are drawn with one curved point and one corner, which is why they are teardrops rather than symmetrical leaves. Curving both points gives a shape with flared tips rather than pointed ones, because the Pen ties an anchor's two handles together unless Option says not to. That is correct and it is still slightly surprising."
+  ]
+}

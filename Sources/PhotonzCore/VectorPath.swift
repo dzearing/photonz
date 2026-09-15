@@ -191,6 +191,39 @@ enum Bezier {
         return (low, high)
     }
 
+    /// How much area one run sweeps out about the origin: ∮(x dy − y dx)
+    /// along it. Halve the sum over a closed outline and you have its area.
+    ///
+    /// Worked out exactly rather than by chopping the curve into little
+    /// straight pieces. Both coordinates are cubic polynomials in t, so the
+    /// integrand is a polynomial too and every term integrates to a fraction:
+    /// a run that doubles back along itself cancels to a clean zero instead of
+    /// to sampling noise, which is the one answer this has to get right.
+    static func sweep(of run: PathSegment) -> CGFloat {
+        let x = powers(run.start.x, run.control1.x, run.control2.x, run.end.x)
+        let y = powers(run.start.y, run.control1.y, run.control2.y, run.end.y)
+        // ∫₀¹ (x y′ − y x′) dt, pair of powers by pair of powers. The two
+        // halves of a pair share a denominator, which is what collapses the
+        // sixteen terms to six.
+        var total: CGFloat = 0
+        for i in 0..<4 {
+            for j in (i + 1)..<4 {
+                total += (x[i] * y[j] - x[j] * y[i]) * CGFloat(j - i) / CGFloat(i + j)
+            }
+        }
+        return total
+    }
+
+    /// The same cubic written as plain powers of t, lowest first, rather than
+    /// as four control points.
+    static func powers(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat,
+                       _ p3: CGFloat) -> [CGFloat] {
+        [p0,
+         3 * (p1 - p0),
+         3 * (p0 - 2 * p1 + p2),
+         -p0 + 3 * p1 - 3 * p2 + p3]
+    }
+
     /// The cubic's value at `t`.
     static func value(_ p0: CGFloat, _ p1: CGFloat, _ p2: CGFloat, _ p3: CGFloat,
                       at t: CGFloat) -> CGFloat {
@@ -320,6 +353,32 @@ public struct PathContent: Hashable, Codable, Sendable {
         }
         return runs
     }
+
+    /// How much area the outline encloses, signed: positive one way round the
+    /// shape, negative the other. Zero for an outline with no inside at all.
+    ///
+    /// Zero is the interesting answer. An outline that doubles back along its
+    /// own line sweeps nothing: two points joined by two straight runs, three
+    /// points in a row, a closed path whose every anchor sits on one line.
+    /// Those are the shapes the Pen must refuse to close, because closing them
+    /// would drop a layer on the canvas that paints no pixels and can only be
+    /// found by hunting for it in the layer list.
+    ///
+    /// An OPEN path answers zero whatever shape it is, because a line has no
+    /// inside. Ask a copy with `isClosed` set to see what closing it would give.
+    public var enclosedArea: CGFloat {
+        guard isClosed else { return 0 }
+        return segments.reduce(0) { $0 + Bezier.sweep(of: $1) } / 2
+    }
+
+    /// Whether the outline really has an inside, which is what makes it a
+    /// shape rather than a line that happens to end where it started.
+    ///
+    /// The threshold is there for floating point dust, not for taste: a flat
+    /// outline works out to zero on paper and to about a billionth of a point
+    /// in practice, while the smallest shape anyone would draw on a 24 point
+    /// icon grid covers whole square points.
+    public var enclosesAnArea: Bool { abs(enclosedArea) > 1e-6 }
 
     /// The tight box the OUTLINE covers, curve bulge and all, in the layer's
     /// own coordinates. It knows nothing about the line's thickness: that is

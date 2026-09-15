@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/pen-two-points-make-a-shape-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+
+    { "do": "click", "at": [250, 200] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [650, 200] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "move", "at": [252, 202] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-flat-pair-says-why", "note": "two points in a line, pointer back on the first: the ring is there, and the chip says joining them up has no inside and what to do instead" },
+    { "do": "snapshot", "name": "1-flat-pair-says-why" },
+
+    { "do": "click", "at": [252, 202] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "describe", "stage": "2-refused", "note": "the click was refused: nothing landed in the document, and no third point was dropped on top of the first, which is what used to happen" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "count": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "drag", "from": [250, 400], "to": [250, 300], "steps": 10 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [650, 400] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "move", "at": [252, 402] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-leaf-offered", "note": "one point curved and one corner: the pointer on the first point wears the closing ring and the preview is already the filled leaf" },
+    { "do": "snapshot", "name": "3-leaf-offered" },
+
+    { "do": "click", "at": [252, 402] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 2, "closed": true },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "describe", "stage": "4-leaf-closed", "note": "THE POINT: two points and two curves are a closed shape. A leaf, filled, from one drag and one click" },
+    { "do": "render", "name": "doc-4-leaf" },
+    { "do": "snapshot", "name": "4-leaf-closed" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [250, 600] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [650, 600] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [250, 600], "to": [250, 700], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "expectPath", "anchors": 2, "closed": true },
+    { "do": "describe", "stage": "5-curved-closed", "note": "the way out of the flat pair the chip named: press the first point and PULL rather than click, and the run home bows into a half moon" },
+    { "do": "snapshot", "name": "5-pulled-closed" },
+    { "do": "render", "name": "doc-5-both-shapes" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "6-undo", "note": "one undo step takes the whole two point shape away, the same as any other path" }
+  ]
+}
