@@ -251,7 +251,7 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
      (Layers, the parts of what you picked, Measurements, the Library shelf) is
      as long as the document happens to make it, so nobody designed its height
      and shortening it costs a scroll you were going to do anyway. A **form**
-     (Text, Position & Size, Effects, Arrange) is a set of controls somebody
+     (Text, Appearance, Effects, Arrange) is a set of controls somebody
      chose, and shortening it compresses nothing, it hides controls. So forms
      are drawn whole and paid for first, and the lists share what is left,
      tallest first, each down to its own floor of about three rows.
@@ -318,25 +318,30 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   `queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.json`,
   built in the app as the panel's one rule, `Sources/Photonz/InspectorDockLayout.swift`).
   The section named after the thing you just clicked is the first thing under
-  the layers list, then where it sits, then what it looks like: Position & Size
-  (with Arrange and Component beside it), then Appearance, then Effects, then
-  everything general. Pick a piece of text and Text is what you are looking at;
-  pick a plain rectangle and the X, Y, width and height boxes are what you are
-  looking at, because a rectangle has no section of its own.
+  the layers list, then what it is placed against and what it is a copy of
+  (Arrange, Component), then Appearance, then Effects, then everything general.
+  Pick a piece of text and Text is what you are looking at.
 
-  **Where it sits comes before what it looks like** (2026-09-15). Position &
-  Size used to trail Appearance and Effects, and on a laptop window that put it
-  below the bottom edge: measured on 2026-09-15, a piece of text picked in a
-  three layer document asked the dock for 1052 points against the 688 a laptop
-  window gives and the 968 the largest window on this display gives, so the
-  plainest fact about a layer took a scroll to reach at EVERY window size. A
-  dock that over-subscribed cannot be fixed by sharing its height out
-  differently — the forms alone come to 551 points and every list is already
-  drawn at its floor — so the only question it answers is which sections are
-  above the fold. The cost is real and is the trade this made: Appearance drops
-  by the height of Position & Size, so with an arrow or a measurement picked its
-  last rows are below the fold on a laptop window where they used to be on
-  screen.
+  **A permanent section has to earn the room it takes, and Position & Size did
+  not** (2026-09-15). Where a layer sits and how big it is was four number boxes
+  sitting open at the top of the panel for every layer, forever. Measured on
+  2026-09-15: a piece of text picked in a three layer document asked the dock
+  for 1052 points against the 688 a laptop window gives and the 968 the largest
+  window on this display gives, and 130 of those points were those four boxes.
+  Moving something is what the pointer is for, and an exact number is wanted
+  rarely and precisely, so they are now something you ASK for: Layer ▸ Position
+  and Size…, Option Command P, or a right click on the layer's own row, opening
+  over the thing they are about. The dock for that same selection is 922 points
+  now, and in the largest window it fits for the first time.
+
+  The general rule this is an instance of: **a panel is where a thing lives, a
+  popover is where a thing happens.** A control belongs in the panel when it is
+  looked at as often as it is changed. A control that is wanted rarely, and
+  precisely, and is done with the moment it lands, belongs behind a command
+  where it can be summoned over the thing it acts on. The cost is real and has
+  to be paid on purpose: what is asked for no longer FOLLOWS, so anything whose
+  job is to be watched while something else moves needs a readout on the canvas
+  rather than a section in the column.
 
   **Because the order puts the pick on screen, there is no reveal on selection,
   at all.** That is the whole point of settling it: the panel used to fight
@@ -1141,8 +1146,8 @@ sees is whether the picture moved.
    answer: it stays quiet and lets macOS beep. The reason is already on screen,
    in a menu a person can open, and repeating it on the canvas every time a
    thumb brushes a key would be noise. Nudging a locked layer is this case: the
-   Position & Size section is already saying, in words, that the layer is locked
-   and where to unlock it.
+   layer's own row says it is locked, and Position and Size says so in words
+   the moment you ask for it.
 2. **The command can act, and it is what this press was AIMED at that it cannot
    honour.** Cut works. Cut with a marquee over a shape does not, because a
    marquee takes a piece out of pixels and a rectangle is a description of a

@@ -30,6 +30,7 @@
     { "do": "panel", "stage": "2-picked" },
     { "do": "expect", "row": "Rectangle 2", "present": true },
     { "do": "expect", "row": "Promoted Layer", "present": false },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "expect", "field": "W", "reads": "200" },
     { "do": "expect", "field": "H", "reads": "150" },
     { "do": "describe", "stage": "2-picked", "note": "THE TEST: Command J made a new layer out of the RECTANGLE's corner alone, trimmed to it (200 by 150, the part of the rectangle the marquee covers), named the way duplicating that layer names it, and the marquee has cleared" },

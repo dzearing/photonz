@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:01:13.240Z",
-  "updated": "2026-09-15T15:01:13.331Z",
+  "updated": "2026-09-15T16:19:28.414Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SUPERSEDES a narrower fix. 'position-and-size-stays-on-screen-when-you-pick' (done, p2) made those boxes reachable because they were falling off the bottom of the panel. The user's answer is better: they are not worth the room at all. Log there that this task replaces the reasoning rather than leaving two answers to the same problem.\n\nThe user's words for where it goes: 'if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing.' So a right click on the layer is their suggestion. Weigh it against what the app already has - a layer row context menu that already exists, and the Layer menu - rather than inventing a fourth place. Whatever is chosen has to be findable by somebody who wants to type 240 into a width, because that person exists even if they are rare.\n\nThe measured prize is real: the pane runs 1052 points against a 968 point viewport, so removing the section that was never wholly on screen anyway buys back the overflow.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.",
@@ -31,6 +31,27 @@
     {
       "t": "2026-09-15T15:01:13.330Z",
       "note": "seq 290 -> 2"
+    },
+    {
+      "t": "2026-09-15T16:01:50.567Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T16:19:28.288Z",
+      "note": "Adversarial review BEFORE building. The user's words were 'right click and have an option to do that'. The app has no canvas right click at all, so building that literally means inventing a canvas context menu, which raises its own question (what else is on it: Duplicate? Delete? Bring to Front?) and is a bigger thing than this task. The layer's own row already has a right click menu, and that IS the layer, so the command went there plus the Layer menu, which is the place somebody who never right clicks will find it. Second finding: the section had TWO jobs, typing a number and watching a number change while something else moved it, and only the first survives a popover. That is not a detail to swallow, so it is filed as its own feature (a-layer-says-how-big-it-is-while-you-drag-it) rather than left as a regret. Third: the shortest version really is this one. The fields are one view and they moved as they were."
+    },
+    {
+      "t": "2026-09-15T16:19:28.331Z",
+      "note": "Shipped. Core: ExactPlacement.swift (subject, heading, where the popover points) with 14 tests; DockPositionAndSizeFitsTests rewritten as DockWithoutPositionAndSizeTests, pinning 1052 -> 922 for the same selection and the largest window fitting for the first time. App: the section is no longer offered (InspectorPanel.availableSections), EditorState+ExactPlacement.swift, ExactPlacementPopover.swift hung off the canvas view, Layer menu row on Option Command P, layer row context menu row. Copy that pointed at the section now names the command (PathEditHint.turned, ContentSelection.downTheBoxNote) and the flag description is rewritten. Harness: a new positionAndSize / closePositionAndSize action, and keyTarget now reaches a popover's window so Return and the arrow keys land in the field. 48 walks edited. 6937 tests green, swift build clean."
+    },
+    {
+      "t": "2026-09-15T16:19:28.371Z",
+      "note": "left rough: there is still no right click on the canvas itself. The user asked for exactly that and got the layer row's right click instead. It did not earn its own task because a canvas context menu is a surface decision (what belongs on it) rather than a missing control, and the command is reachable two other ways; if the user says the row is not what they meant, that is the task."
+    },
+    {
+      "t": "2026-09-15T16:19:28.413Z",
+      "note": "left rough: the popover is a fixed 264 points wide, the width the dock opens at, so a panel somebody has widened by hand no longer widens the fields with it. Nobody has asked for wider number boxes and the popover is not attached to the panel any more, so this is a nit until somebody notices."
     }
-  ]
+  ],
+  "started": "2026-09-15T16:01:50.566Z"
 }

@@ -1694,6 +1694,16 @@ private final class Run {
             case .zoomToFit: editor.zoomToFit()
             case .undo: editor.undo()
             case .redo: editor.redo()
+            case .positionAndSize:
+                // The command can quietly do nothing — there is nothing picked
+                // and nothing marqueed — and a walk that then fails at `focus`
+                // would blame the field rather than the empty selection.
+                let subject = editor.exactPlacementSubject
+                editor.openExactPlacement()
+                actionDetail = subject == nil
+                    ? "nothing picked and no marquee, so the menu row is dimmed and nothing opened"
+                    : "open over \(editor.exactPlacementHeading)"
+            case .closePositionAndSize: editor.closeExactPlacement()
             case .newCanvasDialog: editor.isBlankCanvasDialogPresented = true
             case .createCanvas:
                 editor.isBlankCanvasDialogPresented = false
@@ -5803,7 +5813,17 @@ private final class Run {
     /// one is up, the editor itself otherwise. See the `.key` case for why.
     private func keyTarget() throws -> NSWindow {
         let editor = try requireWindow()
-        return editor.attachedSheet ?? editor
+        if let sheet = editor.attachedSheet { return sheet }
+        // A POPOVER is a window of its own too, and it takes the keyboard for
+        // itself: the Position and Size numbers live in one now, so a walk that
+        // sent Return or an arrow key to the editor after focusing a field in
+        // there was pressing a key at a window with no field in it. `focus` and
+        // `type` already looked across these windows; this is `key` catching up
+        // (2026-09-15, when the numbers left the panel).
+        if let typing = try panelWindows().first(where: { $0.firstResponder is NSTextView }) {
+            return typing
+        }
+        return editor
     }
 
     /// One of the app's own windows, by title. Exact first, then a prefix, so

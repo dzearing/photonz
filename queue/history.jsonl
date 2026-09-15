@@ -3719,3 +3719,12 @@
 {"t":"2026-09-15T15:59:59.366Z","ev":"task_note","id":"every-pane-says-what-it-is-for-in-words-somebody"}
 {"t":"2026-09-15T15:59:59.410Z","ev":"task_note","id":"every-pane-says-what-it-is-for-in-words-somebody"}
 {"t":"2026-09-15T16:00:23.122Z","ev":"task_done","id":"every-pane-says-what-it-is-for-in-words-somebody","from":"in_progress","note":"The Component section is one list called Properties. Versions and Adjustable are gone: a variant is now a ROW in that list, with a name the author can change to State or Type and its looks under it, and the copy's panel reads the same list under the same heading with that same name on its top row. Add Variant and Apply to Other Variants replace the old menu rows, every user-facing 'knob' is now 'property', and the tutorials, help text and 18 walks follow. The model holds a LIST of variant properties, not one, so a Type AND a State is an addition rather than a rewrite; that question is settled and written up in docs/design/ui-building.md. Verified by Scripts/test.sh (6922 tests green, including 11 new ones for the variant property) and swift build. NOT verified by eye: the Mac's screen locked at about 08:53 and stayed locked, so no walk could run and the audit has the before pictures only. Sweep requested. Committed 455c18c9 and 59bf8466, pushed to main. Audit: queue/audits/2026-09-15-component-properties-naming.json"}
+{"t":"2026-09-15T16:01:50.466Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T16:01:50.569Z","ev":"task_started","id":"position-and-size-leave-the-panel","title":"Position and size leave the panel","priority":"p1-high"}
+{"t":"2026-09-15T16:14:53.610Z","ev":"task_created","id":"a-layer-says-how-big-it-is-while-you-drag-it","priority":"p2-normal","title":"A layer says how big it is while you drag it"}
+{"t":"2026-09-15T16:15:00.126Z","ev":"task_note","id":"the-size-readout-keeps-up-while-you-reshape-a-pa"}
+{"t":"2026-09-15T16:15:00.170Z","ev":"task_note","id":"position-and-size-stays-on-screen-when-you-pick"}
+{"t":"2026-09-15T16:19:28.290Z","ev":"task_note","id":"position-and-size-leave-the-panel"}
+{"t":"2026-09-15T16:19:28.333Z","ev":"task_note","id":"position-and-size-leave-the-panel"}
+{"t":"2026-09-15T16:19:28.373Z","ev":"task_note","id":"position-and-size-leave-the-panel"}
+{"t":"2026-09-15T16:19:28.415Z","ev":"task_note","id":"position-and-size-leave-the-panel"}

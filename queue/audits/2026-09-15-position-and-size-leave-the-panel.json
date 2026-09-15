@@ -1,0 +1,47 @@
+{
+  "feature": "Position and Size leave the panel",
+  "epic": "ui-building",
+  "summary": "The four number boxes are gone from the right hand panel. The same numbers now open over the thing they are about, from the Layer menu, from Option Command P, or from a right click on the layer's own row. For the same selection in the same window the panel went from 1052 points to 922, and in the largest window this display gives, the whole panel fits for the first time.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Type a layer's position and size, on by default.",
+  "try": [
+    {
+      "do": "Draw a rectangle, then look at the top of the right hand panel. There is no Position & Size."
+    },
+    {
+      "do": "Open the Layer menu and read the row above Bring to Front: Position and Size…"
+    },
+    {
+      "do": "Press Option Command P. The numbers open over the rectangle."
+    },
+    {
+      "do": "Type 240 into W and press Return, then press Escape."
+    },
+    {
+      "do": "Right click the rectangle's row in the layers list and choose Position and Size… there instead."
+    },
+    {
+      "do": "Pick a piece of text and a rectangle together, then open the numbers: the heading says how many layers one typed width would reach."
+    },
+    {
+      "do": "Sweep a selection box with the marquee tool and open the numbers: the heading says Selection, not the layer under it."
+    },
+    {
+      "do": "Nudge with the arrow keys and drag the rectangle around, to check nothing about moving it changed."
+    }
+  ],
+  "evaluate": [
+    "Is the Layer menu where you would have looked for these? You said right click, and right clicking the layer's row does it, but there is no right click on the canvas itself yet.",
+    "Does the popover open close enough to what you picked, or does it land on top of the thing you are trying to size?",
+    "Typing a width, pressing Return, and having it disappear: is that the right ending, or did you want it to stay open for the next number?",
+    "The panel is 130 points shorter and the room went to the layers list in a big window. Is that where you wanted it, or should the panel have simply ended higher?",
+    "Nothing on the canvas says how big something is while you drag it any more. Is that a gap you feel straight away, or only when you go looking?"
+  ],
+  "rough": [
+    "There are NO pictures in this audit and nothing here was seen running. The Mac's screen was locked for the whole task, so every walk refused to run and said so: status locked, zero steps, no capture possible, grant or not. What is proven is the build, the 6937 unit tests, and the dock arithmetic; what is not proven is a single pixel. A full sweep has been requested so the walks run the moment the screen is unlocked.",
+    "One acceptance item could not be met at all: 'the audit shows what is at the top of the panel for a shape, a piece of text and a component copy'. It cannot show anything, for the same locked screen. By construction the top is now the section named after what you picked (Rectangle, Text, Component), because that is the order the dock already used with the four boxes sitting under it; that is a claim from the code, not from a picture, and it is exactly the sort of claim this audit is supposed to stop making.",
+    "The before and after panel heights, 1052 and 922 points, are the app-measured 1052 with the section's own measured 130 taken off it, run back through the same height budget the dock uses. They are not a fresh reading off a running window, for the reason above.",
+    "The numbers no longer follow a drag. A popover closes when you click the canvas, so the half of the old section that was for WATCHING is gone, not moved. Filed as a-layer-says-how-big-it-is-while-you-drag-it rather than left here.",
+    "There is still no right click on the canvas itself, which is literally what you asked for. The layer's row has it and the Layer menu has it; a canvas context menu is a whole new surface with its own question of what else belongs in it, so it was not invented in passing. Left in this task's log rather than filed.",
+    "Nearly fifty walks were edited to open the numbers before they touch a field, and not one of them could be run. If the sweep comes back with a pile of failures in walks that mention X, Y, W or H, that is this task, and the fix is likely one shape of step rather than fifty."
+  ]
+}

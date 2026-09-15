@@ -515,6 +515,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the plain setup window it always was, with no tour offer in it, which is
     /// what this checks before closing it again.
     case showWelcomeAgain
+    /// Open (and close) the Position and Size numbers, which are a popover
+    /// hung off the selection now rather than a section in the panel
+    /// (`ExactPlacement`). A walk that wants to type a width asks for this
+    /// first, exactly as a person presses Option Command P or right clicks the
+    /// layer's row, and then `focus` finds the field in the popover's own
+    /// window.
+    case positionAndSize, closePositionAndSize
     case newCanvasDialog
     /// Answer the New Canvas sheet with the size it opens on, which is what
     /// pressing Return in it does. A sheet cannot be typed into from a walk,

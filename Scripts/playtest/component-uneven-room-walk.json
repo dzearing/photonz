@@ -19,6 +19,7 @@
     { "do": "type", "text": "12" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "360" },
     { "do": "key", "key": "return" },

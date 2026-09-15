@@ -24,6 +24,7 @@
     { "do": "snapshot", "name": "fill-menu-1-a-bar" },
     { "do": "render", "name": "fill-menu-1-a-bar-doc" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "700" },
     { "do": "key", "key": "return" },

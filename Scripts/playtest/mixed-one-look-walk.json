@@ -239,10 +239,11 @@
       "do": "wait",
       "seconds": 0.6
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "reveal",
       "control": "W",
-      "in": "Position & Size"
+      "in": "Position and Size"
     },
     {
       "do": "wait",

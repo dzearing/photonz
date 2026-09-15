@@ -20,6 +20,7 @@
     { "do": "describe", "stage": "2-selected", "note": "a rubber band around all three: Position & Size should now be showing with Mixed in every field, and the caption should say 3 layers" },
     { "do": "snapshot", "name": "multi-2-mixed" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "160" },
     { "do": "key", "key": "return" },
@@ -61,6 +62,7 @@
     { "do": "describe", "stage": "8-with-arrow", "note": "three rectangles plus an arrow selected: X and Y still take a number for all four, W should still be live and read 160 because it speaks only for the three that take a width" },
     { "do": "snapshot", "name": "multi-8-partial" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "120" },
     { "do": "key", "key": "return" },

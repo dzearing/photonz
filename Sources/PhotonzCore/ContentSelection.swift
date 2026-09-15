@@ -101,7 +101,7 @@ public struct TextLayerSelection: Hashable, Sendable {
             ? "This box is exactly as tall as its words"
             : "\(stuck.count) of these boxes are exactly as tall as their words"
         return subject + ", so Middle and Bottom have no room to move them in. "
-            + "Type a height under Position & Size to give it some."
+            + "Type a height under Position and Size, on the Layer menu, to give it some."
     }
 }
 

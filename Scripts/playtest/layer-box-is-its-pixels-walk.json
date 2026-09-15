@@ -41,6 +41,7 @@
       "row": "Layer",
       "present": true
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",
@@ -198,6 +199,7 @@
       "stage": "6-back-to-nothing",
       "note": "THE FIFTH TEST: undoing the first fill takes the layer back to having nothing on it at all, 0x0, so nothing about the new state is one way"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",
@@ -286,6 +288,7 @@
       "do": "wait",
       "seconds": 1.0
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",

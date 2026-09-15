@@ -42,6 +42,7 @@
     { "do": "wait", "seconds": 0.7 },
     { "do": "press", "control": "Fixed", "in": "Width" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "300" },
     { "do": "key", "key": "return" },

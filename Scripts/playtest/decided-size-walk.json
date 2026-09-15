@@ -18,6 +18,7 @@
     { "do": "action", "action": "stackSelection" },
     { "do": "wait", "seconds": 0.8 },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "500" },
     { "do": "key", "key": "return" },
@@ -42,7 +43,8 @@
     { "do": "render", "name": "decided-3-width-is-decided-doc" },
     { "do": "panel", "stage": "3-width-is-decided" },
 
-    { "do": "press", "control": "W", "in": "Position & Size" },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "press", "control": "W", "in": "Position and Size" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "4-clicking-answers",
       "note": "THE TEST: clicking the decided number answers straight away in the line under the fields, naming what decides it and the control that does change it." },

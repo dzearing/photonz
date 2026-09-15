@@ -16,6 +16,7 @@
     { "do": "type", "text": "Photonz measures what it says" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "620" },
     { "do": "key", "key": "return" },
@@ -38,6 +39,7 @@
       "note": "one undo puts the whole thing back: 620 wide and one line tall again" },
     { "do": "render", "name": "label-3-undone-doc" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "180" },
     { "do": "key", "key": "return" },
@@ -66,6 +68,7 @@
     { "do": "type", "text": "12" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "150" },
     { "do": "key", "key": "return" },

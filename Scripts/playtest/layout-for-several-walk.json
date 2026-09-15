@@ -52,6 +52,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "selectRow", "row": "Group" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "700" },
     { "do": "key", "key": "return" },

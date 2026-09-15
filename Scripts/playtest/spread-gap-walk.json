@@ -25,6 +25,7 @@
     { "do": "snapshot", "name": "spread-1-no-room" },
     { "do": "panel", "stage": "1-no-room" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "640" },
     { "do": "key", "key": "return" },

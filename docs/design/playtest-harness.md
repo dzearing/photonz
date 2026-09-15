@@ -497,7 +497,7 @@ The names, as of September 2026:
 | A layer row | `Visibility`, `Lock`, `Twist` | `in: "<the row's name>"` |
 | A color row | `Color`, `Switch`, `Save` | `in: "Fill"`, `in: "Background"`, … |
 | A well anywhere else | `Color` | `in: "Shadow"`, `in: "Backdrop"`, … |
-| Position & Size | `X`, `Y`, `W`, `H` | there is one of each |
+| The Position and Size numbers | `X`, `Y`, `W`, `H`, `A` | there is one of each; open them first with `{ "do": "action", "action": "positionAndSize" }`, since they are a popover rather than a section |
 | A copy's own look | `Revert Blur`, `Revert Shadow`, … | the name says which |
 | Shadow | `Enable Shadow` | there is one |
 | Frame | `Clip contents` | there is one (a screen's own switch) |
@@ -572,7 +572,7 @@ and turn a real break into a pass.
   already said by `in`, and the half you would be repeating is the copy.
 
 Everything else in the panel still goes by its word. A row whose name is
-structural — Width, Height, Layout, Position & Size — has nothing steadier to
+structural — Width, Height, Layout — has nothing steadier to
 be, and the rows of an ordinary menu are read off a list rather than addressed,
 so `choose` takes the words on them (the plus menu's effect rows being the one
 exception above).

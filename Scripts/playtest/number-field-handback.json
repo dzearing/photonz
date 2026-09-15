@@ -41,6 +41,7 @@
       "stage": "1-drawn",
       "note": "a rectangle 200 by 100, selected, and the canvas holds the keyboard"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"
@@ -103,6 +104,7 @@
       "stage": "4-reselected",
       "note": "back on the rectangle so the fields are on screen again"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "X"
@@ -229,6 +231,7 @@
       "do": "wait",
       "seconds": 0.5
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

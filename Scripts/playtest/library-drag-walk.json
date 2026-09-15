@@ -20,6 +20,7 @@
 
     { "do": "action", "action": "frameSelection" },
     { "do": "wait", "seconds": 0.9 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "620" },
     { "do": "key", "key": "return" },

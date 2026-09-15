@@ -10,6 +10,7 @@
     { "do": "waitFor", "condition": "tool", "value": "rectangle" },
     { "do": "drag", "from": [600, 826], "to": [728, 954], "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "X" },
     { "do": "type", "text": "600" },
     { "do": "key", "key": "return" },

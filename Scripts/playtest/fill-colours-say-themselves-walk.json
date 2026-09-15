@@ -110,6 +110,7 @@
       "do": "snapshot",
       "name": "4-canvas-new-space"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

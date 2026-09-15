@@ -1,0 +1,28 @@
+{
+  "id": "a-layer-says-how-big-it-is-while-you-drag-it",
+  "title": "A layer says how big it is while you drag it",
+  "goal": "While you drag or resize something on the canvas, and while you sweep a selection box, nothing on screen says how big it is or where it is. The numbers used to sit in the right hand panel and follow the drag; they are now something you ask for, so the live half of that reading has nowhere to go. Put a small readout on the canvas that follows the drag and disappears when you let go.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2690,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T16:14:53.606Z",
+  "updated": "2026-09-15T16:14:53.609Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Created by position-and-size-leave-the-panel on 2026-09-15. The Position & Size section followed a drag in flight (GeometryInspector reads previewedFrame, and EditorState.regionGeometry gave a live marquee its four numbers). Taking the section out of the panel kept the typing but lost the watching: the popover is a place a thing happens, and a canvas click dismisses it, so it cannot be the live readout. This is the feature that ought to replace that half, and it is better than what it replaces because it is where the eye already is. The measure tool already draws pill readouts on the canvas (AnnotationStyles, LabelPlate, CanvasNameLabel) so the drawing is not new.",
+  "acceptance": [
+    "Dragging a layer shows its position, and resizing one shows its size, next to what is being dragged, updating as it moves",
+    "Sweeping a selection box shows the box size the whole time it is being swept",
+    "The readout disappears the moment the pointer is released, and never covers the thing it is describing",
+    "Nothing is added to the right hand panel to do it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T16:14:53.608Z",
+      "note": "created (manual)"
+    }
+  ]
+}

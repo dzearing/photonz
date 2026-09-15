@@ -432,20 +432,17 @@ struct InspectorPanel: View {
         if Experiments.shared.alignLayersEnabled, editorState.canAlignSelection {
             set.insert(.arrange)
         }
-        // Where the selected layers sit and how big they are, as numbers you
-        // can type (Next, `next-geometry-fields`). Every layer kind has a
-        // position, so this shows for all of them, and it speaks for the whole
-        // selection: pick four buttons and one typed width reaches all four.
-        // Which of the four fields accept typing is `LayerGeometryEditing`'s
-        // call.
-        // A live marquee brings the section up on its own, with or without a
-        // layer picked: while a selection tool has the arrow keys the numbers
-        // are the selection's, and a marquee swept over an empty canvas would
-        // otherwise have nowhere to report its size.
-        if Experiments.shared.geometryFieldsEnabled,
-           editorState.hasLayerSelection || editorState.regionGeometry != nil {
-            set.insert(.geometry)
-        }
+        // Position & Size is NOT here any more, and its absence is the feature.
+        // Where a layer sits and how big it is was a section sitting open at
+        // the top of this panel for every layer, forever, costing the dock 130
+        // of the 1052 points it was asking a 968 point panel for (measured
+        // 2026-09-15). Moving something is what the pointer is for, and an
+        // exact number is wanted rarely and precisely, so the same fields now
+        // open on a command over the thing they are about: Layer ▸ Position
+        // and Size…, or a right click on the layer's own row
+        // (`ExactPlacement`, `ExactPlacementPopover`). The `.geometry` case
+        // stays in the enum so that saved orders and the one-time moves that
+        // mention it keep reading cleanly; nothing puts it on screen.
         // Every color the picked layers have, in ONE place. Present as soon as
         // anything with a color is picked, one layer or twenty: a color that
         // moved to a different section the moment you shift-clicked a second
@@ -751,6 +748,10 @@ struct InspectorPanel: View {
         case .arrange:
             ArrangeInspector()
         case .geometry:
+            // Unreachable: the dock never offers this section any more (see
+            // `availableSections`). The same view is what the Position and Size
+            // popover shows, and the case stays here because the enum still
+            // carries `.geometry` for every order somebody has saved.
             GeometryInspector()
         case .measureTool:
             MeasureToolInspector()

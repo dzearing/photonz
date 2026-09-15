@@ -19,6 +19,7 @@
 
     { "do": "action", "action": "stepIntoSelection" },
     { "do": "wait", "seconds": 0.7 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "Y" },
     { "do": "type", "text": "900" },
     { "do": "key", "key": "return" },

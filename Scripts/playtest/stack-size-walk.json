@@ -24,6 +24,7 @@
     { "do": "snapshot", "name": "size-1-hugging" },
     { "do": "render", "name": "size-1-hugging-doc" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "320" },
     { "do": "key", "key": "return" },

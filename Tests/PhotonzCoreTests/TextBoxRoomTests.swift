@@ -273,7 +273,12 @@ struct TextBoxRoomTests {
             selectionCount: 1)
         let note = selection.downTheBoxNote
         #expect(note != nil)
-        #expect(note?.contains("Position & Size") == true)
+        // Named after the command that opens the field, and where to find it:
+        // these four numbers stopped being a section in the panel on
+        // 2026-09-15 (`ExactPlacement`), so a note that sent somebody looking
+        // down the panel for them would be sending them nowhere.
+        #expect(note?.contains("Position and Size") == true)
+        #expect(note?.contains("Layer menu") == true)
     }
 
     @Test func itSaysNothingWhileTheWordsAreAskedToSitAtTheTop() {

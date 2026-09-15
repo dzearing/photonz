@@ -45,6 +45,7 @@
     { "do": "click", "at": [500, 400] },
     { "do": "wait", "seconds": 0.4 },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "describe", "stage": "6-focus-w", "note": "the W field should take the keyboard for a group now, with no greyed note" },
     { "do": "snapshot", "name": "resize-6-focus-w" },

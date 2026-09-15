@@ -11,6 +11,7 @@
     { "do": "describe", "stage": "2-drew", "note": "a rectangle drawn roughly 200 by 100; the inspector should now show a Position & Size section" },
     { "do": "snapshot", "name": "2-drew" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "describe", "stage": "3-focus-w", "note": "the W field has the keyboard" },
     { "do": "snapshot", "name": "3-focus-w" },
@@ -64,6 +65,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "13-dragged", "note": "the held snapshot is the middle of the drag: X and Y in the inspector should already read the moved position, not the old one" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "0" },
     { "do": "key", "key": "return" },

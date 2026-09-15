@@ -17,7 +17,6 @@
     { "do": "tool", "tool": "select" },
     { "do": "click", "at": [180, 145] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Position & Size section" },
     { "do": "press", "control": "Effects section" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "panelMenu", "menu": "Font", "choose": "Georgia" },

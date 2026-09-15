@@ -6,6 +6,7 @@
     { "do": "action", "action": "selectCanvas" },
     { "do": "describe", "stage": "1-canvas", "note": "the canvas is picked, so the panel is showing W and H" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
 
     { "do": "key", "key": "t" },

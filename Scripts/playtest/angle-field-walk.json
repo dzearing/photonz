@@ -41,6 +41,7 @@
       "do": "panel",
       "stage": "1-drew"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "A",
@@ -79,6 +80,7 @@
       "stage": "2-turned",
       "note": "the rotate knob floats above the top edge at about [220, 100]; dragging it round to [270, 120] with shift held snaps the turn to 45 degrees. The held shot is taken with the button still down, so A must already read 45 there rather than jumping on mouse-up"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "A",

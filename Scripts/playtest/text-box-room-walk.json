@@ -25,6 +25,7 @@
     { "do": "snapshot", "name": "room-2-middle-with-no-room" },
     { "do": "panel", "stage": "2-middle-with-no-room" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "H" },
     { "do": "type", "text": "160" },
     { "do": "key", "key": "return" },

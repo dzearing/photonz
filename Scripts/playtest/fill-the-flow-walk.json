@@ -142,6 +142,7 @@
       "do": "wait",
       "seconds": 0.5
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"
@@ -240,6 +241,7 @@
       "do": "panel",
       "stage": "6-named-in-the-list"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

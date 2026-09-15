@@ -424,6 +424,19 @@ struct LayersRow: View, Equatable {
             Button("Make \(container) Fit") { editorState.makeRoomForLayer(id: id) }
         }
         Divider()
+        // The user's own suggestion for where these went: right click the
+        // layer and ask for the numbers (`ExactPlacement`). It acts on the
+        // whole selection when the row you right clicked is part of it, like
+        // everything else in this menu.
+        if Experiments.shared.geometryFieldsEnabled {
+            Button(ExactPlacement.menuItem) {
+                if !display.isSelected {
+                    editorState.clickRow(id, .plain, in: editorState.panelRows.map(\.id))
+                }
+                editorState.openExactPlacement()
+            }
+        }
+        Divider()
         Button("Rename") { beginRename(id, display.name) }
         if offersMakeComponent {
             Button("Make Component") { editorState.makeComponent() }

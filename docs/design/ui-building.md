@@ -3767,3 +3767,44 @@ the panel in `ComponentPanel.swift` (`ComponentPropertyList`,
 `ComponentVariantPropertyRow`, `ComponentInstanceProperties`). Menus: Layer ▸
 **Add Variant**, Layer ▸ **Apply to Other Variants**. Tests in
 `ComponentVariantPropertyTests.swift`.
+
+## Position and Size leave the panel (2026-09-15)
+
+Where a layer sits and how big it is was four number boxes sitting open at the
+top of the right hand panel for every layer, forever. They are now something you
+ask for.
+
+**Why.** The user, looking at the panel with a component copy selected: "why
+would I ever care to set position and width manually? If I want to move
+something I use the V tool. If we want precision placement right click and have
+an option to do that. Same with sizing." And it was measured as well as felt: a
+piece of text picked in a three layer document asked the dock for 1052 points
+against the 688 a laptop window gives and the 968 the largest window on this
+display gives, and 130 of those points were these four boxes
+(`work-out-whether-the-right-hand-pane-is-carrying`, and the heights are pinned
+in `DockWithoutPositionAndSizeTests`). The dock for that same selection is 922
+points now, and in the largest window the whole panel fits for the first time.
+
+**Where they went.** Layer ▸ **Position and Size…**, on ⌥⌘P, and on a right
+click on the layer's own row. Both run one command
+(`EditorState.openExactPlacement`) which opens a popover over the box the
+selection outline is drawn around. ⌘T is deliberately left alone: macOS reserves
+it for Show Fonts wherever there is text.
+
+**What did NOT change.** The fields themselves are the same view
+(`GeometryInspector`): same typing, same Mixed where the picked layers differ,
+same read-only look for a number the app worked out, same 1 and 10 on the arrow
+keys, same single undo step, same line underneath explaining a refusal. A live
+marquee still owns the numbers while a selection tool has the arrow keys, and
+the popover's heading says "Selection" when it does. Nudging, dragging and
+snapping on the canvas are untouched.
+
+**What it cost, on purpose.** A popover is a place a thing happens, so it closes
+when you click the canvas: the numbers no longer FOLLOW a drag the way a section
+could. The live half of that reading belongs on the canvas rather than in the
+column, and is filed as `a-layer-says-how-big-it-is-while-you-drag-it`.
+
+Model in `ExactPlacement.swift` (the subject, the heading, and where the popover
+points, all pure); the app layer in `EditorState+ExactPlacement.swift` and
+`ExactPlacementPopover.swift`. Walks open the numbers with
+`{ "do": "action", "action": "positionAndSize" }`.

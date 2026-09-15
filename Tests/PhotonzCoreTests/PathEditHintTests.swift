@@ -85,8 +85,10 @@ struct PathEditHintTests {
         #expect(PathEditHint.turned.contains("turned"))
         #expect(PathEditHint.turned.contains("Set A back to 0"),
                 "the field that straightens it")
-        #expect(PathEditHint.turned.contains("Position & Size"),
-                "spelled the way the panel spells it (LayerSection.geometry)")
+        #expect(PathEditHint.turned.contains("Position and Size"),
+                "named the way the command that opens the field is named (ExactPlacement.menuItem)")
+        #expect(PathEditHint.turned.contains("Layer menu"),
+                "and where to find it, since it is no longer a section sitting open in the panel")
         #expect(PathEditHint.turned != PathEditHint.opening)
     }
 }

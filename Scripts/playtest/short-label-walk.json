@@ -148,6 +148,7 @@
       "do": "wait",
       "seconds": 0.6
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

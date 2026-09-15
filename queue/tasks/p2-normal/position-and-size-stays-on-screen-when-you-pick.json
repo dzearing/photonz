@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:37:13.565Z",
-  "updated": "2026-09-15T15:02:35.100Z",
+  "updated": "2026-09-15T16:15:00.169Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 on a probe built from HEAD 093c41da. Walk: Scripts/playtest/studies/side-pane-load-walk.json (a study walk: it measures and asserts nothing, so it lives in a subfolder the sweep's glob does not reach). It draws a text layer and a rectangle in a blank 900x600 document at three window sizes, picks the text, and reads the dock's own numbers back.\n\nWhat it printed, text picked, each time:\n  1000x640  viewport 608  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-891 | Position & Size 891-1021   inView: Layers, Text, Appearance\n  1200x720  viewport 688  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance\n  1680x1000 viewport 968  sections: Layers 6-169 | Text 169-367 | Appearance 367-590 | Effects 590-922 | Position & Size 922-1052   inView: Layers, Text, Appearance, Effects\nSo the dock wants 1052 points and the largest viewport on this display is 968. Position & Size is never in dockInView; at 1680x1000 its header is in dockHeadersInView and the section is not whole.\n\nMechanism, from Sources/Photonz/InspectorDockLayout.swift. Forms are paid at full height and never squeezed; only Layers, Measurements, Library and Effects may be shortened. Effects is shortenable but its floor is set by the open pane (listRoom read back 'Effects 299/299 needs 299'), so one open drop shadow pins 299 points and Layers alone gives way, from 160 down to its 112 floor. That is 48 points of slack against an 84 point shortfall at the largest size, and a 364 point shortfall on a laptop.\n\nCITES the done task the-properties-panel-fits-on-the-screen-it-has, whose acceptance included 'A section with more in it than fits scrolls inside itself rather than pushing the sections under it off the bottom'. That promise does not hold for Position & Size today. Worth reading its log before choosing an approach, and one-open-effect-fits-in-the-effects-list for why the Effects floor is what it is.\n\nFound while running work-out-whether-the-right-hand-pane-is-carrying, whose study page docs/design/mocks/pages/pane-load.html carries the full inventory.",
@@ -68,6 +68,10 @@
     {
       "t": "2026-09-15T15:02:35.099Z",
       "note": "Superseded on 2026-09-15: the user's answer to Position and Size overflowing is that it should not be in the panel at all. Filed as position-and-size-leave-the-panel. This task made the boxes reachable; that one removes the reason they needed reaching."
+    },
+    {
+      "t": "2026-09-15T16:15:00.168Z",
+      "note": "SUPERSEDED on 2026-09-15 by position-and-size-leave-the-panel. This task moved the four boxes up the dock's order so they were at least on screen; the user's answer that afternoon was that they are not worth the room at all. The section is gone, the same fields open on Layer, Position and Size (Option Command P) or a right click on the layer's row, and the dock for the same selection went from 1052 points to 922. The order migration this task added (orderVersionSizeAboveLook, version 6) is left in place: it is harmless now that nothing offers the section, and taking a numbered migration out would make the version numbers lie."
     }
   ],
   "started": "2026-09-15T13:47:21.241Z",

@@ -77,6 +77,7 @@
       "do": "panel",
       "stage": "2-fields"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

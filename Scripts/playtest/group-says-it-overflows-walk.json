@@ -26,6 +26,7 @@
     { "do": "snapshot", "name": "overflow-1-fits" },
     { "do": "panel", "stage": "1-fits" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "200" },
     { "do": "key", "key": "return" },
@@ -48,6 +49,7 @@
     { "do": "reveal", "control": "Wrap onto more lines" },
     { "do": "press", "control": "Wrap onto more lines" },
     { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "320" },
     { "do": "key", "key": "return" },

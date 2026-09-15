@@ -21,6 +21,7 @@
     { "do": "snapshot", "name": "copy-own-size-2-dragged" },
     { "do": "render", "name": "copy-own-size-2-dragged-doc" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "1200" },
     { "do": "key", "key": "return" },
@@ -39,6 +40,7 @@
     { "do": "snapshot", "name": "copy-own-size-4-reverted" },
     { "do": "render", "name": "copy-own-size-4-reverted-doc" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "375" },
     { "do": "key", "key": "return" },

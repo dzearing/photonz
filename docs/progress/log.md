@@ -15500,3 +15500,37 @@ playback change touches.
 Next: run that sweep once the screen is unlocked, then
 `keep-the-pieces-visible-while-trimming-a-recordi` — opening the trim handles
 over a cut recording currently hides the pieces.
+
+## 2026-09-15 — Position and Size leave the panel
+
+- The four number boxes are no longer a section in the right hand panel. They
+  open on a command instead: Layer ▸ **Position and Size…**, ⌥⌘P, or a right
+  click on the layer's own row, as a popover over the box the selection outline
+  is drawn around.
+- The fields themselves did not change. `GeometryInspector` moved as it was:
+  same typing, same Mixed, same read-only look, same 1 and 10 on the arrows,
+  same single undo, same line explaining a refusal, and a live marquee still
+  owns the numbers and says so in the heading.
+- Measured saving, for the same selection in the same window: **1052 points to
+  922**. In the largest window this display gives, the whole panel fits for the
+  first time (962 against 968), because the layers list takes 40 of the freed
+  points back. Pinned in `DockWithoutPositionAndSizeTests`, which replaces
+  `DockPositionAndSizeFitsTests` from this morning.
+- New pure model `ExactPlacement.swift`: whose numbers these are, what the
+  popover calls itself, and where it points, kept inside what is on screen.
+- Copy that sent people to the section now names the command
+  (`PathEditHint.turned`, `ContentSelection.downTheBoxNote`), and the flag
+  description is rewritten.
+- Harness: a `positionAndSize` / `closePositionAndSize` action, and `keyTarget`
+  now reaches a popover's window, so Return and the arrow keys land in a field
+  that is not in the editor window. 48 walks open the numbers before they touch
+  a field.
+
+**Not verified on screen.** The Mac's screen was locked for the whole session
+again, so no walk could run: every attempt came back `status: locked`, zero
+steps. Verified is `swift build`, 6937 unit tests, and the dock arithmetic. A
+full sweep is requested, because a harness rule every walk uses changed.
+
+Next: read `queue/bin/sweep.sh status` once the screen is unlocked. The live
+half of what the section did — numbers that follow a drag — is filed as
+`a-layer-says-how-big-it-is-while-you-drag-it`.

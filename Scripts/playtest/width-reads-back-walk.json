@@ -26,6 +26,7 @@
 
     { "do": "scrollPanel", "by": 400, "row": "Layout section" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "50" },
     { "do": "key", "key": "return" },

@@ -49,6 +49,7 @@
       "do": "render",
       "name": "placement-1-dropped-doc"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"

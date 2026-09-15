@@ -45,13 +45,9 @@
     {
       "do": "describe",
       "stage": "reach-for-h",
-      "note": "W and H are not in the Text section: they live in Position & Size, the section below it, and with Layers, Appearance and an open Effects stacked above them they start below the bottom of the panel. A person scrolls down to read the height, so the walk does the same before it looks, and every snapshot from here on has the readout in it."
+      "note": "W and H are not in the Text section and are no longer anywhere in the panel: they are the Position and Size numbers, asked for over the layer itself, so the walk asks for them before it looks and every snapshot from here on has the readout in it."
     },
-    {
-      "do": "reveal",
-      "control": "H",
-      "in": "Position & Size"
-    },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"
@@ -102,11 +98,7 @@
       "do": "snapshot",
       "name": "2-wrapped"
     },
-    {
-      "do": "reveal",
-      "control": "H",
-      "in": "Position & Size"
-    },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "press",
       "control": "H"
@@ -116,6 +108,7 @@
       "stage": "3-h-reads",
       "note": "H just took a press and the keyboard landed in it: the height is a field you can set, not only a number to read. Until somebody types a height, it goes on showing whatever height the words wrapped to, which is what the rest of this walk checks."
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "W"
@@ -140,11 +133,6 @@
     {
       "do": "snapshot",
       "name": "4-rewrapped-wider"
-    },
-    {
-      "do": "reveal",
-      "control": "H",
-      "in": "Position & Size"
     },
     {
       "do": "press",

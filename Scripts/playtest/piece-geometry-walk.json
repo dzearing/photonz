@@ -252,6 +252,7 @@
       "stage": "6-layers-list",
       "note": "and the Layers list gives the copy's row no twist to open, so there is no piece to click there either"
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "focus",
       "field": "X"

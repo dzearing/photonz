@@ -76,10 +76,6 @@
       "seconds": 0.6
     },
     {
-      "do": "press",
-      "control": "Position & Size section"
-    },
-    {
       "do": "wait",
       "seconds": 0.5
     },

@@ -110,6 +110,7 @@
       "do": "wait",
       "seconds": 0.7
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "X",
@@ -368,6 +369,7 @@
       "do": "wait",
       "seconds": 0.8
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "X",

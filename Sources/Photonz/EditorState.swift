@@ -105,6 +105,11 @@ final class EditorState {
     var isBlankCanvasDialogPresented = false
     /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
     var isNewFrameDialogPresented = false
+    /// The X, Y, W, H and A boxes, open over the thing they are about
+    /// (Next, `next-geometry-fields`, `EditorState+ExactPlacement.swift`).
+    /// They used to be a section sitting open in the panel for every layer;
+    /// now they are asked for, from the Layer menu or the layer's own row.
+    var isExactPlacementPresented = false
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,

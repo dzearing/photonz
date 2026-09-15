@@ -433,6 +433,7 @@
       "do": "wait",
       "seconds": 0.6
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",
@@ -498,6 +499,7 @@
       "do": "wait",
       "seconds": 0.6
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",

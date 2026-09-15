@@ -22,7 +22,6 @@
     { "do": "tool", "tool": "select" },
     { "do": "click", "at": [180, 145] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Position & Size section" },
     { "do": "press", "control": "Effects section" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-typed", "note": "two headings, both in the type a fresh text block starts at. The Text section now carries a Style row above Font, and it says nothing yet because this text is its own." },

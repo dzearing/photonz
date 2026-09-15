@@ -219,6 +219,7 @@
         "Rectangle 2"
       ]
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "X",

@@ -144,6 +144,7 @@
       "do": "wait",
       "seconds": 0.8
     },
+    { "do": "action", "action": "positionAndSize" },
     {
       "do": "expect",
       "field": "W",

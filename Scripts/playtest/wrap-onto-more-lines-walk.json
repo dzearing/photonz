@@ -31,6 +31,7 @@
     { "do": "snapshot", "name": "wrap-1-one-long-row" },
     { "do": "panel", "stage": "1-one-long-row" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "300" },
     { "do": "key", "key": "return" },
@@ -57,6 +58,7 @@
     { "do": "render", "name": "wrap-4-line-gap-doc" },
     { "do": "panel", "stage": "4-line-gap" },
 
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "560" },
     { "do": "key", "key": "return" },

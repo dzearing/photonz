@@ -668,6 +668,20 @@ struct EditorCommands: Commands {
                 }
                 .disabled(!(editor?.canDistributeSelection ?? false))
             }
+            // Where a layer sits and how big it is, typed exactly
+            // (`ExactPlacement`). These four numbers used to be a section
+            // sitting open in the right hand panel for every layer; they are
+            // asked for now, and this row is their home in the menu bar. Option
+            // Command P because P is the letter Position starts with and
+            // Photoshop binds neither the command nor the key; plain Command T
+            // is left alone because macOS reserves it for Show Fonts wherever
+            // there is text, and this app has text.
+            if Experiments.shared.geometryFieldsEnabled {
+                Divider()
+                Button(ExactPlacement.menuItem) { editor?.openExactPlacement() }
+                    .keyboardShortcut("p", modifiers: [.command, .option])
+                    .disabled(!(editor?.canOpenExactPlacement ?? false))
+            }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or

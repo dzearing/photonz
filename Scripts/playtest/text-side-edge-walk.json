@@ -9,7 +9,7 @@
     { "do": "key", "key": "return", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "tool", "tool": "select" },
-    { "do": "reveal", "control": "H", "in": "Position & Size" },
+    { "do": "action", "action": "positionAndSize" },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "360" },
     { "do": "key", "key": "return" },

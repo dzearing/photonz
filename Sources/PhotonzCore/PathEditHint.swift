@@ -49,7 +49,7 @@ public enum PathEditHint {
     /// the one field that undoes it, is the difference between a limit and a
     /// thing that looks broken.
     public static let turned = "This path is turned, so its points cannot be dragged. "
-        + "Set A back to 0 in Position & Size and they come back."
+        + "Set A back to 0 under Position and Size, on the Layer menu, and they come back."
 
     /// A hard corner picked. It has no levers on it, so it is not told to drag
     /// one: the way forward is to curve it first.

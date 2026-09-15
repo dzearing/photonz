@@ -164,12 +164,10 @@ struct GeometryInspector: View {
                 field(.x, selection)
                 field(.y, selection)
             }
-            .panelStartProbe(.row, owner: "Position")
             HStack(spacing: 8) {
                 field(.width, selection)
                 field(.height, selection)
             }
-            .panelStartProbe(.row, owner: "Size")
             // The angle, on its own row under the size. It keeps the left
             // column rather than spreading across, so X, W and A line up in
             // one column of numbers and the row does not read as a fifth field
@@ -179,7 +177,6 @@ struct GeometryInspector: View {
                 field(.rotation, selection)
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
             }
-            .panelStartProbe(.row, owner: "Angle")
             // Most of the time there is no line here at all: the caption is
             // nil unless something is missing or several layers are behaving in
             // a way you cannot see (UX-PATTERNS §4, "How much a section may
@@ -360,7 +357,7 @@ private struct GeometryNumberField: View {
         // Named the same way the readout beside it is, so a `panel` step lists
         // all four numbers whether or not this selection lets you type them,
         // and pressing one puts the keyboard in it.
-        .playtestControl(field.label, detail: "Position & Size")
+        .playtestControl(field.label, detail: "Position and Size")
         .onAppear { text = display() }
         .onChange(of: reading) { text = display() }
         .onChange(of: selectionKey) { text = display() }
@@ -487,7 +484,7 @@ private struct GeometryReadout: View {
         }
         .buttonStyle(.plain)
         .panelHelp(help)
-        .playtestControl(field.label, detail: "Position & Size")
+        .playtestControl(field.label, detail: "Position and Size")
         // A readout is a row with a number on it, the same as a field is, so a
         // walk can ask what it reads. Without this the four numbers went dark
         // to a walk the moment they stopped being typeable, which is exactly
