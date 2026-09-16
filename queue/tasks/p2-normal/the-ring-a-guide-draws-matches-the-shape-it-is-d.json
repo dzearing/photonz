@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 400,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T21:18:08.898Z",
-  "updated": "2026-09-16T08:25:29.110Z",
+  "updated": "2026-09-16T08:26:56.965Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-12-tutorials-01-tool-bar.png shows the ring round the tool bar with a 10pt corner radius against the bar own pill. Ran Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json and read the first capture.\n\nThe radius is hard coded at the one call site: TutorialController.placeCue passes TutorialCueView(cornerRadius: 10). The anchor itself is the only thing that knows its shape, so the shape probably has to travel with the anchor: either a corner radius on TutorialAnchor, or a small shape enum set where the anchor is hung. See docs/design/tutorials.md.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-16T08:25:29.109Z",
       "note": "left rough: the toolBar anchor sits on the container holding BOTH the tools capsule and the tool settings capsules beside it, so one pill rings the pair across the gap between them. Closer than the old box but not exact; did not earn its own task (nobody is stopped by it and the audit's rough list carries it for the user to react to)."
+    },
+    {
+      "t": "2026-09-16T08:26:56.963Z",
+      "note": "The highlight ring now takes each control's own shape: pill on the floating tool bar, circle on a round tool button, and the same squarer corner a panel section always had. TutorialCueShape + TutorialAnchor.cueShape in PhotonzCore, TutorialCueView and placeCue in the app, tutorials.md updated. Verified by 7508 green tests including a new suite for the shape of every anchor family, and by an offscreen render of the shipping ring code (queue/audits/2026-09-16-tutorial-ring-shapes.png). Acceptance 4 is only half met: the screen was locked all task so no walk could photograph the app, and a sweep is pending for when it is unlocked. Committed ad381ba8, pushed."
     }
   ],
-  "started": "2026-09-16T08:18:04.560Z"
+  "started": "2026-09-16T08:18:04.560Z",
+  "completed": "2026-09-16T08:26:56.964Z"
 }
