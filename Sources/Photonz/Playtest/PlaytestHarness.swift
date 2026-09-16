@@ -887,7 +887,8 @@ private final class Run {
             let deadline = Date().addingTimeInterval(timeout)
             while !holds(condition, editor: editor) {
                 guard Date() < deadline else {
-                    throw Failure(description: "\(condition) did not happen within \(timeout)s")
+                    throw Failure(description: "\(condition) did not happen within \(timeout)s"
+                                  + conditionHint(condition))
                 }
                 await sleep(0.1)
             }
@@ -6706,6 +6707,16 @@ private final class Run {
         }
     }
 
+    /// What to add to a failed wait so the reader does not have to go hunting
+    /// through the log for the numbers. A claim about where a section SITS is
+    /// answered by the list of sections, and the list is short.
+    private func conditionHint(_ condition: PlaytestCondition) -> String {
+        guard case .sectionDirectlyUnder = condition else { return "" }
+        let drawn = InspectorLayoutProbe.shared.measured.map(\.title)
+        guard !drawn.isEmpty else { return "; the dock is drawing no sections at all" }
+        return "; the dock draws: " + drawn.joined(separator: " > ")
+    }
+
     private func holds(_ condition: PlaytestCondition, editor: EditorState?) -> Bool {
         // The two conditions that are about the guide rather than about a window.
         if case .tutorialStep(let id) = condition {
@@ -6731,6 +6742,15 @@ private final class Run {
             InspectorLayoutProbe.shared.measured
                 .first { $0.title == title }
                 .map { InspectorLayoutProbe.shared.isHeaderVisible($0) } ?? false
+        // Read off the sections the dock is actually DRAWING, in draw order, so
+        // this is the claim a person could check with their eyes: the next
+        // header down from Effects says Motion. A section the selection does
+        // not bring is not in the way and is not counted.
+        case .sectionDirectlyUnder(let title, let anchor):
+            InspectorLayoutProbe.shared.measured.map(\.title)
+                .firstIndex(of: anchor)
+                .map { $0 + 1 < InspectorLayoutProbe.shared.measured.count
+                    && InspectorLayoutProbe.shared.measured[$0 + 1].title == title } ?? false
         case .layerRowInView(let name):
             LayersListProbe.shared.isInView(name)
         case .tutorialStep(let id):

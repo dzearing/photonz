@@ -476,6 +476,12 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// ...and the weaker claim, for a section too tall to ever fit whole: its
     /// header is on screen, so you at least know the settings are there.
     case sectionHeaderInView(String)
+    /// One section is the NEXT one down from another, by their header text.
+    /// Where a section sits is the whole of what the panel order does, and it
+    /// is the one thing a snapshot argues about badly: a walk could report the
+    /// order in its log for weeks while Motion drifted ten sections away from
+    /// the Effects list it is meant to be read beside. This fails instead.
+    case sectionDirectlyUnder(String, under: String)
     /// A layer's row, by the layer's name, is on screen WHOLE in the layers
     /// list, without anyone touching the scroll wheel. "Clicking that shape
     /// puts its row in front of you" is then a step the walk fails on rather
@@ -2331,10 +2337,12 @@ public enum PlaytestStep: Sendable, Equatable {
             case "measureMode": .measureMode(try f.enumValue("value", MeasureToolMode.self))
             case "sectionInView": .sectionInView(try f.string("value"))
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
+            case "sectionDirectlyUnder": .sectionDirectlyUnder(try f.string("value"),
+                                                               under: try f.string("under"))
             case "layerRowInView": .layerRowInView(try f.string("value"))
             case "tutorialStep": .tutorialStep(try f.string("value"))
             case "tutorialFinished": .tutorialFinished(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, layerRowInView, tutorialStep or tutorialFinished")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep or tutorialFinished")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

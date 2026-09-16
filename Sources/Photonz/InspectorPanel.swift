@@ -90,6 +90,17 @@ struct InspectorPanel: View {
     /// whose Appearance runs to 382 and 525 points — its last rows are below
     /// the fold on a laptop window where they used to be on screen.
     private static let orderVersionSizeAboveLook = 6
+    /// ...and Motion came back up to sit directly under Effects, where it has
+    /// said it belongs since the day it shipped.
+    ///
+    /// It is read the same way the Effects list is read — a header with a plus,
+    /// rows with a switch and a name and a summary, settings that unfold — and
+    /// learning one is meant to teach you the other. Move 4 lifted Appearance
+    /// and Effects up under Layers and left Motion where it was declared, which
+    /// put ELEVEN sections between them: pick a screen and Frame, Columns and
+    /// Layout all sat in the gap, so animating an icon meant scrolling past
+    /// every screen setting in the panel.
+    private static let orderVersionMotionUnderEffects = 7
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
@@ -132,6 +143,11 @@ struct InspectorPanel: View {
             .init(version: orderVersionSizeAboveLook,
                   sections: placeSections.map(\.rawValue),
                   .before, InspectorSectionID.color.rawValue, isEnabled: split),
+            // ...and Motion follows Effects up, because the two are one idea
+            // read twice: what the layer paints, then what about it changes.
+            .init(version: orderVersionMotionUnderEffects,
+                  sections: [InspectorSectionID.motion.rawValue],
+                  .after, InspectorSectionID.effects.rawValue, isEnabled: split),
         ]
     }
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
@@ -542,7 +558,13 @@ struct InspectorPanel: View {
         // everything picked: a motion carries the layer's own numbers in its
         // From and To, so one row standing for five layers would have to hold
         // five different pairs of values and could only ever show one of them.
-        if editorState.motionLayer != nil { set.insert(.motion) }
+        // ...and with more than one picked it STAYS, holding one line that says
+        // why it has nothing to show. Vanishing was the confusing part: the
+        // section directly above it speaks for everything picked, so the second
+        // click looked like it had broken something (2026-09-16 design review).
+        if editorState.motionLayer != nil || editorState.motionNeedsOneLayer {
+            set.insert(.motion)
+        }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows

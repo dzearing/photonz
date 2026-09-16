@@ -1,0 +1,26 @@
+{
+  "feature": "Motion sits under Effects",
+  "epic": "icon-svg",
+  "summary": "Motion is now the next section down from Effects in the right hand panel, instead of eleven sections below it under every screen setting. Picking a second layer no longer makes the section vanish: it stays put and says why it works on one layer at a time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Motion is on by default; nothing to switch on. Anyone who had already dragged their panel sections around keeps that arrangement, only Motion moves.",
+  "try": [
+    { "do": "Draw a screen with the Frame tool and leave it picked." },
+    { "do": "Look down the right hand panel: the section under Effects is Motion, and Frame, Columns and Layout come after it." },
+    { "do": "Press the plus on the Motion header and add a Rotation." },
+    { "do": "Draw two rectangles, click one and shift click the other." },
+    { "do": "Read the Motion section: it is still there under Effects, holding one line about picking a single layer." },
+    { "do": "Click one rectangle on its own. The line goes and the plus is live again." },
+    { "do": "Drag the Motion header somewhere else in the panel and relaunch: your arrangement is kept."}
+  ],
+  "evaluate": [
+    "With a screen picked, does Motion read as part of the same family as Effects now that it is the next thing down?",
+    "Is the line with two layers picked more use than the section simply leaving the panel, or is it clutter in a panel that is already tall?",
+    "Does the wording say the right thing, or does it read as the app refusing rather than explaining?",
+    "Now that Motion sits above Frame, Columns and Layout, is anything about a picked screen harder to reach than it was?"
+  ],
+  "rough": [
+    "NOT SEEN IN THE RUNNING APP. The Mac's screen was locked for the whole of this task, so no walk could run at all: Scripts/playtest.sh exits 3 with status locked and there are no screenshots and no offscreen renders to show. What is proven is the order chain itself, which is pure and unit tested, and that the walk's new steps parse in the probe. A sweep has been asked for and will run when the screen is unlocked.",
+    "Somebody who deliberately dragged Motion to the bottom of their panel gets it moved back once. That is how all seven of these one-time moves work and there is no way to tell a deliberate arrangement of one section from a default one, but it is a real cost.",
+    "With two layers picked the plus on the Motion header is dimmed and the play button beside it is still live, because play is about the whole document rather than the selection. That is correct and it may still read oddly next to a section saying it has nothing to show."
+  ]
+}

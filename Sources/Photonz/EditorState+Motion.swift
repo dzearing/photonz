@@ -70,6 +70,24 @@ extension EditorState {
         return layer
     }
 
+    /// More than one layer is picked, so the list has nothing it can honestly
+    /// show and the section says why instead of disappearing.
+    ///
+    /// Motion sits directly under Effects and Effects speaks for everything
+    /// picked, so the one section that cannot is the one most likely to be read
+    /// as broken: you add a second layer and the whole section goes, with
+    /// nothing anywhere saying it was your second click that did it. Asked for
+    /// in the 2026-09-16 design review, which put it exactly this way: say what
+    /// Motion shows with two layers picked instead of just vanishing, even if
+    /// that is one line explaining why.
+    ///
+    /// A locked layer on its own is NOT this: nothing about it can be changed,
+    /// and a section explaining that would be one of many.
+    var motionNeedsOneLayer: Bool {
+        guard Experiments.shared.motionEnabled, motionLayer == nil else { return false }
+        return layerStyleSelection.layerIDs.count > 1
+    }
+
     /// The entries in the list, top to bottom.
     ///
     /// A bar being dragged on the timing strip is shown here as the hand has

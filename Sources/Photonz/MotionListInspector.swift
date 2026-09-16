@@ -23,7 +23,9 @@ struct MotionListInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if editorState.motionRows.isEmpty {
+            if editorState.motionNeedsOneLayer {
+                oneLayerOnly
+            } else if editorState.motionRows.isEmpty {
                 empty
             } else {
                 ForEach(editorState.motionRows) { motion in
@@ -46,6 +48,20 @@ struct MotionListInspector: View {
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Motion Empty")
             .panelStartProbe(.row, owner: "Motion empty")
+    }
+
+    /// The line for a selection of two or more. The section above this one
+    /// speaks for everything picked, so a Motion section that simply left the
+    /// panel read as the second click having broken something. It stays and
+    /// says what to do instead.
+    private var oneLayerOnly: some View {
+        Text("Motion is set on one layer at a time, because the numbers it "
+             + "animates are that layer's own. Pick a single layer to add one.")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+            .playtestField("Motion One Layer")
+            .panelStartProbe(.row, owner: "Motion one layer")
     }
 }
 

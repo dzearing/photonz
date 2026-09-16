@@ -2759,6 +2759,30 @@ struct PlaytestScriptTests {
         #expect(condition == .layerRowInView("Rectangle 12") && timeout == 3)
     }
 
+    @Test func waitForReadsOneSectionSittingDirectlyUnderAnother() {
+        // The claim "Motion is right under Effects" is a step the walk fails
+        // on. Reading it back off dockSections afterwards is how it went
+        // unnoticed that Motion had drifted ten sections down the panel.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "sectionDirectlyUnder", "value": "Motion",
+              "under": "Effects", "timeout": 3 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .sectionDirectlyUnder("Motion", under: "Effects") && timeout == 3)
+    }
+
+    @Test func waitForRejectsASectionWithNothingToSitUnder() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "sectionDirectlyUnder", "value": "Motion" }
+        ] }
+        """
+        #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
+    }
+
     @Test func waitForRejectsASectionWithNoName() {
         let json = """
         { "out": "/tmp/x", "steps": [ { "do": "waitFor", "condition": "sectionInView" } ] }

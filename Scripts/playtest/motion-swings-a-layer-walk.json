@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/motion-swings-a-layer-walk",
-  "seed": "Motion is a property of a layer, read the same way the Effects list above it is read. This walk draws one shape, opens the plus on the Motion header to show that the menu is built out of THAT LAYER (every property it actually has, with the number it is wearing right now), adds a Rotation, and checks the row that arrives: a switch, the name, the curve drawn small, and a summary a person can read back. It then photographs the canvas twice while the preview is running, to show the picture really is moving, stops it to show the picture goes back to the one you drew, and takes the whole thing back with undo and forward again with redo.",
+  "seed": "Motion is a property of a layer, read the same way the Effects list above it is read. This walk draws one shape, opens the plus on the Motion header to show that the menu is built out of THAT LAYER (every property it actually has, with the number it is wearing right now), adds a Rotation, and checks the row that arrives: a switch, the name, the curve drawn small, and a summary a person can read back. It then photographs the canvas twice while the preview is running, to show the picture really is moving, stops it to show the picture goes back to the one you drew, and takes the whole thing back with undo and forward again with redo. It then checks the two things about the SECTION rather than the list: that Motion is the next section down from Effects even with a screen picked, where Frame, Columns and Layout used to wedge themselves into the gap, and that picking a second layer leaves the section on the panel holding one line saying why it works on one layer at a time, instead of the section silently disappearing.",
   "setup": { "forget": ["tools", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
@@ -65,6 +65,40 @@
     { "do": "expect", "field": "Rotation", "present": true },
     { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
     { "do": "panel", "stage": "9-redone" },
-    { "do": "snapshot", "name": "9-redone" }
+    { "do": "snapshot", "name": "9-redone" },
+
+    { "comment": "WHERE THE SECTION SITS. Motion is read the same way the Effects list above it is read, which only works if it IS above it. A screen is where that went wrong: Frame, Columns and Layout all sat in the gap, so animating an icon on a screen meant scrolling past every screen setting in the panel.", "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [200, 150], "to": [560, 420], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "10-screen-picked", "note": "THE TEST: a screen picked, and the next section under Effects is Motion. Read dockSections: Frame, Columns and Layout come after it, not through the middle of it." },
+    { "do": "waitFor", "condition": "sectionDirectlyUnder", "value": "Motion", "under": "Effects", "timeout": 4 },
+    { "do": "panel", "stage": "10-screen-picked" },
+    { "do": "snapshot", "name": "10-motion-under-effects" },
+
+    { "comment": "AND WITH TWO PICKED. Motion speaks for one layer, unlike Effects directly above it, which speaks for everything picked. It used to answer that by leaving the panel altogether, so the second click looked like it had broken something.", "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 150], "to": [740, 260], "steps": 6 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [620, 310], "to": [740, 420], "steps": 6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [680, 205] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [680, 365], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "11-two-picked", "note": "two shapes picked. The section is still there, still directly under Effects, holding one line that says why it has nothing to show and what to do about it." },
+    { "do": "expect", "field": "Motion One Layer", "present": true },
+    { "do": "expect", "field": "Motion Empty", "present": false },
+    { "do": "waitFor", "condition": "sectionDirectlyUnder", "value": "Motion", "under": "Effects", "timeout": 4 },
+    { "do": "panel", "stage": "11-two-picked" },
+    { "do": "snapshot", "name": "11-two-picked-says-why" },
+
+    { "do": "click", "at": [680, 205] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "12-one-again", "note": "back to one, and the list is a list again: the line is gone and the plus is live." },
+    { "do": "expect", "field": "Motion One Layer", "present": false },
+    { "do": "expect", "field": "Motion Empty", "present": true }
   ]
 }

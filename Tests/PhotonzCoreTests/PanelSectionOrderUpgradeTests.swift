@@ -25,6 +25,7 @@ import Testing
             .init(version: 5, sections: ["text"], .after, "layers", isEnabled: next),
             .init(version: 6, sections: ["arrange", "component", "geometry"], .before, "color",
                   isEnabled: next),
+            .init(version: 7, sections: ["motion"], .after, "effects", isEnabled: next),
         ]
     }
 
@@ -34,9 +35,33 @@ import Testing
         let upgraded = PanelSectionOrder.upgrade(canonical, from: 0,
                                                  through: migrations(next: true))
         #expect(upgraded.order == ["layers", "text", "arrange", "component", "geometry",
-                                   "color", "effects", "measurements", "motion", "shadow",
+                                   "color", "effects", "motion", "measurements", "shadow",
                                    "library"])
-        #expect(upgraded.version == 6)
+        #expect(upgraded.version == 7)
+    }
+
+    /// Motion is read the same way the Effects list above it is read, so it has
+    /// to BE above it: same header, same plus, same kind of row. Move 4 lifted
+    /// Appearance and Effects up under Layers and left Motion where it was
+    /// declared, which put every screen setting (Frame, Columns, Layout)
+    /// between the two.
+    @Test func motionSitsDirectlyUnderEffects() {
+        let order = PanelSectionOrder.upgrade(canonical, from: 0,
+                                              through: migrations(next: true)).order
+        let effects = order.firstIndex(of: "effects")!
+        #expect(order.indices.contains(effects + 1))
+        #expect(order[effects + 1] == "motion")
+    }
+
+    /// Somebody who has been running Next since the day Motion shipped is at
+    /// version 6 with Motion down the bottom. The move reaches them too.
+    @Test func anOrderAlreadyAtTheLastMoveStillGetsMotion() {
+        let stale = ["layers", "text", "arrange", "component", "geometry", "color", "effects",
+                     "measurements", "motion", "shadow", "library"]
+        let upgraded = PanelSectionOrder.upgrade(stale, from: 6, through: migrations(next: true))
+        let effects = upgraded.order.firstIndex(of: "effects")!
+        #expect(upgraded.order[effects + 1] == "motion")
+        #expect(upgraded.version == 7)
     }
 
     @Test func positionAndSizeSitsAboveAppearanceAndEffects() {
@@ -78,7 +103,7 @@ import Testing
         let fresh = PanelSectionOrder.upgrade(canonical, from: 0,
                                               through: migrations(next: true))
         #expect(resumed.order == fresh.order)
-        #expect(resumed.version == 6)
+        #expect(resumed.version == 7)
     }
 
     // MARK: Running it twice
@@ -99,7 +124,7 @@ import Testing
         var byHand = saved
         byHand.removeAll { $0 == "layers" }
         byHand.append("layers")
-        let again = PanelSectionOrder.upgrade(byHand, from: 6, through: migrations(next: true))
+        let again = PanelSectionOrder.upgrade(byHand, from: 7, through: migrations(next: true))
         #expect(again.order == byHand)
     }
 
