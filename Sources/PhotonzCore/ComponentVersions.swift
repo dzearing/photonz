@@ -372,8 +372,15 @@ extension PhotonzDocument {
     /// from, so the picture and the list can never disagree about which drawing
     /// you are looking at.
     func multiVersionComponents() -> [UUID: [ComponentVersion]] {
+        Self.multiVersionComponents(from: mainComponents)
+    }
+
+    /// The same, from mains already in hand. The layers list wants this and
+    /// the name of every component in one pass, and `mainComponents` flattens
+    /// the whole tree, so it asks for the mains once and hands them to both.
+    static func multiVersionComponents(from mains: [Layer]) -> [UUID: [ComponentVersion]] {
         var byComponent: [UUID: [ComponentVersion]] = [:]
-        for main in mainComponents {
+        for main in mains {
             guard let componentID = main.componentID else { continue }
             var versions = byComponent[componentID] ?? []
             versions.append(ComponentVersion(id: main.componentVersionID ?? main.id,

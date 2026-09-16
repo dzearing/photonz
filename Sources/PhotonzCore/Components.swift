@@ -80,6 +80,23 @@ extension PhotonzDocument {
         allLayers.filter(\.isMainComponent)
     }
 
+    /// What each component is called, from mains already in hand: the name a
+    /// copy of it wears, which is the same name on every version of it.
+    ///
+    /// Takes the mains rather than fetching them, because every caller that
+    /// wants this wants something else off the same pass, and `mainComponents`
+    /// flattens the whole tree (`layerRows`).
+    static func componentNames(from mains: [Layer]) -> [UUID: String] {
+        var names: [UUID: String] = [:]
+        for main in mains {
+            guard let componentID = main.componentID else { continue }
+            // First version wins: every version carries the component's name,
+            // so they agree, and a first one is what the shelf tile shows.
+            if names[componentID] == nil { names[componentID] = main.name }
+        }
+        return names
+    }
+
     /// The main a component id belongs to, wherever in the tree it sits.
     public func mainComponent(componentID: UUID) -> Layer? {
         mainComponents.first { $0.componentID == componentID }

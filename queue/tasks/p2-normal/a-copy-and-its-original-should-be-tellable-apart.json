@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 450,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T03:36:30.090Z",
-  "updated": "2026-09-15T12:14:53.766Z",
+  "updated": "2026-09-16T09:58:36.930Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Components tutorial track on 2026-09-13. Reproduce: Help > Tutorials > Components > Override one copy, then open the Layers list. Three rows reading Save Button. Captured in queue/audits/2026-09-13-components-track-4-overridden.png, top right.\n\nThe track works round it: no guide in it sends anybody into the layers list, and a test enforces that (TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem). That workaround costs the guides the one single-click way to reach a piece inside an original, so they use a canvas double click instead, which is why the sample button had to be widened to 240 so a double click can land clear of its label.\n\nOptions worth weighing rather than picking here: a quiet suffix on a copy row, the version name already printed beside the mark being extended to plain copies, or a stronger mark. This is a UX call.",
@@ -42,6 +42,39 @@
     {
       "t": "2026-09-15T12:14:53.765Z",
       "note": "seq 410 -> 450"
+    },
+    {
+      "t": "2026-09-16T09:49:16.505Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Reproduced first: queue/audits/2026-09-13-components-track-4-overridden.png, top right, three rows all reading Save Button, told apart only by 4 diamonds vs 1 at nine points. The original does also carry a twist chevron and a child count, since a copy has no twist, but those are as quiet as the mark."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Adversarial review before building. Of the three options in the notes: a stronger MARK fails acceptance 1 outright, which asks for something you do not have to read a nine point mark for. A suffix on the NAME re-creates the exact squeeze that put the version on its own line on 2026-09-07, when a name with a chip after it left about 30pt and the row read as one ellipsis. So the shape was already decided by the acceptance items and the row's own history: extend the second line, which the row has had since 2026-09-07 and which already handles a narrow dock. Not filed as a decision because the visible question (a word under the name) was settled by the acceptance, and the audit gives the user a line to disagree with."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Shortest version considered and rejected: label only the ORIGINAL, leaving copies silent. It is less ink and the asymmetry is scannable, but a copy whose original sits on another page, or in a document whose original is off screen, would then say nothing at all about being a copy, and acceptance 2 asks a copy to say what it follows. Both are labelled."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Built. PhotonzCore/ComponentRowNote.swift is the policy: role (original/copy), what it follows, which version. Text reads Original / Copy / Copy of Save Button / Original, Disabled / Copy of Save Button, Disabled. A copy only names the component when its own name has drifted off it, so the common case is one word. LayerRowDisplay carries componentNote; layerRows fills it from the mains it already walks for version names (multiVersionComponents(from:) and componentNames(from:) share one pass, so the list costs what it always did). LayersRow draws note.text where it drew the bare version name, and its playtest rowDetail says it too, so a walk can read which row is the original."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Verified: Scripts/test.sh green, 7563 tests in 605 suites, including 15 new ones in ComponentRowNoteTests covering the exact three-row case (one Original, two Copy, nothing renamed in the document)."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "Could NOT verify in the running app: the Mac's screen was locked for the whole task (checked independently with CGSessionCopyCurrentDictionary, CGSSessionScreenIsLocked 1), so playtest.sh exits 3 at step 0 and no walk runs. A sweep was already pending and stays pending until the screen is unlocked, so no new request was filed. Layout was checked instead with an offscreen ImageRenderer sheet at the dock's real width (264) and the row's real thumbnail (40x30): the second line costs no row height, so the list stays even, and the note truncates at the tail with the word Copy always surviving. Picture at queue/audits/2026-09-16-copy-vs-original-rows.png, and the audit says plainly that it is a render and not the app."
+    },
+    {
+      "t": "2026-09-16T09:58:36.930Z",
+      "note": "left rough: the Components tutorial track still routes round the identical rows (no guide enters the layers list, TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem enforces it, and the sample button is 240 wide so a canvas double click clears its label). That workaround is now removable, but undoing it means rewriting guides and re-running the tutorial walks, which a locked screen forbids. Did not earn its own task: nobody using the app is stopped by it, the track works as written, and it is homework rather than a defect."
     }
-  ]
+  ],
+  "started": "2026-09-16T09:49:16.504Z"
 }

@@ -403,6 +403,12 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// copy speaks only when it is showing something other than the first, so a
     /// screen of twelve ordinary buttons is not twelve rows saying "Default".
     public let versionName: String?
+    /// What the row says under its name: whether it is the original or a copy,
+    /// what it follows, and which version it is showing
+    /// (`ComponentRowNote`). Nil on a row that is not a component, which is
+    /// nearly every row. It is the one line: the version name is folded into
+    /// it rather than printed beside it.
+    public let componentNote: ComponentRowNote?
     /// Whether the row's menu offers "Rasterize Layer".
     public let isRasterizable: Bool
     /// Whether the row's menu offers "Turn Into Path": this layer is a box, an
@@ -418,11 +424,13 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
 
     public init(row: LayerPanelRow, name: String, isVisible: Bool, isLocked: Bool,
                 isSelected: Bool, isMainComponent: Bool, isComponentInstance: Bool,
-                versionName: String? = nil, isRasterizable: Bool,
+                versionName: String? = nil, componentNote: ComponentRowNote? = nil,
+                isRasterizable: Bool,
                 canTurnIntoPath: Bool = false,
                 outOfView: RowOutOfView? = nil) {
         self.outOfView = outOfView
         self.versionName = versionName
+        self.componentNote = componentNote
         self.row = row
         self.name = name
         self.isVisible = isVisible
@@ -456,7 +464,14 @@ extension PhotonzDocument {
         // back down to one is a component again, and a row still wearing
         // "Default" reads as a state nobody can get out of. The same answer the
         // canvas labels itself from, so the list and the picture agree.
-        let versions = multiVersionComponents()
+        // One walk for both answers rather than two: `mainComponents` flattens
+        // the tree, and this is asked again on every click in the dock.
+        let mains = mainComponents
+        let versions = Self.multiVersionComponents(from: mains)
+        // What each component is called, for a copy whose own name has drifted
+        // off its original's. Built from the same pass, and empty for a
+        // document with no components at all — which is nearly every one.
+        let componentNames = Self.componentNames(from: mains)
         // Which containers are cutting layers off at this level of the tree,
         // outermost first. Empty for the whole walk of a document that clips
         // nothing, which is nearly every document.
@@ -503,6 +518,7 @@ extension PhotonzDocument {
                             canReturn: canReturn, growsContainer: grows)
                     }
                 }
+                let version = Self.versionName(of: layer, in: versions)
                 rows.append(LayerRowDisplay(
                     row: LayerPanelRow(id: layer.id, depth: depth, isGroup: openable,
                                        childCount: openable ? layer.children.count : 0,
@@ -513,7 +529,13 @@ extension PhotonzDocument {
                     isSelected: selected.contains(layer.id),
                     isMainComponent: layer.isMainComponent,
                     isComponentInstance: layer.isComponentInstance,
-                    versionName: Self.versionName(of: layer, in: versions),
+                    versionName: version,
+                    componentNote: ComponentRowNote.forRow(
+                        isMain: layer.isMainComponent,
+                        isInstance: layer.isComponentInstance,
+                        rowName: layer.name,
+                        componentName: layer.instanceOf.flatMap { componentNames[$0] },
+                        versionName: version),
                     isRasterizable: layer.isRasterizable,
                     canTurnIntoPath: layer.canTurnIntoPath,
                     outOfView: outOfView))

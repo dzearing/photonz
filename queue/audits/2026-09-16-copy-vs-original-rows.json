@@ -1,0 +1,28 @@
+{
+  "feature": "A copy and its original, told apart in the layers list",
+  "epic": "ui-components",
+  "summary": "The layers list now says under each component row whether it is the Original or a Copy, so an original with two copies beside it is three rows you can read rather than three identical names told apart by a nine point mark.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components are on by default; nothing new to switch on.",
+  "try": [
+    { "do": "Draw a box with R, drop a text layer on it with T, select both and group them with Command G.", "shot": "2026-09-16-copy-vs-original-rows.png" },
+    { "do": "Press Option Command K to make it a component, type Save Button and press Return." },
+    { "do": "Open the Library shelf and drag the Save Button tile onto the canvas twice, leaving room between the copies." },
+    { "do": "Look at the layers list: three rows all called Save Button, one saying Original and two saying Copy." },
+    { "do": "Click the row that says Original and check the canvas selects the one you can actually edit." },
+    { "do": "Double click a copy's name in the list, type Cancel and press Return." },
+    { "do": "Read that row again: it now says Copy of Save Button, so a renamed copy still names the family it belongs to." }
+  ],
+  "evaluate": [
+    "Scanning the three rows, does your eye find the original without you having to think about it?",
+    "Is one word the right amount, or does a screen built out of twelve copies read as twelve rows of noise?",
+    "Are Original and Copy the words you would use, given the dock's Component section already says them?",
+    "Should the four-diamond and one-diamond marks stay now that the words say the same thing, or is the mark doing nothing?",
+    "When a copy is showing a variant, does Copy, Disabled read right, or should the variant keep a line of its own?"
+  ],
+  "rough": [
+    "No photograph of the real app in this audit. The Mac's screen was locked for the whole task, so macOS never drew the window and not one walk could run. The picture is an offscreen render of the row at the dock's real width (264pt) with the row's real thumbnail (40x30), showing the three rows before and after and the longest lines the note can produce. It is a layout check, not the app.",
+    "A sweep was already pending when this landed and stays pending until the screen is unlocked, so the walks that photograph this row (version-row-name-walk, component-versions-walk, component-whole-path-walk) have not been run against the change.",
+    "A copy whose name has drifted and that is showing a variant reads Copy of Save Button, Disabled, which truncates at the dock's default width. The word Copy always survives, since the line truncates at the tail.",
+    "The Components tutorial track still routes round this: no guide sends you into the layers list, a guard test enforces it, and the sample button was widened to 240 so a canvas double click could land clear of its label. That workaround can now be undone, but it was left alone here because undoing it means rewriting guides and re-running tutorial walks, which the locked screen forbids."
+  ]
+}

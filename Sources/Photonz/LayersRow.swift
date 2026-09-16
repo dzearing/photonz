@@ -66,9 +66,10 @@ struct LayersRow: View, Equatable {
                          ?? "hiding \(outOfView.hiddenInside) out of view")
         }
         // The same words the row prints under its name, so a walk can check
-        // which look a row is showing instead of squinting at a picture.
-        if componentsEnabled, let version = display.versionName {
-            parts.append("showing the \(version) variant")
+        // whether a row is the original and which look it is showing instead
+        // of squinting at a picture.
+        if componentsEnabled, let note = display.componentNote {
+            parts.append(note.text.lowercased())
         }
         return parts.joined(separator: ", ")
     }
@@ -203,16 +204,16 @@ struct LayersRow: View, Equatable {
     }
 
     /// What the row SAYS it is: the name, with the component mark beside it,
-    /// and under it the version this drawing is when its component holds more
-    /// than one.
+    /// and under it whether this is the original or a copy, and which version
+    /// it is showing (`ComponentRowNote`).
     ///
-    /// The version sits UNDER the name because side by side the two do not
-    /// both fit. At the dock's own width a "Save button" with a "Disabled"
-    /// chip after it left the name about 30pt, and the row read as a single
+    /// That line sits UNDER the name because side by side the two do not both
+    /// fit. At the dock's own width a "Save button" with a "Disabled" chip
+    /// after it left the name about 30pt, and the row read as a single
     /// ellipsis: two rows called nothing (2026-09-07). Stacked, the name has
-    /// the whole width and so does the version, and the row is no taller for
-    /// it, since both lines together are shorter than the thumbnail beside
-    /// them and the thumbnail is what sets the row's height.
+    /// the whole width and so does the note, and the row is no taller for it,
+    /// since both lines together are shorter than the thumbnail beside them
+    /// and the thumbnail is what sets the row's height.
     private var nameBlock: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
@@ -245,16 +246,18 @@ struct LayersRow: View, Equatable {
                     ComponentMark(isInstance: display.isComponentInstance)
                 }
             }
-            // Every version of a component carries the component's name, so
-            // without this line a button with a Disabled version is two rows
-            // both called Button and there is no telling which one you are
-            // about to edit.
-            if componentsEnabled, let version = display.versionName {
-                Text(version)
+            // Every copy of a component carries the component's NAME, so
+            // without this line an original with two copies beside it is three
+            // rows all called Save Button and the only difference between them
+            // is a nine point mark (2026-09-13). One word says which one you
+            // are about to edit, and the version a drawing is showing rides on
+            // the end of it rather than taking a line of its own.
+            if componentsEnabled, let note = display.componentNote {
+                Text(note.text)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .panelHelp("This is the \(version) variant of \(display.name)")
+                    .panelHelp(note.help(rowName: display.name))
             }
         }
     }
