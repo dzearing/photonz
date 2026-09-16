@@ -17271,3 +17271,37 @@ needs the panel by name to add a Rotation at all, so it cannot be forced past a
 lock the way the screen-name walk could. The core rule is tested and all 7759
 tests pass; the app wiring is verified by the compiler and nothing else. A
 sweep is pending.
+
+## 2026-09-16 — A border on an open path runs down the line
+
+Task `a-border-added-to-a-path-follows-the-path-not-a`. Reproduced first: the
+CLOSED half of the reported bug was already fixed by cb69185e on 2026-09-13,
+five hours after the task was filed, so a triangle path's box corners were
+already clear. What was still broken was the OPEN path. Inside asks a ring to
+reach nowhere at all, an open outline has no inside for that to mean anything
+on, so `ringed` fell through to the rounded-rect route and drew a plain
+rectangle round the chevron with no ink on the chevron; Outside swept the full
+width to either side, so an 8 point border painted 16.
+
+A line has two sides and no interior, which the path's own edge has always said
+(`effectiveStrokePosition`). A Border says it now too: on an open outline all
+three positions are the one band down the middle at the width asked for, and
+everything that measures the room a ring needs agrees. The Border row drops its
+Position popup on a line and puts a line of small print there, the way it
+already drops the Offset on a centred ring. `SVGExport` stopped writing a
+`<rect>` for a ring round any path: a band standing `s` out and `w` thick is the
+outline stroked `2(s + w)` wide with the shape and a stroke of `2s` masked out.
+
+26 new tests (9 pixel-level render, 7 export, 10 model) inside a green 7819-test
+run, with the perf budgets unmoved. The Mac's screen was locked for the whole
+task, so no walk could run and no window could be photographed: the new walk
+`border-follows-the-path-walk.json` parses at 53 steps, the audit ships offscreen
+document renders and says so, and a sweep was already pending.
+
+Nearly filed a follow-up about the two-megapixel silhouette bake cap leaving a
+big path with a box border, then could not reproduce it at 8.5 megapixels, so
+the claim came out of the audit instead of going in unverified.
+
+Next: whatever the loop picks up. Open question for the user, in the audit: on an
+open line, is one band down the middle the right answer, or did they want to pick
+a side?
