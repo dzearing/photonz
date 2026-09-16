@@ -41,7 +41,10 @@ SANDBOX=0; [[ -n "${PHOTONZ_QUEUE_DIR:-}" ]] && SANDBOX=1
 MAX_ITERS="${PHOTONZ_MAX_ITERS:-0}"
 Q() { node queue/bin/queue.mjs "$@"; }
 LOG="$QDIR/loop.log"
-mkdir -p "$QDIR/digests"
+mkdir -p "$QDIR/digests" "$QDIR/leftovers"
+# Where run_runner writes its picture of the working tree before a runner
+# starts. See settle_leftovers and queue/bin/leftovers.mjs.
+LEFTOVERS_BEFORE="$QDIR/leftovers/.before.json"
 # stream-json + the formatter give this window a live feed of what each runner
 # is doing (tool by tool), instead of dead air until a task ends.
 RUNNER_MODEL="${PHOTONZ_RUNNER_MODEL:-claude-opus-5}"
@@ -59,6 +62,11 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
   local errf outf rc
   errf=$(mktemp -t goloop-err) || return 1
   outf=$(mktemp -t goloop-out) || return 1
+  # What the working tree already looked like. Whatever is dirty AFTER this
+  # runner that was not dirty now is the runner's doing, and settle_leftovers
+  # puts it away under the runner's name instead of leaving it for the next
+  # task to commit. Taken here so every kind of runner is covered.
+  node queue/bin/leftovers.mjs snapshot "$LEFTOVERS_BEFORE" >/dev/null 2>&1 || : > "$LEFTOVERS_BEFORE"
   claude -p "${CLAUDE_FLAGS[@]}" "$1" 2>"$errf" | node queue/bin/stream-format.mjs | tee -a "$LOG" "$outf"
   rc=${pipestatus[1]}
   cat "$errf" >> "$LOG"
@@ -186,6 +194,7 @@ manager_pass() { # $1 = ready task count (for the log)
   run_runner "$(cat queue/bin/manager-prompt.md; echo; cat queue/bin/follow-up-bar.md)"
   local rc=$?
   record_exit - "$rc"
+  settle_leftovers manager - "$OUTCOME" "the manager pass"
   # The objectives as they stand now are what this pass acted on, its own
   # restaging included, so the next check starts from here and the pass cannot
   # wake itself up. Only a pass that actually ran gets to say so: a runner that
@@ -227,6 +236,22 @@ reap_runaways() {
   local out
   out=$(queue/bin/reap-runaways.sh 2>/dev/null) || return 0
   [[ -n "$out" ]] && echo "[go-loop] $(date +%T) $out" | tee -a "$LOG"
+  return 0
+}
+
+# Put away what a runner walked out on. A task that runs out of its turn stops
+# without committing, and its changed files used to stay in the tree for the
+# next task to pick up and commit under its own name (2026-09-16, 05:18: seven
+# files from separate-finds-the-boxes-in-a-dark-window-too-no, with nothing
+# anywhere saying so). Now the loop names them, stashes them under the task
+# that made them, and hands them back to that task the next time it is claimed.
+# The queue's own files are never touched: no task owns them.
+settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 = outcome, $4 = label
+  local out
+  out=$(node queue/bin/leftovers.mjs settle "$LEFTOVERS_BEFORE" "$1" "$2" "$3" "${4:-}" 2>&1) || true
+  [[ -z "$out" ]] && return 0
+  echo "[go-loop] $(date +%T) $out" | tee -a "$LOG"
+  banner "**Go loop** $out"
   return 0
 }
 
@@ -408,6 +433,7 @@ while :; do
     run_runner "$(cat queue/bin/digest-prompt.md; echo; cat queue/bin/follow-up-bar.md)"
     DIGEST_EXIT=$?
     record_exit - "$DIGEST_EXIT"
+    settle_leftovers digest - "$OUTCOME" "the daily digest pass"
     if [[ -n "$REASON" ]]; then
       # The runner refused to start (no sign-in, or the spend limit), so leave
       # no stub behind: with the file still missing, the digest is the first
@@ -467,6 +493,9 @@ TASK FILE: $TASK_FILE"
   record_exit "$TASK_ID" "$EXIT"
   # Blunt safety net for anything the line above did not cover.
   Q guard >> "$LOG" 2>&1
+  # ...and this catches anything it left CHANGED. Before the next task is
+  # claimed, so that task starts from a tree it owns.
+  settle_leftovers task "$TASK_ID" "$OUTCOME" "$TASK_TITLE"
   # Runners push their own commits; this catches anything they left behind.
   [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true; }
 

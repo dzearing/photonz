@@ -519,6 +519,10 @@ export function claimNext(pid = null) {
   t.status = 'in_progress';
   t.started = now();
   appendLog(t, 'claimed by go loop');
+  // Files a previous attempt at THIS task left behind are handed back here, in
+  // its own log, rather than being found by accident in the working tree by
+  // whoever came next.
+  handLeftovers(t);
   saveTask(t);
   appendEvent('task_started', { id: t.id, title: t.title, priority: t.priority });
   writeStatus({ state: 'running', task: { id: t.id, title: t.title, priority: t.priority, file: t.file }, note: 'working', pid });
@@ -1043,6 +1047,105 @@ export function sweepState() {
   };
 }
 
+// ---- leftovers: a dirty tree a runner walked away from ----------------------
+// A runner that runs out of its turn leaves its changed files in the working
+// tree, and before 2026-09-16 nothing said so: the next task began on top of
+// them and committed them under its own name. queue/bin/leftovers.mjs puts
+// them aside in a git stash and records what it did here, one file per
+// incident. A record stays open until the task that owns them is claimed again
+// (which hands them back, with the restore command, in that task's log) or
+// until somebody clears it.
+const LEFTOVERS = join(QUEUE, 'leftovers');
+const leftoverRestore = (sha) => (sha ? `git stash apply ${sha}` : '');
+
+export function readLeftovers() {
+  if (!existsSync(LEFTOVERS)) return [];
+  return readdirSync(LEFTOVERS)
+    // .before.json is run_runner's picture of the tree, not a record of one.
+    .filter((f) => f.endsWith('.json') && !f.startsWith('.'))
+    .map((f) => readJSON(join(LEFTOVERS, f), null))
+    .filter(Boolean)
+    .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+}
+
+export function recordLeftovers({ task = null, kind = 'task', label = '', title = '', outcome = '', files = [], stash = '', why = '' }) {
+  mkdirSync(LEFTOVERS, { recursive: true });
+  const at = now();
+  const id = `${(task || kind).replace(/[^a-z0-9-]/gi, '-')}-${at.replace(/[:.]/g, '-')}`;
+  const rec = {
+    id, task, kind, label: label || task || kind, title, outcome, at,
+    files, count: files.length,
+    // stashed: the files are out of the tree and recoverable.
+    // left: the stash failed, so they are STILL in the tree and the next task
+    // would commit them. That is the loud case and the dashboard says so.
+    state: stash ? 'stashed' : 'left',
+    stash: stash || null,
+    restore: leftoverRestore(stash),
+    why: why || '',
+    handed: null,
+  };
+  writeJSON(join(LEFTOVERS, `${id}.json`), rec);
+  appendEvent('leftovers', { id: task || kind, task, state: rec.state, count: files.length, stash: stash || null });
+  // The owning task carries the whole story, so a runner that picks it up next
+  // reads it in the task file before it touches anything.
+  if (task) {
+    const t = findTask(task);
+    if (t) {
+      // A task that ENDED FINE and still left files changed is a different
+      // story from one that ran out of turn: nobody will claim it again, so
+      // nobody is coming back for them. Say which happened.
+      const how = outcome === 'ok'
+        ? `finished, but left ${files.length} file(s) changed and uncommitted`
+        : `ran out of turn with ${files.length} file(s) still changed`;
+      appendLog(t, rec.state === 'stashed'
+        ? `${how}: ${files.join(', ')}. Put aside so the next task started clean; restore with \`${rec.restore}\` before carrying on.`
+        : `${how} and they could not be put aside (${rec.why}): ${files.join(', ')}. They are still in the working tree.`);
+      saveTask(t);
+    }
+  }
+  return rec;
+}
+
+// Hand a task its own leftovers back, on purpose, at the moment it is claimed.
+// This is the difference the 2026-09-16 task asked for: the next runner either
+// starts clean, or is TOLD what is waiting for it and whose it is.
+export function handLeftovers(task) {
+  const open = readLeftovers().filter((r) => !r.handed && r.task === task.id);
+  if (!open.length) return [];
+  for (const r of open) {
+    r.handed = now();
+    writeJSON(join(LEFTOVERS, `${r.id}.json`), r);
+    appendLog(task, r.state === 'stashed'
+      ? `a previous attempt at this task left ${r.count} file(s) changed; they are set aside. Restore them with \`${r.restore}\` and carry on, or start over and leave the stash alone.`
+      : `a previous attempt at this task left ${r.count} file(s) changed and still in the working tree: ${r.files.join(', ')}. They are yours; commit or discard them deliberately.`);
+  }
+  appendEvent('leftovers_handed', { id: task.id, task: task.id, count: open.length });
+  return open;
+}
+
+export function clearLeftovers(id, why = '') {
+  const file = join(LEFTOVERS, `${id}.json`);
+  const rec = readJSON(file, null);
+  if (!rec) return null;
+  rec.handed = now();
+  rec.clearedWhy = why;
+  writeJSON(file, rec);
+  appendEvent('leftovers_cleared', { id: rec.task || rec.kind, task: rec.task, why });
+  return rec;
+}
+
+export function leftoversState() {
+  const open = readLeftovers().filter((r) => !r.handed);
+  return {
+    open: open.length,
+    stuck: open.filter((r) => r.state === 'left').length,
+    latest: open.length ? {
+      id: open[0].id, task: open[0].task, label: open[0].label, at: open[0].at,
+      count: open[0].count, state: open[0].state, restore: open[0].restore, why: open[0].why,
+    } : null,
+  };
+}
+
 // ---- objectives -------------------------------------------------------------
 // The ordered epic tree that steers triage. Order IS priority; nesting is
 // sub-epics. The dashboard's Objectives tab edits this wholesale.
@@ -1229,6 +1332,7 @@ export function aggregateState({ tasks: includeTasks = true } = {}) {
       script: loopScript(status, alive),
     },
     sweep: sweepState(),
+    leftovers: leftoversState(),
     // list rows only, see taskRow: the poll used to carry every task's whole
     // log and was three megabytes fifteen times a minute
     ...(includeTasks ? { tasks } : {}),

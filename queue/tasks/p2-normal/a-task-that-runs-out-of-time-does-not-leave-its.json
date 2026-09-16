@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 25,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:24:21.933Z",
-  "updated": "2026-09-16T12:24:21.995Z",
+  "updated": "2026-09-16T13:31:28.922Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED by the 2026-09-16 triage pass, from a real instance that happened today rather than a hypothetical.\n\nAt 05:18 local the runner on separate-finds-the-boxes-in-a-dark-window-too-no ran out of turn waiting for the full test suite. queue/loop.log:\n\n  [go-loop] 03:57:59 running task separate-finds-the-boxes-in-a-dark-window-too-no\n  [go-loop] 05:18:01 task separate-finds-the-boxes-in-a-dark-window-too-no runner exited 0\n  [go-loop] 05:18:02 unhealthy: 1 consecutive runner failures; waiting 30s. Last error: Waiting on the full suite...\n\nThe task went back to pending and seven files stayed changed in the working tree:\n  M Sources/Photonz/EditorState+Separate.swift\n  M Sources/PhotonzCore/BoxSweep.swift\n  M Tests/PhotonzCoreTests/BoxSweepTests.swift\n  M docs/design/separate-into-layers.md\n  ?? Scripts/playtest/separate-dark-window-walk.json\n  ?? Tests/PhotonzRenderTests/AppWindowSeparateFixtureTests.swift\n  ?? Tests/PhotonzRenderTests/Fixtures/app-window-2x.png\n\nNothing in the loop mentions them. The triage pass handled this one instance by hand, by moving that task to the very front of p2 (seq 5) so the runner who inherits the files is the one who owns them. That is a patch for today, not the fix: the next time it happens nobody will be watching.\n\nNote the exit code. The runner exited 0, which is how a runner says it finished, and the loop still classed it a failure from the shape of its last message. So 'did the task finish' and 'did the runner exit cleanly' are already known to disagree; this task is what the loop should DO about the tree when they do.",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-16T12:24:21.994Z",
       "note": "seq 2750 -> 25"
+    },
+    {
+      "t": "2026-09-16T13:15:21.410Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T13:31:28.790Z",
+      "note": "Adversarial review before building. The mock-equivalent here was the triage's hand fix (move the owning task to the front so whoever inherits the files owns them). Rejected as the shipped answer: it only works when a person is watching, it needs the task to still be open, and it still starts the next runner on a tree it did not write. Also rejected: committing leftovers to a branch (heavier, and a commit nobody asked for is its own problem) and refusing to claim a task while the tree is dirty (the loop would idle forever on one stuck file). Shortest thing that delivers the value: take a picture of the tree before each runner, stash the difference under the runner's name, hand it back to the owning task when it is claimed again."
+    },
+    {
+      "t": "2026-09-16T13:31:28.834Z",
+      "note": "Built: queue/bin/leftovers.mjs (snapshot/settle/list/clear), leftovers helpers in queue-lib.mjs (recordLeftovers, handLeftovers, clearLeftovers, leftoversState, wired into claimNext and aggregateState), go-loop.sh takes the snapshot in run_runner and calls settle_leftovers after every runner (task, digest, manager), one line on the dashboard hero under the sweep. queue/ is never stashed (no task owns it, every runner writes it) and neither is anything already dirty before the runner started (the user's own repo). Untracked files are listed file by file (--untracked-files=all) so a log line names Tests/Fixtures/app-window-2x.png rather than Tests."
+    },
+    {
+      "t": "2026-09-16T13:31:28.877Z",
+      "note": "Verified: queue/bin/leftovers-drill.sh, 18 checks across two scenarios, all passing. Scenario 1 runs the REAL go-loop.sh against a throwaway git repo and a fake runner that dirties two files and exits 0 without finalizing, exactly the 05:18 incident shape; it asserts the log names the task, one record is written, the files are stashed under the task id, the next runner's tree has none of them, the task is handed them back with the restore command, restoring gives back the bytes, the queue's own files were never stashed, and a file the user had dirtied first was untouched. Scenario 2 makes git refuse the stash (unborn HEAD) and asserts that case is louder: state 'left', the files still in the tree, the task told, the dashboard told 'stuck'. Also green: failure-drill.sh (90 checks), manager-due-drill.sh (14), churn/decision/audit-index/sweep-notes/state-poll drills, Scripts/test.sh (7597 tests). The real path was exercised on the real repo as a guaranteed no-op (snapshot then settle with nothing changed in between): no output, no stash, tree untouched."
+    },
+    {
+      "t": "2026-09-16T13:31:28.921Z",
+      "note": "Left rough, no task filed (below the bar): stash entries accumulate one per incident and nothing prunes them, which is harmless because the record stores the commit sha rather than stash@{n}. A record owned by a finished task, or by the digest/manager pass, never clears itself; the daily triage pass is now told to look at those and decide, rather than inventing an expiry."
     }
-  ]
+  ],
+  "started": "2026-09-16T13:15:21.409Z"
 }

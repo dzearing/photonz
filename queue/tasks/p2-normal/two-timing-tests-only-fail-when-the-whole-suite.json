@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T18:20:47.039Z",
-  "updated": "2026-09-16T12:23:33.401Z",
+  "updated": "2026-09-16T13:14:09.568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-15 on main at 6b3deb32 plus the copy-a-look work.\n\nFull run:\n  $ Scripts/test.sh\n  ✘ Test \"A whole strip of moving previews fits inside one frame of the loop\" recorded an issue at IconPreviewRenderTests.swift:258:27: Issue recorded\n  ✘ Test aGridOverALargeScreenshotPaysForTheBorderQuery() recorded an issue at DrawLandingCostTests.swift:151:9: Expectation failed: (abs(dense - sparse) → 2662.0996093750005) < (dense * 0.5 → 1463.3499375)\n  ✘ Test run with 7028 tests in 564 suites failed after 84.362 seconds with 2 issues.\n\nSame binary, same commit, the two suites on their own:\n  $ Scripts/test.sh --filter DrawLandingCostTests --filter IconPreviewRenderTests\n  ✔ Test run with 10 tests in 3 suites passed after 8.120 seconds.\n\nAn earlier full run of nearly the same tree passed all 7027, so it is load dependent rather than a real regression. Both are wall-clock or work-count budgets measured while 564 suites share the machine. The renderer perf suite already solves this: it calibrates against a yardstick and reports the machine multiplier (see the [perf] lines it prints). These two do not.",
@@ -38,6 +38,36 @@
     {
       "t": "2026-09-16T12:23:33.400Z",
       "note": "seq 2720 -> 20"
+    },
+    {
+      "t": "2026-09-16T12:57:17.239Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T13:14:05.203Z",
+      "note": "Reproduced before fixing. Synthetic load never did it (six attempts, 16 yes + 14 dd burners, filtered runs all green); the condition is 607 suites in ONE process. Full run went red: dense 2633.4us vs sparse 5697.6us, i.e. the map with 104 borders read twice as FAST as the same picture with four. Cheaper work, twice the time - so the number was about which core each of the two separately-timed blocks landed on, not about the border query."
+    },
+    {
+      "t": "2026-09-16T13:14:05.247Z",
+      "note": "Same fault in the icon strip, wearing a budget: MachineSpeed.factor is measured once at process start. One run read the filter-graph yardstick at 14.4ms at startup and 7.3ms during the test itself, while the strip read 5.3ms alone and 8.9ms in the suite for identical work."
+    },
+    {
+      "t": "2026-09-16T13:14:05.292Z",
+      "note": "Fix, both places: take the comparison INSIDE the round. DrawLandingCostTests reads dense and sparse back to back each round and judges the median per-round relative gap; new MachineSpeed.checkInterleaved takes the yardstick back to back with the subject. MachineSpeed.check untouched - still right for the big renderer budgets, which run long enough to average the machine's mood out alone. Arithmetic pure and tested in MachineSpeedTests (6 new cases)."
+    },
+    {
+      "t": "2026-09-16T13:14:05.338Z",
+      "note": "left rough: a 5ms baseline plus the flat 8ms jitterSlackMS means the icon strip only trips on a regression bigger than about 4x, so a 2x slowdown there still passes. Pre-existing and deliberate (documented in MachineSpeed), not made worse here, and now pinned by its own test aSmallBaselineOnlyEverCatchesABigRegression so the next reader finds it instead of rediscovering it. Did not earn a task: nobody using the app notices it and nothing is broken."
+    },
+    {
+      "t": "2026-09-16T13:14:05.383Z",
+      "note": "No sweep requested and no audit written: the change is two test files plus one test helper, no app or renderer code, so no walk touches it and there is nothing a person can try in the app."
+    },
+    {
+      "t": "2026-09-16T13:14:09.566Z",
+      "note": "Both tests now take their comparison inside each round, so a busy machine slows both readings and divides out. Verified on the real failure: dense-vs-sparse gap reads 6% alone, 6%/8% in the full suite and 5% under 24 extra burners (where the raw cost inflated 63%, 2520us to 4398us) - the machine got slower and the verdict did not move. Icon strip normalizes to 6.3-7.2ms across all three against a 20ms budget. Four consecutive full runs of 7597 tests all green, one of them under load. Both still catch their regression, proven by breaking each and reverting: content-proportional cost in EdgeMap.refinedPeaks took the gap to 76% (red), five renders where there was one in DocumentRenderer.iconPreview took the strip to 25.4ms against 20ms (red). Shipped in 8279e9b9: Tests/PhotonzCoreTests/DrawLandingCostTests.swift, Tests/PhotonzRenderTests/IconPreviewRenderTests.swift, and MachineSpeed.normalizedMS + checkInterleaved with 6 new pure tests in MachineSpeedTests."
     }
-  ]
+  ],
+  "started": "2026-09-16T12:57:17.238Z",
+  "completed": "2026-09-16T13:14:09.567Z"
 }

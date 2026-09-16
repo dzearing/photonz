@@ -1,0 +1,27 @@
+{
+  "feature": "A task that runs out of time does not leave its work for the next one to commit",
+  "epic": "unmanned-loop",
+  "summary": "When a build task stops part way through, the files it changed no longer sit in the repository waiting for the next task to commit them under its own name. The loop notices them, says whose they are in its window and on the dashboard, puts them aside where they can be brought back, and hands them to the task that made them the next time that task runs.",
+  "setup": "Nothing to install. This is the build loop, not the app. The dashboard line appears at http://127.0.0.1:8791 under the heartbeat, and only when something has actually been left behind.",
+  "try": [
+    { "do": "Run queue/bin/leftovers-drill.sh. It ends a task part way on purpose, against a throwaway repo, and reports what the next task started from." },
+    { "do": "Read the line 'the NEXT runner started from a tree with none of them in it' and the tree it prints underneath." },
+    { "do": "Read the two task-log lines it quotes: what the task was told it left behind, and what it was handed back when it ran again." },
+    { "do": "Read scenario 2 at the end: what happens when git refuses to put the files aside, which is the louder case." },
+    { "do": "Run node queue/bin/leftovers.mjs list against the real queue. It should say 'no leftovers'." },
+    { "do": "Read 'When a task walks out on its changes' in docs/design/dashboard.md." }
+  ],
+  "evaluate": [
+    "Set aside in a git stash, with the restore command written into the task's log: is that where you would want half-finished work to go, or would you rather see it committed to a branch you could look at?",
+    "The line on the dashboard only appears when something is waiting, and disappears when the owning task picks it back up. Is that enough of a trace, or would you want a record of every time it happened?",
+    "A task that finishes and still leaves files uncommitted gets the same treatment, and nobody is coming back for it. Should that be louder than a task that merely ran out of time?",
+    "Anything you had already changed yourself before a task started is never touched. Does that match what you would expect if you are editing the repo while the loop runs?",
+    "The queue's own files are never put aside, so a commit can still carry queue bookkeeping from another task. Is that the right line to draw?"
+  ],
+  "rough": [
+    "No screenshot of the dashboard line: it only draws when leftovers exist, and manufacturing one in the real queue to photograph would put a false record in the user's history. The rendering was checked by running the page's own function over the five states it can be in.",
+    "A leftovers record belonging to a task that is already finished, or to the digest or manager pass, has nobody coming back for it and stays on the dashboard until somebody decides. The daily triage pass is now told to look at those and clear them; nothing expires them on its own, on purpose.",
+    "A stash entry is kept per incident and nothing ever prunes them. Rare enough to leave alone, and the record stores the commit sha rather than stash@{n}, so restoring still works after entries are dropped.",
+    "If a runner dies mid-rebase, git refuses to stash and the files really do stay in the tree. The loop says so in red rather than pretending, but it does not stop the next task from claiming; the honest alternative would be idling the loop on it, which felt worse than saying it plainly."
+  ]
+}

@@ -120,3 +120,30 @@ file changes, so the page is never behind the queue.
 The sweep is on the hero too, under the heartbeat: the last run's pass count and
 age, or how many runs have been asked for and never served. It runs between
 tasks and nothing else on the page would ever have mentioned it.
+
+## When a task walks out on its changes
+
+A task that runs out of its turn stops without putting its work away. On
+2026-09-16 at 05:18 the runner on `separate-finds-the-boxes-in-a-dark-window-too-no`
+did exactly that and left seven files changed. The task went back to pending,
+nothing in the loop mentioned the files, and the next task would have started on
+top of somebody else's half-built code and committed it under its own name.
+
+So the loop takes a picture of the working tree before every runner starts, and
+compares when it ends. Anything that became dirty during that runner's turn is
+its own: named in the loop window, put into a git stash whose message carries
+the task id, and recorded in `queue/leftovers/`. The record is handed back to
+the owning task the next time that task is claimed, as a log line with the
+`git stash apply <sha>` that restores it. So the next task always starts from a
+tree it owns, and a task that gets another turn is given its own unfinished work
+back on purpose rather than finding it by accident.
+
+Two things are never touched. `queue/` is the loop's own bookkeeping, which no
+task owns and every runner writes, so stashing it would throw away queue state
+mid-write. And anything already dirty before the runner started is the user
+editing their own repo, or an earlier leftover somebody decided to keep.
+
+The hero carries a line under the sweep whenever a record is open: amber for
+files set aside, red when git refused to stash them, because in that case they
+really are still in the tree waiting for the next task to commit them. Drill:
+`queue/bin/leftovers-drill.sh`.

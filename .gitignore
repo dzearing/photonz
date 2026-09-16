@@ -21,3 +21,8 @@ queue/playtest.lock
 # (PlaytestWalkOutputFolderTests). This stays as the net under an older build
 # of the app, or a hand run, still dropping renders here.
 Scripts/playtest/out/
+
+# run_runner's picture of the working tree as it was before a runner started,
+# which queue/bin/leftovers.mjs compares against when that runner ends. It is
+# scratch for one task, not queue state (the records beside it ARE committed).
+queue/leftovers/.before.json

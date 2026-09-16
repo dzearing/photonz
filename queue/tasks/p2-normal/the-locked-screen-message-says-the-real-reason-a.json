@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:18.070Z",
-  "updated": "2026-09-16T12:56:15.564Z",
+  "updated": "2026-09-16T12:56:43.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED by the 2026-09-16 triage pass, and the reproduction is the evidence for every acceptance item.\n\n  ioreg / CGWindowList: loginwindow at layer 2004, 1728x1117, over everything. The Mac really is locked.\n  Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build          -> status locked, 0 steps, exit 3\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build -> 5 steps in 3.87s, exit 1, failed at step 6\n\nWhat the forced run's own log says, which is the whole point:\n  [4 drag] (320, 260) to (620, 460) document, cursor while down crosshair, ... grid lines caught 0, let go 0, changed 7 ... last 608.0/448.0\n  [5 wait] 0.5s, never went quiet (15 of 16 slices busy, 5 restless (animating CAShapeLayer transition)); mainBusy 764.4ms over 2491 passes\n  [6 panelMenu] FAILED: no menu called \"Add Effect\" is in the window; the ones that are: ... 25.0pt wide at x 1218.0 says \"Add an effect: a shadow, a glow, a border or a blur\"\n\nSo: the drag landed and moved things, layout ran, animations were actively running, and the control the step could not find was on screen at the right size with the right tooltip and an EMPTY name. Layout and animations do NOT stop. Accessibility identifiers do not arrive, and screen capture is refused (the run printed 'Window captures: none' and wrote no -sc.png, with no SCStreamErrorDomain error at all).\n\nThe wrong explanation lives in three places and they must agree: the printed message and Sources/Photonz/Playtest/PlaytestScreenState.swift, and the CLAUDE.md section 'A walk needs the screen unlocked' which says 'layout and animations stop, the control names SwiftUI hands to AppKit never arrive'. The middle clause is right; the first is not.\n\nWhy it earns a task: task logs on a-hundred-and-fifteen-walks-fail-on-code-that-pa carry four separate runner reproductions (2026-09-15 15:50, 2026-09-15 23:00, 2026-09-16 00:5x, 2026-09-16 02:24) each filed to argue the gate is too broad, each because what the runner saw did not match what it had been told. This does not change the gate. It stops the argument.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-16T12:56:15.563Z",
       "note": "left rough: PlaytestHarness.finish() still says a screen that locked mid-run 'takes the answer with it', which is true but for the name reason rather than the drawing reason. Left as is, the sentence does not assert the wrong cause. Also: the evidence is from this Mac with the login window up and the session still on console; nothing here claims capture survives every kind of lock, which is why the new wording tells the reader to believe the run's own Window captures line."
+    },
+    {
+      "t": "2026-09-16T12:56:43.000Z",
+      "note": "The locked-screen explanation now says what actually happens, in all nine places that repeated the wrong one: PlaytestScreenState (header, lockedExplanation, allowedAnywayNote), PlaytestHarness comments, PlaytestCaptureLedger, playtest.sh, playtest-all.sh, probe-app.sh, sweep.sh, CLAUDE.md, docs/design/playtest-harness.md. A locked Mac takes the NAME off every control and nothing else: the app still draws, animates, takes clicks and photographs. Acceptance item 2 was itself wrong (it asked the message to say the app cannot be photographed) and was corrected in the task file against a two-snapshot locked run that wrote two real, different captures. The lock is no longer an excuse or an explanation for a missing picture, so screenLocked left PlaytestCaptureLedger.failure/.report (tests first). Refusal unchanged: exit 3, status locked. Verified by running the refusal, a forced run, playtest-all and probe-app on the locked Mac; Scripts/test.sh green, 7589 tests. Pushed as f50bffed."
     }
   ],
-  "started": "2026-09-16T12:49:06.898Z"
+  "started": "2026-09-16T12:49:06.898Z",
+  "completed": "2026-09-16T12:56:43.001Z"
 }

@@ -56,6 +56,8 @@
     background:color-mix(in srgb,var(--warn) 8%,transparent)}
   #dashboard .db-herr.warn .ic{color:var(--warn)}
   #dashboard .db-beat .db-sweep.waiting{color:var(--warn)}
+  #dashboard .db-beat .db-left{color:var(--warn)}
+  #dashboard .db-beat .db-left.stuck{color:var(--crit)}
   #dashboard .db-hero .db-what{min-width:0;flex:1}
   #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
@@ -818,6 +820,25 @@
     return '<span class="' + cls + '">' + t + '</span>';
   }
 
+  // A runner that ran out of its turn left files changed in the repository. The
+  // loop puts them aside under the task that made them, and this is the only
+  // place a person sees that it happened: without it the next task inherits a
+  // tree it did not write and commits it under its own name.
+  function leftoversLine() {
+    var F = S.leftovers;
+    if (!F || !F.open) return '';
+    var L = F.latest || {};
+    var who = L.label || L.task || 'a task';
+    var t;
+    if (F.stuck) {
+      t = L.count + ' changed file' + (L.count === 1 ? '' : 's') + ' from ' + who + ' could not be set aside';
+    } else {
+      t = L.count + ' changed file' + (L.count === 1 ? '' : 's') + ' left by ' + who + ', set aside';
+      if (F.open > 1) t += ' · ' + (F.open - 1) + ' more waiting';
+    }
+    return '<br><span class="db-left' + (F.stuck ? ' stuck' : '') + '" title="' + esc(L.restore || L.why || '') + '">' + esc(t) + '</span>';
+  }
+
   // The loop is a zsh script and zsh parses one once, so a fix landed in it
   // reaches nothing until the process restarts. The loop restarts itself onto
   // a new copy between tasks; this covers what that cannot: the long minutes
@@ -852,7 +873,7 @@
     else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
     h += '</div>';
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked';
-    h += '<br>' + sweepLine() + '</div>';
+    h += '<br>' + sweepLine() + leftoversLine() + '</div>';
     h += '</div>';
     if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) {
       var LS = L.lastError;

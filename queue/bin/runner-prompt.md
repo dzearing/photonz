@@ -136,6 +136,10 @@ A task carries three kinds of writing and they are not interchangeable:
 - **`notes`** — your working detail. Be as technical as you like here: it is read last, by an agent, and it is where file names and class names belong.
 
 This applies to tasks you CREATE and to the task you are running: if the task you claimed has no `goal` or an empty `acceptance`, write them into the task file as your first act, from what you learn reading it. The dashboard renders goal first, checklist second, detail last, so a queue full of jargon blobs is a queue nobody can steer.
+- **Anything you leave changed and uncommitted is put away under your task's name.** When your turn ends, the loop compares the working tree against the picture it took before you started, and every file you dirtied and did not commit goes into a git stash whose message names your task. It says so in its window and on the dashboard, and it writes the restore command into your task's log. So an unfinished turn costs the next task nothing, and nothing you half-wrote is ever committed by somebody else. Two consequences for you:
+  - If your task's log says *a previous attempt at this task left N file(s) changed*, that was you, last turn. Run the `git stash apply <sha>` it gives you before you start rebuilding it from scratch, or decide out loud in the log that you are starting over.
+  - Finish by committing. A task you mark `done` with files still changed is recorded as a task that left work behind, and nobody is coming back for it.
+  - The queue's own files (`queue/…`) are never stashed, and neither is anything that was already changed before you started: that is the user's own repo, not yours to move.
 - Commit your work to main with a clear message when the task completes, then push: `git pull --rebase --autostash origin main && git push origin main`. If the rebase conflicts, abort it (`git rebase --abort`), leave your commit local, and record the situation in the task log; never force-push and never resolve someone else's conflict blind.
 - Task titles name the outcome. Never put status words (blocked, in progress) in a title; status lives in the status field.
 
