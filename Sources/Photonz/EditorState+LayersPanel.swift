@@ -71,9 +71,26 @@ extension EditorState {
     /// indented under it. With the groups flag off every group stays shut, so
     /// the list is the flat one it has always been.
     var panelRows: [LayerPanelRow] {
-        document?.panelRows(expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [])
+        // One list, so a click, a shift-click range, a reveal and a drop all
+        // read the same rows the eye does. While a search is typed that is the
+        // results, and nothing downstream has to know a search is happening.
+        if isSearchingLayers { return layerRows.map(\.row) }
+        return document?.panelRows(expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [])
             ?? []
     }
+
+    /// Whether the layers list is showing search results rather than the
+    /// document's own list. Only true while the find field is on AND something
+    /// is typed in it, so a flag switched off mid-session cannot leave a
+    /// window stuck showing a filtered list.
+    var isSearchingLayers: Bool {
+        Experiments.shared.findALayerEnabled && !LayerSearch.normalized(layerSearchQuery).isEmpty
+    }
+
+    /// How many layers there are altogether to search, which is the second
+    /// half of "3 of 142". Every row a twist could reveal, so it counts the
+    /// same things a search looks at.
+    var searchableLayerCount: Int { document?.fullyExpandedRowCount ?? 0 }
 
     /// The same rows, each carrying what it draws — name, visibility, lock,
     /// whether it is selected, its component marks — from a single walk of the
@@ -87,6 +104,10 @@ extension EditorState {
     var layerRows: [LayerRowDisplay] {
         var selected = multiSelectedLayerIDs
         if let selectedLayerID { selected.insert(selectedLayerID) }
+        if isSearchingLayers {
+            return document?.layerRows(matching: layerSearchQuery, selected: selected,
+                                       saysItsWords: Experiments.shared.rowSaysItsWordsEnabled) ?? []
+        }
         return document?.layerRows(
             expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [],
             selected: selected,
@@ -118,6 +139,11 @@ extension EditorState {
     /// With groups off nothing can be twisted open, so this is exactly the
     /// rows on screen and the list is the one it has always been.
     func layerListReservedRowCount(visibleRowCount: Int) -> Int {
+        // A search reserves room for its RESULTS. Keeping room for every layer
+        // a twist could reveal would leave three results at the top of a
+        // hundred and forty rows of empty scroll, which is the long list this
+        // was built to get rid of.
+        if isSearchingLayers { return visibleRowCount }
         guard Experiments.shared.layerGroupsEnabled, let document else { return visibleRowCount }
         return max(visibleRowCount, document.fullyExpandedRowCount)
     }

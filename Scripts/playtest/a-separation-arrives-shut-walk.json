@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/a-separation-arrives-shut",
+  "seed": "THE OTHER ANSWER TO A HUNDRED NEW ROWS, AND WHAT IT COSTS. With next-a-separation-arrives-shut on, a separation big enough to fill the layers list arrives inside ONE group named after the picture it came from, and the group arrives shut: the list is one row longer rather than a hundred and something. The walk proves that, and then proves the price in the same run - a click on the canvas, over a piece you can see, picks the whole group rather than the piece, so the one thing a fresh separation is good for is two clicks away instead of one. Both halves are the point: this walk is the comparison for find-a-layer-walk, not a feature being shipped. It finishes on a small capture to show that taking a card apart still hands the pieces straight to you.",
+  "setup": {
+    "forget": ["groups"],
+    "flags": { "next-a-separation-arrives-shut": true, "next-find-a-layer": false }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 4 },
+
+    { "do": "describe", "stage": "1-one-row-not-a-hundred", "note": "THE FIRST TEST: well over a hundred pieces came out, and the layers list is TWO rows - the picture and one shut group holding everything. The layerRowsInView line below is the whole claim: you can see the entire list without scrolling" },
+    { "do": "expectLayers", "atLeast": 100, "atMost": 300 },
+    { "do": "expect", "row": "Background pieces", "present": true },
+    { "do": "expect", "row": "Text 25", "present": false },
+    { "do": "snapshot", "name": "shut-1-one-row" },
+
+    { "do": "describe", "stage": "2-and-what-it-cost", "note": "THE SECOND TEST, and the reason this is a comparison rather than a feature: clicking a piece on the canvas picks the GROUP. The outline goes round the whole page, and dragging from here would carry every piece at once. Reaching one word means double clicking into the group first, which is the one move a fresh separation exists to save you" },
+    { "do": "click", "at": [900, 42] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Background pieces"] },
+    { "do": "snapshot", "name": "shut-2-one-click-picks-everything" },
+
+    { "do": "click", "at": [900, 42], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-two-clicks-in", "note": "THE THIRD TEST: a second click does step inside and pick the piece, and the list opens the group and scrolls to that piece's row. So nothing is lost, it just costs a click and puts the hundred rows back on screen the moment you use it" },
+    { "do": "snapshot", "name": "shut-3-two-clicks-in" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "describe", "stage": "4-one-undo-still", "note": "THE FOURTH TEST: gathering did not cost a second undo step. One press puts the untouched screenshot back" },
+    { "do": "expectLayers", "count": 1 },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 3 },
+    { "do": "describe", "stage": "5-a-small-separation-is-untouched", "note": "THE LAST TEST: a capture with a handful of things in it comes apart into loose pieces exactly as it always has. Only a separation big enough to fill the list is gathered, so taking a card or a pane apart still hands you its pieces" },
+    { "do": "expect", "row": "Background pieces", "present": false },
+    { "do": "expect", "row": "Text 1", "present": true },
+    { "do": "snapshot", "name": "shut-4-small-is-untouched" }
+  ]
+}

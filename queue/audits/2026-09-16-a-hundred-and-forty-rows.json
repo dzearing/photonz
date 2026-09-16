@@ -1,0 +1,33 @@
+{
+  "feature": "How a hundred and forty new rows arrive in the layers list",
+  "epic": "ui-building",
+  "summary": "Two answers were built and measured on the same dense capture. A find field over the layers list turns 173 rows into 33 as you type and puts the one you want on screen without scrolling; a separation arriving inside one shut group turns 173 rows into three, but then one click on the canvas picks all 172 pieces at once. The find field ships on; the shut group is off, built only to be compared. Both ran on the real app and the pictures here are the real window.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Find a layer by typing\" is on by default. \"A big separation arrives in one shut group\" is off by default; switch it on to see the second half. Any dense screenshot works; the pictures use Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png.",
+  "try": [
+    { "do": "Open a dense screenshot, right click the Background row and choose Separate into Layers.", "shot": "2026-09-16-list-1-the-wall.png" },
+    { "do": "Try to reach one particular piece by scrolling. The list is 173 rows of 38pt in a 200pt window, so it is about 35 screens long." },
+    { "do": "Type Text 2 into the find field over the list. 173 rows become 33, and the line under the list says so.", "shot": "2026-09-16-list-2-narrowed.png" },
+    { "do": "Click one of the results. It picks on the canvas like any row; clear the field and the list comes back with that row still picked." },
+    { "do": "Now type recommended, a word you can plainly read on the canvas. Nothing is found.", "shot": "2026-09-16-list-3-nothing-says-that.png" },
+    { "do": "Turn on \"A big separation arrives in one shut group\", undo, and separate again. The list is three rows.", "shot": "2026-09-16-list-4-gathered-one-row.png" },
+    { "do": "Click any word on the canvas. The whole page is picked, not the word.", "shot": "2026-09-16-list-5-gathered-one-click-picks-everything.png" },
+    { "do": "Open an ordinary picture with a few layers. There is no find field and nothing has changed." }
+  ],
+  "evaluate": [
+    "The recommendation is the find field, and against the shut group, because the shut group takes away the one thing a fresh separation is good for. Do you agree, or would you rather have the short list and pay the extra click?",
+    "The find field appears on its own once the list goes past a dozen rows. Should it be there always instead, so its place never moves?",
+    "Search results are drawn flat, with no indent and no twist, so a piece that lives inside a box is shown on its own. Is losing the context worth the shorter list?",
+    "A result cannot be dragged to a new place in the list while a search is showing. Does that ever come up, or is a search always a way to get somewhere?",
+    "The honest finding: a fresh separation names every piece Text and a number, so searching one for a word you can see finds nothing. Is naming a separated run by the words it holds worth a recognition pass over the whole picture?"
+  ],
+  "rough": [
+    "MEASURED on the real app, not judged by eye. dense-page-1x.png separates into 142 runs of text and 30 boxes. The layers list then reports \"173 rows of 38pt, list 200pt\": five rows on screen out of 173, about 7,100 points of scrolling, and after the command the list is already parked 5,478 points down. Typing \"Text 2\" leaves 33 rows and the target is on screen with no scrolling at all. Gathered, the list is three rows and nothing scrolls.",
+    "THE FINDING THAT DECIDES IT: not one row a fresh separation makes says any words. A separated run is a PICTURE of text, and the row-says-its-words work that landed this morning reads a TEXT layer, so it does not reach them. Searching the capture for \"recommended\" or \"decision\" returns nothing while both words are on screen. So no arrangement of these rows is the real fix: grouping by where the pieces sat would give you a bucket called Top holding forty rows called Text N. Filed as a follow-up: Separate should name each run by the words in it.",
+    "WHY THE SHUT GROUP WAS NOT RECOMMENDED, proven rather than argued: selectionTarget picks the outermost layer under a canvas click, so with the pieces inside a group one click picks all 172 and a drag would carry the whole page. Two tests hold this down. The list is where a separation is unreadable; the canvas is where it is usable, and the shut group trades the first for the second.",
+    "The find field does nothing for the third arrangement the task asked about, grouping by where the pieces sat on the page. It was rejected without being built: the app knows a rectangle's position and nothing about headers or sidebars, so the buckets would be invented ones, and they would fight the nesting Separate already does.",
+    "Word matching is substring matching, so typing \"Text 2\" also finds Text 12 and Text 142. Harmless for real words, silly for numbers.",
+    "With nothing found, the list is a tall empty space with \"No layer says that\" alone at the right edge. It reads a little lost.",
+    "The screen was locked for this whole run, so the walks had to be forced past their own refusal with PHOTONZ_ALLOW_LOCKED_WALK=1. Every picture here is still a real photograph of the window, taken by the probe, not an offscreen render: the camera works while locked. Both walks pass.",
+    "Two walks cover this: Scripts/playtest/find-a-layer-walk.json and Scripts/playtest/a-separation-arrives-shut-walk.json."
+  ]
+}

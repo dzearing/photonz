@@ -1,0 +1,341 @@
+{
+  "out": "/tmp/photonz-playtest/find-a-layer",
+  "seed": "FINDING ONE ROW IN A HUNDRED. Separating a whole screenshot puts well over a hundred pieces in the layers list, and the list shows about five rows at a time, so reaching the one you wanted is a very long scroll. The walk takes a dense capture apart, proves a find field has appeared over the list, types into it and watches a hundred rows become a handful, clicks one and watches the canvas follow, then clears it and watches the whole list come back. It also photographs the honest half of the answer: a fresh separation names every piece Text and a number, so searching it for a word you can plainly SEE on the canvas finds nothing and the list says so in as many words. Last it opens an ordinary picture with a few layers and proves there is no field there at all. It finishes by counting the threshold out loud: ten layers made by hand have no field, and fourteen do.",
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-find-a-layer": true,
+      "next-a-separation-arrives-shut": false
+    }
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "a dense page as it opens: one locked Background picture and nothing else. There is no find field, because there is nothing to find"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "field": "Find a layer",
+      "present": false
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-wall",
+      "note": "THE PROBLEM, photographed: well over a hundred pieces in a list that shows about five rows at a time. The layerList line in this stage says how many rows of what height are in how tall a viewport, which is the number the whole task is about"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 100,
+      "atMost": 300
+    },
+    {
+      "do": "snapshot",
+      "name": "find-1-the-wall"
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-field-arrived",
+      "note": "THE FIRST TEST: a list this long has a find field over it. It appeared on its own, because the list went past a dozen rows"
+    },
+    {
+      "do": "expect",
+      "field": "Find a layer",
+      "present": true
+    },
+    {
+      "do": "focus",
+      "field": "Find a layer"
+    },
+    {
+      "do": "type",
+      "text": "Text 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-hundred-becomes-a-handful",
+      "note": "THE SECOND TEST: typing narrowed the list to the rows that say it - Text 2 and Text 20 through Text 29 - and the line under the list says how many of how many. layerRowsInView below is what a person can actually see, and the FIRST result is among them: a search that narrows the list puts it back at the top, rather than leaving it parked thousands of points down where the old list was"
+    },
+    {
+      "do": "expect",
+      "field": "Search count",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 129",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "layerRowInView",
+      "value": "Text 129",
+      "timeout": 3
+    },
+    {
+      "do": "snapshot",
+      "name": "find-2-narrowed"
+    },
+    {
+      "do": "selectRow",
+      "row": "Text 129"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-clicking-a-result-picks-it",
+      "note": "THE THIRD TEST: a result is a row like any other. Clicking it picks the layer on the canvas, so the outline appears over the piece you were hunting for"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Text 129"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "find-3-picked"
+    },
+    {
+      "do": "press",
+      "control": "Clear the search"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-clearing-gives-the-list-back",
+      "note": "THE FOURTH TEST: clearing the field puts the whole list back, the count line goes, and the layer you picked from the results is still the layer that is picked"
+    },
+    {
+      "do": "expect",
+      "field": "Search count",
+      "present": false
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Text 129"
+      ]
+    },
+    {
+      "do": "focus",
+      "field": "Find a layer"
+    },
+    {
+      "do": "type",
+      "text": "recommended"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-and-the-honest-half",
+      "note": "THE FIFTH TEST, and the finding this walk exists to photograph: the word Recommended is on the page in front of you, and searching for it finds nothing, because a fresh separation calls every piece Text and a number. The field works; there is nothing in the rows to search. The list says so in as many words rather than going blank"
+    },
+    {
+      "do": "expect",
+      "field": "Search count",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 129",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "find-4-nothing-says-that"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-an-ordinary-picture-is-untouched",
+      "note": "THE LAST TEST: a picture with a handful of layers has no find field at all. A search box over a list you can see the whole of is a control that earns nothing, so it is not there"
+    },
+    {
+      "do": "expect",
+      "field": "Find a layer",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "find-5-ordinary-list"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-ten-layers-is-an-ordinary-list",
+      "note": "THE THRESHOLD, checked rather than assumed: a document somebody built by hand with ten layers in it has no find field. A search box over a list you can nearly see the whole of earns nothing, so it is not there"
+    },
+    {
+      "do": "expectLayers",
+      "count": 10
+    },
+    {
+      "do": "expect",
+      "field": "Find a layer",
+      "present": false
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-and-past-a-dozen-it-appears",
+      "note": "...and four more layers past that, the field is there. Nothing about the list changed except that it is now worth searching"
+    },
+    {
+      "do": "expectLayers",
+      "count": 14
+    },
+    {
+      "do": "expect",
+      "field": "Find a layer",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "find-6-past-a-dozen"
+    }
+  ]
+}

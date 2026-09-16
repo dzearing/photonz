@@ -166,6 +166,10 @@ public enum FeatureCatalog {
 
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
 
+    public static let findALayerFlag = "next-find-a-layer"
+
+    public static let separationArrivesShutFlag = "next-a-separation-arrives-shut"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -569,6 +573,24 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: findALayerFlag,
+                    title: "Find a layer by typing",
+                    description: "A screenshot taken apart can put well over a hundred pieces in the layers list, and the list shows about five rows at a time, so reaching the one label you wanted is a very long scroll. With this on there is a find field over the list: type a few letters and the list shows only the layers whose row says them, wherever they are, including ones inside groups that are shut. Every word you type has to appear somewhere in the row, in any order, and capitals and accents do not count, so \"save ch\" finds Save Changes and so does \"changes save\". Results are plain rows with no indent and no twist, because a result is something you click to get to rather than a branch to read, and the line under the list says how many of how many. Click one and the canvas picks it, exactly as clicking any row does. Clear the field and the list comes back as it was, with the same groups open and the list scrolled where you left it. Nothing about the document changes, so it costs no undo step, and while a search is showing rows cannot be dragged into a new order, because the row above a result is not its real neighbour. The field only appears once the list is longer than the panel can show, so an ordinary picture with ten layers looks exactly as it always has. Off means no field and no searching.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: separationArrivesShutFlag,
+                    title: "A big separation arrives in one shut group",
+                    description: "The other answer to a hundred and forty pieces arriving at once: instead of a hundred and forty new rows, Separate into Layers puts everything it made into one group named after the picture it came from, and leaves it shut. The layers list is one row longer than it was, you open the twist when you want to go in, and the pieces are all still there on the canvas exactly where they were. Only a separation big enough to fill the list does this, so taking a card or a small pane apart still hands the pieces straight to you. Be warned that the pieces are then INSIDE something: one click on the canvas picks the whole group and dragging it carries the entire page, and reaching a single word means double clicking into the group first. This is here to be compared against finding a layer by typing, not because both should ship. Off means the pieces arrive loose over the picture, which is what the command has always done.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: lineEndsFlag,

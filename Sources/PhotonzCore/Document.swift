@@ -876,11 +876,19 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// for taking the screenshot apart. A piece that holds nothing is one
     /// layer, exactly as before.
     ///
-    /// Does nothing to a layer that is not a picture. Returns the TOP LEVEL
-    /// layers' ids in stacking order, bottom-most first.
+    /// `gatheredAs` puts every piece inside ONE group of that name instead of
+    /// leaving them loose over the picture, so a screenshot that comes apart
+    /// into a hundred and forty pieces makes the layers list one row longer
+    /// rather than a hundred and forty. Nil leaves them loose, which is what
+    /// the command has always done.
+    ///
+    /// Does nothing to a layer that is not a picture. Returns the PIECES' ids,
+    /// in the order they were handed over, gathered or not — so a caller can
+    /// still say which piece is which without knowing where they landed.
     @discardableResult
     public mutating func separateIntoLayers(id: UUID, patched: ImageRef,
-                                            pieces: [SeparatedPiece]) -> [UUID] {
+                                            pieces: [SeparatedPiece],
+                                            gatheredAs: String? = nil) -> [UUID] {
         guard let source = layer(id: id), source.imageRef != nil else { return [] }
         func body(_ piece: SeparatedPiece, named name: String, shadowed: Bool) -> Layer {
             var style = LayerStyle()
@@ -932,9 +940,23 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             return group
         }
         let made = pieces.map(build)
+        // Gathered, everything inside is stored against the group's corner,
+        // the same way a card's own labels already are, so one move carries
+        // the lot and nothing has to be kept in step. The group's corner is
+        // the canvas origin rather than the pieces' bounding box, because the
+        // box a separation covers IS the picture and a group whose corner
+        // wandered would put every piece somewhere else.
+        let top: [Layer]
+        if let gatheredAs, !made.isEmpty {
+            top = [Layer(name: gatheredAs,
+                         content: .group(GroupContent(children: made)),
+                         frame: CGRect(origin: .zero, size: .zero))]
+        } else {
+            top = made
+        }
         withSiblings(of: id) { siblings, index in
             siblings[index].content = .image(patched)
-            siblings.insert(contentsOf: made, at: index + 1)
+            siblings.insert(contentsOf: top, at: index + 1)
         }
         return made.map(\.id)
     }

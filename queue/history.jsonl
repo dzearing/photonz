@@ -4389,3 +4389,14 @@
 {"t":"2026-09-16T14:43:19.995Z","ev":"task_note","id":"a-text-layer-s-row-says-the-words-that-are-in-it"}
 {"t":"2026-09-16T14:43:20.039Z","ev":"task_note","id":"a-text-layer-s-row-says-the-words-that-are-in-it"}
 {"t":"2026-09-16T14:43:29.182Z","ev":"task_done","id":"a-text-layer-s-row-says-the-words-that-are-in-it","from":"in_progress","note":"A text layer nobody renamed now wears its own words in the layers list and follows them as they are retyped (Layer.displayName, read not stored, so no undo step); a hand name is theirs and survives retyping; Turn Into Path renames a Rectangle row to Path inside the same undo step as the shape change. Behind next-a-row-says-its-words, on by default in Next. Scripts/test.sh green, 7613 tests, 13 new in LayerDisplayNameTests. NOT verified in the app: the Mac's screen was locked all task, every walk reported status locked, so there are no captures and the audit says so; a sweep is requested for the 9 walks whose row names changed. Audit: queue/audits/2026-09-16-a-row-says-what-it-is.json"}
+{"t":"2026-09-16T14:44:14.334Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T14:44:14.442Z","ev":"task_started","id":"find-out-how-a-hundred-and-forty-new-rows-should","title":"Find out how a hundred and forty new rows should arrive in the layers list","priority":"p2-normal"}
+{"t":"2026-09-16T14:45:14.543Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}
+{"t":"2026-09-16T14:56:38.004Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}
+{"t":"2026-09-16T15:00:09.675Z","ev":"task_created","id":"a-separated-run-of-text-says-the-words-in-it-wit","priority":"p2-normal","title":"A separated run of text says the words in it, without being turned into text first"}
+{"t":"2026-09-16T15:00:18.274Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}
+{"t":"2026-09-16T15:00:18.320Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}
+{"t":"2026-09-16T15:00:18.366Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}
+{"t":"2026-09-16T15:07:33.474Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-16T15:16:43.693Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-16T15:19:37.561Z","ev":"task_note","id":"find-out-how-a-hundred-and-forty-new-rows-should"}

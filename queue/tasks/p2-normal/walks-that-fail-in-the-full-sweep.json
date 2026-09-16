@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T12:23:35.079Z",
+  "updated": "2026-09-16T15:16:43.692Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -243,6 +243,14 @@
     {
       "t": "2026-09-16T12:23:35.078Z",
       "note": "seq 380 -> 400"
+    },
+    {
+      "t": "2026-09-16T15:07:33.472Z",
+      "note": "FIVE SEPARATE WALKS FAIL, and I proved they are not the change I was making: I stashed my whole diff, rebuilt the probe from clean main and got the identical failures. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build separate. Results on clean main: separate-boxes-walk FAILED step 16 (expect): no row called \"Box 2\" is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3. separate-hierarchy-walk FAILED step 13, same message. separate-shadow-walk FAILED step 15, same message. separate-dark-window-walk FAILED step 13 (expectLayers): 1 layer in the document, not at least 40; the first few: Background. separate-whole-screenshot-walk FAILED step 16 (expectLayers): 173 layers in the document, more than the 151 claimed. separate-into-layers-walk and separate-turn-into-text-walk pass. TWO DIFFERENT CAUSES. The 173-not-151 one is the walk being out of date: 'Separating a dark panel gives back the controls on it' (a14cec9c, 2026-09-16) made the box sweep find boxes on dark chrome, so dense-page-1x.png now comes apart into 142 runs AND 30 boxes where the walk was written against runs alone. That walk's ceiling wants raising. The three 'no row called Box 2' ones look like a different thing: the rows named back (Text 1, Box 4, Text 9, Fill, Box 3) are the handful the lazy list has BUILT, so the step may be asking for a row that exists but is off screen rather than one that is missing. separate-dark-window getting 1 layer out of a capture it used to get 40+ from is the one that looks like a real break in the app. Screen was locked, so these were forced with PHOTONZ_ALLOW_LOCKED_WALK=1; the camera and the name lookups both worked, and the two passing walks in the same run say the lock is not what broke these five."
+    },
+    {
+      "t": "2026-09-16T15:16:43.691Z",
+      "note": "ALSO FAILING ON CLEAN MAIN: tutorial-layers-and-undo-walk, step 23 (waitFor): tutorialStep(\"put-it-back\") did not happen within 6.0s. Checked the same way, by stashing my diff and rebuilding the probe from main, so it is not something a focus runner brought in today. The step before it is 'command+backspace taken by responder chain', so the Delete went somewhere and the tutorial did not advance to its next step. That walk never gets past 6 layers, so nothing about the layers list being longer is involved. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh tutorial-layers-and-undo."
     }
   ]
 }

@@ -443,6 +443,21 @@ extension Experiments {
     /// every row back to the number it had.
     var rowSaysItsWordsEnabled: Bool { isEnabled(FeatureCatalog.rowSaysItsWordsFlag) }
 
+    /// `next-find-a-layer`: whether a find field sits over the layers list, so
+    /// one label in a hundred and forty is reached by typing rather than by
+    /// scrolling. It reads the names the list is ALREADY showing, so what you
+    /// can search for is exactly what you can see.
+    var findALayerEnabled: Bool { isEnabled(FeatureCatalog.findALayerFlag) }
+
+    /// `next-a-separation-arrives-shut`: whether a separation big enough to
+    /// fill the layers list arrives inside one shut group instead of as a
+    /// hundred and forty loose rows. Built to be compared against
+    /// `findALayerEnabled` rather than to ship beside it, which is why it
+    /// starts off.
+    var separationArrivesShutEnabled: Bool {
+        layerGroupsEnabled && isEnabled(FeatureCatalog.separationArrivesShutFlag)
+    }
+
     /// `next-turn-into-path`: whether a box, an oval or a line can be turned
     /// into a path from the two menus. It needs the reshaping work, because
     /// converting a shape you then cannot edit is a command with no payoff: the

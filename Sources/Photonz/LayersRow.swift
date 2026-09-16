@@ -13,6 +13,12 @@ struct LayersRow: View, Equatable {
     /// document HOLDS a group, so a screenshot with a few annotations on it
     /// reads exactly as it always has.
     let showsTwist: Bool
+    /// Whether this row can be picked up and carried to a new place in the
+    /// list. False while the list is showing search results: a result is shown
+    /// flat and away from its neighbours, so the row above it is not the row it
+    /// would land in front of, and a drop there would put the layer somewhere
+    /// nobody pointed (`next-find-a-layer`).
+    let canReorder: Bool
     let componentsEnabled: Bool
     /// The two component menu items, already decided by the list.
     let offersMakeComponent: Bool
@@ -43,6 +49,7 @@ struct LayersRow: View, Equatable {
         a.display == b.display
             && a.thumbnail === b.thumbnail
             && a.showsTwist == b.showsTwist
+            && a.canReorder == b.canReorder
             && a.componentsEnabled == b.componentsEnabled
             && a.offersMakeComponent == b.offersMakeComponent
             && a.offersDetachInstance == b.offersDetachInstance
@@ -50,6 +57,14 @@ struct LayersRow: View, Equatable {
             && a.styleDrop == b.styleDrop
             && a.draftName == b.draftName
             && a.rowHeight == b.rowHeight
+    }
+
+    /// The row, pickable or not. A search result is not pickable: it is drawn
+    /// flat and away from its neighbours, so the row above it is not the row it
+    /// would land in front of, and a drop there would put the layer somewhere
+    /// nobody pointed.
+    @ViewBuilder private func carrying(_ content: some View) -> some View {
+        if canReorder { content.onDrag(pickUp) } else { content }
     }
 
     private var id: UUID { display.id }
@@ -90,11 +105,14 @@ struct LayersRow: View, Equatable {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.layersRow)
         #endif
-        content
-            .onDrag(pickUp)
+        carrying(content)
             // One drop destination for everything a row can be handed, because
             // SwiftUI gives the drag to the innermost target and stops there: a
-            // second `onDrop` on the same row would simply hide the first.
+            // second `onDrop` on the same row would simply hide the first. It
+            // stays on while a search is showing: a colour or a saved style is
+            // aimed at THIS row by name and lands on it wherever the row is
+            // drawn, and with no row pickable there is no reorder in the air to
+            // mis-aim.
             .onDrop(of: LayerRowDropDelegate.acceptedTypes, delegate: LayerRowDropDelegate(
                 row: panelRow, rowHeight: rowHeight, editorState: editorState))
             .playtestTarget(display.name, kind: .row,

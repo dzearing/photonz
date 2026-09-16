@@ -1,0 +1,29 @@
+{
+  "id": "a-separated-run-of-text-says-the-words-in-it-wit",
+  "title": "A separated run of text says the words in it, without being turned into text first",
+  "goal": "Take a screenshot apart and you get a hundred and forty rows called Text 1 to Text 142, with nothing to tell them apart but a thumbnail the size of a postage stamp. The words are right there in the picture. The row should say them, the way a text layer already does, so the list can be read and searched instead of counted.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2760,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T15:00:09.671Z",
+  "updated": "2026-09-16T15:00:09.674Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "FOUND WHILE MEASURING find-out-how-a-hundred-and-forty-new-rows-should on 2026-09-16, reproduced on the real app. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/find-a-layer-walk.json. The walk separates Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png (pill: \"142 runs of text and 30 boxes\"), types \"recommended\" into the layers find field, and the list says \"No layer says that\" while the word (Recommended) is plainly on the canvas. Picture: queue/audits/2026-09-16-list-3-nothing-says-that.png. Headless confirmation over the same fixture: HOW-MANY-SAY-WORDS=0, SEARCH-recommended=0, SEARCH-decision=0.\n\nWHY: Layer.displayName (Sources/PhotonzCore/LayerNaming.swift) returns the words only when the layer HAS text, and a separated run is .image until somebody runs Turn into Text on it, one row at a time (Sources/Photonz/EditorState+ReadText.swift). So next-a-row-says-its-words, which landed 2026-09-16, does not reach the case it was written for.\n\nCOST TO WEIGH: TextReader is documented at about 40ms per run in a release build, so 142 runs is roughly 5.7s, far too slow to do inside the command. Two cheaper shapes worth trying: read only the runs whose rows the list is actually drawing (it is lazy, five at a time) and fill the name in as you scroll; or read in the background after the command lands, so the numbers turn into words a second later. Either keeps Separate as fast as it is now.\n\nThis is the follow-up the audit 2026-09-16-a-hundred-and-forty-rows names in its rough notes as the real fix.",
+  "acceptance": [
+    "Separating a dense screenshot gives rows that say their own words rather than Text and a number",
+    "Typing a word you can see on the canvas into the layers find field reaches that piece",
+    "The command does not get noticeably slower: say what it costs on a whole-screen capture, and if reading every run is too slow, read the ones the list is showing",
+    "Nothing is written into the document, so a separated picture is byte for byte what it was and it costs no extra undo step",
+    "A walk covers it and an audit reports the timing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T15:00:09.673Z",
+      "note": "created (manual)"
+    }
+  ]
+}

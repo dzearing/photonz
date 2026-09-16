@@ -35,6 +35,15 @@ extension EditorState {
     static let separatedShapeBodyName = "Fill"
     static let separatedPictureBodyName = "Picture"
 
+    /// How many pieces make a separation big enough to arrive gathered into
+    /// one shut group (`next-a-separation-arrives-shut`). The layers list
+    /// shows about five rows at rest and its grab bar reaches maybe fifteen,
+    /// so twenty is the line where a separation stops being a list you can
+    /// look at and becomes one you have to hunt through. Under it the pieces
+    /// arrive loose, because taking a card or a small pane apart should hand
+    /// you its pieces rather than a twist to open.
+    static let gathersASeparationOver = 20
+
     /// Whether Separate into Layers applies to this layer (menu enablement).
     ///
     /// A picture, drawn the way its box says it is. A cropped or turned picture
@@ -207,9 +216,36 @@ extension EditorState {
         }
 
         discardDragPreview()
+        // A separation big enough to fill the layers list can arrive inside
+        // ONE shut group named after the picture it came from, so the list is
+        // one row longer rather than a hundred and forty
+        // (`next-a-separation-arrives-shut`). Small separations never gather:
+        // taking a card apart hands you its pieces, and wrapping three of them
+        // would be a twist to open for nothing.
+        let sourceName = document.layer(id: id).map {
+            Experiments.shared.rowSaysItsWordsEnabled ? $0.displayName : $0.name
+        } ?? "Background"
+        let gatheredAs = Experiments.shared.separationArrivesShutEnabled
+            && pieces.count >= Self.gathersASeparationOver
+            ? String(format: NSLocalizedString("%@ pieces", comment: "name of the group a big separation arrives in"), sourceName)
+            : nil
         var made: [UUID] = []
-        perform { made = $0.separateIntoLayers(id: id, patched: patched, pieces: pieces) }
+        perform {
+            made = $0.separateIntoLayers(id: id, patched: patched, pieces: pieces,
+                                         gatheredAs: gatheredAs)
+        }
         guard !made.isEmpty else { return }
+        // Gathered, the ONE thing picked is the group itself, shut. Picking a
+        // piece inside it would open every twist above it to bring its row
+        // into view, which is the whole arrangement undone in the first frame.
+        if gatheredAs != nil, let group = made.first.flatMap({ self.document?.parentID(of: $0) }) {
+            multiSelectedLayerIDs = []
+            selectedLayerID = group
+            raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
+                                                   skipped: result.skipped,
+                                                   crowded: result.crowded))
+            return
+        }
         // Every group this made is left OPEN. The command has just invented
         // these layers and the pill says how many came out, so a list that
         // hides most of them behind a twist reads as having lost them. One

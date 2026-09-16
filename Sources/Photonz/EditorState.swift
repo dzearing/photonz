@@ -1320,6 +1320,16 @@ final class EditorState {
     /// editable is a row nobody knows they can type in.
     var componentAwaitingName: UUID?
 
+    /// What is typed in the layers list's find field, empty when nothing is
+    /// (`next-find-a-layer`). While it holds anything the list shows only the
+    /// layers whose row says it, flat and at any depth, so one label in a
+    /// hundred and forty is reached by typing rather than by scrolling.
+    ///
+    /// Per window and never written down: a search is where you are looking
+    /// right now, not something about the picture. Closing the window or
+    /// opening another file leaves nothing behind.
+    var layerSearchQuery = ""
+
     /// A layer whose row in the Layers or Measurements list should open its
     /// rename field, set by the Rename command. Whichever list is showing that
     /// row consumes it and puts it back to nil, so it fires once rather than

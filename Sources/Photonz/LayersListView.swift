@@ -264,6 +264,9 @@ struct LayersListView: View {
     /// the third is still settling.
     @State private var revealPass = 0
     @FocusState private var renameFieldFocused: Bool
+    /// The keyboard in the find field, so Escape can hand it back to the
+    /// picture rather than leaving a caret blinking over an empty search.
+    @FocusState private var findFieldFocused: Bool
 
     /// The layer area's max height (user-resizable, persisted). Beyond this the
     /// list scrolls INTERNALLY so a tall stack doesn't shove the Effects/Shadow
@@ -352,6 +355,7 @@ struct LayersListView: View {
         // reader asked for rather than for rows the grab bar already ruled out.
         let unpressed = PanelAreaResize.height(contentHeight: reserved, ceiling: maxHeight)
         return VStack(spacing: 0) {
+            findField
             ScrollView(.vertical) {
                 rows(displays, viewport: viewport)
             }
@@ -397,6 +401,7 @@ struct LayersListView: View {
             // the list — a grab bar that scrolled away would be a grab bar you
             // could not reach — so the dock has to budget for them separately.
             VStack(spacing: 0) {
+                searchCount(showing: displays.count)
                 multiSelectionCount
                 resizeHandle(reserved: grabRange)
             }
@@ -454,6 +459,20 @@ struct LayersListView: View {
             DispatchQueue.main.async {
                 follow(request, displays: displays, viewport: scroll.viewport)
             }
+        }
+        // A search that narrows the list has to show its FIRST result. The
+        // list keeps whatever offset it had, and after a separation that
+        // offset is thousands of points down: measured on a dense capture,
+        // typing turned 173 rows into 33 and left the list parked at 1120pt,
+        // so the five rows on screen were the LAST five results and the top of
+        // the search was somewhere above the window. Every change to the query
+        // goes back to the top, and clearing it does too, since the rows under
+        // that old offset are not the rows that were there.
+        .onChange(of: editorState.layerSearchQuery) { _, _ in
+            guard Experiments.shared.findALayerEnabled else { return }
+            scroll.offset = 0
+            firstVisibleRow = 0
+            scrollPosition.scrollTo(y: 0)
         }
         .onChange(of: editorState.layerAwaitingRename) { _, id in
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),
@@ -598,6 +617,7 @@ struct LayersListView: View {
                 LayersRow(display: display,
                           thumbnail: thumbnails[display.id],
                           showsTwist: showsTwist,
+                          canReorder: !editorState.isSearchingLayers,
                           componentsEnabled: componentsEnabled,
                           offersMakeComponent: canMakeComponent && display.isSelected,
                           offersDetachInstance: canDetachInstance && display.isSelected,
@@ -616,7 +636,11 @@ struct LayersListView: View {
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the
             // Background it frames). Not a real layer — no eye/lock/delete/
             // reorder; selecting it puts resize handles on the canvas boundary.
-            canvasRow
+            //
+            // Not while a search is showing: everything in the list then is
+            // something that answered what you typed, and a Canvas row sitting
+            // under three results reads as a fourth one.
+            if !editorState.isSearchingLayers { canvasRow }
         }
         .padding(.horizontal, EditorChromeLayout.panelListGutter)
         .padding(.bottom, LayerListMetrics.bottomPadding)
@@ -626,6 +650,88 @@ struct LayersListView: View {
         // opening or closing. Keyed on the SHAPE of the list only: a selection
         // change is not a layout change and never was animated here.
         .animation(.spring(duration: 0.25), value: displays.map(\.row))
+    }
+
+    /// How long a list has to be before it is worth offering to search it.
+    ///
+    /// The list shows about five rows at rest and its grab bar reaches maybe
+    /// fifteen, so a dozen is where scrolling starts to cost something. Under
+    /// it there is no field at all: an ordinary picture with ten layers has
+    /// exactly the list it has always had, and a search box over a list you
+    /// can see the whole of is a control that earns nothing.
+    static let findFieldAppearsOver = 12
+
+    /// Type a few letters and the list shows only the layers whose row says
+    /// them, wherever they are, including inside groups that are shut
+    /// (`next-find-a-layer`). Separating a whole screenshot can put well over a
+    /// hundred pieces in here, and this is how you reach one of them.
+    ///
+    /// It reads the names the list is ALREADY showing, so what can be searched
+    /// for is exactly what can be seen: a piece of text nobody renamed is
+    /// found by the words it holds.
+    @ViewBuilder private var findField: some View {
+        if Experiments.shared.findALayerEnabled,
+           editorState.searchableLayerCount > Self.findFieldAppearsOver
+            || !editorState.layerSearchQuery.isEmpty {
+            @Bindable var editor = editorState
+            HStack(spacing: 5) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                TextField("Find a layer", text: $editor.layerSearchQuery)
+                    .textFieldStyle(.plain)
+                    .font(.caption)
+                    .focused($findFieldFocused)
+                    // Escape empties the box and hands the keyboard back to the
+                    // picture, the way every search field on the Mac does, so
+                    // the next tool letter picks a tool rather than typing into
+                    // a search nobody is reading.
+                    .nameFieldKeys(canCommit: false,
+                                   commit: {},
+                                   revert: {
+                                       editor.layerSearchQuery = ""
+                                       findFieldFocused = false
+                                   })
+                    .playtestField("Find a layer")
+                if !editorState.layerSearchQuery.isEmpty {
+                    Button { editor.layerSearchQuery = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .panelHelp("Clear the search")
+                    .playtestControl("Clear the search")
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary))
+            .padding(.horizontal, EditorChromeLayout.panelListGutter)
+            .padding(.bottom, 6)
+        }
+    }
+
+    /// "3 of 142", under the list while a search is showing. Without it a
+    /// search that finds three rows and a document that HAS three rows look
+    /// exactly the same, and the second one is the one that means you typed
+    /// the wrong thing.
+    @ViewBuilder private func searchCount(showing: Int) -> some View {
+        if editorState.isSearchingLayers {
+            let all = editorState.searchableLayerCount
+            let words = showing == 0
+                ? "No layer says that"
+                : "\(showing) of \(all)"
+            Text(words)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.leading, EditorChromeLayout.panelEdgeInset)
+                .panelEdgePadding()
+                .padding(.top, 4)
+                .panelReadout(words)
+                .playtestField("Search count")
+        }
     }
 
     /// A grabber under the list: drag it to resize the layer area. It is there

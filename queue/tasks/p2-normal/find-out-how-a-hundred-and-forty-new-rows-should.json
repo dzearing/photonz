@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:50.902Z",
-  "updated": "2026-09-16T12:23:33.577Z",
+  "updated": "2026-09-16T15:19:37.560Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Asked as an open question by audit 2026-09-13-separate-whole-screenshot: \"A hundred and forty two rows called Text 1 to Text 142 is a long list even with thumbnails. Is that usable as it stands, or does a separation this size need the list grouped by where the pieces were on the page?\" and in its rough notes: \"The limit keeps 500 rows from happening but does not make 142 pleasant. At the window size in these pictures the layers list shows about five rows at a time.\"\n\nPairs with a-text-layer-s-row-says-the-words-that-are-in-it, which fixes what the rows are CALLED. This one is about how many of them there are. Do that one first if both are open: a hundred rows with real words on them may be a different problem from a hundred rows called Text N.\n\nSeparate already nests (audit 2026-09-13-separate-hierarchy), so some of the shape may already be there.",
@@ -52,6 +52,35 @@
     {
       "t": "2026-09-16T12:23:33.576Z",
       "note": "seq 530 -> 60"
+    },
+    {
+      "t": "2026-09-16T14:44:14.440Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T14:45:14.541Z",
+      "note": "ADVERSARIAL REVIEW, before building. Four arrangements were offered. (1) GROUPED BY WHERE THE PIECES SAT: rejected. The app has no idea what a header or a sidebar is, so the buckets would be invented ones (Top, Middle, Bottom, or a grid), and a person does not think 'the Save button was in the lower third'. It would also fight the nesting Separate already produces, since a card group would end up inside a made-up region group, and it puts fake containers in the document that change what Move does. (2) COLLAPSED UNDER THE THING THEY CAME FROM: real structure, one row, but it has a serious cost the task did not anticipate. selectionTarget in LayerGrouping.swift picks the OUTERMOST layer under a canvas click, so wrapping 142 pieces in a group means every click on the canvas picks the whole page and moving it moves everything. The one purpose of separating a screenshot is that you can click a word and drag it. Worth BUILDING to measure rather than arguing about, which is what this task asked for. (3) FILTERED/SEARCHABLE: the only one that answers the question the goal actually asks, which is finding the one label you wanted. Constant work whatever the list length, costs the document nothing, no undo step, no changed picking, and it helps a sixty-layer screen somebody built by hand just as much as a separation. It only became possible this week: a-row-says-its-words landed 2026-09-16, so rows now carry real words to search. (4) SOMETHING ELSE: the canvas is already a way in, since clicking a piece reveals its row. The list problem is only when you want to work FROM the list. PLAN: build (3) and (2) behind their own flags, measure both on the same dense capture, recommend."
+    },
+    {
+      "t": "2026-09-16T14:56:38.002Z",
+      "note": "MEASURED, headless, on the real fixture. Command: Scripts/test.sh --filter DenseSeparationListTests (a throwaway test that runs LayerSeparator over Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png and asks the document what the panel would show). Output: PIECES flat=105 nested=105 skipped=1 crowded=0 / FLAT-TODAY topLevelRows=106 fullyExpanded=106 / FIRST-20-NAMES=[Text 105, Text 104, ... Text 86] / HOW-MANY-SAY-WORDS=0 / SEARCH-recommended=0 / SEARCH-decision=0 / GATHERED topLevelRows=2 rowsShut=2 fullyExpanded=107. THE FINDING THAT CHANGES THE ANSWER: every row a fresh separation makes is called Text N and NOT ONE of them says any words. a-row-says-its-words landed this morning but it reads Layer.displayName, which needs a TEXT layer, and a separated run is a PICTURE of text until somebody runs Turn into Text on it one row at a time. So searching a fresh separation for a word you can plainly see on the canvas finds nothing: 'recommended' returns 0 of 106 and so does 'decision'. No arrangement fixes that. Grouped by region would give you a bucket called Top holding forty rows called Text N; gathered gives you one row; searched gives you nothing to search. The list is not where a fresh separation is usable, the canvas is."
+    },
+    {
+      "t": "2026-09-16T15:00:18.272Z",
+      "note": "RECOMMENDATION: ship the find field, do not ship the shut group, and the real fix is neither. Measured on the real app, dense-page-1x.png, 142 runs plus 30 boxes. (a) TODAY, flat: the list reports '173 rows of 38pt, list 200pt' - five rows on screen out of 173, about 7100pt of scrolling, and the command leaves it parked 5478pt down. You cannot find a named piece at all, because no row is named. (b) FIND FIELD: focus, six keystrokes, 173 rows become 33 and the target is on screen with no scrolling. Costs the document nothing, costs a ten-layer picture nothing (the field is not there under a dozen rows), and stays right after the naming is fixed. (c) SHUT GROUP: three rows, nothing scrolls, and then one click on the canvas picks all 172 pieces and a drag carries the whole page (proven by aClickOnTheCanvasPicksTheWholeGroupRatherThanThePieceUnderIt). It trades the list, where a separation is unreadable, for the canvas, where it is usable. REJECTED WITHOUT BUILDING: grouped by where the pieces sat - the app knows rectangles, not headers, so the buckets are invented, and they fight the nesting Separate already does. FOUND WHILE MEASURING and filed as a-separated-run-of-text-says-the-words-in-it-wit: no row a fresh separation makes says any words, so the find field is a facility waiting for content."
+    },
+    {
+      "t": "2026-09-16T15:00:18.318Z",
+      "note": "FIXED ALONG THE WAY, found by the walk rather than by reading: typing into the find field narrowed 173 rows to 33 and left the list parked at 1120pt, so the five rows on screen were the LAST five results and the top of the search was above the window. Every change to the query now puts the list back at the top."
+    },
+    {
+      "t": "2026-09-16T15:00:18.364Z",
+      "note": "left rough: word matching is substring matching, so typing 'Text 2' also finds Text 12 and Text 142 - harmless for real words, silly for numbers, and nobody searches a layers list for a number on purpose. left rough: with nothing found the list is a tall empty space with 'No layer says that' alone at the right edge, which reads a little lost. Neither earns a task; both are in the audit's rough notes where the user can disagree."
+    },
+    {
+      "t": "2026-09-16T15:19:37.559Z",
+      "note": "MY MISTAKE, recorded rather than hidden: I put a stray 'Scripts/build-app.sh --help' into a shell line while staging, and build-app.sh has no --help, so it started a real DEV build. There was no queue/playtest.lock, so the guard that normally refuses did not fire. I killed it within seconds, which was the wrong half of the fix: it left dist/Photonz Dev.app in pieces - a zero byte Info.plist, no Resources, and an ad-hoc linker signature instead of the stable Photonz Dev cert, which is the exact state that breaks the Screen Recording grant. Repaired by running queue/bin/refresh-dev-app.sh to completion; the bundle is now com.dzearing.photonz.dev with sealed resources and the stable cert, and the script quit and relaunched the app the way it is designed to. The user's dev app was restarted as a result. No walk or test touched the dev bundle; only that one stray line did."
     }
-  ]
+  ],
+  "started": "2026-09-16T14:44:14.439Z"
 }

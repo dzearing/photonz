@@ -300,3 +300,105 @@ struct SeparateIntoLayersTests {
         #expect(history.current.layers[0].name == "Background")
     }
 }
+
+/// The other half of what a big separation costs: a hundred and forty pieces
+/// arriving in a list that shows five rows at a time. `gatheredAs` puts them in
+/// one group so the list is one row longer rather than a hundred and forty.
+@Suite("A separation that arrives gathered")
+struct SeparateGatheredTests {
+
+    private func capture() -> (document: PhotonzDocument, id: UUID) {
+        let document = PhotonzDocument.withBaseImage(ImageRef(pixelSize: CGSize(width: 400, height: 300)))
+        return (document, document.layers[0].id)
+    }
+
+    private func piece(_ y: CGFloat, _ name: String) -> PhotonzDocument.SeparatedPiece {
+        let rect = CGRect(x: 10, y: y, width: 80, height: 18)
+        return PhotonzDocument.SeparatedPiece(frame: rect, ref: ImageRef(pixelSize: rect.size), name: name)
+    }
+
+    private func patch() -> ImageRef { ImageRef(pixelSize: CGSize(width: 400, height: 300)) }
+
+    @Test func gatheringLeavesOneRowBesideThePicture() {
+        var (document, id) = capture()
+        let pieces = (1...5).map { piece(CGFloat($0) * 20, "Text \($0)") }
+        _ = document.separateIntoLayers(id: id, patched: patch(), pieces: pieces,
+                                        gatheredAs: "Background pieces")
+        #expect(document.layers.map(\.name) == ["Background", "Background pieces"])
+        #expect(document.layers[1].children.map(\.name) == ["Text 1", "Text 2", "Text 3", "Text 4", "Text 5"])
+    }
+
+    @Test func thePiecesComeBackInTheOrderTheyWereHandedOver() throws {
+        var (document, id) = capture()
+        let pieces = (1...5).map { piece(CGFloat($0) * 20, "Text \($0)") }
+        let made = document.separateIntoLayers(id: id, patched: patch(), pieces: pieces,
+                                               gatheredAs: "Background pieces")
+        #expect(made.count == 5)
+        #expect(made.map { document.layer(id: $0)?.name } == ["Text 1", "Text 2", "Text 3", "Text 4", "Text 5"])
+        // ...and every one of them is inside the gathering group, so the list
+        // shows them only once its twist is opened.
+        let group = try #require(document.layers.last)
+        #expect(made.allSatisfy { document.parentID(of: $0) == group.id })
+    }
+
+    @Test func aPieceKeepsItsPlaceOnTheCanvas() throws {
+        var (document, id) = capture()
+        let made = document.separateIntoLayers(id: id, patched: patch(),
+                                               pieces: [piece(120, "Text 1")],
+                                               gatheredAs: "Background pieces")
+        let piece = try #require(made.first)
+        // Inside a group everything is stored against the group's corner, so
+        // the frame on the layer is not the frame on the canvas: what has to
+        // hold is where it LANDS.
+        #expect(document.canvasLayer(id: piece)?.frame == CGRect(x: 10, y: 120, width: 80, height: 18))
+    }
+
+    @Test func notGatheringIsExactlyWhatItAlwaysWas() {
+        var (document, id) = capture()
+        _ = document.separateIntoLayers(id: id, patched: patch(),
+                                        pieces: [piece(20, "Text 1"), piece(40, "Text 2")])
+        #expect(document.layers.map(\.name) == ["Background", "Text 1", "Text 2"])
+    }
+
+    @Test func nothingToGatherGathersNothing() {
+        var (document, id) = capture()
+        #expect(document.separateIntoLayers(id: id, patched: patch(), pieces: [],
+                                            gatheredAs: "Background pieces").isEmpty)
+        #expect(document.layers.map(\.name) == ["Background"])
+    }
+
+    /// The price of gathering, written down rather than argued about: the one
+    /// thing a fresh separation is good for is clicking a piece on the canvas
+    /// and dragging it, and a group in the way takes that.
+    @Test func aClickOnTheCanvasPicksTheWholeGroupRatherThanThePieceUnderIt() throws {
+        var (document, id) = capture()
+        let made = document.separateIntoLayers(id: id, patched: patch(),
+                                               pieces: [piece(120, "Text 1")],
+                                               gatheredAs: "Background pieces")
+        let group = try #require(document.layers.last)
+        let inThePiece = CGPoint(x: 50, y: 129)
+        let picked = try #require(document.selectionTarget(at: inThePiece, inside: nil))
+        #expect(picked.id == group.id)
+        #expect(picked.id != made.first)
+        // ...and once you have double clicked in, the piece itself answers.
+        #expect(document.selectionTarget(at: inThePiece, inside: group.id)?.id == made.first)
+    }
+
+    /// The same click with the pieces loose, which is what it does today.
+    @Test func loosePiecesArePickedByOneClick() throws {
+        var (document, id) = capture()
+        let made = document.separateIntoLayers(id: id, patched: patch(),
+                                               pieces: [piece(120, "Text 1")])
+        #expect(document.selectionTarget(at: CGPoint(x: 50, y: 129), inside: nil)?.id == made.first)
+    }
+
+    @Test func theGatheringGroupSitsDirectlyOverThePictureAndNotOverEverything() {
+        var (document, id) = capture()
+        document.layers.append(Layer(name: "Arrow",
+                                     content: .image(ImageRef(pixelSize: .init(width: 4, height: 4))),
+                                     frame: CGRect(x: 0, y: 0, width: 40, height: 40)))
+        _ = document.separateIntoLayers(id: id, patched: patch(), pieces: [piece(20, "Text 1")],
+                                        gatheredAs: "Background pieces")
+        #expect(document.layers.map(\.name) == ["Background", "Background pieces", "Arrow"])
+    }
+}
