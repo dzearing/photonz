@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 340,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:47:48.900Z",
-  "updated": "2026-09-15T12:14:53.643Z",
+  "updated": "2026-09-16T07:01:23.324Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on a CLEAN tree (git stash, swift build, run), so this is not from the group turning work.\n\n$ Scripts/playtest.sh Scripts/playtest/turn-into-a-picture-walk.json\n  [37 shortcut] FAILED: command+z is Edit > Undo, but that item has no action behind it, so pressing it does nothing. macOS will not give a background app focus, so SwiftUI leaves the probes menu bar frozen at its launch state: every window-scoped command is dimmed and empty for the whole walk, however the document changes. Use an `action` step for the outcome and keep a `key` step if you want the press on record.\n  \"status\" : \"failed\"\n\nThe harness already suggests the workaround (an `action` step with action undo), which is what Scripts/playtest/turn-a-group-walk.json does. Either fix turn-into-a-picture-walk the same way, or make the harness fall back to the action when the menu item is dead so no walk has to know.",
@@ -41,6 +41,39 @@
     {
       "t": "2026-09-15T12:14:53.642Z",
       "note": "seq 300 -> 340"
+    },
+    {
+      "t": "2026-09-16T06:48:15.390Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T07:01:12.528Z",
+      "note": "Adversarial review before building. Fixing just this one walk (swap the chord for an `action` step) is cheapest but leaves the trap set: every future walk that reaches for Command Z fails on the same macOS fact, and the walk's author has to already know it. Making the harness stand in is the shortest thing that removes the trap once. The risk is a walk passing on a chord that would be dead for a person, so the stand-in only fires when the menu item EXISTS carrying that chord, only for chords written down by hand, and it says in the log line that the press did not run the item. `key` steps are left alone on purpose: three walks (undo-shortcut, panel-change-can-be-taken-back, tutorial-layers-and-undo) exist to document that the chord does nothing, and changing `key` would rewrite what they prove."
+    },
+    {
+      "t": "2026-09-16T07:01:17.125Z",
+      "note": "Built: PlaytestMenuStandIn in PhotonzCore is the table of what a chord means (Command Z = undo, Shift Command Z = redo, the copies, the cut, the three zooms), with tests first. The harness's `shortcut` step now runs the stand-in when the menu item it found is dimmed and empty, and writes one line that cannot be misread as the press having worked: 'command+z is Edit > Undo. THE PRESS DID NOT RUN IT: <the frozen menu bar, in words>. The item carries the chord, so the walk ran what the press meant, action undo, directly instead.' A chord with no stand-in still fails the walk, and now says to add one."
+    },
+    {
+      "t": "2026-09-16T07:01:17.168Z",
+      "note": "Reviewed the built thing on the real app and found the walk had a SECOND problem the step 37 failure was hiding. With the chord working the walk went green while nothing it describes had happened: turn-5-turned-doc.png and turn-6-piece-out-doc.png were byte-identical, so the piece never came out, and the row menu after the turn still offered 'Turn Into Picture…', so the shape was never turned. The cause was the walk answering the confirmation sheet with `key return`, which never reaches an NSAlert's default button: a capture taken afterwards shows the sheet still standing. Fixed the walk to press the button by name, which the `press` step already reaches into a sheet for: { do: press, control: 'Turn Into Picture', in: 'Sheet' }. Now the turn really happens, the piece really comes out, and the two Command Z presses really put it back (layers 2 and canUndo still true after both, turn-7-shape-back.png identical to turn-5 as it should be). A walk that passes while proving nothing is worse than one that fails, so this was part of the task, not a detour."
+    },
+    {
+      "t": "2026-09-16T07:01:23.194Z",
+      "note": "Verification, and its one honest limit. The Mac's screen reported LOCKED for this whole run, so every walk here was run with PHOTONZ_ALLOW_LOCKED_WALK=1, which the harness documents as being for working on the harness itself. That buys the run, not the verdict: this task still owes one clean pass of turn-into-a-picture-walk on an unlocked screen. What did run: Scripts/test.sh green, 7472 tests in 598 suites; turn-into-a-picture-walk status ok, 55 steps, with 6 real window captures; the other ten walks that use a `shortcut` step re-run, of which history-menu-title, history-thumbnail-shapes, history-tooltips and undo-shortcut pass and five fail. All five failures reproduce on a clean tree (git stash, rebuild, re-run), so none of them is from this change."
+    },
+    {
+      "t": "2026-09-16T07:01:23.236Z",
+      "note": "left rough: the five walks above (copy-a-look, menu-checkmarks, motion-strip-way-back, motion-timing-strip, panel-name) fail on two things that both read like the locked screen rather than the app. copy-a-look and the two motion walks fail at `panelMenu` with 'no menu called Add Effect / Add Motion is in the window' while listing those very menus with EMPTY names, which is the exact symptom the lock guard warns about (the control names SwiftUI hands to AppKit never arrive). menu-checkmarks and panel-name fail at `menuShot` on the frozen menu bar. Not filed: a sweep is already pending and will settle all five once the screen is unlocked, and filing five p2 bugs off readings the harness itself says are not evidence is how the queue fills with ghosts."
+    },
+    {
+      "t": "2026-09-16T07:01:23.279Z",
+      "note": "left rough: the lock reading may be over-firing. queue/bin/sweep.sh status says the whole sweep has been held since 2026-09-16T06:48Z because the screen is locked, yet every run under the override took real screen captures at 2560x1800 that show the window drawn correctly, step by step, including the sheet and the layer row menu. So the window IS being composited while CGSSessionScreenIsLocked reads true, which would mean the loop's only whole-app signal is held back for nothing. Not filed: one sample, I cannot tell a real lock from a display asleep with a password asked for, and the lock guard was hard won. If a later pass sees the same thing, it has stopped being a one-off."
+    },
+    {
+      "t": "2026-09-16T07:01:23.323Z",
+      "note": "No audit written: this is harness plumbing with nothing in the app for the user to try. What a person would notice is only that walks stop lying about undo."
     }
-  ]
+  ],
+  "started": "2026-09-16T06:48:15.389Z"
 }

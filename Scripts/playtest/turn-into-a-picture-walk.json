@@ -141,8 +141,9 @@
       "note": "the sheet asks 'Turn “Rectangle” into a picture?' and says the shape stops being editable. Nothing has changed yet: canUndo must still be whatever step 1 left it"
     },
     {
-      "do": "key",
-      "key": "return"
+      "do": "press",
+      "control": "Turn Into Picture",
+      "in": "Sheet"
     },
     {
       "do": "wait",

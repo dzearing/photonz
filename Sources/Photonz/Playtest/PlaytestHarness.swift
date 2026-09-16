@@ -480,9 +480,26 @@ private final class Run {
             // and it is also why a window-scoped shortcut cannot be pressed in
             // a walk at all. See `Self.frozenMenuBar` for the whole finding.
             guard destination.item.action != nil else {
-                throw Failure(description: "\(chord) is \(destination.path), but that item has no action behind it, "
-                    + "so pressing it does nothing. \(Self.frozenMenuBar) "
-                    + "Use an `action` step for the outcome and keep a `key` step if you want the press on record.")
+                // The item is dead because of how a WALK is launched, not
+                // because of anything the app did: the same item is live the
+                // moment a person has the window. So stopping here told a walk
+                // nothing it could act on, and every walk that reached for
+                // ⌘Z failed on the same macOS fact. Where the chord has a
+                // stand-in, run what the press meant and say so in one line
+                // nobody can misread as the press having worked.
+                guard let standIn = PlaytestMenuStandIn.action(for: key, modifiers: modifiers) else {
+                    throw Failure(description: "\(chord) is \(destination.path), but that item has no action behind it, "
+                        + "so pressing it does nothing, and no stand-in is written down for this chord. "
+                        + "\(Self.frozenMenuBar) "
+                        + "Use an `action` step for the outcome and keep a `key` step if you want the press on record, "
+                        + "or add the chord to PlaytestMenuStandIn so every walk gets it.")
+                }
+                note(number, step.name,
+                     "\(chord) is \(destination.path). THE PRESS DID NOT RUN IT: \(Self.frozenMenuBar) "
+                     + "The item carries the chord, so the walk ran what the press meant, `action \(standIn.rawValue)`, "
+                     + "directly instead. This says nothing about whether the menu would be live for a person.")
+                try await perform(.action(standIn), number: number)
+                return
             }
             let takenBy = press(key, modifiers: modifiers, in: window)
             guard takenBy == "menu" else {

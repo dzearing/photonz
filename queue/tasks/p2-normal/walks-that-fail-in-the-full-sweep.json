@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T00:29:59.887Z",
+  "updated": "2026-09-16T07:02:07.788Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -227,6 +227,14 @@
     {
       "t": "2026-09-16T00:29:59.886Z",
       "note": "Two more, both reproduced on UNMODIFIED main (git stash, rebuild, run) on 2026-09-15 17:2x, so neither is the layers-list work that was in flight beside them:\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh motion-swings-a-layer\n  motion-swings-a-layer-walk  5s  FAILED  step 10 (expect): no field called \"Motion Empty\" is in the panel; the ones that are: Opacity, Blending, Corner Radius\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh colour-onto-a-layer-row\n  colour-onto-a-layer-row-walk  18s  FAILED\n\nThe motion one looks like fallout from the motion work that landed 2026-09-15 (the Motion section's own fields moved), so it is worth reading beside those commits. Caveat on both: the Mac has been locked since 2026-09-14 20:46, so these ran under PHOTONZ_ALLOW_LOCKED_WALK=1 and a locked-screen artefact cannot be ruled out. tutorial-layers-and-undo-walk also fails, and that one IS the lock (it waits on a tutorial anchor, which needs a drawn window) - already covered by an-audit-gets-a-real-picture-of-the-app-again."
+    },
+    {
+      "t": "2026-09-16T07:01:25.727Z",
+      "note": "also seen on 2026-09-16 while fixing the Command Z chord: copy-a-look, motion-strip-way-back and motion-timing-strip all fail at `panelMenu` with 'no menu called Add Effect / Add Motion is in the window', and the listing right after it shows those menus present with EMPTY names. menu-checkmarks and panel-name fail at `menuShot` on the frozen menu bar. All five reproduce on a clean tree, but every run was under PHOTONZ_ALLOW_LOCKED_WALK=1 because the screen was locked, and a missing control name is the exact symptom a locked screen produces, so treat these five as unsettled until the pending sweep runs unlocked."
+    },
+    {
+      "t": "2026-09-16T07:02:07.787Z",
+      "note": "turn-into-a-path-walk now has an owner: pressing-return-answers-a-question-the-app-asks. It fails at step 42 (expectPath: no path in the document) because step 40 answers the confirmation sheet with `key return` and the press never reaches the button. Same root cause made turn-into-a-picture-walk pass while proving nothing until 2026-09-16."
     }
   ]
 }
