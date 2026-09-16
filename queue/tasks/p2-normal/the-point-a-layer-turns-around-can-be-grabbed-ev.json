@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:56.205Z",
-  "updated": "2026-09-16T20:28:51.110Z",
+  "updated": "2026-09-16T20:29:02.975Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-motion-pivot.json: \"The crosshair is read AFTER the box's own resize handles and the turn knob, so a pivot parked within about eleven points of a corner cannot be grabbed on the canvas; it can still be set from the Around menu or the At boxes. Resizing has no other way in, which is why it was ordered this way.\"\n\nThis is the SECOND time in two days that the order canvas chrome is read in has been wrong in this direction. The other: queue/audits/2026-09-15-path-points-under-the-pen.json says \"The pointer cue over a path's points used to be read AFTER the canvas's own boundary handles, which is the opposite of the order the press itself uses. Moving it fixed that mismatch as a side effect; nothing was ever reported about it.\" Two hand-rolled answers to the same question means the canvas needs ONE written order for what a press over overlapping chrome hits, and whoever takes this should write it down rather than reorder a third list. That is the part that stops a fourth.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-16T20:28:51.109Z",
       "note": "left rough: a crosshair parked EXACTLY on the turn knob takes the knob's presses, because the tie rule gives it to the mark drawn on the picture. Turning is still reachable through the A field and dragging the crosshair away gives the knob back, and nobody has hit it, so it is written into the audit's rough for the user to react to rather than filed as its own task."
+    },
+    {
+      "t": "2026-09-16T20:29:02.973Z",
+      "note": "One written canvas hit order (docs/design/canvas-hit-order.md) plus the code that follows it: CanvasHitOrder in PhotonzCore (16 tests), Handles.grab / CornerRadiusHandles.grab / CanvasPointer.contentGrab, and one motionPivotTakesPress that both mouseDown and the pointer cue call. A crosshair parked on a corner now takes the press aimed at it; the turn knob and the other seven handles are untouched. New expectCue walk step (parse tested) and new walk motion-pivot-in-a-corner-walk.json. Verified: 7759 unit tests green, probe builds. NOT verified in the running app: the screen was locked all task, so the new walk has never run and the audit ships with no picture. Sweep requested. Audit: queue/audits/2026-09-16-pivot-in-a-corner.json. Commit 43fc946e, pushed."
     }
   ],
-  "started": "2026-09-16T20:18:19.559Z"
+  "started": "2026-09-16T20:18:19.559Z",
+  "completed": "2026-09-16T20:29:02.974Z"
 }
