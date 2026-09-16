@@ -2458,6 +2458,31 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A shelf is built in two places from one catalogue — the menu bar once at
+    // launch, the window every time it is drawn — so a feature switched off
+    // that reaches only one of them has to fail the walk.
+    @Test("A walk claims which tutorial shelves are on offer and which are not")
+    func expectTutorialTracksClaimsBothWays() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTutorialTracks",
+                       "with": ["Basics"], "without": ["Redlining"] } ] }
+        """)
+        guard case .expectTutorialTracks(let with, let without) = script.steps[0] else {
+            Issue.record("expected an expectTutorialTracks step")
+            return
+        }
+        #expect(with == ["Basics"])
+        #expect(without == ["Redlining"])
+    }
+
+    @Test("An expectTutorialTracks step that claims nothing is refused")
+    func expectTutorialTracksHasToClaimSomething() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(
+                Data("{ \"steps\": [ { \"do\": \"expectTutorialTracks\" } ] }".utf8))
+        }
+    }
+
     // MARK: - Setup a walk can ask for
 
     // Two walks only ever passed on their first run on a machine: one changed
@@ -2530,6 +2555,65 @@ struct PlaytestScriptTests {
         #expect(!script.setup.isEmpty)
     }
 
+    // A guide, and plenty else, is only there when a feature is switched on in
+    // the Experiments window. Until this, a walk could only run the app as it
+    // came, so the flags-off half of a feature was checked by hand with
+    // `defaults write` and put back by memory, and a walk written for it passed
+    // either way.
+    @Test("A walk says which features to switch on and off for its run")
+    func setupNamesTheFlagsToSwitch() throws {
+        let script = try decode("""
+        { "setup": { "flags": { "\(FeatureCatalog.measureModesFlag)": false,
+                                "\(FeatureCatalog.measurePanelFlag)": true } },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.flags == [
+            PlaytestFlagChoice(name: FeatureCatalog.measureModesFlag, isEnabled: false),
+            PlaytestFlagChoice(name: FeatureCatalog.measurePanelFlag, isEnabled: true),
+        ])
+        #expect(!script.setup.isEmpty)
+    }
+
+    // Sorted rather than left in whatever order the JSON parser hands back, so
+    // the line the log writes about what this walk changed reads the same every
+    // run and two runs can be compared.
+    @Test("The flags a walk names come out in a steady order")
+    func setupFlagsAreInASteadyOrder() throws {
+        let script = try decode("""
+        { "setup": { "flags": { "\(FeatureCatalog.measurePanelFlag)": false,
+                                "\(FeatureCatalog.measureModesFlag)": false } },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.flags.map(\.name)
+                == [FeatureCatalog.measureModesFlag, FeatureCatalog.measurePanelFlag].sorted())
+    }
+
+    // The whole reason for naming them: a walk that asks for a feature nobody
+    // has heard of has to fail loudly. Switching nothing and passing anyway is
+    // the bug this replaces.
+    @Test("A feature nobody has heard of is refused")
+    func unknownFlagIsRefused() throws {
+        do {
+            _ = try decode("{ \"setup\": { \"flags\": { \"next-measur-modes\": false } }, \"steps\": [] }")
+            Issue.record("expected \"next-measur-modes\" to be refused")
+        } catch let error as PlaytestScriptError {
+            #expect(error.description.contains("next-measur-modes"))
+            #expect(error.description.contains("flags"))
+        }
+    }
+
+    @Test("Flags have to be an object of on and off, not anything else")
+    func setupFlagsShapeIsChecked() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(
+                Data("{ \"setup\": { \"flags\": [\"next-measure-modes\"] }, \"steps\": [] }".utf8))
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(
+                Data("{ \"setup\": { \"flags\": { \"next-measure-modes\": \"off\" } }, \"steps\": [] }".utf8))
+        }
+    }
+
     // A misspelled memory is the whole point of naming them: it has to come
     // back naming the ones that exist, not silently forget nothing.
     @Test("An unknown memory says which ones there are")
@@ -2553,6 +2637,7 @@ struct PlaytestScriptTests {
             #expect(error.description.contains("seed"))
             #expect(error.description.contains("forget"))
             #expect(error.description.contains("captures"))
+            #expect(error.description.contains("flags"))
         }
     }
 

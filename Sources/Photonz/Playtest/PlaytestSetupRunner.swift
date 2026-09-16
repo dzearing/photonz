@@ -129,6 +129,27 @@ struct PlaytestSetupRunner {
             let placed = try makeScratch(setup.scratch, besides: scriptURL)
             said.append("gave the walk its own copy of \(placed.joined(separator: ", "))")
         }
+        // The features this walk named were switched before the app finished
+        // launching, because the menu bar is built once and a feature switched
+        // off after that still has its rows in it. All that is left here is to
+        // say so in the log, and to fail the walk when they could not be set:
+        // a walk running with the app exactly as it came, claiming otherwise,
+        // is the thing this replaces.
+        // Said whatever this walk asked for, because it is about the machine
+        // rather than about the walk: a run before this one was killed with a
+        // feature still switched, and the launch put it back.
+        if let recovered = PlaytestFlagOverrides.recoveryNote { said.append(recovered) }
+        if !setup.flags.isEmpty {
+            if let problem = PlaytestFlagOverrides.problem {
+                throw PlaytestSetupError(description: problem)
+            }
+            guard let report = PlaytestFlagOverrides.report else {
+                throw PlaytestSetupError(
+                    description: "setup names features to switch, and none were switched; the walk was "
+                        + "started some way that does not read its script before the app is built")
+            }
+            said.append(report)
+        }
         return said.isEmpty ? "nothing asked for" : said.joined(separator: "; ")
     }
 
@@ -224,6 +245,12 @@ struct PlaytestSetupRunner {
         return ledger.report + "; changed without saying so: "
             + quiet.map(\.rawValue).joined(separator: ", ")
     }
+
+    /// Puts every feature the walk switched back where it found it. Separate
+    /// from `restoreSettings` because the flags are not one of the areas of
+    /// memory a walk can forget: they were moved before the walk was even
+    /// parsed, so they are put back by the code that moved them.
+    func restoreFlags() -> String? { PlaytestFlagOverrides.restore() }
 
     /// Puts the shared component shelf back to what it was before step one.
     /// Says so only when the walk actually changed it.

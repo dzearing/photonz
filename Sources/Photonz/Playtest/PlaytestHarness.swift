@@ -345,6 +345,7 @@ private final class Run {
         // Then every remembered setting, so the walk after this one starts from
         // the machine this one did rather than from whatever this one left.
         note(steps, "setup", setupRunner.restoreSettings())
+        if let flags = setupRunner.restoreFlags() { note(steps, "setup", flags) }
         if let shelf = setupRunner.restoreSharedShelf() { note(steps, "setup", shelf) }
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
@@ -1445,6 +1446,38 @@ private final class Run {
             }
             await sleep(0.4)
             note(number, step.name, "drawing \(which.rawValue)", state: describe())
+
+        // Both places a tutorial shelf shows, asked together. The menu bar is
+        // built once at launch and the window every time it is drawn, so a
+        // feature switched off that reaches one and not the other is exactly
+        // what this is here to catch.
+        case .expectTutorialTracks(let wanted, let unwanted):
+            let inMenu = Self.tutorialTracksInHelpMenu()
+            guard let hub = TutorialHubProbe.window() else {
+                throw Failure(description: "expectTutorialTracks reads the Tutorials window as well as "
+                              + "the menu, and it is not open; run the showTutorials action first")
+            }
+            let said = WindowReadProbe.fullReading(in: hub).map(\.label).filter { !$0.isEmpty }
+            let inWindow = TutorialTrack.allCases
+                .filter { Self.tutorialTrack($0, isReadableIn: said) }
+                .map(\.title)
+            var wrong: [String] = []
+            for track in wanted {
+                if !inMenu.contains(track) { wrong.append("\(track) is not in Help, and should be") }
+                if !inWindow.contains(track) { wrong.append("\(track) is not in the Tutorials window, and should be") }
+            }
+            for track in unwanted {
+                if inMenu.contains(track) { wrong.append("\(track) is still in Help") }
+                if inWindow.contains(track) { wrong.append("\(track) is still in the Tutorials window") }
+            }
+            guard wrong.isEmpty else {
+                throw Failure(description: wrong.joined(separator: "; ")
+                              + ". Help offers \(inMenu.joined(separator: ", ")); "
+                              + "the window offers \(inWindow.joined(separator: ", "))")
+            }
+            note(number, step.name,
+                 "Help ▸ Tutorials offers \(inMenu.joined(separator: ", ")); "
+                 + "the Tutorials window offers \(inWindow.joined(separator: ", "))")
 
         case .menus(let stage, let menu):
             let tree = try readMenuBar(only: menu)
@@ -5916,6 +5949,36 @@ private final class Run {
     /// Without it an item that renames itself ("Show History" becoming "Hide
     /// History") reports whatever title it was last left with, which is exactly
     /// the sort of "verified" that is not.
+    /// Whether a shelf is really on offer in the Tutorials window, read the way
+    /// somebody listening to it would hear it.
+    ///
+    /// Two ways, because a shelf says itself twice. Its heading is one combined
+    /// element reading "Redlining. Measure a screenshot and ... 0 of 5
+    /// finished.", and each guide on it says its own title. Either is the shelf
+    /// being there; NEITHER is it being gone, which is the claim a walk with a
+    /// feature switched off is making.
+    static func tutorialTrack(_ track: TutorialTrack, isReadableIn said: [String]) -> Bool {
+        if said.contains(where: { $0 == track.title || $0.hasPrefix("\(track.title). ") }) {
+            return true
+        }
+        let titles = TutorialCatalog.guides(in: track).map(\.title)
+        return said.contains { line in titles.contains { line.contains($0) } }
+    }
+
+    /// The tutorial shelves Help is offering, by the name a person reads.
+    /// Read off the live menu rather than off the catalogue, because the whole
+    /// question is whether the menu that was BUILT agrees with the catalogue.
+    static func tutorialTracksInHelpMenu() -> [String] {
+        guard let help = NSApp.mainMenu?.items.first(where: { $0.title == "Help" }),
+              let tutorials = help.submenu?.items
+                  .first(where: { $0.title == TutorialMenuModel.menuTitle })?.submenu else {
+            return []
+        }
+        tutorials.update()
+        let titles = TutorialTrack.allCases.map(\.title)
+        return tutorials.items.map(\.title).filter { titles.contains($0) }
+    }
+
     private func readMenuBar(only wanted: String?) throws -> [String: Any] {
         guard let bar = NSApp.mainMenu else { throw Failure(description: "the app has no menu bar yet") }
         bar.update()

@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-shelf-measure-off-walk",
+  "seed": "Somebody has switched the measure features off in Experiments. Every guide on the Redlining shelf teaches one of them, so the shelf is not a shelf any more: it is gone from Help and gone from the Tutorials window, with no dimmed row and no empty submenu left behind. This is the flags-off half of the tutorials work, and until a walk could switch a feature off for its own run it was checked by hand and put back by memory.",
+  "setup": {
+    "forget": ["tutorials", "measure"],
+    "flags": { "next-measure-modes": false, "next-measure-panel": false }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "0-menu", "note": "Help ▸ Tutorials with the measure features off: Basics is still there, Redlining is not, and there is no empty Redlining submenu standing in for it" },
+    { "do": "menus", "stage": "help-measure-off", "menu": "Help" },
+
+    { "do": "action", "action": "showTutorials" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectTutorialTracks", "with": ["Basics"], "without": ["Redlining"] },
+    { "do": "describe", "stage": "1-window", "note": "the Tutorials window says the same thing as the menu: no Redlining shelf, and nothing explaining why" },
+    { "do": "snapshot", "name": "1-no-redlining-shelf", "window": "Tutorials" },
+    { "do": "action", "action": "readTutorialWindow" },
+    { "do": "action", "action": "closeTutorials" }
+  ]
+}

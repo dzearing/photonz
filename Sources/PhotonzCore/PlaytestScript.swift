@@ -154,6 +154,15 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// to it, say — so it starts from the same nothing every time and leaves no
     /// trace. Paths are relative to the script, or absolute.
     public var scratch: [String]
+    /// Features to switch on or off for the length of the walk, and put back
+    /// afterwards, named the way the Experiments window names them.
+    ///
+    /// A guide is only offered when the feature it teaches is switched on, and
+    /// plenty else in the app reads a flag the same way, so "what this looks
+    /// like switched off" is half of what a walk has to be able to say. Before
+    /// this it could not: the flags were changed by hand with `defaults write`
+    /// and put back by memory, and the walk written for it passed either way.
+    public var flags: [PlaytestFlagChoice]
     /// Guide steps this walk EXPECTS to find nothing to ring, named
     /// "<guide>/<step>".
     ///
@@ -167,19 +176,22 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var expectNoControl: [String]
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
-                scratch: [String] = [], expectNoControl: [String] = []) {
+                scratch: [String] = [], expectNoControl: [String] = [],
+                flags: [PlaytestFlagChoice] = []) {
         self.forget = forget
         self.captures = captures
         self.scratch = scratch
         self.expectNoControl = expectNoControl
+        self.flags = flags
     }
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
+            && flags.isEmpty
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["forget", "captures", "expectNoControl", "scratch"]
+    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "scratch"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -197,7 +209,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         if let stray = fields.keys.sorted().first(where: { !Self.knownKeys.contains($0) }) {
             throw PlaytestScriptError.invalidSetup(
                 field: stray, reason: "is not something setup can ask for; it takes "
-                    + Self.knownKeys.joined(separator: " and "))
+                    + Self.knownKeys.joined(separator: ", "))
         }
         // "all" is the word for a machine that has never run Photonz, which is
         // what most walks want and what none of them can name without listing
@@ -220,7 +232,36 @@ public struct PlaytestSetup: Sendable, Equatable {
                   captures: try Self.words(fields["captures"], field: "captures"),
                   scratch: try Self.words(fields["scratch"], field: "scratch"),
                   expectNoControl: try Self.words(fields["expectNoControl"],
-                                                  field: "expectNoControl"))
+                                                  field: "expectNoControl"),
+                  flags: try Self.choices(fields["flags"]))
+    }
+
+    /// Reads `"flags": { "<feature>": true, "<other>": false }`.
+    ///
+    /// A name no release has a feature for is refused here rather than applied
+    /// to nothing: a walk that switches nothing off and then claims the app
+    /// looks right switched off is worse than no walk at all. Sorted by name,
+    /// so the line the log writes about what was changed reads the same every
+    /// run.
+    private static func choices(_ raw: Any?) throws -> [PlaytestFlagChoice] {
+        guard let raw, !(raw is NSNull) else { return [] }
+        guard let object = raw as? [String: Any] else {
+            throw PlaytestScriptError.invalidSetup(
+                field: "flags", reason: "must be an object naming each feature and whether it is on: "
+                    + "{ \"next-measure-modes\": false }")
+        }
+        return try object.keys.sorted().map { name in
+            guard let value = object[name] as? Bool else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "flags", reason: "says \"\(name)\" is something other than true or false")
+            }
+            guard PlaytestFlagChoice.isKnownFeature(name) else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "flags", reason: "names \"\(name)\", which is no feature this app has; "
+                        + "the names are the ones in the Experiments window")
+            }
+            return PlaytestFlagChoice(name: name, isEnabled: value)
+        }
     }
 
     private static func words(_ raw: Any?, field: String) throws -> [String] {
@@ -274,6 +315,31 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// put the strip away and did not put it back would hand every later walk
     /// a window with no strip in it, and no walk could say why.
     case motion
+}
+
+/// One feature a walk switches on or off for the length of its run.
+///
+/// The name is the one the Experiments window shows, so a walk reads like the
+/// setting a person would change by hand, and the harness puts it back however
+/// the run ends.
+public struct PlaytestFlagChoice: Sendable, Hashable, Codable {
+    public let name: String
+    public let isEnabled: Bool
+
+    public init(name: String, isEnabled: Bool) {
+        self.name = name
+        self.isEnabled = isEnabled
+    }
+
+    /// Whether any release has a feature by this name. Asked of every release
+    /// rather than of the one running, because the script is parsed before
+    /// anything knows which release this launch is; the harness asks the
+    /// narrower question when it applies them.
+    static func isKnownFeature(_ name: String) -> Bool {
+        Release.allCases.contains { release in
+            FeatureCatalog.flags(for: release).contains { $0.name == name }
+        }
+    }
 }
 
 /// A key the script can press, named the way a person would type it: a single
@@ -1698,6 +1764,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// exactly right (`TutorialLauncher`). Panels do not count, so a callout or
     /// a tooltip floating over a window is never mistaken for one.
     case expectWindows(titled: String, count: Int)
+    /// Which tutorial shelves must be on offer right now, and which must not,
+    /// by the name a person reads ("Redlining").
+    ///
+    /// Asked of BOTH places a shelf shows: Help ▸ Tutorials, and the Tutorials
+    /// window, which has to be open. They are built from the same catalogue but
+    /// at different moments — the menu bar once at launch, the window every
+    /// time it is drawn — so a feature switched off that reaches only one of
+    /// them is exactly the kind of thing that goes unnoticed.
+    case expectTutorialTracks(with: [String], without: [String])
     /// Where a measurement's ends are right now, and what it reads.
     ///
     /// A picture cannot settle this. The feet are two dots a few points across
@@ -2023,7 +2098,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2076,6 +2151,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
         case .expectWindows: "expectWindows"
+        case .expectTutorialTracks: "expectTutorialTracks"
         case .expectFeet: "expectFeet"
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
@@ -2499,6 +2575,15 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of windows is a whole number, zero or more, not \(howMany)")
             }
             self = .expectWindows(titled: titled, count: Int(howMany))
+        case "expectTutorialTracks":
+            let with = try f.optionalStrings("with")
+            let without = try f.optionalStrings("without")
+            guard !with.isEmpty || !without.isEmpty else {
+                throw f.invalid("without", "expectTutorialTracks has to claim something: \"with\" "
+                    + "naming the shelves that must be on offer, \"without\" naming the ones that "
+                    + "must not be, or both")
+            }
+            self = .expectTutorialTracks(with: with, without: without)
         case "expectFeet":
             let start = fields["start"] == nil ? nil : try f.point("start")
             let end = fields["end"] == nil ? nil : try f.point("end")

@@ -11,6 +11,13 @@ struct PhotonzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        #if PHOTONZ_PLAYTEST
+        // Before anything reads a feature flag, and before the menu bar exists:
+        // a walk that says it runs with a feature switched off has to have it
+        // off while the Help menu is being built, or the shelf it claims is
+        // gone is still hanging there (`PlaytestFlagOverrides`).
+        PlaytestFlagOverrides.applyEarly()
+        #endif
         // The document model measures text — a box around words has to know how
         // tall the words are — and it is pure, so CoreText's answer is handed
         // in here, once, before any document exists.

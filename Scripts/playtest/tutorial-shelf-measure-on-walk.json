@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-shelf-measure-on-walk",
+  "seed": "The other half of the same claim: with the measure features switched on, the Redlining shelf is back in Help and back in the Tutorials window. Run beside tutorial-shelf-measure-off-walk, the pair is what says the shelf follows the setting rather than following nothing.",
+  "setup": {
+    "forget": ["tutorials", "measure"],
+    "flags": { "next-measure-modes": true, "next-measure-panel": true }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "0-menu", "note": "Help ▸ Tutorials with the measure features on: the Redlining shelf is there, holding the guides that teach them" },
+    { "do": "menus", "stage": "help-measure-on", "menu": "Help" },
+
+    { "do": "action", "action": "showTutorials" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectTutorialTracks", "with": ["Basics", "Redlining"] },
+    { "do": "describe", "stage": "1-window", "note": "the Tutorials window carries the Redlining shelf and its guides" },
+    { "do": "snapshot", "name": "1-redlining-shelf-is-back", "window": "Tutorials" },
+    { "do": "action", "action": "readTutorialWindow" },
+    { "do": "action", "action": "closeTutorials" }
+  ]
+}

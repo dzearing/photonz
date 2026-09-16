@@ -170,6 +170,7 @@ or fail. The `setup` line is logged as step 0, so the log says what was done.
 | `forget` | a list of memories (below) | Those settings go back to the values a machine that had never run Photonz would have, before the first step. |
 | `captures` | picture files, relative to the script or absolute | Each is copied into the capture folder (`~/Pictures/Screenshots`) so the Library's Media shelf has it, and taken away again at the end. A name already taken there fails the walk rather than writing over someone's screenshot. |
 | `expectNoControl` | guide steps, named `"<guide>/<step>"` | Those steps are expected to point at a control that is NOT there, and the usual check turns around for them: the step has to find nothing, or the walk fails saying the declaration is out of date. For the rare walk that exercises the fallback on purpose, like skipping every step of the trim guide so nothing is trimmed and there is no Save button to ring. |
+| `flags` | features and whether each is on: `{ "next-measure-modes": false }` | Those features are switched for the length of the run and put back at the end, however it ends. The names are the ones in the Experiments window. |
 | `scratch` | files, relative to the script or absolute | Each is copied into an EMPTY FOLDER OF THE WALK'S OWN, made fresh for the run and thrown away at the end. The walk names one as `"scratch/<file name>"` wherever a step takes a file. This is for a walk that WRITES beside the picture it opened — `saveLayers` keeps the layers next to it — so it starts from the same nothing every time and leaves nothing behind. |
 
 The memories a walk can forget, by the word it uses:
@@ -187,6 +188,38 @@ The memories a walk can forget, by the word it uses:
 | `frames` | The size a new frame is offered at, which is the last one made. |
 | `tutorials` | Which guides have been finished, and where you stopped in any left part way. |
 | `motion` | Whether the timing strip across the bottom is open or put away to its row. |
+
+#### Switching a feature off for one walk
+
+A guide is only offered when the feature it teaches is switched on, and plenty
+else in the app reads a flag the same way, so "what this looks like switched
+off" is half of what a walk has to be able to say. Name the features in `flags`:
+
+```json
+{ "setup": { "flags": { "next-measure-modes": false, "next-measure-panel": false } } }
+```
+
+Three things to know about it:
+
+- **They are switched before the app has finished launching**, not at step one.
+  The menu bar is built once, so a feature switched off after that still has its
+  rows hanging in Help. The walk's script is read in `PhotonzApp.init` for this
+  and nothing else (`PlaytestFlagOverrides`).
+- **A name no feature answers to fails the walk**, when the script is read if no
+  release has it and at setup if the release this probe runs does not. Switching
+  nothing and passing anyway is the whole thing this replaces: before it, the
+  flags-off half of a feature was checked by hand with `defaults write` and put
+  back by memory, and the walk written for it passed either way, so it was
+  deleted rather than left in the sweep.
+- **Step 0 of the log says what the run was configured as**, including a feature
+  that was already the way the walk asked for, because what a walk proves is the
+  configuration it ran in and not the edit it happened to make:
+  `ran with next-measure-modes off, next-measure-panel off (switched
+  next-measure-modes, next-measure-panel; the rest were already so)`.
+
+`Scripts/playtest/tutorial-shelf-measure-off-walk.json` and its `-on-` twin are
+the pair this was built for: the Redlining tutorials shelf is gone from Help and
+from the Tutorials window with the measure features off, and back with them on.
 
 A walk that reads a setting it never set is the one to think about here. Drawing
 a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,
@@ -328,6 +361,7 @@ by a value an earlier step of the same walk chose.
 | `expectSectionFits` | `section` | CLAIMS that a section of the right hand panel has room to draw everything down to and including its first OPEN entry, whole, and fails the run when the panel has cut a control across the middle. Named the way the dock names it: `{"section": "Effects"}`. The dock shortens a list when the panel holds more than the window is tall, and a list of small panes cuts badly: on 2026-09-08 a Border opened in a full dock and lost the bottom half of its Width slider. The check reads the RAW pane measurements rather than the floor the panel worked out from them, so a floor that stopped being applied lowers no bar; the failure says by how many points it came up short. A section the dock never shortens passes and says so. `Scripts/playtest/effects-fit-one-open-walk.json` is the walk that reads it. |
 | `expectInView` | `field`, optional `whole` | CLAIMS that one named thing in the right hand panel is really on screen — all of it, or as much of it as there is room for, starting at its top — and fails the run saying how much is cut off. Two edges can hide something and a walk has to answer for both: the window, and whatever is scrolling it. An effect opened at the foot of a squeezed Effects list is inside the window and still invisible, because the list's own scroller ends above it, which is exactly what happened on 2026-09-08: you pressed a chevron and the settings appeared somewhere you could not see. Nothing may be cut off the TOP, ever, and something may only be cut off the bottom when it is taller than the room it is in — a shadow with 255pt of settings in a list drawn 153pt tall can never be shown whole, and the right answer is its heading at the top with its settings running down from there. Name it the way `panel` lists it: `{"field": "Shadow"}`. `"whole": true` takes the allowance away and demands the ROOM as well, which is the claim to make about a pane the dock promised to keep room for: on 2026-09-09 opening the second of two effects showed 175 points of its 277 and the plain step passed, because 175 was all the room the panel had kept. `Scripts/playtest/effects-open-into-view-walk.json` and `effects-room-for-the-one-you-opened-walk.json` are the walks that read it. |
 | `expectOneUnit` | nothing | CLAIMS that every readout in the right hand panel spells the unit the same way, and fails naming the row that does not. The panel measures ONE space — where a layer sits, how wide it is, how round its corners are, how thick its outline is, how far apart the grid's lines are, how big its type is — so it says one word for it, and that word is `px`. It did not always: on 2026-09-08 a capture caught Corner Radius reading "18 pt" and a border "4 pt" two rows above Position and Size saying "px from the top left", and a person redlining a screenshot had to work out which of two units their number was in. The step takes no arguments ON PURPOSE: it asks the panel what it is showing rather than making a walk list the rows it knows about, so a row added next month is checked the day it arrives, and it fails if the panel is showing no length at all rather than passing an empty check. Slider numbers are SwiftUI `Text` and publish nothing to accessibility, so they are read through the invisible markers `panelReadout` plants (`PanelReadoutProbe.swift`), the same trick `panelHelp` uses for tooltips: a readout added without that modifier is invisible here. `Scripts/playtest/one-unit-word-walk.json` is the walk that reads it. |
+| `expectTutorialTracks` | `with`, `without` | CLAIMS which tutorial shelves are on offer right now, by the name a person reads (`{"with": ["Basics"], "without": ["Redlining"]}`), and fails naming the ones in the wrong place. Asked of BOTH places a shelf shows: Help ▸ Tutorials, and the Tutorials window, which has to be open, so run `showTutorials` first. They are built from the same catalogue at different moments — the menu bar once at launch, the window every time it is drawn — so a feature switched off that reaches one and not the other is exactly what goes unnoticed. The window half is read the way somebody listening to it would hear it: the shelf's own heading, or any guide on it saying its title. Pairs with `setup.flags` above; `Scripts/playtest/tutorial-shelf-measure-off-walk.json` and its `-on-` twin are the walks that read it. |
 | `expectOneNumberPerName` | nothing | CLAIMS that no two rows in the right hand panel wear the same name over different numbers, and fails naming both rows and what each one says. One name, one number. It did not always hold: on 2026-09-09 a capture caught a picked copy of a button showing Corner Radius 0 px in Appearance, slider at the far left, and Corner radius 18 in the Component section under it, over a button that was plainly round; both numbers were true of different layers and nothing on screen said which was which (`InstanceRounding.swift`). A row INSIDE another row keeps its owner's name in front of its own, so a shadow's Opacity is "Shadow ▸ Opacity" and the layer's own is "Opacity": two names, free to differ, which is exactly what the bracket round a part's settings says on screen. Readouts that say a word rather than a number (Mixed, Pill, Square) are skipped, and a unit word is ignored, so "18" and "18 px" are the same claim. Like its neighbour above it takes no arguments on purpose. `Scripts/playtest/component-whole-path-walk.json` reads it twice: over a fresh copy and again over a copy whose rounding knob has been turned down. |
 | `panel` | `stage` | Writes what the RIGHT HAND PANEL, and any popover open on top of it, are showing to the log and to `panel-<stage>.json`: every tile on the Library shelf, every row in the layers list, every control a `press` can land on (with the row it is on and whether it is far enough up the dock to be reached where it is), and every menu in the dock, by the names the steps below use for them. The `menus` step for the panel, and the first step to write when a walk cannot find something. |
 | `press` | `control`, optional `in` `count` `modifiers` `across` | Presses something in the RIGHT HAND PANEL, or in a popover open on top of it, by the words on it: a button ("Each side"), one segment of a picker ("Row", "Fixed"), a row that goes somewhere. `in` names the row it sits on, for when the same word appears twice — the Layout section holds a Hug and a Fixed for Width and another pair for Height, so `{"control": "Fixed", "in": "Width"}`. The press is real mouse events posted to the app's queue, never the control's action called behind its back, so a control that is covered or wired to nothing fails the walk. Fails with the list of controls that ARE there; a `panel` step prints the same list. |

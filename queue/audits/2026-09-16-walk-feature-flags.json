@@ -1,0 +1,27 @@
+{
+  "feature": "A walk can switch a feature off before it runs",
+  "epic": "unmanned-loop",
+  "summary": "A scripted walk can now name the features it wants switched on or off, and the app comes up that way: switched before the window or the menu bar is built, and put back when the walk ends however it ends. That makes the flags-off half of a feature something the loop can photograph instead of something somebody checked by hand and undid from memory.",
+  "setup": "Nothing to set up in the app. This is harness work, so it is read by running a walk: Scripts/playtest.sh Scripts/playtest/tutorial-shelf-measure-off-walk.json",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/tutorial-shelf-measure-off-walk.json", "shot": "2026-09-16-walk-flags-no-redlining-shelf.png" },
+    { "do": "Open /tmp/photonz-playtest/tutorial-shelf-measure-off-walk/menus-help-measure-off.txt and look at Help for a Redlining shelf. There is none." },
+    { "do": "Read step 0 in log.json: it says what the run was configured as, and the last setup line says what was put back." },
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/tutorial-shelf-measure-on-walk.json and look at the same menu file. Redlining is back, with its five guides.", "shot": "2026-09-16-walk-flags-redlining-shelf-back.png" },
+    { "do": "Open a walk of your own and add \"flags\": { \"next-pen\": false } to its setup block." },
+    { "do": "Misspell one of those names and run it: the walk fails when the script is read, naming what you typed." }
+  ],
+  "evaluate": [
+    "Is \"flags\" the word you would reach for in a walk, next to \"forget\", \"captures\" and \"scratch\"?",
+    "Step 0 says the whole configuration, including a feature that was already the way the walk asked for. Is that the line you want, or only the ones it had to move?",
+    "The pair of walks proves one claim between them, because the features are switched at launch and a walk cannot change its mind half way. Is one claim per walk the right shape, or would you want a step that switches a feature mid walk?",
+    "expectTutorialTracks asks Help and the Tutorials window together and fails if they disagree. Is checking both in one step right, or should a walk have to say which surface it means?",
+    "Every tutorials task is accepted on \"checked with the features it teaches flagged off as well as on\". Does this give you enough to hold the next one to that?"
+  ],
+  "rough": [
+    "The Mac reported its screen locked for this whole task, so both walks were run with the harness's PHOTONZ_ALLOW_LOCKED_WALK=1 override, which the rules say buys the run and never the verdict. Unusually the two pictures in this audit DID come out as real screen captures of the window and the window read back its control names normally, which is not what a locked screen is supposed to allow. Both halves are recorded in a task to look into rather than acted on here.",
+    "A probe killed mid walk used to leave the feature switched for every walk after it, in a fresh process with no idea. Reproduced by killing a run and watching the next one inherit it. Fixed with a reading left at /tmp/photonz-playtest/flags-before.plist that the next launch puts back first, and that is reproduced working too.",
+    "Only whether a feature is on or off, not the numbers and words inside one. Nothing needs those yet, and adding them would mean a walk could ask for a value the feature does not have.",
+    "The walks that prove this are the one pair. Every other tutorials track task that wants the flags-off half still has to write its own, which is the point, but the pair is the only worked example."
+  ]
+}

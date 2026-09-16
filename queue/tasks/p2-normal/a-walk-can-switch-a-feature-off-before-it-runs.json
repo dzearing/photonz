@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 440,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:11:54.576Z",
-  "updated": "2026-09-15T12:14:53.755Z",
+  "updated": "2026-09-16T09:48:26.746Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). The acceptance item there asked for every guide to be checked with its feature flagged off as well as on, and there was no way to do it in a walk: the flags live in UserDefaults as a JSON blob under experiments.next.flags (ExperimentsStore.settingsKey), so the check was done by hand with defaults write against com.dzearing.photonz.probe and then undone. A walk written for it passed either way, which is worse than no walk, so it was deleted rather than left in the sweep.\n\nShape: PlaytestSetup already takes forget/captures/scratch (Sources/PhotonzCore/PlaytestScript.swift, knownKeys); add flags, applied and restored by PlaytestSetupRunner the way forget already is. Every later tutorials track task wants this for the same acceptance item.",
@@ -43,6 +43,36 @@
     {
       "t": "2026-09-15T12:14:53.754Z",
       "note": "seq 400 -> 440"
+    },
+    {
+      "t": "2026-09-16T09:11:49.036Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T09:27:08.224Z",
+      "note": "Adversarial review BEFORE building. (1) The obvious shape is wrong: a setup block is performed after launch, and the Help menu is SwiftUI .commands built once, so a feature switched off at step 0 still has its tutorials shelf hanging in Help. So the flags a walk names are read straight off the script in PhotonzApp.init, before the coordinator, the menu bar or any window exists, which is also what a person who set them in Experiments and relaunched would be in. Confirmed in the menu dump: Help offers Basics, Looks, Colours and Styles, Building UI, Components, Icons, Video with the measure features off, and Basics, Redlining, ... with them on. (2) A flag name the RUNNING release has no feature for would be written into the blob and dropped by the next reconcile, so the walk would run with the app exactly as it came and claim otherwise. That is the failure this whole thing replaces, so it fails the walk instead. (3) Shortest version wins: no step that switches a feature mid walk. A walk proves ONE configuration and the pair proves the claim; a mid-walk switch would invite claims about a menu that cannot change. (4) Cut: no way to set a flag's numbers or words, only on and off. Nothing needs it."
+    },
+    {
+      "t": "2026-09-16T09:31:48.612Z",
+      "note": "Shipped. A walk's setup block takes \"flags\": { \"<feature>\": true|false }. PhotonzCore: PlaytestSetup.flags as [PlaytestFlagChoice], sorted by name so the log line is steady, refused at parse when no release has a feature by that name. App: Sources/Photonz/Playtest/PlaytestFlagOverrides.swift, called from PhotonzApp.init before the coordinator or the menu bar exists; PlaytestSetupRunner says it in the step 0 line and fails the walk if the running release has no such feature; PlaytestHarness restores it alongside the settings, however the run ends. New step expectTutorialTracks with/without asks Help and the Tutorials window together. Walks: Scripts/playtest/tutorial-shelf-measure-{off,on}-walk.json. Docs: docs/design/playtest-harness.md, setup table plus a section, and the step table."
+    },
+    {
+      "t": "2026-09-16T09:31:48.659Z",
+      "note": "Adversarial review AFTER building, on the real app. Found and fixed: a probe KILLED mid walk (which Scripts/playtest.sh does on a timeout) left the feature switched for every walk after it, in a fresh process with no way to know. Reproduced: ran a walk with a 40s wait and next-measure-modes off, pkill -9 the probe, and experiments.next.flags was left holding a 70205 byte blob with the feature off; the next walk then reported 'switched next-measure-modes' and put it back to OFF. Fixed with a reading left at /tmp/photonz-playtest/flags-before.plist that the next probe launch puts back before anything reads a flag, and reproduced working: the marker survived the kill, the next launch removed the leaked key and logged 'a run before this one was killed with features still switched'. The recovery runs on ANY probe launch, not only one with a script, so somebody opening the probe by hand after a kill is not quietly looking at an app with a feature missing, and its note is appended to every walk's setup line whether or not that walk names flags. Also moved: recoveryNote was only reachable through the flags report, so a walk that cleaned up after its predecessor and named no flags of its own said nothing."
+    },
+    {
+      "t": "2026-09-16T09:31:48.706Z",
+      "note": "Not exercised live: the branch that fails a walk naming a feature the RUNNING release has no flag for. No flag in FeatureCatalog is current-only (grep 'releases: [.current]' finds none), so the only way to reach it is a next- flag under Current, and Scripts/probe-app.sh writes experiments.release = next on every launch. Reviewed by reading, covered indirectly by the parse-time check which IS tested. Left rough rather than filed: nobody would notice it, and forcing the probe to Current to test it would make every other walk in the run meaningless."
+    },
+    {
+      "t": "2026-09-16T09:48:22.609Z",
+      "note": "Checked for regressions across the whole tutorial set (45 walks, PHOTONZ_ALLOW_LOCKED_WALK=1 because the Mac reported its screen locked): 31 passed, 14 failed, and both new shelf walks passed. The 14 are NOT this change. Proved it rather than assumed it: stashed every source change and moved PlaytestFlagOverrides.swift aside, rebuilt the probe from untouched source, and tutorial-tour-walk failed identically, 'step 30 (waitFor): take-the-tour step properties points at panel.geometry, and nothing in the window carries that name'. They carry the same signature as the failures recorded in a-hundred-and-fifteen-walks-fail-on-code-that-pa, which is already p1 and blocked. Not filed again. The failing set was: tutorial-add-a-shadow-a-border-a-glow, draw-it-with-the-pen, export-a-spec-list, finish, get-the-timing-right, layers-and-undo, make-something-move, mark-it-up, padding-and-columns, save-export-copy, start-on-an-icon-frame, tour, turn-a-shape-into-a-path, two-parts-out-of-phase."
+    },
+    {
+      "t": "2026-09-16T09:48:26.744Z",
+      "note": "A walk's setup block takes \"flags\": { \"<feature>\": true|false }. Switched in PhotonzApp.init, before the menu bar exists, because the Help menu is built once; put back however the run ends, and a reading left on disk means a killed probe cannot leak a switched feature into the walks after it. New expectTutorialTracks step asks Help and the Tutorials window together. Proved by Scripts/playtest/tutorial-shelf-measure-off-walk.json and its -on- twin: the Redlining shelf is gone from both with the measure features off and back with them on, both walks green, both with real screen captures (shipped in the audit). 7549 tests pass; the whole tutorial set was run and its 14 failures reproduce identically on stashed source."
     }
-  ]
+  ],
+  "started": "2026-09-16T09:11:49.035Z",
+  "completed": "2026-09-16T09:48:26.745Z"
 }

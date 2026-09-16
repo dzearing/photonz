@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T06:03:39.665Z",
+  "updated": "2026-09-16T09:29:31.479Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -100,6 +100,10 @@
     {
       "t": "2026-09-16T06:03:39.664Z",
       "note": "Window captures are working again as of 2026-09-15 23:02 local: a walk run with PHOTONZ_ALLOW_LOCKED_WALK=1 (Scripts/playtest/caliper-foot-keeps-its-grip-walk.json) wrote caliper-foot-keeps-its-grip-sc.png, a complete 2800x2000 picture of the real window with shadow, panel text and canvas all correct, and no SCStreamErrorDomain -3811 anywhere in its log.json. So the capture failure in the notes is not permanent. What is still stopping audits getting pictures is the lock gate rather than the grant: every unforced walk is refused before it starts (see a-hundred-and-fifteen-walks-fail-on-code-that-pa). Worth re-checking this task against a run that is allowed to start."
+    },
+    {
+      "t": "2026-09-16T09:29:31.478Z",
+      "note": "Screen capture was WORKING on 2026-09-16 02:24: Scripts/playtest/tutorial-shelf-measure-off-walk.json wrote 1-no-redlining-shelf-sc.png, 1120x1184, a correct picture of the Tutorials window with its shadow and title bar, and the walk's 'Window captures' line read '1 real picture of the window'. Both pictures are in queue/audits/ (2026-09-16-walk-flags-no-redlining-shelf.png and -redlining-shelf-back.png). No SCStreamErrorDomain -3811 anywhere in the log this time. So whatever was refusing the stream on 2026-09-14/15 is not refusing it now; worth confirming before this task is worked, in case it has already fixed itself."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

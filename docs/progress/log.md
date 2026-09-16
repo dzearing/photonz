@@ -16765,3 +16765,35 @@ nobody needs answered yet.
   run, yet with the override the same walks pass, photograph the window fully
   drawn, and report numbers identical to the ones recorded in daylight on
   2026-09-12. Folded into a-hundred-and-fifteen-walks-fail-on-code-that-pa.
+
+## 2026-09-16 — A walk can switch a feature off before it runs
+
+- `a-walk-can-switch-a-feature-off-before-it-runs`. A walk's `setup` block now
+  takes `"flags": { "<feature>": true|false }`, so the flags-off half of a
+  feature is something the loop can photograph instead of something somebody
+  checked by hand with `defaults write` and undid from memory.
+- The timing is the whole trick, and the obvious shape is wrong. A `setup`
+  block is performed after launch, and the Help menu is SwiftUI `.commands`
+  built once, so a feature switched off at step 0 still has its tutorials shelf
+  hanging in Help. The flags a walk names are read straight off the script in
+  `PhotonzApp.init` instead (`Sources/Photonz/Playtest/PlaytestFlagOverrides.swift`),
+  before the coordinator, the menu bar or any window exists.
+- A name no release has a feature for fails when the script is read; one the
+  RUNNING release has no feature for fails at setup. Switching nothing and
+  passing anyway is the failure this replaces.
+- A probe KILLED mid walk used to leave the feature switched for every walk
+  after it, in a fresh process with no idea. Reproduced, then fixed with a
+  reading at `/tmp/photonz-playtest/flags-before.plist` that any later probe
+  launch puts back before anything reads a flag, and reproduced working.
+- New step `expectTutorialTracks`, with `with` and `without`, asks Help and the
+  Tutorials window together. `Scripts/playtest/tutorial-shelf-measure-off-walk.json`
+  and its `-on-` twin are the pair: the Redlining shelf is gone from both with
+  the measure features off, and back with them on.
+- Next: every later tutorials track task can now satisfy "checked with the
+  features it teaches flagged off as well as on" in a walk rather than a unit
+  test.
+- Open question, again: the Mac reported its screen locked for this whole task,
+  and yet with the override both walks passed, read real control names out of
+  the Tutorials window, and wrote real screen captures of it. Folded into
+  `a-hundred-and-fifteen-walks-fail-on-code-that-pa` as a fourth independent
+  confirmation rather than filed as a near-twin.
