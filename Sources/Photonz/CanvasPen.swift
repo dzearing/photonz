@@ -157,6 +157,12 @@ extension CanvasNSView {
     }
 
     /// The path content as a view-space CGPath.
+    ///
+    /// One ring, deliberately: this draws the outline the Pen has IN FLIGHT,
+    /// and a drawing in flight is one loop of anchors by construction
+    /// (`PenSession`). A shape made of several loops only ever exists after an
+    /// area operation has finished one (`PathCombining.swift`), and that is
+    /// drawn by the rasterizer, which walks every ring.
     private func appendPen(_ content: PathContent, to path: CGMutablePath, viewport: Viewport) {
         guard let first = content.anchors.first else { return }
         path.move(to: viewport.viewPoint(fromDocument: first.point))

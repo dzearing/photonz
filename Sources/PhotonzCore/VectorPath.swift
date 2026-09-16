@@ -285,6 +285,25 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// Whether the last anchor joins back to the first. A closed path is
     /// something you can paint inside; an open one is a line.
     public var isClosed: Bool
+    /// Where each ring AFTER the first begins in `anchors`. Empty for the
+    /// single-ring outline almost every path is.
+    ///
+    /// A ring is one closed loop of the outline. Most shapes are one ring, but
+    /// the two things an area operation hands back are not: a circle with a
+    /// circle cut out of it is a rim and a hole, and two shapes that do not
+    /// touch, joined, are two separate pieces. Both are ONE shape wearing one
+    /// fill, so both have to live in one path.
+    ///
+    /// They live in one FLAT anchor list, with this saying where each new loop
+    /// starts, rather than in a list of lists. That is the whole reason for the
+    /// shape of it: an anchor is still found by one number, so picking a point
+    /// up, dragging it, nudging it, selecting several and reading a press off
+    /// the outline all go on working on the hole exactly as they work on the
+    /// rim, with no second index to thread through every one of them.
+    ///
+    /// Strictly increasing, every entry between 1 and `anchors.count - 1`,
+    /// kept that way by `init` and by every edit.
+    public var ringStarts: [Int]
     /// What the OUTLINE is drawn in. Flat by default, a gradient once one is
     /// chosen, exactly like every other shape's paint.
     public var paint: Paint
@@ -310,6 +329,7 @@ public struct PathContent: Hashable, Codable, Sendable {
 
     public init(anchors: [PathAnchor],
                 isClosed: Bool = false,
+                ringStarts: [Int] = [],
                 paint: Paint = Paint(hex: PathContent.defaultColorHex),
                 strokeWidth: CGFloat = PathContent.defaultStrokeWidth,
                 strokePosition: BorderPosition = .center,
@@ -320,6 +340,7 @@ public struct PathContent: Hashable, Codable, Sendable {
                 linePattern: PathLinePattern = .solid) {
         self.anchors = anchors
         self.isClosed = isClosed
+        self.ringStarts = PathContent.tidyRingStarts(ringStarts, count: anchors.count)
         self.paint = paint
         self.strokeWidth = strokeWidth
         self.strokePosition = strokePosition
@@ -355,14 +376,66 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// have a fill. An open path is a line whatever colour is stored on it.
     public var paintsAnInside: Bool { isClosed && fill != nil }
 
-    /// The runs between the anchors, the closing one included when the path is
-    /// closed. Empty for a path of one anchor or none, which has no outline
-    /// yet.
+    /// The stretch of `anchors` each ring covers, in order, the first one
+    /// always starting at zero. One range for the single-ring outline almost
+    /// every path is.
+    public var ringRanges: [Range<Int>] {
+        guard !anchors.isEmpty else { return [] }
+        guard !ringStarts.isEmpty else { return [0..<anchors.count] }
+        var ranges: [Range<Int>] = []
+        var from = 0
+        for start in ringStarts {
+            ranges.append(from..<start)
+            from = start
+        }
+        ranges.append(from..<anchors.count)
+        return ranges
+    }
+
+    /// How many separate loops the outline is made of. One for an ordinary
+    /// shape; two for a ring; more for a result in several pieces.
+    public var ringCount: Int { anchors.isEmpty ? 0 : ringStarts.count + 1 }
+
+    /// Whether this outline is more than one loop, which is what a hole or a
+    /// result in unconnected pieces is.
+    public var hasSeveralRings: Bool { ringCount > 1 }
+
+    /// Which ring an anchor belongs to, and the stretch that ring covers.
+    /// Nil for an index that is not an anchor.
+    public func ring(containing index: Int) -> (ring: Int, range: Range<Int>)? {
+        for (number, range) in ringRanges.enumerated() where range.contains(index) {
+            return (number, range)
+        }
+        return nil
+    }
+
+    /// The only ring list that means anything: strictly increasing, inside the
+    /// anchors, and with no empty ring in it.
+    static func tidyRingStarts(_ starts: [Int], count: Int) -> [Int] {
+        guard count > 0 else { return [] }
+        var tidy: [Int] = []
+        for start in starts.sorted() where start >= 1 && start < count {
+            if tidy.last != start { tidy.append(start) }
+        }
+        return tidy
+    }
+
+    /// The runs between the anchors, ring by ring, each ring's closing run
+    /// included when the path is closed. A run NEVER crosses from one ring to
+    /// the next: the last anchor of the rim joins back to the rim's own first
+    /// anchor and not to the first anchor of the hole.
+    ///
+    /// Empty for a path of one anchor or none, which has no outline yet.
     public var segments: [PathSegment] {
         guard anchors.count >= 2 else { return [] }
-        var runs = zip(anchors, anchors.dropFirst()).map { PathSegment(from: $0, to: $1) }
-        if isClosed, let first = anchors.first, let last = anchors.last {
-            runs.append(PathSegment(from: last, to: first))
+        var runs: [PathSegment] = []
+        for range in ringRanges {
+            let ring = anchors[range]
+            guard ring.count >= 2 else { continue }
+            runs += zip(ring, ring.dropFirst()).map { PathSegment(from: $0, to: $1) }
+            if isClosed, let first = ring.first, let last = ring.last {
+                runs.append(PathSegment(from: last, to: first))
+            }
         }
         return runs
     }
@@ -455,6 +528,31 @@ public struct PathContent: Hashable, Codable, Sendable {
         return moved
     }
 
+    /// The same shape with an affine transform applied to it: the anchors
+    /// move, and the handles turn with them.
+    ///
+    /// Handles are stored as OFFSETS from their anchor, so only the rotating
+    /// and scaling part of the transform touches them and the shifting part
+    /// must not: applying the full transform to an offset would move every
+    /// curve by the whole translation on top of its anchor.
+    ///
+    /// This is what bakes a layer's rotation into its outline, so a turned
+    /// shape can take part in an area operation as the shape you can see
+    /// rather than as the unturned one its numbers still describe.
+    public func transformed(by transform: CGAffineTransform) -> PathContent {
+        let linear = CGAffineTransform(a: transform.a, b: transform.b,
+                                       c: transform.c, d: transform.d, tx: 0, ty: 0)
+        var moved = self
+        moved.anchors = anchors.map { anchor in
+            var turned = anchor
+            turned.point = anchor.point.applying(transform)
+            turned.handleIn = anchor.handleIn?.applying(linear)
+            turned.handleOut = anchor.handleOut?.applying(linear)
+            return turned
+        }
+        return moved
+    }
+
     /// The same shape re-stated against its own top-left corner, so its
     /// bounds start at zero and the layer's frame is the box it fills.
     public func normalized() -> PathContent {
@@ -466,7 +564,7 @@ public struct PathContent: Hashable, Codable, Sendable {
     // MARK: On disk
 
     private enum CodingKeys: String, CodingKey {
-        case anchors, closed, paint, strokeWidth, strokePosition, fill, fillRule
+        case anchors, closed, ringStarts, paint, strokeWidth, strokePosition, fill, fillRule
         case lineEnd, lineCorner, linePattern
     }
 
@@ -474,6 +572,10 @@ public struct PathContent: Hashable, Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         anchors = try c.decodeIfPresent([PathAnchor].self, forKey: .anchors) ?? []
         isClosed = try c.decodeIfPresent(Bool.self, forKey: .closed) ?? false
+        // A file written before a path could hold more than one ring has none
+        // of these, and comes back as the single-ring outline it always was.
+        ringStarts = PathContent.tidyRingStarts(
+            try c.decodeIfPresent([Int].self, forKey: .ringStarts) ?? [], count: anchors.count)
         paint = try c.decodeIfPresent(Paint.self, forKey: .paint)
             ?? Paint(hex: PathContent.defaultColorHex)
         strokeWidth = try c.decodeIfPresent(CGFloat.self, forKey: .strokeWidth)
@@ -493,6 +595,9 @@ public struct PathContent: Hashable, Codable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(anchors, forKey: .anchors)
         try c.encode(isClosed, forKey: .closed)
+        // Left out of an ordinary one-ring path, so nothing already on disk
+        // changes shape the next time it is saved.
+        if !ringStarts.isEmpty { try c.encode(ringStarts, forKey: .ringStarts) }
         try c.encode(paint, forKey: .paint)
         try c.encode(strokeWidth, forKey: .strokeWidth)
         try c.encode(strokePosition, forKey: .strokePosition)
@@ -578,16 +683,35 @@ extension PathSegment {
 
 extension PathContent {
 
-    /// The outline as a chain of straight steps, in the layer's own
-    /// coordinates. Closed paths come back with the closing run included, so
-    /// the last point is the first one again.
-    public func flattened(steps: Int = 16) -> [CGPoint] {
-        guard let first = anchors.first, anchors.count >= 2 else {
-            return anchors.map(\.point)
+    /// Every ring of the outline as its own chain of straight steps, in the
+    /// layer's own coordinates. A closed ring comes back with its closing run
+    /// included, so its last point is its first one again.
+    ///
+    /// One chain per ring rather than one long one, because the gap between
+    /// the rim and the hole is not part of the outline: chaining them would
+    /// invent a straight run across the middle of the shape, and everything
+    /// that measures a distance to the outline or counts crossings through it
+    /// would read that invented run as real.
+    public func flattenedRings(steps: Int = 16) -> [[CGPoint]] {
+        guard anchors.count >= 2 else { return anchors.isEmpty ? [] : [anchors.map(\.point)] }
+        var rings: [[CGPoint]] = []
+        var runs = segments[...]
+        for range in ringRanges {
+            let ring = anchors[range]
+            guard ring.count >= 2, let first = ring.first else { continue }
+            let count = ring.count - 1 + (isClosed ? 1 : 0)
+            var points = [first.point]
+            for run in runs.prefix(count) { points += run.flattened(steps: steps) }
+            runs = runs.dropFirst(count)
+            rings.append(points)
         }
-        var points = [first.point]
-        for segment in segments { points += segment.flattened(steps: steps) }
-        return points
+        return rings
+    }
+
+    /// The FIRST ring as a chain of straight steps, which for the single-ring
+    /// outline almost every path is is the whole outline.
+    public func flattened(steps: Int = 16) -> [CGPoint] {
+        flattenedRings(steps: steps).first ?? anchors.map(\.point)
     }
 
     /// Whether a point in the layer's own coordinates is INSIDE the shape.
@@ -596,32 +720,44 @@ extension PathContent {
     /// says so rather than pretending its two ends are joined.
     public func containsInside(_ point: CGPoint) -> Bool {
         guard isClosed else { return false }
-        let outline = flattened()
-        guard outline.count >= 3 else { return false }
+        let rings = flattenedRings()
+        guard rings.contains(where: { $0.count >= 3 }) else { return false }
         var crossings = 0
         var winding = 0
-        for (a, b) in zip(outline, outline.dropFirst()) {
-            guard (a.y > point.y) != (b.y > point.y) else { continue }
-            let span = b.y - a.y
-            guard span != 0 else { continue }
-            let x = a.x + (point.y - a.y) / span * (b.x - a.x)
-            guard x > point.x else { continue }
-            crossings += 1
-            winding += b.y > a.y ? 1 : -1
+        // Every ring is counted into the SAME tally, which is what makes a
+        // hole a hole: the rim is wound one way and the hole the other, so a
+        // point inside both cancels to nothing and is outside the shape.
+        for outline in rings where outline.count >= 3 {
+            for (a, b) in zip(outline, outline.dropFirst()) {
+                guard (a.y > point.y) != (b.y > point.y) else { continue }
+                let span = b.y - a.y
+                guard span != 0 else { continue }
+                let x = a.x + (point.y - a.y) / span * (b.x - a.x)
+                guard x > point.x else { continue }
+                crossings += 1
+                winding += b.y > a.y ? 1 : -1
+            }
         }
         return fillRule == .evenOdd ? crossings % 2 == 1 : winding != 0
     }
 
     /// How far a point in the layer's own coordinates is from the OUTLINE.
     public func distanceToOutline(from point: CGPoint) -> CGFloat {
-        let outline = flattened()
-        guard outline.count >= 2 else {
-            guard let only = outline.first else { return .infinity }
-            return hypot(point.x - only.x, point.y - only.y)
+        // Every ring counts: the edge of a hole is as much the shape's outline
+        // as its rim is, and a press on it has to catch the shape.
+        var best = CGFloat.infinity
+        for outline in flattenedRings() {
+            guard outline.count >= 2 else {
+                if let only = outline.first {
+                    best = min(best, hypot(point.x - only.x, point.y - only.y))
+                }
+                continue
+            }
+            for (a, b) in zip(outline, outline.dropFirst()) {
+                best = min(best, Geometry.distance(from: point, toSegmentFrom: a, to: b))
+            }
         }
-        return zip(outline, outline.dropFirst()).reduce(CGFloat.infinity) { best, pair in
-            min(best, Geometry.distance(from: point, toSegmentFrom: pair.0, to: pair.1))
-        }
+        return best
     }
 
     /// Whether a click at `point`, in the layer's own coordinates, lands on

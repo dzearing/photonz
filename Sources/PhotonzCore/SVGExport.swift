@@ -144,18 +144,29 @@ public enum SVGExport {
     /// no handle on either end is written as a straight run, exactly as the
     /// rasterizer draws it, so a straight edge stays straight in the file.
     public static func pathData(_ content: PathContent) -> String {
-        guard let first = content.anchors.first else { return "" }
-        var parts = ["M\(num(first.point.x)) \(num(first.point.y))"]
-        for run in content.segments {
-            if run.isStraight {
-                parts.append("L\(num(run.end.x)) \(num(run.end.y))")
-            } else {
-                parts.append("C\(num(run.control1.x)) \(num(run.control1.y))"
-                    + " \(num(run.control2.x)) \(num(run.control2.y))"
-                    + " \(num(run.end.x)) \(num(run.end.y))")
+        guard !content.anchors.isEmpty else { return "" }
+        var parts: [String] = []
+        // One M per ring, so a shape with a hole in it leaves as one path of
+        // two loops rather than as a rim with a line drawn across it.
+        var runs = content.segments[...]
+        for range in content.ringRanges {
+            let ring = content.anchors[range]
+            guard let first = ring.first else { continue }
+            parts.append("M\(num(first.point.x)) \(num(first.point.y))")
+            guard ring.count >= 2 else { continue }
+            let count = ring.count - 1 + (content.isClosed ? 1 : 0)
+            for run in runs.prefix(count) {
+                if run.isStraight {
+                    parts.append("L\(num(run.end.x)) \(num(run.end.y))")
+                } else {
+                    parts.append("C\(num(run.control1.x)) \(num(run.control1.y))"
+                        + " \(num(run.control2.x)) \(num(run.control2.y))"
+                        + " \(num(run.end.x)) \(num(run.end.y))")
+                }
             }
+            runs = runs.dropFirst(count)
+            if content.isClosed { parts.append("Z") }
         }
-        if content.isClosed { parts.append("Z") }
         return parts.joined(separator: " ")
     }
 

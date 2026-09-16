@@ -219,15 +219,19 @@ extension PathContent {
         anchors[index].kind = .corner
     }
 
-    /// The anchor one step either side of `index`, wrapping round a closed
-    /// path and running out at the ends of an open one.
+    /// The anchor one step either side of `index`, wrapping round the end of
+    /// its OWN ring on a closed path and running out at the ends of an open
+    /// one.
+    ///
+    /// Within the ring, because the anchor after the last one on the rim is
+    /// the rim's own first anchor, never the first anchor of the hole.
     private func neighbour(of index: Int, step: Int) -> PathAnchor? {
-        let count = anchors.count
-        guard count > 1 else { return nil }
+        guard let (_, range) = ring(containing: index), range.count > 1 else { return nil }
         let next = index + step
-        if anchors.indices.contains(next) { return anchors[next] }
+        if range.contains(next) { return anchors[next] }
         guard isClosed else { return nil }
-        return anchors[(next % count + count) % count]
+        let span = range.count
+        return anchors[range.lowerBound + ((next - range.lowerBound) % span + span) % span]
     }
 
     // MARK: - Adding a point
@@ -245,11 +249,10 @@ extension PathContent {
     /// handle dragged all the way in.
     @discardableResult
     public mutating func insertAnchor(onSegment index: Int, at t: CGFloat) -> Int? {
-        guard segments.indices.contains(index) else { return nil }
+        guard segments.indices.contains(index), let ends = segmentEnds(index) else { return nil }
         let t = min(max(t, 0), 1)
-        let count = anchors.count
-        let startIndex = index
-        let endIndex = (index + 1) % count
+        let startIndex = ends.start
+        let endIndex = ends.end
         let start = anchors[startIndex]
         let end = anchors[endIndex]
         let p0 = start.point, p1 = start.controlOut, p2 = end.controlIn, p3 = end.point
@@ -280,8 +283,32 @@ extension PathContent {
         // anchor itself, which is exactly where the split leaves it.
         if start.handleOut != nil { anchors[startIndex].handleOut = offset(p0, q0) }
         if end.handleIn != nil { anchors[endIndex].handleIn = offset(p3, q2) }
-        anchors.insert(added, at: index + 1)
-        return index + 1
+        anchors.insert(added, at: startIndex + 1)
+        // Every ring that begins after the new point begins one anchor later.
+        ringStarts = ringStarts.map { $0 > startIndex ? $0 + 1 : $0 }
+        return startIndex + 1
+    }
+
+    /// Which two anchors the run at `index` in `segments` lies between.
+    ///
+    /// `segments` walks ring by ring, so its numbering only lines up with the
+    /// anchor numbering on the first ring. On a shape with a hole in it the
+    /// run's two ends have to be found by walking the rings, and the last run
+    /// of a ring comes back to that ring's own first anchor.
+    func segmentEnds(_ index: Int) -> (start: Int, end: Int)? {
+        var remaining = index
+        for range in ringRanges {
+            let ring = anchors[range]
+            guard ring.count >= 2 else { continue }
+            let runs = ring.count - 1 + (isClosed ? 1 : 0)
+            if remaining < runs {
+                let start = range.lowerBound + remaining
+                let end = remaining == ring.count - 1 ? range.lowerBound : start + 1
+                return (start, end)
+            }
+            remaining -= runs
+        }
+        return nil
     }
 
     // MARK: - Taking a point out
@@ -299,15 +326,28 @@ extension PathContent {
     public mutating func removeAnchors(_ indices: Set<Int>) -> Bool {
         let doomed = indices.filter { anchors.indices.contains($0) }.sorted(by: >)
         guard !doomed.isEmpty, anchors.count - doomed.count >= 2 else { return false }
-        for index in doomed { removeOne(at: index) }
+        // Each RING has to keep at least two points of its own: a hole cannot
+        // be worn down to one anchor and go on being a loop. A ring that would
+        // be left with fewer is taken out whole, so deleting the last two
+        // points of a hole fills the hole in rather than leaving a stub.
+        var going = Set(doomed)
+        for range in ringRanges {
+            let left = range.count - range.filter { going.contains($0) }.count
+            if left > 0 && left < 2 { going.formUnion(range) }
+        }
+        guard anchors.count - going.count >= 2 else { return false }
+        for index in going.sorted(by: >) { removeOne(at: index) }
         return true
     }
 
     private mutating func removeOne(at index: Int) {
-        let count = anchors.count
         let removed = anchors[index]
-        let beforeIndex = index - 1 >= 0 ? index - 1 : (isClosed ? count - 1 : nil)
-        let afterIndex = index + 1 < count ? index + 1 : (isClosed ? 0 : nil)
+        let range = ring(containing: index)?.range ?? 0..<anchors.count
+        let count = range.count
+        let beforeIndex = index - 1 >= range.lowerBound
+            ? index - 1 : (isClosed && count > 1 ? range.upperBound - 1 : nil)
+        let afterIndex = index + 1 < range.upperBound
+            ? index + 1 : (isClosed && count > 1 ? range.lowerBound : nil)
         if let beforeIndex, let afterIndex {
             // Where the point came from a split, `t` is written in its own two
             // handles: the point sits exactly that far along the line between
@@ -324,6 +364,8 @@ extension PathContent {
             }
         }
         anchors.remove(at: index)
+        ringStarts = PathContent.tidyRingStarts(ringStarts.map { $0 > index ? $0 - 1 : $0 },
+                                                count: anchors.count)
     }
 
     /// How far along the joined run the point being removed sat, between 0 and

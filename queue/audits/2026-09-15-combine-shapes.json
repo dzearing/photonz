@@ -1,0 +1,32 @@
+{
+  "feature": "Two shapes become one: join, cut out, keep or drop the overlap",
+  "epic": "icon-vector",
+  "summary": "Most icons are built rather than drawn point by point: a circle with a smaller circle cut out of it is a ring, two rounded rectangles joined are a chat bubble. Pick two or more shapes that have an inside and Combine Shapes turns them into one, four ways. What you get back is a path with real points on it, hole and all, not a picture of one.",
+  "setup": "Photonz Dev, Experiments window, release Next. It rides on the Pen's own flag, Draw any shape with the Pen, which is on by default in Next. Nothing else to turn on.",
+  "try": [
+    { "do": "Draw two overlapping circles with O, on a blank canvas.", "shot": "2026-09-15-combine-0-two-circles-overlapping.png" },
+    { "do": "Pick both rows in the layers list, then Layer, Combine Shapes, Join.", "shot": "2026-09-15-combine-join-overlapping.png" },
+    { "do": "Read the line that appears under the canvas: it names the shape whose fill, outline and effects the result is wearing." },
+    { "do": "Command Z, then right click either row and try Combine Shapes, Cut Out.", "shot": "2026-09-15-combine-cutOut-overlapping.png" },
+    { "do": "Command Z, then Combine Shapes, Keep Overlap.", "shot": "2026-09-15-combine-keepOverlap-overlapping.png" },
+    { "do": "Command Z, then Combine Shapes, Drop Overlap.", "shot": "2026-09-15-combine-dropOverlap-overlapping.png" },
+    { "do": "Command Z, drag the top circle wholly inside the bottom one, and Cut Out. You get a ring.", "shot": "2026-09-15-combine-cutOut-nested.png" },
+    { "do": "With the ring still picked, drag one of its points out, then drag a point on the hole. Both move; the hole stays a hole." }
+  ],
+  "evaluate": [
+    "Cut Out cuts the shapes above out of the one at the bottom. Is that the way round you expected, and does the line under the canvas tell you enough afterwards?",
+    "Are Join, Cut Out, Keep Overlap and Drop Overlap the right names, or would you rather the menu said union, subtract, intersect and exclude like every other drawing program?",
+    "Is one submenu called Combine Shapes the right home for the four, or should they sit as four rows in the Layer menu?",
+    "Ask for Keep Overlap on two shapes that do not touch. Nothing changes and the pill says why. Is refusing the right answer, or would you rather it gave you an empty shape?",
+    "The result keeps the bottom shape's NAME, so a ring made from two ovals is still called Ellipse. Is that right, or should it be renamed Path?",
+    "There is no keyboard shortcut for any of the four. Do you want one?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this task, so macOS never drew the app and not one walk could run: there are no window captures here. The six pictures above ARE real pictures, rendered through the app's own composite offscreen, so they show what the canvas would draw; they are not photographs of the window, and nothing here shows the menus or the pill. A walk covering all of it is committed as Scripts/playtest/combine-shapes-walk.json and a full sweep has been asked for.",
+    "Where the mock was not followed, and why: docs/design/mocks/pages/draw-boolean.html proposes a LIVE combine, with both sources kept underneath, a Union/Subtract/Intersect/Exclude row in the Properties panel to retune it and a Release combine command. That contradicts what this task asks for, because a live combine's result has no points of its own: reshaping it means reshaping the hidden sources. This is the one-shot version. Undo is the release, and what you get has points you can pull. The retune row and Release combine are not built.",
+    "The mock's names, union and subtract and intersect and exclude, are not on the menu: the house style keeps jargon out of user-facing copy. They are said once in the flag's description so a search in the Experiments window finds them, and that is the only bridge for somebody arriving from another app.",
+    "A GROUP cannot take part. Illustrator and Figma both let you combine a group with a shape; here a group is not a shape with an inside, so it is left alone with everything else that has none. Nobody has asked for it yet, so it is in the task log rather than filed.",
+    "The result keeps the bottom shape's name deliberately, so the row in the layers list and the line under the canvas name the same thing. The cost is that a ring can be called Ellipse.",
+    "Only the bottom shape's effects survive, because only the bottom shape's row survives. A shadow on the shape you cut away is gone. That is the same rule the look follows and it is stated in the line under the canvas, but it is worth disagreeing with if it bites."
+  ]
+}

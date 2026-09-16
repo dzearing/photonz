@@ -16283,3 +16283,38 @@ confirm the walks themselves once the screen is unlocked.
 Next: nothing outstanding on this. Open question: a walk can still aim a
 relative `out` into the repo deliberately, which the new folder-wide test
 catches at test time but the harness still allows at run time.
+
+## 2026-09-15 — Two shapes become one
+
+`Combine Shapes`, in the Layer menu and on a layer row's own menu, behind the
+Pen's flag: Join, Cut Out, Keep Overlap, Drop Overlap on any shapes that have an
+inside. What comes back is one path with real points on it, hole and all.
+
+The model was the work, not the arithmetic. `PathContent` held exactly ONE
+outline, and a ring is a rim and a hole while a join of two strangers is two
+unconnected pieces — both one shape wearing one fill. They now fit as one flat
+anchor list plus `ringStarts`, the indices where each ring after the first
+begins, so an anchor is still found by one number and everything that picks a
+point up works on a hole exactly as it works on a rim. `PathCombining.swift`
+runs the four through `CGPath`'s own boolean operations — exact, and they keep
+curves as curves — and `PathContent.init?(CGPath)` walks the answer back into
+anchors and handles. Proven lossless: a circle joined with itself comes back as
+the same four cubics, and a square union keeps every run straight with no
+handles at all. `docs/design/vector-paths.md` has the whole of it.
+
+The bottom shape survives, keeping its id, slot, name, effects and look. A
+combination that comes to NOTHING leaves the document alone and says why in the
+pill under the canvas, which is the surface it uses rather than the path chip:
+in that case the shapes are still shapes and the chip is not up to say anything.
+
+**The Mac's screen was locked for this whole task**, so macOS never drew the app
+and not one walk could be run. The new walk
+`Scripts/playtest/combine-shapes-walk.json` has never been executed and a full
+sweep is requested. What IS verified: 7282 tests green, including four render
+tests that check the picture has a transparent middle and a rim in the bottom
+shape's colour, and six offscreen renders through the app's own composite,
+shipped with the audit.
+
+Next: the audit's open questions are the names on the menu, whether the four
+want a keyboard shortcut, and whether a ring should keep the name of the oval it
+came from. A group still cannot take part.

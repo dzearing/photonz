@@ -688,10 +688,104 @@ It is the same "Don't ask again" the one-shape question carries, because it is
 the same command. Silenced, nothing is announced — which the app's own bar for
 asking allows, since a join is VISIBLE the instant after: three rows became one.
 
+## Two shapes become one
+
+Most icons are not drawn point by point, they are built. A circle with a smaller
+circle cut out of it is a ring; two rounded rectangles joined are a chat bubble;
+the overlap of a square and a circle is a squircle. **Combine Shapes**, in the
+Layer menu and on a layer row's own menu, is the four ways that happens:
+
+| On the menu | What it keeps | What other apps call it |
+| --- | --- | --- |
+| Join | everything either shape covered | union |
+| Cut Out | the bottom shape, less everything above it | subtract |
+| Keep Overlap | only the part every shape covered | intersect |
+| Drop Overlap | everything but the part they share | exclude |
+
+It rides on the Pen's own flag, because the result of every one of these is a
+path and a path you cannot reshape is a command with no payoff.
+
+### A path holds several rings
+
+The model had to change first. `PathContent` held exactly ONE outline, and the
+two things an area operation hands back are not one outline: a ring is a rim and
+a hole, and two shapes that never touch, joined, are two unconnected pieces.
+Both are a single shape wearing a single fill, so both have to fit in one path.
+
+They fit as ONE FLAT anchor list plus `ringStarts`, the indices where each ring
+after the first begins — not as a list of lists. That is the decision the whole
+change turns on: an anchor is still found by one number, so picking a point up,
+dragging it, nudging it, gathering several and reading a press off the outline
+all go on working on a hole exactly as they work on a rim, with no second index
+threaded through the canvas. What had to learn about rings is short and all in
+the geometry: `segments` and `flattenedRings` never join the last anchor of one
+ring to the first of the next, `containsInside` counts every ring into one
+tally (which is how the rim's winding and the hole's opposite winding cancel),
+`neighbour` wraps within its own ring, and an edit that would leave a ring with
+fewer than two points takes that ring out whole rather than leaving a stub.
+
+`ringStarts` is left out of the file for a one-ring path, so nothing already on
+disk changes the next time it is saved.
+
+### The arithmetic is Core Graphics'
+
+`CGPath` has had union, subtraction, intersection and symmetric difference since
+macOS 13. They are exact and they keep curves as curves: a circle joined with
+itself comes back as the same four cubics. Writing a bezier clipper by hand to
+do the same thing worse is not the work.
+
+The work is `PathContent.init?(CGPath)`, walking the answer back into the app's
+own anchors. A `CGPath` is a flat list of "move here, curve to there" with no
+notion of an anchor that has a handle on each side, and a naive walk turns every
+curve into the straight line between its ends. So each curve's first control
+point is written onto the anchor it LEAVES and its second onto the anchor it
+ARRIVES at, the closing duplicate point is folded into the first anchor, a
+quadratic is elevated exactly, loops that enclose nothing are dropped, and each
+anchor is asked whether its two handles run in one line through it so a circle
+that came through untouched still has four smooth points on it.
+
+### The rules a person can hold in their head
+
+* **The BOTTOM shape survives.** It keeps its id, its slot in the stack, its
+  name, its effects and its look, and the result wears that look. One rule for
+  all four, and it is what makes Cut Out predictable: everything above is cut
+  out of it, so restacking changes the answer.
+* **A shape has to have an inside.** An open path is a line and a line encloses
+  nothing, so it takes no part and is left exactly where it is. Quietly closing
+  it and filling it would change a picture nobody asked to change.
+* **A turned shape combines where it LOOKS.** The turn is baked into the anchors
+  on the way in, which is also why the result comes back unturned and its points
+  are draggable again.
+* **Nothing is a real answer.** Keep Overlap on two shapes that do not touch, a
+  shape cut out of itself, a cut that swallows everything: the document is left
+  exactly as it was and the pill under the canvas says why. Deleting both shapes
+  and leaving a blank canvas is the one outcome nobody wants and the easiest to
+  reach.
+* **One undo step**, whatever the shapes were.
+
+### What it says afterwards
+
+The pill under the canvas, not the path chip — because the sentence that matters
+most is the one about a combination that came to nothing, and in that case the
+shapes are still shapes and the chip is not up to say it. It carries the two
+things the canvas cannot show: which shape's fill, outline and effects the
+result is wearing, since two overlapping circles of the same colour say nothing
+about which was underneath, and whether the result has a hole in it or came
+apart into pieces.
+
+### Where the mock was not followed
+
+`docs/design/mocks/pages/draw-boolean.html` proposes a LIVE combine: both
+sources kept underneath, a Union/Subtract/Intersect/Exclude row in the panel to
+retune it, and a Release combine command. That contradicts the thing this is
+for, because a live combine's result has no points of its own — reshaping it
+means reshaping the hidden sources. This is the one-shot version: undo is the
+release, and what you get has points you can pull. The mock's four words are
+jargon the house style keeps out of user-facing copy, so they are said once in
+the flag's description and nowhere else.
+
 ## What the next slices add
 
-* **Booleans** (`docs/design/mocks/pages/draw-boolean.html`) — union, subtract,
-  intersect. `flattened()` and `containsInside` are the start of the geometry.
 * **SVG export** — done, under `icon-export`. A path is already exactly the
   cubic data an SVG `d` attribute wants, and Export writes it:
   `docs/design/svg-export.md` says what every layer kind writes, including the
@@ -707,6 +801,9 @@ asking allows, since a join is VISIBLE the instant after: three rows became one.
   flanks. The path's is the correct one; the oval's is the one to fix.
 * **Line cap and line join are not settable.** Icons want butt caps and a miter
   limit sooner or later.
+* **A GROUP cannot take part in Combine Shapes.** It is not a shape with an
+  inside, so it is left alone with everything else that has none. Illustrator
+  and Figma both allow it.
 * **The Pen still needs ⌥ to place a half-smooth anchor as it draws**, and its
   own chip does not mention it. Reshaping no longer does — a double click on a
   lever is the way in there, and the chip says so — but the two tools now

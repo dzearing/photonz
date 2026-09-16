@@ -55,26 +55,10 @@ public enum PathRasterizer {
         return context.makeImage()
     }
 
-    /// The outline as a CGPath, in the layer's own coordinates.
-    ///
-    /// A run with no handle on either end is emitted as a LINE rather than as a
-    /// cubic that happens to look flat, so a straight edge is exactly straight
-    /// and stays that way under any transform.
-    public static func cgPath(_ content: PathContent) -> CGPath {
-        let path = CGMutablePath()
-        guard let first = content.anchors.first else { return path }
-        path.move(to: first.point)
-        for segment in content.segments {
-            if segment.isStraight {
-                path.addLine(to: segment.end)
-            } else {
-                path.addCurve(to: segment.end, control1: segment.control1,
-                              control2: segment.control2)
-            }
-        }
-        if content.isClosed { path.closeSubpath() }
-        return path
-    }
+    /// The outline as a CGPath, in the layer's own coordinates. The model
+    /// itself answers this now (`PathContent.cgPath`), because an area
+    /// operation needs the same path and lives in PhotonzCore.
+    public static func cgPath(_ content: PathContent) -> CGPath { content.cgPath }
 
     // MARK: - The two paints
 

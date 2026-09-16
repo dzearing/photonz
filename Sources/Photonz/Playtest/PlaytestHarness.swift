@@ -1235,10 +1235,10 @@ private final class Run {
             note(number, step.name, try checkMeasures(count), state: describe())
 
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
-                         let halfSmooth, let width, let fill, let ink, let anchorAt):
+                         let halfSmooth, let rings, let width, let fill, let ink, let anchorAt):
             note(number, step.name,
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
-                               smooth: smooth, halfSmooth: halfSmooth, width: width,
+                               smooth: smooth, halfSmooth: halfSmooth, rings: rings, width: width,
                                fill: fill, ink: ink, anchorAt: anchorAt),
                  state: describe())
 
@@ -1268,6 +1268,9 @@ private final class Run {
 
         case .expectHint(let contains):
             note(number, step.name, try checkHint(contains: contains), state: describe())
+
+        case .expectNotice(let says, let absent):
+            note(number, step.name, try checkNotice(says: says, absent: absent), state: describe())
 
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
@@ -3394,6 +3397,27 @@ private final class Run {
         return "the chip says \"\(reading)\", carrying \"\(contains)\" as claimed"
     }
 
+    /// What the notice pill under the canvas is saying right now.
+    private func checkNotice(says: String?, absent: Bool?) throws -> String {
+        let editor = try requireEditor()
+        let pill = editor.copyConfirmation
+        let reading = pill.map { "\($0.title) · \($0.detail)" }
+        if absent == true {
+            guard let reading else { return "no pill under the canvas, as claimed" }
+            throw Failure(description: "a pill is up under the canvas saying \"\(reading)\"")
+        }
+        guard let says else { return reading.map { "the pill says \"\($0)\"" } ?? "no pill" }
+        guard let reading else {
+            throw Failure(description: "no pill is up under the canvas, so it cannot be saying "
+                + "\"\(says)\"")
+        }
+        guard reading.contains(says) else {
+            throw Failure(description: "the pill says \"\(reading)\", which does not carry "
+                + "\"\(says)\"")
+        }
+        return "the pill says \"\(reading)\", carrying \"\(says)\" as claimed"
+    }
+
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -3448,8 +3472,8 @@ private final class Run {
     /// What the path the Pen drew is made of, asked of the document rather than
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
-                           curves: Int?, smooth: Int?, halfSmooth: Int?, width: CGFloat?,
-                           fill: String?, ink: String?,
+                           curves: Int?, smooth: Int?, halfSmooth: Int?, rings: Int?,
+                           width: CGFloat?, fill: String?, ink: String?,
                            anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -3487,6 +3511,11 @@ private final class Run {
         }
         if let curves, curved != curves {
             throw Failure(description: "\(shape) — not the \(curves) curved claimed")
+        }
+        if let rings, content.ringCount != rings {
+            let loops = content.ringCount == 1 ? "one loop" : "\(content.ringCount) loops"
+            throw Failure(description: "\(shape), made of \(loops) — not the \(rings) claimed. "
+                + "A shape with a hole in it is TWO loops; one means the hole is not there.")
         }
         if let width, content.strokeWidth != width {
             throw Failure(description: "\(shape) — not the \(DocumentUnit.text(width)) claimed")
@@ -4322,6 +4351,41 @@ private final class Run {
     ///
     /// Everything about waiting for a menu's own event loop, and about why the
     /// picture has to be a real screen capture, is `PlaytestPanelMenu`.
+    /// The row a walk asked to pick, wherever it is in the menu.
+    ///
+    /// A row menu is not a flat list: commands that are one idea with several
+    /// answers live in a submenu (Combine Shapes, and Arrange), and a walk that
+    /// could only reach the top level could never press one of them. The name
+    /// is looked for at the top first, then one step into each submenu, and
+    /// "Combine Shapes > Cut Out" names the row through its parent for the day
+    /// two submenus carry the same word.
+    private static func find(_ title: String, in menu: NSMenu) -> (menu: NSMenu, index: Int)? {
+        let parts = title.components(separatedBy: " > ").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
+        if parts.count > 1 {
+            guard let parent = menu.items.first(where: { $0.title == parts[0] })?.submenu else {
+                return nil
+            }
+            parent.update()
+            return find(parts.dropFirst().joined(separator: " > "), in: parent)
+        }
+        if let index = menu.items.firstIndex(where: { $0.title == title }) {
+            return (menu, index)
+        }
+        for item in menu.items {
+            guard let submenu = item.submenu else { continue }
+            // A submenu SwiftUI has never opened can still be empty: its rows
+            // are built when it is first asked for. Asking is what `update()`
+            // is, and without it a walk would report a row that exists as
+            // missing.
+            submenu.update()
+            guard let index = submenu.items.firstIndex(where: { $0.title == title }) else { continue }
+            return (submenu, index)
+        }
+        return nil
+    }
+
     private func openRowMenu(_ name: String, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], number: Int) async throws {
         let target = try rightClickTarget(name)
@@ -4367,9 +4431,9 @@ private final class Run {
             // Picking happens LAST, after the reading and the picture: choosing
             // a row can rebuild the very list being read.
             if let choose {
-                if let index = menu.items.firstIndex(where: { $0.title == choose }) {
-                    if menu.items[index].isEnabled {
-                        menu.performActionForItem(at: index)
+                if let found = Self.find(choose, in: menu) {
+                    if found.menu.items[found.index].isEnabled {
+                        found.menu.performActionForItem(at: found.index)
                         reading.chose = choose
                     } else {
                         reading.problem = "the row \"\(choose)\" is dimmed, so picking it would do nothing"

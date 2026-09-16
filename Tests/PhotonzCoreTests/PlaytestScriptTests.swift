@@ -2332,7 +2332,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "halfSmooth": 2 } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, let half, _, _, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, let half, _, _, _, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(half == 2)
@@ -2347,12 +2347,78 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// The only claim that can tell a ring from a disc.
+    @Test("An expectPath step can claim how many separate loops the outline is made of")
+    func expectPathCountsRings() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPath", "rings": 2 } ] }
+        """)
+        guard case .expectPath(_, _, _, _, _, _, let rings, _, _, _, _) = script.steps[0] else {
+            Issue.record("expectPath"); return
+        }
+        #expect(rings == 2)
+    }
+
+    @Test("A claim about loops has to be a count")
+    func expectPathRefusesANonsenseRingCount() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectPath", "rings": -1 } ] }
+            """)
+        }
+    }
+
+    // MARK: - The pill under the canvas
+
+    @Test("An expectNotice step can claim the words the pill is carrying")
+    func expectNoticeReadsThePill() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectNotice", "says": "do not overlap" } ] }
+        """)
+        guard case .expectNotice(let says, let absent) = script.steps[0] else {
+            Issue.record("expectNotice"); return
+        }
+        #expect(says == "do not overlap")
+        #expect(absent == nil)
+    }
+
+    @Test("An expectNotice step can claim there is no pill at all")
+    func expectNoticeCanClaimNone() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectNotice", "absent": true } ] }
+        """)
+        guard case .expectNotice(let says, let absent) = script.steps[0] else {
+            Issue.record("expectNotice"); return
+        }
+        #expect(says == nil)
+        #expect(absent == true)
+    }
+
+    @Test("An expectNotice step that claims nothing is refused")
+    func expectNoticeHasToClaimSomething() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectNotice" } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectNotice", "says": "   " } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectNotice", "says": "hole", "absent": true } ] }
+            """)
+        }
+    }
+
     @Test("An expectPath step can claim the two colours the path came out in")
     func expectPathNamesTheColours() throws {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "#2D7FF9", "ink": "#2D7FF9" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "#2D7FF9")
@@ -2366,7 +2432,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "none" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "none")

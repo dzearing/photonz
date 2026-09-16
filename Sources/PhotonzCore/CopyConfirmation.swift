@@ -125,6 +125,15 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// did not fit, because a look is best effort by design: a result that
         /// is not quite a match has to be explained rather than mysterious.
         case lookPasted(LookPaste)
+        /// Two or more shapes became one (`PathCombining.swift`). It carries
+        /// the two things the canvas cannot show: WHICH shape's look the
+        /// result is wearing, since two overlapping circles of the same colour
+        /// say nothing about which was underneath, and whether the result has a
+        /// hole in it or came apart into pieces. It is also the only place a
+        /// combination that came to NOTHING can say why, and that is the case
+        /// it exists for: without it, Keep Overlap on two shapes that do not
+        /// touch is a menu item that does nothing at all.
+        case shapesCombined(PathCombinePlan)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -181,7 +190,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
-             .separatedIntoLayers, .turnedIntoText, .lookPasted: return Self.breakLifetime
+             .separatedIntoLayers, .turnedIntoText, .lookPasted,
+             .shapesCombined: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -225,6 +235,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "Cut to its own layer"
         case .lookCopied: return "Copied"
         case .lookPasted(let report): return report.title
+        case .shapesCombined(let plan): return plan.title
         }
     }
 
@@ -337,6 +348,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return layer.isEmpty ? "The look of that layer" : "The look of \(layer)"
         case .lookPasted(let report):
             return report.detail
+        case .shapesCombined(let plan):
+            return plan.detail
         }
     }
 

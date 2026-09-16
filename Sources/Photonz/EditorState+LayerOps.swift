@@ -433,6 +433,74 @@ extension EditorState {
         turnedIntoPathNotice = PathEditHint.justTurned(paths: alive.count)
     }
 
+    // MARK: - Two shapes become one (join, cut out, keep or drop the overlap)
+
+    /// Whether any of the four area operations applies from a layer ROW's menu.
+    ///
+    /// Like Turn Into Path, it asks about everything the row menu would act on
+    /// (`rowMenuTargets`), so right clicking one of three picked circles
+    /// offers the commands for all three.
+    func canCombineLayers(id: UUID) -> Bool {
+        canCombine(ids: rowMenuTargets(id))
+    }
+
+    /// Whether Layer ▸ Combine Shapes has anything to act on: the whole
+    /// selection, the same targets Duplicate and Delete read.
+    var canCombineSelection: Bool { canCombine(ids: actionableLayerIDs) }
+
+    /// Two shapes with an inside between them is the whole test. It rides on
+    /// the Pen's own flag, because the result of every one of these is a path
+    /// and a path you cannot reshape is a command with no payoff.
+    private func canCombine(ids: Set<UUID>) -> Bool {
+        guard Experiments.shared.penEnabled, let document else { return false }
+        return document.combinableLayers(ids: ids).count >= 2
+    }
+
+    /// The row menu's Join, Cut Out, Keep Overlap or Drop Overlap, on the whole
+    /// selection when the row you right clicked is part of it.
+    func combineLayers(id: UUID, _ operation: PathCombine.Operation) {
+        combine(ids: rowMenuTargets(id), operation)
+    }
+
+    /// Layer ▸ Combine Shapes ▸ … over the selection.
+    func combineSelection(_ operation: PathCombine.Operation) {
+        combine(ids: actionableLayerIDs, operation)
+    }
+
+    /// Runs one of the four, in ONE undo step, and leaves the result picked so
+    /// its points are on it and ready to drag (`CanvasPathEdit`).
+    ///
+    /// There is no question first, unlike Turn Into Path. Turning a rectangle
+    /// into a path takes away something invisible — the corner radius has
+    /// nothing left to act on — while this takes away two shapes you can SEE
+    /// and hands back one you can see, so there is nothing to warn about that
+    /// the canvas does not already say. What it does need afterwards is the
+    /// one line naming which shape's look survived and whether the result has
+    /// a hole in it, which is what the canvas cannot show.
+    ///
+    /// When the answer is nothing the document is left exactly as it was and
+    /// the line says why, rather than a command quietly doing nothing.
+    private func combine(ids: Set<UUID>, _ operation: PathCombine.Operation) {
+        guard Experiments.shared.penEnabled, let document else { return }
+        let plan = document.combiningLayers(ids: ids, operation).plan
+        guard plan.takes >= 2 else { return }
+        // The shape at the BOTTOM of the picked ones is the row that survives,
+        // and it is named before the command runs: afterwards the rows above
+        // it are gone and there is nothing left to ask.
+        let keeper = document.combinableLayers(ids: ids).first
+        discardDragPreview()
+        if plan.didAnything {
+            perform { $0.combineLayers(ids: ids, operation) }
+            multiSelectedLayerIDs = []
+            selectedLayerID = keeper
+        }
+        // The pill under the canvas rather than the path chip, because the
+        // sentence that matters most is the one about a combination that came
+        // to NOTHING, and in that case the shapes are still shapes and the
+        // path chip is not up to say it.
+        raiseCanvasNotice(.shapesCombined(plan))
+    }
+
     // MARK: - Restacking (Photoshop ⌘] ⌘[ ⇧⌘] ⇧⌘[)
 
     func bringLayerForward(id: UUID) { restack(id: id, .forward) }

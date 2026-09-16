@@ -1619,6 +1619,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// substring rather than the whole line, so a walk claims the PROMISE the
     /// chip makes rather than breaking on a comma.
     case expectHint(contains: String)
+    /// What the NOTICE PILL under the canvas is saying, or that there is none.
+    ///
+    /// The pill and the tool chip share the slot under the canvas and the pill
+    /// wins while it is up (`EditorView`), but they are different surfaces
+    /// saying different kinds of thing: a chip teaches the gesture under your
+    /// hand, and a pill reports what a command just did. This claims the pill,
+    /// which is the only way a walk can hold the app to a sentence it is
+    /// obliged to say — above all the sentence a command says when it changed
+    /// NOTHING, which is the one case where the canvas cannot tell you.
+    case expectNotice(says: String?, absent: Bool?)
     /// What the path the Pen just drew is actually made of: how many anchors it
     /// has, whether it closed, and how many of its runs are curves.
     ///
@@ -1647,9 +1657,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that arrives straight and leaves on a curve is not a smooth bend and
     /// the runs either side of it are counted the same whether it is one or a
     /// hard corner sitting between a line and a curve.
+    ///
+    /// `rings` is how many separate loops the outline is made of, which is the
+    /// only way a walk can claim that a shape really has a HOLE in it: a ring
+    /// built by cutting one circle out of another has exactly two, and a walk
+    /// that only counted its points would pass on a solid disc with the same
+    /// number of them (`PathCombining.swift`).
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
-                    smooth: Int?, halfSmooth: Int?, width: CGFloat?, fill: String?,
-                    ink: String?, anchorAt: PlaytestAnchorClaim?)
+                    smooth: Int?, halfSmooth: Int?, rings: Int?, width: CGFloat?,
+                    fill: String?, ink: String?, anchorAt: PlaytestAnchorClaim?)
     /// How far the points and levers drawn on the picked path may be from the
     /// shape the canvas is actually drawing, in screen points, at the worst
     /// moment of the drag that just ran.
@@ -1866,7 +1882,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -1924,6 +1940,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
+        case .expectNotice: "expectNotice"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
@@ -2231,6 +2248,7 @@ public enum PlaytestStep: Sendable, Equatable {
             let curves = try f.optionalNumber("curves")
             let smooth = try f.optionalNumber("smooth")
             let halfSmooth = try f.optionalNumber("halfSmooth")
+            let rings = try f.optionalNumber("rings")
             let closed = try f.optionalFlag("closed")
             // Where one named point ENDED UP, which is the only way a walk can
             // claim that dragging it did anything: a reshaped path has the same
@@ -2263,19 +2281,20 @@ public enum PlaytestStep: Sendable, Equatable {
                 }
             }
             guard anchors != nil || closed != nil || curves != nil || smooth != nil
-                    || halfSmooth != nil || width != nil || fill != nil || ink != nil
-                    || anchorAt != nil else {
+                    || halfSmooth != nil || rings != nil || width != nil || fill != nil
+                    || ink != nil || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
                     + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
                     + "how many of its points are smooth bends, \"halfSmooth\" for how many "
-                    + "curve on one side only, \"width\" for the weight its "
+                    + "curve on one side only, \"rings\" for how many separate loops it is "
+                    + "made of, \"width\" for the weight its "
                     + "line came out at, \"fill\" or \"ink\" for the colours it came out "
                     + "wearing, or \"anchor\" and \"near\" for "
                     + "where one point ended up")
             }
             for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth),
-                                   ("halfSmooth", halfSmooth)] {
+                                   ("halfSmooth", halfSmooth), ("rings", rings)] {
                 guard let value else { continue }
                 guard value >= 0, value == value.rounded() else {
                     throw f.invalid(field, "a number of \(field) is a whole number, zero or more, not \(value)")
@@ -2285,6 +2304,7 @@ public enum PlaytestStep: Sendable, Equatable {
                                anchors: anchors.map { Int($0) }, closed: closed,
                                curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
                                halfSmooth: halfSmooth.map { Int($0) },
+                               rings: rings.map { Int($0) },
                                width: width.map { CGFloat($0) }, fill: fill, ink: ink,
                                anchorAt: anchorAt)
         case "expectLanding":
@@ -2322,6 +2342,23 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "carry; an empty claim passes against every chip and against no chip")
             }
             self = .expectHint(contains: contains)
+        case "expectNotice":
+            let says = try f.optionalString("says")
+            let absent = try f.optionalFlag("absent")
+            guard says != nil || absent != nil else {
+                throw f.invalid("says", "expectNotice has to claim something: \"says\" for words "
+                    + "the pill under the canvas must be carrying, or \"absent\": true for no "
+                    + "pill at all")
+            }
+            if let says, says.trimmingCharacters(in: .whitespaces).isEmpty {
+                throw f.invalid("says", "an empty claim passes against every pill and against no "
+                    + "pill; name the words that matter")
+            }
+            if says != nil, absent == true {
+                throw f.invalid("absent", "a pill that is not there cannot also be saying "
+                    + "something; claim one or the other")
+            }
+            self = .expectNotice(says: says, absent: absent)
         case "expectRegion":
             let reads = try f.optionalString("reads")
             let present = fields["present"] as? Bool

@@ -383,6 +383,17 @@ struct LayersRow: View, Equatable {
         if editorState.canTurnLayerIntoPath(id: id) {
             Button(TurnIntoPathPrompt.menuItem) { editorState.turnLayerIntoPath(id: id) }
         }
+        // The four ways two shapes become one, on the row where every other
+        // command about a layer already lives (`PathCombining.swift`). Absent
+        // rather than dimmed when there are not two shapes to combine, the
+        // rule this menu follows for everything that does not apply.
+        if editorState.canCombineLayers(id: id) {
+            Menu(PathCombine.menuItem) {
+                ForEach(PathCombine.Operation.allCases, id: \.self) { operation in
+                    Button(operation.title) { editorState.combineLayers(id: id, operation) }
+                }
+            }
+        }
         if display.isRasterizable {
             Button(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) }
         }

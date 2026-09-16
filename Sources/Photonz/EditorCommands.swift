@@ -471,6 +471,21 @@ struct EditorCommands: Commands {
                 Button(TurnIntoPathPrompt.menuItem) { editor?.turnSelectionIntoPath() }
                     .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
             }
+            // Two shapes become one (`PathCombining.swift`). A submenu rather
+            // than four rows in the Layer menu, because they are one idea with
+            // four answers and the menu is already long; directly under Turn
+            // Into Path, because both turn a shape you drew into an outline you
+            // can pull the points of. The whole submenu is dimmed on a
+            // selection with fewer than two shapes in it, which is where
+            // somebody finds out the commands exist.
+            if Experiments.shared.penEnabled {
+                Menu(PathCombine.menuItem) {
+                    ForEach(PathCombine.Operation.allCases, id: \.self) { operation in
+                        Button(operation.title) { editor?.combineSelection(operation) }
+                    }
+                }
+                .disabled(!(editor?.canCombineSelection ?? false))
+            }
             // The one command that makes a shape or a piece of text into pixels,
             // which is what a marquee needs before it can cut a piece out of it
             // (`RasterizePrompt`, `RegionSliceRefusal`). Named the way the
