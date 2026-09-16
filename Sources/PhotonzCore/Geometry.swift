@@ -315,22 +315,44 @@ public enum Geometry {
         return style.isOutlined ? box.insetBy(dx: -strokeWidth / 2, dy: -strokeWidth / 2) : box
     }
 
+    /// The four corners of a box, clockwise from top-left.
+    public static func corners(of rect: CGRect) -> [CGPoint] {
+        [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
+         CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)]
+    }
+
     /// The two leader-line segments connecting a zoom callout to its source box.
     /// Returns (from, to) pairs joining the nearest corners.
     public static func leaderLines(source: CGRect, callout: CGRect) -> [(from: CGPoint, to: CGPoint)] {
-        func corners(_ r: CGRect) -> [CGPoint] {
-            [CGPoint(x: r.minX, y: r.minY), CGPoint(x: r.maxX, y: r.minY),
-             CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.maxX, y: r.maxY)]
+        leaderLines(source: source, calloutCorners: corners(of: callout))
+    }
+
+    /// The same lines for a callout box that has been TURNED: `calloutCorners`
+    /// are the corners of the box as it is DRAWN (`Layer.transformedCorners`),
+    /// so the lines reach the magnifier a person can see rather than the
+    /// upright box it is stored as.
+    public static func leaderLines(source: CGRect,
+                                   calloutCorners: [CGPoint]) -> [(from: CGPoint, to: CGPoint)] {
+        guard !calloutCorners.isEmpty else { return [] }
+        // Two corners exactly the same distance away are equally right, so the
+        // topmost then leftmost wins: the same two lines come back whatever
+        // order the corners arrive in, turned or not.
+        func closer(_ a: CGPoint, _ b: CGPoint, to point: CGPoint) -> Bool {
+            let da = hypot(a.x - point.x, a.y - point.y)
+            let db = hypot(b.x - point.x, b.y - point.y)
+            if da != db { return da < db }
+            return a.y != b.y ? a.y < b.y : a.x < b.x
         }
-        let s = corners(source)
-        let c = corners(callout)
         // Pair each source corner with its nearest callout corner; keep the two shortest pairs.
         var pairs: [(from: CGPoint, to: CGPoint, d: CGFloat)] = []
-        for sc in s {
-            let nearest = c.min { hypot($0.x - sc.x, $0.y - sc.y) < hypot($1.x - sc.x, $1.y - sc.y) }!
+        for sc in corners(of: source) {
+            guard let nearest = calloutCorners.min(by: { closer($0, $1, to: sc) }) else { continue }
             pairs.append((sc, nearest, hypot(nearest.x - sc.x, nearest.y - sc.y)))
         }
-        pairs.sort { $0.d < $1.d }
+        pairs.sort {
+            if $0.d != $1.d { return $0.d < $1.d }
+            return $0.from.y != $1.from.y ? $0.from.y < $1.from.y : $0.from.x < $1.from.x
+        }
         return Array(pairs.prefix(2)).map { (from: $0.from, to: $0.to) }
     }
 }

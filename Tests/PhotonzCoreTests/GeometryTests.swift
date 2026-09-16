@@ -123,6 +123,28 @@ struct GeometryTests {
         }
     }
 
+    /// A magnifier turned on its side is DRAWN somewhere else, and the lines
+    /// back to the bit of the picture it enlarges have to follow it there.
+    /// They land on the corners of the box you can see, not on the upright box
+    /// it is stored as.
+    @Test func leaderLinesLandOnTheCornersOfATurnedCallout() {
+        let source = CGRect(x: 172, y: 76, width: 288, height: 76)
+        let frame = CGRect(x: 432, y: 528, width: 600, height: 184)
+        let turn = LayerTransform(rotation: 40 * .pi / 180)
+            .affineTransform(around: CGPoint(x: frame.midX, y: frame.midY))
+        let turned = Geometry.corners(of: frame).map { $0.applying(turn) }
+
+        let lines = Geometry.leaderLines(source: source, calloutCorners: turned)
+        #expect(lines.count == 2)
+        // Turned 40 degrees, the corner nearest the source is the top-left one,
+        // swung up and to the right of where it is stored.
+        for line in lines {
+            #expect(hypot(line.to.x - turned[0].x, line.to.y - turned[0].y) < 0.001,
+                    "line ends on the visible top-left corner \(turned[0]) — got \(line.to)")
+            #expect(line.from.x == source.maxX, "line starts on the source's near edge — got \(line.from)")
+        }
+    }
+
     @Test func arrowheadTipIsAtEndPoint() {
         let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50), end: CGPoint(x: 80, y: 50), strokeWidth: 6)
         #expect(points.count == 3)

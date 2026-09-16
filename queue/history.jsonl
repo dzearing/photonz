@@ -4634,3 +4634,19 @@
 {"t":"2026-09-16T22:48:37.320Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
 {"t":"2026-09-16T22:48:37.434Z","ev":"task_started","id":"an-exported-redline-is-shapes-not-a-picture-of-o","title":"An exported redline is shapes, not a picture of one","priority":"p2-normal"}
 {"t":"2026-09-16T23:15:00.381Z","ev":"task_done","id":"an-exported-redline-is-shapes-not-a-picture-of-o","from":"in_progress","note":"An arrow, a highlight and a measurement all write as SVG shapes now (Sources/PhotonzCore/SVGExport.swift), sharing one plan with the canvas through the new MeasurePlan in PhotonzCore and one type engine through SVGExport.TypeSetter. Checked by rendering the file back: 9 cases, worst 0.33 of 255 mean over the canvas. Full suite 7889 green, committed a88165a5. Audit queue/audits/2026-09-16-redline-as-shapes.json. The walk could not run (screen locked), so the audit ships offscreen renders and a browser shot; sweep requested."}
+{"t":"2026-09-16T23:17:25.057Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T23:17:25.161Z","ev":"task_started","id":"keep-the-pieces-visible-while-trimming-a-recordi","title":"Keep the pieces visible while trimming a recording","priority":"p2-normal"}
+{"t":"2026-09-16T23:24:37.048Z","ev":"task_note","id":"keep-the-pieces-visible-while-trimming-a-recordi"}
+{"t":"2026-09-16T23:25:12.147Z","ev":"task_note","id":"keep-the-pieces-visible-while-trimming-a-recordi"}
+{"t":"2026-09-16T23:25:12.193Z","ev":"task_note","id":"keep-the-pieces-visible-while-trimming-a-recordi"}
+{"t":"2026-09-16T23:25:12.240Z","ev":"task_note","id":"keep-the-pieces-visible-while-trimming-a-recordi"}
+{"t":"2026-09-16T23:25:14.478Z","ev":"task_done","id":"keep-the-pieces-visible-while-trimming-a-recordi","from":"in_progress","note":"The trim track keeps the pieces: TrimTimeline draws a block per piece with the kept part lit, the readout beside the scissors reads '2 of 3 pieces' while trimming, and VideoCutList.piecesUnderTrim + VideoTrimTrackBlock hold the geometry in PhotonzCore. 13 new tests, one of which pins what is drawn as kept to exactly what Done keeps; whole suite (7902) green. Committed 84f87ab4 and pushed. Not seen on screen: the Mac was locked all task so no walk could run and there are no pictures; trim-with-pieces-walk.json is written and a sweep is requested. Audit: queue/audits/2026-09-16-video-cutting-trim.json"}
+{"t":"2026-09-16T23:27:41.835Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T23:27:41.943Z","ev":"task_started","id":"the-line-back-from-a-turned-magnifier-points-at","title":"The line back from a turned magnifier points at its frame","priority":"p2-normal"}
+{"t":"2026-09-16T23:37:41.352Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.399Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.445Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.493Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.539Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.585Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}
+{"t":"2026-09-16T23:37:41.631Z","ev":"task_note","id":"the-line-back-from-a-turned-magnifier-points-at"}

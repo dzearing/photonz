@@ -289,4 +289,36 @@ struct ZoomCalloutRenderingTests {
         let output = DocumentRenderer().render(doc, store: store)
         #expect(output != nil, "degenerate callout is skipped, not fatal")
     }
+
+    /// Turn a magnifier on its side and the line back to what it magnifies has
+    /// to turn with it. The numbers are the ones from the report: a 1440x960
+    /// document, a 600x184 box turned 40 degrees, whose visible top-left corner
+    /// swings up and right to about (561, 357) while the box it is stored as
+    /// still says (432, 528).
+    @Test func aTurnedCalloutsLeaderLineReachesTheBoxYouCanSee() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 1440, height: 960, r: 0, g: 0, b: 0))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 1440, height: 960)
+
+        var style = LayerStyle()
+        style.borderWidth = 4
+        style.borderColorHex = "#00FF00"
+        var layer = calloutLayer(source: CGRect(x: 172, y: 76, width: 288, height: 76),
+                                 magnification: 2.4,
+                                 frame: CGRect(x: 432, y: 528, width: 600, height: 184),
+                                 style: style)
+        layer.transform = LayerTransform(rotation: 40 * .pi / 180)
+        doc.addLayer(layer)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // A dozen points back from the visible corner, on the way to the source:
+        // the leader line's ink has to be here.
+        let reaching = pixel(output, x: 556, y: 346)
+        #expect(reaching.g > 100, "leader line runs up to the turned box's corner — got \(reaching)")
+        // ...and nothing is left stranded out past the turned box, where the
+        // upright corner used to pull it.
+        let stranded = pixel(output, x: 432, y: 528)
+        #expect(stranded.g < 40, "no leader line left hanging at the upright corner — got \(stranded)")
+    }
 }

@@ -504,11 +504,18 @@ public final class DocumentRenderer: @unchecked Sendable {
                 // leader lines and the source outline keep exactly the weight
                 // they have at 100% instead of thinning out as you zoom in.
                 let shrink = 1 / contentScale
+                // The box as it is DRAWN, not as it is stored: a turned
+                // magnifier's leader lines have to reach the corners a person
+                // can see. `transformedCorners` is in the layer's own space, so
+                // it moves onto the canvas the way `frame` does.
+                let drawnCorners = layer.transformedCorners.map {
+                    CGPoint(x: ($0.x + origin.x) * shrink, y: ($0.y + origin.y) * shrink)
+                }
                 if let overlay = ZoomCalloutOverlayRasterizer.rasterize(
                     source: callout.sourceRect.standardized
                         .intersection(CGRect(origin: .zero, size: document.canvasSize))
                         .magnified(by: shrink),
-                    callout: frame.magnified(by: shrink),
+                    calloutCorners: drawnCorners,
                     style: layer.style.magnified(by: shrink),
                     magnification: callout.magnification,
                     shape: callout.shape) {

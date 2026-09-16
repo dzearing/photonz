@@ -335,7 +335,8 @@ extension CanvasNSView {
                                  cornerWidth: sourceRadius, cornerHeight: sourceRadius,
                                  transform: nil)
         let leaderPath = CGMutablePath()
-        for line in Geometry.leaderLines(source: callout.sourceRect, callout: calloutLayer.frame) {
+        for line in Geometry.leaderLines(source: callout.sourceRect,
+                                         calloutCorners: calloutLayer.transformedCorners) {
             leaderPath.move(to: viewport.viewPoint(fromDocument: line.from))
             leaderPath.addLine(to: viewport.viewPoint(fromDocument: line.to))
         }

@@ -15,11 +15,28 @@ public enum ZoomCalloutOverlayRasterizer {
     public static func rasterize(source: CGRect, callout: CGRect,
                                  style: LayerStyle, magnification: CGFloat,
                                  shape: ZoomCalloutShape = .rectangle) -> (image: CGImage, origin: CGPoint)? {
+        rasterize(source: source, calloutCorners: Geometry.corners(of: callout),
+                  style: style, magnification: magnification, shape: shape)
+    }
+
+    /// The same overlay for a callout box that has been TURNED.
+    /// `calloutCorners` are the corners of the box as it is DRAWN
+    /// (`Layer.transformedCorners`), so the leader lines meet the magnifier a
+    /// person can see instead of aiming at the upright box it is stored as.
+    public static func rasterize(source: CGRect, calloutCorners: [CGPoint],
+                                 style: LayerStyle, magnification: CGFloat,
+                                 shape: ZoomCalloutShape = .rectangle) -> (image: CGImage, origin: CGPoint)? {
         let source = source.standardized
         guard source.width >= 1, source.height >= 1 else { return nil }
 
         let outlineWidth = max(1, style.borderWidth)
-        let bounds = source.union(callout).insetBy(dx: -outlineWidth, dy: -outlineWidth).integral
+        // Room for the box wherever the turn has put it, so a leader line
+        // running out to a swung corner is not cropped away.
+        var reach = source
+        for corner in calloutCorners {
+            reach = reach.union(CGRect(origin: corner, size: .zero))
+        }
+        let bounds = reach.insetBy(dx: -outlineWidth, dy: -outlineWidth).integral
         let width = Int(bounds.width.rounded())
         let height = Int(bounds.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -46,7 +63,7 @@ public enum ZoomCalloutOverlayRasterizer {
         context.setStrokeColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b,
                                        alpha: rgba.a * opacity * 0.6))
         context.setLineWidth(outlineWidth)
-        for line in Geometry.leaderLines(source: source, callout: callout) {
+        for line in Geometry.leaderLines(source: source, calloutCorners: calloutCorners) {
             context.move(to: line.from)
             context.addLine(to: line.to)
             context.strokePath()

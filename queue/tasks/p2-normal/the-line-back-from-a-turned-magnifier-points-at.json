@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 350,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T05:40:09.265Z",
-  "updated": "2026-09-16T12:23:34.858Z",
+  "updated": "2026-09-16T23:37:41.630Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing a-lens-turned-on-its-side-still-shows-the-pictur on 2026-09-16.\n\nReproduction: rendered a 1440x960 document with one zoomCallout layer, sourceRect (172,76,288,76), magnification 2.4, frame (432,528,600,184), transform.rotation 40 degrees, via DocumentRenderer().render. In the output the single leader line ends at about (430,528) - the UNTURNED frame corner - with roughly 60 points of empty canvas between it and the turned box edge. At 18 degrees it is subtler but still short.\n\nCause: DocumentRenderer.compositeLayers passes ZoomCalloutOverlayRasterizer.rasterize(callout: frame.magnified(by: shrink)) - the stored frame, with no transform applied - and the overlay is composited in canvas space, so Geometry.leaderLines picks corner pairs off a box that is not where the box is drawn. The fix wants the turned corners (Layer.turnedCorners / transform.affineTransform(around: turnPivot)) rather than the axis-aligned rect, and leaderLines currently takes two rects.\n\nThe source outline itself is right - it follows sourceRect, which does not turn.",
@@ -26,6 +26,39 @@
     {
       "t": "2026-09-16T12:23:34.857Z",
       "note": "seq 2790 -> 350"
+    },
+    {
+      "t": "2026-09-16T23:27:41.941Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T23:37:41.350Z",
+      "note": "Reproduced first, at the exact numbers in the report: rendered 1440x960 with a 600x184 callout turned 40 degrees and read the pixels. Green leader ink sat at (432,528), the UPRIGHT corner, 30 points out past the far edge of the turned box, and there was nothing at the visible corner (561,357). Test: aTurnedCalloutsLeaderLineReachesTheBoxYouCanSee."
+    },
+    {
+      "t": "2026-09-16T23:37:41.397Z",
+      "note": "Fix: Geometry.leaderLines gained a corners form (source:calloutCorners:), ZoomCalloutOverlayRasterizer gained the matching rasterize(source:calloutCorners:...) which also widens the overlay bitmap to reach the swung corners, and DocumentRenderer feeds it layer.transformedCorners offset onto the canvas. CanvasAnnotationPreview's creation flight uses the same corners. The rect-taking forms stay and just build the four corners."
+    },
+    {
+      "t": "2026-09-16T23:37:41.443Z",
+      "note": "Acceptance 3 (an unturned magnifier looks exactly as today) verified rather than assumed: a throwaway test ran the old algorithm and the new one over 20000 random source/callout pairs. It found 24 pairs where an exactly equidistant pair of corners made the answer depend on array order, so leaderLines now breaks a distance tie by topmost then leftmost, and the two returned lines are sorted deterministically. After that, all 20000 pairs return the identical two segments."
+    },
+    {
+      "t": "2026-09-16T23:37:41.491Z",
+      "note": "Adversarial review before building: the shortest fix is aiming the existing corner-to-corner lines at the box as drawn, not redesigning them into edge-anchored connectors, which would have changed how every straight magnifier looks and broken acceptance 3. Rejected that."
+    },
+    {
+      "t": "2026-09-16T23:37:41.537Z",
+      "note": "left rough: past about 30 degrees both lines converge on the same corner and read as a thin wedge rather than a band. It is exactly what a straight magnifier does today when the box sits well off to one side, so it is not a regression and not a defect, just the corner-to-corner rule showing. Raised as a question in the audit's evaluate list instead of filing a task."
+    },
+    {
+      "t": "2026-09-16T23:37:41.583Z",
+      "note": "Walks: the Mac's screen was locked for the whole task, so Scripts/playtest-all.sh callout reported COULD NOT RUN and no walk of any kind could be taken. Asked for a sweep with that reason. Audit shots are offscreen renders from the real render path and say so."
+    },
+    {
+      "t": "2026-09-16T23:37:41.629Z",
+      "note": "Scripts/test.sh green: 7904 tests in 632 suites. Perf: the composite path only changed where the callout overlay bitmap's bounds come from; the 12MP/10-layer gate measured 6.4ms median against a 34ms budget."
     }
-  ]
+  ],
+  "started": "2026-09-16T23:27:41.940Z"
 }

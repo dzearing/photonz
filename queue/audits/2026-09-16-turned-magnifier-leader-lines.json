@@ -1,0 +1,25 @@
+{
+  "feature": "A turned magnifier keeps its leader lines attached",
+  "epic": "measure-redline",
+  "summary": "Turn a magnifier box on its side and the two thin lines running back to the bit of the picture it enlarges now meet the corner of the box you can see. Before, they aimed at where the box would be if you had never turned it, so they crossed it and stopped in mid air on the far side.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Open a screenshot and press M to place a magnifier over a detail." },
+    { "do": "Drag the magnifier box away from the detail so the leader lines are long." },
+    { "do": "Grab the turn handle and swing the box about twenty degrees." },
+    { "do": "Look at where the two lines end.", "shot": "2026-09-16-turned-magnifier-18.png" },
+    { "do": "Keep turning, past forty degrees and on round past ninety.", "shot": "2026-09-16-turned-magnifier-40.png" },
+    { "do": "Turn it back to straight and check it looks like it always did.", "shot": "2026-09-16-turned-magnifier-0.png" }
+  ],
+  "evaluate": [
+    "Do the lines stay attached to the box the whole way round the turn?",
+    "At a big turn both lines run to the same corner and make a thin wedge. Does that read as a connector, or would two lines spreading to different corners read better?",
+    "Is a straight magnifier exactly as you remember it?",
+    "Does the outline round the source region still sit where you expect while the box turns?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this run, so no walk could be taken and there is no photograph of the window. The pictures here are renders from the real render path, the same pixels the app bakes into the canvas, not the app's own chrome around them.",
+    "Past about thirty degrees both lines converge on one corner, so the pair reads as a narrow wedge rather than a band. That is how a straight magnifier has always drawn when the box sits well off to one side, so it is unchanged behaviour rather than new, but it is the part most likely to be worth a different rule.",
+    "The lines still join corner to corner. They do not slide along an edge to the closest point, so at some angles they meet the box at a corner that is not the closest bit of the box."
+  ]
+}
