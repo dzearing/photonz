@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 410,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T21:18:08.950Z",
-  "updated": "2026-09-16T08:41:00.756Z",
+  "updated": "2026-09-16T08:41:12.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today the family slot answers to whichever member it is wearing: EditorView.groupButton hangs .tutorialAnchor(.tool(editorState.lastTool(in: group))). So .tool(.rectangle) resolves when Rectangle is the remembered member and silently does not when it is not, which lands the callout in the middle of the window (the honest fallback, but not a good tutorial).\n\nEvidence: Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json logs where every anchor resolved to; the family slot only ever reports one tool. See docs/design/tutorials.md, \"What this framework deliberately does not do\".",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-16T08:41:00.755Z",
       "note": "Left rough, not filed: the card says 'the More menu' while the button's tooltip says 'More tools' and the button is drawn as three dots, so the words and the control are not quite the same name; and when the person opens that menu it opens over the card, which nothing moves out of the way. Both are in the audit's rough list for the user to react to rather than filed as tasks of their own, since neither stops anybody and the audit is where they get judged."
+    },
+    {
+      "t": "2026-09-16T08:41:12.299Z",
+      "note": "A step can name the tool it teaches even when that tool is not on the bar: the ring goes to the family slot or the More button holding it, in that control's own shape, and the card adds one line saying which and how to reach it. Nothing opens it for the person. Chain plus copy in PhotonzCore (TutorialStandIn.swift, 13 tests); TutorialController walks it; .moreTools hung on the overflow button; the Building UI rectangle step names the rectangle again. Scripts/test.sh green, 7521 tests. Verified by tests and by an offscreen render of the card; NOT verified in the running app, because the Mac's screen was locked all task and every walk reported status locked. The new walk tutorial-hidden-tool-walk.json has never run; a sweep was requested with that reason. Audit: queue/audits/2026-09-16-tutorial-hidden-tool.json. Pushed as f5e271bf."
     }
   ],
-  "started": "2026-09-16T08:28:27.589Z"
+  "started": "2026-09-16T08:28:27.589Z",
+  "completed": "2026-09-16T08:41:12.300Z"
 }
