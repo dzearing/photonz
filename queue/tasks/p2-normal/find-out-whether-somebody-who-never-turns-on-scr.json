@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 430,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T00:04:48.521Z",
-  "updated": "2026-09-16T09:09:10.644Z",
+  "updated": "2026-09-16T09:09:25.388Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while building the first run offer on 2026-09-12. FirstRunOffer.showsChoice (Sources/PhotonzCore/FirstRunOffer.swift) requires screenRecordingGranted and no pending restart. Both guards are there for good reasons, written down in that file: the grant only takes effect in a fresh process, so a tour offered before the restart is a tour the restart kills.\n\nThe gap is real but so is the reason. Note that this person is already in a loop today, independently of tutorials: WelcomeController presents the setup window at every launch while welcome.setupCompleted is false, which it stays until the window is closed with the grant in place. So the honest version of this question is probably the bigger one, what the app should do for somebody who wants Photonz without giving it the screen, and the tour offer is one line of that answer.\n\nSeen, not reproduced as a failure: it is a deliberate rule, not a bug.",
@@ -82,7 +82,12 @@
     {
       "t": "2026-09-16T09:09:10.643Z",
       "note": "Audit: queue/audits/2026-09-16-first-run-offer.json. No pictures in it, and it says why in one line: the screen was locked."
+    },
+    {
+      "t": "2026-09-16T09:09:25.386Z",
+      "note": "Decided: everyone is offered the tour, including somebody who never grants Screen Recording. Recorded in docs/design/tutorials.md (The first launch) with the reasoning and with what it deliberately leaves alone. FirstRunOffer.showsChoice now waits on a pending restart and nothing else; answerOnDismiss moves with it but keeps its second reason so Current cannot spend Next's offer. Headline and button prominence change while setup is unfinished. Verified by Scripts/test.sh, 7543 tests green, 24 in the First run offer suite including the five-launch run of somebody who never grants. first-run-walk.json could NOT run: the Mac's screen was locked all task, sweep requested. Audit: queue/audits/2026-09-16-first-run-offer.json, no pictures and it says why. Follow-up filed for the setup window still presenting every launch."
     }
   ],
-  "started": "2026-09-16T08:59:20.381Z"
+  "started": "2026-09-16T08:59:20.381Z",
+  "completed": "2026-09-16T09:09:25.387Z"
 }
