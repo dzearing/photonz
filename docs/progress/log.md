@@ -16565,3 +16565,32 @@ it is folded into that task rather than filed again.
 
 Next: the sweep requested against this change runs once walks are allowed to
 start.
+
+## 2026-09-16 — A shared component arrives the size it should be
+
+A component built on a Retina screenshot arrived in a one-to-one document at
+twice the size it looked, because the shelf handed over the drawing verbatim
+and a Retina document counts in image pixels. Reproduced first on HEAD: a
+button made at pixel scale 2 came out 120x40 with 24pt type where 60x20 and
+12pt was wanted.
+
+- `SharedComponent` now records the unit its drawing was written in
+  (`pixelScale`, optional so shelves already written are taken verbatim).
+- `Layer.rescaled(by:)` (new, `Sources/PhotonzCore/LayerRescaling.swift`)
+  restates a drawing in a different unit. Unlike `magnified(by:)` it rewrites
+  the content payloads too — the type size, the stroke width, the points of an
+  outline — because a shared component STAYS in the document it lands in
+  rather than being handed to a rasterizer with a scale beside it.
+- Both ways in rescale: `adoptSharedComponent` and `refill`, so a component
+  that arrives right is not put back wrong by the next look at the shelf.
+- The walk harness's `blank` step takes an optional `pixelScale`, so a walk can
+  put two documents that count differently side by side.
+
+Next: the new walk `shared-component-scale-walk.json` has never been run — the
+Mac's screen was locked for the whole session, so no walk could run and the
+audit (`queue/audits/2026-09-16-shared-component-scale.json`) carries no
+pictures. A sweep is requested.
+
+Open question for the user, in the audit: the panel reads 240 by 80 on the
+screenshot and 120 by 40 in the new document for a button that looks identical
+in both. Honest, but is it clear?

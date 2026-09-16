@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 330,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:06:40.786Z",
-  "updated": "2026-09-15T12:14:53.632Z",
+  "updated": "2026-09-16T06:47:31.541Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/PhotonzCore/SharedComponents.swift: adoptSharedComponent takes the drawing verbatim. The starters solve this by BUILDING at max(pixelScale, 1); a shared component is a drawing rather than a recipe, so it needs scaling on the way in (LayerScaling) plus a note of the scale it was shared at on SharedComponent. Raised by the audit queue/audits/2026-09-12-shared-components.json.",
@@ -43,6 +43,52 @@
     {
       "t": "2026-09-15T12:14:53.631Z",
       "note": "seq 290 -> 330"
+    },
+    {
+      "t": "2026-09-16T06:34:28.494Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T06:47:26.439Z",
+      "note": "Reproduced on HEAD first: a component made in a pixelScale-2 document arrived at 120x40 with 24pt type in a pixelScale-1 document, where 60x20 / 12pt was wanted. Temp test printed 'ARRIVED SIZE: (120.0, 40.0) font: 24.0'."
+    },
+    {
+      "t": "2026-09-16T06:47:26.484Z",
+      "note": "Adversarial review before building: the mock/audit says 'starters solve this by rebuilding at the document scale; a shared component cannot'. Correct, but the note stopped at the drop. The drop is only half of it: refill() rewrites the local drawing from the shelf after every sync, so a component that arrived right would have been put back to the shelf's numbers on the next look. Both ways in rescale now."
+    },
+    {
+      "t": "2026-09-16T06:47:26.526Z",
+      "note": "Design: magnified(by:) was the obvious tool and is the wrong one. It deliberately leaves content payloads (type size, stroke width, outline points) alone because the rasterizer is handed a box plus a scale. A shared component STAYS in the new document, so the type has to move with the box or a halved button keeps 24pt words. Hence a separate Layer.rescaled(by:) in Sources/PhotonzCore/LayerRescaling.swift."
+    },
+    {
+      "t": "2026-09-16T06:47:26.568Z",
+      "note": "Shelf format: SharedComponent.pixelScale is optional. A shelf written before this decodes nil and its drawings are taken verbatim, so nothing already on anybody's shelf moves."
+    },
+    {
+      "t": "2026-09-16T06:47:26.612Z",
+      "note": "No ping-pong risk between two open windows: sharedShelfChanged goes through applyOutsideHistory, which does not publish, so a sync never republishes. Only a person's edit publishes."
+    },
+    {
+      "t": "2026-09-16T06:47:26.656Z",
+      "note": "Added an optional pixelScale to the walk harness's blank step (PlaytestScript + PlaytestHarness + docs/design/playtest-harness.md), because there was no way for a walk to make two documents that count differently. It drives the same setDocumentPixelScale the capture-scale control uses."
+    },
+    {
+      "t": "2026-09-16T06:47:26.699Z",
+      "note": "left rough: a component that MOVES is not rescaled - LayerMotion values keep the numbers they were written with. Nothing on the shelf animates yet and motion-on-components is not a shipped combination, so it did not earn a task; it is in the audit's rough list."
+    },
+    {
+      "t": "2026-09-16T06:47:26.743Z",
+      "note": "left rough: a measure's labelScale is left alone on purpose (a readout is a fixed size by design), so a caliper inside a shared component would keep its readout size across a crossing."
+    },
+    {
+      "t": "2026-09-16T06:47:26.790Z",
+      "note": "Screen was LOCKED for this whole task, so no walk could run: shared-component-scale-walk.json parses but has never been executed, and the audit has no pictures at all. Sweep requested."
+    },
+    {
+      "t": "2026-09-16T06:47:31.539Z",
+      "note": "The shelf now records the unit a drawing was written in and both ways into a document restate it: Sources/PhotonzCore/LayerRescaling.swift (new Layer.rescaled(by:)) plus SharedComponents.swift. Verified by reproducing the bug on HEAD first (120x40/24pt where 60x20/12pt was wanted), then 13 new tests covering both directions, same-scale, an old shelf with no scale recorded, and the round trip through sync; full suite 7466 tests green. The end-to-end walk could not be run: the Mac's screen was locked all session, so no walk runs at all. Sweep requested."
     }
-  ]
+  ],
+  "started": "2026-09-16T06:34:28.493Z",
+  "completed": "2026-09-16T06:47:31.540Z"
 }

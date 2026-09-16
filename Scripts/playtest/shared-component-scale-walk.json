@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/shared-component-scale-walk",
+  "steps": [
+    { "comment": "The first document counts in twos: every number in it is half a point, exactly as a Retina capture's are.", "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900, "pixelScale": 2 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 420] },
+    { "do": "wait", "seconds": 0.4 },
+    { "comment": "Exact numbers, so what arrives in the second document can be checked against something rather than eyeballed.", "do": "focus", "field": "W" },
+    { "do": "type", "text": "240" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "80" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "W", "reads": "240" },
+    { "do": "expect", "field": "H", "reads": "80" },
+
+    { "do": "tool", "tool": "select" },
+    { "comment": "A component is made out of a group, the way the Components walk makes one.", "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Save Button" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "shareSelectedComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-made-at-two", "note": "the first document counts in twos: the button reads 240 by 80 here, which is 120 by 40 of the points a person sees" },
+    { "do": "snapshot", "name": "scale-1-made-at-two" },
+
+    { "comment": "A brand new document that counts one to one, the file you start from scratch.", "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "comment": "THE TEST. A document counting in ones holds it at 120 by 40: the same button, the same size on screen, restated in this document's unit. Before this it arrived at 240 by 80 and drew twice as big.", "do": "expect", "field": "W", "reads": "120" },
+    { "do": "expect", "field": "H", "reads": "40" },
+    { "do": "describe", "stage": "2-arrived-at-one", "note": "the second document counts one to one: the same button reads 120 by 40 and is the same size on screen as it was in the first" },
+    { "do": "snapshot", "name": "scale-2-arrived-at-one" },
+    { "do": "render", "name": "scale-2-arrived-at-one-doc" }
+  ]
+}

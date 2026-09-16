@@ -1,0 +1,30 @@
+{
+  "feature": "A shared component arrives the size it should be",
+  "epic": "ui-components",
+  "summary": "A component you built on a Retina screenshot now arrives in a one-to-one document at the size it looked where you made it, instead of twice that. It works the other way round too, and following the shelf afterwards keeps it right.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: this is how the shelf behaves now. You need two documents that count differently, which is what a screenshot and a File > New give you.",
+  "try": [
+    { "do": "Open a Retina screenshot: press ⇧⌘4 and grab any part of your screen." },
+    { "do": "Draw a rectangle on it about the size of a button, then press ⌘G to group it." },
+    { "do": "Press ⌥⌘K to make it a component and name it Save Button." },
+    { "do": "Click it and turn on Share across documents in the Component section." },
+    { "do": "Press ⌘N and take the offered blank canvas." },
+    { "do": "Open the Library on Comps and drag Save Button onto the canvas." },
+    { "do": "Put the two windows side by side and compare the button in each." },
+    { "do": "Move a piece of it here, then look back at the screenshot document." }
+  ],
+  "evaluate": [
+    "Side by side, is the button the same size in both windows, the way you expected?",
+    "The W and H in the panel read 240 by 80 on the screenshot and 120 by 40 in the new document, for a button that looks identical in both. Is that honest and clear, or does it need saying out loud?",
+    "It resizes on the way in with nothing said. Should a component that arrived rescaled mention it, or would that be noise?",
+    "After you edit it in the new document, does it come back the right size in the screenshot document?",
+    "Does the type inside it look right at both ends, or does anything read a shade heavy or thin after the crossing?"
+  ],
+  "rough": [
+    "There are no pictures in this audit. The Mac's screen was locked for the whole of this task, so macOS refuses every capture and no walk can run at all, offscreen renders included.",
+    "For the same reason the new walk Scripts/playtest/shared-component-scale-walk.json has never actually been run. It parses, and a sweep has been asked for so the loop runs it the moment the screen is unlocked. Treat it as unproven until then.",
+    "A component that MOVES does not have its movement rescaled: the boxes and the type are restated in the new document's unit, but a keyframed offset still carries the numbers it was written with, so a shared component that animates would travel the wrong distance after crossing scales. Nothing on the shelf animates yet.",
+    "A measurement's readout keeps its own size across the crossing, because a readout is a fixed size on purpose. A caliper inside a shared component is the only place that would show.",
+    "Between a document counting in twos and one counting in threes the arithmetic is not exactly reversible, so a button could come back a millionth of a point different from where it started. Nothing anybody can see, and it cannot compound, because a document only republishes when a person edits it."
+  ]
+}

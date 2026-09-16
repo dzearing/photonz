@@ -49,16 +49,27 @@ public struct SharedComponent: Codable, Hashable, Sendable, Identifiable {
     public var textStyles: [TextStyle]
     /// ...and the named effects.
     public var effectStyles: [EffectStyle]
+    /// The unit the drawing is written in: how many of its numbers make one
+    /// point in the document it was made in.
+    ///
+    /// A document opened from a Retina capture counts in image pixels, so a
+    /// button that LOOKS 60 wide is 120 there. Without this the shelf would
+    /// hand those 120 to a one-to-one document and the button would arrive
+    /// twice the size it was drawn (`SharedComponentScale`). Nil is a shelf
+    /// written before this was recorded: its drawings are taken verbatim,
+    /// exactly as they always were.
+    public var pixelScale: CGFloat?
 
     public init(id: UUID, name: String, drawings: [Layer],
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
-                effectStyles: [EffectStyle] = []) {
+                effectStyles: [EffectStyle] = [], pixelScale: CGFloat? = nil) {
         self.id = id
         self.name = name
         self.drawings = drawings
         self.colorStyles = colorStyles
         self.textStyles = textStyles
         self.effectStyles = effectStyles
+        self.pixelScale = pixelScale
     }
 }
 
@@ -194,7 +205,10 @@ extension PhotonzDocument {
             id: componentID, name: main.name, drawings: drawings,
             colorStyles: colorStyles.filter { used.color.contains($0.id) },
             textStyles: textStyles.filter { used.text.contains($0.id) },
-            effectStyles: effectStyles.filter { used.effect.contains($0.id) })
+            effectStyles: effectStyles.filter { used.effect.contains($0.id) },
+            // The drawing is written in this document's unit, so the shelf
+            // says which unit that was and everywhere it lands restates it.
+            pixelScale: SharedComponentScale.unit(of: self))
     }
 
     /// Every named style the drawings claim to be wearing.
@@ -256,7 +270,11 @@ extension PhotonzDocument {
         if mainComponent(componentID: shared.id) != nil {
             return insertComponentInstance(of: shared.id, at: point, inside: context)
         }
-        guard var main = shared.drawings.first else { return nil }
+        // The drawing arrives in THIS document's unit, so a component built on
+        // a Retina capture is the size it looked there rather than twice it
+        // (`SharedComponentScale`).
+        let arriving = SharedComponentScale.drawings(shared, into: self)
+        guard var main = arriving.first else { return nil }
         adoptSharedStyles(shared)
         let box = main.localBounds
         main.frame.origin = CGPoint(x: (point.x - box.width / 2).rounded(),
@@ -280,14 +298,14 @@ extension PhotonzDocument {
         }
         // The other versions land loose beside the first, the way adding a
         // version does, rather than dropping strays into whatever it landed in.
-        placeExtraVersions(of: shared, beside: main.id)
+        placeExtraVersions(arriving, beside: main.id)
         repaintFromLocalStyles(shared)
         return main.id
     }
 
     /// The versions after the first, each somewhere clear on the canvas.
-    private mutating func placeExtraVersions(of shared: SharedComponent, beside firstID: UUID) {
-        for drawing in shared.drawings.dropFirst() {
+    private mutating func placeExtraVersions(_ drawings: [Layer], beside firstID: UUID) {
+        for drawing in drawings.dropFirst() {
             guard let anchor = layer(id: firstID) else { continue }
             let parent = parentOrigin(of: firstID) ?? .zero
             let anchorBox = anchor.localBounds.offsetBy(dx: parent.x, dy: parent.y)
@@ -333,7 +351,10 @@ extension PhotonzDocument {
         var changed = adoptSharedStyles(shared)
         var seen: Set<UUID> = []
         var anchorID: UUID?
-        for drawing in shared.drawings {
+        // Restated in this document's unit on every look, not just the first,
+        // or the drop would arrive the right size and the next sync would put
+        // it back to the size it was written at.
+        for drawing in SharedComponentScale.drawings(shared, into: self) {
             let key = drawing.group?.versionID
             guard let local = mainComponent(componentID: shared.id, version: key),
                   key == nil || local.componentVersionID == key else {
@@ -449,5 +470,51 @@ extension PhotonzDocument {
             guard before.sharedComponent(componentID: id) != now else { return nil }
             return now
         }
+    }
+}
+
+// MARK: - The unit the drawing is written in
+
+/// How a shared component crosses between documents that count in different
+/// units.
+///
+/// A document opened from a Retina capture measures everything in image
+/// pixels: a button that looks 60 points wide is 120 units wide there. A
+/// document you started from scratch counts one to one. Both are ordinary
+/// documents and a component moves freely between them, so the shelf records
+/// the unit each drawing was written in and every way INTO a document restates
+/// it in that document's unit. A starter does not need any of this because a
+/// starter is a recipe and is simply built at the document's scale
+/// (`StarterComponents`); a shared component is a drawing, so it is rewritten
+/// on the way in.
+enum SharedComponentScale {
+
+    /// The unit a document counts in. Never zero and never a nonsense number:
+    /// a document that says something impossible counts one to one, the same
+    /// floor every other reader of `pixelScale` keeps.
+    static func unit(of document: PhotonzDocument) -> CGFloat {
+        let scale = document.pixelScale
+        return scale.isFinite && scale > 0 ? scale : 1
+    }
+
+    /// What to multiply a shelf drawing by on its way into `document`, so it
+    /// arrives the size it looked where it was made.
+    ///
+    /// One for a shelf written before the unit was recorded, so those drawings
+    /// are taken verbatim exactly as they always were, and one for two
+    /// documents that count the same, so nothing about today's behaviour moves.
+    static func factor(_ shared: SharedComponent, into document: PhotonzDocument) -> CGFloat {
+        guard let made = shared.pixelScale, made.isFinite, made > 0 else { return 1 }
+        let here = unit(of: document)
+        let factor = here / made
+        return factor.isFinite && factor > 0 ? factor : 1
+    }
+
+    /// The drawings of `shared` as this document should hold them.
+    static func drawings(_ shared: SharedComponent,
+                         into document: PhotonzDocument) -> [Layer] {
+        let factor = factor(shared, into: document)
+        guard factor != 1 else { return shared.drawings }
+        return shared.drawings.map { $0.rescaled(by: factor) }
     }
 }

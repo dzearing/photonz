@@ -4122,3 +4122,15 @@
 {"t":"2026-09-16T06:32:05.142Z","ev":"task_note","id":"a-shelf-tile-says-where-the-component-came-from"}
 {"t":"2026-09-16T06:32:05.186Z","ev":"task_note","id":"a-shelf-tile-says-where-the-component-came-from"}
 {"t":"2026-09-16T06:32:13.969Z","ev":"task_done","id":"a-shelf-tile-says-where-the-component-came-from","from":"in_progress","note":"Every tile on the Components shelf that is not in your document now wears one word in the corner of its picture, 'shared' or 'starter'; one already in your file wears nothing. PhotonzCore/ComponentShelfOrigin.swift holds the policy (10 tests), LibraryShelfLayout holds the metrics (2 tests proving the tile stays 68 points tall), LibraryComponentTile draws it. Verified: Scripts/test.sh green, 7451 tests; Current release untouched because both flags are Next-only. NOT verified visually: the Mac's screen was locked for the whole task, so no walk could run and the harness writes neither captures nor offscreen renders in that state. Scripts/playtest/shelf-origin-walk.json is written and its script decodes under the walk tests but has never been run; sweep requested. Audit: queue/audits/2026-09-16-shelf-tile-origin.json."}
+{"t":"2026-09-16T06:34:28.392Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T06:34:28.496Z","ev":"task_started","id":"a-shared-component-arrives-the-size-it-should-be","title":"A shared component arrives the size it should be in this document","priority":"p2-normal"}
+{"t":"2026-09-16T06:47:26.441Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.486Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.528Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.570Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.614Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.658Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.701Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.745Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:26.792Z","ev":"task_note","id":"a-shared-component-arrives-the-size-it-should-be"}
+{"t":"2026-09-16T06:47:31.542Z","ev":"task_done","id":"a-shared-component-arrives-the-size-it-should-be","from":"in_progress","note":"The shelf now records the unit a drawing was written in and both ways into a document restate it: Sources/PhotonzCore/LayerRescaling.swift (new Layer.rescaled(by:)) plus SharedComponents.swift. Verified by reproducing the bug on HEAD first (120x40/24pt where 60x20/12pt was wanted), then 13 new tests covering both directions, same-scale, an old shelf with no scale recorded, and the round trip through sync; full suite 7466 tests green. The end-to-end walk could not be run: the Mac's screen was locked all session, so no walk runs at all. Sweep requested."}

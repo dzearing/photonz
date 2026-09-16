@@ -209,10 +209,34 @@ struct PlaytestScriptTests {
           ]
         }
         """)
-        guard case .blank(let canvas, let window, let card) = script.steps[0] else { Issue.record("blank"); return }
+        guard case .blank(let canvas, let window, let card, let scale) = script.steps[0] else { Issue.record("blank"); return }
         #expect(canvas == CGSize(width: 800, height: 600))
         #expect(window == CGSize(width: 1200, height: 900))
         #expect(card == "empty-card")
+        #expect(scale == 1)
+    }
+
+    @Test("A blank step can say the document counts in twos, the way a Retina capture does")
+    func blankTakesAPixelScale() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "pixelScale": 2 }
+          ]
+        }
+        """)
+        guard case .blank(_, _, _, let scale) = script.steps[0] else { Issue.record("blank"); return }
+        #expect(scale == 2)
+    }
+
+    @Test("A blank step refuses a scale that is not a scale")
+    func blankRefusesANonsenseScale() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "out": "/tmp/walk/out", "steps": [{ "do": "blank", "pixelScale": 0 }] }
+            """)
+        }
     }
 
     @Test("A blank step with no size takes the default preset")
@@ -220,10 +244,11 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "out": "/tmp/walk/out", "steps": [{ "do": "blank" }] }
         """)
-        guard case .blank(let canvas, let window, let card) = script.steps[0] else { Issue.record("blank"); return }
+        guard case .blank(let canvas, let window, let card, let scale) = script.steps[0] else { Issue.record("blank"); return }
         #expect(canvas == BlankCanvas.defaultPreset.size)
         #expect(window == nil)
         #expect(card == nil)
+        #expect(scale == 1)
     }
 
     @Test("blank is listed among the step names the error text offers")

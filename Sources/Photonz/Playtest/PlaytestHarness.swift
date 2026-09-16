@@ -398,8 +398,9 @@ private final class Run {
 
     private func perform(_ step: PlaytestStep, number: Int) async throws {
         switch step {
-        case .blank(let canvas, let size, let card):
-            try await blank(canvas: canvas, window: size, card: card, number: number)
+        case .blank(let canvas, let size, let card, let pixelScale):
+            try await blank(canvas: canvas, window: size, card: card, pixelScale: pixelScale,
+                            number: number)
 
         case .open(let file, let size):
             let url = try fileURL(file)
@@ -5540,7 +5541,8 @@ private final class Run {
     /// Start from nothing: a new window, handed a blank canvas of `canvas`,
     /// which is what the empty window's Blank canvas row does once a size has
     /// been chosen. From here on the walk drives it like any other document.
-    private func blank(canvas size: CGSize, window: CGSize?, card: String?, number: Int) async throws {
+    private func blank(canvas size: CGSize, window: CGSize?, card: String?,
+                       pixelScale: CGFloat, number: Int) async throws {
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
         let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
         coordinator.openWindowAction?(.fresh(UUID()))
@@ -5556,8 +5558,15 @@ private final class Run {
         // Through the same door the sheet uses, so a walk proves the empty
         // window fills itself rather than spawning a second one.
         fresh.createBlankCanvas(size: size)
+        // A document that counts in twos, the way one opened from a Retina
+        // capture does. Set through the same call the capture-scale control
+        // uses, so the walk is driving a real setting rather than a state only
+        // a walk can reach.
+        if pixelScale != 1 { fresh.setDocumentPixelScale(pixelScale) }
+        let unit = pixelScale == 1 ? "" : " at \(pixelScale)x"
         try await adopt(fresh, window: window, step: "blank",
-                        subject: "blank \(Int(size.width))x\(Int(size.height))", number: number)
+                        subject: "blank \(Int(size.width))x\(Int(size.height))\(unit)",
+                        number: number)
     }
 
     /// The empty window before anything is in it: the onboarding card, which

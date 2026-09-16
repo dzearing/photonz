@@ -1209,7 +1209,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `card` names a snapshot taken of the EMPTY window, before the canvas
     /// exists: the onboarding card is the only thing on screen then, and this
     /// is the only way a walk can photograph it.
-    case blank(canvas: CGSize, window: CGSize?, card: String?)
+    ///
+    /// `pixelScale` is how many of the document's numbers make one point, the
+    /// way a Retina capture counts in twos. One, and the document counts one
+    /// to one, which is what a blank canvas has always done and what every
+    /// walk written before this gets. It is here so a walk can put two
+    /// documents that count differently side by side, which is the only way to
+    /// see a component cross between them at the size it should be
+    /// (`SharedComponentScale`).
+    case blank(canvas: CGSize, window: CGSize?, card: String?, pixelScale: CGFloat)
     case wait(seconds: Double)
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
@@ -2032,7 +2040,12 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
-            self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"))
+            let scale = try f.optionalNumber("pixelScale") ?? 1
+            guard scale > 0, scale.isFinite else {
+                throw f.invalid("pixelScale", "must be a positive number")
+            }
+            self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"),
+                          pixelScale: CGFloat(scale))
         case "wait":
             self = .wait(seconds: try f.number("seconds"))
         case "key":
