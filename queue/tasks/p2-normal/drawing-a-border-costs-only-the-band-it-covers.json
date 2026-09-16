@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 250,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:28:47.840Z",
-  "updated": "2026-09-15T12:14:53.542Z",
+  "updated": "2026-09-16T04:47:13.227Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the border seam fix on 2026-09-09. DocumentRenderer.laid runs about ten filters over the layer's WHOLE extent, but its answer only differs from a plain composite inside the ring's band. The band is an annulus, so the work can be confined to four thin strips (top, bottom, left, right of the outer rect, each the ring's width plus a pixel or two), with the rest of the picture passed straight through and the strips composited back over whole pixel boundaries so no new seam is introduced. roundedRectMask could bake per strip too. Measured cost of the fix: 12MP/10-layer interactive edit 5.5ms -> 6.4ms, full render 38.2ms -> 36.9ms, edit inside a styled group of five 35.8ms -> 45.9ms, export at 2x 96ms -> 118ms.",
@@ -42,6 +42,36 @@
     {
       "t": "2026-09-15T12:14:53.541Z",
       "note": "seq 210 -> 250"
+    },
+    {
+      "t": "2026-09-16T04:15:23.688Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T04:47:13.008Z",
+      "note": "Adversarial review before building: reproduced the cost first rather than trusting the note. With the ring's area-weighted composite swapped for a plain one (env switch, reverted), the 12MP benchmark went 35.3->26.2 on a styled group render, 44.8->35.2 on an interactive edit inside it and 124.8->96.1 on a 2x export, so the regression is real. But it is NOT spread over every bordered layer: the 800x600 card border costs nothing measurable, and the whole 9-13ms is one ring round a FULL-CANVAS box (the Box annotation, whose stroke became a border effect in the 2026-09-07 outline retirement). So the shortest version that delivers the value is to make the cost proportional to the ring rather than to the picture, which is what shipped."
+    },
+    {
+      "t": "2026-09-16T04:47:13.051Z",
+      "note": "Three seams came back while building it, all at 2.75x zoom, all because a layer that lands between two pixels of the canvas is SAMPLED rather than copied and every hard edge in it is smeared: (1) the mask's outer edge sitting on the ring's own outline, fixed by reaching 2px past it; (2) the strips laid over each other rather than added, so a join came to less than a whole pixel and the layer went see-through along it; (3) the joined picture left as a recipe for the placement to fold into itself, fixed with insertingIntermediate, which also turned out to be most of the speed. CIMaximumCompositing is NOT the identity on itself (an image maxed with itself moved by up to 37/255 at a soft edge) - worth knowing, it looked like the obvious combiner."
+    },
+    {
+      "t": "2026-09-16T04:47:13.094Z",
+      "note": "Only a ring round a BOX is confined. A ring round a path or an oval keeps the whole-layer path, because neither has a rectangle known to be wholly inside the ring and guessing one would put a hole in the border. That is left rough: an oval border still pays over the whole layer."
+    },
+    {
+      "t": "2026-09-16T04:47:13.137Z",
+      "note": "left rough: the perf benchmark document builds a rectangle annotation whose frame is the whole canvas while the shape inside it is 1300x800, so its retired stroke draws as a ring round the canvas. Every path that CREATES a shape today gives it a tight frame (AnnotationBuilder.layer, Document.separateIntoLayers), so this is a hand-built document rather than something a person can make; it did not earn a task, but a document written before shapes got tight frames would draw its edge round the frame."
+    },
+    {
+      "t": "2026-09-16T04:47:13.181Z",
+      "note": "Walks could not run: the Mac's screen is locked, so playtest-all.sh border reported COULD NOT RUN for every border walk and filed nothing. Nothing was photographed. The change is renderer-only and is covered by 7379 passing tests including every case in BorderSeamRenderTests at four zooms, so it ships on those; the border walks want re-running once the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T04:47:13.225Z",
+      "note": "A ring round a box is now laid in the four strips its band covers instead of across the whole layer (DocumentRenderer.ringStrips/laid), with BorderBandRenderTests proving the two draw the same picture. Measured both ways in one process: 12MP full render 35.3->25.8ms, the same with five layers in a styled group 37.9->24.6ms, an interactive edit inside that group 46.6->33.4ms (the task's 40ms bar), 2x export 112.5->116.2ms (the one path it does not help). Perf baselines updated, docs/progress/perf.md records it, full suite green at 7379 tests, pushed as 5e534540."
     }
-  ]
+  ],
+  "started": "2026-09-16T04:15:23.687Z",
+  "completed": "2026-09-16T04:47:13.226Z"
 }

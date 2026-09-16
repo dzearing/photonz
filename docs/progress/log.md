@@ -16417,3 +16417,21 @@ and now needs no fourth box: its task log spells out exactly what to pass.
 that disagree still does nothing. Only the geometry fields know how to step
 every layer from its own value (`stepEach`). Raised in the audit for the user to
 call.
+
+## 2026-09-16 — a border costs the band it covers
+
+Confined the ring's area-weighted composite to the four strips its band covers
+(`DocumentRenderer.ringStrips`/`laid`), which was the last of the 2026-09-09
+seam fix's cost. 12MP benchmark, both ways in one process: full render
+35.3 -> 25.8ms, the same with five layers in a styled group 37.9 -> 24.6ms, an
+interactive edit inside that group 46.6 -> 33.4ms, 2x export 112.5 -> 116.2ms
+(the one path it does not help). Perf baselines moved with it and
+`docs/progress/perf.md` carries the detail, including the three seams that came
+back at 2.75x zoom while it was being built and what each of them taught.
+
+Only a ring round a BOX is confined; a ring round a path or an oval has no
+rectangle known to be inside it, so it still takes the whole layer.
+
+Next: the border walks could not be run — the Mac's screen was locked, so every
+one reported COULD NOT RUN and nothing was photographed. A full sweep is
+requested for the loop to run between tasks.
