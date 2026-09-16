@@ -16252,3 +16252,34 @@ the screen is unlocked.
 
 Next: whatever the queue holds. Open question: the locked screen is now three
 runner passes old and is the reason two audits in a row carry no picture.
+
+## 2026-09-15 — A walk with nothing to say about where to write says /tmp
+
+A scripted walk that named no `out` wrote its renders, captures and log into a
+folder beside its own script, and every walk lives in `Scripts/playtest`, so the
+default dropped megabytes into the working copy. `panel-says-less-walk.json` was
+the only walk written that way; it picked up an explicit folder in passing on
+2026-09-14, which fixed that walk and left the trap set for the next one.
+
+The default is now `/tmp/photonz-playtest/<walk name>` — the scratch folder all
+456 walks already name by hand, under the walk's own name so two walks run back
+to back do not read each other's pictures. A relative `out` still resolves
+beside the script: that is the author's choice, spelled out in the file, rather
+than something fallen into by silence. `Scripts/playtest.sh` resolves the folder
+a second time to know where to watch for `done.json`, so it moved in step, and
+while there it stopped dying on a walk too broken to parse.
+
+`PlaytestWalkOutputFolderTests` now reads every walk in the folder and fails if
+any of them resolves inside the repository, by its own `out` or by the default.
+Proven by pointing a walk back at `out` and watching it fail.
+
+**The Mac's screen was locked for this whole task**, so not one walk could be run
+to a pass. Verified: the reproduction before the change (`out` resolving to
+`.../Scripts/playtest/out`, with done.json and log.json landing there), the same
+walk after it writing to `/tmp/photonz-playtest/…` with the launcher finding
+done.json there, and the full suite at 7192 tests. A sweep is requested to
+confirm the walks themselves once the screen is unlocked.
+
+Next: nothing outstanding on this. Open question: a walk can still aim a
+relative `out` into the repo deliberately, which the new folder-wide test
+catches at test time but the harness still allows at run time.

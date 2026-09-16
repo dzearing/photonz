@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T15:37:30.969Z",
-  "updated": "2026-09-15T12:14:53.385Z",
+  "updated": "2026-09-16T00:39:42.928Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/playtest/panel-says-less-walk.json is the only walk with no \"out\" key, so the harness defaults to `out` beside the script, which is inside the repo. Every other walk names an absolute /tmp/photonz-playtest/<name> path.\n\nREPRODUCTION, run on 2026-09-14:\n\n  $ rm -rf Scripts/playtest/out\n  $ Scripts/playtest.sh Scripts/playtest/panel-says-less-walk.json --no-build\n  ...\n  panel-says-less-arrange-reference-sc.png\n  panel-says-less-arrange-reference.png\n  panel-says-less-three-picked-sc.png\n  panel-says-less-three-picked.png\n  panel-three-picked.json\n  ==> Probe quit.\n  $ git status --short | grep playtest\n  ?? Scripts/playtest/out/\n  $ du -sh Scripts/playtest/out\n  2.6M\n\nFix is one line: give the walk an \"out\" of /tmp/photonz-playtest/panel-says-less like its neighbours. Worth also checking whether the harness should refuse a default that lands inside the repo at all, since the next walk written without an \"out\" repeats this.",
@@ -34,6 +34,36 @@
     {
       "t": "2026-09-15T12:14:53.384Z",
       "note": "seq 16 -> 110"
+    },
+    {
+      "t": "2026-09-16T00:33:34.445Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T00:39:36.645Z",
+      "note": "Reproduced before fixing: a throwaway walk with no \"out\" in Scripts/playtest resolved out to /Users/dzearing/git/photonz/Scripts/playtest/out and left done.json and log.json there. The specific walk named in the task (panel-says-less) had already picked up an explicit out in passing in commit eb474448 on 2026-09-14, so the remaining bug was the default itself, which is the half that would catch the next walk written."
+    },
+    {
+      "t": "2026-09-16T00:39:40.689Z",
+      "note": "Adversarial review before building: the one-line fix the task suggested was already in, so building it would have been a no-op that closed the task with the trap intact. The durable fix is the default itself. Considered also refusing a relative \"out\" that lands in the repo and decided against it: a relative out is written into the file by hand, visible at review, and is documented as how a script folder travels with its renders, whereas the default is what a walk falls into by saying nothing. The folder-wide test covers the deliberate case anyway."
+    },
+    {
+      "t": "2026-09-16T00:39:40.734Z",
+      "note": "No audit written: this is loop plumbing, not something the user can try in the app, so there is nothing for them to playtest or react to."
+    },
+    {
+      "t": "2026-09-16T00:39:40.778Z",
+      "note": "left rough: the harness still ALLOWS a relative \"out\" pointing inside the repo at run time; only the test catches it, so a walk run from a branch before its test lands could still litter. Did not clear the follow-up bar: no walk does this, nobody would notice, and the .gitignore net plus the test cover it. Noting here so a later pass in this area finds it."
+    },
+    {
+      "t": "2026-09-16T00:39:40.821Z",
+      "note": "left rough: acceptance item 2 (\"the walk still passes\") could not be checked. The Mac's screen was locked for the entire task, so every walk reported status locked and neither passed nor failed. Asked for a sweep so the first unlocked run confirms it. Not filed as a task: it is the documented locked-screen behaviour working correctly, not a defect."
+    },
+    {
+      "t": "2026-09-16T00:39:42.926Z",
+      "note": "A walk that names no output folder now writes to /tmp/photonz-playtest/<its name> instead of beside its own script inside the repo (Sources/PhotonzCore/PlaytestScript.swift, matched in Scripts/playtest.sh). New PlaytestWalkOutputFolderTests reads all 456 walks and fails if any resolves inside the repository; proven by pointing one back at 'out' and watching it fail. Reproduced the bug first, confirmed the fix by rerunning the same walk into /tmp with the launcher finding done.json there, full suite green at 7192 tests. The screen was locked all task so no walk could be run to a pass; a sweep is requested. Commit 5130e1d8, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-16T00:33:34.444Z",
+  "completed": "2026-09-16T00:39:42.927Z"
 }
