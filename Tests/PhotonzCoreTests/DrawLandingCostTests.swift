@@ -18,7 +18,11 @@ import Testing
 // on the hover path, and the third measurement is the one it keeps off it.
 //
 // Read on the thread's own CPU clock, fastest of a run, so a test machine
-// sharing cores with a build cannot turn a healthy number into a failure.
+// sharing cores with a build cannot turn a healthy number into a failure. The
+// one check that compares two costs to each other takes them back to back
+// inside every round as well: see `relativeGap` for why a ceiling on one number
+// survives a busy machine when a gap between two separately measured ones does
+// not.
 
 private func threadCPUNow() -> Duration {
     var ts = timespec()
@@ -42,6 +46,46 @@ private func fastest(_ name: String, calls: Int, each: Int, _ body: () -> Void) 
     print(String(format: "[perf] %@: %.1f us a mouse move (worst round %.1f us each)",
                  name, best, microseconds(cpu.max() ?? .zero) / Double(each)))
     return best
+}
+
+/// How far apart two costs are, as a fraction of the first, measured with the
+/// two taken BACK TO BACK inside every round and judged round by round.
+///
+/// Measuring one in full and then the other is what this replaced, and it does
+/// not survive the full suite: on 2026-09-16 the same run read 2633 us for the
+/// expensive map and 5697 us for the cheap one, because the two blocks ran
+/// minutes apart in scheduler terms and landed on different cores with
+/// different caches. Half a dozen red runs since 2026-09-15 were all that and
+/// nothing else. Inside one round both readings share whatever the round got,
+/// so their difference is about the work again; the median of the rounds then
+/// keeps one round where the thread was taken away from deciding anything.
+private func relativeGap(_ name: String, rounds: Int, each: Int,
+                         _ a: () -> Void, _ b: () -> Void) -> (gap: Double, aCost: Double) {
+    a()
+    b()
+    var gaps: [Double] = []
+    var aCosts: [Duration] = []
+    var bCosts: [Duration] = []
+    for _ in 0..<rounds {
+        var start = threadCPUNow()
+        a()
+        let aRound = threadCPUNow() - start
+        start = threadCPUNow()
+        b()
+        let bRound = threadCPUNow() - start
+        aCosts.append(aRound)
+        bCosts.append(bRound)
+        let aUS = microseconds(aRound), bUS = microseconds(bRound)
+        gaps.append(aUS > 0 ? abs(aUS - bUS) / aUS : .infinity)
+    }
+    gaps.sort()
+    let typical = gaps[gaps.count / 2]
+    let aBest = microseconds(aCosts.min() ?? .zero) / Double(each)
+    print(String(format: "[perf] %@: %.0f%% apart in a typical round over %d interleaved rounds "
+                 + "(widest %.0f%%); %.1f us and %.1f us a mouse move at their fastest",
+                 name, typical * 100, rounds, gaps[gaps.count - 1] * 100,
+                 aBest, microseconds(bCosts.min() ?? .zero) / Double(each)))
+    return (typical, aBest)
 }
 
 @Suite("What the landing mark costs per mouse move")
@@ -137,18 +181,15 @@ struct DrawLandingCostTests {
         // tenfold regression in that shared query is caught by something.
         let points = probes(64)
         var sink = CGPoint.zero
-        let dense = fastest("grid over a 2560x1600 screenshot, 104 borders in it",
-                            calls: 20, each: points.count) {
-            for p in points { sink = self.landing(p, edges: Self.busyEdges) }
-        }
-        let sparse = fastest("the same screenshot with only four borders in it",
-                             calls: 20, each: points.count) {
-            for p in points { sink = self.landing(p, edges: Self.sparseEdges) }
-        }
+        let (gap, dense) = relativeGap(
+            "grid over a 2560x1600 screenshot, 104 borders in it against the same with four",
+            rounds: 20, each: points.count,
+            { for p in points { sink = self.landing(p, edges: Self.busyEdges) } },
+            { for p in points { sink = self.landing(p, edges: Self.sparseEdges) } })
         #expect(sink != CGPoint(x: -1, y: -1))
         // Within a whisker of each other: the cost is the picture's WIDTH, not
         // what is drawn on it. That is the fact worth recording.
-        #expect(abs(dense - sparse) < dense * 0.5)
+        #expect(gap < 0.5)
         #expect(dense < 25_000)
     }
 }

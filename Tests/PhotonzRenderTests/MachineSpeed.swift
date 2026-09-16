@@ -59,6 +59,42 @@ enum MachineSpeed {
         (baselineMS * tolerance + jitterSlackMS) * max(1, factor)
     }
 
+    /// The middle of a set of readings. Used instead of a mean so that one
+    /// round where the thread was taken away cannot decide a whole gate.
+    static func median(of values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        return values.sorted()[values.count / 2]
+    }
+
+    /// What the subject would have read on the calibration machine, worked out
+    /// from a yardstick taken back to back with it INSIDE every round.
+    ///
+    /// `factor(_:)` above is measured once, when the process starts. That says
+    /// how fast the hardware is, and it was enough while the budgets it fed
+    /// were the only thing running. Inside the full suite — 600-odd suites in
+    /// one process, running in parallel — the number that moves is not the
+    /// hardware, it is how much of the machine this test has at the moment it
+    /// runs, and a reading taken at process start knows nothing about that.
+    /// The same test then reads 5.3ms alone and 8.9ms in the suite against a
+    /// budget scaled by a factor measured while it was still quiet.
+    ///
+    /// Taking the yardstick in the same round fixes that: whatever a round is
+    /// competing with slows both readings, and dividing one by the other
+    /// cancels it. The subject has to get genuinely more expensive, relative to
+    /// a fixed piece of work on the same core, before this number moves.
+    ///
+    /// Rounds where the yardstick read nothing are dropped; if that leaves
+    /// none, the answer is infinity, so a comparison that never happened fails
+    /// rather than passes.
+    static func normalizedMS(subject: [Double], reference: [Double],
+                             referenceBaselineMS: Double) -> Double {
+        let ratios = zip(subject, reference)
+            .filter { $0.1 > 0 }
+            .map { $0.0 / $0.1 }
+        guard let typical = median(of: ratios) else { return .infinity }
+        return typical * referenceBaselineMS
+    }
+
     /// Whether a budget failing should fail the build.
     /// Set `PHOTONZ_PERF_GATE=report` to collect the numbers without gating:
     /// the release workflow does exactly that, so publishing a build can never
@@ -108,6 +144,15 @@ enum MachineSpeed {
 
     private static let filterGraphFactor: Double = measure(.filterGraph)
     private static let pixelPushFactor: Double = measure(.pixelPush)
+
+    /// One round of the yardstick's fixed workload, for a caller that wants to
+    /// take it back to back with its own subject rather than at process start.
+    static func round(for yardstick: Yardstick) -> () -> Void {
+        switch yardstick {
+        case .filterGraph: return filterGraphRound()
+        case .pixelPush: return pixelPushRound()
+        }
+    }
 
     private static func measure(_ yardstick: Yardstick) -> Double {
         let measured: Double
@@ -231,5 +276,57 @@ enum MachineSpeed {
         Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
                      sourceLocation: SourceLocation(fileID: fileID, filePath: filePath,
                                                     line: line, column: column))
+    }
+
+    /// The same gate as `check`, but with the yardstick taken back to back with
+    /// the subject inside every round instead of once when the process started.
+    ///
+    /// Use this for anything whose reading moves with how busy the machine is
+    /// rather than with what hardware it is — which, inside the full suite, is
+    /// everything measured in single-digit milliseconds. `check` remains right
+    /// for the big renderer budgets, where the subject already takes long
+    /// enough to average the machine's mood out by itself.
+    static func checkInterleaved(_ label: String, baselineMS: Double,
+                                 yardstick: Yardstick = .filterGraph,
+                                 rounds: Int = 15,
+                                 fileID: String = #fileID, filePath: String = #filePath,
+                                 line: Int = #line, column: Int = #column,
+                                 subject: () -> Void) {
+        let reference = round(for: yardstick)
+        // Warm both, so neither pays for a pipeline the other gets for free.
+        reference()
+        subject()
+
+        var subjectMS: [Double] = []
+        var referenceMS: [Double] = []
+        let clock = ContinuousClock()
+        for _ in 0..<rounds {
+            referenceMS.append(ms(clock.measure { reference() }))
+            subjectMS.append(ms(clock.measure { subject() }))
+        }
+
+        let normalized = normalizedMS(subject: subjectMS, reference: referenceMS,
+                                      referenceBaselineMS: yardstick.baselineMS)
+        let bound = budget(baselineMS: baselineMS, factor: 1)
+        let rawMedian = median(of: subjectMS) ?? .infinity
+        let referenceMedian = median(of: referenceMS) ?? .infinity
+        let message = String(format: "%@ — %.1fms on the calibration machine's clock against a "
+                             + "budget of %.0fms (baseline %.1fms x %.1f tolerance). "
+                             + "Read %.1fms here beside a %@ yardstick reading %.1fms "
+                             + "against its own %.1fms, over %d interleaved rounds",
+                             label, normalized, bound, baselineMS, tolerance,
+                             rawMedian, yardstick.rawValue, referenceMedian,
+                             yardstick.baselineMS, rounds)
+        print("[perf] budget: \(message)")
+        guard isGating else { return }
+        guard normalized >= bound else { return }
+        Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
+                     sourceLocation: SourceLocation(fileID: fileID, filePath: filePath,
+                                                    line: line, column: column))
+    }
+
+    private static func ms(_ duration: Duration) -> Double {
+        Double(duration.components.seconds) * 1000
+            + Double(duration.components.attoseconds) / 1e15
     }
 }

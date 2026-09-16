@@ -241,22 +241,16 @@ struct IconPreviewMotionPerfTests {
         }
         strip(atMS: 0)
 
-        var samples: [Double] = []
-        let clock = ContinuousClock()
-        for round in 0..<20 {
-            let duration = clock.measure { strip(atMS: round * 54) }
-            samples.append(Double(duration.components.seconds) * 1000
-                           + Double(duration.components.attoseconds) / 1e15)
+        // Read against the yardstick taken in the same rounds. A flat budget
+        // scaled by a factor measured when the process started said 5.3ms alone
+        // and 8.9ms inside the full suite for identical work, and went red on
+        // 2026-09-15 for no reason but the company it was keeping.
+        var frame = 0
+        MachineSpeed.checkInterleaved("moving icon previews, whole strip of 4",
+                                      baselineMS: 5) {
+            strip(atMS: frame * 54)
+            frame += 1
         }
-        samples.sort()
-        let median = samples[samples.count / 2]
-        print("[perf] moving icon previews, whole strip of 4 — "
-              + "median \(String(format: "%.2f", median))ms, "
-              + "min \(String(format: "%.2f", samples[0]))ms, "
-              + "max \(String(format: "%.2f", samples[samples.count - 1]))ms "
-              + "over \(samples.count) frames")
-        MachineSpeed.check("moving icon previews, whole strip of 4",
-                           medianMS: median, baselineMS: 5)
     }
 
     /// Working out where one frame's contents are is the part that happens on

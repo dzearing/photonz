@@ -16797,3 +16797,74 @@ nobody needs answered yet.
   the Tutorials window, and wrote real screen captures of it. Folded into
   `a-hundred-and-fifteen-walks-fail-on-code-that-pa` as a fourth independent
   confirmation rather than filed as a near-twin.
+
+## 2026-09-16 — Two timing tests that only ever failed in company
+
+`Scripts/test.sh` had been reporting two failures for a week that nobody could
+reproduce on their own: `aGridOverALargeScreenshotPaysForTheBorderQuery` and the
+icon-preview strip budget. Both passed every time their suite was run by itself.
+
+**Reproduced first.** Six tries with synthetic load never did it, because the
+condition is not a busy machine, it is 607 suites running in parallel inside one
+process. The full run caught it:
+
+    [perf] grid over a 2560x1600 screenshot, 104 borders in it: 2633.4 us
+    [perf] the same screenshot with only four borders in it:    5697.6 us
+    ✘ Expectation failed: (abs(dense - sparse) → 3064.2) < (dense * 0.5 → 1316.7)
+
+The map with 104 borders in it read TWICE AS FAST as the same picture with four.
+That cannot be true of the work, and it is the whole diagnosis: each figure was
+the fastest of twenty rounds of one map, then the fastest of twenty rounds of
+the other, the two blocks minutes apart in scheduler terms and landing on
+different cores with different caches. The test was measuring the machine.
+
+The icon strip is the same fault in its other form. Its budget is scaled by
+`MachineSpeed.factor`, which is measured ONCE when the process starts. That says
+what hardware this is; it cannot say how much of the machine the test has at the
+moment it runs. One run read the yardstick at 14.4ms at startup and 7.3ms during
+the test itself. Meanwhile the strip read 5.3ms alone and 8.9ms in the suite for
+identical work.
+
+**The fix is the same idea in both places: take the comparison INSIDE the round.**
+
+- `DrawLandingCostTests` now reads the dense and sparse maps back to back in
+  every round and judges the median per-round relative gap. Whatever a round is
+  competing with slows both readings and divides out.
+- `MachineSpeed.checkInterleaved` takes the yardstick back to back with the
+  subject, round by round, and reports what the subject would have read on the
+  calibration machine. `MachineSpeed.check` is unchanged and still right for the
+  big renderer budgets, which take long enough to average the mood out alone.
+
+The arithmetic is pure and tested in `MachineSpeedTests` (a machine busy
+throughout, load arriving part way through, one spiked round, and a real 3x
+regression on machines reading 1x, 2x and 8x).
+
+**What it reads now**, same tests, three conditions:
+
+| | alone | full suite | full suite + 24 burners |
+| --- | --- | --- | --- |
+| dense vs sparse gap | 6% | 6% and 8% | **5%** |
+| ...raw cost per mouse move | 2520 us | 2702 us | **4398 us** |
+| icon strip, normalized | 6.4ms | 6.8ms and 6.3ms | **6.9ms** |
+
+The last column is the point: the machine got 63% slower and the verdict did not
+move. Three consecutive full runs of 7597 tests, two back to back and one under
+24 bounded burners, all green.
+
+**Both still catch what they were written for**, checked by breaking the thing
+each guards and watching it go red, then reverting:
+
+- A content-proportional cost added to `EdgeMap.refinedPeaks` (the exact
+  regression the first test exists to catch): gap went 6% → **76%**, red.
+- Five renders where there was one in `DocumentRenderer.iconPreview`: normalized
+  6.4ms → **25.4ms** against a 20ms budget, red.
+
+**Left rough.** A 5ms baseline plus the flat 8ms `jitterSlackMS` means the icon
+strip only trips on a regression bigger than about 4x; a 2x slowdown there still
+passes. That is the deliberate trade already documented in `MachineSpeed`, it is
+not made worse by this change, and it is now written down as its own test
+(`aSmallBaselineOnlyEverCatchesABigRegression`) so the next person reads it
+instead of rediscovering it.
+
+- Next: nothing outstanding. No sweep requested — the change is confined to two
+  test files and one test helper, and no walk touches them.
