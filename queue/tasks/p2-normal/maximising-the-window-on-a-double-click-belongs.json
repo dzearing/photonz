@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:41:01.954Z",
-  "updated": "2026-09-16T01:41:31.640Z",
+  "updated": "2026-09-16T01:41:40.514Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/CanvasPointerDrags.swift:97 reads `if event.clickCount == 2, tool != .pen, document?.canvasHitTest(p, zoom: viewport.zoom) == nil { performWindowTitleBarAction() }`. The `tool != .pen` is a list of exemptions with one name in it, added on 2026-09-13 with the reproduction in the comment above it: 1280x900 to 1728x1028 on the second click, the anchor never landed.\n\nWhat is NOT reproduced, and the runner reproduces it before changing anything: whether the same collision actually bites any other tool today. Sources/PhotonzCore/Tools.swift:36 says the Pen is the one tool that draws over several clicks rather than in one drag, so the honest claim is that this is a rule with the wrong shape rather than a bug you can hit right now. The reason to fix it before it is a bug is the very next queued task, a-path-can-be-reshaped-after-you-draw-it: anchor editing is click-based, and double clicking a point to swap it between a corner and a curve is what every other vector tool does with that gesture.\n\nWhere the fork is: the drawing tools are arrow, line, rectangle, ellipse, highlight, text, zoomCallout, lens, measure, fill, frame and pen. Select, crop and the marquee trio are the ones where a double click on nothing plausibly means the window. Text and crop already own a double click of their own further down the same function. Keep the behaviour for Select and take it away from the tools that draw; say in the audit which tools changed and why.\n\nThis is a change to a gesture people may already be using, so the audit names it plainly and the walk that covers window zoom on a double click gets updated rather than deleted.",
@@ -77,7 +77,12 @@
     {
       "t": "2026-09-16T01:41:31.639Z",
       "note": "Release: this lands in shared code, so both Current and Next have it. Gating it on the release would mean a Release switch outside ReleaseExperience, which CLAUDE.md forbids, and the Pen exemption it replaces was unconditional too. Said plainly in the audit's setup line."
+    },
+    {
+      "t": "2026-09-16T01:41:40.512Z",
+      "note": "The double click on bare canvas that zooms the window is now the tool's own answer (Tool.doubleClickOnEmptyCanvasZoomsWindow, exhaustive switch) instead of a 'tool != .pen' exemption in CanvasPointerDrags. Select, Crop and the marquee trio keep it; arrow, line, rectangle, ellipse, highlight, text, zoomCallout, lens, measure, fill, frame and pen lost it. Found a second tool with the same collision while reviewing: Measure places two feet by clicking, and over a locked base image the hit test is nil everywhere, so short dimensions were hitting it too. Two tests cover both halves and the whole set, so a click-to-place tool added later cannot inherit the zoom back. Verified with Scripts/test.sh (7241 tests green) and swift build. NOT verified live: the Mac's screen was locked all task, so both walk attempts came back status locked with zero steps and macOS refused every capture; a walk covering both halves is committed (Scripts/playtest/double-click-belongs-to-select-walk.json, and describe lines now report the window size) and a full sweep is requested. Audit: queue/audits/2026-09-15-double-click-belongs-to-select.json."
     }
   ],
-  "started": "2026-09-16T01:34:28.466Z"
+  "started": "2026-09-16T01:34:28.466Z",
+  "completed": "2026-09-16T01:41:40.513Z"
 }
