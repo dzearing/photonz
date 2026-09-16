@@ -15,8 +15,7 @@ import SwiftUI
 /// re-presents it on the next launch — that unfinished state is exactly the
 /// scary first-capture failure this flow exists to prevent.
 ///
-/// Once setup works, this window also carries the one and only offer of the
-/// guided tour (`FirstRunOffer`, PhotonzCore, where the rules and their traps
+/// This window also carries the one and only offer of the guided tour (`FirstRunOffer`, PhotonzCore, where the rules and their traps
 /// are written down). It lives here rather than in a second welcome surface
 /// because this window already owns first launch, and a new person should be
 /// asked once, by one thing.
@@ -136,10 +135,15 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         if state?.screenRecordingGranted == true {
             UserDefaults.standard.set(true, forKey: Self.completedDefaultsKey)
         }
-        // Closing the window while everything works IS an answer, and the
+        // Closing the window while the question is up IS an answer, and the
         // answer is skip. Without this, somebody who reaches for the red button
         // instead of either offered button gets asked again on every launch.
+        // `tourOfferPending` is the same value `showsTourChoice` passes as
+        // tutorialsEnabled. It also carries "nobody has answered yet", which is
+        // harmless here because the answer below is checked anyway, and which
+        // keeps the two rules reading off one thing.
         if let recorded = FirstRunOffer.answerOnDismiss(
+            tutorialsEnabled: state?.tourOfferPending ?? false,
             screenRecordingGranted: state?.screenRecordingGranted ?? false,
             needsRelaunch: state?.needsRelaunch ?? false,
             answer: answeredThisRun ?? Self.firstRunAnswer) {
@@ -264,12 +268,12 @@ final class WelcomeState {
     /// window opens, because the answer can only change by being given here.
     let tourOfferPending: Bool
 
-    /// Whether the two ways on are showing right now. It waits for Screen
-    /// Recording and for any pending restart, because a tour the restart kills
-    /// is worse than no tour (`FirstRunOffer`).
+    /// Whether the two ways on are showing right now. It waits for a pending
+    /// restart and nothing else, because a tour the restart kills is worse than
+    /// no tour, while a tour on a machine that never granted Screen Recording
+    /// works perfectly well (`FirstRunOffer`).
     var showsTourChoice: Bool {
         FirstRunOffer.showsChoice(tutorialsEnabled: tourOfferPending,
-                                  screenRecordingGranted: screenRecordingGranted,
                                   needsRelaunch: needsRelaunch,
                                   answer: nil)
     }

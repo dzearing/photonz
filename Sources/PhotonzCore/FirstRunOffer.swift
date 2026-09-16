@@ -11,14 +11,19 @@ import Foundation
 //
 // The rules, and what each one is defending against:
 //
-//  * The choice waits for Screen Recording to be granted AND for no restart to
-//    be pending. A Screen Recording grant only takes effect in a fresh process,
-//    so the setup window's last act on a brand new Mac is "Relaunch Photonz".
-//    A tour started there is a tour a restart kills twenty seconds later.
-//  * CLOSING the window while everything works counts as skip. Without that,
+//  * The choice waits for no restart to be pending, and for nothing else. A
+//    Screen Recording grant only takes effect in a fresh process, so the setup
+//    window's last act on a brand new Mac is "Relaunch Photonz", and a tour
+//    started there is a tour a restart kills twenty seconds later.
+//    It does NOT wait for the grant itself. It used to, and that quietly meant
+//    the one person never shown round was the person who came to build UI and
+//    never intended to capture anything. The tour teaches the tool bar, the
+//    layers list and the settings beside them; none of it touches the screen.
+//  * CLOSING the window while the question is up counts as skip. Without that,
 //    somebody who reaches for the red button instead of either offered button
 //    is asked again on every launch for ever, which is the nagging this is
-//    supposed to prevent.
+//    supposed to prevent. A finished setup with no question to ask counts too,
+//    and only those two: see `answerOnDismiss` for why both and not either.
 //  * The migration stamp happens ONCE, on the first launch of a build that
 //    knows about tutorials. Run every launch, it would fire on the new person
 //    the moment they restart (by then their setup IS complete) and quietly eat
@@ -54,24 +59,42 @@ public enum FirstRunOffer {
 
     /// Whether the window is showing the two ways on right now.
     ///
-    /// Deliberately NOT waiting on the recommended steps (the screenshot key
-    /// conflicts). Those are worth fixing and not worth being blocked by, and
-    /// waiting on them would leave somebody who never frees the keys being
-    /// asked on every launch.
-    public static func showsChoice(tutorialsEnabled: Bool, screenRecordingGranted: Bool,
-                                   needsRelaunch: Bool, answer: FirstRunAnswer?) -> Bool {
-        tutorialsEnabled && answer == nil && screenRecordingGranted && !needsRelaunch
+    /// Deliberately NOT waiting on Screen Recording, nor on the recommended
+    /// steps (the screenshot key conflicts). Neither is worth being blocked by,
+    /// and waiting on either leaves somebody who never sorts it being asked on
+    /// every launch, or never asked at all. A pending restart is the one thing
+    /// that does hold the question back, because it would end the tour.
+    public static func showsChoice(tutorialsEnabled: Bool, needsRelaunch: Bool,
+                                   answer: FirstRunAnswer?) -> Bool {
+        tutorialsEnabled && answer == nil && !needsRelaunch
     }
 
     /// What closing the window records, or nil to record nothing.
     ///
-    /// Not gated on whether tutorials are switched on: an install that finishes
-    /// setup while there is no offer to make has still had its first run, and
-    /// recording that here is what stops the question arriving months later
-    /// out of nowhere.
-    public static func answerOnDismiss(screenRecordingGranted: Bool, needsRelaunch: Bool,
+    /// There are two separate reasons to stop asking, and both are needed.
+    ///
+    ///  * **The question was on screen**, so closing the window is the answer.
+    ///    This has to track `showsChoice` exactly or somebody who reaches for
+    ///    the red button instead of either offered button is asked again on
+    ///    every launch for ever, which is the nagging this exists to prevent.
+    ///  * **The install finished its setup** with no question to ask, which is
+    ///    still its first run being over. That is what stops the question
+    ///    arriving months later out of nowhere in a release where tutorials are
+    ///    switched off.
+    ///
+    /// The second one is why this cannot simply be `showsChoice`, and the first
+    /// is why it cannot simply be "setup is finished". Photonz ships Current and
+    /// Next in one binary over one set of settings, so a brand new person who
+    /// tries Current first and dismisses this window there must NOT have the
+    /// offer they have never seen quietly spent on their behalf: with tutorials
+    /// off and nothing granted, neither reason holds and nothing is recorded.
+    public static func answerOnDismiss(tutorialsEnabled: Bool, screenRecordingGranted: Bool,
+                                       needsRelaunch: Bool,
                                        answer: FirstRunAnswer?) -> FirstRunAnswer? {
-        guard answer == nil, screenRecordingGranted, !needsRelaunch else { return nil }
+        guard answer == nil, !needsRelaunch else { return nil }
+        let wasAsked = showsChoice(tutorialsEnabled: tutorialsEnabled,
+                                   needsRelaunch: needsRelaunch, answer: answer)
+        guard wasAsked || screenRecordingGranted else { return nil }
         return .skip
     }
 
@@ -88,15 +111,30 @@ public enum FirstRunOffer {
 
     // MARK: - The words
 
-    /// What the window says once everything works and the question is on the
-    /// table. It replaces the setup line, so the last thing read before
-    /// choosing is what the two buttons are for.
+    /// What the window says while the question is on the table. It replaces the
+    /// setup line, so the last thing read before choosing is what the two
+    /// buttons are for.
+    public static func headline(screenRecordingGranted: Bool) -> String {
+        screenRecordingGranted ? headlineWhenReady : headlineWhenSetupIsUnfinished
+    }
+
+    /// Everything works and the question is on the table.
     ///
     /// It does not say "you are all set": the finished step above it already
     /// says that, and reading the same sentence twice eight lines apart makes
     /// the window feel like it is stalling.
-    public static let headline =
+    public static let headlineWhenReady =
         "Everything is ready. Take a quick lap of the window, or jump straight in. The tour is under Help whenever you want it."
+
+    /// The question is on the table with Screen Recording still unfinished.
+    ///
+    /// "Everything is ready" cannot be said here: it would sit eight lines
+    /// above a step still badged Required, and a window that contradicts
+    /// itself teaches somebody not to read it. So it says the one thing that
+    /// makes the choice safe to make, which is that the tour is independent of
+    /// the setup underneath it.
+    public static let headlineWhenSetupIsUnfinished =
+        "The tour does not need any of the setup below. Take a quick lap of the window, or jump straight in. It is under Help whenever you want it."
 
     /// Show me around.
     public static let tourButtonTitle = "Take the Tour"
@@ -111,7 +149,8 @@ public enum FirstRunOffer {
     /// Every word above, labelled, so a test can run the repo's copy rules over
     /// the lot rather than over whichever one somebody remembered.
     public static var allCopy: [(String, String)] {
-        [("first run headline", headline),
+        [("first run headline", headlineWhenReady),
+         ("first run headline before setup is finished", headlineWhenSetupIsUnfinished),
          ("first run tour button", tourButtonTitle),
          ("first run skip button", skipButtonTitle)]
     }

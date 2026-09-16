@@ -410,21 +410,70 @@ straight in. The tour is under Help whenever you want it.
                               [ Start Working ]  [ Take the Tour ]
 ```
 
+The same window for somebody who has not granted Screen Recording and may never
+mean to. The offer is there, and the blue button is still the one above it:
+
+```
+Welcome to Photonz
+The tour does not need any of the setup below. Take a quick lap
+of the window, or jump straight in. It is under Help whenever
+you want it.
+
+  ⬚ Screen Recording   Required
+    Lets Photonz take screenshots and record video.
+    [ Open Screen Recording Settings… ]
+  ⬚ Microphone         Optional
+
+⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records
+⇧⌘6 opens the last capture for editing
+                              [ Start Working ]  [ Take the Tour ]
+```
+
 The rules live in `FirstRunOffer` (PhotonzCore), which is pure, so the whole
 sequence is driven in tests rather than guessed at. They exist because the real
 first run is not the happy one:
 
-- **The question waits until the app actually works.** A Screen Recording grant
-  only takes effect in a fresh process, so on a brand new Mac the setup window's
-  last act is "Relaunch Photonz". A tour offered there is a tour the restart
-  kills twenty seconds later. So the choice appears only with Screen Recording
-  granted and no restart pending, which lands it on the first launch where
-  Photonz can do anything. It does NOT wait on the recommended step (the
-  screenshot key conflicts), because somebody who never frees those keys would
-  then be asked on every launch for ever.
+- **The question waits out a pending restart, and nothing else.** A Screen
+  Recording grant only takes effect in a fresh process, so on a brand new Mac
+  the setup window's last act is "Relaunch Photonz". A tour offered there is a
+  tour the restart kills twenty seconds later, so with a restart pending the
+  choice is not shown. It does NOT wait on the recommended step (the screenshot
+  key conflicts), because somebody who never frees those keys would then be
+  asked on every launch for ever.
+- **Everyone is offered the tour, including somebody who never grants Screen
+  Recording.** Decided on 2026-09-16. The choice used to wait for the grant as
+  well, which read as "the question waits until the app actually works" and was
+  true when Photonz only took screenshots. It is not true now: the tour teaches
+  the tool bar, the Measure tool, the layers list and the settings beside them,
+  over a sample picture it brings itself, and none of that touches the screen.
+  So the one person the app never showed round was the person who came to build
+  UI or draw an icon and never intended to capture anything, and who therefore
+  never reached the moment the offer was waiting for. The grant is required for
+  capture, not for Photonz, and the tour offer no longer pretends otherwise.
+  - With setup unfinished the headline changes, because "Everything is ready"
+    eight lines above a step still badged Required is a window arguing with
+    itself. It says instead that the tour does not need any of the setup below.
+  - With setup unfinished **Take the Tour is an ordinary button, not the blue
+    one.** The Screen Recording step already carries a prominent "Open Screen
+    Recording Settings…", and two blue buttons argue over where to look. Once
+    the setup above has nothing left to ask for, Take the Tour is prominent and
+    the default action exactly as it always was.
+  - What this does NOT fix: the setup window itself still presents at every
+    launch while Screen Recording is unfinished, because `welcome.setupCompleted`
+    only becomes true when the window closes with the grant in place. The tour
+    question is asked once and then over, but the permission window is not. That
+    is the bigger question of what Photonz owes somebody who never gives it the
+    screen, and it is tracked separately.
 - **Closing the window is an answer**, and the answer is skip. Without that,
   reaching for the red button instead of either offered button means being asked
-  again on every launch, which is the nagging this exists to prevent.
+  again on every launch, which is the nagging this exists to prevent. There are
+  two separate reasons to stop asking and both are kept: the question was on
+  screen, so closing it answered it; or the install finished its setup with no
+  question to ask, which is still its first run being over. Neither alone is
+  enough. Current and Next ship in one binary over one set of settings, so a
+  brand new person who tries Current first and closes this window without
+  granting anything was asked nothing and finished nothing, and their offer is
+  still there to be made the day they switch to Next.
 - **Skipping is final.** Both buttons write `tutorials.firstRunOffer`, and the
   window never asks again. There is no second "would you like a tour" anywhere
   in the app. Help ▸ Tutorials is the way back.

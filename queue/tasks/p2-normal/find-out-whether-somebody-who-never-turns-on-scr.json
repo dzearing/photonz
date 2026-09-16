@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 430,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T00:04:48.521Z",
-  "updated": "2026-09-15T12:14:53.744Z",
+  "updated": "2026-09-16T09:09:10.644Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while building the first run offer on 2026-09-12. FirstRunOffer.showsChoice (Sources/PhotonzCore/FirstRunOffer.swift) requires screenRecordingGranted and no pending restart. Both guards are there for good reasons, written down in that file: the grant only takes effect in a fresh process, so a tour offered before the restart is a tour the restart kills.\n\nThe gap is real but so is the reason. Note that this person is already in a loop today, independently of tutorials: WelcomeController presents the setup window at every launch while welcome.setupCompleted is false, which it stays until the window is closed with the grant in place. So the honest version of this question is probably the bigger one, what the app should do for somebody who wants Photonz without giving it the screen, and the tour offer is one line of that answer.\n\nSeen, not reproduced as a failure: it is a deliberate rule, not a bug.",
@@ -42,6 +42,47 @@
     {
       "t": "2026-09-15T12:14:53.743Z",
       "note": "seq 390 -> 430"
+    },
+    {
+      "t": "2026-09-16T08:59:20.382Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T09:00:49.719Z",
+      "note": "Reproduced the gap in the sequence model the app really runs: Scripts/test.sh --filter FirstRunOfferTests passes somebodyWhoIgnoresPermissionIsNeverAskedAboutATour, which drives five launches with no grant and asserts the setup window comes up every time, the tour is never offered, and no answer is ever recorded."
+    },
+    {
+      "t": "2026-09-16T09:00:49.761Z",
+      "note": "Adversarial review before building. (1) The tour does not need the grant: TutorialGuides.takeTheTour uses sample .starterScreen and its six steps are the tool bar, the Measure tool, the layers list, picking a layer, the geometry section and the Select tool. Nothing in it captures anything, so the gate is an artifact of WHERE the offer lives, not a technical requirement. (2) The needsRelaunch guard is different and stays: a grant only takes effect in a fresh process, so a tour offered with a restart pending really is killed by the restart. (3) Shortest version that works: drop screenRecordingGranted from showsChoice AND from answerOnDismiss, in lockstep, because showing the choice without recording the dismissal is the every-launch nagging the rules exist to prevent. (4) Two things the shortest version gets wrong and that I am fixing with it: the headline says 'Everything is ready' eight lines above a red Required card, and Take the Tour is borderedProminent+defaultAction so an ungranted window would carry two blue buttons competing for the eye."
+    },
+    {
+      "t": "2026-09-16T09:09:10.382Z",
+      "note": "Decided and built: everyone is offered the tour, including somebody who never grants Screen Recording. showsChoice now waits on a pending restart and nothing else. Recorded in docs/design/tutorials.md under The first launch, with the reasoning and with what it deliberately does not fix."
+    },
+    {
+      "t": "2026-09-16T09:09:10.426Z",
+      "note": "Caught a trap in my own change before it shipped. answerOnDismiss was never gated on the tutorials flag, on purpose, so dropping the grant guard from it would have made CURRENT (where tutorials are off) record skip when somebody closes the ungranted welcome window. Current and Next share one settings store, so a brand new person who tries Current first, closes that window, then switches to Next would have been silently stamped answered and never offered the tour: the exact bug I was sent to fix, reappearing on a different path. answerOnDismiss now records on either of two reasons, the question was on screen OR setup is finished, which leaves every existing case identical and adds only the new one. Test aReleaseThatNeverAsksNeverSpendsTheOfferItNeverMade pins it."
+    },
+    {
+      "t": "2026-09-16T09:09:10.470Z",
+      "note": "Verified: Scripts/test.sh green, 7543 tests in 603 suites, including 24 in the First run offer suite. swift build clean. NOT verified in the app: the Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true), so Scripts/playtest.sh Scripts/playtest/first-run-walk.json exited 3 with status locked and zero steps, and no capture of any kind was possible. Sweep requested for it."
+    },
+    {
+      "t": "2026-09-16T09:09:10.514Z",
+      "note": "left rough: the playtest harness reads the real TCC state, so no walk can drive the window in its ungranted shape and the new headline and the non-prominent Take the Tour button have no walk covering them. Adding a probe-only way to pretend the grant is missing would fix it, but writing a walk I cannot run on a locked screen is writing a walk I cannot claim, so it is not filed: no person is affected, only an agent's coverage."
+    },
+    {
+      "t": "2026-09-16T09:09:10.556Z",
+      "note": "left rough: granting Screen Recording while the window is open now makes the two tour buttons vanish and Relaunch Photonz take their place, because a pending restart correctly hides the offer. It is a visible flip that did not happen before. Not filed: what replaces the buttons is one unambiguous prominent button, the offer returns on the next launch, and it is on the audit for the user to react to."
+    },
+    {
+      "t": "2026-09-16T09:09:10.599Z",
+      "note": "Follow-up filed: saying-no-to-screen-recording-is-an-answer-the-a (p2-normal, ui-building). The setup window still presents at every launch while Screen Recording is unfinished, so the person who says no is still shown it for ever, and my change adds a contradiction by offering a way past a step badged Required. Reproduced by the new test neverGrantingStillLeavesTheSetupWindowComingBack. queue.mjs flagged work-out-whether-the-app-needs-project-types-at as a near twin; read it, and it is about modes as visibility presets in the mocks, nothing to do with macOS permissions, so both stand."
+    },
+    {
+      "t": "2026-09-16T09:09:10.643Z",
+      "note": "Audit: queue/audits/2026-09-16-first-run-offer.json. No pictures in it, and it says why in one line: the screen was locked."
     }
-  ]
+  ],
+  "started": "2026-09-16T08:59:20.381Z"
 }

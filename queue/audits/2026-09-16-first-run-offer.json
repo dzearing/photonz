@@ -1,0 +1,29 @@
+{
+  "feature": "The first run tour offer",
+  "epic": "ui-building",
+  "summary": "The one offer of the guided tour no longer waits for Screen Recording, so somebody who came to build UI or draw an icon and never means to capture anything is now shown round once, instead of never. A pending restart still holds the question back, because that really would kill the tour.",
+  "setup": "Photonz Dev, Experiments window, release Next, Guided tutorials on. To be asked again on a machine that has already answered, quit Photonz and run: defaults delete com.dzearing.photonz.dev tutorials.firstRunOffer; defaults delete com.dzearing.photonz.dev tutorials.firstRunOffer.migrated",
+  "try": [
+    { "do": "Launch Photonz and wait for the Welcome window to come up." },
+    { "do": "Read the one sentence under the title." },
+    { "do": "Look at the footer: Start Working on the left, Take the Tour blue on the right." },
+    { "do": "Press Take the Tour and watch a window open with a sample screen in it and the guide already running." },
+    { "do": "Close the guide, quit Photonz, and launch it again." },
+    { "do": "Check that nothing comes up." },
+    { "do": "Pick Welcome & Permissions... from the menu bar menu and check the window has no tour buttons in it." }
+  ],
+  "evaluate": [
+    "On a Mac that has never granted Screen Recording the same window now offers Take the Tour, under the sentence \"The tour does not need any of the setup below.\" Does that read as permission to get on with it, or as the app going soft on a step it still calls Required?",
+    "In that state Take the Tour is an ordinary button and Open Screen Recording Settings... is the blue one. Is that the right thing to pull the eye, or should the tour be blue for somebody who came to draw?",
+    "The offer is spent the moment that person closes the window, even though they granted nothing. Is once still the right number of times to ask them?",
+    "Somebody who grants Screen Recording while this window is open watches the two tour buttons vanish and Relaunch Photonz take their place. Is that jarring enough to be worth fixing?",
+    "Should the Screen Recording step still be badged Required now that the window offers a way straight past it?"
+  ],
+  "rough": [
+    "No pictures in this audit: the Mac's screen was locked for the whole task, so first-run-walk.json refused to run and macOS refuses every capture. A sweep is requested and the loop will run that walk once the screen is unlocked.",
+    "The ungranted version of this window cannot be shown on a machine that HAS granted Screen Recording, so the questions above quote its words rather than show it. Revoking the grant to see it would make the dev app ask for Screen Recording again, which is not worth it.",
+    "The rules themselves are covered exhaustively by 24 tests in Tests/PhotonzCoreTests/FirstRunOfferTests.swift, launch by launch, including the five-launch run of somebody who never grants. What is NOT covered by a walk is how the ungranted window LOOKS, because the playtest harness reads the real permission state and has no way to pretend it is missing.",
+    "The window still opens itself at every launch while Screen Recording is unfinished, so the person who says no is still shown it every time. Only the tour half is fixed here. That is the bigger question and it is filed as saying-no-to-screen-recording-is-an-answer-the-a.",
+    "Changed away from what was written down: the design doc said the question waits until the app actually works. That was true when Photonz only took screenshots and is not true now, so the rule and the doc both changed."
+  ]
+}

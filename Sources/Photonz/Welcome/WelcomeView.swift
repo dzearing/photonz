@@ -37,11 +37,13 @@ struct WelcomeView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Welcome to \(AppInfo.name)")
                     .font(.title2.weight(.semibold))
-                // Once setup works and the tour has never been offered, the
-                // last thing read before choosing is what the two buttons in
-                // the footer are for.
+                // While the tour has never been offered, the last thing read
+                // before choosing is what the two buttons in the footer are
+                // for. Which sentence depends on whether the setup below is
+                // finished, because "everything is ready" above a red Required
+                // step is a window arguing with itself.
                 Text(state.showsTourChoice
-                     ? FirstRunOffer.headline
+                     ? FirstRunOffer.headline(screenRecordingGranted: state.screenRecordingGranted)
                      : "Photonz lives in your menu bar. Two quick macOS settings and you're ready to capture anything.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -138,6 +140,15 @@ struct WelcomeView: View {
     /// they squeezed those onto three wrapped lines and made the moment of
     /// choosing look busy. So when the choice is up the shortcuts sit above it
     /// with room to breathe, and the two ways on get a line of their own.
+    ///
+    /// **Only one button is blue at a time.** The offer is now made with Screen
+    /// Recording possibly still ungranted, and in that state the step card
+    /// already carries a prominent "Open Screen Recording Settings…". A second
+    /// prominent button in the footer would leave two blue buttons arguing over
+    /// where to look, and would make Return start a tour when the thing most
+    /// people opened this window to do is the one above. So Take the Tour is
+    /// prominent and default ONLY once the setup above has nothing left to ask
+    /// for; until then it is an ordinary button, still there, still one click.
     private var footer: some View {
         VStack(alignment: .leading, spacing: 10) {
             if state.showsTourChoice {
@@ -146,9 +157,13 @@ struct WelcomeView: View {
                     Spacer()
                     Button(FirstRunOffer.skipButtonTitle) { onFinish() }
                         .keyboardShortcut(.cancelAction)
-                    Button(FirstRunOffer.tourButtonTitle) { onTakeTour() }
-                        .buttonStyle(.borderedProminent)
-                        .keyboardShortcut(.defaultAction)
+                    if state.screenRecordingGranted {
+                        Button(FirstRunOffer.tourButtonTitle) { onTakeTour() }
+                            .buttonStyle(.borderedProminent)
+                            .keyboardShortcut(.defaultAction)
+                    } else {
+                        Button(FirstRunOffer.tourButtonTitle) { onTakeTour() }
+                    }
                 }
             } else {
                 HStack {
