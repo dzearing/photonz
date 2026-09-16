@@ -290,6 +290,15 @@ extension Experiments {
     /// Help ▸ guided tutorials (Next, `next-tutorials`).
     var tutorialsEnabled: Bool { isEnabled(FeatureCatalog.tutorialsFlag) }
 
+    /// `next-setup-takes-no-for-an-answer`: whether closing the first run setup
+    /// window without granting Screen Recording is remembered as a no, so the
+    /// window stops opening itself at every launch. Exists only in the Next
+    /// release's catalog, so Current always reads false and keeps coming back
+    /// until the permission is on.
+    var setupTakesNoForAnAnswer: Bool {
+        isEnabled(FeatureCatalog.setupTakesNoForAnAnswerFlag)
+    }
+
     /// Separate into Layers, on a picture's row menu and in the Layer menu
     /// (Next, `next-separate-into-layers`). Exists only in the Next release's
     /// catalog, so Current never offers the command.

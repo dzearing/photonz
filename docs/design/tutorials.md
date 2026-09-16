@@ -419,8 +419,9 @@ The tour does not need any of the setup below. Take a quick lap
 of the window, or jump straight in. It is under Help whenever
 you want it.
 
-  ⬚ Screen Recording   Required
+  ⬚ Screen Recording   Needed to capture
     Lets Photonz take screenshots and record video.
+    Everything else in Photonz works without it.
     [ Open Screen Recording Settings… ]
   ⬚ Microphone         Optional
 
@@ -458,12 +459,31 @@ first run is not the happy one:
     Recording Settings…", and two blue buttons argue over where to look. Once
     the setup above has nothing left to ask for, Take the Tour is prominent and
     the default action exactly as it always was.
-  - What this does NOT fix: the setup window itself still presents at every
-    launch while Screen Recording is unfinished, because `welcome.setupCompleted`
-    only becomes true when the window closes with the grant in place. The tour
-    question is asked once and then over, but the permission window is not. That
-    is the bigger question of what Photonz owes somebody who never gives it the
-    screen, and it is tracked separately.
+- **Closing the setup window is a no, and a no sticks**
+  (`next-setup-takes-no-for-an-answer`, 2026-09-16). It used to come back at
+  every single launch until Screen Recording was switched on, because
+  `welcome.setupCompleted` only ever recorded the grant, so the only way to stop
+  the window was to do the thing you did not want to do. A second remembered
+  fact, `welcome.setupDismissed`, records the close itself, and
+  `presentsAtLaunch` reads either as the first run being over. Three things move
+  with it, because a window you may leave cannot keep talking as though you may
+  not:
+  - The Screen Recording step is badged **"Needed to capture"**, not
+    "Required". Photonz is also where you draw an icon, build a screen and edit
+    a picture, so "Required" was a false statement sitting above a way out.
+  - The step says **"Everything else in Photonz works without it"**, which is
+    the sentence that makes saying no safe to say.
+  - The way out says **"Done"**, not "Not Now". "Not Now" promises a later that
+    no longer comes.
+
+  The one close that records nothing is the one carrying a pending restart:
+  that close IS the restart, and the window is owed one more appearance on the
+  other side of it where the tour can finally be offered. So a first run that
+  grants the screen behaves exactly as it always did. What replaces the nagging
+  is an explanation at the moment it is worth something: reach for a screenshot
+  with the screen never granted and the capture strip comes down saying what is
+  missing, with a button that opens setup, and Welcome & Permissions in the
+  menu-bar menu opens it any time.
 - **Closing the window is an answer**, and the answer is skip. Without that,
   reaching for the red button instead of either offered button means being asked
   again on every launch, which is the nagging this exists to prevent. There are

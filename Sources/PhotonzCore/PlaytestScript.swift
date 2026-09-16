@@ -621,6 +621,19 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the plain setup window it always was, with no tour offer in it, which is
     /// what this checks before closing it again.
     case showWelcomeAgain
+    /// Be (or stop being) the person who never gives Photonz the screen.
+    /// These change what the APP reads the Screen Recording grant as, in the
+    /// probe build only: nothing about macOS is touched and nothing is
+    /// granted or revoked. The probe machine granted the screen long ago, so
+    /// without this a walk can never reach the half of the first run that
+    /// belongs to somebody who only wants to draw.
+    case screenRecordingOff, screenRecordingOn
+    /// Reach for a screenshot the way ⇧⌘4 does, from a walk. Only useful
+    /// after `screenRecordingOff`: the point is the moment somebody who said
+    /// no to setup finds out what saying no cost them, which has to be the
+    /// moment they try, with the way to fix it in reach. Nothing is captured
+    /// and no selection overlay is drawn, because the app stops before either.
+    case tryToCapture
     /// Open (and close) the Position and Size numbers, which are a popover
     /// hung off the selection now rather than a section in the panel
     /// (`ExactPlacement`). A walk that wants to type a width asks for this

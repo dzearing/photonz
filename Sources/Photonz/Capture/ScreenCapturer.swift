@@ -6,7 +6,22 @@ import ScreenCaptureKit
 @MainActor
 enum ScreenCapturer {
 
-    static var hasPermission: Bool { CGPreflightScreenCaptureAccess() }
+    static var hasPermission: Bool {
+        #if PHOTONZ_PLAYTEST
+        if let pretended = playtestPretendedPermission { return pretended }
+        #endif
+        return CGPreflightScreenCaptureAccess()
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// What a walk has told the app to read the Screen Recording grant as, or
+    /// nil to read the real one. Nothing about macOS is touched: this is the
+    /// app's own answer to "may I capture", and it exists because the probe
+    /// machine granted the screen long ago, so without it no walk could ever
+    /// stand where the person who only wants to draw icons stands.
+    /// Probe builds only (`PHOTONZ_PLAYTEST`), never in a release.
+    static var playtestPretendedPermission: Bool?
+    #endif
 
     /// Triggers the system permission prompt (no-op if already decided).
     /// Returns whether access is currently granted.

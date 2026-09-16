@@ -146,6 +146,8 @@ public enum FeatureCatalog {
 
     public static let tutorialsFlag = "next-tutorials"
 
+    public static let setupTakesNoForAnAnswerFlag = "next-setup-takes-no-for-an-answer"
+
     public static let separateIntoLayersFlag = "next-separate-into-layers"
 
     public static let doubleClickReadsALabelFlag = "next-double-click-reads-a-label"
@@ -431,6 +433,15 @@ public enum FeatureCatalog {
                     name: toolBarFeedbackFlag,
                     title: "Tool bar buttons respond to the pointer",
                     description: "Pointing at a tool in the floating tool bar shows the soft fill every other icon button in the app shows, and pressing one shows the stronger fill with a slight shrink. The tool in hand keeps its accent circle and still lights up under the pointer. Off means the buttons sit still until clicked.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: setupTakesNoForAnAnswerFlag,
+                    title: "Saying no to the setup window sticks",
+                    description: "Closing the first run setup window without turning on Screen Recording is taken as an answer and remembered, so it never opens itself at you again. The Screen Recording step says \"Needed to capture\" instead of \"Required\" and says in plain words that everything else works without it, and the way out says Done rather than Not Now. Try to take a screenshot later and the capture strip tells you what is missing with a button that opens setup, and Welcome & Permissions in the menu bar opens it any time. Off means the window comes back at every single launch until the permission is on.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

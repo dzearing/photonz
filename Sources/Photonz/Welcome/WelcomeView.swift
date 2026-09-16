@@ -60,7 +60,8 @@ struct WelcomeView: View {
             done: state.screenRecordingGranted && !state.needsRelaunch,
             icon: "rectangle.dashed.badge.record",
             title: "Screen Recording",
-            badge: "Required",
+            badge: FirstRunOffer.screenRecordingBadge(
+                takesNoForAnAnswer: state.takesNoForAnAnswer),
             body: screenRecordingBody
         ) {
             if state.needsRelaunch {
@@ -79,7 +80,8 @@ struct WelcomeView: View {
                 ? "Access granted! macOS applies it when \(AppInfo.name) reopens. One click and you're done."
                 : "\(AppInfo.name) can capture your screen. You're all set here."
         }
-        var text = "Lets \(AppInfo.name) take screenshots and record video. Click below, then turn on \(AppInfo.name). This window updates by itself."
+        var text = FirstRunOffer.screenRecordingBody(
+            appName: AppInfo.name, takesNoForAnAnswer: state.takesNoForAnAnswer)
         if state.screenRecordingGrantAttempted {
             text += "\n\nNot in the list? macOS's list gets stuck sometimes. Restart your Mac and try again."
         }
@@ -174,7 +176,8 @@ struct WelcomeView: View {
                             .buttonStyle(.borderedProminent)
                             .keyboardShortcut(.defaultAction)
                     } else {
-                        Button("Not Now") { onFinish() }
+                        Button(FirstRunOffer.closeButtonTitle(
+                            takesNoForAnAnswer: state.takesNoForAnAnswer)) { onFinish() }
                             .keyboardShortcut(.cancelAction)
                     }
                 }

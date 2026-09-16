@@ -11,9 +11,12 @@ import SwiftUI
 /// time from the menu-bar menu and the history overlay's permission hint.
 ///
 /// "Finished" means the window was closed with Screen Recording granted (or
-/// the user clicked the primary button in that state). Closing it earlier
-/// re-presents it on the next launch — that unfinished state is exactly the
-/// scary first-capture failure this flow exists to prevent.
+/// the user clicked the primary button in that state). Where the release takes
+/// no for an answer (`next-setup-takes-no-for-an-answer`), closing it earlier
+/// is remembered too and the window stops opening itself: capture then explains
+/// itself at the moment somebody tries it, which is where the explanation is
+/// worth something. Without that flag, closing it earlier re-presents it on the
+/// next launch for ever.
 ///
 /// This window also carries the one and only offer of the guided tour (`FirstRunOffer`, PhotonzCore, where the rules and their traps
 /// are written down). It lives here rather than in a second welcome surface
@@ -22,6 +25,12 @@ import SwiftUI
 @MainActor
 final class WelcomeController: NSObject, NSWindowDelegate {
     static let completedDefaultsKey = "welcome.setupCompleted"
+    /// Set the first time the setup window is closed at all, granted or not.
+    /// It is what makes a no stick: `completedDefaultsKey` only ever records
+    /// the screen being switched ON, so before this existed there was no
+    /// dismissal the app would remember (`FirstRunOffer`). Written and read
+    /// only where the release takes no for an answer.
+    static let dismissedDefaultsKey = "welcome.setupDismissed"
     /// The one remembered answer to "shall I show you around": `tour`, `skip`,
     /// or absent for somebody who has never been asked.
     static let firstRunOfferKey = "tutorials.firstRunOffer"
@@ -53,8 +62,11 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// is done but nobody has ever been offered the tour.
     func presentIfNeeded(capture: CaptureCenter) {
         Self.migrateFirstRunOfferOnce()
+        let defaults = UserDefaults.standard
         guard FirstRunOffer.presentsAtLaunch(
-            setupCompleted: UserDefaults.standard.bool(forKey: Self.completedDefaultsKey),
+            setupCompleted: defaults.bool(forKey: Self.completedDefaultsKey),
+            setupDismissed: Self.takesNoForAnAnswer
+                && defaults.bool(forKey: Self.dismissedDefaultsKey),
             answer: Self.firstRunAnswer,
             tutorialsEnabled: Experiments.shared.tutorialsEnabled) else { return }
         // Give the menu-bar agent a beat to settle before taking focus.
@@ -135,6 +147,16 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         if state?.screenRecordingGranted == true {
             UserDefaults.standard.set(true, forKey: Self.completedDefaultsKey)
         }
+        // Closing the window is also an answer to the SETUP, and the answer is
+        // no. Before this, the only dismissal the app remembered was one that
+        // granted the screen, so somebody who came to draw got this window at
+        // every launch for ever. The one close that means nothing is the one
+        // carrying a pending restart: that close IS the restart.
+        if FirstRunOffer.dismissalEndsFirstRun(
+            takesNoForAnAnswer: Self.takesNoForAnAnswer,
+            needsRelaunch: state?.needsRelaunch ?? false) {
+            UserDefaults.standard.set(true, forKey: Self.dismissedDefaultsKey)
+        }
         // Closing the window while the question is up IS an answer, and the
         // answer is skip. Without this, somebody who reaches for the red button
         // instead of either offered button gets asked again on every launch.
@@ -170,6 +192,11 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     }
 
     // MARK: - The remembered answer
+
+    /// Whether this release remembers a no to the setup window
+    /// (`next-setup-takes-no-for-an-answer`). Read in one place so the write
+    /// and the read can never disagree.
+    static var takesNoForAnAnswer: Bool { Experiments.shared.setupTakesNoForAnAnswer }
 
     static var firstRunAnswer: FirstRunAnswer? {
         UserDefaults.standard.string(forKey: firstRunOfferKey)
@@ -268,6 +295,12 @@ final class WelcomeState {
     /// window opens, because the answer can only change by being given here.
     let tourOfferPending: Bool
 
+    /// Whether closing this window is a remembered no. It changes what the
+    /// window SAYS as well as what it does: a step badged Required and a way
+    /// out labelled "Not Now" are both false in a window you can leave for good
+    /// (`FirstRunOffer`).
+    let takesNoForAnAnswer: Bool
+
     /// Whether the two ways on are showing right now. It waits for a pending
     /// restart and nothing else, because a tour the restart kills is worse than
     /// no tour, while a tour on a machine that never granted Screen Recording
@@ -286,6 +319,7 @@ final class WelcomeState {
     init(screenGrantedAtLaunch: Bool, tourAlreadyAnswered: Bool = true) {
         self.screenGrantedAtLaunch = screenGrantedAtLaunch
         tourOfferPending = Experiments.shared.tutorialsEnabled && !tourAlreadyAnswered
+        takesNoForAnAnswer = WelcomeController.takesNoForAnAnswer
         screenRecordingGranted = ScreenCapturer.hasPermission
         microphone = AVCaptureDevice.authorizationStatus(for: .audio)
         let conflicts = Self.currentShortcutConflicts()

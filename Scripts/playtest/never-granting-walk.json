@@ -1,0 +1,113 @@
+{
+  "out": "/tmp/photonz-playtest/never-granting-walk",
+  "seed": "Somebody who came to draw icons and build UI, and who will never give Photonz the screen. The setup window used to open itself at them at every single launch for ever, because the only dismissal the app remembered was one that granted Screen Recording. This walk stands where that person stands: it tells the app to read the grant as never given, closes the window once, and then measures whether it comes back. It also reaches for a screenshot afterwards, because a no that sticks is only safe if the app still says what is missing at the moment somebody tries to capture.",
+  "setup": {
+    "forget": [
+      "tutorials"
+    ],
+    "flags": {
+      "next-setup-takes-no-for-an-answer": true,
+      "next-tutorials": true
+    }
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "freshInstall"
+    },
+    {
+      "do": "action",
+      "action": "screenRecordingOff"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectWelcome"
+    },
+    {
+      "do": "action",
+      "action": "readWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "1-nothing-is-required",
+      "note": "first launch on a machine that will never grant the screen. The Screen Recording step is badged Needed to capture rather than Required, and says in plain words that everything else works without it, so the window no longer demands something this person does not want. Both ways on are still offered."
+    },
+    {
+      "do": "snapshot",
+      "name": "1-needed-to-capture",
+      "window": "Welcome"
+    },
+    {
+      "do": "action",
+      "action": "startWorking"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "2-no-sticks",
+      "note": "three more launches and nothing comes up. Screen Recording was never granted and never will be, and that is now an answer the app remembers rather than an unfinished job it keeps raising."
+    },
+    {
+      "do": "action",
+      "action": "tryToCapture"
+    },
+    {
+      "do": "describe",
+      "stage": "3-told-at-the-moment-it-matters",
+      "note": "the day this person does reach for a screenshot, the capture strip comes down and says what is missing with a button that opens setup. The explanation now lands where it is worth something instead of at every launch."
+    },
+    {
+      "do": "snapshot",
+      "name": "2-what-is-missing",
+      "window": "Capture History"
+    },
+    {
+      "do": "appKey",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "showWelcomeAgain"
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-click-back",
+      "note": "Welcome & Permissions... in the menu bar still opens the window any time, so turning Screen Recording on later is one click and never a hunt. The way out of it says Done, because there is no later left to promise."
+    },
+    {
+      "do": "action",
+      "action": "screenRecordingOn"
+    }
+  ]
+}

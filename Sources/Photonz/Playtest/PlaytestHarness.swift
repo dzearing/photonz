@@ -1571,6 +1571,30 @@ private final class Run {
             note(number, step.name,
                  "pretended an install that finished setup before tutorials existed")
 
+        // Be the person who never gives Photonz the screen, on a machine that
+        // long since granted it. Nothing about macOS changes: this is the
+        // app's own reading of the grant, in the probe build only, so a walk
+        // can drive the half of the first run the probe machine can never
+        // reach by itself.
+        case .action(let action) where action == .screenRecordingOff
+            || action == .screenRecordingOn:
+            let granted = action == .screenRecordingOn
+            ScreenCapturer.playtestPretendedPermission = granted
+            note(number, step.name,
+                 "from here Photonz reads Screen Recording as "
+                 + (granted ? "granted" : "never granted") + "; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .tryToCapture:
+            coordinator.capture.beginRectCapture()
+            await sleep(0.9)
+            guard coordinator.capture.needsScreenRecordingPermission else {
+                throw Failure(description: "the capture went ahead, so there is nothing to "
+                              + "explain; this step wants screenRecordingOff before it")
+            }
+            note(number, step.name,
+                 "reached for a screenshot with the screen never granted; "
+                 + "the app should now be saying what is missing")
+
         case .action(let action) where action == .launchHook:
             coordinator.runWelcomeLaunchHook()
             // The hook waits out the beat the menu-bar agent needs to settle
@@ -2273,7 +2297,7 @@ private final class Run {
                 break // handled above: neither needs an editor
             case .freshInstall, .oldInstall, .launchHook, .expectWelcome,
                  .expectNoWelcome, .readWelcome, .takeTheTour, .startWorking,
-                 .showWelcomeAgain:
+                 .showWelcomeAgain, .screenRecordingOff, .screenRecordingOn, .tryToCapture:
                 break // handled above: the first run happens before any document
             case .closeTutorials:
                 NSApp.windows.first { $0.title == TutorialHubModel.windowTitle }?.close()
@@ -6882,6 +6906,7 @@ private final class Run {
     /// Everything the setup window remembers about whether it has run, so a
     /// walk can forget the lot by name rather than spelling keys again.
     static let firstRunKeys = [WelcomeController.completedDefaultsKey,
+                               WelcomeController.dismissedDefaultsKey,
                                WelcomeController.firstRunOfferKey,
                                WelcomeController.firstRunMigratedKey]
 
@@ -6890,8 +6915,10 @@ private final class Run {
     static var firstRunReading: String {
         let defaults = UserDefaults.standard
         let answer = WelcomeController.firstRunAnswer.map(\.rawValue) ?? "never asked"
+        let said = defaults.bool(forKey: WelcomeController.dismissedDefaultsKey)
+            ? "waved away" : "never answered"
         return "setup \(defaults.bool(forKey: WelcomeController.completedDefaultsKey) ? "finished" : "unfinished"), "
-            + "tour offer \(answer)"
+            + "setup \(said), tour offer \(answer)"
     }
 
     private func snapshot(_ view: NSView, name: String) throws {
