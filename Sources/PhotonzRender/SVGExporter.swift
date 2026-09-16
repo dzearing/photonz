@@ -96,7 +96,13 @@ public enum SVGExporter {
         case .lens, .zoomCallout:
             whole = renderer.render(document, store: store, scale: scale)
         default:
-            whole = renderer.render(document, store: store, only: layer.id, scale: scale)
+            // Drawn at FULL strength, because the file says the fade itself, on
+            // the `<image>` the picture lands in. Baked in here as well it is
+            // applied twice, and a half-faded layer came back a quarter of what
+            // it is on the canvas (`SVGExport.Writer.picture`).
+            var solid = document
+            solid.updateLayer(id: layer.id) { $0.style.opacity = 1 }
+            whole = renderer.render(solid, store: store, only: layer.id, scale: scale)
         }
         guard let whole, let cropped = whole.cropping(to: cut),
               let png = ImageCodec.encode(cropped, format: .png) else { return nil }

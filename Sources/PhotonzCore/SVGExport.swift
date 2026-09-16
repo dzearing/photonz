@@ -100,19 +100,22 @@ public enum SVGExport {
     public static func fallbacks(in document: PhotonzDocument,
                                  flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
         var found: [Fallback] = []
-        func walk(_ layers: [Layer]) {
+        func walk(_ layers: [Layer], carried: Bool) {
             for layer in layers where layer.isVisible {
-                switch answer(for: layer, canOutlineText: true, flatImages: flatImages) {
+                switch answer(for: layer, canOutlineText: true, flatImages: flatImages,
+                              carried: carried) {
                 case .picture(let reason?):
                     found.append(Fallback(layerName: layer.name, reason: reason))
                 case .picture:
                     break
                 case .vector:
-                    if case .group(let group) = layer.content { walk(group.children) }
+                    if case .group(let group) = layer.content {
+                        walk(group.children, carried: carried || carries(layer))
+                    }
                 }
             }
         }
-        walk(document.layers)
+        walk(document.layers, carried: false)
         return found
     }
 
@@ -125,18 +128,21 @@ public enum SVGExport {
     public static func embeddedPictures(in document: PhotonzDocument,
                                         flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
         var found: [Fallback] = []
-        func walk(_ layers: [Layer]) {
+        func walk(_ layers: [Layer], carried: Bool) {
             for layer in layers where layer.isVisible {
-                switch answer(for: layer, canOutlineText: true, flatImages: flatImages) {
+                switch answer(for: layer, canOutlineText: true, flatImages: flatImages,
+                              carried: carried) {
                 case .picture(let reason):
                     found.append(Fallback(layerName: layer.name,
                                           reason: reason ?? "it is a picture rather than shapes"))
                 case .vector:
-                    if case .group(let group) = layer.content { walk(group.children) }
+                    if case .group(let group) = layer.content {
+                        walk(group.children, carried: carried || carries(layer))
+                    }
                 }
             }
         }
-        walk(document.layers)
+        walk(document.layers, carried: false)
         return found
     }
 
@@ -234,8 +240,9 @@ public enum SVGExport {
     }
 
     static func answer(for layer: Layer, canOutlineText: Bool,
-                       flatImages: [UUID: RGBA] = [:]) -> Answer {
-        if let reason = styleReason(layer) { return .picture(reason) }
+                       flatImages: [UUID: RGBA] = [:],
+                       carried: Bool = false) -> Answer {
+        if let reason = styleReason(layer, carried: carried) { return .picture(reason) }
         switch layer.content {
         case .image:
             return flatColor(of: layer, in: flatImages) == nil ? .picture(nil) : .vector
@@ -297,18 +304,11 @@ public enum SVGExport {
     }
 
     /// Why this layer's STYLING has no vector answer, or nil when it has one.
-    private static func styleReason(_ layer: Layer) -> String? {
+    private static func styleReason(_ layer: Layer, carried: Bool) -> String? {
         if layer.style.blendMode != .normal {
             return "it is blended with what is under it"
         }
-        for effect in layer.style.effects where effect.isOn {
-            switch effect.kind {
-            case .shadow: return "it wears a shadow"
-            case .blur: return "it wears a blur"
-            case .glow: return "it wears a glow"
-            case .border: continue
-            }
-        }
+        if case .beyondSVG(let reason) = effects(of: layer, carried: carried) { return reason }
         // A picture carries its own rounding in the picture, so this is only
         // about the shapes.
         if layer.style.cornerRadii.isRound, layer.content.isDrawnAsShapes {
@@ -318,6 +318,145 @@ public enum SVGExport {
             return "it is cropped"
         }
         return nil
+    }
+
+    // MARK: - Softness and shadow
+
+    /// The softness and the shadows a layer wears, as the one SVG filter that
+    /// says them.
+    ///
+    /// Nearest the eye first, which is the order the Appearance list holds
+    /// them in and the order the canvas paints them
+    /// (`DocumentRenderer.shadowed`).
+    struct EffectFilter: Hashable, Sendable {
+        var blur: CGFloat = 0
+        var shadows: [ShadowStyle] = []
+
+        var isEmpty: Bool { blur <= 0 && shadows.isEmpty }
+    }
+
+    /// What a layer's blur and shadows can be written as.
+    enum Effects: Equatable {
+        /// It wears none, so there is no filter to write.
+        case plain
+        /// It wears some, and SVG can say all of them.
+        case filter(EffectFilter)
+        /// It wears something SVG has no answer for, in words a person can
+        /// read on the Export sheet.
+        case beyondSVG(String)
+    }
+
+    /// Whether a group draws what is inside it anywhere but where their own
+    /// coordinates put them, which is what `carried` means below.
+    static func carries(_ group: Layer) -> Bool {
+        group.frame.origin != .zero || !group.transform.isIdentity
+    }
+
+    /// Whether this layer's softness and shadows can go out as a filter, and
+    /// where they cannot, why not (`docs/design/svg-export.md`).
+    ///
+    /// `carried` says something round this layer moves it: a group that draws
+    /// away from the canvas corner, or the layer's own motion, which is
+    /// written as groups that slide and turn it. Apple's SVG reader draws a
+    /// filtered shape in the wrong place whenever anything round it does that,
+    /// so a shadow there would land somewhere else in Preview, Quick Look and
+    /// Xcode than it does in a browser. Such a layer keeps its picture.
+    static func effects(of layer: Layer, carried: Bool = false) -> Effects {
+        var filter = EffectFilter()
+        // Only the FIRST blur paints, so only the first one goes out
+        // (`LayerStyle.blurRadius`).
+        filter.blur = max(layer.style.blurRadius, 0)
+        for effect in layer.style.effects where effect.isOn {
+            switch effect {
+            case .blur, .border:
+                continue
+            case .glow:
+                return .beyondSVG("it wears a glow")
+            case .shadow(let shadow):
+                guard shadow.paints else { continue }
+                guard shadow.kind == .drop else {
+                    return .beyondSVG("it wears a shadow cast into it")
+                }
+                // Growing or shrinking the silhouette before it is blurred is
+                // a rounded-off shape on the canvas and a square-cornered one
+                // in every SVG reader, so a spread shadow keeps its picture.
+                guard shadow.spread == 0 else {
+                    return .beyondSVG("its shadow is spread wider than the shape it falls from")
+                }
+                filter.shadows.append(shadow)
+            }
+        }
+        guard !filter.isEmpty else { return .plain }
+        // A halo is cast in the canvas's own directions: the canvas turns the
+        // shape first and throws the shadow afterwards, and a file cannot say
+        // that, because a filter on a turned drawing turns the shadow with it.
+        guard layer.transform.isIdentity else {
+            return .beyondSVG("it is turned, and its shadow would turn with it")
+        }
+        // A label's halo is not always the halo on its list: type on a
+        // designed surface drops the contrast halo it was given
+        // (`Layer.drawnShadows(onDesignedSurface:)`), and the file has no way
+        // of knowing what it is sitting on.
+        guard layer.content.isDrawnAsShapes, !layer.content.isText else {
+            return .beyondSVG(filter.shadows.isEmpty ? "it wears a blur" : "it wears a shadow")
+        }
+        // Fading is the one thing that cannot ride alongside a filter. Apple's
+        // SVG reader applies a fade twice to anything filtered, once to the
+        // drawing going in and once to what comes out, so a half-faded shape
+        // comes back a quarter of itself. Its picture is right everywhere.
+        guard layer.style.opacity >= 1 else {
+            return .beyondSVG(filter.shadows.isEmpty
+                ? "it wears a blur and is faded at the same time"
+                : "it wears a shadow and is faded at the same time")
+        }
+        guard !carried, layer.motions?.contains(where: \.isOn) != true else {
+            return .beyondSVG(filter.shadows.isEmpty
+                ? "it wears a blur, and something round it moves it"
+                : "it wears a shadow, and something round it moves it")
+        }
+        // The filter has to ride the drawing itself rather than a group round
+        // it, so a layer drawn in more than one piece keeps its picture.
+        guard drawsAsOnePiece(layer) else {
+            return .beyondSVG(filter.shadows.isEmpty
+                ? "it wears a blur, and it is drawn in more than one piece"
+                : "it wears a shadow, and it is drawn in more than one piece")
+        }
+        return .filter(filter)
+    }
+
+    /// Whether the layer's drawing comes out as ONE element in the file.
+    ///
+    /// A filter can only ride a shape: every SVG reader honours one there, and
+    /// Apple's own reader ignores a filter on a `<g>` outright, which would
+    /// lose the shadow in Preview, Quick Look and Xcode while a browser still
+    /// drew it. So a layer that draws a fill and a line as two elements, or
+    /// that wears a ring, goes out as a picture instead of half a shadow.
+    static func drawsAsOnePiece(_ layer: Layer) -> Bool {
+        let ringed = layer.style.effects.contains { effect in
+            guard case .border(let border) = effect else { return false }
+            return border.isOn && border.width > 0
+        }
+        guard !ringed else { return false }
+        switch layer.content {
+        case .path(let path):
+            guard path.anchors.count >= 2 else { return false }
+            // An inside or an outside line is drawn double width and half of
+            // it cut away, which is two elements (`Writer.path`).
+            return path.strokeWidth <= 0 || path.effectiveStrokePosition == .center
+        case .annotation(let annotation):
+            switch annotation.shape {
+            case .line:
+                return annotation.strokeWidth > 0
+            case .rectangle, .ellipse:
+                // A filled shape with a line round it is a fill and a stroke,
+                // drawn one after the other (`Writer.annotation`).
+                return (annotation.fill == nil) != (annotation.strokeWidth <= 0)
+            case .arrow, .highlight:
+                return false
+            }
+        default:
+            return false
+        }
     }
 
     private static func sweepReason(_ paint: Paint?) -> String? {
@@ -385,6 +524,10 @@ private struct Writer {
     var nextPaintNumber = 1
     var nextClipNumber = 1
     var nextCutNumber = 1
+    var nextFilterNumber = 1
+    /// Whether a group round whatever is being written moves it, which costs
+    /// a shadow its filter (`SVGExport.effects(of:carried:)`).
+    var carried = false
 
     mutating func run(_ document: PhotonzDocument) -> SVGExport.Result {
         let body = write(document.layers, groupOffset: .zero, level: 1)
@@ -419,7 +562,7 @@ private struct Writer {
         let canvasOrigin = CGPoint(x: groupOffset.x + layer.frame.minX,
                                    y: groupOffset.y + layer.frame.minY)
         let answer = SVGExport.answer(for: layer, canOutlineText: outlineText != nil,
-                                      flatImages: flatImages)
+                                      flatImages: flatImages, carried: carried)
         let isPicture: Bool = if case .picture = answer { true } else { false }
         // What this layer is told to do over time, as the groups that do it.
         // A still export asks for none of this, and a layer with nothing
@@ -440,8 +583,23 @@ private struct Writer {
             body = picture(of: layer, canvasOrigin: canvasOrigin,
                            groupOffset: groupOffset, level: inner, wrap: wrap)
         case .vector:
-            body = shapes(of: layer, canvasOrigin: canvasOrigin,
-                          groupOffset: groupOffset, level: inner, wrap: wrap)
+            // Everything before this point is decided by looking at the layer;
+            // one thing is only known once it is drawn, which is how many
+            // pieces it came out as. Where that costs the layer its shadow the
+            // writer is wound back to where it started, so no ramp or cut it
+            // wrote on the way is left in the file with nothing pointing at it.
+            let before = self
+            switch drawing(of: layer, canvasOrigin: canvasOrigin,
+                           groupOffset: groupOffset, level: inner, wrap: wrap) {
+            case .shapes(let lines):
+                body = lines
+            case .picture(let reason):
+                self = before
+                fallbacks.append(SVGExport.Fallback(layerName: layer.name, reason: reason))
+                if animation.cycleMS != nil { reportMotionsBaked(into: layer) }
+                body = picture(of: layer, canvasOrigin: canvasOrigin,
+                               groupOffset: groupOffset, level: inner, wrap: wrap)
+            }
         }
         // A layer that drew nothing needs no groups round the nothing.
         guard !body.isEmpty else { return [] }
@@ -489,10 +647,17 @@ private struct Writer {
             + " href=\"data:image/png;base64,\(data)\"/>"]
     }
 
+    /// A layer as the shapes it is made of, or the reason it has to be a
+    /// picture after all.
+    enum Drawing {
+        case shapes([String])
+        case picture(String)
+    }
+
     /// A layer as the shapes it is made of.
-    mutating func shapes(of layer: Layer, canvasOrigin: CGPoint,
-                         groupOffset: CGPoint, level: Int,
-                         wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> [String] {
+    mutating func drawing(of layer: Layer, canvasOrigin: CGPoint,
+                          groupOffset: CGPoint, level: Int,
+                          wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> Drawing {
         // Everything inside is written in the layer's OWN coordinates and the
         // layer is put in its place once, on the way in.
         var inside: [String] = []
@@ -508,10 +673,13 @@ private struct Writer {
             let cut = cutBox(of: layer)
             let held = cut == nil ? inner : inner + 1
             var body = surface(of: layer, group: group, level: held)
+            let outside = carried
+            carried = outside || SVGExport.carries(layer)
             body.append(contentsOf: write(group.children,
                                           groupOffset: CGPoint(x: canvasOrigin.x,
                                                                y: canvasOrigin.y),
                                           level: held))
+            carried = outside
             if let cut, !body.isEmpty {
                 let name = defineCut(cut, radii: layer.style.cornerRadii)
                 inside.append(indent(inner) + "<g clip-path=\"url(#\(name))\">")
@@ -534,17 +702,51 @@ private struct Writer {
         inside.append(contentsOf: rings(of: layer, level: inner))
         // A group with nothing left in it is nothing at all, rather than an
         // empty pair of tags for somebody to wonder about.
-        guard !inside.isEmpty else { return [] }
+        guard !inside.isEmpty else { return .shapes([]) }
 
         let place = placement(of: layer, withoutTurn: wrap.ownsTheTurn)
         let fade = attribute("opacity", wrap.omitsOpacity ? nil : opacity(layer.style.opacity))
+        // Its softness and its shadows, as the filter that says them. The fade
+        // stays outside the filter, because the canvas fades the layer and its
+        // shadow together once the shadow has been cast.
+        if case .filter(let effects) = SVGExport.effects(of: layer, carried: carried) {
+            guard inside.count == 1 else {
+                return .picture(effects.shadows.isEmpty
+                    ? "it wears a blur, and it is drawn in more than one piece"
+                    : "it wears a shadow, and it is drawn in more than one piece")
+            }
+            // The filter rides the SAME element that is placed, never a group
+            // round it: Apple's SVG reader draws a filtered shape a second
+            // step along for every transform standing above it, and one on
+            // the shape itself is the one it gets right.
+            //
+            // Which leaves where the region is read. This file says it in
+            // plain user units, and the readers disagree about whose units
+            // those are: the shape's own, or the ones it is placed in. So the
+            // region covers the drawing's whole reach in BOTH, which is a
+            // bigger rectangle than either needs and right whichever is meant.
+            let inPlace = layer.renderBounds
+            let itsOwn = inPlace.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
+            let mark = " filter=\"url(#\(defineFilter(effects, reach: inPlace.union(itsOwn))))\""
+            // A fade belongs OUTSIDE the filter, since the canvas fades the
+            // layer and the shadow it has already cast together. On the same
+            // element, one reader fades the drawing before it casts anything
+            // and the shadow shows through it.
+            guard !fade.isEmpty else {
+                return .shapes([fold(mark + place, into: inside[0], level: level)])
+            }
+            return .shapes([indent(level) + "<g\(fade)>",
+                            fold(mark + place, into: inside[0], level: level + 1),
+                            indent(level) + "</g>"])
+        }
         // A group stays a group, so the file has the nesting the layers list
         // shows. A layer that turned out to be one shape carries its own
         // placing instead of sitting alone inside a wrapper.
         if !layer.isGroup, inside.count == 1 {
-            return [fold(place + fade, into: inside[0], level: level)]
+            return .shapes([fold(place + fade, into: inside[0], level: level)])
         }
-        return [indent(level) + "<g\(place)\(fade)>"] + inside + [indent(level) + "</g>"]
+        return .shapes([indent(level) + "<g\(place)\(fade)>"] + inside
+            + [indent(level) + "</g>"])
     }
 
     /// The box a group cuts its contents at, in the group's OWN coordinates,
@@ -570,6 +772,106 @@ private struct Writer {
         defs.append(boxElement(box, radii: radii.fitted(in: box.size), paint: "", level: 3))
         defs.append("    </clipPath>")
         return name
+    }
+
+    /// Writes the layer's softness and shadows into the definitions as one
+    /// filter, and hands back its name.
+    ///
+    /// Said the long way round, in the five primitives a drop shadow is made
+    /// of, rather than in the one-word `feDropShadow` that means the same
+    /// thing. Apple's SVG reader parses `feDropShadow` and then draws nothing
+    /// for it, and does the same with `feMerge`, so an icon with either in it
+    /// loses its shadow in Preview, Quick Look and Xcode while a browser draws
+    /// it. The long way round is honoured everywhere
+    /// (`docs/design/svg-export.md`).
+    ///
+    /// `reach` is the box the drawing can touch, in the layer's own
+    /// coordinates: a filter clips whatever falls outside its region, and the
+    /// default region is a tenth of the shape's box, which cuts a long shadow
+    /// off in mid air.
+    mutating func defineFilter(_ effects: SVGExport.EffectFilter, reach: CGRect) -> String {
+        let name = "effect-\(nextFilterNumber)"
+        nextFilterNumber += 1
+        // Colours are mixed the way the canvas mixes them. SVG's own default
+        // is to mix a filter in linear light, which would come back a
+        // different shade from the app's.
+        var lines = ["    <filter id=\"\(name)\" filterUnits=\"userSpaceOnUse\""
+            + " x=\"\(n(reach.minX))\" y=\"\(n(reach.minY))\""
+            + " width=\"\(n(reach.width))\" height=\"\(n(reach.height))\""
+            + " color-interpolation-filters=\"sRGB\">"]
+        // The layer's own softness goes on before the shadows, so a soft shape
+        // throws a soft shadow, exactly as the canvas does it
+        // (`DocumentRenderer.styled`). The shadows are cast from the
+        // silhouette, which is softened by the same amount.
+        var body = "SourceGraphic"
+        var silhouette = "SourceAlpha"
+        if effects.blur > 0 {
+            let last = effects.shadows.isEmpty
+            lines.append(blurStep(in: body, sigma: effects.blur,
+                                  result: last ? nil : "softened"))
+            if !last {
+                body = "softened"
+                lines.append(blurStep(in: silhouette, sigma: effects.blur, result: "soft-edge"))
+                silhouette = "soft-edge"
+            }
+        }
+        var cast: [String] = []
+        for (index, shadow) in effects.shadows.enumerated() {
+            cast.append(shadowSteps(shadow, number: index + 1, from: silhouette, into: &lines))
+        }
+        // Stacked the way the canvas stacks them: the foot of the list is
+        // furthest from the eye, so everything above it goes over it, and the
+        // drawing itself goes over the lot.
+        if var under = cast.last {
+            for (index, name) in cast.dropLast().enumerated().reversed() {
+                let stacked = "shadows-\(index + 1)"
+                lines.append(overStep(name, over: under, result: stacked))
+                under = stacked
+            }
+            lines.append(overStep(body, over: under, result: nil))
+        }
+        lines.append("    </filter>")
+        defs.append(contentsOf: lines)
+        return name
+    }
+
+    /// One shadow, as the steps that cast it: soften the silhouette, move it,
+    /// paint it, and keep the paint only where the silhouette is. Hands back
+    /// the name of what it made.
+    mutating func shadowSteps(_ shadow: ShadowStyle, number: Int, from silhouette: String,
+                              into lines: inout [String]) -> String {
+        var mask = silhouette
+        if shadow.radius > 0 {
+            mask = "shadow-\(number)-soft"
+            lines.append(blurStep(in: silhouette, sigma: shadow.radius, result: mask))
+        }
+        if shadow.offset.width != 0 || shadow.offset.height != 0 {
+            let moved = "shadow-\(number)-cast"
+            lines.append("      <feOffset in=\"\(mask)\" dx=\"\(n(shadow.offset.width))\""
+                + " dy=\"\(n(shadow.offset.height))\" result=\"\(moved)\"/>")
+            mask = moved
+        }
+        // The colour's own see-through-ness and the shadow's opacity multiply,
+        // the same way the canvas multiplies them (`DocumentRenderer.ciColor`).
+        let colour = RGBA(hex: shadow.colorHex) ?? RGBA(r: 0, g: 0, b: 0)
+        let ink = "shadow-\(number)-ink"
+        let name = "shadow-\(number)"
+        lines.append("      <feFlood flood-color=\"\(colour.hexString)\""
+            + " flood-opacity=\"\(n(CGFloat(colour.a * shadow.opacity)))\""
+            + " result=\"\(ink)\"/>")
+        lines.append("      <feComposite in=\"\(ink)\" in2=\"\(mask)\" operator=\"in\""
+            + " result=\"\(name)\"/>")
+        return name
+    }
+
+    func blurStep(in source: String, sigma: CGFloat, result: String?) -> String {
+        "      <feGaussianBlur in=\"\(source)\" stdDeviation=\"\(n(sigma))\""
+            + attribute("result", result) + "/>"
+    }
+
+    func overStep(_ top: String, over bottom: String, result: String?) -> String {
+        "      <feComposite in=\"\(top)\" in2=\"\(bottom)\" operator=\"over\""
+            + attribute("result", result) + "/>"
     }
 
     /// A frame's own surface, under everything in it.

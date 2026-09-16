@@ -43,6 +43,7 @@ through to a picture, which is safe and lossy, and the export says so.
 | Group | `<g transform="translate(…)">` | The nesting and the order the layers list shows. A frame's background is a `<rect>` under its children. A group that CUTS OFF what sticks out of it (a frame does by default, and so does any group with rounded corners) writes a `<clipPath>` of its box and holds its contents in one more `<g clip-path>`, so an icon drawn in a frame stays shapes. The ring round the box is written outside that cut, since a border is painted over the edge rather than cut by it. |
 | Picture | `<image href="data:image/png;base64,…">` | An untouched photograph goes out as its OWN pixels — smallest file, sharpest picture. One that is cropped, turned, rounded off or wearing an effect is re-rendered through the real renderer at 2× so it looks the way it looks on the canvas. |
 | Arrow, highlight, measurement, zoom callout, lens, collage | `<image>` | No vector answer yet. Each is reported. |
+| A shape's softness and its shadows | `<filter>` on the shape itself | See "A shadow and a blur" below. Everything else about a halo — a glow, an inner shadow, a spread one — still falls back. |
 
 ### Paint
 
@@ -142,6 +143,78 @@ rather than a black square. That is checked by rendering the file back through
 the system's own SVG reader and comparing it with the canvas
 (`anAnimatedFileStillDrawsTheIconWhereTheLapStarts`).
 
+## A shadow and a blur
+
+A shape wearing a blur or a drop shadow goes out **as a shape**, with one
+`<filter>` on it. A shadow is the commonest thing to put on an icon, so it was
+also the commonest reason an icon left the app as a flat picture.
+
+The filter says the same thing the canvas does, in the same order: the layer's
+own softness first, then each shadow cast from that softened silhouette, then
+the drawing laid over the lot. The foot of the Appearance list is furthest from
+the eye, exactly as `DocumentRenderer.shadowed` stacks them.
+
+```
+<filter id="effect-1" filterUnits="userSpaceOnUse" x="-14" y="-14" width="148" height="158"
+        color-interpolation-filters="sRGB">
+  <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="shadow-1-soft"/>
+  <feOffset in="shadow-1-soft" dx="4" dy="8" result="shadow-1-cast"/>
+  <feFlood flood-color="#102040" flood-opacity="0.5" result="shadow-1-ink"/>
+  <feComposite in="shadow-1-ink" in2="shadow-1-cast" operator="in" result="shadow-1"/>
+  <feComposite in="SourceGraphic" in2="shadow-1" operator="over"/>
+</filter>
+```
+
+Four things in that are not the obvious way to write it, and each of them is
+there because of what **Apple's own SVG reader** does with the obvious way. That
+reader is CoreSVG: it is what `NSImage` uses, which makes it the thing the
+render-back check measures against, and it is also Preview, Quick Look and
+Xcode, which makes it the thing a person sees when they double-click the icon
+this app just wrote. Every one of these was measured rather than assumed
+(`queue/audits`, and the task log of "A shadow survives the trip out to SVG").
+
+* **Never `feDropShadow`.** CoreSVG parses it and draws nothing for it: two
+  shadows with nothing in common render byte for byte identical. The five
+  primitives it is shorthand for all work, so the file says them.
+* **Never `feMerge`.** Same story. `feComposite operator="over"` stacks the
+  shadows instead, and is just as old and just as portable.
+* **`color-interpolation-filters="sRGB"`.** SVG's default is to mix a filter in
+  linear light, which comes back a different shade from the canvas.
+* **The filter rides the shape, and the shape carries its own `transform`.**
+  CoreSVG draws a filtered element one extra step along for every transform
+  standing ABOVE it, so a shadowed shape inside a group that sits anywhere but
+  the canvas corner lands in the wrong place. A transform on the element itself
+  it gets right.
+
+### The region, and whose units it is in
+
+A filter clips whatever falls outside its region, and the region a file gets for
+free is a tenth of the shape's box on each side, which cuts a long shadow off in
+mid air. So the region is stated outright, from `Layer.renderBounds` — the same
+reach a drag sprite and a dirty rect already use.
+
+In whose user units, though, is a question the readers answer differently:
+a browser reads them in the shape's own space, CoreSVG in the space the shape is
+placed in. The two differ by exactly where the layer sits. Rather than pick one
+and be wrong in the other, the region covers the reach in **both**: a rectangle
+bigger than either needs, and right whichever is meant. A region larger than
+necessary costs a bigger buffer and nothing else.
+
+### What still keeps its picture, and why
+
+| It wears | Why it cannot go out as a shape |
+| --- | --- |
+| A glow | A glow is a halo grown from the silhouette before it is blurred, which is `feMorphology`, and that is a square-cornered grow in a file and a round one on the canvas. |
+| An inner shadow | Same shape of problem, cast the other way. |
+| A shadow with spread | Same: spread is the grow. |
+| A fade, with any filter at all | CoreSVG applies a fade twice to anything filtered, once to the drawing going in and once to what comes out, so a half-faded shape comes back a quarter of itself. |
+| A turn | The canvas turns the shape and throws the shadow afterwards, so the shadow falls the same way whatever the angle. A filter turns with the thing it is on. |
+| Anything that moves it | A group that draws it away from the canvas corner, or its own motion, which is written as groups that slide and turn it. See the transform note above. |
+| More than one piece of drawing | A ring round the shape, or an inside or outside line, is a second element, and the shadow has to be cast from both at once. A filter on the `<g>` holding them is ignored outright by CoreSVG. |
+
+Each of these is named on the Export sheet in plain words before you save, the
+same as every other fallback.
+
 ## Where it is going, asked before what format
 
 `SVGHandoff` is the model behind the Export sheet's first question. The same
@@ -174,8 +247,10 @@ covers the writing itself.
 * **An arrow, a highlight, a measurement, a zoom callout, a lens and a collage
   all fall back to pictures.** Arrows and measurements are the ones a redliner
   would miss.
-* **A shadow, a blur or a glow costs a shape its vectors.** SVG has
-  `feDropShadow` and `feGaussianBlur`; neither is wired up yet.
+* **A glow, an inner shadow and a spread shadow still cost a shape its
+  vectors**, and so does a shadow on a shape that is faded, turned, moved by a
+  group, or drawn in more than one piece. See "A shadow and a blur" above for
+  the table and the reasons. A plain drop shadow and a blur go out as shapes.
 * **A sweeping gradient falls back.** A conic ramp can be approximated with
   wedges, at the cost of a big file.
 * **A shape whose LAYER box is rounded off falls back** (as opposed to the

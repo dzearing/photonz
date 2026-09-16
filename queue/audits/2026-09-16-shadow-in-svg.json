@@ -1,0 +1,29 @@
+{
+  "feature": "A shadow survives the trip out to SVG",
+  "epic": "icon-export",
+  "summary": "A shape wearing a drop shadow or a blur used to leave the app as a flat picture, which is the fallback people hit most, since a shadow is the commonest thing to put on an icon. It now goes out as the shape it is, with the shadow written into the file, so what you hand over is still editable.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on. Any drawn shape will do.",
+  "try": [
+    { "do": "Press P and draw a closed shape, then press Escape to finish it.", "shot": "2026-09-16-shadow-in-svg-side-by-side.png" },
+    { "do": "In Appearance, add a Shadow and push its Softness and Distance up until it is obvious." },
+    { "do": "File, Export, pick SVG, and read the list of what the file will be. The shape should not be named there." },
+    { "do": "Save it, then open the file in Preview or press Space on it in Finder and compare it to the canvas." },
+    { "do": "Open the same file in a text editor and look for the shape: it is one <path>, with one <filter> above it." },
+    { "do": "Add a second Shadow, a tight dark one, and export again: both should be in the file and in the right order." },
+    { "do": "Now fade the layer with Opacity, or add a Glow, and export again: the sheet names the shape and says why in plain words." }
+  ],
+  "evaluate": [
+    "Side by side with the canvas, does the exported file throw the same shadow, or can you see it is softer, darker or in the wrong place?",
+    "Opened in whatever you would hand it to, does the shadow survive, and is the shape still a shape you can move and recolour?",
+    "The Export sheet used to name every shadowed shape as a picture. Is the shorter list clearer now, or does it feel like the sheet stopped warning you about things?",
+    "Six things still keep their picture: a glow, an inner shadow, a shadow with Spread, a shadow on a faded layer, a shadow on a turned layer, and a shadow on a shape that also wears a border. Are those the right six to have left behind, or is one of them the one you actually use?",
+    "The reasons on the sheet are written for a person, not an engineer. Does \"it wears a shadow and is faded at the same time\" tell you enough to do something about it?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and no photograph of the window was taken. The picture here is NOT a window capture: it is the app's own render of an icon beside the same icon as macOS draws it from the exported file, which is the comparison this feature is actually about. Scripts/playtest/svg-export-walk.json was rewritten to match the new behaviour and still needs one unlocked run; a sweep is requested.",
+    "Six cases still fall back, and every one of them is a bug in Apple's own SVG reader rather than a gap in SVG. That reader is Preview, Quick Look and Xcode, so a file it draws wrong is a file that looks broken on the machine it was made on. It ignores feDropShadow and feMerge outright, applies a fade twice to anything filtered, and draws a filtered shape a step further along for every transform standing above it. The file therefore says a drop shadow the long way round, carries the fade only where nothing is filtered, and never puts a filter on a group. A browser would have taken all of it.",
+    "The one that will be missed first is a shadow on a shape that also wears a border, because the shadow has to be cast from both pieces at once and a filter on the pair is what Apple's reader ignores. A nested shape, drawn inside a frame that sits anywhere but the canvas corner, is the second.",
+    "Spread has a name in SVG, feMorphology, but it grows a shape with square corners where the canvas grows it with round ones, so it would come back a different shape. It was left as a picture rather than shipped as an approximation.",
+    "A separate bug turned up on the way and was fixed here: any faded layer that fell back to a picture was drawn twice as faint as it is on the canvas, because the fade was baked into the picture AND written onto it again. That affected photographs, arrows, measurements and everything else that goes out as a picture, not just shadows."
+  ]
+}

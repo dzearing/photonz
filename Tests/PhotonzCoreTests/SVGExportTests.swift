@@ -430,32 +430,203 @@ struct SVGExportTests {
         #expect(result.fallbacks.isEmpty)
     }
 
-    @Test func aLayerWearingAShadowFallsBackAndSaysWhy() {
-        var layer = Self.pathLayer()
-        layer.style.effects = [.shadow(ShadowStyle())]
-        let result = Self.write(Self.document([layer]))
-        #expect(result.text.contains("<image "))
-        #expect(result.fallbacks.count == 1)
-        #expect(result.fallbacks[0].layerName == "Shape")
-        #expect(result.fallbacks[0].reason.lowercased().contains("shadow"))
-    }
-
     @Test func whatWillFallBackCanBeAskedForBeforeAnythingIsWritten() {
-        var shadowed = Self.pathLayer()
-        shadowed.name = "Shadowed"
-        shadowed.style.effects = [.shadow(ShadowStyle())]
-        let document = Self.document([Self.pathLayer(), shadowed])
+        var lit = Self.pathLayer()
+        lit.name = "Glowing"
+        lit.style.effects = [.glow(GlowEffect())]
+        let document = Self.document([Self.pathLayer(), lit])
         let coming = SVGExport.fallbacks(in: document)
         #expect(coming.count == 1)
-        #expect(coming[0].layerName == "Shadowed")
+        #expect(coming[0].layerName == "Glowing")
     }
 
     @Test func aLayerWithNoPictureToFallBackOnIsStillReported() {
         var layer = Self.pathLayer()
-        layer.style.effects = [.shadow(ShadowStyle())]
+        layer.style.effects = [.glow(GlowEffect())]
         let result = Self.write(Self.document([layer]), picture: nil)
         #expect(!result.text.contains("<image "))
         #expect(result.fallbacks.count == 1)
+    }
+
+    // MARK: - A shadow and a blur, as themselves
+
+    @Test func aShapeWearingAShadowStaysAShape() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle(radius: 6,
+                                                   offset: CGSize(width: 4, height: 8),
+                                                   colorHex: "#102040", opacity: 0.5))]
+        let result = Self.write(Self.document([layer]))
+        #expect(!result.text.contains("<image "))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.text.contains("<filter id=\"effect-1\""))
+        #expect(result.text.contains("filter=\"url(#effect-1)\""))
+        #expect(result.text.contains("<feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"6\""))
+        #expect(result.text.contains("dx=\"4\" dy=\"8\""))
+        #expect(result.text.contains("flood-color=\"#102040\" flood-opacity=\"0.5\""))
+    }
+
+    @Test func aShapeWearingABlurStaysAShape() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.blur(BlurEffect(radius: 5))]
+        let result = Self.write(Self.document([layer]))
+        #expect(!result.text.contains("<image "))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.text.contains("<feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"5\"/>"))
+    }
+
+    /// The one-word `feDropShadow` and `feMerge` are parsed and then drawn as
+    /// nothing by Apple's SVG reader, which is Preview, Quick Look and Xcode,
+    /// so the file says the same thing the long way round instead.
+    @Test func aShadowIsSaidInTheWordsEveryReaderKnows() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle())]
+        let text = Self.write(Self.document([layer])).text
+        #expect(!text.contains("feDropShadow"))
+        #expect(!text.contains("feMerge"))
+        #expect(text.contains("<feComposite"))
+        #expect(text.contains("color-interpolation-filters=\"sRGB\""))
+    }
+
+    /// A filter clips whatever falls outside its region, and the region a file
+    /// gets for free is a tenth of the shape's box, which cuts a long shadow
+    /// off in mid air.
+    @Test func theFilterLeavesRoomForTheWholeShadow() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle(radius: 10,
+                                                   offset: CGSize(width: 0, height: 20)))]
+        let text = Self.write(Self.document([layer])).text
+        let reach = CGFloat(Double(Self.attribute("width", in: text.components(
+            separatedBy: "<filter")[1])) ?? 0)
+        // The shape is 100 across; 3 sigma of softness plus the distance
+        // thrown is 50 more on each side.
+        #expect(reach >= 200)
+    }
+
+    /// Apple's SVG reader draws a filtered shape a step further along for
+    /// every transform standing ABOVE it, so the drawing carries its own
+    /// placing and nothing is wrapped round it.
+    @Test func theFilterRidesTheSameShapeThatIsPlaced() {
+        var layer = Self.pathLayer(at: CGPoint(x: 20, y: 30))
+        layer.style.effects = [.shadow(ShadowStyle())]
+        let text = Self.write(Self.document([layer])).text
+        #expect(text.contains("<path filter=\"url(#effect-1)\" transform=\"translate(20 30)\""))
+        #expect(!text.contains("<g "))
+    }
+
+    /// The region is written in plain user units and the readers disagree
+    /// about whose units those are, so it covers the reach in both.
+    @Test func theRegionCoversTheReachInEitherSpace() {
+        var layer = Self.pathLayer(at: CGPoint(x: 20, y: 30))
+        layer.style.effects = [.shadow(ShadowStyle(radius: 4, offset: .zero))]
+        let text = Self.write(Self.document([layer])).text
+        let filter = text.components(separatedBy: "<filter")[1]
+        // 14 points of reach — three sigma of softness and half the line the
+        // shape is drawn with. The shape's own space starts at -14, and the
+        // space it is placed in reaches 20 and 30 further on.
+        #expect(Self.attribute("x", in: filter) == "-14")
+        #expect(Self.attribute("y", in: filter) == "-14")
+        #expect(Self.attribute("width", in: filter) == "148")
+        #expect(Self.attribute("height", in: filter) == "158")
+    }
+
+    @Test func aFadedShapeWithAHaloKeepsItsPicture() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle())]
+        layer.style.opacity = 0.5
+        let result = Self.write(Self.document([layer]))
+        #expect(result.text.contains("<image "))
+        #expect(result.fallbacks.first?.reason.contains("faded") == true)
+    }
+
+    @Test func aShapeInsideAGroupThatMovesItKeepsItsPicture() {
+        var layer = Self.pathLayer(at: CGPoint(x: 0, y: 0))
+        layer.name = "Inside"
+        layer.style.effects = [.shadow(ShadowStyle())]
+        let group = Layer(name: "Holder", content: .group(GroupContent(children: [layer])),
+                          frame: CGRect(x: 40, y: 40, width: 0, height: 0))
+        let document = Self.document([group])
+        let result = Self.write(document)
+        #expect(result.text.contains("<image "))
+        #expect(result.fallbacks.first?.layerName == "Inside")
+        #expect(result.fallbacks.first?.reason.contains("moves it") == true)
+        // ...and the sheet says the same thing before anything is written.
+        #expect(SVGExport.fallbacks(in: document).map(\.layerName) == ["Inside"])
+    }
+
+    @Test func aShapeInsideAGroupThatSitsStillKeepsItsShadow() {
+        var layer = Self.pathLayer(at: CGPoint(x: 0, y: 0))
+        layer.style.effects = [.shadow(ShadowStyle())]
+        let group = Layer(name: "Holder", content: .group(GroupContent(children: [layer])),
+                          frame: .zero)
+        let document = Self.document([group])
+        #expect(Self.write(document).fallbacks.isEmpty)
+        #expect(SVGExport.fallbacks(in: document).isEmpty)
+    }
+
+    @Test func everyShadowOnTheListComesOut() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [
+            .shadow(ShadowStyle(radius: 2, offset: CGSize(width: 0, height: 1))),
+            .shadow(ShadowStyle(radius: 12, offset: CGSize(width: 0, height: 8)))
+        ]
+        let result = Self.write(Self.document([layer]))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.text.contains("result=\"shadow-1\""))
+        #expect(result.text.contains("result=\"shadow-2\""))
+        // The foot of the list is furthest from the eye, so the one above it
+        // is laid over it.
+        #expect(result.text.contains("<feComposite in=\"shadow-1\" in2=\"shadow-2\""
+            + " operator=\"over\""))
+    }
+
+    @Test func aShapeWearingBothIsSoftenedBeforeItThrowsItsShadow() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.blur(BlurEffect(radius: 4)),
+                               .shadow(ShadowStyle(radius: 6))]
+        let text = Self.write(Self.document([layer])).text
+        #expect(text.contains("result=\"softened\""))
+        #expect(text.contains("<feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"4\""
+            + " result=\"soft-edge\"/>"))
+        #expect(text.contains("<feGaussianBlur in=\"soft-edge\" stdDeviation=\"6\""))
+    }
+
+    // MARK: - The haloes SVG still has no answer for
+
+    @Test func theHaloesWithNoAnswerStillFallBackAndSayWhy() {
+        let cases: [(String, [LayerEffect], String)] = [
+            ("cast into it", [.shadow(ShadowStyle(kind: .inner))], "into it"),
+            ("spread", [.shadow(ShadowStyle(spread: 4))], "spread"),
+            ("a glow", [.glow(GlowEffect())], "glow")
+        ]
+        for (name, effects, words) in cases {
+            var layer = Self.pathLayer()
+            layer.style.effects = effects
+            let result = Self.write(Self.document([layer]))
+            #expect(result.text.contains("<image "), "\(name) should still be a picture")
+            #expect(result.fallbacks.count == 1, "\(name)")
+            #expect(result.fallbacks.first?.reason.contains(words) == true, "\(name)")
+        }
+    }
+
+    @Test func aTurnedShapeKeepsItsPictureBecauseTheShadowWouldTurnWithIt() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle())]
+        layer.transform.rotation = 0.4
+        let result = Self.write(Self.document([layer]))
+        #expect(result.text.contains("<image "))
+        #expect(result.fallbacks.first?.reason.contains("turned") == true)
+    }
+
+    @Test func aShapeDrawnInMoreThanOnePieceKeepsItsPicture() {
+        var layer = Self.pathLayer()
+        layer.style.effects = [.shadow(ShadowStyle()),
+                               .border(BorderEffect(width: 3, colorHex: "#000000"))]
+        let result = Self.write(Self.document([layer]))
+        #expect(result.text.contains("<image "))
+        #expect(result.fallbacks.first?.reason.contains("more than one piece") == true)
+        // ...and nothing it wrote on the way is left in the file with nothing
+        // pointing at it.
+        #expect(!result.text.contains("<filter "))
     }
 
     @Test func whatEndsUpAsAPictureIncludesThePhotographs() {

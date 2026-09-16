@@ -165,7 +165,7 @@
     {
       "do": "describe",
       "stage": "5-svg-picked",
-      "note": "the same sheet on SVG: the 1x and 2x row has gone, and in its place is what the file will be. A shape wearing a shadow would be named here as going out as a picture"
+      "note": "the same sheet on SVG: the 1x and 2x row has gone, and in its place is what the file will be, with anything the file cannot say named by layer"
     },
     {
       "do": "snapshot",
@@ -205,12 +205,45 @@
     },
     {
       "do": "describe",
-      "stage": "6-fallback-named",
-      "note": "a shadow put on the drawn shape: the sheet now says the shape itself goes out as a picture, and why, BEFORE anything is saved"
+      "stage": "6-shadow-stays-a-shape",
+      "note": "a shadow put on the drawn shape, and the sheet still names nothing: a plain drop shadow now goes out as a shadow rather than costing the shape its vectors"
     },
     {
       "do": "snapshot",
-      "name": "svg-export-6-fallback-named"
+      "name": "svg-export-6-shadow-stays-a-shape"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-fallback-named",
+      "note": "the same shape faded as well as shadowed: THAT the file cannot say, so the sheet names the shape and says why, BEFORE anything is saved"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-7-fallback-named"
     },
     {
       "do": "key",

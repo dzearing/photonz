@@ -273,14 +273,91 @@ struct SVGExportRenderTests {
 
     // MARK: - What has no vector answer
 
-    @Test func aShapeWearingAShadowLandsWhereItWasAsAPicture() throws {
+    @Test func aShapeWearingAShadowThrowsTheSameShadowInTheFile() throws {
         var layer = Self.pathLayer(fill: "#FFD60A", stroke: "#1C1C1E", width: 4)
         layer.style.effects = [.shadow(ShadowStyle(radius: 6,
-                                                   offset: CGSize(width: 4, height: 6)))]
+                                                   offset: CGSize(width: 6, height: 10),
+                                                   colorHex: "#000000", opacity: 0.6))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "shadowed")
+        // ...and the shadow is really in the file, rather than the file
+        // happening to be close enough to a shape with no shadow at all.
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "shadowed")
+    }
+
+    @Test func aShapeWearingABlurComesBackJustAsSoft() throws {
+        var layer = Self.pathLayer(fill: "#34C759", stroke: "#0A5C2A", width: 5)
+        layer.style.effects = [.blur(BlurEffect(radius: 5))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "blurred")
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "blurred")
+    }
+
+    @Test func aContactShadowAndASoftLiftBothLandInTheRightOrder() throws {
+        var layer = Self.pathLayer(fill: "#FFFFFF", stroke: "#D1D1D6", width: 2)
+        layer.style.effects = [
+            .shadow(ShadowStyle(radius: 2, offset: CGSize(width: 0, height: 1),
+                                colorHex: "#000000", opacity: 0.5)),
+            .shadow(ShadowStyle(radius: 14, offset: CGSize(width: 0, height: 10),
+                                colorHex: "#0A2540", opacity: 0.45))
+        ]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        #expect(SVGExporter.export(document, store: ImageStore()).fallbacks.isEmpty)
+        try Self.expectTheSamePicture(of: document, name: "two-shadows")
+    }
+
+    /// A faded shape keeps its picture: Apple's SVG reader fades anything
+    /// filtered twice over, once going in and once coming out, so a half-faded
+    /// shape would come back a quarter of itself.
+    @Test func aFadedShapeThatThrowsAShadowKeepsItsPicture() throws {
+        var layer = Self.pathLayer(fill: "#5856D6", stroke: "#1C1C1E", width: 3)
+        layer.style.effects = [.shadow(ShadowStyle(radius: 8,
+                                                   offset: CGSize(width: 4, height: 8),
+                                                   colorHex: "#000000", opacity: 0.7))]
+        layer.style.opacity = 0.45
         let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
         let result = SVGExporter.export(document, store: ImageStore())
         #expect(result.fallbacks.count == 1)
-        try Self.expectTheSamePicture(of: document, name: "shadowed")
+        try Self.expectTheSamePicture(of: document, name: "faded-shadow")
+    }
+
+    @Test func aFadedShapeThatIsOnlySoftKeepsItsPictureToo() throws {
+        var layer = Self.pathLayer(fill: "#5856D6", stroke: "#1C1C1E", width: 3)
+        layer.style.effects = [.blur(BlurEffect(radius: 5))]
+        layer.style.opacity = 0.45
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        #expect(SVGExporter.export(document, store: ImageStore()).fallbacks.count == 1)
+        try Self.expectTheSamePicture(of: document, name: "faded-blur")
+    }
+
+    @Test func aSoftenedShapeThrowsASoftenedShadow() throws {
+        var layer = Self.pathLayer(fill: "#FF9500", stroke: "#FF9500", width: 0)
+        layer.style.effects = [.blur(BlurEffect(radius: 4)),
+                               .shadow(ShadowStyle(radius: 6, offset: CGSize(width: 5, height: 5),
+                                                   colorHex: "#000000", opacity: 0.6))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        #expect(SVGExporter.export(document, store: ImageStore()).fallbacks.isEmpty)
+        try Self.expectTheSamePicture(of: document, name: "soft-and-shadowed")
+    }
+
+    @Test func aShadowSpreadWiderThanItsShapeStillGoesOutAsAPicture() throws {
+        var layer = Self.pathLayer(fill: "#FFD60A", stroke: "#1C1C1E", width: 4)
+        layer.style.effects = [.shadow(ShadowStyle(radius: 6,
+                                                   offset: CGSize(width: 4, height: 6),
+                                                   spread: 5))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.count == 1)
+        #expect(result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "spread-shadow")
     }
 
     @Test func aPhotographGoesOutAsItsOwnPixels() throws {
@@ -379,6 +456,43 @@ struct SVGExportRenderTests {
                                         and: theirs)
         #expect(difference <= tolerance,
                 "\(name): the exported file draws \(difference) off the canvas's own render",
+                sourceLocation: sourceLocation)
+    }
+
+    /// The same document with every blur, shadow and glow taken off it: what
+    /// the file would look like if the effects had quietly gone missing.
+    static func withoutEffects(_ document: PhotonzDocument) -> PhotonzDocument {
+        var bare = document
+        bare.layers = bare.layers.map { layer in
+            var stripped = layer
+            stripped.style.effects = stripped.style.effects.filter { $0.kind == .border }
+            return stripped
+        }
+        return bare
+    }
+
+    /// The exported file of `document` does NOT draw `other`, which is what
+    /// says an effect really made it into the file rather than the two
+    /// pictures being close enough to pass by luck.
+    static func expectADifferentPicture(of document: PhotonzDocument, from other: PhotonzDocument,
+                                        name: String, by: Double = 2,
+                                        sourceLocation: SourceLocation = #_sourceLocation) throws {
+        let renderer = DocumentRenderer()
+        let bare = try #require(renderer.render(other, store: ImageStore()),
+                                "the app could not draw \(name) without its effects",
+                                sourceLocation: sourceLocation)
+        let result = SVGExporter.export(document, store: ImageStore(), renderer: renderer)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-svg-\(name)-bare-\(UUID().uuidString).svg")
+        try result.text.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let theirs = try #require(rasterize(url, size: document.canvasSize),
+                                  "the system could not read back \(name)",
+                                  sourceLocation: sourceLocation)
+        let difference = meanDifference(between: pixels(of: bare, size: document.canvasSize),
+                                        and: theirs)
+        #expect(difference > by,
+                "\(name): the exported file draws only \(difference) away from the same shape with no effects on it, so the effect may not be in the file at all",
                 sourceLocation: sourceLocation)
     }
 
