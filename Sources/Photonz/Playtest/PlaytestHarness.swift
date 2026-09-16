@@ -643,7 +643,7 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
-                   let readout, let wobble, let cancel):
+                   let readout, let wobble, let cancel, let showsBox):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -706,11 +706,21 @@ private final class Run {
             if let readout {
                 said = ", " + (try checkDragReadout(says: readout, absent: false))
             }
+            // The box the canvas is outlining for the container in hand, read
+            // with the button still down and settled against where the thing
+            // actually lands, once it is up. See `checkResizeBox`.
+            let outlined = canvas.liveResizeBox
+            let resized = canvas.resizeDrag?.layerID
             // The pointer's shape WHILE the button is down: the only moment a
             // closed-hand grab cue exists, and a walk cannot photograph it.
             let heldCursor = Self.cursorName()
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
+            var boxed = ""
+            if let showsBox {
+                boxed = ", " + (try checkResizeBox(outlined: outlined, of: resized,
+                                                   expected: showsBox))
+            }
             var keys = ""
             if let later = halfway {
                 func spell(_ list: [PlaytestModifier]) -> String {
@@ -720,7 +730,7 @@ private final class Run {
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)"
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)"
                      + "\(cancel ? ", called off with Escape half way and carried on to the end" : ""), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
@@ -3388,6 +3398,61 @@ private final class Run {
                 + "walk expects \"\(says)\".")
         }
         return "the drag reads \"\(showing)\""
+    }
+
+    /// A walk's `showsBox` claim: while the button was still down at the end of
+    /// the travel, the canvas was outlining the box the drag was making, and
+    /// that box is exactly where the thing landed once the button came up.
+    ///
+    /// Both halves matter and neither can be settled by a picture. A container
+    /// that arranges itself does not move its contents when its box changes, so
+    /// a photograph of the canvas mid-drag looks the same whether the outline
+    /// is live, frozen, or absent — which is how a stack went on showing
+    /// nothing for a whole drag while every other check passed (2026-09-09).
+    /// And an outline that tracked the pointer past a limit the stack will not
+    /// go past would be a drag promising a shape the release does not give, so
+    /// the landing is what it is measured against rather than the pointer.
+    private func checkResizeBox(outlined: CGRect?, of layerID: UUID?,
+                                expected: Bool) throws -> String {
+        let editor = try requireEditor()
+        guard expected else {
+            guard let outlined else {
+                return "nothing was outlined, which is right for a container that shows its own "
+                    + "resize"
+            }
+            throw Failure(description: "the canvas outlined \(Self.short(outlined)) during this "
+                + "drag, and this kind of container is meant to show its resize by itself: a "
+                + "screen has its own live edge, and a plain group and a copy of a component both "
+                + "move their contents under the hand. A second box is one edge claimed twice.")
+        }
+        guard let outlined, let layerID else {
+            throw Failure(description: "nothing was outlined on the canvas at the end of this "
+                + "drag, so there was no sign on screen that the box was changing size at all. "
+                + "A container that arranges itself leaves its contents where they are, so the "
+                + "box is the only thing that could have moved. Check "
+                + "\(FeatureCatalog.autoLayoutFlag) is on and that the layer in hand really is a "
+                + "stack or a grid (`ContainerResizeBox`).")
+        }
+        guard let landed = editor.document?.canvasBounds(of: layerID) else {
+            throw Failure(description: "the canvas outlined \(Self.short(outlined)) during the "
+                + "drag and the layer it belonged to is not in the document any more, so there is "
+                + "nothing to settle the claim against.")
+        }
+        let drift = max(abs(outlined.minX - landed.minX), abs(outlined.minY - landed.minY),
+                        abs(outlined.maxX - landed.maxX), abs(outlined.maxY - landed.maxY))
+        guard drift <= 0.5 else {
+            throw Failure(description: "the box outlined while the button was down was "
+                + "\(Self.short(outlined)) and the layer landed at \(Self.short(landed)), "
+                + "\(Self.round1(drift))pt apart at the worst edge. The drag showed a shape the "
+                + "release did not give.")
+        }
+        return "the box under the hand, \(Self.short(outlined)), is where it landed"
+    }
+
+    /// A rect in the words a failure reads best in: whole numbers, no labels.
+    private static func short(_ box: CGRect) -> String {
+        "\(Int(box.minX.rounded())), \(Int(box.minY.rounded())) "
+            + "\(Int(box.width.rounded())) × \(Int(box.height.rounded()))"
     }
 
     private func checkHint(contains: String) throws -> String {

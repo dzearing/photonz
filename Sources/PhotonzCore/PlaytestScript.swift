@@ -1276,9 +1276,24 @@ public enum PlaytestStep: Sendable, Equatable {
     /// to the end and lets go, which is a hand changing its mind: a walk that
     /// passes it has proved both that the drag went back AND that the rest of
     /// the gesture did nothing, since the button is still down for all of it.
+    /// `showsBox: true` claims that this drag was outlining the box it was
+    /// making while the button was still down, AND that the box outlined is
+    /// exactly where the thing landed once it came up. It is the claim for a
+    /// container that arranges itself, whose contents do not move when its box
+    /// changes, so a picture of the canvas mid-drag cannot tell a live box from
+    /// a dead one (`ContainerResizeBox`). It needs no numbers in the walk on
+    /// purpose: the walk is claiming the outline and the landing AGREE, and the
+    /// app knows both.
+    ///
+    /// `showsBox: false` claims the opposite, and is how the three kinds of
+    /// container that must NOT change are held to that: a screen has its own
+    /// live edge, and a plain group and a copy of a component both move their
+    /// contents under the hand, so a second box on any of them would be one
+    /// edge claimed twice. Left off entirely, a drag claims nothing either way.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
-              hold: String?, readout: String?, wobble: CGFloat, cancel: Bool)
+              hold: String?, readout: String?, wobble: CGFloat, cancel: Bool,
+              showsBox: Bool?)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -2042,7 +2057,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          hold: try f.optionalString("hold"),
                          readout: try f.optionalString("readout"),
                          wobble: CGFloat(try f.optionalNumber("wobble") ?? 0),
-                         cancel: try f.optionalFlag("cancel") ?? false)
+                         cancel: try f.optionalFlag("cancel") ?? false,
+                         showsBox: try f.optionalFlag("showsBox"))
         case "expectReadout":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent") ?? false

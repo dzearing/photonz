@@ -670,6 +670,11 @@ final class CanvasNSView: NSView {
     /// The hairline at every frame's edge, so a screen has a visible boundary
     /// even where its surface matches the canvas behind it.
     let frameEdgeLayer = CAShapeLayer()
+    /// The same hairline, at the box a self-arranging container is being
+    /// dragged to, for as long as the button is down (`CanvasResizeBox`). A
+    /// stack does not move its rows when its box changes and has no edge of its
+    /// own, so without this a drag on one changes nothing on screen at all.
+    let resizeBoxLayer = CAShapeLayer()
     /// A main component's mark and name, above its top left corner: one glyph
     /// and one text sublayer per component.
     let componentChromeLayer = CALayer()
@@ -1906,6 +1911,14 @@ final class CanvasNSView: NSView {
         frameEdgeLayer.lineWidth = 1
         frameEdgeLayer.isHidden = true
         layer?.addSublayer(frameEdgeLayer)
+        // Deliberately identical to the frame edge above: a container's box
+        // looks the same whether the container keeps one or only has one while
+        // your hand is on it.
+        resizeBoxLayer.strokeColor = frameEdgeLayer.strokeColor
+        resizeBoxLayer.fillColor = nil
+        resizeBoxLayer.lineWidth = 1
+        resizeBoxLayer.isHidden = true
+        layer?.addSublayer(resizeBoxLayer)
         // (The column bands go in near the picture, not here: see the block
         // beside the preview sprite.)
         columnChromeLayer.strokeColor = nil

@@ -1,0 +1,28 @@
+{
+  "feature": "Resizing a stack shows the box you are making",
+  "epic": "ui-layout",
+  "summary": "Drag a handle on a group that arranges itself and the box you are making is now drawn on the canvas for as long as the button is down, as the same grey hairline a screen wears at its edge. Before this, a stack's rows did not move and the group had no edge, so a whole drag changed nothing on screen and the only sign anything was happening was the width in the right hand panel.",
+  "setup": "Photonz Dev, release Next. Groups that arrange their own contents must be on in Experiments; it is on by default.",
+  "try": [
+    { "do": "Draw three rectangles one under the other, all about the same width." },
+    { "do": "Select all three and press Control Command G to stack them." },
+    { "do": "Press the bottom right handle of the stack and drag it out, slowly, without letting go." },
+    { "do": "Watch the canvas rather than the panel: a thin grey box should be following your hand." },
+    { "do": "Let go, and check the rows and the box landed where the hairline was." },
+    { "do": "Now drag the same handle back in, past the left edge of the rows, and let go." },
+    { "do": "Do the same drag on a plain group and on a frame, and see that neither picked up a second edge." }
+  ],
+  "evaluate": [
+    "While you are dragging, can you tell what size you are choosing without looking at the right hand panel?",
+    "Does the hairline land exactly where the stack lands, or does the box jump on release?",
+    "Is a grey hairline the right weight here, or does the box want to be more obviously temporary, for example dashed?",
+    "Pulled in narrower than its rows, the box goes smaller than what is inside it and the rows hang out: is that the right thing to show, or should it refuse?",
+    "Does a plain group still feel fine without one, since its contents scale under your hand anyway?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and no picture of the window was possible: there is no screenshot here, and none of this was seen on a real canvas. The rule behind the box has thirteen tests of its own and the whole suite is green, but nobody has watched the hairline follow a hand yet. A sweep has been asked for so the walk runs the moment the screen is unlocked.",
+    "The box is axis aligned, so a stack that has been turned would get a straight box round a slanted group. Frame edges have the same limit today, so this is not new, but it is not right either.",
+    "A copy of a component that is itself a left aligned stack still shows nothing: its pieces are placed rather than flowed, so most copies do move under the hand, but a hugging one would not. It was left out because the task asked for copies to behave exactly as they do today.",
+    "The hairline is the same grey as a screen's edge on purpose, so the canvas has one voice for a container's edge. The other reading is that a box which only exists while your hand is down should look temporary, and that is a real choice somebody should make by looking at it."
+  ]
+}

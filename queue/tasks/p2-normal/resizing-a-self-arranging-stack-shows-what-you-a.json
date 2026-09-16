@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 260,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T17:35:22.431Z",
-  "updated": "2026-09-15T12:14:53.553Z",
+  "updated": "2026-09-16T05:02:57.803Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing \"Resizing a frame shows what you are getting while you drag\" (2026-09-09). REPRODUCED, picture in the repo: run Scripts/playtest.sh Scripts/playtest/frame-live-other-kinds-walk.json --no-build and look at /tmp/photonz-playtest/frame-live-other-kinds/kinds-2-stack-mid-sc.png. It is the hold shot, taken with the button still down near the end of the drag. Position & Size reads W 294 H 410; the three rows on the canvas are still exactly where and how wide they were before the press. That much is CORRECT behaviour for a Left-aligned hug stack (the rows are not supposed to stretch), which is why this is a design question rather than a bug: the frame case was fixed by making the frame edge chrome live (CanvasNSView.liveCanvasBounds in Sources/Photonz/CanvasFrames.swift), and a group has no equivalent edge. Note CanvasDisplay hides the blue outline AND the eight handles for the whole of any resize, deliberately, so there is nothing else left. Deciding what to show is the work here; do not just un-hide the outline for groups without weighing what it costs the alignment case that rule exists for.",
@@ -43,6 +43,39 @@
     {
       "t": "2026-09-15T12:14:53.552Z",
       "note": "seq 220 -> 260"
+    },
+    {
+      "t": "2026-09-16T04:48:04.949Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T05:02:54.080Z",
+      "note": "Before building: walked the flow as a first-time user. Press a stack handle and the outline and the eight handles go (deliberate, so aligned edges stay clear), the rows do not move (correct for a left aligned hug stack), and the group has no edge. So the drag is genuinely dead. Rejected un-hiding the blue outline: it is 2pt accent round the whole box and sits on the very edges the hiding rule exists to keep clear. Rejected a ghost of where the rows will end up: they do not move. Shortest version that delivers the value is the box itself, drawn as the same grey hairline a screen already wears, so the canvas has ONE voice for a container's edge rather than two."
+    },
+    {
+      "t": "2026-09-16T05:02:54.127Z",
+      "note": "Reproduction: the drag readout pill landed on 2026-09-15 15:59 (commit 5244eeac), AFTER the picture in the notes was taken, so a resize now says its numbers on the canvas as well. That is a reading, not a shape: it does not say where the edges are, so the task stands and the box is still the missing half."
+    },
+    {
+      "t": "2026-09-16T05:02:54.171Z",
+      "note": "Shipped. ContainerResizeBox (PhotonzCore, 13 tests) decides which containers need a box and works it out through the SAME door the release goes through, Layer.resized(to:).localBounds, so the outline and the landing cannot disagree: a stack held at a maxWidth stops under the hairline as well as under the release. CanvasResizeBox.swift draws it on resizeBoxLayer, styled identically to frameEdgeLayer, from the PRESS rather than the first move so there is no gap after the outline goes. Stacks and grids get one; a frame (own live edge), a plain group and a copy of a component (both move their contents) get nothing, which is acceptance item 3. Gated on autoLayoutEnabled, which is next-only, so Current is untouched and no new flag was needed."
+    },
+    {
+      "t": "2026-09-16T05:02:54.216Z",
+      "note": "Walk: the drag step gained showsBox, a tri-state. true means the canvas was outlining a box at the end of the travel with the button still down AND that box is exactly where the layer landed once up; false means nothing was outlined. It carries no numbers on purpose, because the claim is that the outline and the landing AGREE and the app knows both. frame-live-other-kinds-walk.json now claims true on the stack and false on the plain group, the frame and the component copy, so all four kinds are held. Documented in docs/design/playtest-harness.md and docs/design/ui-building.md."
+    },
+    {
+      "t": "2026-09-16T05:02:57.716Z",
+      "note": "Not verified on a real canvas: the Mac's screen has been locked since 2026-09-14 20:46, so Scripts/playtest.sh reports status locked and exits 3 without running a step. Verified instead: 7395 tests green (13 of them new, on the rule), the probe build compiles with -DPHOTONZ_PLAYTEST, and all 462 walk files still parse including the edited one. A sweep was requested so the walk runs the moment the screen is unlocked. Said plainly in the audit's rough list."
+    },
+    {
+      "t": "2026-09-16T05:02:57.758Z",
+      "note": "left rough: nothing in the repo checks that every walk in Scripts/playtest parses. A typo in one only surfaces when it is run, which right now is never. Tried it as a throwaway test during this task and all 462 parse, so there is nothing broken to file, and it did not earn a task of its own."
+    },
+    {
+      "t": "2026-09-16T05:02:57.802Z",
+      "note": "left rough: the box is axis aligned, so a turned stack would get a straight box round a slanted group. Frame edge hairlines have exactly the same limit today, so it is not a regression and not worth its own task until somebody turns a container and minds."
     }
-  ]
+  ],
+  "started": "2026-09-16T04:48:04.948Z"
 }

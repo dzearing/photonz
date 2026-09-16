@@ -427,13 +427,17 @@
         360
       ],
       "steps": 30,
-      "hold": "kinds-1-group-mid"
+      "hold": "kinds-1-group-mid",
+      "showsBox": false
     },
     {
       "do": "wait",
       "seconds": 0.6
     },
-    { "do": "action", "action": "positionAndSize" },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
     {
       "do": "expect",
       "field": "W",
@@ -463,7 +467,8 @@
         860
       ],
       "steps": 30,
-      "hold": "kinds-2-stack-mid"
+      "hold": "kinds-2-stack-mid",
+      "showsBox": true
     },
     {
       "do": "wait",
@@ -472,7 +477,7 @@
     {
       "do": "describe",
       "stage": "2-stack",
-      "note": "a self-arranging stack takes the width and re-flows its rows"
+      "note": "a self-arranging stack takes the width and re-flows its rows. Its rows do not move when its box changes and it has no edge of its own, so while the button is down it wears the same grey hairline a screen wears, at the box the drag is making"
     },
     {
       "do": "selectRow",
@@ -493,13 +498,17 @@
         430
       ],
       "steps": 30,
-      "hold": "kinds-3-frame-mid"
+      "hold": "kinds-3-frame-mid",
+      "showsBox": false
     },
     {
       "do": "wait",
       "seconds": 0.6
     },
-    { "do": "action", "action": "positionAndSize" },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
     {
       "do": "expect",
       "field": "W",
@@ -529,7 +538,8 @@
         970
       ],
       "steps": 30,
-      "hold": "kinds-4-copy-mid"
+      "hold": "kinds-4-copy-mid",
+      "showsBox": false
     },
     {
       "do": "wait",

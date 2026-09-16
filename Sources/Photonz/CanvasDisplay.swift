@@ -321,6 +321,11 @@ extension CanvasNSView {
         refreshDrawLanding()
         refreshPathEditChrome()
         refreshMotionPivotChrome()
+        // After the selection chrome, which takes the outline and the handles
+        // away for the whole of a resize, and before the reading: the box a
+        // stack is being dragged to is the only thing left saying what the
+        // gesture is doing (`CanvasResizeBox`).
+        refreshResizeBox()
         // Last, because it is placed against boxes the refreshes above have
         // just settled, and because it draws over all of them.
         refreshDragReadout()

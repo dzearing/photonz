@@ -4068,3 +4068,12 @@
 {"t":"2026-09-16T04:47:13.139Z","ev":"task_note","id":"drawing-a-border-costs-only-the-band-it-covers"}
 {"t":"2026-09-16T04:47:13.183Z","ev":"task_note","id":"drawing-a-border-costs-only-the-band-it-covers"}
 {"t":"2026-09-16T04:47:13.228Z","ev":"task_done","id":"drawing-a-border-costs-only-the-band-it-covers","from":"in_progress","note":"A ring round a box is now laid in the four strips its band covers instead of across the whole layer (DocumentRenderer.ringStrips/laid), with BorderBandRenderTests proving the two draw the same picture. Measured both ways in one process: 12MP full render 35.3->25.8ms, the same with five layers in a styled group 37.9->24.6ms, an interactive edit inside that group 46.6->33.4ms (the task's 40ms bar), 2x export 112.5->116.2ms (the one path it does not help). Perf baselines updated, docs/progress/perf.md records it, full suite green at 7379 tests, pushed as 5e534540."}
+{"t":"2026-09-16T04:48:04.845Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T04:48:04.951Z","ev":"task_started","id":"resizing-a-self-arranging-stack-shows-what-you-a","title":"Resizing a self-arranging stack shows what you are getting while you drag","priority":"p2-normal"}
+{"t":"2026-09-16T05:02:54.082Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:54.129Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:54.173Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:54.218Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:57.718Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:57.760Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}
+{"t":"2026-09-16T05:02:57.804Z","ev":"task_note","id":"resizing-a-self-arranging-stack-shows-what-you-a"}

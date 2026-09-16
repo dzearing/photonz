@@ -717,6 +717,39 @@ grid on the original travels to every copy, along with how it lines its contents
 up. Without that, a copy of a stack is a heap that happens to look right until
 something inside it changes size.
 
+### Resizing a stack shows the box you are making (landed 2026-09-16)
+
+Pull a handle on a stack and, until this, nothing on the canvas moved. Its rows
+are placed by its own rules — a left aligned column keeps every row at its own
+width against the left edge — so they stay exactly where they were however wide
+the box gets, and a group has no edge of its own to follow the way a screen
+does. Both halves of the usual answer are off for the whole of a resize too: the
+blue outline and the eight handles hide so the edges being aligned stay
+unobstructed. The only sign anything was happening was the width in the right
+hand panel, which is a glance away from where your hand is.
+
+So a container that arranges itself borrows the one piece of chrome it does not
+have. For as long as the button is down it wears the same grey hairline a screen
+wears at its edge, and the moment you let go it is gone. One voice for "here is
+a container's edge", whether the container keeps one or only has one while your
+hand is on it.
+
+- **It is drawn where the drag LANDS, not where the pointer is.** A stack told
+  the widest it may ever be stops there on release, so the hairline stops there
+  too; a stack pulled in narrower than its rows shows a box smaller than its
+  rows, because that is what it becomes. The box is worked out through the same
+  door the release goes through (`Layer.resized(to:)`), so the two cannot
+  disagree.
+- **Only the containers that need it.** A screen already has a live edge of its
+  own, and a plain group and a copy of a component both move their contents
+  under the hand, so none of them grows a second edge.
+
+**Where it lives.** The rule is `ContainerResizeBox` in `PhotonzCore`; the
+drawing is `CanvasResizeBox.swift`. A walk claims both halves with `showsBox` on
+a drag step (`Scripts/playtest/frame-live-other-kinds-walk.json`), because a
+picture taken mid-drag looks the same whether the outline is live, frozen or
+missing entirely.
+
 ## What the first version deliberately does not do
 
 So later work is not measured against a promise nobody made. Each of these is a
