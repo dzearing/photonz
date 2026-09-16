@@ -16533,3 +16533,35 @@ captures were possible. Next: the pending sweep re-runs the new walk unlocked,
 and `queue/audits/2026-09-16-undo-after-a-panel-click.json` asks the user the one
 question the loop can never answer — does Command Z undo for you, in one press,
 after clicking the Fill switch?
+
+## 2026-09-16 — A measurement end follows your hand
+
+A caliper's feet are grabbed with nine points of slack, and the drag used to
+put the foot under the pointer, so a short pull could move the end the other
+way from the hand and shrink the reading while it was being pulled longer.
+The grab now keeps its grip: `MeasureHandleGrip` (PhotonzCore, six tests)
+holds the press-to-foot offset, bounded by that same slack, and it is applied
+BEFORE the magnets so `EdgeSnapping`, the span window and the ⇧-held line all
+judge the point the foot is aiming at rather than the point the pointer is on.
+A press exactly on the dot takes no grip, so that case is unchanged.
+
+Walks could not claim any of this, so `expectFeet` was added: it asks the
+document where a measurement's ends are and what it reads, in the coordinates
+a walk writes its own clicks in. Documented in `docs/design/playtest-harness.md`,
+used by the new `Scripts/playtest/caliper-foot-keeps-its-grip-walk.json`.
+
+Verified: that walk, 40 of 40 steps with a real window capture; a differential
+run proving the magnets judge the foot (same hand landing, foot at 700 with no
+grip and 708 with a grip of eight); playtest-all caliper 6/6 and measure 9/10,
+with the one failure reproduced identically on a stashed tree. 7431 tests pass.
+
+Worth a look for whoever picks up the loop next: the Mac has reported its
+screen locked since 08:44 local, so every walk is refused before it starts and
+61 of the 72 sweep logs say COULD NOT RUN, the last real sweep being 07:31.
+Forced with `PHOTONZ_ALLOW_LOCKED_WALK=1` the walks run perfectly and the
+capture shows the app fully drawn. That is a second independent reproduction
+of what `a-hundred-and-fifteen-walks-fail-on-code-that-pa` already records, and
+it is folded into that task rather than filed again.
+
+Next: the sweep requested against this change runs once walks are allowed to
+start.
