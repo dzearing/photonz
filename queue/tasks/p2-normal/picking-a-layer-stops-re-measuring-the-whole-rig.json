@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T00:30:17.736Z",
-  "updated": "2026-09-16T12:23:33.841Z",
+  "updated": "2026-09-16T17:50:23.620Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of picking-a-layer-lands-within-a-frame-in-a-long-l on 2026-09-15, which finished the LIST half and measured this as what is left.\n\nMeASURED (locked screen, PHOTONZ_ALLOW_LOCKED_WALK=1, so the absolute numbers are understated but the comparison is same-run):\n  two rows, pick swaps [layers] <-> [layers, geometry]: mainBusy 20-36ms, LONGEST SINGLE PASS 14-25ms, inspectorPanel bodies 1-2\n  eighteen rows, pick keeps the same sections [layers,color,effects,motion]: mainBusy 11-12ms, longest pass 7.6-8.6ms, inspectorPanel bodies 1\nSo it is not list length and it is not the number of sections drawn, it is the ARRIVAL: a section coming in or going out makes the dock share its height out again. The mechanisms are PanelSectionArrival and DockArrivals (Sources/Photonz/InspectorPanel.swift, the arrivalPass counter), DockBudgetScratch (a struct in @State, so every height a section measures rebuilds the panel) and InspectorDockLayout. The earlier task already cut the four passes per pick down to two by refusing to record a departing section's last measurement; what is left is the two that remain and what each of them re-measures.\n\nThe walk to use is Scripts/playtest/layer-pick-latency-walk.json: its selectRow steps report mainBusy, longest pass and the per-view body counts, and InspectorPanel logs one trace line per dock pass saying which sections and what budget it drew at.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-09-16T12:23:33.840Z",
       "note": "seq 2750 -> 120"
+    },
+    {
+      "t": "2026-09-16T17:20:06.364Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T17:50:21.311Z",
+      "note": "Adversarial review of the task BEFORE building: the goal says the panel 'works out its whole height again from scratch' and that this is the twenty milliseconds. I could not take that on trust, so I measured it by ablation before changing anything. It is not true. Reproduced the baseline first (layer-pick-latency-walk, screen locked so PHOTONZ_ALLOW_LOCKED_WALK=1, comparisons same-session): selectRow 22-42ms busy / 13-30ms longest, selectCanvas 50-71 / 27-39."
+    },
+    {
+      "t": "2026-09-16T17:50:21.355Z",
+      "note": "Built a steadier benchmark than the walk: a blank 900x700 canvas with a rectangle and an arrow on it, picked alternately twenty times, medians over 38 picks. Baseline 46.4ms busy / 28.6ms longest single pass. Then took one piece out at a time: dock hidden 12.9/9.8; every section body blanked 16.6/13.4; layers list back, forms blank 22.6/19.4; everything back 46.4/28.6. So a pick is ~10ms canvas and selection, ~4ms dock shell, ~6ms the layers list drawing itself again, ~10ms building the arriving section's form."
+    },
+    {
+      "t": "2026-09-16T17:50:21.403Z",
+      "note": "Everything this task names costs nothing measurable. Per-section chrome removed (tutorial anchor, frame reader, lift, offsets, animation, drop target): 44.6/28.8, no change. .regularMaterial removed: 46.6/29.0, no change. DockBudgetScratch's @State writes: no-ops once a section's height has been seen once, which after the first pick is always, so bodies stay at 2 per pick. PanelSectionArrival EARNS its keep: turning the deferral off put the longest pass UP, 29.7 to 33.3ms. Replacing the ScrollView made it worse still, 38.0. Stubbing the probe-only PanelTarget and HelpAnchor NSViews changed nothing, so these numbers are honest about the shipping build and not an artefact of the harness."
+    },
+    {
+      "t": "2026-09-16T17:50:21.449Z",
+      "note": "What it IS: making AppKit controls. Two TextFields in the Canvas section are 6ms on their own, the colour well 2ms, so roughly 3-5ms per control with no single villain. A section coming in builds its whole form from nothing because a view taken out of a ForEach loses its identity, and no bookkeeping in InspectorPanel can make that cheaper. Acceptance 1 is also unreachable through this panel either way: with the dock hidden altogether a pick is still 9.8ms in its longest pass, and the layers list is 6ms on three rows."
+    },
+    {
+      "t": "2026-09-16T17:50:21.495Z",
+      "note": "Shipped the measurement rather than a change: commit e43154ad puts the whole breakdown and the method in a comment above `arrivals` in Sources/Photonz/InspectorPanel.swift, next to the machinery three tasks in a row have now suspected. Scripts/test.sh green (7668 tests); layer-pick-latency-walk and layer-pick-at-scale-walk both pass. Filed a-section-that-appears-in-the-right-hand-panel-a to carry the user-facing goal with the right target and the reproduction."
+    },
+    {
+      "t": "2026-09-16T17:50:21.539Z",
+      "note": "left rough: the layers list rebuilds twice per pick (layersList bodies 2), once for the click and once for the arrival pass, at ~3ms each on a three row list. Making it skip the parent-driven one would need .equatable(), which LibraryPanel's own comment warns against for exactly this panel, and ~3ms of 28.6 does not pay for that risk. Noted here rather than filed."
+    },
+    {
+      "t": "2026-09-16T17:50:23.619Z",
+      "note": "Measured by ablation before building: the dock's height budget, the arrival bookkeeping and the per-section chrome this task names cost nothing. A pick's panel cost is building the arriving section's form out of AppKit controls, ~3-5ms each, which no bookkeeping in InspectorPanel can reach. The measurement is committed (e43154ad) next to the machinery, and a-section-that-appears-in-the-right-hand-panel-a carries the user-facing goal with the right target."
     }
-  ]
+  ],
+  "started": "2026-09-16T17:20:06.363Z"
 }

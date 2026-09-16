@@ -1,0 +1,27 @@
+{
+  "id": "a-section-that-appears-in-the-right-hand-panel-a",
+  "title": "A section that appears in the right hand panel appears within a frame",
+  "goal": "When you click something and a new group of settings appears on the right, the app stops for about a thirtieth of a second while it builds that group. Clicking back and forth between two things that need different settings drops a frame every time. The settings should appear without the app pausing.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2790,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T17:50:14.180Z",
+  "updated": "2026-09-16T17:50:14.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Replaces picking-a-layer-stops-re-measuring-the-whole-rig, which named the dock height budget and the arrival machinery as the cost. Measured on 2026-09-16 and they are not: the whole breakdown and the method are in the comment above `arrivals` in Sources/Photonz/InspectorPanel.swift (commit e43154ad).\n\nREPRODUCTION. Build a walk that opens a blank 900x700 canvas, draws a rectangle at [140,90]-[340,150] and an arrow at [160,300]-[420,420], then clicks [240,120] and [290,360] alternately twenty times with 0.5s waits, and run it with Scripts/playtest.sh. Take the median of the click steps' mainBusy and longest. On 2026-09-16 on restored source: busy median 49.0ms, longest single pass median 30.2ms, n=38. Picking the arrow (the Annotation section arrives) is 36.9ms; picking the rectangle back (it departs) is 25.1ms. Both are over a frame.\n\nWHERE IT GOES. Each line is one build with one piece taken out, same walk, busy/longest medians:\n  dock hidden altogether (hideInspector)            12.9 / 9.8\n  every section body replaced by a blank            16.6 / 13.4\n  layers list back, forms still blank               22.6 / 19.4\n  everything back                                   46.4 / 28.6\nSo the arriving form is about 24ms of the total and 9ms of the longest pass. Inside one form, on the Canvas section: two TextFields are 6ms, the colour well 2ms. Roughly 3 to 5ms per AppKit backed control, no single villain. A section coming in builds its whole form from nothing, because a view taken out of a ForEach loses its identity and everything under it, so nothing in InspectorPanel can make that cheaper. The work is in the controls.\n\nTRIED AND WORTH NOTHING, do not repeat: removing the per-section chrome (tutorial anchor, frame reader, lift, offsets, animation, drop target); removing .regularMaterial; stubbing out the probe-only PanelTarget and HelpAnchor NSViews (so these numbers are honest about the shipping build); stubbing PanelNumberField to plain text. Two made it WORSE: replacing the ScrollView with a ZStack (38.0 longest) and turning off the arrival deferral (33.3 longest), so keep both as they are.\n\nNOTE ON THE BAR. Acceptance 2 may be unreachable even with a free panel. With the dock hidden entirely a pick is still 9.8ms in its longest pass, and the layers list drawing itself again is 6ms on THREE rows. If the forms are made free and a pick still does not fit in a frame, what is left is the layers list and the canvas, and that is a different task again. Say so rather than forcing it.\n\nMeasured with the screen locked and PHOTONZ_ALLOW_LOCKED_WALK=1, so the absolute numbers may be understated; every comparison above is same machine, same session, one variable at a time.",
+  "acceptance": [
+    "Picking one shape and then another that shows a different set of sections costs no more main thread work in its longest single pass than picking two that show the same sections",
+    "No single pass of main thread work in a pick runs past one frame at sixty hertz on a document with a rectangle and an arrow on it",
+    "The settings that appear are the same settings, with the same controls, tooltips and keyboard behaviour, and every walk that presses one still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T17:50:14.182Z",
+      "note": "created (manual)"
+    }
+  ]
+}

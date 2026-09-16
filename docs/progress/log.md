@@ -17146,3 +17146,30 @@ photographs of the window, but a sweep is requested and the loop should run it
 unlocked. Two walks unrelated to this change fail on clean main today
 (`corner-drag-rounds-walk`, `four-sided-popout-walk`), baselined by stashing and
 folded into `walks-that-fail-in-the-full-sweep`.
+
+## 2026-09-16 — what picking a layer really costs
+
+Ran `picking-a-layer-stops-re-measuring-the-whole-rig`. The task said the
+click's cost was the right hand panel working out its height again. Measured
+it first, by taking one piece out at a time and running the same walk again,
+and it is not. A pick on a blank canvas with a rectangle and an arrow on it
+is about 10ms of canvas and selection, 4ms of dock shell, 6ms of the layers
+list drawing itself again, and 10ms of building the arriving section's form
+out of AppKit controls — 30.2ms in its longest single pass all told.
+
+Nothing the task named moved it: the per-section chrome, the material, and
+the height budget's writes are all free, and the arrival deferral earns its
+keep (turning it off puts the longest pass up from 29.7 to 33.3ms). Two
+changes made it worse and were reverted. The cost is roughly 3 to 5ms per
+AppKit backed control, and a section coming in builds its whole form from
+nothing, which nothing in `InspectorPanel` can reach.
+
+Shipped the measurement instead of a change: the breakdown and the method are
+now a comment above `arrivals` in `Sources/Photonz/InspectorPanel.swift`
+(e43154ad), so the next pass does not re-derive it. Task dropped;
+`a-section-that-appears-in-the-right-hand-panel-a` carries the user-facing
+goal with the right target and the reproduction.
+
+Open question for a later pass: with the dock hidden altogether a pick is
+still 9.8ms in its longest pass, and the layers list is 6ms on three rows, so
+one frame may not be reachable even with the forms made free.

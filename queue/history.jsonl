@@ -4446,3 +4446,13 @@
 {"t":"2026-09-16T17:19:12.893Z","ev":"task_note","id":"the-last-three-sliders-whose-number-you-still-ca"}
 {"t":"2026-09-16T17:19:14.889Z","ev":"task_note","id":"the-last-three-sliders-whose-number-you-still-ca"}
 {"t":"2026-09-16T17:19:23.021Z","ev":"task_done","id":"the-last-three-sliders-whose-number-you-still-ca","from":"in_progress","note":"Corner Radius, Chip size and the tool bar popover's Width (plus Arrowhead, left odd by the change) are number boxes. Core: CornerRadiusSelection.typed(_:), six tests. Full suite green, 7668 tests. Walks: type-the-last-three-numbers-walk (new) and measure-parts-walk (extended) both pass, forced under a locked screen so neither carries a verdict; sweep requested. Audit: queue/audits/2026-09-16-type-the-last-three-numbers.json. Commit f8189a54."}
+{"t":"2026-09-16T17:20:06.258Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T17:20:06.366Z","ev":"task_started","id":"picking-a-layer-stops-re-measuring-the-whole-rig","title":"Picking a layer stops re-measuring the whole right hand panel","priority":"p2-normal"}
+{"t":"2026-09-16T17:50:14.184Z","ev":"task_created","id":"a-section-that-appears-in-the-right-hand-panel-a","priority":"p2-normal","title":"A section that appears in the right hand panel appears within a frame"}
+{"t":"2026-09-16T17:50:21.313Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:21.357Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:21.405Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:21.451Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:21.497Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:21.541Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
+{"t":"2026-09-16T17:50:23.621Z","ev":"task_dropped","id":"picking-a-layer-stops-re-measuring-the-whole-rig","from":"in_progress","note":"Measured by ablation before building: the dock's height budget, the arrival bookkeeping and the per-section chrome this task names cost nothing. A pick's panel cost is building the arriving section's form out of AppKit controls, ~3-5ms each, which no bookkeeping in InspectorPanel can reach. The measurement is committed (e43154ad) next to the machinery, and a-section-that-appears-in-the-right-hand-panel-a carries the user-facing goal with the right target."}
