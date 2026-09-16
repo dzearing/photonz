@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-16T02:25:19.855Z",
+  "updated": "2026-09-16T02:25:31.063Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -72,7 +72,12 @@
     {
       "t": "2026-09-16T02:25:19.854Z",
       "note": "left rough, not filed: Flat and Square read almost the same at a glance, in the panel and on the canvas, because the whole difference is half a line width at each end - the word beside the caption carries it. Said of the path's own row on 2026-09-15 and still true, and it is a question for the user in the audit rather than a defect. Also left rough: a line and an arrow are not offered Pattern (solid/dashed/dotted), which a path is. A dashed redline arrow may well be worth having, but it is a feature nobody has asked for and the audit asks whether it is wanted before anybody builds it."
+    },
+    {
+      "t": "2026-09-16T02:25:31.061Z",
+      "note": "A line and an arrow now show Ends (Flat, Round, Square) under Outline beside their Thickness, reading the same PathLineEnd a path reads, drawn on the canvas and written into an exported SVG, one undo step, behind next-line-ends. The sharp-corner clipping the last runner left is fixed: reproduced as a chevron losing 1.7pt off its point, fixed in PathContent.sharpCornerOutset. Corners are deliberately NOT added to a line, a rectangle or a Border effect, with the reasoning in the audit and the log. Verified: 7302 tests green (16 written before the code); the walk could not run because the Mac's screen was locked all task, so a full sweep is requested and the audit ships a composite render instead of a window capture. Audit: queue/audits/2026-09-15-shape-line-ends.json"
     }
   ],
-  "started": "2026-09-16T02:08:09.714Z"
+  "started": "2026-09-16T02:08:09.714Z",
+  "completed": "2026-09-16T02:25:31.062Z"
 }
