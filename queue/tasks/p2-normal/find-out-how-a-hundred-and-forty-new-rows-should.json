@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:50.902Z",
-  "updated": "2026-09-15T12:14:53.855Z",
+  "updated": "2026-09-16T10:56:45.634Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Asked as an open question by audit 2026-09-13-separate-whole-screenshot: \"A hundred and forty two rows called Text 1 to Text 142 is a long list even with thumbnails. Is that usable as it stands, or does a separation this size need the list grouped by where the pieces were on the page?\" and in its rough notes: \"The limit keeps 500 rows from happening but does not make 142 pleasant. At the window size in these pictures the layers list shows about five rows at a time.\"\n\nPairs with a-text-layer-s-row-says-the-words-that-are-in-it, which fixes what the rows are CALLED. This one is about how many of them there are. Do that one first if both are open: a hundred rows with real words on them may be a different problem from a hundred rows called Text N.\n\nSeparate already nests (audit 2026-09-13-separate-hierarchy), so some of the shape may already be there.",
@@ -44,6 +44,10 @@
     {
       "t": "2026-09-15T12:14:53.854Z",
       "note": "seq 490 -> 530"
+    },
+    {
+      "t": "2026-09-16T10:56:45.633Z",
+      "note": "Separate now looks one level INSIDE every box it takes (separate-the-rows-inside-a-card-not-just-the-car, landed 2026-09-16), so a dense capture offers more rows than when this task was written: the settings pane fixture went from 13 pieces to 19, and on a whole screen the ceiling is 30 boxes plus 150 runs rather than 30 top-level boxes plus 150 runs. They do arrive NESTED, so a card closes up into one row and the list is shorter closed than the flat pile was — which is a real option this task should measure rather than assume."
     }
   ]
 }

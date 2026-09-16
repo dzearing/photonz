@@ -22,8 +22,9 @@ import Testing
 /// | 8 | "Reset", dark words on a light grey button |
 /// | 9 | "Save Changes", WHITE words on a solid blue button |
 ///
-/// …and three switches, two text fields and two buttons, none of which are text
-/// and none of which may come out as a layer.
+/// …and four switches, two text fields and two buttons, none of which are text.
+/// The buttons sit on the page, so they are boxes of their own; the switches and
+/// the fields sit on the cards, so they come out nested under them.
 ///
 /// Full design: `docs/design/separate-into-layers.md`.
 @Suite("Separate into Layers on a real capture")
@@ -258,15 +259,33 @@ struct SeparateIntoLayersFixtureTests {
             "\(Int($0.rect.width))x\(Int($0.rect.height)) at (\(Int($0.rect.minX)),"
                 + "\(Int($0.rect.minY))) \($0.image == nil ? "shape" : "picture")"
         }.joined(separator: ", "))
-        // Both cards and both buttons. The switches and the text fields are ON
-        // the cards, so they are part of them rather than rows of their own —
-        // one level, which is the rule. The cards used to be left in the
-        // picture because of their shadow; they come out wearing it now.
-        #expect(boxes.count == 4)
-        #expect(boxes.contains { $0.rect == CGRect(x: 233, y: 756, width: 248, height: 60) })
-        #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 756, width: 145, height: 60) })
-        #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 148, width: 1312, height: 264) })
-        #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 452, width: 1312, height: 264) })
+        // On the page: both cards and both buttons. The cards used to be left
+        // in the picture because of their shadow; they come out wearing it now.
+        let onThePage = boxes.filter { box in
+            !boxes.contains { $0.rect != box.rect && $0.rect.contains(box.rect) }
+        }
+        #expect(onThePage.count == 4)
+        #expect(onThePage.contains { $0.rect == CGRect(x: 233, y: 756, width: 248, height: 60) })
+        #expect(onThePage.contains { $0.rect == CGRect(x: 64, y: 756, width: 145, height: 60) })
+        #expect(onThePage.contains { $0.rect == CGRect(x: 64, y: 148, width: 1312, height: 264) })
+        #expect(onThePage.contains { $0.rect == CGRect(x: 64, y: 452, width: 1312, height: 264) })
+        // And on the cards: four switches down the right, and the two text
+        // fields on the second card, which come out as real rounded rectangles
+        // now that they are read against the card rather than against the page.
+        let onTheCards = boxes.filter { box in
+            boxes.contains { $0.rect != box.rect && $0.rect.contains(box.rect) }
+        }
+        #expect(onTheCards.count == 6)
+        #expect(onTheCards.filter { $0.rect.width == 84 && $0.rect.height == 48 }.count == 4)
+        #expect(onTheCards.filter { $0.rect.width == 440 && $0.rect.height == 52 }.count == 2)
+        // A box comes out AFTER whatever holds it, so a card is never laid over
+        // its own switches.
+        for (index, box) in boxes.enumerated() {
+            for other in boxes[(index + 1)...] {
+                #expect(!other.rect.contains(box.rect),
+                        "\(box.rect) came out before the \(other.rect) holding it")
+            }
+        }
     }
 
     // MARK: - Text inside a box comes out inside that box
@@ -285,24 +304,29 @@ struct SeparateIntoLayersFixtureTests {
         }
         print("TREE\n" + describe(tree, "").joined(separator: "\n"))
 
-        // Thirteen pieces came out of this capture and five of them are
-        // nobody's child: the heading, the two cards and the two buttons. Every
-        // other piece is a label sitting in one of them — three rows on each
-        // card, one on each button.
+        // Five pieces are nobody's child: the heading, the two cards and the
+        // two buttons. Everything else sits in one of them — a card holds its
+        // three row labels and the switches and fields on it, a button holds
+        // its one label.
         #expect(tree.count == 5)
         let holders = tree.filter { !$0.children.isEmpty }
         #expect(holders.count == 4)
         for holder in holders {
             #expect(result.pieces[holder.index].kind == .box)
             let box = result.pieces[holder.index].rect
-            #expect(holder.children.count == (box.width > 1000 ? 3 : 1))
+            let labels = holder.children.filter { result.pieces[$0.index].kind == .text }
+            #expect(labels.count == (box.width > 1000 ? 3 : 1))
             for child in holder.children {
-                let label = result.pieces[child.index]
-                #expect(label.kind == .text)
-                // The label really does sit in the thing it was put in.
-                #expect(box.intersects(label.rect))
+                // Everything in it really does sit in it.
+                #expect(box.contains(result.pieces[child.index].rect))
             }
         }
+        // The cards hold the controls that were sitting on them, three deep
+        // with the labels: a card, the things on it, and nothing orphaned.
+        let cards = holders.filter { result.pieces[$0.index].rect.width > 1000 }
+        #expect(cards.count == 2)
+        #expect(cards.flatMap { $0.children }
+            .filter { result.pieces[$0.index].kind == .box }.count == 6)
         // The Save Changes label under the blue button, not beside it.
         let blue = try #require(tree.first { result.pieces[$0.index].rect.minX == 233 })
         #expect(Int(result.pieces[blue.children[0].index].rect.minX) == 270)
@@ -754,5 +778,220 @@ struct SeparateIntoLayersFixtureTests {
                      + "text and boxes %.0f ms", w, h, Double(w * h) / 1_000_000,
                      result.runs.count, result.boxes.count,
                      reading * 1000, sweep * 1000, text * 1000, whole * 1000))
+    }
+}
+
+/// A row inside a card inside a screen: the three levels the fixture cannot
+/// show, because its own cards paint their rows the same white as the card and
+/// so never draw a row there is anything to find.
+///
+/// Drawn, and drawn the way real UI is painted: a page colour, a card on it, a
+/// row on the card, a label on the row, antialiasing down every rounded edge.
+///
+/// Full design: `docs/design/separate-into-layers.md`.
+@Suite("A row inside a card")
+struct SeparatedRowInsideACardTests {
+
+    /// A picture being painted, in premultiplied sRGB bytes.
+    private struct Scene {
+        let width: Int
+        let height: Int
+        var bytes: [UInt8]
+
+        init(width: Int, height: Int, background: (Double, Double, Double)) {
+            self.width = width
+            self.height = height
+            bytes = [UInt8](repeating: 0, count: width * height * 4)
+            for i in stride(from: 0, to: bytes.count, by: 4) {
+                bytes[i] = UInt8(background.0)
+                bytes[i + 1] = UInt8(background.1)
+                bytes[i + 2] = UInt8(background.2)
+                bytes[i + 3] = 255
+            }
+        }
+
+        /// A rounded rectangle with the antialiasing a real renderer leaves.
+        mutating func rounded(_ rect: CGRect, radius: Double,
+                              _ rgb: (Double, Double, Double)) {
+            let r = min(radius, min(Double(rect.width), Double(rect.height)) / 2)
+            for y in Int(rect.minY - 2)..<Int(rect.maxY + 2) {
+                for x in Int(rect.minX - 2)..<Int(rect.maxX + 2) {
+                    guard x >= 0, y >= 0, x < width, y < height else { continue }
+                    let hx = Double(rect.width) / 2 - r, hy = Double(rect.height) / 2 - r
+                    let ax = abs(Double(x) + 0.5 - Double(rect.midX)) - hx
+                    let ay = abs(Double(y) + 0.5 - Double(rect.midY)) - hy
+                    let d = sqrt(max(ax, 0) * max(ax, 0) + max(ay, 0) * max(ay, 0))
+                        + min(max(ax, ay), 0) - r
+                    let cover = min(max(0.5 - d, 0), 1)
+                    guard cover > 0 else { continue }
+                    let i = (y * width + x) * 4
+                    for (k, value) in [rgb.0, rgb.1, rgb.2].enumerated() {
+                        bytes[i + k] = UInt8(value * cover + Double(bytes[i + k]) * (1 - cover))
+                    }
+                }
+            }
+        }
+
+        /// A line of "words": stems with daylight between them, most of them x
+        /// height, two reaching the ascender and the last dropping a descender,
+        /// which is what stops a row of bars reading as a box.
+        @discardableResult
+        mutating func words(at origin: CGPoint, letters: Int, height: Int,
+                            _ rgb: (Double, Double, Double)) -> CGRect {
+            let x = Int(origin.x), y = Int(origin.y)
+            let stem = 3, spacing = 6
+            let xHeight = max(1, height / 4), descender = max(2, height / 5)
+            for i in 0..<letters {
+                let top = (i == 0 || i == 3) ? y : y + xHeight
+                let bottom = i == letters - 1 ? y + height + descender : y + height
+                rounded(CGRect(x: x + i * spacing, y: top, width: stem, height: bottom - top),
+                        radius: 0, rgb)
+            }
+            return CGRect(x: x, y: y, width: (letters - 1) * spacing + stem,
+                          height: height + descender)
+        }
+
+        var image: CGImage? { LayerSeparator.makeImage(bytes, width: width, height: height) }
+    }
+
+    private static let page = (242.0, 242.0, 247.0)
+    private static let card = (255.0, 255.0, 255.0)
+    private static let row = (233.0, 233.0, 237.0)
+    private static let ink = (28.0, 28.0, 30.0)
+
+    /// The card, the row on it, the label on the row.
+    private static let scene: Scene = {
+        var scene = Scene(width: 600, height: 400, background: page)
+        scene.rounded(CGRect(x: 40, y: 40, width: 520, height: 260), radius: 12, card)
+        scene.rounded(CGRect(x: 70, y: 90, width: 460, height: 90), radius: 10, row)
+        scene.words(at: CGPoint(x: 110, y: 118), letters: 14, height: 24, ink)
+        return scene
+    }()
+
+    private static let separated: LayerSeparator.Result? = {
+        guard let image = scene.image else { return nil }
+        return LayerSeparator.separate(image, luma: EdgeMapAnalyzer.analyzeFully(image).luma)
+    }()
+
+    private func describe(_ nodes: [LayerNesting.Node], _ result: LayerSeparator.Result,
+                          _ indent: String) -> [String] {
+        nodes.flatMap { node -> [String] in
+            let piece = result.pieces[node.index]
+            return ["\(indent)\(piece.kind == .text ? "text" : "box") "
+                + "\(Int(piece.rect.width))x\(Int(piece.rect.height)) at "
+                + "(\(Int(piece.rect.minX)),\(Int(piece.rect.minY)))"]
+                + describe(node.children, result, indent + "  ")
+        }
+    }
+
+    @Test func aRowOnACardComesOutThreeDeep() throws {
+        let result = try #require(Self.separated)
+        print("TREE\n" + describe(result.nested, result, "").joined(separator: "\n"))
+        #expect(result.pieces.count == 3)
+        #expect(LayerNesting.depth(of: result.nested) == 3)
+
+        let card = try #require(result.nested.first)
+        #expect(result.pieces[card.index].rect == CGRect(x: 40, y: 40, width: 520, height: 260))
+        let row = try #require(card.children.first)
+        #expect(card.children.count == 1)
+        #expect(result.pieces[row.index].rect == CGRect(x: 70, y: 90, width: 460, height: 90))
+        // Picking the row up takes its label and nothing else.
+        #expect(row.children.count == 1)
+        let label = result.pieces[row.children[0].index]
+        #expect(label.kind == .text)
+        #expect(CGRect(x: 70, y: 90, width: 460, height: 90).contains(label.rect))
+    }
+
+    @Test func theCardHasNoHoleWhereTheRowWas() throws {
+        let result = try #require(Self.separated)
+        let card = try #require(result.boxes.first { $0.rect.width == 520 })
+        let piece = try #require(card.image)
+        let bytes = try #require(LayerSeparator.read(piece))
+        // Right through the middle of where the row was, in the card's own
+        // coordinates: every pixel is the card's white, fully opaque.
+        var worst = 0, seen = 0
+        for y in Int(90 - card.rect.minY)..<Int(180 - card.rect.minY) {
+            for x in Int(70 - card.rect.minX)..<Int(530 - card.rect.minX) {
+                let i = (y * piece.width + x) * 4
+                #expect(bytes[i + 3] == 255)
+                for channel in 0..<3 { worst = max(worst, abs(Int(bytes[i + channel]) - 255)) }
+                seen += 1
+            }
+        }
+        print("HOLE the card's \(seen) pixels where the row was: worst channel "
+            + "difference from its own white is \(worst)/255")
+        #expect(worst <= 1)
+    }
+
+    @Test func theRowIsTheRowAndNotARectangleOfCard() throws {
+        let result = try #require(Self.separated)
+        let row = try #require(result.boxes.first { $0.rect.width == 460 })
+        // It came out as a real rounded rectangle, read against the card rather
+        // than against a page it cannot see.
+        guard case .shape(let shape) = row.body else {
+            Issue.record("the row came out as a picture")
+            return
+        }
+        print("SHAPE the row: fill \(shape.fill.hexString), corners "
+            + "\(Int(shape.radii.topLeft)) px, edge \(Int(shape.borderWidth)) px")
+        #expect(shape.fill.hexString == "#E9E9ED")
+        #expect(abs(shape.radii.topLeft - 10) <= 1)
+        #expect(shape.borderWidth == 0)
+    }
+
+    @Test func theSpaceTheCardCameFromIsPlainPage() throws {
+        let result = try #require(Self.separated)
+        let bytes = try #require(LayerSeparator.read(result.background))
+        var worst = 0
+        for y in 38..<302 {
+            for x in 38..<562 {
+                let i = (y * result.background.width + x) * 4
+                worst = max(worst, abs(Int(bytes[i]) - 242))
+                worst = max(worst, abs(Int(bytes[i + 1]) - 242))
+                worst = max(worst, abs(Int(bytes[i + 2]) - 247))
+            }
+        }
+        print("PATCH the card's whole space reads within \(worst)/255 of the page")
+        #expect(worst <= 1)
+    }
+
+    @Test func theCeilingIsSpentOnTheCardsBeforeWhatIsOnThem() throws {
+        // Thirty two cards, each with one control on it: sixty four things and
+        // room for thirty. Every slot goes to a card, because a screenshot with
+        // more cards than the ceiling allows should come apart into cards and
+        // not into some cards plus the controls off whichever one was biggest.
+        var scene = Scene(width: 680, height: 360, background: Self.page)
+        for row in 0..<4 {
+            for column in 0..<8 {
+                let x = 20 + column * 80, y = 20 + row * 80
+                scene.rounded(CGRect(x: x, y: y, width: 60, height: 60), radius: 10, Self.card)
+                scene.rounded(CGRect(x: x + 15, y: y + 15, width: 30, height: 30),
+                              radius: 6, Self.row)
+            }
+        }
+        let image = try #require(scene.image)
+        let result = try #require(LayerSeparator.separate(
+            image, luma: EdgeMapAnalyzer.analyzeFully(image).luma))
+        print("CEILING \(result.boxes.count) boxes came out of 32 cards with a control on "
+            + "each, \(result.crowded) left in the picture")
+        #expect(result.boxes.count == SeparateBudget.maxBoxes)
+        #expect(result.boxes.allSatisfy { $0.rect.width == 60 })
+        #expect(result.nested.allSatisfy { $0.children.isEmpty })
+        #expect(result.left == 64 - SeparateBudget.maxBoxes)
+    }
+
+    @Test func aCardLeftInThePictureKeepsWhatWasSittingOnIt() throws {
+        // The card runs off the right edge, so the picture cut it in half and
+        // its real shape is not in there to be cut. The row on it stays too:
+        // taking it would leave a hole in a card nobody can fill.
+        var scene = Scene(width: 600, height: 400, background: Self.page)
+        scene.rounded(CGRect(x: 40, y: 40, width: 620, height: 260), radius: 12, Self.card)
+        scene.rounded(CGRect(x: 70, y: 90, width: 460, height: 90), radius: 10, Self.row)
+        let image = try #require(scene.image)
+        let result = try #require(LayerSeparator.separate(
+            image, luma: EdgeMapAnalyzer.analyzeFully(image).luma))
+        print("LEFT \(result.boxes.count) boxes came out of a card the frame cut in half")
+        #expect(result.boxes.isEmpty)
+        #expect(result.pieces.isEmpty)
     }
 }

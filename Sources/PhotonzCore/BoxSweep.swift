@@ -10,12 +10,19 @@ import Foundation
 /// itself is not a thing; nor is anything the frame cut in half; nor is what
 /// sits on top of a box, because that travels with the box it is on.
 ///
-/// That rule is the answer to the question this feature lives or dies on:
-/// WHICH of the nested rungs in a screenshot are worth becoming layers. A
+/// That rule is asked TWICE. Once of the page, which gives the cards and the
+/// buttons; then again inside every box it gave, where the box's own paint
+/// plays the part the page played and whatever interrupts it is a thing on the
+/// box. That is how a row inside a card, or a switch on a row, gets a layer of
+/// its own instead of being baked into a flat picture of the card.
+///
+/// It stops at two (`maxBoxDepth`). WHICH of the nested rungs in a screenshot
+/// are worth becoming layers is the question this feature lives or dies on: a
 /// settings pane has a rung for the window, one for the pane, one for every
-/// group and one for every row, and taking all of them produces a tree nobody
-/// wants. Taking one level produces the cards and the buttons, which is what a
-/// person points at.
+/// group and one for every row, and all of them as a flat pile is a tree nobody
+/// wants. Two levels, nested, is the cards and what is sitting on them — and a
+/// card that closes up into one row is SHORTER in the layers list than the flat
+/// list was.
 ///
 /// Two things were tried first and measured, and both are written down here so
 /// nobody spends the afternoon again:
@@ -73,11 +80,22 @@ public enum BoxSweep {
         /// The shape it can honestly be turned into, or nil when it has to stay
         /// a picture.
         public let shape: Shape?
+        /// The island of the box this one is SITTING ON, or 0 when it is
+        /// sitting on the page. A row inside a card carries the card's island,
+        /// which is what says where its edge has to be read from and what has
+        /// to be painted into the space it leaves.
+        public let parent: Int32
+        /// How many boxes deep it is: 1 for a box on the page, 2 for a box on
+        /// that one.
+        public let depth: Int
 
-        public init(rect: CGRect, island: Int32, shape: Shape?) {
+        public init(rect: CGRect, island: Int32, shape: Shape?,
+                    parent: Int32 = 0, depth: Int = 1) {
             self.rect = rect
             self.island = island
             self.shape = shape
+            self.parent = parent
+            self.depth = depth
         }
     }
 
@@ -85,20 +103,29 @@ public enum BoxSweep {
     /// pixels are the background they are sitting on.
     public struct Sweep: Sendable {
         public let boxes: [Box]
-        /// One label per pixel: which island it belongs to, 0 for none.
+        /// One label per pixel: the DEEPEST island it belongs to, 0 for none.
+        /// A pixel of a row inside a card carries the row, not the card, so a
+        /// row can be cut out on its own; `owns` is what answers the other
+        /// question, whether the card has it.
         public let islands: [Int32]
         /// 1 where the pixel is part of a background rather than a thing on it.
         /// What the patch reads its ring from, so a neighbouring control can
         /// never vote on what is behind this one.
         public let backdrop: [UInt8]
+        /// Which island holds each island: `ancestors[id - 1]` is the island
+        /// that one is sitting on, 0 when it is sitting on the page. Empty when
+        /// nothing was found inside anything, which is every picture the sweep
+        /// only ever read one level of.
+        public let ancestors: [Int32]
         public let width: Int
         public let height: Int
 
         public init(boxes: [Box], islands: [Int32], backdrop: [UInt8],
-                    width: Int, height: Int) {
+                    ancestors: [Int32] = [], width: Int, height: Int) {
             self.boxes = boxes
             self.islands = islands
             self.backdrop = backdrop
+            self.ancestors = ancestors
             self.width = width
             self.height = height
         }
@@ -106,11 +133,34 @@ public enum BoxSweep {
         public static let empty = Sweep(boxes: [], islands: [], backdrop: [],
                                         width: 0, height: 0)
 
-        /// Whether the pixel belongs to that island. Outside the picture is no.
+        /// Whether the pixel belongs to that island ITSELF. A pixel of a row
+        /// inside a card is the row's, not the card's. Outside the picture is
+        /// no.
         public func isIsland(_ x: Int, _ y: Int, _ id: Int32) -> Bool {
             guard width > 0, x >= 0, y >= 0, x < width, y < height,
                   islands.count == width * height else { return false }
             return islands[y * width + x] == id
+        }
+
+        /// Whether the pixel is that island's or anything sitting on it, however
+        /// deep. This is what cutting a card out asks: the space a row came from
+        /// is still part of the card, and what goes back into it is the card's
+        /// own colour rather than a hole.
+        public func owns(_ x: Int, _ y: Int, _ id: Int32) -> Bool {
+            guard width > 0, x >= 0, y >= 0, x < width, y < height,
+                  islands.count == width * height else { return false }
+            var here = islands[y * width + x]
+            // Every child is numbered after its parent, so walking up strictly
+            // decreases and this cannot loop however the ancestry was built.
+            while here != 0 {
+                if here == id { return true }
+                let slot = Int(here) - 1
+                guard slot >= 0, slot < ancestors.count else { return false }
+                let up = ancestors[slot]
+                guard up < here else { return false }
+                here = up
+            }
+            return false
         }
 
         /// Whether the pixel is background. Outside the picture is no.
@@ -118,6 +168,17 @@ public enum BoxSweep {
             guard width > 0, x >= 0, y >= 0, x < width, y < height,
                   backdrop.count == width * height else { return false }
             return backdrop[y * width + x] == 1
+        }
+
+        /// Whether the pixel is what `box` is SITTING ON: the page for a box on
+        /// the page, the holder's own paint for a box on a box.
+        ///
+        /// Everything that reads round a box goes through this — the ring the
+        /// patch is decided from, the shadow, the edge read to better than a
+        /// pixel — so a row inside a card is measured against the card and
+        /// never against a page it cannot see.
+        public func isSurround(_ x: Int, _ y: Int, of box: Box) -> Bool {
+            box.parent == 0 ? isBackdrop(x, y) : isIsland(x, y, box.parent)
         }
     }
 
@@ -155,6 +216,20 @@ public enum BoxSweep {
     /// How many boxes one sweep will return.
     public static let defaultLimit = 200
 
+    /// How many boxes deep the sweep looks: a box on the page, and the boxes on
+    /// THAT one. Two.
+    ///
+    /// The line has to go somewhere, and this is where the answers stop being
+    /// things a person points at. On a settings pane, one level is the cards and
+    /// the buttons; two is the rows, switches and fields sitting on them, which
+    /// is the whole point of looking inside at all. Three is the knob inside the
+    /// switch and the chevron inside the row — parts of a control rather than
+    /// controls, and a layers list that offers them is a list you scroll past.
+    ///
+    /// Nothing is lost by stopping: the knob still comes out, INSIDE its switch,
+    /// because a box is cut whole and everything sitting on it travels with it.
+    public static let maxBoxDepth = 2
+
     /// How far a colour may sit from the middle of its neighbours and still be
     /// called one flat colour, per channel out of 255. The same tightness the
     /// patch uses to call a ring flat, so what the app calls a solid fill and
@@ -188,6 +263,13 @@ public enum BoxSweep {
 
     /// How wide a band outside a box is read to find out what is behind it.
     public static let ringWidth = 3
+
+    /// How far in from a box's own outline is still the box's own edge rather
+    /// than something sitting on it: two pixels, which is the blend a renderer
+    /// leaves plus one for the rounding to land in. Only the sweep INSIDE a box
+    /// uses it, and only to keep that box's own rim from being read as a thing
+    /// on it.
+    public static let bodyMargin = 2
 
     /// The roundest corner that will be read as a corner, in image pixels —
     /// 32 points on a 2x capture, past which nothing in real UI is rounded and
@@ -244,6 +326,8 @@ public enum BoxSweep {
 
         let minSide = Int(minElement.rounded())
         var boxes: [Box] = []
+        /// Which island each island is sitting on: `ancestors[id - 1]`.
+        var ancestors = [Int32](repeating: 0, count: found.count)
         for island in found.sorted(by: { $0.area > $1.area }) {
             let bw = island.x1 - island.x0 + 1, bh = island.y1 - island.y0 + 1
             guard bw >= minSide, bh >= minSide,
@@ -258,13 +342,158 @@ public enum BoxSweep {
             guard !reserved.contains(where: { $0.intersects(rect) && !rect.contains($0) }),
                   !boxes.contains(where: { $0.rect.intersects(rect) })
             else { continue }
-            boxes.append(Box(rect: rect, island: island.id,
-                             shape: readShape(rect, island: island.id, islands: islands,
-                                              backdrop: backdrop, field: field)))
+            let id = island.id
+            boxes.append(Box(rect: rect, island: id,
+                             shape: readShape(rect, field: field,
+                                              owns: { x, y in islands[y * w + x] == id },
+                                              surround: { x, y in backdrop[y * w + x] == 1 })))
             if boxes.count == limit { break }
         }
-        return Sweep(boxes: boxes.sorted { ($0.rect.minY, $0.rect.minX) < ($1.rect.minY, $1.rect.minX) },
-                     islands: islands, backdrop: backdrop, width: w, height: h)
+
+        // And now the same question inside every box that was taken: what is
+        // sitting on THIS one? A card holds rows, a row holds a switch, and
+        // until this loop existed every one of them came out baked into one
+        // flat picture of the card.
+        var frontier = boxes
+        var depth = 2
+        while depth <= maxBoxDepth, !frontier.isEmpty, boxes.count < limit {
+            var deeper: [Box] = []
+            for parent in frontier {
+                for kid in children(of: parent, in: regions, islands: &islands,
+                                    ancestors: &ancestors, field: field,
+                                    minSide: minSide, reserved: reserved,
+                                    taken: boxes + deeper) {
+                    let id = kid.island, holder = parent.island
+                    deeper.append(Box(
+                        rect: kid.rect, island: id,
+                        shape: readShape(kid.rect, field: field,
+                                         owns: { x, y in islands[y * w + x] == id },
+                                         surround: { x, y in islands[y * w + x] == holder }),
+                        parent: holder, depth: depth))
+                    if boxes.count + deeper.count == limit { break }
+                }
+                if boxes.count + deeper.count == limit { break }
+            }
+            boxes += deeper
+            frontier = deeper
+            depth += 1
+        }
+
+        // Outermost first, then down the page: that is the stacking order, and
+        // a row laid over the card it came off would hide it otherwise.
+        let ordered = boxes.sorted {
+            ($0.depth, $0.rect.minY, $0.rect.minX) < ($1.depth, $1.rect.minY, $1.rect.minX)
+        }
+        return Sweep(boxes: ordered, islands: islands, backdrop: backdrop,
+                     ancestors: ancestors, width: w, height: h)
+    }
+
+    /// What is sitting on `parent`: the whole sweep's question asked again, one
+    /// box in.
+    ///
+    /// The parent's own paint plays the part the page plays outside it —
+    /// whatever interrupts that colour is a thing ON the parent — so this is
+    /// the same rule with the page already known: the colour region most of the
+    /// parent is painted.
+    ///
+    /// Every pixel a child claims is RELABELLED from the parent to the child,
+    /// so the child can be cut out exactly. The parent gets them back through
+    /// `Sweep.owns`, which is what lets the space a row came from be filled with
+    /// the card's own colour rather than left as a hole.
+    static func children(of parent: Box, in regions: [Int32], islands: inout [Int32],
+                         ancestors: inout [Int32], field: PixelField, minSide: Int,
+                         reserved: [CGRect],
+                         taken: [Box]) -> [(rect: CGRect, island: Int32)] {
+        // A box the sweep could read as ONE FLAT COLOUR has nothing on it, by
+        // the definition of flat: that reading is what says every pixel three
+        // clear of its edge is the same paint. So there is nothing to look for,
+        // and on a screen full of buttons this is most of the boxes.
+        guard parent.shape == nil else { return [] }
+        let w = field.width, h = field.height
+        let x0 = Int(parent.rect.minX), y0 = Int(parent.rect.minY)
+        let bw = Int(parent.rect.width), bh = Int(parent.rect.height)
+        guard bw >= minSide + 2 * bodyMargin, bh >= minSide + 2 * bodyMargin,
+              x0 >= 0, y0 >= 0, x0 + bw <= w, y0 + bh <= h else { return [] }
+
+        // What the parent itself is painted. Counted on a coarse grid rather
+        // than pixel by pixel: the paint a box is mostly painted holds most of
+        // it, and one vote in nine settles that just as well as all nine while
+        // a card's worth of dictionary work is the single biggest cost here.
+        var votes: [Int32: Int] = [:]
+        for y in stride(from: y0, to: y0 + bh, by: 3) {
+            for x in stride(from: x0, to: x0 + bw, by: 3) where islands[y * w + x] == parent.island {
+                votes[regions[y * w + x], default: 0] += 1
+            }
+        }
+        guard let body = votes.max(by: { $0.value < $1.value })?.key else { return [] }
+
+        // The parent's pixels with the band at its own outline taken off, which
+        // is where its antialiasing lives. Without that, a header painted edge
+        // to edge joins the rim running all the way round the card and the pair
+        // reads as one piece the size of the card — so nothing is found at all.
+        //
+        // How far each pixel is from the nearest one that is not the parent's,
+        // in two sweeps rather than one erosion per pixel of margin.
+        let cap = UInt8(bodyMargin + 1)
+        var depth = [UInt8](repeating: 0, count: bw * bh)
+        for y in 0..<bh {
+            for x in 0..<bw {
+                let i = y * bw + x
+                guard islands[(y0 + y) * w + x0 + x] == parent.island else { continue }
+                depth[i] = x == 0 || y == 0
+                    ? 1 : min(cap, min(depth[i - 1], depth[i - bw]) &+ 1)
+            }
+        }
+        // Everything of the parent's that is not the parent's own paint, as
+        // connected pieces. Read in a frame one pixel bigger all round, so that
+        // nothing counts as cut off by an edge: a row really can run the whole
+        // width of the card it is in, and the card is not a picture frame.
+        let pw = bw + 2, ph = bh + 2
+        var inside = [UInt8](repeating: 1, count: pw * ph)
+        var any = false
+        for y in stride(from: bh - 1, through: 0, by: -1) {
+            for x in stride(from: bw - 1, through: 0, by: -1) {
+                let i = y * bw + x
+                guard depth[i] > 0 else { continue }
+                let back: UInt8 = x == bw - 1 || y == bh - 1
+                    ? 1 : min(cap, min(depth[i + 1], depth[i + bw]) &+ 1)
+                let here = min(depth[i], back)
+                depth[i] = here
+                guard here > UInt8(bodyMargin),
+                      regions[(y0 + y) * w + x0 + x] != body else { continue }
+                inside[(y + 1) * pw + (x + 1)] = 0
+                any = true
+            }
+        }
+        guard any else { return [] }
+        let (labels, pieces) = self.islands(notIn: inside, width: pw, height: ph)
+
+        var out: [(rect: CGRect, island: Int32)] = []
+        for piece in pieces.sorted(by: { $0.area > $1.area }) {
+            let cw = piece.x1 - piece.x0 + 1, ch = piece.y1 - piece.y0 + 1
+            guard cw >= minSide, ch >= minSide,
+                  Double(piece.area) <= maxAreaFraction * Double(bw * bh),
+                  Double(piece.area) >= minFill * Double(cw * ch)
+            else { continue }
+            let rect = CGRect(x: x0 + piece.x0 - 1, y: y0 + piece.y0 - 1,
+                              width: cw, height: ch)
+            // Same two rules as outside: never a run of text the command is
+            // already taking, and never on top of a box already found. Holding
+            // one is fine — that is what a row does to its label.
+            guard !reserved.contains(where: { $0.intersects(rect) && !rect.contains($0) }),
+                  !taken.contains(where: { $0.rect.intersects(rect) && !$0.rect.contains(rect) }),
+                  !out.contains(where: { $0.rect.intersects(rect) })
+            else { continue }
+            let id = Int32(ancestors.count + 1)
+            ancestors.append(parent.island)
+            for y in piece.y0...piece.y1 {
+                for x in piece.x0...piece.x1 where labels[y * pw + x] == piece.id {
+                    islands[(y0 + y - 1) * w + x0 + x - 1] = id
+                }
+            }
+            out.append((rect, id))
+        }
+        return out.sorted { ($0.rect.minY, $0.rect.minX) < ($1.rect.minY, $1.rect.minX) }
     }
 
     // MARK: - Patches of one colour
@@ -430,15 +659,21 @@ public enum BoxSweep {
     // MARK: - Is it really a shape?
 
     /// The rounded rectangle a box can honestly be turned into, or nil.
-    static func readShape(_ rect: CGRect, island: Int32, islands: [Int32],
-                          backdrop: [UInt8], field: PixelField) -> Shape? {
+    ///
+    /// `owns` says which pixels are the box's; `surround` says which are what it
+    /// is SITTING ON — the page for a box on the page, the card's own paint for
+    /// a row inside a card. A row read against a page it cannot see would have
+    /// no reading at all.
+    static func readShape(_ rect: CGRect, field: PixelField,
+                          owns: (Int, Int) -> Bool,
+                          surround: (Int, Int) -> Bool) -> Shape? {
         let w = field.width, h = field.height
         let x0 = Int(rect.minX), y0 = Int(rect.minY)
         let bw = Int(rect.width), bh = Int(rect.height)
         func isIsland(_ x: Int, _ y: Int) -> Bool {
             let px = x0 + x, py = y0 + y
             guard px >= 0, py >= 0, px < w, py < h else { return false }
-            return islands[py * w + px] == island
+            return owns(px, py)
         }
 
         // What is behind the box, and how far the box's own paint sits from it.
@@ -452,8 +687,7 @@ public enum BoxSweep {
             for x in (-ringWidth)..<(bw + ringWidth) {
                 guard x < 0 || y < 0 || x >= bw || y >= bh else { continue }
                 let px = x0 + x, py = y0 + y
-                guard px >= 0, py >= 0, px < w, py < h, backdrop[py * w + px] == 1
-                else { continue }
+                guard px >= 0, py >= 0, px < w, py < h, surround(px, py) else { continue }
                 behind.append(field.color(px, py))
             }
         }

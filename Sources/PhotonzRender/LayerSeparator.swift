@@ -62,11 +62,12 @@ public enum LayerSeparator {
     public struct Result: Sendable {
         /// The picture with every accepted piece's space filled in.
         public let background: CGImage
-        /// The pieces that came out, BOTTOM-MOST FIRST: the boxes down the
-        /// page, then the runs of text in reading order. That order is the
-        /// stacking order, and it is the only one that works — a label sits ON
-        /// the button it came off, so a button laid over its own label would
-        /// hide it the instant the command finished.
+        /// The pieces that came out, BOTTOM-MOST FIRST: the boxes outermost
+        /// first and then down the page, then the runs of text in reading
+        /// order. That order is the stacking order, and it is the only one that
+        /// works — a row sits ON the card it came off and a label sits ON the
+        /// button, so a card laid over its own rows would hide them the instant
+        /// the command finished.
         public let pieces: [Piece]
         /// How many things were found but left in the picture, because their
         /// surroundings did not justify a fill or the app could not read them
@@ -109,6 +110,22 @@ public enum LayerSeparator {
         public var runs: [Piece] { pieces.filter { $0.kind == .text } }
         /// Just the boxes.
         public var boxes: [Piece] { pieces.filter { $0.kind == .box } }
+    }
+
+    /// Everything read off the picture about one box before anything is cut.
+    ///
+    /// The whole point of writing it down rather than acting on it straight
+    /// away: a row inside a card has to be READ while the card is still whole,
+    /// and the card has to be CUT once the row is out of it. One list, filled in
+    /// outermost first and spent innermost first.
+    private struct BoxPlan {
+        let box: BoxSweep.Box
+        /// The box plus whatever its shadow reaches: the space to be filled in.
+        let grown: CGRect
+        /// What goes in that space — the page for a card, the card's own colour
+        /// for a row inside it.
+        let fill: PatchFill
+        let shadow: ShadowRead.Reading?
     }
 
     /// How much of the visible gap a run of text is grown by before anything is
@@ -212,47 +229,117 @@ public enum LayerSeparator {
             let found = BoxSweep.sweep(in: field, avoiding: spokenFor, minElement: minElement)
             // Same ceiling, its own much smaller number: a box is a container,
             // and thirty groups to open is already more than a list wants.
-            let takeable = SeparateBudget.choose(found.boxes.map(\.rect), limit: SeparateBudget.maxBoxes)
-            crowded += takeable.crowdedOut
-            var boxFills: [(rect: CGRect, fill: PatchFill)] = []
-            for box in takeable.kept.map({ found.boxes[$0] }) {
+            //
+            // Spent OUTERMOST FIRST. A screenshot with more cards in it than the
+            // ceiling allows should come apart into cards, not into eight cards
+            // and the switches off the ninth, so every level takes what is left
+            // after the one above it — and a box sitting on a card that did not
+            // come out is not offered at all.
+            var keptIndexes: [Int] = []
+            var keptIslands: Set<Int32> = []
+            let deepest = found.boxes.map(\.depth).max() ?? 1
+            for depth in 1...max(1, deepest) {
+                let level = found.boxes.enumerated().filter { $0.element.depth == depth }
+                let offered = level.filter {
+                    $0.element.parent == 0 || keptIslands.contains($0.element.parent)
+                }
+                crowded += level.count - offered.count
+                let room = SeparateBudget.maxBoxes - keptIndexes.count
+                guard room > 0 else { crowded += offered.count; continue }
+                let choice = SeparateBudget.choose(offered.map(\.element.rect), limit: room)
+                crowded += choice.crowdedOut
+                for index in choice.kept {
+                    keptIndexes.append(offered[index].offset)
+                    keptIslands.insert(offered[index].element.island)
+                }
+            }
+            let takeable = keptIndexes.sorted()
+
+            // Pass one, OUTERMOST FIRST: everything a box needs read off the
+            // picture before a single pixel of it is cut or painted. Reading it
+            // all up front is what lets a row be cut out of its card and the
+            // card still come out whole — the row's own colour is known before
+            // the card is asked what it looks like without it.
+            var plans: [BoxPlan] = []
+            var planned: Set<Int32> = []
+            for box in takeable.map({ found.boxes[$0] }) {
+                // A box sitting on a box that is staying in the picture stays
+                // too. Taking the switch off a card that never came out would
+                // leave a hole in the screenshot with nothing to fill it.
+                guard box.parent == 0 || planned.contains(box.parent) else {
+                    skipped += 1
+                    continue
+                }
                 // A card usually sits on a soft shadow, and a shadow is the one
                 // thing around a box that neither agrees with itself nor ramps
                 // evenly — so without reading it, every shadowed card in every
                 // screenshot stays in the picture. Read as a real shadow it
                 // comes off WITH the card, and the space underneath is plain
                 // page again rather than a grey halo of a card that has moved.
-                let shadow = ShadowRead.read(box.rect, in: field,
-                                             isBackdrop: { found.isBackdrop($0, $1) })
+                let surround: (Int, Int) -> Bool = { found.isSurround($0, $1, of: box) }
+                let shadow = ShadowRead.read(box.rect, in: field, isBackdrop: surround)
                 let out = shadow.map { max(1, Int($0.reach.rounded(.up))) } ?? 1
                 let grown = box.rect.insetBy(dx: CGFloat(-out), dy: CGFloat(-out))
                     .integral.intersection(bounds)
                 guard !grown.isNull,
                       !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
-                      !boxFills.contains(where: { $0.rect.intersects(grown) }),
-                      shadow == nil || onlyBackdrop(grown, outside: box.rect, in: found)
+                      // Overlapping another box is still refused; HOLDING one,
+                      // or being held by one, is the whole point of this pass.
+                      !plans.contains(where: { $0.grown.intersects(grown)
+                          && !grown.contains($0.grown) && !$0.grown.contains(grown) }),
+                      shadow == nil || onlySurround(grown, outside: box.rect, is: surround)
                 else { skipped += 1; continue }
                 guard let ring = ring(around: grown, in: pixels, width: w, height: h,
-                                      keeping: { found.isBackdrop($0, $1) }),
+                                      keeping: surround),
                       let fill = PatchDecision.decide(ring) else { skipped += 1; continue }
-                // What was under the box's own antialiased rim. With a shadow
-                // that is the page ALREADY DARKENED by the shadow, not the bare
-                // page: read against the bare page a card's edge comes out too
-                // faint and dissolves into whatever it is dragged onto.
-                let under = background(fill, over: grown, shadow: shadow, box: box.rect)
-                let body: Piece.Body
-                if let shape = box.shape {
-                    body = .shape(shape)
-                } else if let cut = cutBox(box, from: pixels, width: w, height: h,
-                                           islands: found, under: under) {
-                    body = .picture(cut)
-                } else {
-                    skipped += 1
-                    continue
+                planned.insert(box.island)
+                plans.append(BoxPlan(box: box, grown: grown, fill: fill, shadow: shadow))
+            }
+
+            // Pass two, INNERMOST FIRST: cut. A box is cut with the space each
+            // of its own children came from painted in that box's colour, so a
+            // card comes out whole rather than with a switch-shaped hole in it,
+            // and the switch is not in the picture twice.
+            var bodies: [Int32: Piece.Body] = [:]
+            for depth in stride(from: plans.map(\.box.depth).max() ?? 0, through: 1, by: -1) {
+                for plan in plans where plan.box.depth == depth {
+                    let box = plan.box
+                    if let shape = box.shape {
+                        bodies[box.island] = .shape(shape)
+                        continue
+                    }
+                    let holes = plans
+                        .filter { $0.box.parent == box.island && bodies[$0.box.island] != nil }
+                        .map { (rect: $0.grown, fill: $0.fill) }
+                    // What was under the box's own antialiased rim. With a
+                    // shadow that is the page ALREADY DARKENED by the shadow,
+                    // not the bare page: read against the bare page a card's
+                    // edge comes out too faint and dissolves into whatever it
+                    // is dragged onto.
+                    let under = background(plan.fill, over: plan.grown, shadow: plan.shadow,
+                                           box: box.rect)
+                    guard let cut = cutBox(box, from: pixels, width: w, height: h,
+                                           islands: found, under: under, holes: holes)
+                    else { continue }
+                    bodies[box.island] = .picture(cut)
                 }
-                boxPieces.append(Piece(rect: box.rect, kind: .box, body: body,
-                                       shadow: shadow?.style))
-                boxFills.append((grown, fill))
+            }
+
+            // Pass three, outermost first again: who actually came out. A box
+            // whose holder could not be cut stays in the picture with it.
+            var taken: Set<Int32> = []
+            var boxFills: [(rect: CGRect, fill: PatchFill)] = []
+            for plan in plans {
+                guard let body = bodies[plan.box.island],
+                      plan.box.parent == 0 || taken.contains(plan.box.parent)
+                else { skipped += 1; continue }
+                taken.insert(plan.box.island)
+                boxPieces.append(Piece(rect: plan.box.rect, kind: .box, body: body,
+                                       shadow: plan.shadow?.style))
+                // Only what was sitting on the PAGE leaves a space in it. A row
+                // came out of its card, and the card's own space is painted over
+                // the lot of it in one go.
+                if plan.box.depth == 1 { boxFills.append((plan.grown, plan.fill)) }
             }
             for (rect, fill) in boxFills {
                 paint(fill, into: &pixels, width: w, rect: rect)
@@ -380,15 +467,30 @@ public enum LayerSeparator {
     /// renderer antialiased is worked out, and each of those pixels is measured
     /// against the paint right beside it, so a card that is barely lighter than
     /// its page keeps its edge instead of dissolving into it.
+    ///
+    /// `holes` are the spaces the boxes sitting ON this one have just been cut
+    /// out of, each with the colour this box is painted there. They are filled
+    /// in rather than read, so a card whose switch has come out comes out itself
+    /// as a whole card — no switch baked into it, and no switch-shaped hole.
     static func cutBox(_ box: BoxSweep.Box, from pixels: [UInt8], width w: Int, height h: Int,
-                       islands: BoxSweep.Sweep, under: (Int, Int) -> RGBA) -> CGImage? {
+                       islands: BoxSweep.Sweep, under: (Int, Int) -> RGBA,
+                       holes: [(rect: CGRect, fill: PatchFill)] = []) -> CGImage? {
         let x0 = Int(box.rect.minX), y0 = Int(box.rect.minY)
         let bw = Int(box.rect.width), bh = Int(box.rect.height)
         guard bw > 0, bh > 0 else { return nil }
-        func mine(_ x: Int, _ y: Int) -> Bool { islands.isIsland(x0 + x, y0 + y, box.island) }
+        // `owns` rather than `isIsland`: the pixels of a row inside this card
+        // are labelled the row's, and they are still the card's space.
+        func mine(_ x: Int, _ y: Int) -> Bool { islands.owns(x0 + x, y0 + y, box.island) }
         func rim(_ x: Int, _ y: Int) -> Bool {
             mine(x, y) && (!mine(x - 1, y) || !mine(x + 1, y)
                 || !mine(x, y - 1) || !mine(x, y + 1))
+        }
+        /// This box's own colour where a child was, or nil where there was none.
+        func patch(_ px: Int, _ py: Int) -> RGBA? {
+            let point = CGPoint(x: Double(px) + 0.5, y: Double(py) + 0.5)
+            guard let hole = holes.first(where: { $0.rect.contains(point) }) else { return nil }
+            return hole.fill.color(u: (point.x - hole.rect.minX) / hole.rect.width,
+                                   v: (point.y - hole.rect.minY) / hole.rect.height)
         }
 
         var out = [UInt8](repeating: 0, count: bw * bh * 4)
@@ -396,7 +498,7 @@ public enum LayerSeparator {
         for y in 0..<bh {
             for x in 0..<bw where mine(x, y) {
                 let index = y * bw + x
-                let pixel = color(pixels, w, x0 + x, y0 + y)
+                let pixel = patch(x0 + x, y0 + y) ?? color(pixels, w, x0 + x, y0 + y)
                 let under = under(x0 + x, y0 + y)
                 var alpha = 1.0
                 if rim(x, y) {
@@ -424,19 +526,19 @@ public enum LayerSeparator {
     // MARK: - What was behind a box
 
     /// Whether everything the repair will paint over, outside the box itself,
-    /// is background.
+    /// is what the box was sitting on — the page for a card, the card's own
+    /// paint for a row inside it.
     ///
     /// Asked only of a box with a shadow, because that is the one whose repair
     /// reaches: a shadow's reach can be seventeen pixels, and painting that
     /// over a control sitting eight pixels below the card would erase it. A box
-    /// whose repair would reach anything that is not page is left in the
-    /// picture instead.
-    static func onlyBackdrop(_ grown: CGRect, outside box: CGRect,
-                             in found: BoxSweep.Sweep) -> Bool {
+    /// whose repair would reach anything else is left in the picture instead.
+    static func onlySurround(_ grown: CGRect, outside box: CGRect,
+                             is surround: (Int, Int) -> Bool) -> Bool {
         for y in Int(grown.minY)..<Int(grown.maxY) {
             for x in Int(grown.minX)..<Int(grown.maxX) {
                 guard !box.contains(CGPoint(x: Double(x) + 0.5, y: Double(y) + 0.5)) else { continue }
-                guard found.isBackdrop(x, y) else { return false }
+                guard surround(x, y) else { return false }
             }
         }
         return true

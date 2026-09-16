@@ -117,9 +117,10 @@ struct BoxSweepTests {
         #expect(BoxSweep.sweep(in: scene.field).boxes.isEmpty)
     }
 
-    @Test func aThingSittingOnABoxComesOutInsideIt() {
-        // One level, deliberately. The card is what a person grabs; the two
-        // buttons on it travel with it rather than arriving as their own rows.
+    @Test func theThingsSittingOnABoxComeOutUnderIt() throws {
+        // The card comes out, and so does each button ON it, saying the card
+        // is what holds it. The card is still what a person grabs to move the
+        // lot; a button is there for when they want just the button.
         var scene = Scene(width: 500, height: 400, background: Self.page)
         scene.rounded(CGRect(x: 40, y: 40, width: 420, height: 240), radius: 12,
                       Self.card, over: Self.page)
@@ -128,8 +129,76 @@ struct BoxSweepTests {
         scene.rounded(CGRect(x: 240, y: 80, width: 120, height: 44), radius: 8,
                       Self.blue, over: Self.card)
         let boxes = BoxSweep.sweep(in: scene.field).boxes
-        #expect(boxes.count == 1)
-        #expect(boxes.first?.rect == CGRect(x: 40, y: 40, width: 420, height: 240))
+        #expect(boxes.count == 3)
+        // Outermost first, so a card is never laid over its own buttons.
+        let card = try #require(boxes.first)
+        #expect(card.rect == CGRect(x: 40, y: 40, width: 420, height: 240))
+        #expect(card.parent == 0)
+        #expect(card.depth == 1)
+        let buttons = boxes.dropFirst()
+        #expect(buttons.allSatisfy { $0.parent == card.island && $0.depth == 2 })
+        #expect(buttons.map(\.rect) == [CGRect(x: 80, y: 80, width: 120, height: 44),
+                                        CGRect(x: 240, y: 80, width: 120, height: 44)])
+    }
+
+    @Test func aRowInsideACardIsReadAgainstTheCardAndNotThePage() throws {
+        // The row is only four levels off the card and miles off the page. Read
+        // against the page it would be a shape with no edge anywhere near where
+        // the renderer drew one; read against the card it is a row.
+        let row = RGBA(r: 0.93, g: 0.93, b: 0.95)
+        var scene = Scene(width: 500, height: 400, background: Self.page)
+        scene.rounded(CGRect(x: 40, y: 40, width: 420, height: 240), radius: 12,
+                      Self.card, over: Self.page)
+        scene.rounded(CGRect(x: 60, y: 80, width: 380, height: 56), radius: 10,
+                      row, over: Self.card)
+        let boxes = BoxSweep.sweep(in: scene.field).boxes
+        #expect(boxes.count == 2)
+        let inner = try #require(boxes.last)
+        #expect(inner.rect == CGRect(x: 60, y: 80, width: 380, height: 56))
+        let shape = try #require(inner.shape)
+        #expect(abs(shape.fill.r - row.r) < 0.01)
+        #expect(abs(shape.radii.topLeft - 10) <= 1)
+    }
+
+    @Test func theSweepStopsTwoBoxesDeep() {
+        // A card, a row on it, and a chip on the row. The chip is a part of the
+        // row rather than a thing in its own right, and it is not lost: it comes
+        // out INSIDE the row, because a box is cut whole.
+        let row = RGBA(r: 0.93, g: 0.93, b: 0.95)
+        var scene = Scene(width: 500, height: 400, background: Self.page)
+        scene.rounded(CGRect(x: 40, y: 40, width: 420, height: 240), radius: 12,
+                      Self.card, over: Self.page)
+        scene.rounded(CGRect(x: 60, y: 80, width: 380, height: 120), radius: 10,
+                      row, over: Self.card)
+        scene.rounded(CGRect(x: 90, y: 110, width: 120, height: 60), radius: 8,
+                      Self.blue, over: row)
+        let boxes = BoxSweep.sweep(in: scene.field).boxes
+        #expect(boxes.map(\.depth) == [1, 2])
+        #expect(!boxes.contains { $0.rect == CGRect(x: 90, y: 110, width: 120, height: 60) })
+    }
+
+    @Test func aRowsPixelsAreItsOwnAndStillTheCardsSpace() throws {
+        let row = RGBA(r: 0.93, g: 0.93, b: 0.95)
+        var scene = Scene(width: 500, height: 400, background: Self.page)
+        scene.rounded(CGRect(x: 40, y: 40, width: 420, height: 240), radius: 12,
+                      Self.card, over: Self.page)
+        scene.rounded(CGRect(x: 60, y: 80, width: 380, height: 56), radius: 10,
+                      row, over: Self.card)
+        let sweep = BoxSweep.sweep(in: scene.field)
+        let card = try #require(sweep.boxes.first)
+        let inner = try #require(sweep.boxes.last)
+        // A pixel in the middle of the row is the ROW's, so the row can be cut
+        // out exactly...
+        #expect(sweep.isIsland(250, 108, inner.island))
+        #expect(!sweep.isIsland(250, 108, card.island))
+        // ...and it is still the card's space, which is what fills it back in
+        // with the card's own colour instead of leaving a hole.
+        #expect(sweep.owns(250, 108, card.island))
+        #expect(sweep.owns(250, 108, inner.island))
+        // What the row is sitting on is the card, not the page.
+        #expect(sweep.isSurround(100, 60, of: inner))
+        #expect(!sweep.isSurround(10, 10, of: inner))
+        #expect(sweep.isSurround(10, 10, of: card))
     }
 
     @Test func aPanelFillingThePictureIsLookedInsideRatherThanTakenWhole() {

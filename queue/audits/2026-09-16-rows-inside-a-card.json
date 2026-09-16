@@ -1,0 +1,30 @@
+{
+  "feature": "Separate into Layers looks inside a card",
+  "epic": "ui-building",
+  "summary": "Separate into Layers now takes a card apart as well as taking it off the page: a row, a switch or a field sitting on a card comes out as its own layer, tucked under the card in the layers list. Picking the card up still carries everything on it; picking a row up carries only that row and its label.",
+  "setup": "Photonz Dev, Experiments window, release Next. Separate into Layers and Layer groups are both on by default. Any screenshot of a settings pane or a form works; a capture with cards or grouped rows in it shows the most.",
+  "try": [
+    { "do": "Open a screenshot of a settings pane or a form." },
+    { "do": "Right click the picture and choose Separate into Layers." },
+    { "do": "Open the twist on a card row in the layers list and read what is under it." },
+    { "do": "Open the twist on one of those rows in turn, to see the label that sits on it." },
+    { "do": "Drag the card row on the canvas: everything on it moves with it." },
+    { "do": "Drag one row inside the card: only that row and what is on it moves, and the card keeps its own colour where the row was." },
+    { "do": "Press Command Z once and watch the whole separation go back in one step." }
+  ],
+  "evaluate": [
+    "Opening the card shows its rows AND its labels in one list. Is that the right amount to show at once, or does the card want to open into rows only?",
+    "It stops two boxes deep, so the knob inside a switch stays part of the switch. Is that where you would have drawn the line?",
+    "A text field on a card now comes out as a real rounded rectangle you can recolour and resize, rather than a picture. Is that what you expected of it?",
+    "The layers list calls every one of these Box 5, Box 6, Box 7. With six of them under one card, can you tell which is which without clicking them?",
+    "A screenshot with more cards than the command takes now spends the whole ceiling on cards before any of their rows. Is that the trade you would make?"
+  ],
+  "rough": [
+    "The screen on this Mac was locked for the whole of this task, so not one scripted walk could run and there is no picture of it at all, real or offscreen. Everything here is from the unit tests, which do run it against the real 2x settings pane capture end to end. A sweep has been asked for.",
+    "Nobody has watched this happen in the app. The tests say the fixture comes apart into the two cards, the two buttons, four switches, two text fields and nine labels, nested three deep, and that a card has no hole in it where a switch came out. They cannot say whether opening that card in the layers panel feels good.",
+    "Six rows appearing under one card makes the panel taller in a way this change did not try to answer. Folded into the open task about how a hundred and forty new rows should arrive in the list.",
+    "A control that nearly fills the thing it is on is left in it, because there is no clean band of the holder around it to read its edge against. That is why a switch keeps its knob. It is the right answer here and it was not designed, it fell out, so a control with tight padding may be left behind for the same reason and look arbitrary.",
+    "A row painted right up to the edge of its card loses two pixels on that side, because the band at the card's own outline is taken as the card's antialiasing. Nothing in the fixture does this; a full width table header would.",
+    "Separating a 12.2 megapixel capture went from 864 ms to 959 ms, about a tenth. The real 1.4 MP fixture went 137 ms to 155 ms. Still one command's worth of work off the main thread, but it is not free."
+  ]
+}

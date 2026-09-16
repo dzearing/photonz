@@ -112,12 +112,48 @@ behind everything — and whatever interrupts that colour is a thing.
 3. **The islands** are the connected pieces of everything that is not the page.
    One touching the edge of the picture is dropped: the frame cut it in half, so
    its real shape is not in the picture and the app does not guess it.
-4. **One level.** What sits on a box travels with it. That is the whole answer to
-   the question this feature lives or dies on — WHICH of the nested rungs are
-   worth becoming layers. A settings pane has a rung for the window, one for the
-   pane, one for every group and one for every row; taking all of them produces
-   a tree nobody wants. Taking one level produces the cards and the buttons,
-   which is what a person points at.
+4. **Two levels.** The boxes on the page, and then the boxes on THOSE. This is
+   the question the feature lives or dies on — WHICH of the nested rungs are
+   worth becoming layers — and it was answered with "one" until the layers list
+   could nest. A settings pane has a rung for the window, one for the pane, one
+   for every group and one for every row, and taking all of them as a flat pile
+   is a tree nobody wants; taking them as a TREE, where a card closes up into
+   one row, is shorter than the flat list was.
+
+   So the same question is asked again inside every box that was taken: the
+   parent's own paint plays the part the page plays outside it, and whatever
+   interrupts it is a thing on the parent. On the fixture that turns four boxes
+   into ten — the two cards and two buttons, plus four switches and two text
+   fields nested under the cards, with the fields now real rounded rectangles
+   because they are finally read against the card rather than against a page
+   they cannot see.
+
+   It stops at two (`BoxSweep.maxBoxDepth`), which is where the answers stop
+   being things a person points at: three is the knob inside the switch and the
+   chevron inside the row. Nothing is lost by stopping, because a box is cut
+   whole — the knob still comes out, inside its switch.
+
+   Three things keep the tree honest, and all three earn their place:
+
+   - A box that read as ONE FLAT COLOUR is never looked inside. That reading
+     already says every pixel three clear of its edge is the same paint, so
+     there is nothing in there, and on a screen full of buttons that is most of
+     the boxes.
+   - The band two pixels in from the parent's own outline is the parent's
+     antialiasing, not a thing on it (`bodyMargin`). Without taking it off, a
+     header painted edge to edge joins the rim running all the way round the
+     card and the pair reads as one piece the size of the card.
+   - A child needs a clean ring of its parent to be read against, same as
+     anything else. That is what refuses the knob inside a switch when the
+     switch IS taken on its own: the knob nearly fills the track, so the band
+     round it catches the track's own rounded ends and agrees with nothing.
+     Something that nearly fills its holder stays in it.
+
+   A child is cut out of its PARENT: its edge is read against the card, the
+   space it leaves is filled with the card's own colour, and only what was
+   sitting on the PAGE leaves a space in the page. So a card comes out whole
+   rather than with a switch-shaped hole in it, and the switch is not in the
+   picture twice. If a card is left behind, everything on it is left behind too.
 5. **Something that fills the picture IS the picture.** A screenshot of one
    window offers one island the size of the frame. Rather than hand back the
    whole window, whatever that island is mostly painted becomes background too
@@ -349,13 +385,20 @@ to end, reading the picture plus separating it:
 
 | capture | reading | separating |
 | --- | --- | --- |
-| 1.4 MP settings pane | 37 ms | 146 ms |
+| 1.4 MP settings pane | 37 ms | 155 ms |
 | 5.1 MP web dashboard | 73 ms | 73 ms † |
 | 7.7 MP whole screen at 2x | 138 ms | 98 ms † |
-| 12.2 MP tiled fixture | 110 ms | 905 ms |
+| 12.2 MP tiled fixture | 110 ms | 959 ms |
 
 † measured before the shadow slice and not re-measured since; both will have
 gone up in the same way the other two rows did.
+
+Looking inside the boxes added about a tenth on both re-measured rows (137 to
+155 ms and 864 to 959 ms, measured back to back on the same machine). That is
+one more pass over each box that was taken, and it is only paid on the boxes
+that could hold something: a box that read as one flat colour is skipped
+outright, and the parent's own paint is counted on a one-in-nine grid rather
+than pixel by pixel, which together cost about a third of the first attempt.
 
 The two rows that were re-measured went up because the CARDS now come out. Most
 of that is work the command could not do before: cutting two 1312 x 264 cards to

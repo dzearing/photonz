@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 470,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T08:27:18.923Z",
-  "updated": "2026-09-15T12:14:53.788Z",
+  "updated": "2026-09-16T10:57:02.875Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the hierarchy slice (text-inside-a-box-comes-out-inside-that-box, landed 2026-09-13). The nesting RULE is done and depth-unlimited: PhotonzCore/LayerNesting.swift nests by containment, tested three deep. What is missing is detection. BoxSweep.sweep takes ONE level: islands are connected components of everything that is not the page backdrop, so a button sitting on a card is part of the card island and can never be a box of its own. The design doc says so deliberately (BoxSweep.swift:13, docs/design/separate-into-layers.md, The boxes, rule 4) because without hierarchy a deep tree was a pile nobody wanted. With hierarchy that reason is gone: a card that collapses to one row in the layers list is SHORTER than the flat list, not longer.\n\nThe machinery to descend already exists in the file. BoxSweep already grows the backdrop by an island dominant colour when the island fills the picture (maxDescents, dominantRegion); doing the same INSIDE an accepted box gives its children. Two things are genuinely new: (1) a child box must be cut out of its PARENT pixels and the parent own hole patched, not the page one, since LayerSeparator.cutBox today keeps every island pixel including the child; (2) a child whose parent was skipped must be skipped too, or the fixture switches would come out of cards that stayed in the picture. Keeping that rule is what should keep the fixture at 2 boxes and 9 runs.\n\nThis is a scope question as much as a code one: on a settings pane it turns 2 boxes into 2 boxes plus three switches and two fields nested under two cards. Worth asking the user in the audit before going wide.",
@@ -44,6 +44,51 @@
     {
       "t": "2026-09-15T12:14:53.787Z",
       "note": "seq 430 -> 470"
+    },
+    {
+      "t": "2026-09-16T10:14:44.746Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T10:57:02.483Z",
+      "note": "Adversarial review before building. The mock-free question here was scope: descending without a limit turns a settings pane into the tree the design doc refused in 2026-09-12. Three limits earn their place and all three were needed. (1) maxBoxDepth 2: a box on the page and the boxes on that, no further, because level three is the knob inside the switch and the chevron inside the row. Nothing is lost, since a box is cut whole and the knob still comes out inside its switch. (2) A box that read as ONE FLAT COLOUR is never looked inside, because that reading already says every pixel three clear of its edge is the same paint. (3) A child needs a clean ring of its parent to read its edge against, which is what refuses a knob that nearly fills its track. Limit 3 was not designed, it fell out of the existing patch rule, and it is the one that keeps the drawn switch test passing unchanged."
+    },
+    {
+      "t": "2026-09-16T10:57:02.528Z",
+      "note": "Built. BoxSweep asks its own rule a second time inside every box it took: the parents own dominant colour region plays the part the page plays outside, and whatever interrupts it is a child. Box gains parent and depth; Sweep gains ancestors plus owns() and isSurround(). islands[] now labels each pixel with the DEEPEST island, so a row can be cut exactly, while owns() gives the card them back so it has no hole. readShape takes owns/surround closures, so a row is read against its card rather than against a page it cannot see - which is why the fixtures two text fields now come out as real rounded rectangles."
+    },
+    {
+      "t": "2026-09-16T10:57:02.569Z",
+      "note": "LayerSeparator is three passes. Outermost first: read everything a box needs (shadow, grown rect, ring, fill) while the picture is still whole, refusing a box whose holder is staying in the picture. Innermost first: cut, with each parent given its children's rects and fills as holes so it comes out whole rather than with a switch-shaped hole and the switch is not in the picture twice. Outermost first again: decide who actually came out, and paint only what was sitting on the PAGE, since a row's space is inside its card and gets painted over anyway."
+    },
+    {
+      "t": "2026-09-16T10:57:02.613Z",
+      "note": "The box ceiling is now spent outermost first. Before, one choose() over all boxes could keep the switches off the biggest card and crowd out the ninth card; now each level takes what is left after the one above it, and a box on a card that did not come out is not offered at all. Pinned by theCeilingIsSpentOnTheCardsBeforeWhatIsOnThem."
+    },
+    {
+      "t": "2026-09-16T10:57:02.655Z",
+      "note": "Fixture: 4 boxes to 10 (2 cards, 2 buttons, 4 switches, 2 fields), 13 pieces to 19, still exactly 9 runs of text and the same two buttons. Tree is card > switches + labels, and card > row > label three deep on the drawn scene. Full suite green, 7578 tests."
+    },
+    {
+      "t": "2026-09-16T10:57:02.699Z",
+      "note": "Perf. 12.2 MP tiled fixture 864 ms to 959 ms and the 1.4 MP fixture 137 ms to 155 ms, release, measured back to back on this machine. The first attempt was 1002 ms; skipping boxes that read as one flat colour, counting the parent's paint on a one-in-nine grid, and replacing the two erosion passes with a two-sweep distance transform gave a third of it back. Table in docs/design/separate-into-layers.md updated."
+    },
+    {
+      "t": "2026-09-16T10:57:02.743Z",
+      "note": "Could not run a single walk: the Mac's screen was locked for the whole task, so Scripts/playtest-all.sh separate reported COULD NOT RUN. No pictures, real or offscreen. Asked for a sweep with the reason."
+    },
+    {
+      "t": "2026-09-16T10:57:02.786Z",
+      "note": "left rough: a row painted right up to the edge of its card loses two pixels on that side, because the band at the card's own outline is taken as the card's own antialiasing (BoxSweep.bodyMargin). Nothing in the fixture does it; a full width table header would. Not filed: no capture we have shows it and a person would not notice two pixels."
+    },
+    {
+      "t": "2026-09-16T10:57:02.829Z",
+      "note": "left rough: the ring rule that refuses a knob inside a switch will also refuse a control with tight padding inside a card, and will look arbitrary when it does. Not filed: it is the conservative direction (the thing stays in its holder rather than coming out wrong) and nothing we have reproduces it."
+    },
+    {
+      "t": "2026-09-16T10:57:02.874Z",
+      "note": "Follow-up folded, not filed: six rows under one card makes the layers panel taller, which belongs to the open task find-out-how-a-hundred-and-forty-new-rows-should. Logged there with the new numbers."
     }
-  ]
+  ],
+  "started": "2026-09-16T10:14:44.745Z"
 }
