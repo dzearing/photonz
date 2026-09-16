@@ -1,0 +1,26 @@
+{
+  "feature": "A stalled loop tells the person who can clear it",
+  "epic": "unmanned-loop",
+  "summary": "When the build loop stops on something only you can fix (the spend limit, or a sign-in) it now raises a macOS notification saying what is wrong and the one thing that ends it, instead of saying it only in its own terminal window. It says it once when the stall starts, once more each day it lasts, and nothing at all when it recovers.",
+  "setup": "Nothing to install. Heads up: verifying this fired six real notifications at you this evening saying the loop had stopped. It had not. Those were the test, not a stall.",
+  "try": [
+    { "do": "Run queue/bin/failure-drill.sh and watch scenario 6." },
+    { "do": "Read the three lines it prints: four refusals, the same stall a day later, then the limit raised." },
+    { "do": "See what the real notification looks like: PHOTONZ_QUEUE_DIR=$(mktemp -d) PHOTONZ_GO_LOOP_DEFS_ONLY=1 zsh -c 'source queue/bin/go-loop.sh; notify_person spend 0'" },
+    { "do": "Run the same line with signin 30 instead of spend 0, for the sign-in wording a day and a bit in." },
+    { "do": "Read the spend-limit bullet in queue/README.md under Failure handling." }
+  ],
+  "evaluate": [
+    "Read as a banner over whatever you are doing, does 'Photonz build loop has stopped' tell you enough to decide whether to act right now?",
+    "Is 'Raise it at claude.ai/settings/usage, or wait for the reset' the thing you would actually go and do, or would you want the reset time in the notification itself?",
+    "Once at the start and once a day after: is that the right amount of nagging for something that cost sixty two hours, or should the second one come sooner?",
+    "Should raising the limit really be silent, or would you want one 'building again' notification so you know it took?",
+    "The sound is Basso. At three in the morning, is a sound right here, or should this one be quiet?"
+  ],
+  "rough": [
+    "No screenshot of the notification: macOS refuses screen capture to this terminal, so the proof is the system log instead. It records the notification presented as a banner with sound and delivered to the alert, lock screen and Notification Center.",
+    "If you have notifications switched off for Script Editor, this is silently dropped and the only trace is a line in queue/loop.log. The loop cannot tell the difference and does not try to.",
+    "The spend limit landing mid-task, with exactly one task in the queue, still parks that task after three tries and then the loop idles quietly. The first notification fires, the day-later one never does, because nothing is retrying to notice. With two or more tasks the streak blames the environment, nothing is parked, and the daily notice works.",
+    "Found and fixed on the way: the failure drill's own digest checks read today's date in UTC while the loop names digests after the local date, so every evening after 5pm Pacific three scenarios failed on source that was fine. The loop's own regression check was broken for seven hours a day."
+  ]
+}

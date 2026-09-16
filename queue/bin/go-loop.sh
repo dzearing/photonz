@@ -21,6 +21,9 @@
 #                         user's dev app after a task lands app code. Default 1.
 #   PHOTONZ_DIGEST_HOUR   earliest local hour for the daily digest. Default 5
 #                         (drills set 0 so the digest pass runs whenever).
+#   PHOTONZ_STALL_RENOTICE  seconds a stall on a refusal only a person can clear
+#                         (spend limit, sign-in) must last before they are told
+#                         a second time. Default 86400; drills set it low.
 #   PHOTONZ_LOOP_RELOAD   0 to stop the loop adopting edits to this file
 #                         between tasks. Default 1.
 #   PHOTONZ_LOOP_ITERS    set by the loop on itself across a reload; not for
@@ -80,7 +83,48 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
 # run that ended in one is deferred, never stubbed.
 record_exit() { # $1 = task id or "-", $2 = exit code
   OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0; SIGNIN=0; REASON=""
+  NOTIFY=0; STALLHOURS=0
   eval "$(Q runner-exit "$1" "$2" --reason "$RUNNER_REASON" "$RUNNER_ERR")"
+}
+
+# Leave the terminal window. Everything else the loop does about a refusal only
+# a person can clear (the banner, the window title, the dashboard hero, the
+# status note) is visible only to somebody already looking at it, and on
+# 2026-09-09 nobody was: the loop sat on the spend limit for sixty two hours,
+# 128 refusals apart, and two days of work never happened. This is the one
+# thing that reaches somebody who is doing something else.
+#
+# The queue decides WHEN (NOTIFY, set by record_exit): once when the stall
+# starts, once more per day it survives, never once per retry. This decides
+# WHAT IT SAYS, and it has one job, which is to name the one action that ends
+# the stall.
+notify_person() { # $1 = reason (signin|spend), $2 = whole hours stalled so far
+  local title body hours=${2:-0}
+  case "$1" in
+    spend)
+      title="Photonz build loop has stopped"
+      body="Spend limit reached, so nothing is building. Raise it at claude.ai/settings/usage, or wait for the reset. It resumes on its own." ;;
+    signin)
+      title="Photonz build loop has stopped"
+      body="Sign-in needed, so nothing is building. Run claude in a terminal and log in. It resumes on its own." ;;
+    *) return 0 ;;
+  esac
+  (( hours > 0 )) && body="Still stopped ${hours}h later. $body"
+  # A notification banner shows two or three lines and cuts the rest, so the
+  # wording above puts what is wrong and where to go in the first sentence.
+  # argv, not string interpolation: the refusal text and the limit URL travel
+  # as data so nothing in them can be read as AppleScript.
+  if osascript -e 'on run argv' \
+               -e 'display notification (item 1 of argv) with title (item 2 of argv) sound name "Basso"' \
+               -e 'end run' -- "$body" "$title" >/dev/null 2>&1; then
+    echo "[go-loop] $(date +%T) notified you: $title. $body" | tee -a "$LOG"
+    Q event stall_notified "{\"reason\":\"$1\",\"hours\":$hours}"
+  else
+    # Notifications can be switched off for the terminal, and there is nothing
+    # the loop can do about that except say so where it can be read later.
+    echo "[go-loop] $(date +%T) could not raise a notification; the stall is only visible here and on the dashboard." | tee -a "$LOG"
+    Q event stall_notify_failed "{\"reason\":\"$1\",\"hours\":$hours}"
+  fi
 }
 
 # Manager pass: the loop's own product manager. Whenever fewer than
@@ -297,6 +341,10 @@ Q busy "starting up"
 # as working when nothing is working.
 backoff_wait() {
   local secs=$1 fails=$2 err=$3
+  # Before the window is dressed for a person who is here, tell the one who is
+  # not. Only a refusal nothing but a person can clear qualifies, and only the
+  # first one of a stall (or the first of a new day inside it).
+  (( ${NOTIFY:-0} )) && notify_person "${REASON:-}" "${STALLHOURS:-0}"
   if [[ "${SIGNIN:-0}" == 1 ]]; then
     # Not a runner failure in any useful sense: nothing runs until a person
     # logs in, so the window says exactly that and what to do about it.

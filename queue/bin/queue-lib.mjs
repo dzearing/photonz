@@ -597,6 +597,48 @@ export const isSpendLimitFailure = (text) => environmentSignature(text)?.id === 
 export const isEnvironmentFailure = (text) => !!environmentSignature(text);
 export const SIGN_IN_HINT = 'Sign-in needed: run `claude` in a terminal and log in. The loop retries on its own.';
 
+// ---- telling the person who can clear a stall -------------------------------
+// A refusal only a person can cure (the spend limit, a sign-in) is handled
+// perfectly by the loop except for one thing: reach. It says so in its own
+// terminal window and in the dashboard hero, and if nobody is looking at
+// either, the build stops for days. It did: the last task finished
+// 2026-09-09T17:37Z and the next 2026-09-12T08:26Z, sixty two hours later,
+// with 128 consecutive refusals recorded thirty minutes apart and two daily
+// digests never written.
+//
+// This decides WHEN to leave the window, and the whole answer is "rarely":
+// once when the stall starts, and once more for each day it survives. One
+// notification per retry would have been a hundred and twenty eight of them,
+// which is a worse silence than no notification at all.
+export const STALL_RENOTICE_SECONDS = Number(process.env.PHOTONZ_STALL_RENOTICE || 86400);
+// prev = the stall record on status.json, reason = signin|spend|null for this run.
+// Returns the record to store, whether to tell the person now, and how long the
+// stall has been going, in whole hours.
+export function advanceStall(prev, reason, at = now()) {
+  const record = (prev && typeof prev === 'object' && prev.reason) ? prev : null;
+  if (!reason) return { stall: null, notify: false, hours: 0 };
+  const t = Date.parse(at);
+  // A different refusal is a different stall: the person is told again because
+  // what they have to do has changed (raise a limit, versus log in).
+  if (!record || record.reason !== reason) {
+    return { stall: { reason, since: at, notifiedAt: at, notices: 1, attempts: 1 }, notify: true, hours: 0 };
+  }
+  const since = Date.parse(record.since) || t;
+  const last = Date.parse(record.notifiedAt) || since;
+  const due = (t - last) / 1000 >= STALL_RENOTICE_SECONDS;
+  return {
+    stall: {
+      reason,
+      since: record.since,
+      notifiedAt: due ? at : record.notifiedAt,
+      notices: (record.notices || 0) + (due ? 1 : 0),
+      attempts: (record.attempts || 0) + 1,
+    },
+    notify: due,
+    hours: Math.max(0, Math.floor((t - since) / 3600000)),
+  };
+}
+
 // What a finished runner's output meant: the one line worth keeping as its
 // error, and whether the CLI itself refused to run (sign-in, spend limit).
 //
@@ -678,8 +720,11 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   const failed = task ? unfinalized : (exit !== 0 || !!signature);
   if (!failed) {
     if (task && task.failures) { task.failures = 0; saveTask(task); }
-    writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
-    return { outcome: 'ok', backoff: 0, consecutiveFailures: 0, parked: false };
+    // A run that worked is the end of any stall, and the end of a stall is
+    // silent: the person who raised the limit does not need telling that it
+    // worked, and a loop that pings on recovery trains them to ignore it.
+    writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null, stall: null });
+    return { outcome: 'ok', backoff: 0, consecutiveFailures: 0, parked: false, notify: false, stallHours: 0 };
   }
 
   const message = cleanError(error) ||
@@ -729,6 +774,10 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   }
 
   const backoff = BACKOFF_STEPS[Math.min(consecutive - 1, BACKOFF_STEPS.length - 1)];
+  // Whether this refusal is worth leaving the terminal window for. An ordinary
+  // failure passes reason=null, which ends any stall on record: the CLI plainly
+  // ran, so whatever a person had to clear is cleared.
+  const stalled = advanceStall(s.stall, reason);
   // A refusal the CLI named (sign-in, spend limit) is unambiguous, so the loop
   // reports unhealthy on the first one instead of waiting for a second to be
   // sure, and the note says which it was.
@@ -737,12 +786,17 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
     consecutiveFailures: consecutive,
     lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment, signIn, reason },
     failureStreak: streak,
+    stall: stalled.stall,
     note: signature
       ? `${signature.note}; retrying in ${backoff}s`
       : `runner failed (exit ${exit}); retrying in ${backoff}s`,
   });
   appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, signIn, reason, error: message });
-  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment, signIn, reason };
+  return {
+    outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked',
+    unparked, environment, signIn, reason,
+    notify: stalled.notify, stallHours: stalled.hours,
+  };
 }
 
 // A runner that exits without finalizing leaves the task in_progress forever.

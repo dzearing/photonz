@@ -44,6 +44,16 @@
 #  16. status.json names the copy the loop is running, and the dashboard reads
 #      a loop that has not named one as stale
 #
+# Scenario 6, a stall that has to reach a person (2026-09-09 to 09-12):
+#
+#  20. the first refusal only a person can clear raises a macOS notification
+#      naming what is wrong and the one thing that ends it
+#  21. every retry after it is silent: a stall is one notification, not one
+#      per attempt (the real one would have been a hundred and twenty eight)
+#  22. a stall still going a day later says so again, so it is not forgotten
+#  23. the limit clearing sends nothing, and leaves nothing on status.json that
+#      would make the next stall silent
+#
 # Scenario 5, a runner that works ON the spend limit (2026-09-12 12:04):
 #
 #  17. a runner that finishes its work while quoting a refusal in its tool
@@ -65,7 +75,21 @@ SANDBOX2=$(mktemp -d -t photonz-drill-signin)
 SANDBOX3=$(mktemp -d -t photonz-drill-spend)
 SANDBOX4=$(mktemp -d -t photonz-drill-reload)
 SANDBOX5=$(mktemp -d -t photonz-drill-talk)
-trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5"' EXIT
+SANDBOX6=$(mktemp -d -t photonz-drill-reach)
+SHARED_BIN=$(mktemp -d -t photonz-drill-bin)
+trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5" "$SANDBOX6" "$SHARED_BIN"' EXIT
+
+# Nothing a drill does may reach the user's real Notification Center. The loop
+# now raises a notification the moment it stalls on a refusal only a person can
+# clear, and four of these scenarios stall it on purpose, so every one of them
+# runs with this on PATH in place of osascript: it records the call and exits 0.
+cat > "$SHARED_BIN/osascript" <<'FAKENOTIFY'
+#!/bin/zsh
+print -r -- "$@" >> "${DRILL_NOTIFY_LOG:-/dev/null}"
+exit 0
+FAKENOTIFY
+chmod +x "$SHARED_BIN/osascript"
+export PATH="$SHARED_BIN:$PATH"
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -212,7 +236,10 @@ PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
 const fs = await import("node:fs");
 const q = process.env.PHOTONZ_QUEUE_DIR;
 const st = process.env.DRILL_STATE;
-const today = new Date().toISOString().slice(0, 10);
+// The LOCAL day, because that is the day the loop names its digest after
+// (TODAY=$(date +%F)). Reading it back in UTC made every digest check in this
+// drill fail between 5pm and midnight Pacific, on source that was fine.
+const today = new Date().toLocaleDateString("en-CA");
 const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
 const status = read(q + "/status.json", {});
 const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
@@ -349,7 +376,10 @@ PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
 const fs = await import("node:fs");
 const q = process.env.PHOTONZ_QUEUE_DIR;
 const st = process.env.DRILL_STATE;
-const today = new Date().toISOString().slice(0, 10);
+// The LOCAL day, because that is the day the loop names its digest after
+// (TODAY=$(date +%F)). Reading it back in UTC made every digest check in this
+// drill fail between 5pm and midnight Pacific, on source that was fine.
+const today = new Date().toLocaleDateString("en-CA");
 const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
 const status = read(q + "/status.json", {});
 const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
@@ -612,7 +642,10 @@ PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
 const fs = await import("node:fs");
 const q = process.env.PHOTONZ_QUEUE_DIR;
 const st = process.env.DRILL_STATE;
-const today = new Date().toISOString().slice(0, 10);
+// The LOCAL day, because that is the day the loop names its digest after
+// (TODAY=$(date +%F)). Reading it back in UTC made every digest check in this
+// drill fail between 5pm and midnight Pacific, on source that was fine.
+const today = new Date().toLocaleDateString("en-CA");
 const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
 const status = read(q + "/status.json", {});
 const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
@@ -701,9 +734,178 @@ process.exit(failed ? 1 : 0);
 '
 S5=$?
 
-if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 )); then
+# ---- scenario 6: a stall that has to reach a person -------------------------
+# 2026-09-09T17:37Z to 2026-09-12T08:26Z: the loop hit the spend limit and did
+# everything right except leave the room. It banners its own Ghoztty window,
+# retitles it, marks the dashboard unhealthy and backs off to thirty minutes,
+# and it repeated all of that 128 times over sixty two hours while nobody
+# looked. Two daily digests were never written and two and a half days of the
+# focus never happened. This proves the loop now tells the person who can clear
+# it, once when it starts, again each day it lasts, and never on recovery.
+QDIR6="$SANDBOX6/queue"
+BIN6="$SANDBOX6/bin"
+STATE6="$SANDBOX6/state"
+mkdir -p "$QDIR6/digests" "$BIN6" "$STATE6"
+
+# Refuses every run, with the agent CLI's own spend-limit wording, for as long
+# as the drill leaves the "refuse" file in place. The digest run is what gets
+# refused because that is what a stall really looks like: it is retried every
+# pass forever, where a task run would be parked after three and go quiet.
+cat > "$BIN6/claude" <<'FAKE'
+#!/bin/zsh
+prompt="${@[-1]}"
+kind=digest; [[ "$prompt" == *"TASK FILE: "* ]] && kind=task
+echo '{"type":"system","subtype":"init","session_id":"drill-session"}'
+if [[ -f "$DRILL_STATE/refuse" ]]; then
+  limit="You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets Sep 16 at 1am (America/Los_Angeles)"
+  echo "{\"type\":\"result\",\"subtype\":\"success\",\"result\":\"\"}"
+  echo "$limit" >&2
+  exit 0
+fi
+if [[ $kind == task ]]; then
+  file="${prompt##*TASK FILE: }"
+  id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+  node queue/bin/queue.mjs status "$id" done "drill: finished once the limit was raised" >/dev/null
+else
+  printf '# Daily digest %s\n\n## Summary\nWritten once the limit was raised.\n' "$(date +%F)" > "$PHOTONZ_QUEUE_DIR/digests/$(date +%F).md"
+fi
+echo '{"type":"result","subtype":"success","result":"done"}'
+exit 0
+FAKE
+chmod +x "$BIN6/claude"
+
+export PATH="$BIN6:$PATH"
+export PHOTONZ_QUEUE_DIR="$QDIR6"
+export DRILL_STATE="$STATE6"
+export DRILL_NOTIFY_LOG="$STATE6/notifications.txt"
+export PHOTONZ_BACKOFF_STEPS="1,1,1,1,1"
+export PHOTONZ_DIGEST_HOUR=0
+export PHOTONZ_STALL_RENOTICE=86400          # the real one: a day, not a drill value
+: > "$DRILL_NOTIFY_LOG"
+touch "$STATE6/refuse"
+
+Q add "Drill task six" p1-high "drill" >/dev/null
+
+# Phase A: four refusals in a row, the shape of the real stall.
+echo "[drill] scenario 6: four refusals in a row; the person should hear about it once..."
+PHOTONZ_MAX_ITERS=4 queue/bin/go-loop.sh > "$SANDBOX6/drill-a.log" 2>&1
+cp "$DRILL_NOTIFY_LOG" "$STATE6/notifications-after-a.txt"
+cp "$QDIR6/status.json" "$STATE6/status-after-a.json"
+
+# Phase B: the same stall, a day older. Ageing the record on status.json is
+# exactly what twenty five hours of refusals would have left behind, without
+# the drill taking twenty five hours to say so.
+node -e '
+const fs = require("fs"), f = process.argv[1];
+const s = JSON.parse(fs.readFileSync(f, "utf8"));
+const back = (iso) => new Date(Date.parse(iso) - 25 * 3600 * 1000).toISOString();
+s.stall.since = back(s.stall.since);
+s.stall.notifiedAt = back(s.stall.notifiedAt);
+fs.writeFileSync(f, JSON.stringify(s, null, 2));
+' "$QDIR6/status.json"
+echo "[drill] scenario 6: the same stall a day later; the person should hear about it again..."
+PHOTONZ_MAX_ITERS=1 queue/bin/go-loop.sh > "$SANDBOX6/drill-b.log" 2>&1
+cp "$DRILL_NOTIFY_LOG" "$STATE6/notifications-after-b.txt"
+
+# Phase C: somebody raised the limit. The loop gets on with it and says nothing.
+rm -f "$STATE6/refuse"
+echo "[drill] scenario 6: the limit is raised; the loop should recover in silence..."
+PHOTONZ_MAX_ITERS=1 queue/bin/go-loop.sh > "$SANDBOX6/drill-c.log" 2>&1
+
+export DRILL_LOG="$SANDBOX6/drill-a.log"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const q = process.env.PHOTONZ_QUEUE_DIR;
+const st = process.env.DRILL_STATE;
+// The LOCAL day, because that is the day the loop names its digest after
+// (TODAY=$(date +%F)). Reading it back in UTC made every digest check in this
+// drill fail between 5pm and midnight Pacific, on source that was fine.
+const today = new Date().toLocaleDateString("en-CA");
+const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
+const text = (f) => { try { return fs.readFileSync(f, "utf8"); } catch { return ""; } };
+const lines = (f) => text(f).split("\n").filter(Boolean);
+const status = read(q + "/status.json", {});
+const afterA = read(st + "/status-after-a.json", {});
+const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
+const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+  const d = q + "/tasks/" + p;
+  return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+});
+const task = tasks[0] || {};
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const notesA = lines(st + "/notifications-after-a.txt");
+const notesB = lines(st + "/notifications-after-b.txt");
+const notesC = lines(process.env.DRILL_NOTIFY_LOG);
+const refusalsA = history.filter((e) => e.ev === "runner_failed" && e.reason === "spend").length;
+const notified = history.filter((e) => e.ev === "stall_notified");
+
+check("four refusals in a row raised exactly one notification",
+  refusalsA >= 4 && notesA.length === 1,
+  refusalsA + " refusals recorded, " + notesA.length + " notification(s)");
+check("it names what is wrong and the one thing that ends it",
+  /Photonz build loop has stopped/.test(notesA[0] || "")
+    && /Spend limit reached/.test(notesA[0] || "")
+    && /claude\.ai\/settings\/usage/.test(notesA[0] || ""),
+  JSON.stringify((notesA[0] || "").slice(-240)));
+check("the stall is on status.json, counted once, with every attempt tallied",
+  afterA.stall && afterA.stall.reason === "spend" && afterA.stall.notices === 1 && afterA.stall.attempts >= 4,
+  JSON.stringify(afterA.stall));
+check("a stall still going a day later says so again, and says how long",
+  notesB.length === 2 && /Still stopped 25h later/.test(notesB[1] || ""),
+  notesB.length + " notification(s); second=" + JSON.stringify((notesB[1] || "").slice(-200)));
+check("the second notice is recorded as the second, not as a new stall",
+  notified.length === 2 && notified[0].hours === 0 && notified[1].hours === 25,
+  JSON.stringify(notified.map((e) => [e.reason, e.hours])));
+check("raising the limit sends nothing",
+  notesC.length === 2,
+  notesC.length + " notification(s) after recovery, expected the same 2");
+check("and leaves no stall behind that would silence the next one",
+  !status.stall,
+  JSON.stringify(status.stall));
+check("the work the stall was holding up got done once the limit was raised",
+  task.status === "done" && /Written once the limit was raised/.test(text(q + "/digests/" + today + ".md")),
+  task.id + "=" + task.status);
+check("the loop recovered on its own", status.health === "ok" && status.consecutiveFailures === 0 && !status.lastError,
+  "health=" + status.health + " consecutive=" + status.consecutiveFailures);
+check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+
+// The rule itself, called directly: this is what decides whether a person is
+// disturbed, so it is checked on its own rather than only through a loop run.
+const { advanceStall } = await import(process.cwd() + "/queue/bin/queue-lib.mjs");
+const at = (h) => new Date(Date.parse("2026-09-09T18:00:00.000Z") + h * 3600 * 1000).toISOString();
+const first = advanceStall(null, "spend", at(0));
+check("the first refusal of a stall always tells somebody",
+  first.notify === true && first.stall.notices === 1 && first.hours === 0, JSON.stringify(first));
+let s2 = first.stall, told = 1;
+for (let h = 0.5; h <= 62; h += 0.5) {           // the real stall, half-hourly, to the hour it ended
+  const step = advanceStall(s2, "spend", at(h));
+  s2 = step.stall; if (step.notify) told++;
+}
+check("the sixty two hour stall of 2026-09-09 would have been three notices, not a hundred and twenty eight",
+  told === 3 && s2.attempts === 125, "notices=" + told + " attempts=" + s2.attempts);
+check("an ordinary failure ends the stall: the CLI plainly ran",
+  advanceStall(s2, null, at(63)).stall === null, "");
+check("a different refusal is a different stall, and is told at once",
+  advanceStall(s2, "signin", at(63)).notify === true, "");
+check("a stall with no refusal on record never notifies",
+  advanceStall(null, null, at(0)).notify === false, "");
+
+console.log(failed ? "\n[drill] scenario 6: " + failed + " check(s) failed" : "\n[drill] scenario 6: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S6=$?
+
+if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 && S6 == 0 )); then
   echo "[drill] all checks passed"
   exit 0
 fi
-echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5)"
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5, scenario 6 exit $S6)"
 exit 1
+

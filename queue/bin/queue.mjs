@@ -196,7 +196,11 @@ try {
         ...(given === undefined ? {} : { reason: given }),
       });
       const health = (r.reason || r.consecutiveFailures >= q.UNHEALTHY_AT) ? 'unhealthy' : 'ok';
-      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''}`);
+      // NOTIFY is the one bit the loop cannot work out for itself: whether this
+      // refusal is the START of a stall (or a day older than the last time the
+      // person was told), rather than one more retry inside a stall they have
+      // already been told about.
+      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''} NOTIFY=${r.notify ? 1 : 0} STALLHOURS=${r.stallHours || 0}`);
       break;
     }
     case 'event':

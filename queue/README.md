@@ -18,7 +18,7 @@ a task says otherwise.
 | `bin/follow-up-bar.md` | The one bar a new task has to clear, cat'd onto the runner, manager and digest prompts by `go-loop.sh` so all three passes apply the same one. A finding earns a task when a person would notice it and no open task already covers it; anything actually broken clears it automatically; everything under it goes in a task log instead of being lost. Added on 2026-09-14, after the queue grew about forty tasks a week on "anything left rough is filed as a follow-up task". |
 | `history.jsonl` | Append-only event log; the dashboard's charts are computed from it. Self-compacting: once past 512KB, churn events (`task_started`, `task_reset`, `runner_failed`) that are older than 48 hours, or beyond the most recent 200, collapse into one entry per task per day carrying `repeats` and `until`. Every other event is kept forever, so the charts stay exact. `queue.mjs compact` runs it by hand. |
 | `sweep/` | The full walk sweep, handed back and forth between the runners and the loop. A runner asks for one with `bin/sweep.sh request "<why>"` and finishes its task; the loop runs it between tasks and writes `sweep/latest.json` plus a per-run log. Only the README in there is tracked. See `sweep/README.md`. |
-| `status.json` | Live loop heartbeat: state, current task, note, pid, plus loop health (`health`, `consecutiveFailures`, `lastError`) so a wedged loop is visible instead of silent. |
+| `status.json` | Live loop heartbeat: state, current task, note, pid, plus loop health (`health`, `consecutiveFailures`, `lastError`, and `stall` when it is waiting on something only a person can clear) so a wedged loop is visible instead of silent. |
 | `loop.log` | Runner output from each iteration. Rotated to `loop.log.1` past 32MB. Untracked. |
 | `bin/go-loop.sh` | The loop: adopt any fix landed in this file (it re-execs itself between tasks, keeping its pid and its queue; `PHOTONZ_LOOP_RELOAD=0` turns that off), a requested walk sweep, daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Every runner is Opus 5 at high effort (`PHOTONZ_RUNNER_MODEL`, `PHOTONZ_RUNNER_EFFORT`), by the user's choice on 2026-09-01. Records every runner exit, backs off on failure, parks tasks that keep failing. |
 | `bin/sweep.sh` | The full walk sweep (all 322 scripted walks, about 52 minutes). A task runner's background work is terminated at 600s, so a runner that starts the sweep is killed waiting for it and its task is handed back unfinished: eight of the twenty recorded runner failures are that, including 2026-09-07 16:22 and 2026-09-08 00:03. Runners call `sweep.sh request` and move on; the loop calls `sweep.sh run` between tasks, where nothing can kill it and no task is in flight to fight it for the probe app. `Scripts/playtest-all.sh` refuses to run the whole set without `PHOTONZ_SWEEP=1` so the rule is enforced rather than only written down. |
@@ -31,7 +31,7 @@ a task says otherwise.
 | `bin/runner-prompt.md` | The contract each task runner follows (status protocol, decision protocol, next-release rule). |
 | `bin/digest-prompt.md` | The daily digest + triage contract. |
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
-| `bin/failure-drill.sh` | Runs the real loop in a throwaway queue against two fake runners, one that always exits non-zero and one whose login has expired and is later restored, and asserts what the dashboard would show. Run it after touching failure handling. |
+| `bin/failure-drill.sh` | Runs the real loop in throwaway queues against fake runners (one that always exits non-zero, one whose login has expired and is later restored, one refused by the spend limit, one that merely talks about it, and one stall that has to reach a person) and asserts what the dashboard would show and who gets told. Run it after touching failure handling. |
 | `bin/manager-due-drill.sh` | Drives the real `manager_due`/`manager_pass` (sourced out of `go-loop.sh`) in a throwaway queue and asserts the manager pass cannot wake itself up: a pass that restages an epic is not a reason to run another one, an edit by anyone else still is, a rewrite that changes nothing is not, and a pass whose runner died leaves the edit that called it still pending. Replays the two recorded passes of 2026-09-13. Run it after touching the manager trigger. |
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
 | `bin/audit-index-drill.mjs` | Asserts the Ready to try index: the day comes from the file name, newest first, an unreadable report is skipped rather than taking the page down, a report with nothing in it still draws a card, and the cache notices a report arriving. Run it after touching audits in `queue-lib.mjs`. |
@@ -111,7 +111,34 @@ happens now, after every runner exit:
   CLI let it run. The phrase patterns stay deliberately broad — precision comes
   from who wrote the line, not from how the sentence is worded.
 
-A fourth way the loop can stop working is quieter than any of these: it keeps
+- **A refusal only a person can clear leaves the terminal window.** Everything
+  above happens where only somebody already watching can see it: the loop's own
+  Ghoztty window, its title, and the dashboard hero. On 2026-09-09 nobody was
+  watching. The loop hit the spend limit at 17:37Z, did every one of the right
+  things 128 times over the next sixty two hours, thirty minutes apart, and
+  nothing built until 2026-09-12T08:26Z. Two daily digests were never written.
+  So a stall on a refusal in `ENVIRONMENT_SIGNATURES` now also raises a macOS
+  notification (`notify_person` in `go-loop.sh`, via `osascript`), naming what
+  is wrong and the one action that ends it: raise the limit, or log in.
+  - **Once per stall, not once per retry.** The stall is recorded on
+    `status.json` as `stall` (`reason`, `since`, `notifiedAt`, `notices`,
+    `attempts`), and `advanceStall` in `queue-lib.mjs` decides whether this
+    refusal is worth disturbing anybody over. That same sixty two hours is
+    three notifications, not a hundred and twenty eight.
+  - **Again each day it survives**, so a stall that outlives the first notice
+    is not forgotten; the second one and later say how many hours it has been
+    going. `PHOTONZ_STALL_RENOTICE` sets that interval in seconds (default
+    86400) and the drill uses the real value rather than a shortened one.
+  - **Recovery is silent.** Any successful runner clears the stall record, and
+    nothing is sent: the person who raised the limit does not need telling that
+    it worked, and a loop that pings on recovery teaches them to ignore it. A
+    different refusal (spend, then sign-in) is a new stall and is told at once,
+    because the action that ends it has changed.
+  - If notifications are switched off for the terminal, `osascript` fails and
+    the loop says so in `loop.log` and records `stall_notify_failed`. Nothing
+    else about the stall changes.
+
+A fifth way the loop can stop working is quieter than any of these: it keeps
 running, healthily, on a copy of itself from days ago. zsh parses a script once,
 so a fix landed in `bin/go-loop.sh` reaches nothing until the process restarts.
 That cost four days in September 2026: the loop started on the 5th, the walk
@@ -130,9 +157,13 @@ before this landed can be silent about it.
 one scenario for a runner that always dies, one for a login that expires and
 is later restored, one for a spend limit that refuses the digest run and later
 clears, one for a fix landed in the loop's own script (which builds a
-stand-in repo of symlinks so the real one is never written to), and one for a
+stand-in repo of symlinks so the real one is never written to), one for a
 runner that finishes its work while quoting a refusal in every place the loop
-reads.
+reads, and one for a stall that has to reach a person (four refusals in a row
+raise exactly one notification, the same stall a day later raises a second
+saying how long it has been, and raising the limit sends nothing and leaves no
+stall record behind). Every scenario runs with a stand-in `osascript` on PATH,
+so a drill can never reach the real Notification Center.
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,
