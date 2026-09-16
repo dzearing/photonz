@@ -1262,6 +1262,11 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectFeet(let layerName, let start, let end, let reads, let within):
+            note(number, step.name,
+                 try checkFeet(layerName, start: start, end: end, reads: reads, within: within),
+                 state: describe())
+
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
                          let halfSmooth, let rings, let width, let fill, let ink, let anchorAt):
             note(number, step.name,
@@ -3331,6 +3336,65 @@ private final class Run {
         return count == 0
             ? "nothing has been measured, as claimed"
             : "\(count) \(plural(count)) on the canvas, as claimed"
+    }
+
+    /// Where a measurement's two ends are, and what it reads.
+    ///
+    /// Asked of the document rather than of a picture: a foot is a dot a few
+    /// points across, and "it went six right" and "it went two left" are the
+    /// same screenshot to anything but a pixel count. The failure says where
+    /// the feet actually are and what the thing reads, because "the foot went
+    /// the wrong way" and "the foot never moved" are different bugs.
+    private func checkFeet(_ layerName: String?, start: PlaytestPoint?, end: PlaytestPoint?,
+                           reads: String?, within: CGFloat) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "no document is open, so nothing has been measured")
+        }
+        let measured = document.allLayers.filter { $0.measure != nil }
+        let layer: Layer
+        if let layerName {
+            guard let found = measured.first(where: {
+                MeasureSpecList.displayName(for: $0).lowercased() == layerName.lowercased()
+            }) else {
+                throw Failure(description: "no measurement called \"\(layerName)\" on the canvas"
+                    + (measured.isEmpty ? "; nothing has been measured"
+                       : "; there is \(measured.map { MeasureSpecList.displayName(for: $0) }.joined(separator: ", "))"))
+            }
+            layer = found
+        } else {
+            guard measured.count == 1, let only = measured.first else {
+                throw Failure(description: measured.isEmpty
+                    ? "nothing has been measured, so there are no feet to claim"
+                    : "\(measured.count) measurements are on the canvas, so expectFeet has to say "
+                      + "which one with \"layer\": \(measured.map { MeasureSpecList.displayName(for: $0) }.joined(separator: ", "))")
+            }
+            layer = only
+        }
+        guard let measure = layer.measure else {
+            throw Failure(description: "that layer is not a measurement")
+        }
+        let feet = MeasureSnapping.documentMeasure(layer)
+        let actualStart = feet?.start ?? measure.start
+        let actualEnd = feet?.end ?? measure.end
+        let label = measure.label(pixelScale: document.pixelScale)
+        let where_ = "feet \(short(actualStart)) to \(short(actualEnd)), reading \(label)"
+        func check(_ claim: PlaytestPoint?, _ actual: CGPoint, _ name: String) throws {
+            guard let claim else { return }
+            let want = try documentPoint(claim)
+            let off = hypot(actual.x - want.x, actual.y - want.y)
+            guard off <= within else {
+                throw Failure(description: "the \(name) foot is \(short(actual)), not \(short(want)): "
+                    + "\(Self.round1(off)) document points away and a walk allowed \(Self.round1(within)). "
+                    + "The measurement is \(where_)")
+            }
+        }
+        try check(start, actualStart, "first")
+        try check(end, actualEnd, "second")
+        if let reads, label != reads {
+            throw Failure(description: "the measurement reads \(label), not \(reads). It is \(where_)")
+        }
+        return "\(where_), as claimed"
     }
 
     /// How many layers the document holds, groups and their children counted.

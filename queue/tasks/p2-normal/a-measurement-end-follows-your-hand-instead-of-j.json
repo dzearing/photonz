@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 300,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:30:45.335Z",
-  "updated": "2026-09-15T12:14:53.598Z",
+  "updated": "2026-09-16T06:13:01.677Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-12 on the probe build, AFTER the click-does-not-move-it fix landed. Walk /tmp/foot-grip.json: caliper placed with the magnets off at (600,500) to (800,500), reading 100 px, then a command-drag from (792,500) to (798,500) — the press lands 8 points LEFT of the right foot and the hand travels 6 points RIGHT. Result: feet (600,500) to (798,500), reading 99 px. The foot went 2 points LEFT while the hand went 6 points RIGHT, and the measurement got shorter while being pulled longer.\n\nWhy: Sources/Photonz/CanvasMeasure.swift, MeasureHandleDrag.params(), the .footA/.footB cases put the foot at `current`, which is the pointer landing. The HEAD case already keeps its grip through grabCross/grabAlong, seeded in Sources/Photonz/CanvasPointerDrags.swift mouseDown; the feet have no equivalent.\n\nThe catch, and why this was left out of the click fix (task clicking-a-measurement-end-does-not-move-it, which required dragging to keep working exactly as it does): the magnets read the RAW pointer. EdgeSnapping.snap is handed `p` in the mouseDragged branch, and the span window is built from `p` too. A grip offset has to be applied BEFORE snapping so the magnets judge the point the foot is actually going to, or the foot will snap to edges near the pointer rather than edges near itself. Expect to thread the offset through that whole branch, not just params().\n\nWorth deciding how big the grip may get: the grab tolerance is 9 view points, so the offset is bounded by that already.",
@@ -44,6 +44,27 @@
     {
       "t": "2026-09-15T12:14:53.597Z",
       "note": "seq 260 -> 300"
+    },
+    {
+      "t": "2026-09-16T05:48:03.385Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T06:02:25.970Z",
+      "note": "Adversarial review before building: the grip has to be applied BEFORE the magnets, or a foot held off its dot would snap to edges near the HAND instead of edges near the foot, which is the version of this fix that would have felt worse than the bug. Shortest version that delivers it: one value (the offset from press to foot, taken once) threaded through the foot branch of mouseDragged. No decision opened: the grip's size has no free choice in it, the grab slack (9 view points) already bounds it, and a press exactly on the dot takes no grip at all, so the magnets are bit-identical to today for that case."
+    },
+    {
+      "t": "2026-09-16T06:02:29.079Z",
+      "note": "Verification, honestly: the Mac's screen was locked for this entire task (confirmed independently of the harness with CGSessionCopyCurrentDictionary: CGSSessionScreenIsLocked = 1, locked since before the task started), so NO walk could run, including the reproduction. What is verified: MeasureHandleGrip's arithmetic by six unit tests, the whole suite green apart from the known DrawLandingCostTests flake, and the new walk parsing in the probe (the run reported '40 steps' before refusing on the lock). What is NOT verified: the app wiring, because a walk is the only way to exercise it and Sources/Photonz has no test target. Sweep requested naming the walk and the change; the loop runs it once the screen is unlocked and any failure comes back as a task."
+    },
+    {
+      "t": "2026-09-16T06:02:30.783Z",
+      "note": "left rough: with a grip held the pointer sits a few pixels off the dot for the rest of the drag and nothing on screen shows how much grip was taken. It is how dragging a layer or the number chip already behaves, so it did not earn a task; it is in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-16T06:13:01.676Z",
+      "note": "VERIFIED after all, with the lock override. Every acceptance item is checked by Scripts/playtest/caliper-foot-keeps-its-grip-walk.json, 40 of 40 steps ok: (1) press 8 left of the right foot, hand 6 right, foot lands (806,500) reading 103 px - it used to land (798,500) at 99 px; (2) the same grip the other way, press 7 right and hand 10 left, foot lands (790,500) at 95 px, so the reading never moves against the hand; (3) magnets live and grabbed on the dot lands the left foot at x 560 reading 120 px, exactly where the click walk has always put it; (4) command+shift from a gripped press still holds the line and lands (900,500) at 150 px with the other foot untouched. The magnets now judge the FOOT, proved differentially with /tmp/grip-magnets.json: same hand landing x 700, zero grip puts the foot at 700 and a grip of 8 puts it at 708. Neighbours green: playtest-all caliper 6/6, measure 9/10 - the one failure, measure-row-menu-walk (step 13 rightClick cannot reach the Height row), fails identically with my changes stashed, is in the 115-walk list on walks-that-fail-in-the-full-sweep, and is not mine. Scripts/test.sh 7431/7431."
     }
-  ]
+  ],
+  "started": "2026-09-16T05:48:03.384Z"
 }

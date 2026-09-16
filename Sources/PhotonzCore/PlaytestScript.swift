@@ -1629,6 +1629,25 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// Where a measurement's ends are right now, and what it reads.
+    ///
+    /// A picture cannot settle this. The feet are two dots a few points across
+    /// sitting on a picture full of edges, and telling "the end went six points
+    /// right" from "the end went two points left" off a screenshot is counting
+    /// pixels. This asks the DOCUMENT, in the same coordinates the walk's own
+    /// clicks are written in, which is how a walk can claim that an end
+    /// travelled as far as the hand did and the same way.
+    ///
+    /// `start` and `end` are the two feet, either one on its own, with `within`
+    /// document points of slack (half a point unless said otherwise: a drag is
+    /// synthesized as a run of moves and lands where the pointer lands).
+    /// `reads` is the label the measurement is wearing, "106 px", which is the
+    /// other half of the claim: a reading that got shorter while the hand
+    /// pulled it longer is the bug this step was written for.
+    /// `layer` names which measurement to ask when there is more than one; the
+    /// only one on the canvas is meant when it is left off.
+    case expectFeet(layer: String?, start: PlaytestPoint?, end: PlaytestPoint?,
+                    reads: String?, within: CGFloat)
     /// Where the marquee is right now, or that there is none.
     ///
     /// The outline is the one thing on the canvas a walk cannot photograph a
@@ -1911,7 +1930,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -1963,6 +1982,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectFeet: "expectFeet"
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
@@ -2366,6 +2386,21 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectFeet":
+            let start = fields["start"] == nil ? nil : try f.point("start")
+            let end = fields["end"] == nil ? nil : try f.point("end")
+            let reads = try f.optionalString("reads")
+            guard start != nil || end != nil || reads != nil else {
+                throw f.invalid("start", "expectFeet has to claim something: \"start\" or "
+                    + "\"end\" with the [x, y] a foot should have landed on, or \"reads\" with "
+                    + "the label the measurement must be wearing")
+            }
+            let within = try f.optionalNumber("within") ?? 0.5
+            guard within >= 0 else {
+                throw f.invalid("within", "a distance is zero or more, not \(within)")
+            }
+            self = .expectFeet(layer: try f.optionalString("layer"), start: start, end: end,
+                               reads: reads, within: CGFloat(within))
         case "expectHint":
             let contains = try f.string("contains")
             guard !contains.trimmingCharacters(in: .whitespaces).isEmpty else {

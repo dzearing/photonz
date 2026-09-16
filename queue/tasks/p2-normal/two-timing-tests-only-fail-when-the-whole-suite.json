@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T18:20:47.039Z",
-  "updated": "2026-09-16T04:12:35.796Z",
+  "updated": "2026-09-16T06:00:02.553Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-15 on main at 6b3deb32 plus the copy-a-look work.\n\nFull run:\n  $ Scripts/test.sh\n  ✘ Test \"A whole strip of moving previews fits inside one frame of the loop\" recorded an issue at IconPreviewRenderTests.swift:258:27: Issue recorded\n  ✘ Test aGridOverALargeScreenshotPaysForTheBorderQuery() recorded an issue at DrawLandingCostTests.swift:151:9: Expectation failed: (abs(dense - sparse) → 2662.0996093750005) < (dense * 0.5 → 1463.3499375)\n  ✘ Test run with 7028 tests in 564 suites failed after 84.362 seconds with 2 issues.\n\nSame binary, same commit, the two suites on their own:\n  $ Scripts/test.sh --filter DrawLandingCostTests --filter IconPreviewRenderTests\n  ✔ Test run with 10 tests in 3 suites passed after 8.120 seconds.\n\nAn earlier full run of nearly the same tree passed all 7027, so it is load dependent rather than a real regression. Both are wall-clock or work-count budgets measured while 564 suites share the machine. The renderer perf suite already solves this: it calibrates against a yardstick and reports the machine multiplier (see the [perf] lines it prints). These two do not.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-16T04:12:35.795Z",
       "note": "Seen again on 2026-09-15: aGridOverALargeScreenshotPaysForTheBorderQuery failed in the full run (dense 5068us vs sparse 4814us worst round, gap 2942us against a 1387us allowance) and passed on its own seconds later (dense 2608us, sparse 2388us). The same run took 72s for that test inside the suite and 8s alone, so what it is really measuring is how loaded the machine is, not how much the border query costs."
+    },
+    {
+      "t": "2026-09-16T06:00:02.552Z",
+      "note": "Hit again on 2026-09-16 during the measurement-grip task: two consecutive full Scripts/test.sh runs failed only aGridOverALargeScreenshotPaysForTheBorderQuery (DrawLandingCostTests.swift:151, abs(dense-sparse) 2857.6 against an allowance of 1350.3), and the same filter alone passed 3/3 in 8.2s seconds later. Everything else in the 7431-test run was green. It is now common enough that a runner has to know to ignore it."
     }
   ]
 }

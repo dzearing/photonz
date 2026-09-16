@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/caliper-foot-keeps-its-grip",
+  "seed": "A measurement's end is grabbed with a few points of slack around its dot, and it used to jump under the pointer the moment the drag started. So a short pull could move the end the OTHER WAY from the hand: taking hold 8 points to the left of the right foot and pulling 6 points right left the foot 2 points further left than it started, and the reading got shorter while it was being pulled longer. The grab now keeps its grip. This walk takes hold of a foot off its dot, pulls it each way, and reads the feet back out of the document: the foot travels as far as the hand did, the way the hand did. It then proves the two keys are untouched: shift still holds the caliper on its line, and a drag with the magnets live still lands where it always did.",
+  "setup": { "forget": ["shapes", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [600, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 440], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "expectFeet", "start": [600, 500], "end": [800, 500], "reads": "100 px" },
+    { "do": "describe", "stage": "1-placed", "note": "THE SETUP: a caliper reading 100 px, feet at (600, 500) and (800, 500), readout chip at (700, 440)" },
+
+    { "do": "drag", "from": [792, 500], "to": [798, 500], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectFeet", "start": [600, 500], "end": [806, 500], "reads": "103 px", "within": 1 },
+    { "do": "describe", "stage": "2-pulled-right", "note": "THE CLAIM: the press landed 8 points LEFT of the right foot and the hand travelled 6 points RIGHT, so the foot is 6 points right of where it was, at (806, 500), and the measurement got longer: 103 px, on a picture at 2x so 206 document points is 103 px. It used to end up at (798, 500) reading 99 px, shorter than it started" },
+    { "do": "snapshot", "name": "caliper-foot-keeps-its-grip" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+
+    { "do": "drag", "from": [807, 500], "to": [797, 500], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectFeet", "start": [600, 500], "end": [790, 500], "reads": "95 px", "within": 1 },
+    { "do": "describe", "stage": "3-pushed-left", "note": "THE SAME GRIP THE OTHER WAY: taken hold of 7 points RIGHT of the foot and pushed 10 points LEFT, the foot is 10 points left of where it was, at (790, 500), reading 95 px" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+
+    { "do": "drag", "from": [795, 504], "to": [895, 560], "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectFeet", "start": [600, 500], "end": [900, 500], "reads": "150 px", "within": 1 },
+    { "do": "describe", "stage": "4-held", "note": "THE HOLD IS UNTOUCHED: shift still holds the foot on the caliper's line. The press was 5 left and 4 below the foot, the hand went 100 right and 56 down, and the foot lands 100 right ON the line, at (900, 500). The other foot has not moved" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectFeet", "end": [800, 500], "reads": "100 px" },
+
+    { "do": "drag", "from": [600, 500], "to": [560, 500] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectFeet", "start": [560, 500], "within": 2 },
+    { "do": "describe", "stage": "5-magnets", "note": "THE MAGNETS ARE UNTOUCHED: the same drag the click walk makes, without command so the magnets are live, taken hold of exactly on the dot so there is no grip to apply. The left foot goes to x 560, where it has always gone" }
+  ]
+}

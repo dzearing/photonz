@@ -4094,3 +4094,13 @@
 {"t":"2026-09-16T05:47:10.991Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
 {"t":"2026-09-16T05:47:11.036Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
 {"t":"2026-09-16T05:47:11.078Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:29.303Z","ev":"task_done","id":"find-out-whether-command-z-works-after-clicking","from":"in_progress","note":"Not a bug in the app and not about the panel: no walk can press Command Z at all. Proved with the control the report was missing (no panel press anywhere) - same nothing, because macOS refuses a script-launched app focus and SwiftUI leaves the probe's menu bar frozen with Edit > Undo dimmed and empty (found 2026-09-03). What a walk CAN check passes: canUndo stays true across a Fill switch press and Undo puts the switch back. Fixed the harness line that misled two runners (the 'no action behind it' note was wired to takenBy == menu, which a dead item never is), landed Scripts/playtest/panel-change-can-be-taken-back-walk.json (19 steps, passes), and wrote it into docs/design/playtest-harness.md. Screen was locked throughout, so walks ran under PHOTONZ_ALLOW_LOCKED_WALK=1 on model state only and there are no captures; the pending sweep re-runs the new walk unlocked. 7422 tests pass. The one question a runner can never answer - does the keystroke land for a person - is queue/audits/2026-09-16-undo-after-a-panel-click.json."}
+{"t":"2026-09-16T05:48:03.283Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T05:48:03.387Z","ev":"task_started","id":"a-measurement-end-follows-your-hand-instead-of-j","title":"A measurement end follows your hand instead of jumping to it","priority":"p2-normal"}
+{"t":"2026-09-16T06:00:02.554Z","ev":"task_note","id":"two-timing-tests-only-fail-when-the-whole-suite"}
+{"t":"2026-09-16T06:02:25.972Z","ev":"task_note","id":"a-measurement-end-follows-your-hand-instead-of-j"}
+{"t":"2026-09-16T06:02:29.081Z","ev":"task_note","id":"a-measurement-end-follows-your-hand-instead-of-j"}
+{"t":"2026-09-16T06:02:30.785Z","ev":"task_note","id":"a-measurement-end-follows-your-hand-instead-of-j"}
+{"t":"2026-09-16T06:03:37.053Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-16T06:03:39.666Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-16T06:13:01.678Z","ev":"task_note","id":"a-measurement-end-follows-your-hand-instead-of-j"}

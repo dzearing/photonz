@@ -29,6 +29,11 @@ public enum CanvasPointer {
     /// Screen-point slop around the rotate knob, matching the press.
     public static let rotateTolerance: CGFloat = 8
 
+    /// Screen-point slack around a caliper's foot and head dots. It is what
+    /// makes the handles catchable without aiming, and it is also the most
+    /// grip a press can take on one (`MeasureHandleGrip`).
+    public static let measureHandleTolerance: CGFloat = 9
+
     /// What the pointer should show at `p` (document coordinates) over
     /// `layer`, which must be the SELECTED layer: an unselected object draws
     /// no handles and offers none of these presses.

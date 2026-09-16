@@ -74,6 +74,12 @@ extension CanvasNSView {
         /// The same grip ALONG the line, relative to the readout pill's centre,
         /// so a pill taken hold of by its edge does not jump under the pointer.
         var grabAlong: CGFloat = 0
+        /// The FOOT's grip: how far the foot sat from where the press landed.
+        /// The grab has slack around the dot, so a press is almost never on the
+        /// foot, and a foot that jumped under the pointer travelled a different
+        /// distance from the hand and sometimes the other way entirely. Empty
+        /// for a head drag, which keeps its grip through grabCross/grabAlong.
+        var grip: MeasureHandleGrip = .none
         /// The lines the OTHER measurements offer this drag, collected once at
         /// grab time: nothing else on the canvas moves while a handle is held,
         /// and rebuilding them per mouse-moved event would be wasted work.

@@ -2015,6 +2015,49 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A walk can photograph a caliper being dragged and still say nothing
+    // about where its ends ended up: the feet are two dots a few points across
+    // and the reading is a chip that moves with them. `expectFeet` asks the
+    // DOCUMENT where the ends are, which is the only way a walk can hold the
+    // app to a foot that travelled as far as the hand did.
+    @Test("An expectFeet step says where a measurement's ends must have landed")
+    func expectFeetNamesTheEnds() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectFeet", "start": [600, 500], "end": [806, 500],
+                       "within": 1, "reads": "106 px" } ] }
+        """)
+        guard case .expectFeet(let layer, let start, let end, let reads, let within) = script.steps[0] else {
+            Issue.record("expectFeet"); return
+        }
+        #expect(layer == nil)
+        #expect(start?.point == CGPoint(x: 600, y: 500))
+        #expect(end?.point == CGPoint(x: 806, y: 500))
+        #expect(reads == "106 px")
+        #expect(within == 1)
+        #expect(script.steps[0].name == "expectFeet")
+        #expect(PlaytestStep.names.contains("expectFeet"))
+    }
+
+    @Test func expectFeetClaimsOneEndOnItsOwn() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectFeet", "end": [806, 500] } ] }
+        """)
+        guard case .expectFeet(_, let start, let end, _, let within) = script.steps[0] else {
+            Issue.record("expectFeet"); return
+        }
+        #expect(start == nil)
+        #expect(end?.point == CGPoint(x: 806, y: 500))
+        #expect(within == 0.5)
+    }
+
+    @Test func expectFeetHasToClaimSomething() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectFeet" } ] }
+            """)
+        }
+    }
+
     @Test func expectMeasuresTakesZero() throws {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 0 } ] }

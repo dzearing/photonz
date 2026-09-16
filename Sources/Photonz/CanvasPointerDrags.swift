@@ -333,17 +333,18 @@ extension CanvasNSView {
         if let id = selectedLayerID, let layer = selectedLayer, offersOwnHandles(layer),
            let m = layer.measure,
            let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
-            let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
-            var best: (handle: MeasureHandle, distance: CGFloat)?
+            let slack = CanvasPointer.measureHandleTolerance
+            let tolerance = viewport.zoom > 0 ? slack / viewport.zoom : slack
+            var best: (handle: MeasureHandle, point: CGPoint, distance: CGFloat)?
             for h in measureHandles(layer) {
                 let d = hypot(p.x - h.point.x, p.y - h.point.y)
                 if d <= tolerance, d < (best?.distance ?? .infinity) {
-                    best = (h.handle, d)
+                    best = (h.handle, h.point, d)
                 }
             }
             if best == nil, let pill = measureReadoutRect(layer),
                pill.insetBy(dx: -tolerance, dy: -tolerance).contains(p) {
-                best = (.head, 0)
+                best = (.head, p, 0)
             }
             if let best {
                 resetDragMotion(p)
@@ -363,6 +364,13 @@ extension CanvasNSView {
                     }
                     drag.guides = measureChipGuideLines(excluding: id)
                 } else {
+                    // A foot taken hold of a few points off its dot keeps that
+                    // grip for the whole drag: it travels as far as the hand
+                    // travelled, the way the hand travelled, instead of jumping
+                    // under the pointer the moment the drag starts. The head
+                    // has had this all along, through grabCross/grabAlong.
+                    drag.grip = MeasureHandleGrip.taken(pressing: p, handle: best.point,
+                                                        zoom: viewport.zoom, tolerance: slack)
                     drag.guides = measureGuideLines(excluding: id)
                     drag.layerLines = measureLayerLines(excluding: id)
                 }
@@ -747,6 +755,12 @@ extension CanvasNSView {
             // pointer. The two keys compose and each still means one thing: ⌘
             // ignores the magnets, ⇧ holds the line.
             let held = snapHold(freeing: event.modifierFlags.contains(.command))
+            // Where the FOOT is going for this pointer position: the pointer
+            // plus the grip the press took. Everything downstream is asked
+            // about this point rather than the raw pointer, so the magnets
+            // judge the edges near the FOOT rather than the edges near the
+            // hand, and the ⇧ line is the line the foot has to stay on.
+            let q = drag.grip.handlePoint(for: p)
             if drag.handle != .head {
                 drag.heldLine = MeasureLineHold.holding(
                     drag.heldLine, shiftDown: event.modifierFlags.contains(.shift),
@@ -757,22 +771,22 @@ extension CanvasNSView {
                                             snapping: !held.isFree, holding: held)
                 snapHold.caught(x: snapGuide?.x, y: snapGuide?.y)
             } else if held.isFree {
-                drag.current = drag.heldLine?.project(p) ?? p
+                drag.current = drag.heldLine?.project(q) ?? q
                 snapGuide = nil
             } else {
                 trackDragMotion(p)
                 // Window the edge candidates by the span from the opposite foot to
-                // the pointer, exactly like the create drag.
+                // the foot being dragged, exactly like the create drag.
                 let fixed = drag.handle == .footA ? drag.originalEnd : drag.originalStart
                 let snap = axisGated(
-                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
-                                      xSpan: min(fixed.x, p.x)...max(fixed.x, p.x),
-                                      ySpan: min(fixed.y, p.y)...max(fixed.y, p.y),
+                    EdgeSnapping.snap(q, edges: edgeMap, zoom: viewport.zoom,
+                                      xSpan: min(fixed.x, q.x)...max(fixed.x, q.x),
+                                      ySpan: min(fixed.y, q.y)...max(fixed.y, q.y),
                                       includeCenters: measureSnapsToCenters,
                                       guides: drag.guides,
                                       layerLines: drag.layerLines,
                                       holding: held),
-                    raw: p)
+                    raw: q)
                 // The magnets are asked exactly what a free drag asks them,
                 // and then the held line has the last word: an edge ALONG the
                 // line still catches, one that would pull the foot off it is

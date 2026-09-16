@@ -1,0 +1,42 @@
+{
+  "feature": "A measurement end follows your hand",
+  "epic": "measure-redline",
+  "summary": "Taking hold of a measurement's end a few pixels off its dot now keeps that grip: the end travels exactly as far as your hand did, the way your hand went. Before, the end teleported under the pointer the moment the drag started, so a short pull could move it the opposite way and shrink the reading while you were pulling it longer.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    {
+      "do": "Open a screenshot and press I for the measure tool."
+    },
+    {
+      "do": "Click twice to lay a measurement across something, then a third time to park its number above the line."
+    },
+    {
+      "do": "Press V for Select, and note the number it reads."
+    },
+    {
+      "do": "Take hold of the right end a few pixels to the LEFT of its dot and pull your hand a short way RIGHT."
+    },
+    {
+      "do": "Check the end: it should have moved right by about as far as your hand did, and the reading should have got bigger.",
+      "shot": "2026-09-16-caliper-foot-keeps-its-grip.png"
+    },
+    {
+      "do": "Do the same with the magnets live (no Command) and watch which edge it catches: it should be an edge near the END, not one near your pointer."
+    },
+    {
+      "do": "Hold Shift and drag an end you took hold of off its dot. It should still slide along the measurement's own line and nothing else should move."
+    }
+  ],
+  "evaluate": [
+    "When you grab an end slightly off its dot, does it now move the way your hand moved?",
+    "With the magnets on, does it catch the edge you were aiming the END at, or does it feel like it is aiming at your pointer?",
+    "The grip is capped at the same nine points of slack that let you grab the end at all. Does a grab at the very edge of that slack still feel like you have hold of the end?",
+    "Does the yellow guide still appear where you expect while an end is held off its dot?"
+  ],
+  "rough": [
+    "The walk proves it end to end: Scripts/playtest/caliper-foot-keeps-its-grip-walk.json passes all 40 steps, including the shift hold and a magnets-live drag, and it reads the feet out of the document rather than off a picture. The picture here is a real window capture from that run, not an offscreen drawing.",
+    "It took an override to run it at all. The Mac has reported its screen locked since 08:44 this morning, so every walk is refused before it starts, and this one only ran with PHOTONZ_ALLOW_LOCKED_WALK=1. The capture above shows the app fully drawn while that flag said locked, which is evidence for the open p1 about walks being refused on a machine where they work. Nothing about the fix depends on that; it just means the sweep has not seen it yet.",
+    "With a grip held, the end is no longer under the pointer, so the pointer sits a few pixels off the dot for the rest of the drag. That is how dragging a layer and dragging the number chip already behave, but it is the one thing worth feeling before it is called right.",
+    "The grip is capped at the same nine points of slack that let you grab the end at all, so it can never get large enough to confuse. Nothing shows you how much grip you took."
+  ]
+}
