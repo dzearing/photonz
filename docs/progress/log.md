@@ -16435,3 +16435,39 @@ rectangle known to be inside it, so it still takes the whole layer.
 Next: the border walks could not be run — the Mac's screen was locked, so every
 one reported COULD NOT RUN and nothing was photographed. A full sweep is
 requested for the loop to run between tasks.
+
+## 2026-09-16 — A zoom callout is the Lens set to Magnify
+
+The Zoom Callout and the Lens were two tools doing the same kind of thing, so
+in Next they are one. The Lens offers Magnify alongside Blur, Pixelate,
+Greyscale, Invert and Brightness: one box on the tool bar where there were two,
+one Lens section in the panel for both, Z hands you the Lens already set to
+Magnify and K hands you it set to whatever you left it on.
+
+Nothing in the document model moved. A magnifier is still a
+`LayerContent.zoomCallout`, so the renderer, the SVG exporter, the dirty-region
+logic and every saved document are untouched, and Current keeps its Zoom Callout
+tool and its own section. The task asked for a decode migration and that would
+have been a Current regression: the Lens ships in Next only, so a Current user
+picking their migrated callout would have had no Magnification and no Shape at
+all. `LensKind` holds the six kinds and `LensConversion` the switch between
+them; `docs/design/tools.md` carries the reasoning.
+
+Also fixed on the way past, in shared code: the box that flies out of a callout
+drag was always built at 2x whatever the Magnification slider said, so at 4x it
+flew to a frame the wrong size and jumped when the real layer landed.
+
+**Not verified on screen.** The Mac's screen was locked for the whole session, so
+not one walk could run — `Scripts/playtest.sh` reported `status: "locked"` with
+0 steps. What is verified is `swift build` clean and `Scripts/test.sh` green at
+7416 tests, including 19 new core tests and an end-to-end render check that a
+lens switched to Magnify draws an outline you can see. A full sweep is requested
+and runs once the screen is unlocked. New walk
+`Scripts/playtest/magnify-lens-walk.json` has never been run;
+`Scripts/playtest/tool-bar-families.json` was updated for Z and is likewise
+unrun.
+
+Next: the sweep, then whatever the queue holds. Open question for the user, on
+the audit card: switching a blur to Magnify moves the box to the side of what it
+was covering, which is what a magnifier is but is the one place in this feature
+where something jumps.

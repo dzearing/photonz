@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:01:09.379Z",
-  "updated": "2026-09-16T05:27:23.791743Z",
+  "updated": "2026-09-16T05:27:35.068Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Held back from the lens task on purpose, on the task file's own instruction: the callout carries canvas-space chrome (leader lines, source outline drawn OUTSIDE the layer frame by ZoomCalloutOverlayRasterizer) and a source rect that is not the layer's own box, and it is shipped. The lens model was shaped so this can happen: LayerContent.lens holds an adjustment enum, Layer.readsBackdrop and Layer.backdropSource are already generic over both kinds, and DocumentRenderer builds the backdrop for any layer that answers readsBackdrop. The work is (a) a .magnify case with a sourceRect and a magnification, (b) migrating .zoomCallout on decode, (c) moving the overlay rasterizer call onto the lens path, (d) merging CalloutInspector into LensInspector.",
@@ -99,7 +99,12 @@
     {
       "t": "2026-09-16T05:27:23.791743Z",
       "note": "new walk Scripts/playtest/magnify-lens-walk.json covers the whole thing (one slot on the bar, Z landing on Magnify, the drag, the Does row both ways, undo, and the same tool still drawing a plain lens). It has never been run. Scripts/playtest/tool-bar-families.json pressed z and waited for tool zoomCallout, which is now lens; updated with the bar and likewise unrun. New playtest actions armLensMagnify and lensMagnify; armLensBlur and armLensPixelate now set the KIND so a walk arming Blur after one that armed Magnify really gets a blur."
+    },
+    {
+      "t": "2026-09-16T05:27:35.066Z",
+      "note": "In Next the Zoom Callout is the Lens set to Magnify: one slot on the bar (ToolBarLayout.bar puts .lens in the callout's place), one Lens section in the panel for both, and Z hands you the Lens already on Magnify. LensKind and LensConversion in PhotonzCore hold the six kinds and the switch between them; nothing in the document model moved, so saved callouts draw exactly as they did and Current is untouched. Verified by swift build and Scripts/test.sh green at 7416 tests, 19 new core tests plus an end-to-end render test. NOT verified on screen: the Mac's screen was locked for the whole task so no walk could run at all; a full sweep is requested. Audit: queue/audits/2026-09-16-magnify-lens.json. Commit 16204c85."
     }
   ],
-  "started": "2026-09-16T05:03:45.390Z"
+  "started": "2026-09-16T05:03:45.390Z",
+  "completed": "2026-09-16T05:27:35.067Z"
 }
