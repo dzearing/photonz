@@ -1,0 +1,26 @@
+{
+  "feature": "A guide card about the picture keeps off the picture",
+  "epic": "ui-building",
+  "summary": "When a guide step talks about the whole picture rather than about one control, its card is drawn on the picture, because there is no side of the canvas for it to sit beside. It used to go across the top whatever was under it. It now looks at what the canvas is showing and slides the smallest distance from there that gets it clear.",
+  "setup": "Photonz Dev, release Next. Any guide from Help > Tutorials. Nothing to switch on.",
+  "try": [
+    { "do": "Open Help > Tutorials and start \"Let a screen arrange itself\"." },
+    { "do": "Read the first card: it should be on clear page, not on the screen it is describing." },
+    { "do": "Walk the guide to the last step, the one about two cards closing up on their own." },
+    { "do": "Check that both remaining cards are readable while that step is up." },
+    { "do": "Close it and start \"Draw it with the pen\", where the icon fills the canvas." },
+    { "do": "Look at where the card lands: with nothing fully clear it takes the quietest corner rather than sitting across the middle of the icon." },
+    { "do": "Drag the window around while a step is up and check the card stays put relative to the picture." }
+  ],
+  "evaluate": [
+    "Does the card land somewhere your eye can take it in without hiding what the step names?",
+    "On the icon guides, is a card tucked into a corner over a sliver of the icon better than a card across its top edge?",
+    "The card is placed when the step arrives and does not chase the picture while you drag a layer. Is staying still the right call, or should it get out of the way as you work?",
+    "Does the card ever land somewhere you were about to drag from?"
+  ],
+  "rough": [
+    "No picture of this. The Mac's screen was locked for the whole task, so no walk could run and macOS takes the name off every control, which is how a walk finds one. Everything here is verified by the placement's own tests against the real sample numbers, not by a run of the app. A full sweep is requested and will run when the screen is unlocked.",
+    "A subject that fills the canvas, like an icon framed edge to edge, still leaves nowhere fully clear. The card then covers the least it can rather than nothing at all. The fix for that is the camera leaving more margin round an icon, which moves every coordinate the icon walks click at, so it was left alone.",
+    "The Building UI samples still start their screen 120 down the page. That was the workaround for this bug and it is no longer required, but moving it changes where the walks click and no walk could be run to check, so the composition was left as it is."
+  ]
+}

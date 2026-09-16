@@ -51,10 +51,15 @@ public enum TutorialCalloutLayout {
     /// side with the most room wins and the card is pushed fully off the
     /// anchor, because covering the control is the one outcome that is never
     /// allowed.
+    /// `busy` is what is DRAWN on the anchor right now, in the same space: the
+    /// layers of the picture, the floating tool bar, anything a card parked on
+    /// the surface would cover. It only ever matters for a surface, because a
+    /// card beside a control is not on top of anything to begin with.
     public static func place(anchor: CGRect, size: CGSize, container: CGRect,
                              preferred: TutorialSide = .automatic,
                              gap: CGFloat = gap,
-                             edge: CGFloat = edge) -> TutorialCalloutPlacement {
+                             edge: CGFloat = edge,
+                             busy: [CGRect] = []) -> TutorialCalloutPlacement {
         let order = sideOrder(preferred: preferred, anchor: anchor, container: container)
         for side in order {
             let rect = clamped(candidate(anchor: anchor, size: size, side: side, gap: gap),
@@ -70,7 +75,7 @@ public enum TutorialCalloutLayout {
         // its buttons unreadable. A step about the whole picture is not
         // pointing at an edge of the picture, so the card goes inside it.
         if let inside = insideSurface(anchor: anchor, size: size, container: container,
-                                      gap: gap, edge: edge) {
+                                      gap: gap, edge: edge, busy: busy) {
             return TutorialCalloutPlacement(frame: inside, side: .above, beakOffset: nil)
         }
         // Nothing fits cleanly. Take the roomiest side and shove the card off
@@ -151,19 +156,81 @@ public enum TutorialCalloutLayout {
 
     /// A card parked INSIDE an anchor that is really a surface.
     ///
-    /// Centred across it and near the top: the bottom of the canvas belongs to
-    /// the floating tool bar, and the middle is where the person is being asked
-    /// to draw. Nil when the anchor has no room to spare, which is every
-    /// ordinary control and every panel section.
+    /// It starts where it has always gone, across the top and centred, clear of
+    /// the floating tool bar along the bottom and of the middle where the
+    /// person is being asked to draw. Then it SLIDES the smallest distance from
+    /// there that gets it off what the surface is showing, because a card about
+    /// the whole picture that covers half the picture is the D14 mistake with
+    /// the surface as the subject.
+    ///
+    /// `busy` is what is drawn on the surface right now. Told nothing is drawn,
+    /// the card does not move at all, so a guide on a blank canvas reads
+    /// exactly as it did.
+    ///
+    /// Nil when the anchor has no room to spare, which is every ordinary
+    /// control and every panel section.
     private static func insideSurface(anchor: CGRect, size: CGSize, container: CGRect,
-                                      gap: CGFloat, edge: CGFloat) -> CGRect? {
+                                      gap: CGFloat, edge: CGFloat,
+                                      busy: [CGRect]) -> CGRect? {
         let spare = gap * 2
         guard anchor.width >= size.width + spare, anchor.height >= size.height + spare else {
             return nil
         }
-        let rect = CGRect(x: anchor.midX - size.width / 2, y: anchor.minY + gap,
+        let home = CGRect(x: anchor.midX - size.width / 2, y: anchor.minY + gap,
                           width: size.width, height: size.height)
-        return clamped(rect, in: container, edge: edge)
+        // Where a card parked on this surface may sit: on the surface with a
+        // gap round it, and inside the window with its edge inset.
+        let room = anchor.insetBy(dx: gap, dy: gap)
+            .intersection(container.insetBy(dx: edge, dy: edge))
+        guard room.width >= size.width, room.height >= size.height else {
+            return clamped(home, in: container, edge: edge)
+        }
+        let drawn = busy.map { $0.intersection(anchor) }
+            .filter { !$0.isNull && $0.width > 1 && $0.height > 1 }
+        guard !drawn.isEmpty else { return settled(home, in: room) }
+
+        var best: (rect: CGRect, rank: CalloutSpotRank)?
+        for spot in spots(around: drawn, home: home, size: size, room: room, gap: gap) {
+            let rect = settled(spot, in: room)
+            let rank = CalloutSpotRank(rect, clearOf: drawn, home: home, gap: gap)
+            if rank.isPerfect { return rect }
+            guard let current = best else {
+                best = (rect, rank)
+                continue
+            }
+            if rank < current.rank { best = (rect, rank) }
+        }
+        return best?.rect ?? settled(home, in: room)
+    }
+
+    /// Every place worth trying for a card parked on a surface: where it
+    /// normally goes, the corners of the room it has, and beside each edge of
+    /// each thing drawn on the surface, with a gap and without one. Crossing
+    /// the two lists is what lets the card find the clear band BETWEEN two
+    /// things, which taking each one in turn never would.
+    private static func spots(around drawn: [CGRect], home: CGRect, size: CGSize,
+                              room: CGRect, gap: CGFloat) -> [CGRect] {
+        var xs: [CGFloat] = [home.minX, room.minX, room.maxX - size.width]
+        var ys: [CGFloat] = [home.minY, room.minY, room.maxY - size.height]
+        // Only the biggest few shape the search. A document with two hundred
+        // layers still has every one of them scored, and squaring the list to
+        // decide where to look would cost more than the answer is worth.
+        for box in drawn.sorted(by: { $0.width * $0.height > $1.width * $1.height }).prefix(8) {
+            xs.append(contentsOf: [box.minX - gap - size.width, box.maxX + gap,
+                                   box.minX - size.width, box.maxX])
+            ys.append(contentsOf: [box.minY - gap - size.height, box.maxY + gap,
+                                   box.minY - size.height, box.maxY])
+        }
+        return ys.flatMap { y in xs.map { CGRect(x: $0, y: y, width: size.width, height: size.height) } }
+    }
+
+    /// The card moved the smallest distance that puts it inside `room`, which
+    /// is already known to be big enough to hold it.
+    private static func settled(_ rect: CGRect, in room: CGRect) -> CGRect {
+        var rect = rect
+        rect.origin.x = min(max(rect.origin.x, room.minX), room.maxX - rect.width)
+        rect.origin.y = min(max(rect.origin.y, room.minY), room.maxY - rect.height)
+        return rect
     }
 
     /// Last resort: move the card entirely off the anchor along the side's own
@@ -196,6 +263,39 @@ public enum TutorialCalloutLayout {
             let low = min(beakInset, rect.height / 2)
             return min(max(target - rect.minY, low), rect.height - low)
         }
+    }
+}
+
+/// How good a place for a parked card is, best first: clear of everything with
+/// a gap round it, then merely clear, then whatever covers the least. Ties go
+/// to the card that moved the least from where it normally sits, so the answer
+/// is steady and a person finds the card where they expect it.
+private struct CalloutSpotRank: Comparable {
+    let covered: CGFloat
+    let crowded: Bool
+    let moved: CGFloat
+
+    init(_ rect: CGRect, clearOf drawn: [CGRect], home: CGRect, gap: CGFloat) {
+        let breathing = rect.insetBy(dx: -gap, dy: -gap)
+        covered = drawn.reduce(CGFloat.zero) { total, box in
+            let over = box.intersection(rect)
+            return over.isNull ? total : total + over.width * over.height
+        }
+        crowded = drawn.contains { $0.intersects(breathing) }
+        moved = abs(rect.minX - home.minX) + abs(rect.minY - home.minY)
+    }
+
+    /// Nothing covered and nothing crowding it: stop looking.
+    var isPerfect: Bool { covered == 0 && !crowded }
+
+    static func < (a: CalloutSpotRank, b: CalloutSpotRank) -> Bool {
+        if a.covered != b.covered { return a.covered < b.covered }
+        if a.crowded != b.crowded { return !a.crowded }
+        return a.moved < b.moved
+    }
+
+    static func == (a: CalloutSpotRank, b: CalloutSpotRank) -> Bool {
+        a.covered == b.covered && a.crowded == b.crowded && a.moved == b.moved
     }
 }
 

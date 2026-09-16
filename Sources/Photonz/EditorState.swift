@@ -1094,13 +1094,11 @@ final class EditorState {
         // canvas to report its size, because there is no viewport to frame with
         // until then.
         if let icon = document.layers.first(where: { $0.isFrame && IconPreviews.isIconSize($0.frame.size) }) {
-            // With a margin round it, and the margin is not decoration. A step
-            // pointing at the canvas draws its card ACROSS the top of the
-            // picture (`TutorialCalloutLayout.insideSurface`), so an icon
-            // framed edge to edge has its top corner read out from behind the
-            // card talking about it. That is the same thing the Building UI
-            // track found the hard way, and the answer there was the same:
-            // keep the work clear of the card's band.
+            // With a margin round it. It reads better than an icon framed edge
+            // to edge, and it leaves a canvas step's card somewhere to sit: the
+            // card is drawn INSIDE the picture and goes to the quiet part of it
+            // (`TutorialCalloutLayout.insideSurface`), so an icon that filled
+            // the canvas would leave no quiet part to find.
             let room = icon.frame.width / 3
             pendingFocusBox = icon.frame.insetBy(dx: -room, dy: -room)
         }

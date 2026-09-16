@@ -161,6 +161,114 @@ struct TutorialCalloutTests {
         #expect(placed.beakOffset == nil)
     }
 
+    // MARK: A card parked on the picture keeps off what the picture SHOWS
+
+    // The window a tutorial opens at, and the canvas inside it: the whole
+    // window bar the panel down the right and the title bar across the top.
+    private let tutorialWindow = CGRect(x: 0, y: 0, width: 1280, height: 900)
+    private let tutorialCanvas = CGRect(x: 0, y: 52, width: 960, height: 848)
+
+    /// The Building UI sample screen, drawn at the very top of its page rather
+    /// than 120 down it, which is the arrangement that produced this bug: the
+    /// card landed across the top of the canvas, squarely on the screen's first
+    /// two cards.
+    private let pictureAtTheTop = CGRect(x: 320, y: 76, width: 320, height: 344)
+
+    @Test func theCardKeepsOffThePictureItIsTalkingAbout() {
+        let placed = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: tutorialWindow,
+                                                 busy: [pictureAtTheTop])
+        #expect(!placed.frame.intersects(pictureAtTheTop),
+                "the card landed on the screen the step is about: \(placed.frame)")
+        // Clear, and not pressed up against it either.
+        #expect(!placed.frame.insetBy(dx: -TutorialCalloutLayout.gap,
+                                      dy: -TutorialCalloutLayout.gap)
+            .intersects(pictureAtTheTop))
+        #expect(tutorialCanvas.contains(placed.frame))
+        #expect(placed.beakOffset == nil)
+    }
+
+    @Test func theCardGoesUnderAPictureThatFillsTheTop() {
+        // A screen drawn across the whole width of the canvas, near the top:
+        // there is no band above it any more, so the quiet space is below.
+        let wide = CGRect(x: 40, y: 80, width: 880, height: 400)
+        let placed = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: tutorialWindow,
+                                                 busy: [wide])
+        #expect(!placed.frame.intersects(wide))
+        #expect(placed.frame.minY > wide.maxY)
+        #expect(tutorialCanvas.contains(placed.frame))
+    }
+
+    @Test func theCardKeepsOffTheFloatingToolBarAsWellAsThePicture() {
+        // Everything drawn ON the canvas counts, the app's own floating bar
+        // included: a card that dodged the picture by sitting on the tool bar
+        // would have swapped one cover-up for another.
+        let wide = CGRect(x: 40, y: 80, width: 880, height: 560)
+        let toolBar = CGRect(x: 300, y: 790, width: 360, height: 56)
+        let placed = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: tutorialWindow,
+                                                 busy: [wide, toolBar])
+        #expect(!placed.frame.intersects(wide))
+        #expect(!placed.frame.intersects(toolBar))
+    }
+
+    @Test func theCardSlipsBesideAPictureThatLeavesNoBandAcross() {
+        // Tall and narrow, top to bottom: no clear band above or below, and a
+        // wide quiet column either side.
+        let tall = CGRect(x: 380, y: 60, width: 200, height: 830)
+        let placed = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: tutorialWindow,
+                                                 busy: [tall])
+        #expect(!placed.frame.intersects(tall))
+        #expect(tutorialCanvas.contains(placed.frame))
+    }
+
+    @Test func anEmptyPictureStillPutsTheCardAlongTheTop() {
+        // Nothing drawn: the card goes where it always went, so a guide on a
+        // blank canvas reads exactly as it did.
+        let plain = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                size: CGSize(width: 320, height: 130),
+                                                container: tutorialWindow)
+        let toldNothingIsThere = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                            size: CGSize(width: 320, height: 130),
+                                                            container: tutorialWindow,
+                                                            busy: [])
+        #expect(plain.frame == toldNothingIsThere.frame)
+        #expect(plain.frame.minY < tutorialCanvas.midY)
+    }
+
+    @Test func aPictureWithNoQuietCornerLeftStillGetsACardOnTheCanvas() {
+        // Covered edge to edge. There is nowhere clear, and the card still has
+        // to be readable and on the surface rather than half off the window.
+        let everywhere = tutorialCanvas
+        let placed = TutorialCalloutLayout.place(anchor: tutorialCanvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: tutorialWindow,
+                                                 busy: [everywhere])
+        #expect(tutorialCanvas.contains(placed.frame))
+        #expect(placed.frame.minY < tutorialCanvas.midY)
+    }
+
+    @Test func whatIsDrawnOnThePictureNeverMovesACardThatSitsBesideAControl() {
+        // A step about a button is unaffected: the busy list is about parking
+        // ON a surface, not about every placement in the app.
+        let button = CGRect(x: 560, y: 380, width: 80, height: 40)
+        let near = CGRect(x: 400, y: 200, width: 500, height: 300)
+        for side in TutorialSide.allCases {
+            let plain = TutorialCalloutLayout.place(anchor: button, size: card,
+                                                    container: window, preferred: side)
+            let told = TutorialCalloutLayout.place(anchor: button, size: card,
+                                                   container: window, preferred: side,
+                                                   busy: [near])
+            #expect(plain.frame == told.frame)
+        }
+    }
+
     @Test func aSurfaceTooSmallToHoldTheCardIsStillTreatedLikeAControl() {
         // The rule is about a surface with room INSIDE it. A panel section
         // barely bigger than the card is still something the card sits beside.

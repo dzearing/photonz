@@ -2575,25 +2575,15 @@ public enum TutorialSampleScreen {
     /// shaped box on a grey page, with room either side of it so the guide that
     /// has you DRAW one has somewhere to drag.
     ///
-    /// It sits 120 down the page on purpose, and that is not a taste decision.
-    /// A step that points at the whole canvas has no side of the canvas to sit
-    /// beside, so its callout is drawn INSIDE the picture, along the top
-    /// (`TutorialCalloutLayout.insideSurface`). At this window size that card
-    /// reaches about 113 points down, dead centre. A screen starting any higher
-    /// has its first card read out from behind the very card talking about it.
+    /// Where it sits on the page is a composition, nothing more. It used to be
+    /// a rule: a step pointing at the whole canvas has no side of the canvas to
+    /// sit beside, so its card is drawn INSIDE the picture, and the card went
+    /// across the top whatever was under it. Every sample here had to leave a
+    /// band of empty page for it. The card now looks for the quiet part of the
+    /// canvas instead (`TutorialCalloutLayout.insideSurface`), so all a sample
+    /// owes is that SOME quiet space exists, which a phone shaped screen on a
+    /// page half as wide again always leaves.
     static let screenFrame = CGRect(x: 200, y: 120, width: 320, height: 344)
-
-    /// How far down a sample's picture the callout of a step that points at the
-    /// whole CANVAS reaches, measured on the probe at the size a tutorial
-    /// window opens at.
-    ///
-    /// A canvas fills the window bar the panel, so no side of it has room for a
-    /// card and the placement draws the card inside the picture instead, along
-    /// the top and centred (`TutorialCalloutLayout.insideSurface`). Nothing a
-    /// step is talking about may sit in that band, which is why every screen
-    /// here starts below it. Generous: the band is about 113 points at the
-    /// window size these guides open at, and a wordier step is a taller card.
-    public static let calloutSkirt: CGFloat = 120
     /// What that screen is called. A name, not "Frame 1": the canvas draws it
     /// above the top left corner and two guides ask you to click it.
     static let screenName = "Home"

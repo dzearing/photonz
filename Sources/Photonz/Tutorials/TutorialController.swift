@@ -560,7 +560,9 @@ final class TutorialController {
                               height: measuredCardHeight(run, note: note))
         let placed = TutorialCalloutLayout.place(anchor: flippedAnchor, size: cardSize,
                                                  container: flippedContainer,
-                                                 preferred: run.step.side)
+                                                 preferred: run.step.side,
+                                                 busy: busyAreas(in: window)
+                                                     .map { TutorialGeometry.flip($0, in: container) })
         // Room for the beak, taken out of the gap on the side it points from.
         var frame = placed.frame
         switch placed.side {
@@ -575,6 +577,35 @@ final class TutorialController {
         }
         show(view(for: run, side: placed.side, beakOffset: placed.beakOffset, note: note),
              at: TutorialGeometry.flip(frame, in: container), in: window)
+    }
+
+    /// What is drawn on the canvas at this moment, plus the app's own floating
+    /// tool bar over it: everything a card PARKED on a surface has to keep off.
+    /// In screen coordinates, like every other frame here.
+    ///
+    /// Only a step about the whole picture ever uses it, and only to choose
+    /// where to sit. It is read when the step arrives rather than every frame:
+    /// a card that chased the picture while you dragged a layer about would be
+    /// a card that never sits still, and the placement is already left alone
+    /// until the step, the window or the anchor moves.
+    private func busyAreas(in window: NSWindow) -> [CGRect] {
+        guard let canvas = Self.canvasView(in: window.contentView) else { return [] }
+        var areas = canvas.tutorialBusyScreenRects
+        // The bar floats OVER the canvas, so a card that dodged the picture by
+        // sitting on the bar would have swapped one cover-up for another.
+        if let bar = TutorialAnchorRegistry.shared.screenFrame(of: .toolBar, in: window) {
+            areas.append(bar)
+        }
+        return areas
+    }
+
+    private static func canvasView(in view: NSView?) -> CanvasNSView? {
+        guard let view else { return nil }
+        if let canvas = view as? CanvasNSView { return canvas }
+        for child in view.subviews {
+            if let found = canvasView(in: child) { return found }
+        }
+        return nil
     }
 
     /// The finish card, in the middle of the window the guide taught in. No

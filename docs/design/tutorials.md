@@ -917,17 +917,20 @@ sees one screen throughout.
 Four things the track settled, each measured on the probe rather than reasoned
 about:
 
-- **A canvas step draws its card ACROSS the picture, so nothing may live under
-  it.** A step pointing at the whole canvas has no side of the canvas to sit
-  beside, so the placement puts the card inside the picture, along the top and
-  centred (`TutorialCalloutLayout.insideSurface`). At the size a tutorial window
-  opens at that band reaches about 113 points down the page. The first cut put
-  the screen at the top of the page and the payoff step — two cards closing up
-  by themselves — was read out from behind the very card talking about it. Every
-  sample here now starts below `TutorialSampleScreen.calloutSkirt`, and the
-  lining-up guide asks you to sweep from the clear page to the LEFT of the boxes
-  rather than above them. Filed as a framework follow-up as well, because a
-  guide should not have to know this.
+- **A canvas step draws its card ON the picture, so the card has to find the
+  quiet part.** A step pointing at the whole canvas has no side of the canvas to
+  sit beside, so the placement puts the card inside the picture
+  (`TutorialCalloutLayout.insideSurface`). The first cut put it along the top
+  and centred whatever was under it: the screen started at the top of the page
+  and the payoff step — two cards closing up by themselves — was read out from
+  behind the very card talking about it. The workaround was a band of empty page
+  every sample had to leave, which is a guide knowing about a callout, and it is
+  gone. The card is now told what is drawn on the canvas — the layers you can
+  see and the floating tool bar over them — and it starts where it always went
+  and slides the smallest distance from there that gets it clear. A sample owes
+  it only that SOME quiet space exists. The lining-up guide still asks you to
+  sweep from the clear page to the LEFT of the boxes, because the card prefers
+  the top of the picture and a drag should not start where the card is.
 - **A screen is a fixed box, so the demo gap has to go DOWN.** Growing the gap
   on a screen whose cards already reach the bottom pushes the last one past the
   edge, where the screen clips it and the panel starts reporting an overflow: the
@@ -1046,8 +1049,10 @@ Five things the track settled, each measured on the probe:
   top to bottom: a clip whose only moving part was in the centre would be a clip
   you could not watch while the card told you to watch it. So the sample puts
   its filling bar along the very top edge, above the highest a card reaches, and
-  its counter in the left column, clear of the widest one. Same lesson the
-  Building UI track learned as `calloutSkirt`, in a window with less room.
+  its counter in the left column, clear of the widest one. The Building UI track
+  learned the same lesson, and the placement learned it back (above), but a clip
+  is not a layer: nothing tells the card where the moving part of a video is, so
+  a recording sample still puts it where cards do not reach.
 - **Nothing in a menu can be pointed at, and Export runs a MODAL save dialog.**
   The three formats are rows in a popup, which is its own window, and picking
   one runs `NSSavePanel.runModal`, which would sit on top of the card with

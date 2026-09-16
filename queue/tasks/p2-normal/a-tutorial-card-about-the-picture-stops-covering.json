@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:18:03.546Z",
-  "updated": "2026-09-16T12:23:34.021Z",
+  "updated": "2026-09-16T18:43:15.458Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe 2026-09-13 while building the Building UI track.\n\nCommand: Scripts/playtest.sh Scripts/playtest/tutorial-let-a-screen-arrange-itself-walk.json\nEvidence: the first run of that walk, with the sample screen at (200, 40), put the callout for the final step squarely over the top card of the two remaining. Screenshot kept at queue/audits/2026-09-13-tutorials-building-ui-callout-over-the-picture.png.\n\nWhy it happens: TutorialCalloutLayout.place tries above, below, leading and trailing; the canvas fills the window bar the panel, so no side has room, and it falls through to insideSurface (TutorialCallout.swift:158), which puts the card at anchor.minY + gap, centred. At the size a tutorial window opens at that band reaches about 113 points down the page and about 320 points across its middle.\n\nWorked around in the Building UI samples by starting every screen below TutorialSampleScreen.calloutSkirt (120) and asking the lining-up guide to sweep from the LEFT rather than from above. That is a guide knowing about a callout, which is backwards.\n\nWorth considering: insideSurface could pick the quietest quarter of the canvas (the renderer already knows where the layers are), or a step could name a rectangle of the picture as its anchor so the card sits beside THAT rather than beside the whole canvas.",
@@ -46,6 +46,35 @@
     {
       "t": "2026-09-16T12:23:34.020Z",
       "note": "seq 500 -> 160"
+    },
+    {
+      "t": "2026-09-16T18:34:43.511Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T18:43:15.229Z",
+      "note": "Adversarial review before building: the mock answer (a step names a rectangle of the picture as its anchor) was rejected because it puts the fix back on the guide author, which is the thing the bug is about. Panning the picture out from under the card was rejected because it moves the person's view and every walk's click coordinates. The shortest version that delivers the value is the card knowing what is drawn under it."
+    },
+    {
+      "t": "2026-09-16T18:43:15.274Z",
+      "note": "Could not reproduce live: the Mac's screen was locked for the whole task (2026-09-16 11:30 and again at 12:05), so Scripts/playtest.sh exits 3 with status locked and no walk runs at all. Reproduced instead in the placement's own space: a card 320x130 parked on a canvas (0,52,960,848) landed at (320,76,320,130), which is exactly on top of a screen drawn at (320,76,320,344). That is the failing case the new test theCardKeepsOffThePictureItIsTalkingAbout holds."
+    },
+    {
+      "t": "2026-09-16T18:43:15.320Z",
+      "note": "Shipped: TutorialCalloutLayout.place gains busy: [CGRect] (what is DRAWN on the anchor). insideSurface now starts at its old home, across the top and centred, and slides the smallest distance that gets it clear, crossing candidate x and y edges taken from every busy rect so it can find the clear band BETWEEN two of them. Ranking is covered area, then crowding, then distance moved, so an empty canvas is byte for byte the old placement. App side: CanvasNSView.tutorialBusyScreenRects reports the visible top level layers (turnedReach, minus anything covering the whole page, which is the backdrop) and TutorialController adds the floating tool bar, read once when the step arrives rather than every frame so the card never chases a drag."
+    },
+    {
+      "t": "2026-09-16T18:43:15.366Z",
+      "note": "Authoring workaround removed: TutorialSampleScreen.calloutSkirt is gone, with the two tests that forced every sample below it replaced by everySampleLeavesACanvasStepSomewhereClearToPutItsCard, which runs the real placement over the real sample layers. docs/design/tutorials.md and the icon framing comment in EditorState say the new rule."
+    },
+    {
+      "t": "2026-09-16T18:43:15.411Z",
+      "note": "left rough: an icon framed edge to edge fills the canvas, so there is no clear space at all and the card covers the least it can (a corner) rather than nothing. The clean fix is the icon camera leaving more margin, which moves every coordinate the icon walks click at, and no walk could be run to re-pin them. It is in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-16T18:43:15.457Z",
+      "note": "left rough: the Building UI samples still start their screen 120 down the page, which was the workaround. The rule is gone but moving the composition moves what the walks click, so it was left alone."
     }
-  ]
+  ],
+  "started": "2026-09-16T18:34:43.510Z"
 }

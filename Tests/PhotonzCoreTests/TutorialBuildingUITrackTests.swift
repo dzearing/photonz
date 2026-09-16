@@ -264,15 +264,41 @@ struct TutorialBuildingUITrackTests {
 
     // MARK: The samples the track brings
 
-    @Test func noScreenSampleSitsUnderTheCardACanvasStepDraws() throws {
+    @Test func everySampleLeavesACanvasStepSomewhereClearToPutItsCard() throws {
         // A step pointing at the whole canvas has no side of the canvas to sit
-        // beside, so its card is drawn across the top of the picture. A screen
-        // reaching up there is a screen read out from behind the card talking
-        // about it, which is what the first cut of these samples did.
+        // beside, so its card is drawn INSIDE the picture. It used to go across
+        // the top whatever was under it, and every sample here had to leave a
+        // band of empty page for it. Now it looks for the quiet part, so what a
+        // sample owes is only that quiet space exists.
+        //
+        // The window a tutorial opens at, modelled: the canvas is the window
+        // bar the panel and the title bar, and the page is drawn in the middle
+        // of it at its own size.
+        let window = CGRect(x: 0, y: 0, width: 1280, height: 900)
+        let canvas = CGRect(x: 0, y: 52, width: 960, height: 848)
+        let page = CGRect(x: canvas.midX - TutorialSampleScreen.canvasSize.width / 2,
+                          y: canvas.midY - TutorialSampleScreen.canvasSize.height / 2,
+                          width: TutorialSampleScreen.canvasSize.width,
+                          height: TutorialSampleScreen.canvasSize.height)
+        // A wordy step at the width the card is drawn at.
+        let card = CGSize(width: 320, height: 150)
+        for sample in [TutorialSample.handPlacedScreen, .tightScreen, .crookedBoxes] {
+            let drawn = TutorialSampleScreen.layers(for: sample)
+                .map { $0.frame.offsetBy(dx: page.minX, dy: page.minY) }
+            let placed = TutorialCalloutLayout.place(anchor: canvas, size: card,
+                                                     container: window, busy: drawn)
+            for box in drawn {
+                #expect(!placed.frame.intersects(box),
+                        "\(sample): the card landed on \(box)")
+            }
+            #expect(canvas.contains(placed.frame), "\(sample): the card left the canvas")
+        }
+    }
+
+    @Test func noScreenSampleHangsOffItsPage() throws {
         for sample in [TutorialSample.handPlacedScreen, .tightScreen] {
             let screen = try #require(TutorialSampleScreen.layers(for: sample).first)
-            #expect(screen.frame.minY >= TutorialSampleScreen.calloutSkirt,
-                    "\(sample)'s screen starts at \(screen.frame.minY)")
+            #expect(screen.frame.minY >= 0, "\(sample)'s screen starts above the page")
             #expect(screen.frame.maxY <= TutorialSampleScreen.canvasSize.height,
                     "\(sample)'s screen hangs off the bottom of the page")
         }
@@ -337,12 +363,10 @@ struct TutorialBuildingUITrackTests {
         let gaps = zip(boxes.dropFirst(), boxes).map { $0.frame.minX - $1.frame.maxX }
         #expect(Set(gaps).count > 1, "the boxes are already evenly spaced")
         // The guide asks you to start a selection on the clear page to the LEFT
-        // of them, because a canvas step's callout takes the top of the picture.
+        // of them, so there has to be clear page there to start on. A canvas
+        // step's card looks for quiet space too, and it prefers the top of the
+        // picture, which is why the drag is asked for from the side.
         let left = boxes.map(\.frame.minX).min() ?? 0
         #expect(left >= 80, "there is no clear page beside the boxes to drag from")
-        // ...and nothing on this page may sit under that callout either.
-        let top = boxes.map(\.frame.minY).min() ?? 0
-        #expect(top >= TutorialSampleScreen.calloutSkirt,
-                "a box sits under the card a canvas step draws across the top")
     }
 }

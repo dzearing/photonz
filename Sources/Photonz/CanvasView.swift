@@ -2098,4 +2098,29 @@ final class CanvasNSView: NSView {
         return CGRect(x: topLeft.x, y: topLeft.y,
                       width: r.width * viewport.zoom, height: r.height * viewport.zoom)
     }
+
+    /// What the canvas is SHOWING right now, in screen coordinates: every top
+    /// level layer you can see, minus anything that covers the whole page,
+    /// because a backdrop IS the page rather than something drawn on it.
+    ///
+    /// This is what a tutorial card parked on the canvas keeps off
+    /// (`TutorialCalloutLayout.place(busy:)`). A step about the whole picture
+    /// has no side of the canvas to sit beside, so it sits on the canvas, and
+    /// without this it sat on the very thing it was talking about.
+    var tutorialBusyScreenRects: [CGRect] {
+        guard let document, let viewport, let window, !bounds.isEmpty else { return [] }
+        let page = CGRect(origin: .zero, size: document.canvasSize)
+        return document.layers.compactMap { layer -> CGRect? in
+            guard layer.isVisible else { return nil }
+            // What the layer's drawing can really touch, its shadow and its
+            // turn included: a card tucked under a slanted one would otherwise
+            // land on the corner that sticks out.
+            let box = layer.turnedReach
+            guard box.width > 1, box.height > 1,
+                  !box.insetBy(dx: -1, dy: -1).contains(page) else { return nil }
+            let shown = viewRect(forDocRect: box, in: viewport).intersection(bounds)
+            guard shown.width > 2, shown.height > 2 else { return nil }
+            return window.convertToScreen(convert(shown, to: nil))
+        }
+    }
 }
