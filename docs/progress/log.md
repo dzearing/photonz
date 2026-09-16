@@ -17305,3 +17305,44 @@ the claim came out of the audit instead of going in unverified.
 Next: whatever the loop picks up. Open question for the user, in the audit: on an
 open line, is one band down the middle the right answer, or did they want to pick
 a side?
+
+## 2026-09-16 — The aiming ring reaches screenshots, and a blocker that was not one
+
+The ring that says where a press would put the first point of a shape was gated
+on the canvas grid pulling. On a plain screenshot the drawing tools still pulled
+that first point onto a border found in the picture, silently, and you only
+learned where it went after you pressed. The gate is gone. The ring is now drawn
+whenever a LINE places the point rather than the hand — a grid crossing, a
+pinned guide, or a border in the picture — which is one new computed property,
+`EdgeSnapping.Snap.isPlaced`, asked of the very snap the press asks. With
+nothing near enough to catch there is still no ring, so it never rides the
+cursor saying nothing. The Pen stays grid-only: `PenSession.landing` knows
+nothing about the picture underneath, so with the grid off it has nothing to aim
+at.
+
+The interesting part is the blocker. The task was filed p2 behind a measured
+cost: "about 2.4ms a mouse move over a 2560x1600 screenshot, whatever is in it".
+That number is real, and it is a number about `swift test`, which builds
+UNOPTIMIZED. Every app bundle comes from `Scripts/build-app.sh`, which is
+`swift build -c release`. Same measurement, release build: **17.5 us**, about a
+tenth of a percent of a frame. So nothing needed optimizing, no profile cache or
+windowed scan was built — either would have changed snap semantics, since a
+candidate's strength is normalized to the queried profile's max — and the whole
+task was removing a guard. `DrawLandingCostTests` now carries a
+per-configuration ceiling (200 us release, a loose 25 ms debug) so a debug
+reading can never be mistaken for a product fact again, and the correction is
+written into the parent task's log and the new audit.
+
+8 new core tests, a new walk (`landing-on-a-screenshot-walk.json`) that hovers a
+real capture with no grid, checks the ring is absent on flat ground and present
+on a border, then drags a box from that spot and checks its corner landed inside
+the ring. Full suite green at 7828 tests. The Mac's screen was locked throughout,
+so every walk run was forced with `PHOTONZ_ALLOW_LOCKED_WALK=1`; this walk uses
+no control names, which is the only thing a locked screen takes away, and the
+three audit shots are real window captures — but by the repo's rule none of the
+runs counts as a pass, and a sweep was already pending.
+
+Next: whatever the loop picks up. Open question for the user, in the audit: near
+text the ring catches cap tops and baselines as well as container edges, and at
+half zoom it can sit a dozen points from the pointer. Is that help, or the tool
+taking over?
