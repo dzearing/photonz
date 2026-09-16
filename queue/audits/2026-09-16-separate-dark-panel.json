@@ -1,0 +1,26 @@
+{
+  "feature": "Separate into Layers on a dark panel",
+  "epic": "ui-building",
+  "summary": "Separating a screenshot of a dark panel now gives back the controls on it. A crop of this app's own inspector used to hand back three things; it hands back six, and the four number fields come out as real rounded rectangles you can resize rather than staying baked into the picture.",
+  "setup": "Photonz Dev, release Next. Open any screenshot of a DARK panel or window (the app's own inspector is the easiest one to hand) and run Separate into Layers.",
+  "try": [
+    { "do": "Screenshot the Photonz inspector panel with Shift Command 4 and open the file." },
+    { "do": "Run Separate into Layers from the Edit menu.", "shot": "2026-09-16-dark-fields-before-after.png" },
+    { "do": "Look at the layers list: the X, Y, W and H fields should each be there." },
+    { "do": "Click one of the field layers and drag it somewhere else on the canvas." },
+    { "do": "Look at the place it came from: it should be plain panel, with no hairline rectangle left where the field was." },
+    { "do": "Pick a field layer and drag a corner handle to resize it, to check it came out as a shape and not as a picture." }
+  ],
+  "evaluate": [
+    "When you drag a field off, does the panel underneath look untouched, or can you still see where it was?",
+    "The fields come back with no edge, just their darker fill. On this panel the edge is eight levels lighter than the panel. Do you miss it?",
+    "The four fields come back 43, 43, 45 and 46 pixels tall when they are plainly all the same height. Is that close enough, or does it need to be exact?",
+    "Six layers out of that panel: is that the handful you expected, or were you hoping for the rows and sliders too?"
+  ],
+  "rough": [
+    "The screen was locked for this whole task, so NOT ONE playtest walk could run and there is no photograph of the real window here. The picture in step 2 is an offscreen render written by the separation code itself: the original crop on the left, what is left in the picture after separating on the right. A sweep has been requested so the walks run once the Mac is unlocked.",
+    "Seven things on that crop still stay in the picture, and all seven are words with a red redline annotation drawn through the band around them. Refusing them is right: lifting the word would erase part of a line somebody drew. It does mean a screenshot that has already been annotated separates worse than a clean one.",
+    "A field comes back without its own edge. The edge is what the app mistook for the panel in the first place, so it is neither in the layer nor left behind, and the layer is a plain rounded rectangle of the fill colour.",
+    "The sliders and the section rows on that panel are still not layers. They never were boxes: the panel is one flat surface with labels and controls painted straight onto it, so there is no row shape to find. The task that asked for this assumed the rows were being refused for running off the edge of the crop; they are not, and that was checked by turning the edge rule off entirely and measuring no change."
+  ]
+}

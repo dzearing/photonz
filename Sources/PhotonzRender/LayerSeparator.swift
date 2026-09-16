@@ -279,19 +279,70 @@ public enum LayerSeparator {
                 let surround: (Int, Int) -> Bool = { found.isSurround($0, $1, of: box) }
                 let shadow = ShadowRead.read(box.rect, in: field, isBackdrop: surround)
                 let out = shadow.map { max(1, Int($0.reach.rounded(.up))) } ?? 1
-                let grown = box.rect.insetBy(dx: CGFloat(-out), dy: CGFloat(-out))
+                let close = box.rect.insetBy(dx: CGFloat(-out), dy: CGFloat(-out))
                     .integral.intersection(bounds)
-                guard !grown.isNull,
-                      !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
+                guard !close.isNull else { skipped += 1; continue }
+                // A box's own edge is not always something the sweep can tell
+                // from the page: on a dark panel a field's edge sits eight
+                // levels off the panel with an antialiased step between, which
+                // is under `BoxSweep.colorTolerance` all the way across, so the
+                // two chain into ONE patch of colour and the edge counts as
+                // background. The box's island then stops inside its own edge
+                // and the band read just outside it is that edge — one row of a
+                // colour that is not the page, which refuses the reading and
+                // leaves the box in the picture.
+                //
+                // So when the band right against the box will not agree, step
+                // off it and read again a little further out, up to the
+                // thickest edge the app will believe in. Nothing is loosened by
+                // this: the reading still has to be one flat colour or one even
+                // ramp, and every pixel in the band still has to be background.
+                // The only thing that changes is WHICH background pixels are
+                // asked, and stepping over a neighbour is not a risk because a
+                // neighbour is an island and was never in the band to begin
+                // with.
+                //
+                // A box sitting on ANOTHER BOX never steps. The mistake being
+                // undone here is a page-level one — a box's edge chaining into
+                // the page's own patch of colour — and inside a box the
+                // surround is not a patch of colour at all, it is the parent's
+                // own pixels. Stepping there would step over the one thing that
+                // keeps a knob inside its switch: something that nearly fills
+                // its holder has no clean ring of the holder to be read
+                // against, and that is how the app knows it is a part rather
+                // than a thing.
+                //
+                // Whatever it steps over comes out WITH the box, because that
+                // is what it just decided the band is: the box grows to take
+                // it, so the repair covers it and the ring stays anchored to
+                // the rect that is about to be painted. Without that the box
+                // leaves a ghost of its own edge behind — the four fields on
+                // the inspector crop came out and left a hairline rectangle
+                // where each of them had been.
+                let steps = box.parent == 0 ? BoxSweep.maxBorderWidth : 0
+                var reading: (grown: CGRect, fill: PatchFill)?
+                var last = CGRect.null
+                for step in 0...steps {
+                    let trying = close.insetBy(dx: CGFloat(-step), dy: CGFloat(-step))
+                        .integral.intersection(bounds)
+                    // Against the picture's own edge the box stops growing, and
+                    // asking the same band again would only fail again.
+                    guard !trying.isNull, trying != last else { break }
+                    last = trying
+                    guard let ring = ring(around: trying, in: pixels, width: w, height: h,
+                                          keeping: surround),
+                          let fill = PatchDecision.decide(ring) else { continue }
+                    reading = (trying, fill)
+                    break
+                }
+                guard let (grown, fill) = reading else { skipped += 1; continue }
+                guard !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
                       // Overlapping another box is still refused; HOLDING one,
                       // or being held by one, is the whole point of this pass.
                       !plans.contains(where: { $0.grown.intersects(grown)
                           && !grown.contains($0.grown) && !$0.grown.contains(grown) }),
                       shadow == nil || onlySurround(grown, outside: box.rect, is: surround)
                 else { skipped += 1; continue }
-                guard let ring = ring(around: grown, in: pixels, width: w, height: h,
-                                      keeping: surround),
-                      let fill = PatchDecision.decide(ring) else { skipped += 1; continue }
                 planned.insert(box.island)
                 plans.append(BoxPlan(box: box, grown: grown, fill: fill, shadow: shadow))
             }

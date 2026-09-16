@@ -1015,3 +1015,72 @@ struct SeparatedRowInsideACardTests {
         #expect(worst <= 1)
     }
 }
+
+/// A dark inspector, cropped to its four number fields
+/// (`Fixtures/dark-fields-2x.png`, a 502x144 2x crop of this app's own
+/// inspector panel).
+///
+/// It is here because a dark panel breaks an assumption a light one never
+/// does. The field's own edge is painted eight levels off the panel behind it,
+/// and somewhere down its rounded corner the step between the two is under
+/// `BoxSweep.colorTolerance`, so the edge chains into the PANEL's colour region
+/// and counts as background. The field's island stops inside its own edge, and
+/// the band read just outside the field to find out what is behind it is one
+/// row of the field's own edge. Refused as "not one flat colour", three of the
+/// four fields stayed in the picture.
+///
+/// Full design: `docs/design/separate-into-layers.md`, "Stepping off the box's
+/// own edge".
+@Suite("Four fields on a dark panel")
+struct SeparatedDarkFieldsTests {
+
+    private static let capture: CGImage? = {
+        guard let url = Bundle.module.url(forResource: "Fixtures/dark-fields-2x",
+                                          withExtension: "png"),
+              let data = try? Data(contentsOf: url) else { return nil }
+        return ImageCodec.decode(data)
+    }()
+
+    private static let separated: LayerSeparator.Result? = {
+        guard let capture else { return nil }
+        return LayerSeparator.separate(capture, luma: EdgeMapAnalyzer.analyzeFully(capture).luma,
+                                       gap: Double(AlignmentScan.visibleGap) * 2,
+                                       minElement: 20)
+    }()
+
+    @Test func allFourFieldsComeOut() throws {
+        let result = try #require(Self.separated)
+        print("FIELDS \(result.boxes.count) of 4 fields came out, \(result.left) left: "
+            + result.boxes.map { "\(Int($0.rect.width))x\(Int($0.rect.height)) at "
+                + "(\(Int($0.rect.minX)),\(Int($0.rect.minY)))" }.joined(separator: ", "))
+        // Four fields, two on each row, each about 195 by 44.
+        #expect(result.boxes.count == 4)
+        #expect(result.boxes.allSatisfy { $0.rect.width > 180 && $0.rect.width < 210 })
+        #expect(result.boxes.allSatisfy { $0.rect.height > 38 && $0.rect.height < 50 })
+        #expect(Set(result.boxes.map { Int($0.rect.minY / 40) }).count == 2)
+    }
+
+    @Test func theSpaceEachFieldCameFromIsThePanelAgain() throws {
+        let result = try #require(Self.separated)
+        let bytes = try #require(LayerSeparator.read(result.background))
+        let w = result.background.width
+        var worst = 0
+        for box in result.boxes {
+            // The WHOLE footprint and two pixels past it, not just the middle.
+            // The field's own edge is a little outside the rect the sweep
+            // reports, because the edge is what the sweep mistook for the
+            // panel, and a repair that stops short of it leaves a hairline
+            // rectangle where the field had been.
+            for y in Int(box.rect.minY) - 2..<Int(box.rect.maxY) + 2 {
+                for x in Int(box.rect.minX) - 2..<Int(box.rect.maxX) + 2 {
+                    let i = (y * w + x) * 4
+                    worst = max(worst, abs(Int(bytes[i]) - 38))
+                    worst = max(worst, abs(Int(bytes[i + 1]) - 45))
+                    worst = max(worst, abs(Int(bytes[i + 2]) - 48))
+                }
+            }
+        }
+        print("PATCH every field's space reads within \(worst)/255 of the panel")
+        #expect(worst <= 3)
+    }
+}

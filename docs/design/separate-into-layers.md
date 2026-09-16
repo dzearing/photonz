@@ -295,6 +295,51 @@ there and an edge extend smears it sideways, and the user was explicit that a
 visible guess is worse than leaving the thing alone. A run whose surroundings are
 a photograph is a run we cannot read confidently, and rule 3 says skip it.
 
+### Stepping off the box's own edge
+
+A box on a DARK panel breaks an assumption a light one never does, and it broke
+this feature on the surface the user looks at most.
+
+A field on the inspector is painted about eight levels off the panel behind it,
+and somewhere down its rounded corner the step between the two is under
+`BoxSweep.colorTolerance`. Colour regions chain, on purpose — that is what lets
+a page with a gentle gradient on it still be one page — so the field's edge
+chains into the PANEL's own patch of colour and counts as background. The
+field's island then stops INSIDE its own edge, and the band read just outside
+the field is one row of that edge: a colour that is not the page, in a ring that
+is otherwise flat. Rule 1 refuses it, rule 2 refuses it, and rule 3 leaves the
+field in the picture.
+
+Measured on a 602 x 704 crop of this app's own inspector: three of the four
+X/Y/W/H fields were refused for exactly this, on rings that were 85% one flat
+colour. The whole crop gave back three boxes.
+
+So when the band right against a box will not agree, the ring **steps off it**
+and reads again a little further out, up to `BoxSweep.maxBorderWidth`. Nothing
+is loosened: the reading still has to be one flat colour or one even ramp, and
+every sample still has to be background. Only WHICH background pixels are asked
+changes, and a neighbouring control was never in the band to begin with — it is
+an island, and the ring keeps only what the sweep called background.
+
+Two things the step has to get right:
+
+- **Whatever it steps over comes out with the box.** That band is what it just
+  decided the box's own edge is, so the repair covers it. Without that the four
+  fields came out and left a hairline rectangle where each of them had been.
+- **A box sitting on another box never steps.** The mistake being undone is a
+  page-level one, and inside a box the surround is not a patch of colour at all,
+  it is the parent's own pixels. Stepping there would step over the one thing
+  that keeps a knob inside its switch: something that nearly fills its holder has
+  no clean ring of the holder to be read against, and that is how the app knows
+  it is a part rather than a thing.
+
+On the inspector crop this takes the boxes from three to six — all four fields,
+as real rounded rectangles — and the refusals from ten to seven. Every refusal
+left is a word with a red redline annotation drawn through the band around it,
+and those are right to refuse: lifting the word would erase part of the line
+somebody drew. Pinned by `Fixtures/dark-fields-2x.png` and
+`SeparatedDarkFieldsTests`.
+
 ## Cutting a box out
 
 A box is not unmixed the way a run of text is. The sweep already said which
