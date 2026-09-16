@@ -1533,6 +1533,32 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// the layer stored here is always the one you can still drag.
     public var motions: [LayerMotion]?
 
+    /// Set on a picture that Separate into Layers lifted off a screenshot as a
+    /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
+    /// still a picture, because reading the words is a separate step, and this
+    /// is how the app can offer that step on the one gesture that already means
+    /// "I want to change these words" without offering it on every photo in the
+    /// document. Nil is everything else, which is every picture in every
+    /// document written before this existed.
+    ///
+    /// It stays set once the words have been read, so undoing the reading
+    /// leaves a run that can be read again.
+    public var isARunOfText: Bool?
+
+    /// Whether a double click on this layer means "read these words": a run of
+    /// text the separation lifted off a screenshot that nobody has read yet.
+    ///
+    /// Deliberately narrow. Reading replaces the picture with the words it
+    /// found, so a double click that did this to an ordinary photo would turn
+    /// a picture into whatever word happened to be on a sign in it. The same
+    /// conditions Turn into Text is offered under otherwise: a picture drawn
+    /// the way its box says it is, since the words are found in the bitmap's
+    /// own pixels and a cropped or turned one has no honest way back.
+    public var holdsWordsToRead: Bool {
+        isARunOfText == true && imageRef != nil && text == nil
+            && crop == nil && transform.isIdentity && !isLocked
+    }
+
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
@@ -1577,6 +1603,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // A copy of a layer does what the original does: copying the look and
         // dropping the movement would be half a duplicate.
         copy.motions = motions
+        // A copy of a run of text is still a run of text, so double clicking it
+        // still offers to read the words.
+        copy.isARunOfText = isARunOfText
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1607,6 +1636,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.textStyleID = textStyleID
         copy.effectStyleBindings = effectStyleBindings
         copy.motions = motions
+        copy.isARunOfText = isARunOfText
         map[id] = copy.id
         return copy
     }

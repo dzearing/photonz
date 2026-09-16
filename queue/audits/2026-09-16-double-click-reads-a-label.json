@@ -1,0 +1,29 @@
+{
+  "feature": "Double click a separated label to retype it",
+  "epic": "ui-building",
+  "summary": "After taking a screenshot apart, double clicking any label reads its words and puts the caret in them, so changing a button's wording is one gesture instead of hunting for Turn into Text in a menu. Labels that were already words, including the ones that live inside a button, open for typing the same way they always did.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Double click a label in a separated screenshot to retype it (next-double-click-reads-a-label), on by default.",
+  "try": [
+    { "do": "Open a screenshot of some interface. Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png is the one the walks use." },
+    { "do": "Right click the picture's row in the Layers list and choose Separate into Layers. Wait for the pill." },
+    { "do": "Double click the heading at the top of the pane.", "shot": "2026-09-16-double-click-reads-a-label-1.png" },
+    { "do": "Type a different heading and press Command Return." },
+    { "do": "Press Command Z twice: once takes back what you typed, once takes back the reading." },
+    { "do": "Double click the white words on the blue button. That picks the label inside the button.", "shot": "2026-09-16-double-click-reads-a-label-2.png" },
+    { "do": "Double click the same words again. They open for typing. Type something shorter and press Command Return." },
+    { "do": "Double click the blue part of the button beside the words. Nothing is read." }
+  ],
+  "evaluate": [
+    "When you double clicked the heading, did you expect the words to open, or did you expect the gesture to do nothing until you had used the menu?",
+    "The words appear a moment after the click rather than instantly, because they are being read. Is that pause noticeable, or does it feel like the field simply opened?",
+    "Inside the button it takes two double clicks: one to pick the label, one to open it. Does the first one feel like a wasted step, or like stepping into the button?",
+    "Two undo presses take back a retyped label: one for the typing, one for the reading. Is that the number you expected, or should the whole gesture be one press?",
+    "The pill at the bottom names the face the words were read in. Read straight after a double click, does that tell you something useful or is it noise?"
+  ],
+  "rough": [
+    "Nothing in the app says the gesture exists. A person who never tries double clicking a label will never find it, which is the same discovery problem the menu row had. The study's other half, an offer on the separation pill to read the whole picture at once, is not built.",
+    "A refusal was not seen in the app, only in the code: every run of the fixture reads, so the case where the reader comes back with nothing and no field opens is untested by hand. An icon the sweep mistook for a run is the case that would show it.",
+    "Both walks were run with the screen locked, using the documented PHOTONZ_ALLOW_LOCKED_WALK override. Nothing in either walk looks a control up by name, so the failures a lock causes cannot happen here, and both screenshots above are real photographs of the window rather than offscreen renders. The full sweep still has to run them once the screen is unlocked before this is a green claim.",
+    "The mock and the study both wanted this on the pill AND on the gesture. Only the gesture is here."
+  ]
+}

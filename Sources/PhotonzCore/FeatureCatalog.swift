@@ -146,6 +146,8 @@ public enum FeatureCatalog {
 
     public static let separateIntoLayersFlag = "next-separate-into-layers"
 
+    public static let doubleClickReadsALabelFlag = "next-double-click-reads-a-label"
+
     public static let newLayerViaCutFlag = "next-new-layer-via-cut"
 
     public static let copyALookFlag = "next-copy-a-look"
@@ -472,6 +474,15 @@ public enum FeatureCatalog {
                     name: separateIntoLayersFlag,
                     title: "Separate a screenshot into layers",
                     description: "Right click the picture in the layers list, or use Layer then Separate into Layers, and every run of text and every box in the screenshot becomes its own layer you can pick up and move, arranged the way the screen was: a label that sat in a button comes out inside that button, so picking the button up picks the label up too. Where a piece came from, the picture is filled in with what was around it, so dragging a label off a dark button leaves the button looking untouched rather than punching a hole in it. A box that is really one flat colour comes out as a real rounded rectangle you can resize and repaint, and a card sitting on a soft shadow brings that shadow with it as a real shadow effect, so moving the card moves its shadow and the page it came off is clean. You get two things and not three: the pieces on their own layers and the picture with the gaps filled. Anything the app cannot read confidently is left in the picture and not mentioned. It is one undo step however many layers come out. A run of text that came out can then be read: right click it and choose Turn into Text and it becomes the words themselves, in the face, size and colour the screenshot was set in, sitting exactly where the old ones sat, so you can retype a label instead of covering it up. Where no face the app can set is close enough to the one in the picture, the run stays a picture and says why. Off means both commands are absent from both menus.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: doubleClickReadsALabelFlag,
+                    title: "Double click a label in a separated screenshot to retype it",
+                    description: "After Separate into Layers, double clicking the words on a button or a row reads them and puts the caret in them, so changing a label is one gesture instead of finding Turn into Text in a menu first. Double clicking already means \"I want to change these words\" everywhere else in the app, and this makes it mean the same thing on a label that is still a picture. The reading is the same one Turn into Text does, on the one label you pointed at, and it lands in its own step: one undo takes the reading back, a second takes back what you typed. Where no face the app can set is close enough to the one in the picture, nothing opens and a line at the bottom of the canvas says why, exactly as the menu row does. Off means a double click on a label that has not been read yet picks it and nothing more, and Turn into Text is the only way to the words.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

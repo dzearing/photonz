@@ -295,6 +295,14 @@ extension Experiments {
     /// catalog, so Current never offers the command.
     var separateIntoLayersEnabled: Bool { isEnabled(FeatureCatalog.separateIntoLayersFlag) }
 
+    /// `next-double-click-reads-a-label`: whether double clicking a separated
+    /// run of text reads the words and opens them for typing, instead of only
+    /// picking the picture. Needs the separation itself to be on, since there
+    /// are no runs without it.
+    var doubleClickReadsALabelEnabled: Bool {
+        separateIntoLayersEnabled && isEnabled(FeatureCatalog.doubleClickReadsALabelFlag)
+    }
+
     /// `next-what-a-separation-left-behind`: whether the picture's own row in
     /// the layers list keeps the count the notice pill faded away with, and
     /// offers the next batch beside it (`SeparationLeftover`). Session chrome

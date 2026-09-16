@@ -1,0 +1,80 @@
+{
+  "out": "/tmp/photonz-playtest/double-click-a-label",
+  "seed": "Double clicking a label that lives INSIDE a group opens it for typing. Separate into Layers turns a button into a group holding its own fill and its own label, so the words a person wants to change are one level down. The walk separates a settings pane, turns the white label on the blue button into real text, then works the gesture from the top level: one click picks the button, a double click picks the label inside it, and a second double click opens the label for typing. It exists because a runner once read the code and concluded the descent could never stop, which turned out to be wrong and was only ever a walk clicking three times into a field that had already opened.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 3 },
+    { "do": "expect", "row": "Text 9", "present": true },
+    { "do": "selectRow", "row": "Text 9" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "turnIntoText" },
+    { "do": "wait", "seconds": 2.5 },
+    {
+      "do": "describe",
+      "stage": "1-a-label-inside-a-button",
+      "note": "Save Changes is real text now, and it is a CHILD of the group Box 4, which also holds the blue Fill it sits on"
+    },
+    { "do": "expect", "row": "Save Changes", "present": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "key", "key": "escape" },
+    { "do": "click", "at": [700, 900], "count": 1 },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "describe",
+      "stage": "2-standing-outside",
+      "note": "nothing is picked and nothing is stepped into, which is where a person starts"
+    },
+    { "do": "click", "at": [360, 792], "count": 1 },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "describe",
+      "stage": "3-one-click-picks-the-button",
+      "note": "THE FIRST TEST: a plain click on the words picks the whole button, not the words"
+    },
+    { "do": "click", "at": [360, 792], "count": 2 },
+    { "do": "wait", "seconds": 0.9 },
+    {
+      "do": "describe",
+      "stage": "4-a-double-click-picks-the-label",
+      "note": "THE SECOND TEST: one double click steps into the button and picks the label, and the canvas says which group you are standing in"
+    },
+    { "do": "click", "at": [360, 792], "count": 2 },
+    { "do": "wait", "seconds": 0.9 },
+    {
+      "do": "describe",
+      "stage": "5-a-second-double-click-opens-it",
+      "note": "THE THIRD TEST, and the one this walk exists for: with nothing left to step into, the double click means what it means everywhere else and the label opens for typing"
+    },
+    { "do": "snapshot", "name": "label-1-editor-open" },
+    { "do": "type", "text": "Save all" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "6-retyped-in-place",
+      "note": "THE FOURTH TEST: the whole label was offered for replacement, so the button says Save all rather than the new words welded onto the old ones. The row followed the words."
+    },
+    { "do": "expect", "row": "Save all", "present": true },
+    { "do": "expect", "row": "Save Changes", "present": false },
+    { "do": "render", "name": "label-2-retyped-doc" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    {
+      "do": "describe",
+      "stage": "7-one-press-takes-it-back",
+      "note": "THE FIFTH TEST: one undo puts the button's own label back"
+    },
+    { "do": "expect", "row": "Save Changes", "present": true }
+  ],
+  "setup": { "forget": ["groups"] }
+}

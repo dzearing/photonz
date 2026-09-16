@@ -832,23 +832,31 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         /// what the shadow was, which leaves the piece flat rather than wearing
         /// a guess (`ShadowRead`).
         public let shadow: ShadowStyle?
+        /// Whether the sweep read this piece as a RUN OF TEXT rather than a
+        /// box. It comes out as a picture either way — reading the words is a
+        /// separate step — but the layer remembers it, so the one gesture that
+        /// already means "change these words" can offer to read them
+        /// (`Layer.isARunOfText`).
+        public let isRunOfText: Bool
 
         public init(frame: CGRect, content: Content, name: String,
                     bodyName: String = "Picture", children: [SeparatedPiece] = [],
-                    shadow: ShadowStyle? = nil) {
+                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false) {
             self.frame = frame
             self.content = content
             self.name = name
             self.bodyName = bodyName
             self.children = children
             self.shadow = shadow
+            self.isRunOfText = isRunOfText
         }
 
         public init(frame: CGRect, ref: ImageRef, name: String,
                     bodyName: String = "Picture", children: [SeparatedPiece] = [],
-                    shadow: ShadowStyle? = nil) {
+                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false) {
             self.init(frame: frame, content: .picture(ref), name: name,
-                      bodyName: bodyName, children: children, shadow: shadow)
+                      bodyName: bodyName, children: children, shadow: shadow,
+                      isRunOfText: isRunOfText)
         }
 
         /// This piece and everything inside it.
@@ -895,8 +903,14 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             if shadowed, let shadow = piece.shadow { style.shadows = [shadow] }
             switch piece.content {
             case .picture(let ref):
-                return Layer(name: name, content: .image(ref), frame: piece.frame,
-                             style: style)
+                var made = Layer(name: name, content: .image(ref), frame: piece.frame,
+                                 style: style)
+                // Only the runs. A box that had to become a group to hold its
+                // label is the BUTTON, and its body is the fill: neither holds
+                // words, and offering to read them would be offering to turn a
+                // button into a word.
+                if piece.isRunOfText, piece.children.isEmpty { made.isARunOfText = true }
+                return made
             case .shape(let fill, let radii, let borderWidth, let borderColor):
                 var annotation = AnnotationContent(
                     shape: .rectangle, start: .zero,

@@ -283,6 +283,25 @@ extension CanvasNSView {
             beginTextSession(layerID: hit.id, at: hit.frame.origin)
             return
         }
+        // Double-click a label the separation has not read yet: read the words
+        // and then put the caret in them (Next `next-double-click-reads-a-label`).
+        // The gesture already means "I want to change these words" one line
+        // above; on a run of text lifted off a screenshot it used to mean
+        // nothing at all, and finding Turn into Text in a menu was the only way
+        // through. The reading is a moment's work off the main thread, so the
+        // field opens when it lands rather than here
+        // (`EditorState.readTheWordsThenType`).
+        if event.clickCount == 2, Experiments.shared.doubleClickReadsALabelEnabled,
+           let hit = document?.canvasHitTest(p, zoom: viewport.zoom), hit.holdsWordsToRead {
+            // Picked first, so the outline says which label is being read
+            // while it is being read, and so a refusal leaves the thing it is
+            // about in hand.
+            selectedLayerFrame = document?.canvasLayer(id: hit.id).map { $0.withoutSlack($0.frame) }
+            onSelectLayerInGroup(hit.id, document?.parentID(of: hit.id))
+            onReadTheWordsThenType(hit.id)
+            refreshOverlays()
+            return
+        }
         // Double-click an arrow to add or edit its caption (Next flag).
         if event.clickCount == 2, Experiments.shared.arrowCaptionsEnabled,
            let hit = document?.canvasHitTest(p, zoom: viewport.zoom),

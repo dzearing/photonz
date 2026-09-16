@@ -776,6 +776,45 @@ All nine runs, in one family:
 The serif and monospace candidates lose by more than the tie margin on every run
 that was checked, which is what makes the bar mean something.
 
+### Double clicking the label reads it and opens it for typing
+
+Flag: `next-double-click-reads-a-label`, on by default in Next. Landed
+2026-09-16.
+
+Double click already means "I want to change these words" on a text layer, and
+on a separated label it used to mean nothing at all: the gesture picked the
+picture and stopped, and the only way to the words was knowing Turn into Text
+sat in a menu. Now, with nothing left to step into, a double click on a run this
+command lifted off reads that ONE run and puts the caret in it — the same
+reading, the same refusal, one undo press for the reading and a second for what
+was typed.
+
+Two things make it safe to hang on a gesture rather than a menu row:
+
+- **Only a run.** The layer remembers that the sweep read it as a run of text
+  (`Layer.isARunOfText`, set by `PhotonzDocument.separateIntoLayers` and asked
+  through `Layer.holdsWordsToRead`). Every other picture is left alone, which
+  matters because reading REPLACES the picture with what was found in it: the
+  same gesture offered on a photograph would turn a photograph into whatever
+  word happened to be on a sign in it. The blue fill under a button is a picture
+  too, and double clicking that reads nothing.
+- **It lands on the one label you are looking at.** That is the whole argument
+  for doing it here rather than inside Separate into Layers, where the app's
+  confidence cannot tell a right reading from a wrong one and a bad guess costs
+  the whole separation to undo. The study is
+  `docs/design/separate-reads-the-words.md`.
+
+The reading is off the main thread like every other, so the field opens when the
+words land rather than on the click — `EditorState.readTheWordsThenType` asks,
+`applyTextReading` answers with `askToTypeIn`, and the canvas opens its field
+once per new token and not at all if the gesture became a drag in the meantime.
+A reading that comes back with nothing opens no field and raises the same line
+at the bottom of the canvas the menu row raises.
+
+Walks: `Scripts/playtest/read-a-label-by-double-click-walk.json` for the reading,
+`Scripts/playtest/double-click-a-label-walk.json` for the plain case of a label
+that is already words and lives inside a group.
+
 ## Which piece sits in which
 
 A pile is not what the screen looked like. A label that sits in a button is part

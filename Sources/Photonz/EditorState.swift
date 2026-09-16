@@ -585,6 +585,31 @@ final class EditorState {
     /// keeping the tool in hand (re-picking the active tool). The canvas owns
     /// the draft, so it answers by committing with `keepTool`.
     private(set) var captionCloseRequest = 0
+
+    /// A layer whose words are being read because somebody double clicked
+    /// them and wants to type in them the moment they arrive
+    /// (`readTheWordsThenType`). Nil for a reading asked for any other way,
+    /// which is every Turn into Text off a menu.
+    var typeAfterReading: UUID?
+
+    /// An ask for the canvas to open its inline field over a layer, from
+    /// somewhere that is not a click on the canvas. The token is what makes it
+    /// an EVENT rather than a state: the canvas opens the field once per new
+    /// token and never re-opens one the person has since closed.
+    struct TypeInLayerRequest: Equatable, Sendable {
+        let layerID: UUID
+        let token: Int
+    }
+
+    /// The most recent ask, or nil if there has never been one.
+    private(set) var typeInLayer: TypeInLayerRequest?
+    private var typeInLayerCount = 0
+
+    /// Asks the canvas to put the caret in this layer's words.
+    func askToTypeIn(_ id: UUID) {
+        typeInLayerCount += 1
+        typeInLayer = TypeInLayerRequest(layerID: id, token: typeInLayerCount)
+    }
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     /// Any change to the primary selection dissolves a marquee multi-selection —
     /// the two never coexist.

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T15:16:43.692Z",
+  "updated": "2026-09-16T16:39:30.932Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -251,6 +251,10 @@
     {
       "t": "2026-09-16T15:16:43.691Z",
       "note": "ALSO FAILING ON CLEAN MAIN: tutorial-layers-and-undo-walk, step 23 (waitFor): tutorialStep(\"put-it-back\") did not happen within 6.0s. Checked the same way, by stashing my diff and rebuilding the probe from main, so it is not something a focus runner brought in today. The step before it is 'command+backspace taken by responder chain', so the Delete went somewhere and the tutorial did not advance to its next step. That walk never gets past 6 layers, so nothing about the layers list being longer is involved. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh tutorial-layers-and-undo."
+    },
+    {
+      "t": "2026-09-16T16:39:30.931Z",
+      "note": "Five of the eight separate-* walks fail on clean main today (2026-09-16, screen locked so run with PHOTONZ_ALLOW_LOCKED_WALK=1; none of these steps looks up a control by name, and the same five fail identically with and without an unrelated change applied, so the failures are in the walks or the app and not in the lock). Baseline was taken by stashing a working change and re-running, so these are NOT caused by next-double-click-reads-a-label.\n\n  Scripts/playtest-all.sh --no-build separate\n  separate-boxes-walk        FAILED step 16 (expect): no row called \"Box 2\" is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3\n  separate-hierarchy-walk    FAILED step 13 (expect): same\n  separate-shadow-walk       FAILED step 15 (expect): same\n  separate-dark-window-walk  FAILED step 13 (expectLayers): 1 layer in the document, not at least 40; the first few: Background\n  separate-whole-screenshot-walk FAILED step 16 (expectLayers): 173 layers in the document, more than the 151 claimed\n\nTwo different shapes. The three 'no row called Box 2' ones all list the SAME five visible rows, so 'expect row' is reading only the rows the layers panel has laid out rather than every row in the document — a walk that scrolls or a panel that is short enough changes the answer. The other two are counts that have moved: the dark window separates into nothing at all now, and the whole screenshot comes apart into 173 pieces where the walk claims at most 151."
     }
   ]
 }

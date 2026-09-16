@@ -4421,3 +4421,11 @@
 {"t":"2026-09-16T16:21:15.461Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
 {"t":"2026-09-16T16:21:15.505Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
 {"t":"2026-09-16T16:21:41.868Z","ev":"task_done","id":"find-out-whether-separating-should-hand-you-text","from":"in_progress","note":"Study, not a build. Both shapes measured on three real captures (settings pane 9 runs, this app's window 40, the dashboard 142): reading every confident run gets the FAMILY wrong on 4 of 31 and 13 of 82, on pages set in one family, and the app calls all of those its confident verdict, so no bar and no provenance filter separates good from bad. It also takes the command from 155ms to 298ms and from 56ms to just under two seconds. Recommendation is no automatic reading; fix discovery with a read-the-words action on the separation pill (the only shape where the page can vote on one family, which takes strays to zero) and with double click on a separated label. Written up in docs/design/separate-reads-the-words.md, audited in queue/audits/2026-09-16-separate-reads-the-words.json, re-derivable with PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests. Full suite green, 7650 tests. Commit a4819c71."}
+{"t":"2026-09-16T16:23:58.450Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":120,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T16:23:58.557Z","ev":"task_started","id":"find-out-whether-a-label-inside-a-group-can-be-d","title":"Find out whether a label inside a group can be double clicked into typing","priority":"p2-normal"}
+{"t":"2026-09-16T16:39:30.933Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-16T16:39:46.791Z","ev":"task_created","id":"the-separation-pill-offers-to-read-the-words-in","priority":"p2-normal","title":"The separation pill offers to read the words in the whole picture"}
+{"t":"2026-09-16T16:39:55.432Z","ev":"task_note","id":"find-out-whether-a-label-inside-a-group-can-be-d"}
+{"t":"2026-09-16T16:39:55.476Z","ev":"task_note","id":"find-out-whether-a-label-inside-a-group-can-be-d"}
+{"t":"2026-09-16T16:39:55.521Z","ev":"task_note","id":"find-out-whether-a-label-inside-a-group-can-be-d"}
+{"t":"2026-09-16T16:39:55.567Z","ev":"task_note","id":"find-out-whether-a-label-inside-a-group-can-be-d"}

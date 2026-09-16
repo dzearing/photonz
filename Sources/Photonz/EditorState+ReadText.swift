@@ -35,6 +35,31 @@ extension EditorState {
         canSeparateIntoLayers(id: id)
     }
 
+    /// Double clicking a label that is still a picture: read the words and
+    /// then put the caret in them (Next, `next-double-click-reads-a-label`).
+    ///
+    /// The gesture already means "I want to change these words" on a text
+    /// layer, and on a separated label it used to mean nothing at all. The
+    /// reading is the same one Turn into Text does, on the ONE run under the
+    /// pointer, so the guess lands where the person is looking and one undo
+    /// press takes back exactly that. A reading that comes back with nothing
+    /// raises the same line at the bottom of the canvas the menu row raises,
+    /// and opens no field: there would be no words in it.
+    ///
+    /// Only offered on a run the separation lifted off a screenshot
+    /// (`Layer.holdsWordsToRead`). Reading replaces the picture with what was
+    /// found in it, which on an ordinary photo would be a picture turned into
+    /// whatever word happened to be on a sign in it.
+    ///
+    /// Why this rather than reading every run inside Separate into Layers:
+    /// `docs/design/separate-reads-the-words.md`.
+    func readTheWordsThenType(id: UUID) {
+        guard Experiments.shared.doubleClickReadsALabelEnabled,
+              document?.layer(id: id)?.holdsWordsToRead == true else { return }
+        typeAfterReading = id
+        turnIntoText(id: id)
+    }
+
     /// Reads the words in a picture and puts them back as text.
     ///
     /// Off the main thread like the sweep, and for the same reason: it reads
@@ -74,6 +99,11 @@ extension EditorState {
     /// held.
     private func applyTextReading(id: UUID, read: TextReader.Read) {
         guard let document, let layer = document.layer(id: id) else { return }
+        // Whoever asked for this reading wanted to type in it afterwards. The
+        // intent is spent here whatever the answer is, so a refusal never
+        // leaves the next Turn into Text opening a field nobody asked for.
+        let thenType = typeAfterReading == id
+        typeAfterReading = nil
         guard let reading = read.outcome.reading, let ink = read.inkRect,
               let ref = layer.imageRef else {
             raiseCanvasNotice(.turnedIntoText(read.outcome))
@@ -116,5 +146,8 @@ extension EditorState {
         selectedLayerID = id
         multiSelectedLayerIDs = []
         raiseCanvasNotice(.turnedIntoText(read.outcome))
+        // The caret goes in LAST, once the words are really there: the canvas
+        // opens its field over the layer it finds in the document.
+        if thenType { askToTypeIn(id) }
     }
 }

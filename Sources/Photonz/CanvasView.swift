@@ -54,6 +54,9 @@ struct CanvasView: NSViewRepresentable {
     /// See `EditorState.captionCloseRequest`: each bump closes an open caption
     /// field with the tool kept.
     let captionCloseRequest: Int
+    /// See `EditorState.typeInLayer`: each new token opens the inline field
+    /// over that layer, for a caret asked for from outside a canvas click.
+    let typeInLayer: EditorState.TypeInLayerRequest?
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
@@ -115,6 +118,9 @@ struct CanvasView: NSViewRepresentable {
     /// A click that resolved through the group walk: the layer it picked and
     /// the group it picked it inside.
     let onSelectLayerInGroup: (UUID?, UUID?) -> Void
+    /// A double click on a separated label: read its words, then open them for
+    /// typing. See `EditorState.readTheWordsThenType`.
+    let onReadTheWordsThenType: (UUID) -> Void
     let onExtendSelection: (UUID) -> Void
     let onAddSweptLayers: (SelectionRegion, UUID?) -> Void
     /// A name typed on the canvas: the layer and what it is now called.
@@ -301,6 +307,7 @@ struct CanvasView: NSViewRepresentable {
                    selectedLayerFrame: selectedLayerFrame, groupContext: groupContext,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, captionCloseRequest: captionCloseRequest,
+                   typeInLayer: typeInLayer,
                    annotationContent: annotationContent,
                    calloutShape: calloutShape,
                    calloutMagnification: calloutMagnification,
@@ -334,6 +341,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
+        view.onReadTheWordsThenType = onReadTheWordsThenType
         view.onExtendSelection = onExtendSelection
         view.onAddSweptLayers = onAddSweptLayers
         view.onRenameLayer = onRenameLayer
@@ -450,6 +458,7 @@ final class CanvasNSView: NSView {
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
+    var onReadTheWordsThenType: ((UUID) -> Void) = { _ in }
     var onExtendSelection: ((UUID) -> Void) = { _ in }
     var onAddSweptLayers: ((SelectionRegion, UUID?) -> Void) = { _, _ in }
     var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
@@ -936,6 +945,7 @@ final class CanvasNSView: NSView {
     /// pointer from hit-test/marquee into drag-to-create.
     var tool: Tool = .select
     var captionCloseRequest = 0
+    var typeInLayerToken = 0
     /// In-progress drag-to-create (document coordinates).
     var annotationDrag: AnnotationDrag?
     /// The path being laid down with the Pen (Next, `next-pen`). The one tool

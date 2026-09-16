@@ -146,13 +146,16 @@ extension EditorState {
                                 width: piece.rect.width * sx,
                                 height: piece.rect.height * sy)
             let name: String
+            let isRun: Bool
             switch piece.kind {
             case .text:
                 name = "\(Self.separatedRunName) \(firstRun + runs)"
                 runs += 1
+                isRun = true
             case .box:
                 name = "\(Self.separatedBoxName) \(firstBox + boxes)"
                 boxes += 1
+                isRun = false
             }
             // The shadow was read in image pixels too, so it is scaled the
             // same way the rounding is: a picture shown at half size gets half
@@ -172,7 +175,7 @@ extension EditorState {
                 bodyNames.append(Self.separatedPictureBodyName)
                 return PhotonzDocument.SeparatedPiece(frame: placed,
                                                       ref: store.register(image), name: name,
-                                                      shadow: shadow)
+                                                      shadow: shadow, isRunOfText: isRun)
             case .shape(let shape):
                 bodyNames.append(Self.separatedShapeBodyName)
                 // The shape was read in image pixels; the layer lives in the
@@ -191,7 +194,7 @@ extension EditorState {
                                         bottomLeft: shape.radii.bottomLeft * scale),
                                     borderWidth: shape.borderWidth * scale,
                                     borderColor: shape.borderColor),
-                    name: name, shadow: shadow)
+                    name: name, shadow: shadow, isRunOfText: isRun)
             }
         }
 
@@ -213,7 +216,8 @@ extension EditorState {
                 return PhotonzDocument.SeparatedPiece(
                     frame: piece.frame, content: piece.content, name: piece.name,
                     bodyName: bodyNames[node.index],
-                    children: node.children.map(assemble), shadow: piece.shadow)
+                    children: node.children.map(assemble), shadow: piece.shadow,
+                    isRunOfText: piece.isRunOfText)
             }
             pieces = result.nested.map(assemble)
         } else {

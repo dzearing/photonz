@@ -26,6 +26,7 @@ extension CanvasNSView {
                groupContext: UUID?,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int,
+               typeInLayer: EditorState.TypeInLayerRequest?,
                annotationContent: AnnotationContent?,
                calloutShape: ZoomCalloutShape,
                calloutMagnification: CGFloat,
@@ -158,6 +159,25 @@ extension CanvasNSView {
             }
             pressClosedCaptionField = false
             window?.invalidateCursorRects(for: self)
+        }
+        // A caret asked for from outside a click on the canvas: today that is
+        // a double click on a separated label, whose words only exist once the
+        // reading has landed, a moment after the gesture. Deferred a tick like
+        // everything else that changes the canvas from inside a SwiftUI update.
+        if let typeInLayer, typeInLayer.token != typeInLayerToken {
+            typeInLayerToken = typeInLayer.token
+            let wanted = typeInLayer.layerID
+            DispatchQueue.main.async { [weak self] in
+                // Nothing opens over a gesture already in hand. The reading is
+                // a few tens of milliseconds, which is long enough for a
+                // double click to have become a drag, and a field appearing
+                // under a moving pointer would eat it.
+                guard let self, self.textSession == nil, self.moveDrag == nil,
+                      self.resizeDrag == nil, self.marquee == nil,
+                      let layer = self.document?.canvasLayer(id: wanted),
+                      case .text = layer.content else { return }
+                self.beginTextSession(layerID: wanted, at: layer.frame.origin)
+            }
         }
         if captionCloseRequest != self.captionCloseRequest {
             self.captionCloseRequest = captionCloseRequest

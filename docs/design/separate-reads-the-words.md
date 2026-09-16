@@ -137,13 +137,19 @@ three differences that all favour it:
 
 ### Double clicking a separated label reads it and opens it for typing
 
+**Landed 2026-09-16** behind `next-double-click-reads-a-label`, on by default in
+Next. See `docs/design/separate-into-layers.md`, "Double clicking the label reads
+it and opens it for typing".
+
 Double click already means "I want to change these words" for a text layer. On a
 separated run it should read the run first and then put the caret in it. The
 cost is one reading (25 to 56 ms) on the one label being touched, the guess
 lands where the person is looking, one press takes it back, and a refusal says
-why exactly as it does today. This folds into the open task
-`find-out-whether-a-label-inside-a-group-can-be-d`, which is already about
-double clicking a separated label into typing.
+why exactly as it does today. That task,
+`find-out-whether-a-label-inside-a-group-can-be-d`, built it, and settled its own
+question on the way: a label inside a group could always be double clicked into
+typing, and the walk that said otherwise was clicking three times into a field
+that had already opened.
 
 ## What was rejected, and why
 

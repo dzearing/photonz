@@ -1,0 +1,249 @@
+{
+  "out": "/tmp/photonz-playtest/read-a-label-by-double-click",
+  "seed": "Double clicking a label a separation has not read yet reads the words and puts the caret in them (next-double-click-reads-a-label). Before this, double clicking a separated label picked the picture and did nothing else, and the only way to the words was finding Turn into Text in a menu. The walk separates a settings pane and retypes two labels without opening a menu at all: the heading, which is a layer of its own, and the white label on the blue button, which lives inside that button.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": true
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        900
+      ],
+      "count": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-nine-pictures-of-words",
+      "note": "every run came out as a picture called Text something, because nothing has read any of them"
+    },
+    {
+      "do": "click",
+      "at": [
+        146,
+        85
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-heading-opened-for-typing",
+      "note": "THE FIRST TEST: one double click on the heading read the word General and put the caret in it, with no menu anywhere"
+    },
+    {
+      "do": "snapshot",
+      "name": "read-1-heading-open"
+    },
+    {
+      "do": "type",
+      "text": "Appearance"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "row": "Appearance",
+      "present": true
+    },
+    {
+      "do": "render",
+      "name": "read-2-heading-retyped-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-two-presses-take-both-back",
+      "note": "THE SECOND TEST: one undo takes back the retyping and the next takes back the reading, so the heading is a picture called Text 1 again"
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": true
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        900
+      ],
+      "count": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        792
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-inside-the-button-first",
+      "note": "the button's label is one level down, so the first double click steps into the button and picks the label, which is still a picture"
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        792
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-the-label-inside-the-button-opened",
+      "note": "THE THIRD TEST: a second double click read the white words on the blue button and opened them for typing, without stepping outside the group"
+    },
+    {
+      "do": "type",
+      "text": "Save all"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "6-the-button-says-something-else",
+      "note": "THE FOURTH TEST: the button reads Save all, in the face, size and colour the screenshot's own label was in, sitting where that label sat"
+    },
+    {
+      "do": "expect",
+      "row": "Save all",
+      "present": true
+    },
+    {
+      "do": "render",
+      "name": "read-3-button-retyped-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        250,
+        792
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-button-itself-is-not-words",
+      "note": "THE FIFTH TEST: the blue fill under the label is a picture too, and double clicking it picks it and reads nothing. Only a run the separation lifted off as WORDS is offered, so a photo can never be turned into whatever word happens to be in it."
+    },
+    {
+      "do": "expect",
+      "row": "Fill",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Save all",
+      "present": true
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
+}

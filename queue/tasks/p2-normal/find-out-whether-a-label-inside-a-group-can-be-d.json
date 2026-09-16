@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T11:55:53.256Z",
-  "updated": "2026-09-16T16:18:45.494Z",
+  "updated": "2026-09-16T16:39:55.566Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while writing Scripts/playtest/separate-turn-into-text-walk.json on 2026-09-13. Reproduced in the walk only, which is why this is filed as something to look into rather than as a bug.\n\nWhat was run: the walk separated the settings-pane fixture, turned run Text 9 (the words Save Changes, white on the blue button) into a text layer inside group Box 4, then did tool select and three `click count 2` steps at document (360, 792) with waits between, then `type`.\n\nWhat it printed, every time:\n  [41 type] FAILED: no text field has the keyboard (first responder is CanvasNSView)\n\nThe same walk, double clicking a TOP LEVEL text layer (the heading at document (146, 85)) opens the editor on the first double click and types fine - that is the shipped walk today.\n\nThe code is Sources/Photonz/CanvasPointerDrags.swift:234: a double click always DESCENDS while `groupAwareDescent` returns a step, and only once it returns nil does the `case .text = hit.content` branch at :255 open the editor. The question is whether descent keeps returning a step for a child that is already picked, or whether the harness synthesises clicks in a way that never reaches the second branch.",
@@ -49,6 +49,27 @@
     {
       "t": "2026-09-16T16:18:45.493Z",
       "note": "RECOMMENDED SHAPE, from the 2026-09-16 study find-out-whether-separating-should-hand-you-text (docs/design/separate-reads-the-words.md): once double click reaches a separated label, it should READ the label first and then put the caret in it, rather than doing nothing because the layer is still a picture. Double click already means 'I want to change these words', and it is the answer to the discovery problem that study was about: the reading costs 25 to 56 ms on the one run being touched, the guess lands on the label the person is looking straight at, and one undo press takes back exactly that. The study recommends AGAINST reading every run inside Separate into Layers, so this gesture and a 'read the words' action on the separation pill are the two ways the words should be reachable."
+    },
+    {
+      "t": "2026-09-16T16:23:58.555Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T16:39:55.430Z",
+      "note": "ANSWERED, and the answer is that it already worked. Reproduced in the app, not read off the code. The premise in the notes was wrong: descendTarget stops exactly where it should, because it requires the CURRENT pick to be a group, and once the pick is the label itself it returns nil and the double click means what it always meant.\n\nWhat the app really does, traced out of the walk's own state at every step (/tmp/photonz-playtest/double-click-a-label, now Scripts/playtest/double-click-a-label-walk.json):\n  click 1  at (360, 792) -> selected Box 4, inside nothing\n  dbl 1    at (360, 792) -> selected Save Changes, inside Box 4\n  dbl 2    at (360, 792) -> handler down 17.6ms, the inline field opens\n  type     -> \"Save all\" into InlineTextView; the row becomes Save all\nA real photograph of that, taken by the walk: queue/audits/2026-09-16-double-click-reads-a-label-2.png shows the label open with all of it highlighted, inside Box 4 in the layers list.\n\nWhy the 2026-09-13 walk looked broken: THREE double clicks. Turn into Text leaves you standing inside Box 4 with the label picked, so double click ONE opens the field; two and three then land INSIDE that field (the harness hit-tests, and the log says so in words: \"landed on the open text field\"), where a double click selects the word under the pointer. Typing then replaced only that word. Ran exactly that and got \"Save Save all\" instead of \"Save all\", which is the same shape as the original report and is entirely the walk."
+    },
+    {
+      "t": "2026-09-16T16:39:55.474Z",
+      "note": "Adversarial review before building the recommended shape. Reading REPLACES the picture with the words found in it, so a double click offered on every picture would turn a photograph into whatever word happened to be on a sign in it, silently, on a gesture that costs nothing to make by accident. canTurnIntoText is 'any picture with no crop and no turn', which is far too wide for a gesture. So the run remembers that the sweep read it as text (Layer.isARunOfText, Layer.holdsWordsToRead) and nothing else is ever offered. Also declined to open the field mid-gesture: the reading takes tens of milliseconds, which is long enough for the double click to have become a drag, so the canvas checks no drag is in hand before it opens anything."
+    },
+    {
+      "t": "2026-09-16T16:39:55.519Z",
+      "note": "left rough: the gesture is undiscoverable on its own. Filed as the-separation-pill-offers-to-read-the-words-in, which is the study's other half and the part that actually fixes discovery. Also left rough, in this log rather than as a task: the refusal path (a run the reader comes back empty on opens no field and raises the usual line) was never seen by hand, because every run of settings-pane-2x reads."
+    },
+    {
+      "t": "2026-09-16T16:39:55.565Z",
+      "note": "Both walks ran with the screen LOCKED, using the documented PHOTONZ_ALLOW_LOCKED_WALK=1 override. Deliberate and bounded: neither walk looks up a single control by name (open, action, selectRow and expect all resolve out of the document model, and click/type go to the canvas and the responder chain), which is the one thing a lock takes away. Both still photographed the window for real. The sweep still owes them a run once the screen is unlocked."
     }
-  ]
+  ],
+  "started": "2026-09-16T16:23:58.554Z"
 }

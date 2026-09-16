@@ -1,0 +1,28 @@
+{
+  "id": "the-separation-pill-offers-to-read-the-words-in",
+  "title": "The separation pill offers to read the words in the whole picture",
+  "goal": "After taking a screenshot apart, the line that appears at the bottom of the canvas says how many pieces came out. It should also offer to read every label in one press, so a person who wants the words does not have to double click each label in turn or find a menu row. Reading them all together also lets the app pick the one typeface the page is set in and hold every label to it, which reading one label at a time can never do.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2780,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T16:39:46.787Z",
+  "updated": "2026-09-16T16:39:46.790Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the study docs/design/separate-reads-the-words.md, which recommended AGAINST reading inside the command and FOR two ways of asking: this pill offer, and a double click on one label. The double click landed on 2026-09-16 (next-double-click-reads-a-label, see docs/design/separate-into-layers.md). This is the other half and it is the one that fixes discovery, since nothing points at the double click.\n\nThe study measured what reading everything at once is worth: letting the page vote on one family and accepting each run where that family still clears the bar takes the strays to zero by construction, at a cost of 1 reading of 31 on app-window-2x and 8 of 82 on the dense page. Per-run reading can never do this because it only ever sees one run.\n\nCost, measured on a release build: settings-pane-2x 143 ms for 9 runs, app-window-2x 477 ms for 40, dense-page-1x 1910 ms for 142, spread over the cores. Past a second this owes a progress indicator. Re-derive with PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests.\n\nThe pill is SeparationLeftover / raiseCanvasNotice(.separatedIntoLayers(...)); the reading is EditorState+ReadText.swift.",
+  "acceptance": [
+    "The line that appears after Separate into Layers carries a control that reads the words in every run it found",
+    "Pressing it turns every run it is confident about into real words, and one undo press takes the whole lot back",
+    "Where the page is set in one typeface, every label that comes back is in that typeface",
+    "Runs it cannot read stay as pictures and the line says how many"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T16:39:46.789Z",
+      "note": "created (manual)"
+    }
+  ]
+}
