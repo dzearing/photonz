@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 290,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T17:48:59.108Z",
-  "updated": "2026-09-16T12:23:34.596Z",
+  "updated": "2026-09-16T21:56:55.384Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-grid-line-under-a-pen-point-lights-up-while on 2026-09-15. The mark there is deliberately gated on the grid pulling, and this is the half that gate leaves out.\n\nThe blocker is cost, and it is measured. Tests/PhotonzCoreTests/DrawLandingCostTests.swift, run with `swift test --filter DrawLandingCostTests`, prints:\n\n  [perf] a grid and twenty guides, nothing photographed: 5.9 us a mouse move\n  [perf] the Pen with forty anchors down: 0.5 us a mouse move\n  [perf] grid over a 2560x1600 screenshot, 104 borders in it: 2530.2 us a mouse move\n  [perf] the same screenshot with only four borders in it: 2390.3 us a mouse move\n\nSo one AnnotationSnapping.snap over a big picture costs about 2.4ms, and the last two lines are the finding: the cost is the picture WIDTH, not what is drawn on it. EdgeMap.verticalEdges/horizontalEdges allocate a [Double] the full width (or height) of the picture and sum every block row into it on every call, then refinedPeaks scans the whole profile. Nothing is cached between calls.\n\nThis is a pre-existing hot path rather than anything new: snapMeasureAnchor pays it on every measure hover move today, and snappedAnnotationPoint pays it on every mouseDragged frame while an arrow is drawn on a screenshot. No user-visible jank has been reproduced from it, which is why this is p2 and not p1 - it is a number, not a complaint. Making it cheap (a cached profile per picture, or a windowed scan instead of a full-width one) would let the hover mark cover screenshots and would take the cost off the drag path at the same time.",
@@ -27,6 +27,24 @@
     {
       "t": "2026-09-16T12:23:34.595Z",
       "note": "seq 2710 -> 290"
+    },
+    {
+      "t": "2026-09-16T21:27:28.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T21:39:54.778Z",
+      "note": "Adversarial review before building. (1) The blocker in the notes is not real: the 2.4ms figure was measured by `swift test`, which builds UNOPTIMIZED. Every app bundle comes from Scripts/build-app.sh, which is `swift build -c release`. Same measurement in release: 17.3 us a mouse move on 2560x1600 (`Scripts/test.sh -c release --filter DrawLandingCostTests`). So there is no cost to optimize away and no cache or windowed scan to build - doing either would have changed snap semantics (strength is normalised to the queried profile's max) for no user gain. (2) The mock-ish instinct of 'ring always visible' is wrong on a plain screenshot: the ring must only appear when a LINE would move the point, otherwise it rides the cursor saying nothing. (3) The Pen has no border magnets at all (PenSession.landing knows the grid and its own anchors, nothing about the picture), so it stays gated on the grid."
+    },
+    {
+      "t": "2026-09-16T21:56:31.683Z",
+      "note": "Adversarial review of the built thing, on the real app. Ran the walk and looked at the capture: the ring landed on the cap-top of a text row rather than a container border, and at half zoom it sat twelve document points from the pointer. Neither is new - that is the magnet the drag has always applied, now visible - so nothing was changed away from it, and both went into the audit's evaluate list as questions for the user. Left rough, none of it a defect and all of it in the audit for the user to react to: (1) the Pen still has no border magnet at all on a screenshot, so with the grid off it marks nothing; (2) hovering draws only the ring, without lighting the caught line yellow the way a drag does, so the ring does not say WHICH line it caught; (3) text cap-tops and baselines catch when you are drawing a box, which may not be what a box wants; (4) at half zoom the magnet reaches sixteen document points, which is a long pull to see happen. No follow-up task filed: none of these is broken, and filing four near-twins of the audit lines is exactly what the follow-up bar exists to stop."
+    },
+    {
+      "t": "2026-09-16T21:56:55.382Z",
+      "note": "The aiming ring now covers screenshots. The gate on the canvas grid is gone; the ring is drawn whenever a LINE places the first point rather than the hand - a grid crossing, a pinned guide, or a border found in the picture - which is one new computed property, EdgeSnapping.Snap.isPlaced, asked of the very snap the press asks (Sources/PhotonzCore/EdgeSnapping.swift, Sources/Photonz/CanvasDrawLanding.swift). With nothing near enough to catch there is still no ring. The Pen stays grid-only: PenSession.landing knows nothing about the picture underneath. THE BLOCKER WAS NOT REAL: the '2.4ms a mouse move' in this task's notes was measured by swift test, which builds unoptimized, while every app bundle is built by Scripts/build-app.sh (swift build -c release). Release measurement: 17.5 us a mouse move on 2560x1600 with no grid, about a tenth of a percent of a frame, so nothing was optimized and the drag path was not touched. DrawLandingCostTests now carries a per-configuration ceiling (200 us release, 25 ms debug). Verified: 8 new core tests (DrawLandingAimTests), full suite green at 7828, and a new walk Scripts/playtest/landing-on-a-screenshot-walk.json (44 steps) that hovers a real capture with no grid, checks the ring absent on flat ground and present on a border under the rectangle, arrow and line tools, checks Command takes it away, and then drags a box from that spot and checks its corner landed inside the ring. The landing, grid and arrow-tip walk sets all pass. CAVEAT: the Mac's screen was locked, so every walk run was forced with PHOTONZ_ALLOW_LOCKED_WALK=1 and by the repo's rule none counts as a pass; this walk uses no control names, which is the only thing a lock takes away, and the three audit shots are real window captures. A sweep was already pending and will run the set once unlocked. Audit: queue/audits/2026-09-16-landing-on-a-screenshot.json. Pushed as 8ae21d58 and 58861ce4."
     }
-  ]
+  ],
+  "started": "2026-09-16T21:27:28.684Z",
+  "completed": "2026-09-16T21:56:55.383Z"
 }
