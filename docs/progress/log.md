@@ -16868,3 +16868,24 @@ instead of rediscovering it.
 
 - Next: nothing outstanding. No sweep requested — the change is confined to two
   test files and one test helper, and no walk touches them.
+
+## 2026-09-16 — Leftovers: a task that runs out of time no longer hands its work to the next one
+
+The 05:18 incident (the runner on `separate-finds-the-boxes-in-a-dark-window-too-no`
+ran out of its turn and left seven files changed, with nothing anywhere saying so)
+is now handled by the loop rather than by hand. `queue/bin/leftovers.mjs` takes a
+picture of the working tree before every runner and compares when it ends;
+anything that became dirty during that turn is named in the loop window and on
+the dashboard, stashed under the task's id, recorded in `queue/leftovers/`, and
+handed back to the owning task in its own log the next time that task is
+claimed. `queue/` and anything the user had already changed are never touched.
+A stash git refuses is reported louder, not quieter.
+
+Drilled by `queue/bin/leftovers-drill.sh` (18 checks, two scenarios, the first
+running the real `go-loop.sh` against a throwaway repo). `failure-drill.sh`,
+`manager-due-drill.sh`, the node drills and `Scripts/test.sh` all still green.
+Commit `10b411c3`.
+
+Next: nothing carried over. Open question for the user, in the audit's
+`evaluate`: a stash plus a log line is where half-finished work goes now, and
+whether that should instead be a branch they can look at.
