@@ -224,6 +224,41 @@ to what you just made. The sheet asks the destination, moves the format to the
 one that survives, and lists what makes the trip and what does not — including
 the one line nothing carries: **a drawing in a page receives no clicks**.
 
+## The canvas it was drawn on
+
+A blank canvas is a REAL full-size bitmap of white (`SolidImage`), because a
+marquee fill or an eraser stroke on the background has to redraw at full
+resolution. That is right on the canvas and wrong in a file: an icon drawn on
+one used to export with a white rectangle the size of the canvas behind it, so
+handed to a developer it could not sit on a coloured page or a dark theme
+without the box showing.
+
+`SVGExport.backdrop(in:flatImages:)` names the layer that is only the canvas:
+the **bottom-most layer anyone can see**, where it is one flat colour reaching
+every edge, with no transform, no blend, and no effect on it. Everything else
+is part of the drawing. That is what keeps the answer safe:
+
+* a **screenshot** is a photograph rather than a flat colour, so it is never
+  the canvas and its picture always goes out;
+* a **screen exported as a frame** is scoped to the frame, whose own surface is
+  inside it rather than under it, so it always keeps its background;
+* a flat swatch **drawn on top** of the canvas is not the bottom layer, and a
+  flat colour that does not reach the edges is not the canvas either.
+
+`SVGExport.Background` says what to do about it, and `.drop` leaves that one
+top-level layer out. The Export sheet asks with **Include the background**,
+unticked, with a swatch of the colour that would go in and one line saying what
+the file will be — and the row is **not there at all** when there is no canvas
+to leave out, rather than sitting dimmed with nothing to say. The answer is not
+remembered between exports: it is shown on the sheet every time instead, so it
+can never be a setting somebody left on months ago quietly putting a white box
+back.
+
+Reading which bitmaps are flat walks their pixels (36 ms for a 12 megapixel
+canvas), so the Export sheet asks **once when it opens and whenever the target
+changes**, and hands the same answer to the background row, the fallback lines,
+the photograph lines and the hand-off list.
+
 ## Saying what it could not do
 
 `SVGExport.fallbacks(in:)` answers the same question the writer answers, without

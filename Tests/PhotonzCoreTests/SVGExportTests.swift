@@ -709,6 +709,97 @@ struct SVGExportTests {
         #expect(SVGExport.embeddedPictures(in: document).map(\.layerName) == ["Background"])
     }
 
+    // MARK: - The canvas it was drawn on
+
+    /// A drawing on a blank canvas: the white bitmap underneath it, and a
+    /// shape on top. The one case the whole question is about.
+    static func drawingOnABlankCanvas(_ colour: RGBA = RGBA(r: 1, g: 1, b: 1))
+        -> (document: PhotonzDocument, flatImages: [UUID: RGBA]) {
+        let (background, flat) = Self.flatBackground(colour)
+        return (Self.document([background, Self.pathLayer()]), flat)
+    }
+
+    @Test func theWhiteBehindADrawingIsRecognisedAsTheCanvasItWasDrawnOn() {
+        let (document, flat) = Self.drawingOnABlankCanvas()
+        let found = SVGExport.backdrop(in: document, flatImages: flat)
+        #expect(found?.layerID == document.layers[0].id)
+        #expect(found?.color == RGBA(r: 1, g: 1, b: 1))
+    }
+
+    @Test func aPhotographBehindTheDrawingIsNeverTheCanvas() {
+        // A screenshot is not flat, so nothing offers to take it away.
+        let (background, _) = Self.flatBackground()
+        let document = Self.document([background, Self.pathLayer()])
+        #expect(SVGExport.backdrop(in: document, flatImages: [:]) == nil)
+    }
+
+    @Test func aFlatShapeThatDoesNotReachTheEdgesIsNotTheCanvas() {
+        var (background, flat) = Self.flatBackground()
+        background.frame = CGRect(x: 10, y: 10, width: 100, height: 100)
+        let document = Self.document([background, Self.pathLayer()])
+        #expect(SVGExport.backdrop(in: document, flatImages: flat) == nil)
+    }
+
+    @Test func aFlatColourLaidOverTheDrawingIsNotTheCanvas() {
+        let (background, flat) = Self.flatBackground()
+        let document = Self.document([Self.pathLayer(), background])
+        #expect(SVGExport.backdrop(in: document, flatImages: flat) == nil)
+    }
+
+    @Test func aBackgroundWearingAShadowIsPartOfTheDrawing() {
+        var (background, flat) = Self.flatBackground()
+        background.style.effects = [.shadow(ShadowStyle())]
+        let document = Self.document([background, Self.pathLayer()])
+        #expect(SVGExport.backdrop(in: document, flatImages: flat) == nil)
+    }
+
+    @Test func aCanvasNobodyCanSeeIsNotSomethingToTakeAway() {
+        let (document, flat) = Self.drawingOnABlankCanvas(RGBA(r: 1, g: 1, b: 1, a: 0))
+        #expect(SVGExport.backdrop(in: document, flatImages: flat) == nil)
+    }
+
+    @Test func keepingTheBackgroundWritesTheCanvasExactlyAsItAlwaysDid() {
+        let (document, flat) = Self.drawingOnABlankCanvas()
+        let result = SVGExport.write(document, flatImages: flat, background: .keep)
+        #expect(result.text.contains("<rect x=\"0\" y=\"0\" width=\"240\" height=\"240\""))
+        #expect(result.text.contains("fill=\"#FFFFFF\""))
+    }
+
+    @Test func droppingTheBackgroundLeavesNothingBehindTheShapes() {
+        let (document, flat) = Self.drawingOnABlankCanvas()
+        let result = SVGExport.write(document, flatImages: flat, background: .drop)
+        #expect(!result.text.contains("fill=\"#FFFFFF\""))
+        #expect(!result.text.contains("<rect"))
+        // ...and the drawing itself is untouched.
+        #expect(result.text.contains("<path transform=\"translate(20 30)\" d="))
+        #expect(result.text.contains("width=\"240\" height=\"240\" viewBox=\"0 0 240 240\""))
+    }
+
+    @Test func droppingTheBackgroundTakesNothingWhenTheBackgroundIsAPicture() {
+        // Asked of a screenshot, the answer is the file it always wrote.
+        let (background, _) = Self.flatBackground()
+        let document = Self.document([background, Self.pathLayer()])
+        let kept = SVGExport.write(document, picture: Self.stubPicture, background: .keep)
+        let dropped = SVGExport.write(document, picture: Self.stubPicture, background: .drop)
+        #expect(dropped.text == kept.text)
+        #expect(dropped.text.contains("<image "))
+    }
+
+    @Test func onlyTheCanvasGoesAndEverySecondFlatLayerStays() {
+        // Two flat bitmaps: the canvas, and a colour swatch the size of a box
+        // drawn on top of it. Only the first is the canvas.
+        let (background, flat) = Self.flatBackground()
+        let swatchRef = ImageRef(pixelSize: CGSize(width: 60, height: 60))
+        let swatch = Layer(name: "Swatch", content: .image(swatchRef),
+                           frame: CGRect(x: 20, y: 20, width: 60, height: 60))
+        var images = flat
+        images[swatchRef.id] = RGBA(r: 0, g: 0.5, b: 1)
+        let document = Self.document([background, swatch])
+        let result = SVGExport.write(document, flatImages: images, background: .drop)
+        #expect(result.text.contains("fill=\"#0080FF\""))
+        #expect(!result.text.contains("fill=\"#FFFFFF\""))
+    }
+
     @Test func aFlatPictureWearingAShadowIsStillAPicture() {
         var (background, flat) = Self.flatBackground()
         background.style.effects = [.shadow(ShadowStyle())]

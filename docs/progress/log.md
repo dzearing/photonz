@@ -17346,3 +17346,50 @@ Next: whatever the loop picks up. Open question for the user, in the audit: near
 text the ring catches cap tops and baselines as well as container edges, and at
 half zoom it can sit a dozen points from the pointer. Is that help, or the tool
 taking over?
+
+## 2026-09-16 — An icon exported as SVG comes out with nothing behind it
+
+An icon drawn on a blank canvas exported with a white rectangle the size of the
+canvas behind it, because the canvas it was drawn on is a real full-size bitmap
+of white. Reproduced first, through the real export path: a pen-drawn shape on a
+900 × 700 blank canvas wrote `<rect x="0" y="0" width="900" height="700"
+fill="#FFFFFF"/>` above the path.
+
+The task file suggested opening a decision card. The task's own acceptance
+already forecloses two of the three options it lists — "the choice is visible in
+the Export sheet before you save" rules out both silently always dropping it and
+leaving it as it is — so what was left was a default, and that was decided
+rather than asked: the file goes out see-through, and the sheet says so with a
+checkbox to put the canvas back.
+
+`SVGExport.backdrop(in:flatImages:)` names the layer that is only the canvas —
+the bottom-most visible layer, one flat colour reaching every edge, no
+transform, no blend, no effects — and `SVGExport.Background.drop` leaves it out.
+Everything else is the drawing, which is what keeps a screenshot (a photograph,
+not a flat colour) and a frame exported on its own (its surface is inside it)
+carrying their backgrounds untouched, unasked. The Export sheet grew an
+**Include the background** row, unticked, with a swatch of the colour that would
+go in and a line saying what the file will be; the row is absent rather than
+dimmed when there is nothing to leave out. Not remembered between exports: it is
+shown every time instead.
+
+One thing found on the way: the sheet was reading every pixel of every picture
+in the document three or four times on each pass SwiftUI made over it, 36 ms
+each on a 12 megapixel canvas, because `unwritable`, `photographs` and the
+hand-off list each asked `FlatBitmap.colors` from `body`. It now reads them once
+when the sheet opens and hands the one answer to all four lines.
+
+17 new tests (11 core, 5 render-back, plus the flat-scan cases), a new walk
+(`svg-export-background-walk.json`) that draws an icon, writes the file both
+ways and photographs the sheet ticked and unticked. Full suite green at 7869.
+The Mac's screen was locked all day, so every walk was forced with
+`PHOTONZ_ALLOW_LOCKED_WALK=1` and none of the runs counts as a pass; the three
+`icon` walks that failed fail identically on unchanged source, which was checked
+by stashing. The two audit shots are real window captures.
+
+Filed: the word Format in the Export sheet is broken across three lines
+(Fo / r / m / at — five format buttons in a 320 point sheet, not from this
+change), and the same background question for PNG, which still bakes the white
+in with no way to ask otherwise.
+
+Next: whatever the loop picks up.

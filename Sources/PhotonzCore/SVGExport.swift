@@ -49,6 +49,31 @@ public enum SVGExport {
         }
     }
 
+    /// What an export does with the canvas the drawing was made on.
+    public enum Background: String, Hashable, Sendable, Codable, CaseIterable {
+        /// Write it, exactly as the canvas shows it. What a screenshot, a
+        /// photograph or a whole screen wants.
+        case keep
+        /// Leave the canvas out, so there is nothing painted behind the
+        /// drawing and it sits on any colour it is dropped onto. Only the
+        /// canvas goes: everything that is part of the drawing stays.
+        case drop
+    }
+
+    /// The layer that is only the canvas the drawing sits on, and the colour
+    /// it is.
+    public struct Backdrop: Hashable, Sendable {
+        /// The layer an export would leave out.
+        public var layerID: UUID
+        /// What colour it is, so the Export sheet can show what would go.
+        public var color: RGBA
+
+        public init(layerID: UUID, color: RGBA) {
+            self.layerID = layerID
+            self.color = color
+        }
+    }
+
     /// Asked for a picture of `layer`, whose frame sits at the given point in
     /// canvas coordinates. Nil where no picture could be made.
     public typealias PictureMaker = @Sendable (_ layer: Layer, _ canvasOrigin: CGPoint) -> Picture?
@@ -88,10 +113,45 @@ public enum SVGExport {
                              animation: Animation = .still,
                              picture: PictureMaker? = nil,
                              outlineText: TextOutliner? = nil,
-                             flatImages: [UUID: RGBA] = [:]) -> Result {
+                             flatImages: [UUID: RGBA] = [:],
+                             background: Background = .keep) -> Result {
+        let omit = background == .drop
+            ? backdrop(in: document, flatImages: flatImages)?.layerID
+            : nil
         var writer = Writer(picture: picture, outlineText: outlineText,
-                            animation: animation, flatImages: flatImages)
+                            animation: animation, flatImages: flatImages,
+                            omitLayer: omit)
         return writer.run(document)
+    }
+
+    /// The layer that is nothing but the canvas the drawing sits on: the
+    /// bottom-most layer anyone can see, where that layer is one flat colour
+    /// reaching every edge of the canvas and wearing nothing.
+    ///
+    /// A blank canvas starts life as a full-size bitmap of white, so an icon
+    /// drawn on one exports with a white rectangle the size of the canvas
+    /// behind it, and handed over, that icon cannot sit on a coloured page or
+    /// a dark theme. This is what lets Export offer to leave it out — and what
+    /// keeps the offer away from everything else, because a screenshot is a
+    /// photograph rather than a flat colour, and a screen's own background is
+    /// inside the frame rather than under the canvas.
+    public static func backdrop(in document: PhotonzDocument,
+                                flatImages: [UUID: RGBA]) -> Backdrop? {
+        guard let bottom = document.layers.first(where: \.isVisible),
+              let colour = flatColor(of: bottom, in: flatImages), colour.a > 0,
+              bottom.transform.isIdentity,
+              bottom.style.blendMode == .normal,
+              !bottom.style.effects.contains(where: { $0.isOn }),
+              covers(document.canvasSize, bottom.frame) else { return nil }
+        return Backdrop(layerID: bottom.id, color: colour)
+    }
+
+    /// Whether `frame` reaches every corner of a canvas that size. Half a
+    /// point of slack, so a canvas laid out in fractions is not disqualified
+    /// by arithmetic nobody could see.
+    private static func covers(_ canvas: CGSize, _ frame: CGRect) -> Bool {
+        frame.insetBy(dx: -0.5, dy: -0.5)
+            .contains(CGRect(origin: .zero, size: canvas))
     }
 
     /// What WOULD go out as a picture, asked before anything is written, so
@@ -513,6 +573,9 @@ private struct Writer {
     var animation: SVGExport.Animation = .still
     /// Which of the document's bitmaps are one flat colour, by bitmap id.
     var flatImages: [UUID: RGBA] = [:]
+    /// The one top-level layer this export leaves out: the canvas the drawing
+    /// was made on, when Export was asked for a file with nothing behind it.
+    var omitLayer: UUID?
     var defs: [String] = []
     var fallbacks: [SVGExport.Fallback] = []
     var unmoved: [SVGExport.Fallback] = []
@@ -530,7 +593,9 @@ private struct Writer {
     var carried = false
 
     mutating func run(_ document: PhotonzDocument) -> SVGExport.Result {
-        let body = write(document.layers, groupOffset: .zero, level: 1)
+        let top = omitLayer.map { id in document.layers.filter { $0.id != id } }
+            ?? document.layers
+        let body = write(top, groupOffset: .zero, level: 1)
         let size = document.canvasSize
         var lines = ["<svg xmlns=\"http://www.w3.org/2000/svg\""
             + " width=\"\(n(size.width))\" height=\"\(n(size.height))\""

@@ -1099,7 +1099,7 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
-        case .writeSVG(let name):
+        case .writeSVG(let name, let background):
             let editor = try requireEditor()
             // A drawing that moves writes the file that moves: one lap of the
             // loop, in the file (`SVGMotionExport.swift`). A still one writes
@@ -1108,7 +1108,8 @@ private final class Run {
                 ? .moving(cycleMS: editor.document?.motionCycleLengthMS ?? 1) : .still
             guard let document = editor.document,
                   let written = SVGExporter.data(document, store: editor.store,
-                                                 animation: animation) else {
+                                                 animation: animation,
+                                                 background: background) else {
                 throw Failure(description: "the document did not write as SVG")
             }
             try written.data.write(to: out.appendingPathComponent("\(name).svg"))
@@ -1120,8 +1121,19 @@ private final class Run {
             let motion = animations > 0
                 ? ", \(animations) moving \(animations == 1 ? "part" : "parts")"
                 : ""
+            // What happened to the canvas the drawing was made on, so a walk's
+            // log says whether the file has a white box in it without anybody
+            // having to open it.
+            let canvas: String
+            if let backdrop = SVGExporter.backdrop(in: document, store: editor.store) {
+                canvas = background == .drop
+                    ? ", nothing behind the drawing"
+                    : ", the \(backdrop.color.hexString) canvas behind the drawing"
+            } else {
+                canvas = ""
+            }
             note(number, step.name,
-                 "\(name).svg \(written.data.count) bytes, \(pictured)\(motion)")
+                 "\(name).svg \(written.data.count) bytes, \(pictured)\(motion)\(canvas)")
 
         case .writePicture(let name, let format, let quality, let scale):
             let editor = try requireEditor()

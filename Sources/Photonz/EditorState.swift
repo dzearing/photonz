@@ -1901,7 +1901,8 @@ final class EditorState {
     /// embedded as a picture in the right place; the Export sheet has already
     /// said which layers those are, so this does not stop to tell you again.
     /// `frameID` narrows it to one frame exactly as the picture formats do.
-    func exportSVG(frameID: UUID? = nil, animated: Bool = false) {
+    func exportSVG(frameID: UUID? = nil, animated: Bool = false,
+                   background: SVGExport.Background = .keep) {
         guard let document else { return }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
@@ -1910,7 +1911,7 @@ final class EditorState {
         let animation: SVGExport.Animation = animated && target.hasMotion
             ? .moving(cycleMS: target.motionCycleLengthMS) : .still
         guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
-                                             animation: animation)
+                                             animation: animation, background: background)
         else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.svg]
@@ -1933,7 +1934,8 @@ final class EditorState {
     /// photograph would have to be rendered to be measured, and rendering a
     /// twelve megapixel document to put a number on a label is not a trade
     /// worth making while somebody is still choosing.
-    func svgPreflight(frameID: UUID? = nil, animated: Bool = false)
+    func svgPreflight(frameID: UUID? = nil, animated: Bool = false,
+                      background: SVGExport.Background = .keep)
         -> (bytes: Int, unmoved: [SVGExport.Fallback])? {
         guard let document else { return nil }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
@@ -1942,9 +1944,11 @@ final class EditorState {
         let animation: SVGExport.Animation = animated && target.hasMotion
             ? .moving(cycleMS: target.motionCycleLengthMS) : .still
         guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,
-                                             animation: animation) else { return nil }
+                                             animation: animation, background: background)
+        else { return nil }
         return (written.data.count, written.unmoved)
     }
+
 
     /// Renders the composite at `scale` and writes it where the user picks.
     ///

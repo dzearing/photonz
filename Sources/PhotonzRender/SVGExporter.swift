@@ -20,7 +20,8 @@ public enum SVGExporter {
     /// named in the result.
     public static func export(_ document: PhotonzDocument, store: ImageStore,
                               renderer: DocumentRenderer = DocumentRenderer(),
-                              animation: SVGExport.Animation = .still) -> SVGExport.Result {
+                              animation: SVGExport.Animation = .still,
+                              background: SVGExport.Background = .keep) -> SVGExport.Result {
         SVGExport.write(document, animation: animation,
                         picture: { layer, origin in
                             picture(of: layer, at: origin, in: document,
@@ -31,7 +32,17 @@ public enum SVGExporter {
                             else { return nil }
                             return SVGExport.pathData(outline)
                         },
-                        flatImages: FlatBitmap.colors(in: document, store: store))
+                        flatImages: FlatBitmap.colors(in: document, store: store),
+                        background: background)
+    }
+
+    /// The canvas this drawing sits on, when it is a flat colour Export could
+    /// offer to leave out. Nil for a screenshot, a photograph, or anything
+    /// whose bottom layer is part of the drawing (`SVGExport.backdrop`).
+    public static func backdrop(in document: PhotonzDocument,
+                                store: ImageStore) -> SVGExport.Backdrop? {
+        SVGExport.backdrop(in: document,
+                           flatImages: FlatBitmap.colors(in: document, store: store))
     }
 
     // MARK: - What would ride along as pixels
@@ -55,9 +66,11 @@ public enum SVGExporter {
     /// The document as SVG bytes, ready to be written to a file.
     public static func data(_ document: PhotonzDocument, store: ImageStore,
                             renderer: DocumentRenderer = DocumentRenderer(),
-                            animation: SVGExport.Animation = .still)
+                            animation: SVGExport.Animation = .still,
+                            background: SVGExport.Background = .keep)
         -> (data: Data, fallbacks: [SVGExport.Fallback], unmoved: [SVGExport.Fallback])? {
-        let result = export(document, store: store, renderer: renderer, animation: animation)
+        let result = export(document, store: store, renderer: renderer, animation: animation,
+                            background: background)
         guard let data = result.text.data(using: .utf8) else { return nil }
         return (data, result.fallbacks, result.unmoved)
     }

@@ -87,6 +87,26 @@ struct ExportDialog: View {
     /// Parts of the motion the FILE itself cannot carry, whatever the
     /// destination: a turn on a layer that is also flipped, say.
     @State private var unmoved: [SVGExport.Fallback] = []
+    /// The canvas behind the drawing, when there is one Export can offer to
+    /// leave out.
+    @State private var backdrop: SVGExport.Backdrop?
+    /// Which of the target's bitmaps are one flat colour, by bitmap id.
+    ///
+    /// Worked out when the sheet opens and whenever the target changes, rather
+    /// than while the sheet draws. Finding out walks every pixel of every
+    /// picture in the document — 36 ms for a 12 megapixel canvas — and four
+    /// separate lines of this sheet want the answer, so asking from `body`
+    /// meant several of those on every pass SwiftUI made. The document cannot
+    /// change while the sheet is up, which is the same thing the size weigher
+    /// already assumes.
+    @State private var flatImages: [UUID: RGBA] = [:]
+    /// Whether the canvas colour goes into the file. Off, because a drawing
+    /// handed to somebody else nearly always lands on their page rather than
+    /// on the one it was drawn on, and a white box round an icon is the thing
+    /// that makes it unusable there. Not remembered: it is answered per export
+    /// and shown on the sheet each time, so it can never be a setting somebody
+    /// left on months ago.
+    @State private var keepsBackground = false
     /// What each lossy format is set to while the sheet is up, seeded from what
     /// was remembered. Held here rather than written straight back so that
     /// moving the slider and then pressing Cancel changes nothing, and so that
@@ -133,6 +153,11 @@ struct ExportDialog: View {
     /// Whether the motion travels with the file.
     private var carriesTheMotion: Bool { handoffFormat == .animatedSVG }
 
+    /// What the file does with the canvas the drawing was made on.
+    private var background: SVGExport.Background {
+        backdrop != nil && !keepsBackground ? .drop : .keep
+    }
+
     /// The format a destination implies, as an Export answer.
     private func answer(for format: SVGHandoff.Format) -> ExportChoice {
         switch format {
@@ -151,8 +176,26 @@ struct ExportDialog: View {
     }
 
     private func refreshSize() {
+        refreshWhatIsFlat()
         refreshVectorSize()
         refreshPictureSize()
+    }
+
+    /// Reads the pixels once, for every line of the sheet that needs them.
+    ///
+    /// A nil backdrop takes the background row away rather than dimming it: a
+    /// screenshot has a photograph behind it, not a canvas, and there is
+    /// nothing to ask about.
+    private func refreshWhatIsFlat() {
+        guard let target else {
+            flatImages = [:]
+            backdrop = nil
+            return
+        }
+        flatImages = FlatBitmap.colors(in: target, store: editorState.store)
+        backdrop = choice.isVector
+            ? SVGExport.backdrop(in: target, flatImages: flatImages)
+            : nil
     }
 
     private func refreshVectorSize() {
@@ -161,7 +204,8 @@ struct ExportDialog: View {
             unmoved = []
             return
         }
-        let preflight = editorState.svgPreflight(frameID: frameID, animated: carriesTheMotion)
+        let preflight = editorState.svgPreflight(frameID: frameID, animated: carriesTheMotion,
+                                                 background: background)
         byteCount = preflight?.bytes
         unmoved = preflight?.unmoved ?? []
     }
@@ -267,7 +311,7 @@ struct ExportDialog: View {
     /// could not say them in shapes.
     private var unwritable: [SVGExport.Fallback] {
         guard choice.isVector, let target else { return [] }
-        return SVGExporter.fallbacks(in: target, store: editorState.store)
+        return SVGExport.fallbacks(in: target, flatImages: flatImages)
     }
 
     /// The pictures that are simply pictures: a photograph was never shapes,
@@ -276,7 +320,7 @@ struct ExportDialog: View {
     private var photographs: [String] {
         guard choice.isVector, let target else { return [] }
         let problems = Set(unwritable.map(\.layerName))
-        return SVGExporter.embeddedPictures(in: target, store: editorState.store)
+        return SVGExport.embeddedPictures(in: target, flatImages: flatImages)
             .map(\.layerName)
             .filter { !problems.contains($0) }
     }
@@ -358,7 +402,8 @@ struct ExportDialog: View {
                                                     quality: ExportQuality.fraction(percent),
                                                     frameID: frameID, using: sizer)
                     case .svg:
-                        editorState.exportSVG(frameID: frameID, animated: carriesTheMotion)
+                        editorState.exportSVG(frameID: frameID, animated: carriesTheMotion,
+                                              background: background)
                     }
                 }
                 .keyboardShortcut(.defaultAction)
@@ -411,6 +456,9 @@ struct ExportDialog: View {
         }
         .onChange(of: choice) { refreshSize() }
         .onChange(of: frameID) { refreshSize() }
+        // A file with nothing behind it is a different file, so it is a
+        // different number.
+        .onChange(of: keepsBackground) { refreshVectorSize() }
         // 2x is a different file, so it is a different number.
         .onChange(of: scale) { refreshPictureSize() }
         .onChange(of: qualityPercent) { refreshPictureSize() }
@@ -455,8 +503,7 @@ struct ExportDialog: View {
         if let target {
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(SVGHandoff.lines(for: destination, in: target,
-                                         flatImages: FlatBitmap.colors(in: target,
-                                                                       store: editorState.store))) { line in
+                                         flatImages: flatImages)) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: line.survives ? "checkmark" : "xmark")
                             .font(.caption)
@@ -531,8 +578,52 @@ struct ExportDialog: View {
                     .foregroundStyle(.secondary)
                     .labelStyle(.titleAndIcon)
             }
+            if let backdrop {
+                backgroundRow(backdrop)
+            }
         }
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Whether the canvas goes into the file, asked only when there is a
+    /// canvas to leave out.
+    ///
+    /// An icon drawn on a blank canvas used to export with a white rectangle
+    /// the size of the canvas behind it, which is invisible on a white page
+    /// and a white box on every other one. It goes out see-through now, and
+    /// this is where you say otherwise, before you save rather than after you
+    /// open the file. The swatch is the colour that would go, so what the
+    /// checkbox is talking about is a thing you can see rather than a word.
+    /// One place the words live, so the walk that presses it and the sheet
+    /// that shows it can never drift apart.
+    static let backgroundLabel = "Include the background"
+
+    @ViewBuilder private func backgroundRow(_ backdrop: SVGExport.Backdrop) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Toggle(Self.backgroundLabel, isOn: $keepsBackground)
+                    .toggleStyle(.checkbox)
+                    .playtestControl(Self.backgroundLabel,
+                                     detail: keepsBackground
+                                         ? "Export, the \(backdrop.color.hexString) canvas goes in"
+                                         : "Export, nothing behind the drawing")
+                Spacer(minLength: 0)
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(Color(hex: backdrop.color.hexStringWithAlpha))
+                    .frame(width: 14, height: 14)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .strokeBorder(.separator, lineWidth: 1)
+                    )
+                    .accessibilityHidden(true)
+            }
+            Text(keepsBackground
+                 ? "The canvas colour is painted behind your drawing."
+                 : "Nothing behind your drawing, so it sits on any colour.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 2)
     }
 
     /// The bitmaps that ride along, named.

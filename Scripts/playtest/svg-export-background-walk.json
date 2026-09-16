@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/svg-export-background-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [220, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [440, 200], "to": [560, 210], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [223, 523] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "describe",
+      "stage": "1-icon-drawn",
+      "note": "an icon drawn with the Pen on a blank white canvas, which is the case the whole question is about: the white is a real full size bitmap under the shape"
+    },
+    { "do": "snapshot", "name": "svg-export-background-1-drawn" },
+    { "do": "writeSVG", "name": "svg-export-background-2-file" },
+    {
+      "do": "describe",
+      "stage": "2-nothing-behind-it",
+      "note": "the file Export writes by default: the log line above says nothing behind the drawing, so the icon can be dropped on a coloured page or a dark theme without a white box round it"
+    },
+    { "do": "writeSVG", "name": "svg-export-background-3-file-with-canvas", "background": "keep" },
+    {
+      "do": "describe",
+      "stage": "3-canvas-kept",
+      "note": "the same drawing asked for with the canvas in it: the log line names the colour that went into the file, and the file is bigger by exactly one rectangle"
+    },
+    { "do": "action", "action": "exportDialogAsSVG" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "4-sheet-says-so",
+      "note": "the Export sheet on SVG: under what the file will be there is Include the background, unticked, with a swatch of the colour that would go in and a line saying the file sits on any colour"
+    },
+    { "do": "snapshot", "name": "svg-export-background-4-sheet" },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "describe",
+      "stage": "5-ticked",
+      "note": "ticked: the line under it changes to say the canvas colour is painted behind the drawing, so which file you are about to save is readable before you save it"
+    },
+    { "do": "snapshot", "name": "svg-export-background-5-sheet-ticked" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

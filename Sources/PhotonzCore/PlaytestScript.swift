@@ -1525,7 +1525,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// from a walk, so this is how a walk proves that what leaves the app is a
     /// real vector file and what it says about the layers it could not write as
     /// shapes.
-    case writeSVG(name: String)
+    ///
+    /// `background` is what the Export sheet's Include the background checkbox
+    /// says: "drop" (the default, and what the sheet opens on) leaves the
+    /// canvas the drawing was made on out of the file, "keep" paints it in.
+    /// With a photograph behind the drawing rather than a canvas there is
+    /// nothing to leave out and both write the same file.
+    case writeSVG(name: String, background: SVGExport.Background)
     /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
     /// format, quality and scale Export would use (Next,
     /// `next-export-quality`), and log how many bytes it came to.
@@ -2391,7 +2397,10 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
         case "writeSVG":
-            self = .writeSVG(name: try f.string("name"))
+            let background = f.has("background")
+                ? try f.enumValue("background", SVGExport.Background.self)
+                : SVGExport.Background.drop
+            self = .writeSVG(name: try f.string("name"), background: background)
         case "writePicture":
             self = .writePicture(name: try f.string("name"),
                                  format: try f.string("format"),
@@ -2872,6 +2881,8 @@ public enum PlaytestStep: Sendable, Equatable {
         func invalid(_ field: String, _ reason: String) -> PlaytestScriptError {
             .invalidField(index: index, step: step, field: field, reason: reason)
         }
+
+        func has(_ field: String) -> Bool { fields[field] != nil }
 
         func string(_ field: String) throws -> String {
             guard let value = fields[field] as? String, !value.isEmpty else { throw invalid(field, "must be a non-empty string") }

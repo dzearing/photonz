@@ -1,0 +1,30 @@
+{
+  "feature": "An exported icon comes out with nothing behind it",
+  "epic": "icon-export",
+  "summary": "An icon drawn on a blank canvas now exports as an SVG with nothing painted behind it, so it can sit on a coloured page or a dark theme without a white box round it. The Export sheet says so before you save, with a checkbox to put the canvas back.",
+  "setup": "Photonz Dev, Experiments window, release Next. SVG export is on by default in Next.",
+  "try": [
+    { "do": "Press ⌘N and make a blank canvas 900 by 700." },
+    { "do": "Press P for the Pen and draw a closed shape in the middle of it." },
+    { "do": "Press ⌘E and pick SVG in the Format row.", "shot": "2026-09-16-svg-background-sheet.png" },
+    { "do": "Read the line under Include the background: it says nothing is behind your drawing." },
+    { "do": "Save it, then open the file in a browser with a dark page behind it. No white box." },
+    { "do": "Press ⌘E again and tick Include the background.", "shot": "2026-09-16-svg-background-ticked.png" },
+    { "do": "Save that one too and put the two files side by side: the second is one rectangle bigger." },
+    { "do": "Now open a screenshot instead of a canvas and press ⌘E on SVG. The row is not there at all, and the screenshot keeps its picture." }
+  ],
+  "evaluate": [
+    "Unticked by default: is that the answer you want, or should the app remember what you picked last time?",
+    "Does the swatch on the right of the row make it obvious which colour would go into the file?",
+    "Is 'Include the background' the right words, or does 'background' read as something you drew rather than the canvas?",
+    "The row is gone entirely on a screenshot rather than dimmed. Does its absence read as the app deciding for you, or as there being nothing to decide?",
+    "Exporting one frame on its own always keeps the frame's own surface. Is that what you would expect, or should a frame be askable too?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run the normal way. The two pictures here are real window captures taken by forcing one run past the refusal with PHOTONZ_ALLOW_LOCKED_WALK=1, which CLAUDE.md says still photographs the window for real, but the run itself is not an official pass. Everything else was proved by tests: the file is written, read back by the system and drawn, and the pixels behind the icon come back empty.",
+    "The word Format in that sheet is broken across three lines, Fo / r / m / at. You can see it in both pictures. It is not from this change, it is five format buttons in a 320 point sheet, and it is filed as its own task.",
+    "The choice is not remembered between exports. Every export starts with the background left out, and the sheet says so each time. That felt safer than a setting somebody ticked months ago quietly putting a white box back, but it is a judgement worth disagreeing with.",
+    "This is SVG only. Export an icon as PNG and the white canvas is still in the picture, with no way to ask otherwise. A transparent PNG is a bigger change and it is not in this task.",
+    "The Export sheet used to read every pixel of every picture in the document three or four times on each pass SwiftUI made over it, 36 ms each on a 12 megapixel canvas. It now reads them once when the sheet opens. That was a hitch on ⌘E before this change, not a new one."
+  ]
+}
