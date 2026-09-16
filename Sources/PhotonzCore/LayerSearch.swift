@@ -50,7 +50,8 @@ extension PhotonzDocument {
     /// quietly flattening the whole tree would be the worst possible answer to
     /// it.
     public func layerRows(matching query: String, selected: Set<UUID>,
-                          saysItsWords: Bool = true) -> [LayerRowDisplay] {
+                          saysItsWords: Bool = true,
+                          separations: [ImageRef: SeparationLeftover] = [:]) -> [LayerRowDisplay] {
         guard !LayerSearch.normalized(query).isEmpty else { return [] }
         // Every row the panel could ever show, which is what makes a piece
         // inside a shut group findable. `marksOutOfView` is off: a result row
@@ -59,7 +60,8 @@ extension PhotonzDocument {
         // every layer in a dense document is the most expensive thing this
         // walk can do.
         return layerRows(expanded: openableGroupIDs, selected: selected,
-                         marksOutOfView: false, saysItsWords: saysItsWords)
+                         marksOutOfView: false, saysItsWords: saysItsWords,
+                         separations: separations)
             .filter { LayerSearch.matches(name: $0.name, query: query) }
             .map { display in
                 LayerRowDisplay(
@@ -74,7 +76,8 @@ extension PhotonzDocument {
                     versionName: display.versionName,
                     componentNote: display.componentNote,
                     isRasterizable: display.isRasterizable,
-                    canTurnIntoPath: display.canTurnIntoPath)
+                    canTurnIntoPath: display.canTurnIntoPath,
+                    separationNote: display.separationNote)
             }
     }
 }

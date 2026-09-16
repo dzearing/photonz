@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:42.726Z",
-  "updated": "2026-09-16T12:23:33.621Z",
+  "updated": "2026-09-16T15:44:24.391Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Four audits in one day each ask a version of \"is the pill enough\": 2026-09-13-separate-into-layers (\"the only thing that tells you is a pill that fades\"), 2026-09-13-separate-whole-screenshot (\"the pill ends with run it again for more rather than offering a button\"), 2026-09-13-separate-boxes, and 2026-09-13-turn-into-text (\"is the pill enough to tell you it worked\").\n\nUX-PATTERNS section 3 files a pill of this kind under \"Modal + toast\" as a transient confirmation (\"Saved\", \"42 instances updated\"). A count you are expected to act on later is not a confirmation, which is why this keeps coming up. The rule scrub is a separate task; this one is the behaviour.\n\nMeasured numbers to design against, from 2026-09-13-separate-whole-screenshot: the project dashboard capture is 142 pieces out of 724, so 580 stay in the picture; this app own window is 93 out and 26 left; a photograph is 0 and 0 with a sentence instead of a count.",
@@ -49,6 +49,27 @@
     {
       "t": "2026-09-16T12:23:33.620Z",
       "note": "seq 510 -> 70"
+    },
+    {
+      "t": "2026-09-16T15:20:36.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T15:22:00.322Z",
+      "note": "Pre-build adversarial review. (1) The mock-free question here is WHERE the lasting count lives. Three homes considered: a non-fading pill (rejected: breaks the pill's own rule that it is inert and transient, and a permanent thing at the bottom of the canvas sits over the picture you are measuring); an inspector section (rejected as the only home: after a separation the selection is the new group or the first piece, never the picture, so the count would be two clicks away and invisible until you go looking); the SOURCE PICTURE'S OWN ROW in the layers list (chosen: it is where the eye already is the instant after, because the layers list is the thing that just changed, and the picture row is the thing that still holds the 580). (2) ComponentRowNote is the precedent, shipped 2026-09-13: a caption line under a row's name saying what the row IS. Same shape, second note. (3) UNDO is the trap. A note keyed by layer id would still read '580 left' after Command Z put all 724 back in the picture. Keying it by the ImageRef instead makes it self-correcting: the patched bitmap is a new ref, undo restores the old ref, and the note is simply not found. (4) Row width is the other trap, documented in LayersRow: a chip beside the name left it 30pt wide. So the note is a second LINE, not a chip, and the count comes first so truncation eats the button's tail and never the number. (5) Shortest version that delivers the value: no new inspector section, no new panel, one caption line and one link."
+    },
+    {
+      "t": "2026-09-16T15:40:45.900Z",
+      "note": "Adversarial review of the BUILT thing, on the app. (1) The row note alone failed its own acceptance and a picture proved it: separating the dense-page fixture with the shipping flags leaves the layers list 173 rows long, scrolled to the pieces, with the picture's row about thirty screens below the bottom of the panel. The count was kept and nobody could see it. So a second home was added, a line under the whole list where nothing can scroll it away: '365 left in the picture' with 'Separate again' beside it. It speaks for the last picture separated and only while another run would actually reach something, so it goes quiet rather than sitting there reading zero. (2) The row's line TRUNCATED in the app: 'Nothing left to separate' came out as 'Nothing left to sep...'. Measured the slot at about 95 points, which is eighteen characters at caption2, and cut every answer to fit: '365 left', '26 left, unclear', 'Nothing left', 'Nothing readable'. A test now fails if any answer grows past eighteen. The whole sentence is one hover away. (3) Verified on the app: run one on the dense capture took 173 pieces and the line read 365 left, matching the pill exactly ('142 runs of text and 30 boxes. 365 left in the picture, run it again for more'). A second run on the same picture took 143 more and the line came down to 203. Undo twice put the picture back and the line went with it. (4) Deliberately NOT changed: the pill still ends 'run it again for more'. That sentence is how a person learns the offer exists at all; the line under the list is where they act on it a minute later."
+    },
+    {
+      "t": "2026-09-16T15:42:08.768Z",
+      "note": "Shipped. Core: SeparationLeftover (pure, 15 tests) + LayerRowDisplay.separationNote keyed by ImageRef. App: EditorState.separationLeftovers/lastSeparated, the row's second line, and separationOffer under the layers list. Flag next-what-a-separation-left-behind, on by default in Next. Full suite green (7648 tests). Audit + 5 real window captures in queue/audits. Walk: Scripts/playtest/what-a-separation-left-behind-walk.json, which could not run here because the Mac's screen is locked and a walk finds controls by name; sweep requested. Left rough, not filed: the pill still ends 'run it again for more' beside a button that says 'Separate again', which is one instruction more than needed but is also how a person learns the offer exists - it is an evaluate question in the audit rather than a task. Also left rough: the line under the list follows the LAST separation, so separating a second thing replaces the first picture's offer (its row keeps the count). Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-16T15:44:24.390Z",
+      "note": "Change after looking at the built row: the Separate again button came OFF the picture's row. Measured in the app, the row's second line has about 95 points, and '365 left' plus a button needs half as much again - the label came out 'Separate agai...'. The press lives under the list where there is a whole row's width for it, and the row is a readout that stays with THIS picture whatever gets separated next. Acceptance 2 (one action from the lasting place) is met by the line under the list. Left rough, not filed: scrolling the layers list far past its end with the harness's scrollPanel leaves it drawing no rows at all; a wheel clamps and a person cannot reach that state, so it is a harness path rather than a user one."
     }
-  ]
+  ],
+  "started": "2026-09-16T15:20:36.840Z"
 }

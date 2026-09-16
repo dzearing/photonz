@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/what-a-separation-left-behind",
+  "seed": "WHAT SEPARATE LEFT BEHIND IS STILL THERE AFTER THE PILL FADES. Separating a dense screenshot answers in a pill: how many pieces came out, how many are still in the picture, and that running it again takes the next batch. Three seconds later the pill is gone and the number is gone with it. With next-what-a-separation-left-behind on, two places keep it. The picture's own row in the layers list says what is still in THAT picture, under its name, as a readout: the row is about ninety five points wide once the thumbnail and the two icons have had theirs, which is eighteen characters, so the count goes there and the press does not. And under the whole list, where nothing can scroll it away, sits the count and one press that takes the next batch - which is the half that matters on a dense page, because a loose separation leaves the list a hundred rows long and the picture's row thirty screens below the bottom of the panel. This walk presses that offer, proves the count came down, proves undo takes the line away with the separation, and finishes on a capture that came apart completely so the row says nothing is left rather than showing an empty count.",
+  "setup": {
+    "forget": ["groups"],
+    "flags": { "next-what-a-separation-left-behind": true }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+
+    { "do": "describe", "stage": "0-nothing-to-say-yet", "note": "Before anything is separated there is no line under the list and no note on the row. The app only speaks once it has something to say" },
+    { "do": "expect", "control": "Separate again", "present": false },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-the-pill-is-up", "note": "The command has just landed. The pill at the bottom of the canvas says what came out and how many are still in the picture. Until now that was the only thing that ever said it, and it has about two seconds left" },
+    { "do": "snapshot", "name": "left-1-the-pill" },
+
+    { "do": "wait", "seconds": 5 },
+    { "do": "describe", "stage": "2-the-pill-has-gone", "note": "THE WHOLE POINT: the pill is gone and the count is still on screen, under the layers list, with the press that takes the next batch beside it. The list itself is a hundred rows long and scrolled to the pieces, which is exactly why the count cannot live on a row alone" },
+    { "do": "panel", "stage": "2-the-count-is-still-there" },
+    { "do": "expect", "control": "Separate again", "present": true },
+    { "do": "snapshot", "name": "left-2-after-the-pill" },
+
+    { "do": "describe", "stage": "3-one-press-takes-the-next-batch", "note": "THE SECOND TEST: pressing Separate again runs the command on the same picture. No menu, no right click, no hunting for a row that is thirty screens down. The count comes down by what the second run took" },
+    { "do": "press", "control": "Separate again" },
+    { "do": "wait", "seconds": 5 },
+    { "do": "panel", "stage": "3-the-count-came-down" },
+    { "do": "snapshot", "name": "left-3-next-batch" },
+
+    { "do": "describe", "stage": "4-undo-takes-the-line-with-it", "note": "THE THIRD TEST: undo puts the untouched picture back and the line goes with it. A line still claiming hundreds are left, over a picture that holds everything again, would be worse than no line at all" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expect", "control": "Separate again", "present": false },
+    { "do": "snapshot", "name": "left-4-undone" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 5 },
+    { "do": "describe", "stage": "5-a-capture-with-nothing-more-to-give", "note": "THE LAST TEST: a small pane gives up everything one run can take, so there is no offer under the list to press. The picture's own row carries the whole answer here, because a list this short leaves it in plain sight" },
+    { "do": "panel", "stage": "5-no-offer" },
+    { "do": "expect", "control": "Separate again", "present": false },
+    { "do": "expect", "row": "Background", "present": true },
+    { "do": "snapshot", "name": "left-5-nothing-more-to-give" }
+  ]
+}

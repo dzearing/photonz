@@ -16990,3 +16990,47 @@ proven pre-existing by rebuilding the probe from clean main, and folded into
 `build-app.sh` line of mine rebuilt and broke the dev bundle mid-run; repaired
 with `queue/bin/refresh-dev-app.sh`, so it is signed with the stable cert again
 and the Screen Recording grant survives.
+
+## 2026-09-16 — what a separation left behind
+
+`what-separate-left-behind-is-still-there-after-t`. Separating the dense-page
+fixture says "142 runs of text and 30 boxes. 365 left in the picture, run it
+again for more" in a pill that fades after three seconds, and 365 is the number
+you actually want a minute later. Four audits in one day asked a version of "is
+the pill enough". It is not: a count you are expected to act on is not a
+confirmation.
+
+**Shipped** (`next-what-a-separation-left-behind`, on by default in Next). The
+value is `SeparationLeftover` in PhotonzCore, pure and tested, held against the
+picture's patched BITMAP rather than its layer — so undo puts the original pixels
+back and the note goes with them, with the undo history never hearing about it.
+
+Two places keep it. **The picture's own row**, second line under its name, the
+slot `ComponentRowNote` already uses. **A line under the whole list**, which is
+the half that matters, and the app proved why: a loose separation leaves the
+layers list 173 rows long, scrolled to the pieces, with the picture's row about
+thirty screens below the bottom of the panel. The count was kept and nobody could
+see it. So "365 left in the picture · Separate again" sits under the list where
+nothing can scroll it away, for the last picture separated and only while another
+run would reach something.
+
+The second thing the app said, rather than the code: the row's line truncated.
+"Nothing left to separate" shipped as "Nothing left to sep…". The slot is about
+95 points, which is eighteen characters, so every answer was cut to fit — "365
+left", "26 left, unclear", "Nothing left", "Nothing readable" — and a test fails
+if any of them grows past eighteen. The sentence is on hover.
+
+Verified on the probe: 173 pieces out and the line reading 365, matching the pill
+exactly; a second run took 143 more and the line came down to 203; two undos put
+the picture back and the line went with it.
+
+**Not changed:** the pill still ends "run it again for more". That is how a person
+learns the offer exists; the line under the list is where they act on it.
+
+Taken on a locked Mac, so the pictures are real captures but no walk could press
+a control by name. `what-a-separation-left-behind-walk.json` does press it and
+has been handed to a sweep.
+
+**Next:** the audit asks whether eighteen characters is too tight to be worth
+having on the row at all, and whether the pill should stop saying "run it again"
+now that a button says it.

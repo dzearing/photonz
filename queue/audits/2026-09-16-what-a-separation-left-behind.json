@@ -1,0 +1,48 @@
+{
+  "feature": "What a separation left behind",
+  "epic": "ui-building",
+  "summary": "Separating a screenshot used to tell you how many pieces were still in it in a pill that faded after three seconds. Now the count stays: under the layers list with one press that takes the next batch, and on the picture's own row under its name.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"What a separation left behind stays on the picture's row\", on by default in Next.",
+  "try": [
+    {
+      "do": "Open a dense screenshot: a whole web page or a full window, not a small pane."
+    },
+    {
+      "do": "Right click the Background row in the layers list and choose Separate into Layers."
+    },
+    {
+      "do": "Read the pill at the bottom of the canvas, then look away until it has gone.",
+      "shot": "2026-09-16-left-1-the-pill.png"
+    },
+    {
+      "do": "Look under the layers list. The count is still there, with Separate again beside it.",
+      "shot": "2026-09-16-left-2-after-the-pill.png"
+    },
+    {
+      "do": "Press Separate again and watch the number come down.",
+      "shot": "2026-09-16-left-3-next-batch.png"
+    },
+    {
+      "do": "Press Command Z twice. The line goes away with the separation.",
+      "shot": "2026-09-16-left-4-undone.png"
+    },
+    {
+      "do": "Now separate a small pane instead and scroll the layers list down to the picture's own row.",
+      "shot": "2026-09-16-left-5-the-row-says-it.png"
+    }
+  ],
+  "evaluate": [
+    "After the pill had gone, which did your eye find first: the line under the list, or the picture's row?",
+    "Is \"365 left in the picture\" the number you wanted, or did you want to know how many came OUT instead?",
+    "Does pressing Separate again feel like the same command you ran from the menu, or like something else?",
+    "On the picture's row, does \"Nothing left\" read as the separation being finished, or as the picture being empty?",
+    "The line under the list goes quiet once there is nothing more to take. Would you rather it stayed and said so?",
+    "The pill still ends with \"run it again for more\" while a button saying Separate again is on screen. Is that one instruction too many?"
+  ],
+  "rough": [
+    "The row's line is cut to eighteen characters because that is all the slot holds: the app was shipping \"Nothing left to sep...\" until it was measured. The same measurement is why the row is a readout and the press sits under the list instead: \"365 left\" with a Separate again beside it came out reading \"Separate agai...\". So from the row itself, running the command again is still the right click menu.",
+    "The line under the list speaks for the LAST picture separated. Separate something else afterwards, even a single piece, and the first picture's offer is replaced. Its row still carries the count, but the always-visible half moves on.",
+    "The count is what is still IN the picture, and it counts two different things together: pieces the limit crowded out, which another run reaches, and pieces the app could not read, which it never will. The offer only appears when at least one is the first kind, but the number itself does not say which is which.",
+    "This was verified on a locked Mac. The app draws and the camera works, so every picture here is a real capture of the window, but a walk cannot find a control BY NAME under the login window, so the Separate again button was not pressed by the walk. The second run in shot three was driven by the same command the button calls, on the same layer, and a walk that does press it is committed as what-a-separation-left-behind-walk.json. A sweep has been asked for."
+  ]
+}

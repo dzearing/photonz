@@ -170,6 +170,8 @@ public enum FeatureCatalog {
 
     public static let separationArrivesShutFlag = "next-a-separation-arrives-shut"
 
+    public static let whatIsLeftInThePictureFlag = "next-what-a-separation-left-behind"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -560,6 +562,15 @@ public enum FeatureCatalog {
                     name: turnIntoPathFlag,
                     title: "Turn a rectangle into a path",
                     description: "A rectangle, an ellipse, a line or a highlighter wash is a fixed thing: you can resize it, but you cannot take one corner and pull it somewhere else. Turn Into Path, in the layer's right click menu and in the Layer menu, stops it being a rectangle and makes it an outline, keeping exactly the look it had. Round the corners first and the curves you get are real ones you can pull on, which is how most icons actually get made. Pick several shapes and it acts on all of them at once, and it does one more thing: shapes whose ends meet are welded into ONE path, so three lines drawn end to end become a single triangle you can fill and reshape, closed because the last end came back to the first. Ends within two points of each other count as meeting and are pulled together; ends further apart are left alone, and the question tells you which happened before you press the button. The shapes keep their fill, their edge, their shadow and everything else they were wearing, and the whole thing is one undo step, so if it was not what you wanted the separate shapes come straight back. A highlighter wash comes across still mixing with what is under it, so it goes on highlighting and is no longer stuck being a box: a run of words that wraps onto two lines, or a panel with a notch out of it, can be one mark. An ARROW is the one shape that does not convert, and the command is missing rather than dimmed on one: its head is part of how it is painted rather than part of an outline, so a path of it would be the silhouette of the whole arrow with its points on the outside, which is not the arrow you drew. You are told once, plainly, what the command will leave you with, and there is a Don't ask again on that question; after the turn, one line under the canvas says what you now have, which is what stands in for the question once it is silenced. Needs Reshape a path, and so the Pen, because a shape you turn and then cannot edit is a command with no payoff. Off means the command is not offered and the shapes stay shapes.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: whatIsLeftInThePictureFlag,
+                    title: "What a separation left behind stays on the picture's row",
+                    description: "Separating a screenshot answers in a pill at the bottom of the canvas: how many pieces came out, how many are still in the picture, and that running the command again takes the next batch. On a dense page that is 142 out and 580 left, and three seconds later the pill has faded and nothing on screen says so. The only way back to the number is to run the command again and read fast, which is the one thing that changes it. With this on, the picture's own row in the layers list keeps the count: a second line under its name reads 580 left, with Separate again beside it, and one click takes the next batch without going near a menu. A picture that came apart completely says Nothing left on its row, so finished looks different from nobody ever told me. Pieces the app read but could not be confident about say so instead and offer no second run, because another run would find exactly those and refuse them exactly the same way. A photograph, where the sweep finds hundreds of pieces in the grass and can read none of them, says Nothing readable rather than counting its texture out loud. Hovering the line spells the whole thing out in a sentence. Nothing about the document changes, so it costs no undo step, and undoing the separation takes the line away with it rather than leaving a count over a picture that holds everything again. Off means the pill is the only thing that ever says it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

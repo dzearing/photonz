@@ -402,6 +402,7 @@ struct LayersListView: View {
             // could not reach — so the dock has to budget for them separately.
             VStack(spacing: 0) {
                 searchCount(showing: displays.count)
+                separationOffer
                 multiSelectionCount
                 resizeHandle(reserved: grabRange)
             }
@@ -731,6 +732,45 @@ struct LayersListView: View {
                 .padding(.top, 4)
                 .panelReadout(words)
                 .playtestField("Search count")
+        }
+    }
+
+    /// "580 left in the picture · Separate again", under the list, for as long
+    /// as the picture last separated still has a batch in it
+    /// (`next-what-a-separation-left-behind`).
+    ///
+    /// The picture's own row carries this too, and on a small capture that is
+    /// the whole answer. On a dense one it is not: separating a page leaves the
+    /// list a hundred rows long, scrolled to the pieces, and the picture's row
+    /// thirty screens down. So the count also sits here, where it cannot scroll
+    /// away, and the press that takes the next batch sits with it.
+    ///
+    /// It goes quiet the moment there is nothing more to take, rather than
+    /// sitting under the list forever reading zero.
+    @ViewBuilder private var separationOffer: some View {
+        if let offer = editorState.separationStillOffering {
+            HStack(spacing: 6) {
+                Text(SeparationLeftover.stillInThePicture(offer.left.count))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                    .panelReadout(SeparationLeftover.stillInThePicture(offer.left.count))
+                Button(SeparationLeftover.againLabel) {
+                    editorState.separateIntoLayers(id: offer.id)
+                }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .foregroundStyle(Color.accentColor)
+                .lineLimit(1)
+                .playtestControl(SeparationLeftover.againLabel,
+                                 detail: "Layers, \(offer.name), \(offer.left.count) left")
+            }
+            .panelHelp(offer.left.help)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.leading, EditorChromeLayout.panelEdgeInset)
+            .panelEdgePadding()
+            .padding(.top, 4)
         }
     }
 

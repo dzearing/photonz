@@ -109,6 +109,11 @@ extension EditorState {
         guard let document, let layer = document.layer(id: id),
               let ref = layer.imageRef else { return }
         guard let result, !result.pieces.isEmpty else {
+            // Nothing came out, so the bitmap is untouched and the note goes on
+            // the ref the picture already wears: it is a verdict about THESE
+            // pixels, and it has to outlive the pill the same way a count does.
+            rememberWhatIsLeft(in: ref, runs: 0, boxes: 0,
+                               skipped: result?.skipped ?? 0, crowded: result?.crowded ?? 0)
             raiseCanvasNotice(.separatedIntoLayers(runs: 0, boxes: 0,
                                                    skipped: result?.skipped ?? 0,
                                                    crowded: result?.crowded ?? 0))
@@ -241,6 +246,8 @@ extension EditorState {
         if gatheredAs != nil, let group = made.first.flatMap({ self.document?.parentID(of: $0) }) {
             multiSelectedLayerIDs = []
             selectedLayerID = group
+            rememberWhatIsLeft(in: patched, runs: runs, boxes: boxes,
+                               skipped: result.skipped, crowded: result.crowded)
             raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
                                                    skipped: result.skipped,
                                                    crowded: result.crowded))
@@ -272,6 +279,8 @@ extension EditorState {
         }
         multiSelectedLayerIDs = []
         selectedLayerID = first.map { made[$0] } ?? made.first
+        rememberWhatIsLeft(in: patched, runs: runs, boxes: boxes,
+                           skipped: result.skipped, crowded: result.crowded)
         // Both halves of what just happened: what came out, and what stayed in
         // the picture. A screenshot dense enough to have pieces crowded out
         // says so and says what to do about it, which is run the command again
@@ -280,5 +289,54 @@ extension EditorState {
         raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
                                                skipped: result.skipped,
                                                crowded: result.crowded))
+    }
+
+    /// The one picture the foot of the layers list is speaking for: the last
+    /// one separated that still has a batch in it, and the layer wearing it.
+    ///
+    /// The row note alone is not enough, and a picture settled it: separating a
+    /// dense page leaves the list 105 rows long, scrolled to the pieces, with
+    /// the picture's own row thirty screens below the bottom of the panel. The
+    /// count was kept and nobody could see it. So the offer also sits UNDER the
+    /// list, where it cannot scroll away, for as long as there is another batch
+    /// to take.
+    ///
+    /// Only while another run would reach something. A picture that came apart
+    /// completely, or one whose leftovers are simply unreadable, has nothing to
+    /// offer and its row says so on its own — and by then the list is short
+    /// enough that the row is on screen anyway.
+    var separationStillOffering: SeparationOffer? {
+        guard Experiments.shared.whatIsLeftInThePictureEnabled,
+              let ref = lastSeparated, let left = separationLeftovers[ref],
+              left.offersAnotherBatch,
+              // Gone from the document means undone, or the layer was deleted.
+              // Either way there is nothing left to offer a second run of.
+              let layer = document?.allLayers.first(where: { $0.imageRef == ref })
+        else { return nil }
+        return SeparationOffer(id: layer.id, name: layer.name, left: left)
+    }
+
+    /// What the foot of the layers list draws, when it draws anything.
+    struct SeparationOffer: Equatable {
+        let id: UUID
+        let name: String
+        let left: SeparationLeftover
+    }
+
+    /// Keeps what the pill just said, on the bitmap it said it about.
+    ///
+    /// The pill is a glance and then it is gone, and the number it carries —
+    /// 580 still in the picture — is one somebody wants back an hour later. So
+    /// the same two counts are held against the picture's own pixels, where the
+    /// layers row reads them (`SeparationLeftover`). Against the BITMAP and not
+    /// the layer, because undo puts the original pixels back and the note has
+    /// to go with them: a row still saying 580 left over a picture that holds
+    /// all 724 again is worse than a row saying nothing.
+    private func rememberWhatIsLeft(in ref: ImageRef, runs: Int, boxes: Int,
+                                    skipped: Int, crowded: Int) {
+        guard Experiments.shared.whatIsLeftInThePictureEnabled else { return }
+        separationLeftovers[ref] = SeparationLeftover(runs: runs, boxes: boxes,
+                                                      skipped: skipped, crowded: crowded)
+        lastSeparated = ref
     }
 }

@@ -541,6 +541,65 @@ where reading starts, and the layers list scrolled to the new rows. Deliberately
 not all of them: a person's first move is to grab a run and drag it, and a drag
 with every piece picked would carry the whole page off the picture in one go.
 
+## And what it goes on saying
+
+The pill fades after three seconds and the number goes with it. On the project
+dashboard capture that number is 365 still in the picture, and it is the whole
+reason a person would run the command again — so a count you are expected to act
+on later cannot live in a confirmation that leaves on a timer. Four audits in one
+day each asked a version of "is the pill enough". It is not.
+
+So two places keep it, behind `next-what-a-separation-left-behind`
+(`SeparationLeftover`). **Neither writes anything into the document**: the value
+is held against the picture's patched BITMAP, so undo puts the original pixels
+back and the note goes with them rather than leaving a count over a picture that
+holds everything again.
+
+**The picture's own row**, on the second line under its name, the same slot a
+component row uses to say whether it is the original or a copy
+(`ComponentRowNote`). It is where the eye already is the instant after, and it is
+printed on the thing that is still holding the 365. Four answers, and each is cut
+to **eighteen characters**, which is measured rather than chosen: the line shares
+a narrow row with a thumbnail, a padlock and an eye, which leaves it about 95
+points on the dock's own width, and "Nothing left to separate" came out of the app
+reading "Nothing left to sep…".
+
+| The picture | The row says |
+| --- | --- |
+| More in it than one command takes | `365 left` |
+| Leftovers it simply could not read | `26 left, unclear` |
+| It gave up everything it had | `Nothing left` |
+| Not a screenshot at all | `Nothing readable` |
+
+The whole sentence is one hover away, because eighteen characters cannot carry
+it: "365 pieces are still in this picture. Separating it again takes the next
+batch."
+
+The row is a READOUT and not a control, for the same measured reason. "365 left"
+with a **Separate again** beside it came out of the app reading "Separate agai…".
+So the press lives under the list, where there is a whole row's width for it, and
+the row does the one job the list foot cannot: it stays with THIS picture,
+whatever gets separated next. The row's own right click menu still carries the
+command.
+
+**A line under the whole list**, which is the half that matters on a dense page.
+A picture tells you why: separating the dashboard leaves the layers list 173 rows
+long, scrolled to the pieces, with the picture's own row about thirty screens
+below the bottom of the panel. The count was kept and nobody could see it. So the
+offer also sits under the list, where nothing can scroll it away, reading "365
+left in the picture · Separate again".
+
+It speaks for the LAST picture separated, and only while another run would reach
+something. A picture that came apart completely, or one whose leftovers are
+simply unreadable, has nothing to offer — and by then the list is short enough
+that its row is in plain sight anyway. So the line appears when there is a batch
+to take and goes quiet the moment there is not, rather than sitting under the
+list forever reading zero.
+
+The pill is unchanged and still says "run it again for more". That is how a
+person learns the offer exists at all; the line under the list is where they act
+on it a minute later.
+
 ## Names
 
 `Text 1`, `Text 2`, … in reading order, and `Box 1`, `Box 2`, … down the page.

@@ -86,6 +86,12 @@ struct LayersRow: View, Equatable {
         if componentsEnabled, let note = display.componentNote {
             parts.append(note.text.lowercased())
         }
+        // What the picture still has in it, in the row's own words, so a walk
+        // can prove the count is still there long after the pill has gone
+        // rather than squinting at a picture (`SeparationLeftover`).
+        if let left = display.separationNote {
+            parts.append(left.text.lowercased())
+        }
         return parts.joined(separator: ", ")
     }
     private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
@@ -277,7 +283,32 @@ struct LayersRow: View, Equatable {
                     .lineLimit(1)
                     .panelHelp(note.help(rowName: display.name))
             }
+            // What Separate into Layers left in THIS picture, kept where the
+            // notice pill cannot keep it (`SeparationLeftover`). The count
+            // first and the offer second, so the narrow row truncates the tail
+            // and never the number.
+            if let left = display.separationNote { separationNote(left) }
         }
+    }
+
+    /// The second line on a picture that has been taken apart: how many pieces
+    /// are still in it.
+    ///
+    /// A READOUT and not a control, which is a width decision rather than a
+    /// taste. The slot is about 95 points once the thumbnail, the padlock and
+    /// the eye have taken theirs, and "365 left" with a Separate again beside it
+    /// needs half as much again — the button came out reading "Separate agai…".
+    /// So the press lives under the list, where there is a whole row's width for
+    /// it (`LayersListView.separationOffer`), and this line does the one job the
+    /// list foot cannot: it stays with THIS picture, whatever is separated next.
+    /// The row's own right click menu still carries the command.
+    @ViewBuilder
+    private func separationNote(_ left: SeparationLeftover) -> some View {
+        Text(left.text)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .panelHelp(left.help)
     }
 
     /// The twist-open control, in a fixed slot so every row's thumbnail lines

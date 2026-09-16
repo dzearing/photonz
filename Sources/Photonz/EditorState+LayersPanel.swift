@@ -106,7 +106,8 @@ extension EditorState {
         if let selectedLayerID { selected.insert(selectedLayerID) }
         if isSearchingLayers {
             return document?.layerRows(matching: layerSearchQuery, selected: selected,
-                                       saysItsWords: Experiments.shared.rowSaysItsWordsEnabled) ?? []
+                                       saysItsWords: Experiments.shared.rowSaysItsWordsEnabled,
+                                       separations: separationLeftovers) ?? []
         }
         return document?.layerRows(
             expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [],
@@ -114,7 +115,12 @@ extension EditorState {
             // Cutting off what does not fit is auto layout's doing, so the mark
             // that says a container has cut something off ships with it.
             marksOutOfView: Experiments.shared.autoLayoutEnabled,
-            saysItsWords: Experiments.shared.rowSaysItsWordsEnabled) ?? []
+            saysItsWords: Experiments.shared.rowSaysItsWordsEnabled,
+            // What a separation left in each picture, kept where the pill
+            // cannot: the picture's own row (`next-what-a-separation-left-behind`).
+            // Empty until something has actually been separated, so an ordinary
+            // document never pays for the lookup.
+            separations: separationLeftovers) ?? []
     }
 
     /// What the layers list is CALLING this layer right now, which is what a

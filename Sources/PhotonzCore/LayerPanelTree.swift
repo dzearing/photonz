@@ -419,6 +419,11 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// layer off, or how many layers a shut group is hiding out of view. Nil
     /// on a row with nothing to say, which is nearly every row.
     public let outOfView: RowOutOfView?
+    /// What Separate into Layers left in this picture, on the row of the
+    /// picture itself (`SeparationLeftover`). Nil on every row but a picture
+    /// that has been separated in this session, which is nearly all of them.
+    /// It is the notice pill's count given somewhere it does not fade from.
+    public let separationNote: SeparationLeftover?
 
     public var id: UUID { row.id }
 
@@ -427,8 +432,10 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
                 versionName: String? = nil, componentNote: ComponentRowNote? = nil,
                 isRasterizable: Bool,
                 canTurnIntoPath: Bool = false,
-                outOfView: RowOutOfView? = nil) {
+                outOfView: RowOutOfView? = nil,
+                separationNote: SeparationLeftover? = nil) {
         self.outOfView = outOfView
+        self.separationNote = separationNote
         self.versionName = versionName
         self.componentNote = componentNote
         self.row = row
@@ -461,7 +468,8 @@ extension PhotonzDocument {
     /// stored as, which is what Current shows.
     public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
                           marksOutOfView: Bool = true,
-                          saysItsWords: Bool = true) -> [LayerRowDisplay] {
+                          saysItsWords: Bool = true,
+                          separations: [ImageRef: SeparationLeftover] = [:]) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
         // Which components hold more than one drawing of themselves, and what
         // those drawings are called. A version name is only worth printing
@@ -545,7 +553,13 @@ extension PhotonzDocument {
                         versionName: version),
                     isRasterizable: layer.isRasterizable,
                     canTurnIntoPath: layer.canTurnIntoPath,
-                    outOfView: outOfView))
+                    outOfView: outOfView,
+                    // Held against the BITMAP rather than the layer, so undoing
+                    // a separation — which puts the original bitmap back —
+                    // takes the note with it instead of leaving a count sitting
+                    // over a picture that holds everything again.
+                    separationNote: separations.isEmpty
+                        ? nil : layer.imageRef.flatMap { separations[$0] }))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }
         }

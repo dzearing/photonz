@@ -37,6 +37,22 @@ final class EditorState {
     /// lands would separate the same picture twice and stack two sets of the
     /// same words (`EditorState+Separate`).
     @ObservationIgnored var separationsInFlight: Set<UUID> = []
+    /// What each separated picture still has in it, so the count the notice
+    /// pill fades away with stays readable on the picture's own row
+    /// (`SeparationLeftover`, `next-what-a-separation-left-behind`).
+    ///
+    /// Keyed by the BITMAP rather than by the layer, and observed so the row
+    /// redraws when it lands. Separating replaces the picture's pixels with the
+    /// repaired ones, which is a new `ImageRef`; undo puts the old one back, so
+    /// the note follows the separation in and out of the undo history without
+    /// the history knowing anything about it. Session chrome: it never enters
+    /// the document.
+    var separationLeftovers: [ImageRef: SeparationLeftover] = [:]
+    /// The picture separated most recently, which is the one the foot of the
+    /// layers list offers another batch of (`separationStillOffering`). A
+    /// bitmap again, so the offer goes away the moment undo takes that picture
+    /// out of the document.
+    var lastSeparated: ImageRef?
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 
