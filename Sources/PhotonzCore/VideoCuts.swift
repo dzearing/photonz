@@ -241,3 +241,82 @@ public struct VideoCutList: Codable, Sendable, Hashable {
         return true
     }
 }
+
+/// One piece read against a live trim window: where the piece sits on the
+/// timeline, and how much of it the window still keeps.
+///
+/// This is what the trim handles draw from. A piece is either wholly kept,
+/// partly kept (the window's edge is somewhere inside it), or dropped, and the
+/// drawing says which, so a person dragging a handle past a join can see what
+/// it is about to eat into.
+public struct VideoPieceTrim: Equatable, Sendable {
+    /// The piece's position in the cut list, in play order.
+    public let index: Int
+    /// Where the whole piece sits on the timeline, ignoring the window.
+    public let start: TimeInterval
+    public let end: TimeInterval
+    /// The part of the piece the window still keeps, in timeline seconds; nil
+    /// when the window misses this piece entirely.
+    public let keptStart: TimeInterval?
+    public let keptEnd: TimeInterval?
+
+    public init(index: Int, start: TimeInterval, end: TimeInterval,
+                keptStart: TimeInterval?, keptEnd: TimeInterval?) {
+        self.index = index
+        self.start = start
+        self.end = end
+        self.keptStart = keptStart
+        self.keptEnd = keptEnd
+    }
+
+    /// How long the whole piece plays for.
+    public var duration: TimeInterval { max(0, end - start) }
+
+    /// How much of it survives the window.
+    public var keptDuration: TimeInterval {
+        guard let keptStart, let keptEnd else { return 0 }
+        return max(0, keptEnd - keptStart)
+    }
+
+    /// Nothing of this piece is inside the window: applying the trim would
+    /// throw it away.
+    public var isDropped: Bool { keptStart == nil || keptEnd == nil }
+
+    /// The window covers the whole piece, so applying the trim leaves it as it is.
+    public var isWhollyKept: Bool {
+        guard let keptStart, let keptEnd else { return false }
+        return keptStart <= start + 1e-9 && keptEnd >= end - 1e-9
+    }
+}
+
+extension VideoCutList {
+    /// Every piece read against a trim window, in play order.
+    ///
+    /// The pieces this reports as kept are exactly the pieces
+    /// `keep(fromTimeline:toTimeline:)` leaves behind, for the same window, so
+    /// what the handles show and what pressing Done does cannot drift apart.
+    /// Handles dragged past each other read the same as the right way round.
+    public func piecesUnderTrim(fromTimeline from: TimeInterval,
+                                toTimeline to: TimeInterval) -> [VideoPieceTrim] {
+        let total = timelineDuration
+        let lo = min(max(0, min(from, to)), total)
+        let hi = min(max(0, max(from, to)), total)
+
+        var reading: [VideoPieceTrim] = []
+        var elapsed: TimeInterval = 0
+        for (index, piece) in pieces.enumerated() {
+            let pieceStart = elapsed
+            let pieceEnd = elapsed + piece.duration
+            elapsed = pieceEnd
+            let overlapLo = max(pieceStart, lo)
+            let overlapHi = min(pieceEnd, hi)
+            // The same epsilon `keep` uses, so a handle parked on a join drops
+            // the piece it just left instead of keeping a sliver of nothing.
+            let covered = overlapHi - overlapLo > 1e-6
+            reading.append(VideoPieceTrim(index: index, start: pieceStart, end: pieceEnd,
+                                          keptStart: covered ? overlapLo : nil,
+                                          keptEnd: covered ? overlapHi : nil))
+        }
+        return reading
+    }
+}

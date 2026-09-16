@@ -1,0 +1,29 @@
+{
+  "feature": "The pieces stay on screen while you trim",
+  "epic": "video-cutting",
+  "summary": "Opening the trim handles on a recording you have cut used to put a plain bar back, so you were dragging the start and end of something you could no longer see the shape of. The pieces now stay on the track under the handles, the part of each one the window still keeps is lit and the part it would drop is not, and the count beside the scissors reads how many of the pieces the window keeps.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Cut a recording into pieces and drop the one you do not want\" (next-cut-a-recording), on by default. You need a recording: use the menu-bar recorder, or open any clip from the capture history.",
+  "try": [
+    { "do": "Open a recording from the capture history and press space to stop it somewhere in the middle." },
+    { "do": "Press B, move on a few seconds, and press B again, so the recording is in three pieces." },
+    { "do": "Press the scissors button to open the trim handles." },
+    { "do": "Drag the start handle to the right until it passes the first cut." },
+    { "do": "Read the count beside the scissors while you drag: it says how many of the pieces the window still keeps." },
+    { "do": "Drag the end handle left, past the last cut." },
+    { "do": "Press Done, and compare what the strip shows now against what the track was showing a moment before." }
+  ],
+  "evaluate": [
+    "Do the blocks under the handles read as the same pieces the strip was showing before you pressed the scissors, or as a different line?",
+    "When a handle crosses a cut, is it obvious which piece is on its way out?",
+    "Is the difference between a kept piece and a dropped one strong enough on your screen, or does a dropped piece vanish into the dimmed end?",
+    "Does \"2 of 3 pieces\" land where your eye already is, or do you watch the blocks and never read it?",
+    "Would you want a handle to catch on a cut as it goes past, so trimming exactly to a join is easy?",
+    "After Done, is what you are left with what you thought the handles were promising?"
+  ],
+  "rough": [
+    "NOTHING HERE WAS PHOTOGRAPHED, AND THERE ARE NOT EVEN OFFSCREEN RENDERS. The Mac's screen was locked for the whole of this task, so a walk refuses to run at all, which means no real capture and no render either. This is the second video task in a row that nobody has seen drawn: the strip, the blocks and the readout are unverified on screen. What IS verified is the geometry and the promise: 13 tests lay the blocks out and pin what they show as kept to exactly what pressing Done keeps. A walk (trim-with-pieces-walk.json) is written and waiting, and a sweep is requested.",
+    "A handle does not catch on a cut as it passes. Trimming exactly to a join is therefore a steady hand, not a snap. I left it out deliberately: it changes what a drag does rather than what it draws, and whether handles should be magnetic is a feel question worth answering by trying this first.",
+    "The lit and unlit greys were chosen without being able to look at them. A dropped piece is drawn over the dimmed end of the track, which is already dark, so if anything is wrong here it is that a dropped block is too faint to notice rather than too loud.",
+    "Trim mode does not show which piece is selected, the way the strip does outside it. There is no Delete while trimming, and an accent block would compete with the accent handles and the accent window border, so the track stays about the window and nothing else."
+  ]
+}

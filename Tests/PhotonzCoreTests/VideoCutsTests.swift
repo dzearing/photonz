@@ -337,3 +337,99 @@ struct VideoCutsTests {
                                           committed: VideoEdits(cuts: cuts)))
     }
 }
+
+/// What a trim window does to each piece — the reading the trim handles draw
+/// from, so what a person sees kept and what Done keeps are the same answer.
+@Suite("Pieces under a trim window")
+struct VideoPieceTrimTests {
+
+    /// Three pieces of six seconds each, cut from an eighteen second recording.
+    private func threePieces() -> VideoCutList {
+        var cuts = VideoCutList(duration: 18)
+        _ = cuts.split(atTimeline: 6)
+        _ = cuts.split(atTimeline: 12)
+        return cuts
+    }
+
+    @Test("An untouched window keeps every piece whole")
+    func wholeWindowKeepsEverything() {
+        let cuts = threePieces()
+        let under = cuts.piecesUnderTrim(fromTimeline: 0, toTimeline: 18)
+        #expect(under.count == 3)
+        #expect(under.allSatisfy { $0.isWhollyKept })
+        #expect(under.map(\.index) == [0, 1, 2])
+        #expect(under[1].keptStart == 6)
+        #expect(under[1].keptEnd == 12)
+    }
+
+    @Test("A window inside one piece drops the pieces either side of it")
+    func windowInsideOnePiece() {
+        let cuts = threePieces()
+        let under = cuts.piecesUnderTrim(fromTimeline: 7, toTimeline: 9)
+        #expect(under[0].isDropped)
+        #expect(under[2].isDropped)
+        #expect(!under[1].isDropped)
+        #expect(!under[1].isWhollyKept)
+        #expect(under[1].keptStart == 7)
+        #expect(under[1].keptEnd == 9)
+        #expect(under[1].keptDuration == 2)
+    }
+
+    @Test("A window across a join keeps the end of one piece and the start of the next")
+    func windowCrossesAJoin() {
+        let cuts = threePieces()
+        let under = cuts.piecesUnderTrim(fromTimeline: 4, toTimeline: 8)
+        #expect(under[0].keptStart == 4)
+        #expect(under[0].keptEnd == 6)
+        #expect(under[1].keptStart == 6)
+        #expect(under[1].keptEnd == 8)
+        #expect(under[2].isDropped)
+    }
+
+    @Test("A handle parked exactly on a join drops the piece it just left")
+    func handleOnAJoinDropsWhatItLeft() {
+        let cuts = threePieces()
+        let under = cuts.piecesUnderTrim(fromTimeline: 6, toTimeline: 18)
+        #expect(under[0].isDropped)
+        #expect(under[1].isWhollyKept)
+        #expect(under[2].isWhollyKept)
+    }
+
+    @Test("Handles dragged past each other read the same way round as applying them")
+    func reversedWindowReadsTheSame() {
+        let cuts = threePieces()
+        #expect(cuts.piecesUnderTrim(fromTimeline: 9, toTimeline: 4)
+                == cuts.piecesUnderTrim(fromTimeline: 4, toTimeline: 9))
+    }
+
+    @Test("An uncut recording is one piece, and the window narrows it")
+    func uncutRecording() {
+        let cuts = VideoCutList(duration: 18)
+        let under = cuts.piecesUnderTrim(fromTimeline: 3, toTimeline: 15)
+        #expect(under.count == 1)
+        #expect(under[0].start == 0)
+        #expect(under[0].end == 18)
+        #expect(under[0].keptStart == 3)
+        #expect(under[0].keptEnd == 15)
+    }
+
+    @Test("What the handles show as kept is exactly what applying the trim keeps")
+    func drawingAgreesWithApplying() {
+        let windows: [(TimeInterval, TimeInterval)] =
+            [(0, 18), (4, 8), (7, 9), (6, 18), (0, 6), (2, 17), (6, 12), (5.5, 12.5)]
+        for (from, to) in windows {
+            let cuts = threePieces()
+            let shownKept = cuts.piecesUnderTrim(fromTimeline: from, toTimeline: to)
+                .filter { !$0.isDropped }
+            var applied = cuts
+            let didApply = applied.keep(fromTimeline: from, toTimeline: to)
+            #expect(didApply, "window \(from)...\(to) should apply")
+            #expect(applied.pieces.count == shownKept.count,
+                    "window \(from)...\(to): \(shownKept.count) shown, \(applied.pieces.count) kept")
+            for (shown, piece) in zip(shownKept, applied.pieces) {
+                #expect(abs(shown.keptDuration - piece.duration) < 1e-9,
+                        "window \(from)...\(to): shown \(shown.keptDuration), kept \(piece.duration)")
+            }
+        }
+    }
+}

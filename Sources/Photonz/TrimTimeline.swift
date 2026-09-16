@@ -15,6 +15,10 @@ struct TrimTimeline: View {
     private let handleWidth: CGFloat = 14
     private let handleHit: CGFloat = 34
     private let trackHeight: CGFloat = 44
+    /// Height of a piece block inside the track, and the gap that draws the cut
+    /// between two of them — the same reading as the strip the trim replaced.
+    private let blockHeight: CGFloat = 26
+    private let joinGap: CGFloat = 4
     /// Breathing room at each end so a handle pinned to a clip extreme isn't
     /// clipped and stays easy to grab.
     private let inset: CGFloat = 18
@@ -46,6 +50,20 @@ struct TrimTimeline: View {
                     .fill(.black.opacity(0.4))
                     .frame(width: max(0, (width - inset) - outX), height: trackHeight)
                     .offset(x: outX)
+
+                // The pieces the recording is in, so opening the handles does
+                // not take away what the strip was showing. Drawn OVER the
+                // dimmed ends: the dim says which stretch of time is going,
+                // the blocks say which pieces that is, and a dropped piece has
+                // to stay readable to be recognised as the one being dropped.
+                // An uncut recording has no pieces to show and keeps its plain
+                // track, exactly as before.
+                if showsPieces {
+                    ForEach(pieceBlocks(trackW: trackW, duration: duration),
+                            id: \.index) { block in
+                        pieceBlock(block)
+                    }
+                }
 
                 // Kept-window highlight border.
                 RoundedRectangle(cornerRadius: 8)
@@ -84,6 +102,42 @@ struct TrimTimeline: View {
             .coordinateSpace(.named(Self.space))
         }
         .frame(height: trackHeight)
+    }
+
+    /// Whether there are pieces worth drawing: cutting has to be available in
+    /// this release, and the recording has to actually be in more than one
+    /// piece. One piece is the plain track it always was.
+    private var showsPieces: Bool {
+        Experiments.shared.cutRecordingEnabled && state.cuts.isCut
+    }
+
+    /// Where each piece is drawn and how much of it the window keeps. The
+    /// geometry lives in PhotonzCore so it is tested rather than eyeballed.
+    private func pieceBlocks(trackW: CGFloat, duration: TimeInterval) -> [VideoTrimTrackBlock] {
+        VideoTrimTrackBlock.blocks(
+            for: state.cuts.piecesUnderTrim(fromTimeline: state.trim.inPoint,
+                                            toTimeline: state.trim.outPoint),
+            duration: duration, inset: inset, trackWidth: trackW, joinGap: joinGap)
+    }
+
+    /// One piece: the whole of it faintly, the part the trim window still keeps
+    /// brighter on top. A piece the handles have let go of has no bright part
+    /// at all, which is what "this one is going" looks like.
+    private func pieceBlock(_ block: VideoTrimTrackBlock) -> some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle()
+                .fill(.white.opacity(0.12))
+            if block.keptWidth > 0 {
+                Rectangle()
+                    .fill(.white.opacity(0.5))
+                    .frame(width: block.keptWidth)
+                    .offset(x: block.keptX - block.x)
+            }
+        }
+        .frame(width: block.width, height: blockHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 5))
+        .offset(x: block.x, y: (trackHeight - blockHeight) / 2)
+        .allowsHitTesting(false)
     }
 
     private enum HandleSide {

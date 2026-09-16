@@ -53,6 +53,14 @@ final class VideoEditorState {
         guard cuts.isCut else { return nil }
         return cuts.pieceIndex(atTimeline: currentTime)
     }
+    /// How many pieces the live trim window still keeps, of how many there are.
+    /// What the trim handles are drawing, said in words, so a person dragging a
+    /// handle past a join can read what they are about to drop as well as see it.
+    var trimmedPieceCount: (kept: Int, total: Int) {
+        let under = cuts.piecesUnderTrim(fromTimeline: trim.inPoint, toTimeline: trim.outPoint)
+        return (under.count { !$0.isDropped }, under.count)
+    }
+
     /// Nominal frame rate (fps), for frame-accurate ←/→ stepping. Defaults to 30
     /// until metadata loads.
     private(set) var frameRate: Double = 30

@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/trim-with-pieces-walk",
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-three-pieces", "note": "two presses of B leave an eight second recording in three pieces: the line under the picture is three blocks with a gap at each cut" },
+    { "do": "snapshot", "name": "1-three-pieces" },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-trimming-shows-pieces", "note": "opening the trim handles keeps the pieces on screen: the same three blocks, now inside the trim track with a handle at each end" },
+    { "do": "snapshot", "name": "2-trimming-shows-pieces" },
+
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-start-eats-first-piece", "note": "the start handle has come in to a quarter, part way into the first piece: what it has eaten is dimmed, what it still keeps is not" },
+    { "do": "snapshot", "name": "3-start-eats-first-piece" },
+
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-both-handles-in", "note": "both handles in at a quarter and three quarters: the kept window crosses two joins, and the piece past the end handle reads as dropped" },
+    { "do": "snapshot", "name": "4-both-handles-in" },
+
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-done-keeps-what-was-shown", "note": "Done keeps exactly the pieces the handles were showing as kept: the strip is the same blocks the trim track was drawing, narrowed at both ends" },
+    { "do": "snapshot", "name": "5-done-keeps-what-was-shown" }
+  ]
+}

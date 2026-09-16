@@ -357,6 +357,14 @@ struct VideoEditorView: View {
         }
     }
 
+    /// "3 pieces" normally; "2 of 3 pieces" while the trim handles are open, so
+    /// the count answers what the window keeps rather than what exists.
+    private var pieceCountLabel: String {
+        guard state.isTrimming else { return "\(state.cuts.pieceCount) pieces" }
+        let counted = state.trimmedPieceCount
+        return "\(counted.kept) of \(counted.total) pieces"
+    }
+
     /// Whether this release offers cutting at all.
     private var cuttingAvailable: Bool { Experiments.shared.cutRecordingEnabled }
 
@@ -376,8 +384,11 @@ struct VideoEditorView: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        if cuttingAvailable, state.cuts.isCut, !state.isTrimming, !state.isCropping {
-            Label("\(state.cuts.pieceCount) pieces", systemImage: "rectangle.split.3x1")
+        if cuttingAvailable, state.cuts.isCut, !state.isCropping {
+            // While trimming this counts what the handles are keeping, because
+            // that is the question a handle over a join raises; the rest of the
+            // time it is simply what the recording is in.
+            Label(pieceCountLabel, systemImage: "rectangle.split.3x1")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
