@@ -1,0 +1,29 @@
+{
+  "feature": "Saying no to Screen Recording",
+  "epic": "ui-building",
+  "summary": "Closing the first run setup window is now an answer the app remembers, so it stops opening itself at every launch at somebody who is never going to turn Screen Recording on. The window also stops demanding it: the step says Needed to capture rather than Required, says everything else works without it, and the way out says Done rather than Not Now.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Saying no to the setup window sticks\" is on by default in Next.",
+  "try": [
+    { "do": "Quit Photonz." },
+    { "do": "In Terminal, make the Mac forget its first run: for k in welcome.setupCompleted welcome.setupDismissed tutorials.firstRunOffer tutorials.firstRunOffer.migrated; do defaults delete com.dzearing.photonz.dev $k; done" },
+    { "do": "Open Photonz Dev. The setup window comes up." },
+    { "do": "Read the Screen Recording step. It is badged Needed to capture, and says everything else in Photonz works without it." },
+    { "do": "Press Start Working." },
+    { "do": "Pick Welcome & Permissions from the menu-bar menu. It opens the same window, and the way out of it now says Done." },
+    { "do": "Close it and quit and reopen Photonz twice. Nothing comes up." }
+  ],
+  "evaluate": [
+    "Does Needed to capture read as honest rather than as the app going soft on a permission it actually wants?",
+    "Is Everything else in Photonz works without it the sentence that makes closing this window feel safe, or does it raise a question it does not answer?",
+    "Does Done read right as the way out, or does it sound like you finished something you did not?",
+    "Knowing the window will never open itself again, is the capture strip saying what is missing the day you do press Shift Command 4 enough of a safety net?",
+    "Should the same no also quiet the Microphone and screenshot keys steps, or are those already quiet enough?"
+  ],
+  "rough": [
+    "There are no pictures in this audit. The Mac's screen was locked for the whole session, so every walk refuses to run and none could be photographed, including the new never-granting-walk written for exactly this. A sweep is requested and will run the walks the moment the screen is unlocked.",
+    "The behaviour half is proved in tests (Tests/PhotonzCoreTests/FirstRunOfferTests.swift, the launch by launch sequence) but has not been watched happening in the real app.",
+    "On a Mac that already granted Screen Recording you can see the new words but not the new behaviour, because granting has always been enough to stop the window. The change only shows itself to somebody who never grants it.",
+    "The Screen Recording step still opens System Settings by itself the first time you reach for a screenshot in a launch. That is the old behaviour and it is useful at that moment, but it is one more thing happening to somebody who already said no once.",
+    "Away from the mock on purpose: no explicit I do not capture choice and no reshaped window. Asking somebody to declare what kind of person they are on launch day, just to escape a window, is worse than the window."
+  ]
+}
