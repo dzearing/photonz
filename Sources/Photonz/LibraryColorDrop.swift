@@ -45,9 +45,12 @@ struct LibraryColorDrop: ViewModifier {
                         delegate: ColorDropTarget(answer: answer, incoming: $incoming,
                                                   apply: save))
                 .overlay { highlight }
-                // The sentence the shelf would say. A tip does not show while
-                // a drag is in the air, so this is for the accessibility
-                // reader and for the moment the pointer rests mid-thought.
+                // What letting go here would do, said out loud beside the
+                // shelf: it SAVES the colour rather than painting with it,
+                // which is the one thing in the panel a lit-up target does
+                // not already imply, and a shelf that refuses owes a reason
+                // every bit as much as a swatch does.
+                .colorDropSpeaks(incoming)
                 .accessibilityValue(incoming?.note ?? "")
                 // Named so a scripted walk can let a colour go on the shelf
                 // through the same delegate a pointer drives.
@@ -68,28 +71,21 @@ struct LibraryColorDrop: ViewModifier {
     }
 
     /// What the shelf about to keep a colour looks like: the ring the swatches
-    /// use, around the whole panel, and one short line saying what letting go
-    /// would do.
+    /// use, around the whole panel, over a faint wash.
     ///
-    /// The line is here and not on a swatch because a swatch that lights up is
-    /// self-explanatory — it paints — while a shelf that lights up is a
-    /// promise nobody has seen before. It is an overlay rather than a row, so
-    /// the shelf does not jump under the pointer at the moment of the drop.
+    /// It used to carry its own words too, a "Save this color" capsule in the
+    /// middle of the shelf. They are gone because the sentence beside the
+    /// shelf says the same thing and more — which colour, whether one like it
+    /// is already saved — and two lines about one drop, worded differently,
+    /// is the drift the one drop note exists to stop. An overlay rather than
+    /// a row, so the shelf does not jump under the pointer at the moment of
+    /// the drop.
     @ViewBuilder private var highlight: some View {
-        if let paint = incoming?.landing?.paint {
+        if incoming?.lightsUp == true {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.accentColor.opacity(0.12))
                 .overlay(RoundedRectangle(cornerRadius: 8)
                     .strokeBorder(Color.accentColor, lineWidth: 2))
-                .overlay {
-                    Text("Save this \(ColorStyleNaming.subject(paint))")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.accentColor))
-                        .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
-                }
                 .allowsHitTesting(false)
                 .transition(.opacity)
         }

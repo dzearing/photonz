@@ -1137,8 +1137,9 @@ private final class Run {
 
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
-        case .dragColor(let from, let onto, let hold, let expect):
-            try await dragColor(from, onto: onto, hold: hold, expect: expect, number: number)
+        case .dragColor(let from, let onto, let hold, let expect, let says):
+            try await dragColor(from, onto: onto, hold: hold, expect: expect, says: says,
+                                number: number)
 
         case .selectRow(let row, let modifiers):
             let editor = try requireEditor()
@@ -5172,7 +5173,8 @@ private final class Run {
     /// stood in the drag pasteboard's place for the length of the step, which
     /// is exactly the board a destination under a real pointer would read.
     private func dragColor(_ from: String, onto: String, hold: String?,
-                           expect: PlaytestColorDropExpectation, number: Int) async throws {
+                           expect: PlaytestColorDropExpectation, says: String?,
+                           number: Int) async throws {
         let window = try requireWindow()
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")
@@ -5201,22 +5203,43 @@ private final class Run {
             operation = dropView.draggingUpdated(info)
             await sleep(0.06)
         }
+        // The line the target is saying about this drag, read while the colour
+        // is still in the air: it is the whole of what a refusal owes
+        // somebody, and it is the only place the crowd a drop reaches is said
+        // out loud. Read from the editor's own state, which is the very value
+        // the pill on screen is drawn from.
+        let sentence = editor?.colorDropNote?.note
         var held = ""
         if let hold {
             try snapshot(content, name: hold)
             await screenCapture(window, name: hold)
             held = ", held \(hold).png"
         }
+        if let says {
+            guard let sentence else {
+                throw Failure(description: "nothing was said about the colour off "
+                    + "\"\(from)\" over \"\(onto)\", and the walk expected \"\(says)\"")
+            }
+            guard sentence.localizedCaseInsensitiveContains(says) else {
+                throw Failure(description: "\"\(onto)\" said \"\(sentence)\" about the colour "
+                    + "off \"\(from)\", and the walk expected \"\(says)\"")
+            }
+        }
         let lightsUp = operation != []
         if lightsUp != (expect == .takes) {
+            dropView.draggingExited(info)
             throw Failure(description: "\"\(onto)\" \(lightsUp ? "lit up" : "stayed dark")"
-                + " for the colour off \"\(from)\", and the walk expected it to \(expect.rawValue)")
+                + " for the colour off \"\(from)\""
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
+                + ", and the walk expected it to \(expect.rawValue)")
         }
         let landed = lightsUp ? dropView.performDragOperation(info) : false
+        if !lightsUp { dropView.draggingExited(info) }
         await sleep(0.4)
         note(number, "dragColor",
              "the colour off \"\(from)\" let go on \"\(onto)\": the swatch "
                 + (lightsUp ? "lit up" : "stayed dark")
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
     }

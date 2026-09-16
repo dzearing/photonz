@@ -1,0 +1,28 @@
+{
+  "feature": "A colour drop says what it will do",
+  "epic": "ui-building",
+  "summary": "Carry a colour over anything that can take one and a line appears beside it saying exactly what letting go would do, and why it would do nothing when it would do nothing. Until now the swatch only lit up, and a swatch that stayed dark said nothing at all.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Colour swatches you can drag, on by default in Next.",
+  "try": [
+    { "do": "Draw three rectangles, then take the fill off the first one with the Fill switch." },
+    { "do": "Drag a marquee round all three, so the Fill row reads mixed." },
+    { "do": "Press the Fill swatch and pick a colour, then pick up the Border swatch and hold it over the Fill swatch without letting go.", "shot": "2026-09-15-colour-drop-crowd.png" },
+    { "do": "Read the line that appears to the left of the panel: it should name the crowd, not just the row." },
+    { "do": "Let go, then pick the Fill swatch up and hold it back over itself.", "shot": "2026-09-15-colour-drop-refused.png" },
+    { "do": "Pick the Fill colour up and hold it over the Library panel.", "shot": "2026-09-15-colour-drop-shelf.png" },
+    { "do": "Switch a part off, then carry a colour over that switched-off row and read what it promises before you let go." }
+  ],
+  "evaluate": [
+    "Does the line land where your eye already is, or do you have to hunt left for it?",
+    "Is one line on every hover too chatty once you have learned the gesture, or is it the refusals that earn it?",
+    "Sitting out on the canvas beside the panel: does it read as belonging to the row it is level with?",
+    "The dark plate for a refusal and the blue one for a drop that lands: is the difference readable at a glance without reading the words?",
+    "On the Library, the shelf used to say \"Save this color\" in the middle of itself and now says the longer line beside it. Is that better or did you lose something?"
+  ],
+  "rough": [
+    "The screen on this Mac was locked the whole time, so these three pictures were taken with the harness override the lock exists to forbid. They are real screen captures and the window in them is fully drawn, but four of the colour walks could not be checked at all: under a lock the accessibility names never arrive and every one of them fails at the Add Effect menu, which has nothing to do with this change. A sweep has been asked for so they run properly once the screen is unlocked.",
+    "Two spellings in one family of pills. The swatch says \"Paints Fill on both of them with this colour\" and the shelf, one drag away, says \"Saves this color under a name you choose\". Both were already written that way and nobody could see either of them until now; the split runs through the whole app, prose in one spelling and row labels in the other, so it is a copy sweep rather than a typo. Left alone deliberately.",
+    "The line has no tail pointing at the row. It is level with the swatch and it names the part, which was enough in every case tried, but with two colour rows close together you are relying on the alignment.",
+    "Changed from the task as filed: it asked for a pill under the pointer, the way the canvas says it for a text style. Under the pointer covers the row below, which is often the row you are comparing against, so the words sit clear of the whole panel instead and line up with the swatch. On the tool bar's own swatch, which floats on the canvas, they hang straight off the side of it."
+  ]
+}

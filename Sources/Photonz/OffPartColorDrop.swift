@@ -39,9 +39,10 @@ struct OffPartColorDrop: ViewModifier {
                 .onDrop(of: ColorDropTarget.types,
                         delegate: ColorDropTarget(answer: answer, incoming: $incoming,
                                                   apply: apply))
-                // A tip does not show while a drag is in the air, so this is
-                // here for the accessibility reader and for the pointer
-                // resting on the row mid-thought.
+                // What letting go here would do, said out loud beside the
+                // row: it both switches the part on and paints it, which is
+                // more than a ring can promise.
+                .colorDropSpeaks(incoming)
                 .accessibilityValue(incoming?.note ?? "")
         } else {
             content
@@ -110,6 +111,7 @@ struct OffEffectColorDrop: ViewModifier {
                 .onDrop(of: ColorDropTarget.types,
                         delegate: ColorDropTarget(answer: answer, incoming: $incoming,
                                                   apply: apply))
+                .colorDropSpeaks(incoming)
                 .accessibilityValue(incoming?.note ?? "")
         } else {
             content

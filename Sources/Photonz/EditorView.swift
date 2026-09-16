@@ -195,6 +195,26 @@ struct EditorView: View {
             }
             }
             .animation(.spring(duration: 0.28), value: editorState.motionStripPhase)
+            // The one line a colour drop target is saying, drawn over the
+            // whole window rather than by the swatch itself: a swatch is 18pt
+            // wide in a column narrower than the sentence, and a sentence
+            // drawn inside the panel would be clipped by it. The words sit
+            // BESIDE whatever is being dropped on and never over it, which on
+            // the right hand panel means out over the canvas where there is
+            // always room. See `ColorDropNote.swift`.
+            .overlay(alignment: .topLeading) {
+                GeometryReader { window in
+                    let frame = window.frame(in: .global)
+                    ColorDropNoteOverlay(
+                        bounds: frame,
+                        panel: inspectorShown
+                            ? CGRect(x: frame.maxX - panelWidth, y: frame.minY,
+                                     width: panelWidth, height: frame.height)
+                            : nil)
+                }
+                .allowsHitTesting(false)
+            }
+            .animation(.easeOut(duration: 0.12), value: editorState.colorDropNote)
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a

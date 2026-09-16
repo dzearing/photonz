@@ -34,7 +34,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "3-a-colour-to-carry", "note": "the three borders go crimson, so there is a colour on screen that the two fills are not already wearing" },
 
-    { "do": "dragColor", "from": "Border", "onto": "Fill", "hold": "2-colour-over-the-swatch", "expect": "takes" },
+    { "do": "dragColor", "from": "Border", "onto": "Fill", "hold": "2-colour-over-the-swatch", "expect": "takes", "says": "on both of them with this colour", "comment": "The swatch says out loud how far letting go reaches, and the hold photographs it: two of the three are filled, so the line reads \"Paints Fill on both of them with this colour\" rather than leaving somebody to guess whether the hollow box is about to get one." },
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "4-painted" },
     { "do": "describe", "stage": "4-painted", "note": "the two filled boxes took the colour and the hollow one is still hollow, which is why the switch goes on saying mixed: what changed is the colour, not who has a fill" },

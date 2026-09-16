@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:43:38.493Z",
-  "updated": "2026-09-15T12:14:53.486Z",
+  "updated": "2026-09-16T02:58:03.707Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-12 with Scripts/playtest.sh Scripts/playtest/mixed-part-keeps-its-colour-walk.json --no-build. The hold capture 2-colour-over-the-swatch-sc.png shows the Fill swatch lit with a blue ring and no sentence anywhere in the window.\n\nThe sentence exists: ColorDrop.answer(...).note. Sources/Photonz/ColorSwatchDrag.swift:84, LibraryColorDrop.swift:52 and OffPartColorDrop.swift:45 and :150 hang it on .accessibilityValue only, with a comment saying a tip does not show while a drag is in the air. The text style equivalent is drawn: StyleRowDropNote in Sources/Photonz/InspectorSections.swift:222 for the panel, CanvasTextStyleDrop.swift:141 for the canvas pill.\n\nThe playtest dragColor step has no \"says\" field, so no walk can pin the colour sentence today; dragTile does (Sources/PhotonzCore/PlaytestScript.swift:1503). Adding the same field is part of this.",
@@ -42,6 +42,31 @@
     {
       "t": "2026-09-15T12:14:53.485Z",
       "note": "seq 160 -> 200"
+    },
+    {
+      "t": "2026-09-16T02:41:15.868Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T02:42:45.905Z",
+      "note": "adversarial review before building. (1) The task says a pill under the pointer, like the canvas text style drop. Under the pointer is wrong in the panel: a swatch is 18pt on a 260pt column, and a pill under the pointer covers the row below, which is often the very row somebody is comparing against. The layers list already solved this by putting the sentence at one END of the list; the swatches have a better option still, because the panel is pinned to the RIGHT edge of the window and the whole canvas is free to its left. So the pill goes to the LEFT of whatever is being dropped on, vertically centred on it: near, never over, always room. (2) The Library shelf already draws its own line, 'Save this color', but only when it ACCEPTS, so every shelf refusal is silent and the 'Brand is already this color, saving keeps a second one' warning is hidden behind a shorter label. One idiom for all of it: the shelf loses its bespoke label and speaks through the same pill. (3) Is a pill on every swatch noise? 'Paints Fill with this colour' is close to obvious. Kept anyway, and always on, for the same reason the text style drop is: the value is in the refusals, the crowd counts and the saved-colour clauses, and a line that only sometimes appears is a line nobody learns to read. (4) Shortest version: the sentence already exists in ColorDrop.answer and every target already goes through one delegate, so this is one piece of state, one placement rule and one view, not four."
+    },
+    {
+      "t": "2026-09-16T02:58:03.576Z",
+      "note": "built. ColorDrop.answer's sentence is now drawn: every colour target speaks through one piece of editor state (colorDropNote) and one pill drawn over the whole window, placed by PhotonzCore/DropNotePlacement (left of the target first, then right, above, below; it lines up with the swatch but stands clear of the whole panel, so it never lies across the row's own label). Wired to swatches (ColorSwatchDrag), switched-off part and effect rows (OffPartColorDrop) and the Library shelf (LibraryColorDrop), which lost its bespoke 'Save this color' capsule because the pill says more. dragColor walks can now pin the words with a says field, matched the way dragTile's already is."
+    },
+    {
+      "t": "2026-09-16T02:58:03.621Z",
+      "note": "verification. 7317 tests pass, including 12 new placement tests. The screen has been locked since before this task started, so no walk can run honestly: the loop's own colour walks all fail at a panelMenu step because control names never arrive under a lock, which is the documented symptom and not this change. With the harness override, mixed-part-keeps-its-colour passed all 44 steps and photographed the line reading 'Paints Fill on both of them with this colour.' beside the Fill row with three layers picked and two of them filled; colour-onto-the-library and colour-off-the-shelf passed; a throwaway walk photographed the dark refusal plate reading 'This is where the colour came from.' A sweep was asked for so the four walks that could not run (colour-onto-a-swatch, toolbar-colour, colour-only-where-it-paints, colour-onto-a-layer-row) run properly once the screen is unlocked. Audit: queue/audits/2026-09-15-colour-drop-says-what-it-will-do.json."
+    },
+    {
+      "t": "2026-09-16T02:58:03.663Z",
+      "note": "left rough: two spellings in one family of pills. The swatch says 'with this colour' and the shelf, one drag away, says 'Saves this color under a name you choose' (ColorStyleNaming.subject returns color). Both strings predate this change and neither was visible before it. The split runs through the whole app, prose in one spelling and row labels in the other, so fixing it is a copy sweep and not a typo, and half of it would be worse than none. Put in the audit's rough so the user can call it; not filed."
+    },
+    {
+      "t": "2026-09-16T02:58:03.706Z",
+      "note": "left rough: the pill has no tail pointing at the row it is about. It is level with the swatch and it names the part, which was enough in every case tried, but two colour rows close together lean on the alignment alone. Not filed: nobody has been confused by it yet and a tail is a change to the text style drop's idiom as well as this one."
     }
-  ]
+  ],
+  "started": "2026-09-16T02:41:15.867Z"
 }

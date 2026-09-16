@@ -84,7 +84,9 @@
       "from": "@fill",
       "onto": "@border",
       "hold": "offpart-2-in-flight",
-      "expect": "takes"
+      "expect": "takes",
+      "says": "painted with this colour",
+      "comment": "Letting go here does two things, and the line beside the row promises both: it turns the part on AND paints it."
     },
     {
       "do": "wait",

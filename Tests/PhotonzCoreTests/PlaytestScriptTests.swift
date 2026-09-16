@@ -1409,13 +1409,15 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline",
                        "hold": "in-flight", "expect": "refuses" } ] }
         """)
-        guard case .dragColor(let from, let onto, let hold, let expect) = script.steps[0] else {
+        guard case .dragColor(let from, let onto, let hold, let expect, let says)
+                = script.steps[0] else {
             Issue.record("dragColor"); return
         }
         #expect(from == "Fill")
         #expect(onto == "Outline")
         #expect(hold == "in-flight")
         #expect(expect == .refuses)
+        #expect(says == nil)
         #expect(script.steps[0].name == "dragColor")
     }
 
@@ -1425,11 +1427,41 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline" } ] }
         """)
-        guard case .dragColor(_, _, let hold, let expect) = script.steps[0] else {
+        guard case .dragColor(_, _, let hold, let expect, _) = script.steps[0] else {
             Issue.record("dragColor"); return
         }
         #expect(hold == nil)
         #expect(expect == .takes)
+    }
+
+    /// A ring says yes and a dark swatch says no; neither says WHY, or how far
+    /// the drop reaches. `says` is how a walk pins the sentence the target is
+    /// saying while the colour is still in the air, the same way `dragTile`
+    /// already pins the text style one.
+    @Test func aColourDragCanPinTheSentenceTheTargetSays() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragColor", "from": "Border", "onto": "Fill",
+                       "says": "both of them" } ] }
+        """)
+        guard case .dragColor(_, _, _, let expect, let says) = script.steps[0] else {
+            Issue.record("dragColor"); return
+        }
+        #expect(says == "both of them")
+        #expect(expect == .takes)
+    }
+
+    /// A refusal owes a reason, so the words can be pinned on a drop that is
+    /// turned away as well as on one that lands.
+    @Test func aRefusedColourDragCanPinItsReason() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Fill",
+                       "expect": "refuses", "says": "where the colour came from" } ] }
+        """)
+        guard case .dragColor(_, _, _, let expect, let says) = script.steps[0] else {
+            Issue.record("dragColor"); return
+        }
+        #expect(expect == .refuses)
+        #expect(says == "where the colour came from")
     }
 
     @Test func aColourDragRefusesAnAnswerThatIsNotOne() {

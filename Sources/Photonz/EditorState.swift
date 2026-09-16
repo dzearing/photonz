@@ -1271,6 +1271,18 @@ final class EditorState {
     /// only by `publishStyleRowDrop`.
     var layerRowStyleDrop: StyleRowDrop?
 
+    /// The one line a colour drop target is saying right now, and where the
+    /// target it is about sits in the window.
+    ///
+    /// Every colour target already works out the whole sentence before the
+    /// pointer is let go — that is what `ColorDrop.answer` is — and until this
+    /// existed nobody ever saw it: the swatch lit up and said nothing, and a
+    /// swatch that stayed dark said nothing at all. One piece of state for all
+    /// of them, because the pill is drawn once, over the whole window, rather
+    /// than by each swatch inside a column too narrow to hold a sentence.
+    /// Written only by `sayColorDrop(_:over:)`.
+    var colorDropNote: ColorDropNote?
+
     /// The tick that keeps `panelDropMarking`, `panelRowInHand` and
     /// `styleRowMarking` honest, running only while there is a mark to take
     /// away or a row to put down. See `startPanelDropWatch`.

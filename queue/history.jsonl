@@ -4006,3 +4006,12 @@
 {"t":"2026-09-16T02:40:27.667Z","ev":"task_note","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe"}
 {"t":"2026-09-16T02:40:27.709Z","ev":"task_note","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe"}
 {"t":"2026-09-16T02:40:43.594Z","ev":"task_done","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe","from":"in_progress","note":"The loop now raises a macOS notification when it stalls on a refusal only a person can clear: once at the start, once more per day it lasts, nothing on recovery. advanceStall in queue-lib.mjs decides when (stall record on status.json), notify_person in go-loop.sh decides what it says, called from backoff_wait. Proven by failure-drill.sh scenario 6 (three real loop runs: four refusals = one notification, the same stall a day later = a second saying how long, limit raised = silence and a cleared record) plus advanceStall replayed against the real 62-hour stall = 3 notices not 128. Delivery confirmed in the system log as a banner with sound to the alert, lock screen and Notification Center. Documented in queue/README.md. Also fixed the drill's UTC-vs-local date bug that failed three scenarios every evening. All 6 drill scenarios, the other 6 queue drills and Scripts/test.sh (7303 tests) pass. Audit: queue/audits/2026-09-15-loop-stall-notification.json. Commit 31903b4c, pushed."}
+{"t":"2026-09-16T02:41:00.342Z","ev":"loop_reloaded","from":"99d697804c03","to":"58c1d5f00f5f"}
+{"t":"2026-09-16T02:41:00.437Z","ev":"loop_started","pid":44685}
+{"t":"2026-09-16T02:41:15.757Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T02:41:15.870Z","ev":"task_started","id":"dropping-a-colour-on-a-swatch-says-nothing-back","title":"Dropping a colour on a swatch says nothing back","priority":"p2-normal"}
+{"t":"2026-09-16T02:42:45.907Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
+{"t":"2026-09-16T02:58:03.578Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
+{"t":"2026-09-16T02:58:03.623Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
+{"t":"2026-09-16T02:58:03.665Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
+{"t":"2026-09-16T02:58:03.708Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}

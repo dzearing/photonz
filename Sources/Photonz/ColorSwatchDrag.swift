@@ -13,14 +13,14 @@ import UniformTypeIdentifiers
 /// out in can be carried off the bar and kept, and a colour let go of on the
 /// bar arms the tool with it.
 ///
-/// What it puts on screen while a colour is in the air is deliberately the
-/// least a Mac can say and still be understood: the swatch that would take the
-/// colour lights up, the swatch that would not stays dark and the pointer shows
-/// the no-entry sign. The one exception is a swatch wearing a SAVED colour,
-/// where letting go costs something the ring alone cannot say, so the palette
-/// mark the whole app uses for a saved colour rides on the ring. The sentence
-/// under that is said out loud by the canvas AFTER the drop, by the same
-/// "stopped following Accent" pill every other way of letting go raises.
+/// What it puts on screen while a colour is in the air is what a Mac shows
+/// plus the one thing a Mac cannot: the swatch that would take the colour
+/// lights up, the swatch that would not stays dark and the pointer shows the
+/// no-entry sign, and a swatch wearing a SAVED colour carries the palette mark
+/// on its ring. Beside all of it sits the sentence, which is the half a ring
+/// cannot say — why a dark swatch is dark, how many layers a bright one
+/// reaches, which saved colour letting go would let go of. See
+/// `ColorDropNote.swift`.
 struct ColorSwatchDrag: ViewModifier {
     /// Which swatch this is, so a colour dropped straight back where it came
     /// from can be refused rather than written into history as a no-op. The
@@ -77,9 +77,15 @@ struct ColorSwatchDrag: ViewModifier {
             .onDrop(of: ColorDropTarget.types,
                     delegate: ColorDropTarget(answer: answer, incoming: $incoming,
                                               apply: onDrop))
-            // The sentence the swatch would say. A tip does not show while a
-            // drag is in the air, so this is here for the times the pointer
-            // rests on a swatch mid-thought, and for the accessibility reader.
+            // What letting go here would do, said out loud beside the swatch
+            // while the colour is still in the air. The ring can only say
+            // yes; the words carry the no and its reason, the crowd the drop
+            // reaches, and the saved colour it would let go of. Drawn once
+            // over the whole window, because a sentence does not fit in a
+            // column this narrow: see `ColorDropNoteOverlay`.
+            .colorDropSpeaks(incoming)
+            // The same sentence for the accessibility reader, and for the
+            // times the pointer rests on a swatch mid-thought.
             .accessibilityValue(incoming?.note ?? "")
     }
 

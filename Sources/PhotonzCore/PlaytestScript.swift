@@ -1451,8 +1451,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// second swatch, which is the only moment the ring that says it will take
     /// it is on screen. `expect` says what the second swatch should answer —
     /// `takes` (the default) or `refuses` — so the step is a test and not only
-    /// a picture.
-    case dragColor(from: String, onto: String, hold: String?, expect: PlaytestColorDropExpectation)
+    /// a picture. `says` pins the SENTENCE the target is saying while the
+    /// colour is still in the air, matched anywhere in the line and ignoring
+    /// case: a ring says yes and a dark swatch says no, but neither says why
+    /// it is dark or how many layers a bright one would paint.
+    case dragColor(from: String, onto: String, hold: String?,
+                   expect: PlaytestColorDropExpectation, says: String?)
     /// Pick a section of the right hand panel up by its title and carry it
     /// until the pointer has passed the middle of the section named by `past`,
     /// which is the moment that one moves aside. `hold` names a picture taken
@@ -2164,7 +2168,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 try f.enumValue("expect", PlaytestColorDropExpectation.self)
             }
             self = .dragColor(from: try f.string("from"), onto: try f.string("onto"),
-                              hold: try f.optionalString("hold"), expect: expect)
+                              hold: try f.optionalString("hold"), expect: expect,
+                              says: try f.optionalString("says"))
         case "dragHandle":
             let expect: PlaytestHandleExpectation = if fields["expect"] == nil {
                 .moves

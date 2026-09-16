@@ -76,7 +76,9 @@
       "from": "@fill",
       "onto": "@border",
       "hold": "colour-2-in-flight",
-      "expect": "takes"
+      "expect": "takes",
+      "says": "with this colour",
+      "comment": "One layer picked, so the line names no crowd at all: \"Paints Border with this colour.\""
     },
     {
       "do": "wait",
@@ -95,13 +97,16 @@
       "do": "dragColor",
       "from": "@fill",
       "onto": "@border",
-      "expect": "refuses"
+      "expect": "refuses",
+      "says": "is already this colour"
     },
     {
       "do": "dragColor",
       "from": "@fill",
       "onto": "@fill",
-      "expect": "refuses"
+      "expect": "refuses",
+      "says": "where the colour came from",
+      "comment": "A dark swatch owes a reason. Both refusals say theirs in the same pill the accepted drop says its promise in."
     },
     {
       "do": "describe",
@@ -155,7 +160,9 @@
       "from": "@border",
       "onto": "@fill",
       "hold": "colour-5-lets-go-of-brand",
-      "expect": "takes"
+      "expect": "takes",
+      "says": "lets go of Brand",
+      "comment": "The costly half of the drop, said BEFORE it happens rather than only in the pill afterwards."
     },
     {
       "do": "wait",
