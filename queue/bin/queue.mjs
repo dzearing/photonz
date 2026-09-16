@@ -22,6 +22,11 @@
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
+//   node queue/bin/queue.mjs withdraw <decisionId> <reason>
+//                                            take a card down that no longer needs an answer (a
+//                                            duplicate, or a question settled some other way). It
+//                                            never counts as an answer and never starts the work
+//                                            it was blocking; the reason is required
 //   node queue/bin/queue.mjs alive           print the live loop's pid, or "no" if none is running
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing)
 //   node queue/bin/queue.mjs compact        collapse old churn events in history.jsonl into counted entries
@@ -122,6 +127,13 @@ try {
       break;
     case 'resolve':
       out(q.resolveDecision(args[0], args[1], args.slice(2).join(' ')).id);
+      break;
+    // Tidying up is not answering. This is the only way a question leaves the
+    // dashboard without somebody choosing an option, and it leaves the task it
+    // was blocking exactly as blocked as it found it.
+    case 'withdraw':
+      if (!args[0]) throw new Error('usage: queue.mjs withdraw <decisionId> "<why it no longer needs an answer>"');
+      out(q.withdrawDecision(args[0], args.slice(1).join(' ')).id);
       break;
     case 'alive': {
       const s = q.readStatus();

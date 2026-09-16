@@ -1,0 +1,29 @@
+{
+  "feature": "Taking down a question that no longer needs an answer",
+  "epic": "unmanned-loop",
+  "summary": "A card on the dashboard used to have only one way out: you answered it. Now a card whose question has been settled somewhere else, or that is simply a duplicate of another card, can be taken down with a reason, and it leaves without ever looking like you answered it. The task it was holding up stays exactly as blocked as it was, so tidying up can never start work by accident.",
+  "setup": "The dashboard at http://127.0.0.1:8791, Summary tab. Nothing to install and no flag to turn on. The loop has the same thing on the command line: queue/bin/queue.mjs withdraw <cardId> \"<reason>\".",
+  "try": [
+    { "do": "Open the Summary tab and look at a card under Needs your decision.", "shot": "2026-09-16-decision-withdraw-1.png" },
+    { "do": "Click This no longer needs an answer, under the options." },
+    { "do": "Read the sentence it opens with, and decide whether it tells you what will happen." },
+    { "do": "Click Take it down with the reason box empty. Nothing should be sent." },
+    { "do": "Click This no longer needs an answer again to close it. The card is untouched." },
+    { "do": "On a card you really are done with, type why and click Take it down. The card leaves and the next question slides in." },
+    { "do": "Open the Tasks tab and find the task that card was blocking. It is still Blocked, and its history says the question was taken down without an answer." }
+  ],
+  "evaluate": [
+    "Is This no longer needs an answer quiet enough that it never competes with answering, but findable when you want it?",
+    "Does the sentence it opens with make you confident nothing will get built?",
+    "Is asking for a reason right, or is it friction on the thing you are trying to clear off your screen?",
+    "When a card leaves this way it animates out exactly like an answered one. Should taking one down look different?",
+    "Would you ever want to see the questions you have taken down, or is gone properly gone?"
+  ],
+  "rough": [
+    "THE PICTURE IN THIS AUDIT IS A BROWSER SCREENSHOT OF THE LIVE DASHBOARD, not a Photonz window, because this feature is entirely on the dashboard and no app walk touches it. It is a real capture, not an offscreen render.",
+    "One card was taken down for real while building this, as its first customer: the 2026-09-15 card asking where the timing of a motion should appear. The user had already settled that on another card six hours earlier, and the loop then shipped the option this card recommended, so three of its four choices would have meant unbuilding working software. The reason is on the card and in that task's history.",
+    "A task whose last question is taken down stays blocked with nothing pointing at it, which is the point, but the Summary tile still counts it under Blocked, waiting on decisions. That reads slightly wrong for a task that is now waiting on nobody. No such task exists today, so this is left rough rather than filed.",
+    "There is no undo. A card taken down by mistake cannot be put back, and the repair is to open a new card carrying the question as it stands. That was deliberate, on the grounds that resurrecting an old card would re-ask a question in words that may no longer fit, but it is a judgment worth disagreeing with.",
+    "The card leaving looks identical to a card being answered: same slide, same next question. Nothing on the page afterwards says a question was taken down rather than settled, though the task's own history says so plainly."
+  ]
+}

@@ -20,6 +20,8 @@
 //      task is never left waiting on a question that is already settled
 //   8. a task with a question genuinely still open is still blocked
 //   9. the guard sweep repairs anything already stranded that way
+//  10. a card taken down without an answer leaves the queue without ever
+//      looking answered, and never starts the work it was holding up
 //
 // Runs against a throwaway queue; never touches the real one.
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -207,6 +209,114 @@ try {
     notes(noCard.id).some((n) => n.includes('no decision card was opened')), notes(noCard.id).join(' | '));
   check('and the sweep leaves it alone rather than guessing',
     !(q.guardStuck().unblocked || []).includes(noCard.id));
+
+  // --- 11: a card taken down without an answer ----------------------------
+  // Two runners ask the same question, or the thing a question was about gets
+  // settled some other way. The card has to be able to leave the dashboard
+  // without anybody putting words in the user's mouth.
+  const moot = q.addTask({ title: 'Where should the timing of the motion appear?', priority: 'p1-high', notes: 'drill' });
+  const dMoot = q.addDecision({ taskId: moot.id, question: 'Where should the timing of the motion appear?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.setStatus(moot.id, 'blocked', 'waiting on the decision');
+  const gone = q.withdrawDecision(dMoot.id, 'the same question was answered on another card and the strip is already built');
+  const pendingIds = () => q.aggregateState().decisions.pending.map((d) => d.id);
+  const resolvedIds = () => q.aggregateState().decisions.resolved.map((d) => d.id);
+  check('a card taken down is gone from the questions waiting for you',
+    !pendingIds().includes(dMoot.id), pendingIds().join(', ') || 'nothing pending');
+  check('and it is not filed with the answered ones either',
+    !resolvedIds().includes(dMoot.id), resolvedIds().join(', ') || 'nothing answered');
+  check('and nothing on it reads as an answer',
+    gone.status === 'withdrawn' && !gone.answer, JSON.stringify({ status: gone.status, answer: gone.answer }));
+  check('and the reason it stopped mattering is kept on the card',
+    (gone.withdrawn || {}).reason.includes('already built'), JSON.stringify(gone.withdrawn));
+  check('and the task history says it was taken down, not answered',
+    notes(moot.id).some((n) => n.includes('taken down without an answer') && n.includes('already built')),
+    notes(moot.id).join(' | '));
+  check('taking the card down is a real event, not a silent edit',
+    q.readHistory().some((e) => e.ev === 'decision_withdrawn' && e.id === dMoot.id && e.taskId === moot.id));
+
+  // The whole point: it must not quietly hand the work back to the loop.
+  check('the task it was blocking is still blocked',
+    q.findTask(moot.id).status === 'blocked', 'status is ' + q.findTask(moot.id).status);
+  check('and nothing can claim it', !q.readyTasks().some((t) => t.id === moot.id));
+  check('and it is never announced as unblocked',
+    !q.readHistory().some((e) => e.ev === 'task_unblocked' && e.id === moot.id));
+  check('and the history says it is waiting with no question left, the way it already does',
+    notes(moot.id).some((n) => n.includes('taken down') && n.includes('until someone opens')),
+    notes(moot.id).join(' | '));
+  check('and the sweep leaves it alone rather than guessing',
+    !(q.guardStuck().unblocked || []).includes(moot.id) && q.findTask(moot.id).status === 'blocked');
+
+  // A reason is the only record of why the question stopped mattering.
+  const needsReason = q.addTask({ title: 'Taken down with nothing said', priority: 'p1-high', notes: 'drill' });
+  const dReason = q.addDecision({ taskId: needsReason.id, question: 'Build it?', options: [BUILD, DECLINE], recommended: 'build' });
+  let refused = '';
+  try { q.withdrawDecision(dReason.id, '   '); } catch (e) { refused = String(e.message); }
+  check('taking a card down with no reason is refused', !!refused, refused || 'it went through');
+  check('and the card is untouched', q.readDecisions().find((d) => d.id === dReason.id).status === 'pending');
+
+  // An answer has already done things to a task. It cannot be taken back.
+  let refusedAnswered = '';
+  try { q.withdrawDecision(dYes.id, 'changed my mind'); } catch (e) { refusedAnswered = String(e.message); }
+  check('a card that was already answered cannot be taken down', !!refusedAnswered, refusedAnswered || 'it went through');
+  let refusedTwice = '';
+  try { q.withdrawDecision(dMoot.id, 'again'); } catch (e) { refusedTwice = String(e.message); }
+  check('and a card cannot be taken down twice', !!refusedTwice, refusedTwice || 'it went through');
+
+  // The freeze this must not cause: a card with no answer on it must not hold a
+  // task open once its OTHER question has been answered.
+  const mixed = q.addTask({ title: 'Asked twice, one question dropped', priority: 'p1-high', notes: 'drill' });
+  const dKeep = q.addDecision({ taskId: mixed.id, question: 'Which order should the families take?', options: [BUILD, DECLINE], recommended: 'build' });
+  const dDup = q.addDecision({ taskId: mixed.id, question: 'Which order should the families take, again?', options: [BUILD, DECLINE], recommended: 'build' });
+  const mixedT = q.findTask(mixed.id);
+  mixedT.blockedBy = [dKeep.id, dDup.id];
+  mixedT.status = 'blocked';
+  q.saveTask(mixedT);
+  q.withdrawDecision(dDup.id, 'a duplicate of the other card on this task');
+  check('a duplicate taken down leaves the task waiting on the question that is left',
+    q.findTask(mixed.id).status === 'blocked', 'status is ' + q.findTask(mixed.id).status);
+  q.resolveDecision(dKeep.id, 'build');
+  check('and answering the one that is left still returns the task to the queue',
+    q.findTask(mixed.id).status === 'pending', 'status is ' + q.findTask(mixed.id).status);
+  check('and a taken-down card never holds a task open after that',
+    !(q.findTask(mixed.id).blockedBy || []).length, JSON.stringify(q.findTask(mixed.id).blockedBy));
+
+  // The other order: the answer lands first, then the stale card comes down.
+  const answeredThenTidied = q.addTask({ title: 'Answered, then the stale card came down', priority: 'p1-high', notes: 'drill' });
+  const dReal = q.addDecision({ taskId: answeredThenTidied.id, question: 'Which order?', options: [BUILD, DECLINE], recommended: 'build' });
+  const dStale = q.addDecision({ taskId: answeredThenTidied.id, question: 'Which order, asked again?', options: [BUILD, DECLINE], recommended: 'build' });
+  const atT = q.findTask(answeredThenTidied.id);
+  atT.blockedBy = [dReal.id, dStale.id];
+  atT.status = 'blocked';
+  q.saveTask(atT);
+  q.resolveDecision(dReal.id, 'build');
+  check('an answer with a stale card still open leaves the task waiting',
+    q.findTask(answeredThenTidied.id).status === 'blocked', 'status is ' + q.findTask(answeredThenTidied.id).status);
+  q.withdrawDecision(dStale.id, 'the same question, already answered on the other card');
+  check('and taking the stale card down lets the answer that exists apply',
+    q.findTask(answeredThenTidied.id).status === 'pending', 'status is ' + q.findTask(answeredThenTidied.id).status);
+  check('and the history names the answer that returned it, not the card that came down',
+    notes(answeredThenTidied.id).some((n) => n.includes('back in the queue') && n.includes(BUILD.label)),
+    notes(answeredThenTidied.id).join(' | '));
+
+  // Work that already finished is not reopened or rewritten by tidying up.
+  const shipped = q.addTask({ title: 'Already shipped, card left behind', priority: 'p1-high', notes: 'drill' });
+  const dLeft = q.addDecision({ taskId: shipped.id, question: 'Which order?', options: [BUILD, DECLINE], recommended: 'build' });
+  q.setStatus(shipped.id, 'done', 'shipped');
+  q.withdrawDecision(dLeft.id, 'the task shipped without needing the answer');
+  check('taking a card down leaves work that already shipped alone',
+    q.findTask(shipped.id).status === 'done', 'status is ' + q.findTask(shipped.id).status);
+
+  // A parked task is blocked because runners keep dying on it. Tidying a card
+  // must not tell the dashboard a story about questions instead.
+  const parkedCard = q.addTask({ title: 'Parked, with a stale card on it', priority: 'p1-high', notes: 'drill' });
+  const dParkedStale = q.addDecision({ taskId: parkedCard.id, question: 'Which order?', options: [BUILD, DECLINE], recommended: 'build' });
+  const pcT = q.findTask(parkedCard.id);
+  pcT.status = 'blocked'; pcT.parked = true; pcT.parkReason = 'runners keep failing on it';
+  q.saveTask(pcT);
+  q.withdrawDecision(dParkedStale.id, 'moot, asked on another task');
+  check('a parked task stays parked and blocked when a card comes down',
+    q.findTask(parkedCard.id).status === 'blocked' && q.findTask(parkedCard.id).parked === true,
+    'status is ' + q.findTask(parkedCard.id).status);
 } finally {
   rmSync(sandbox, { recursive: true, force: true });
 }

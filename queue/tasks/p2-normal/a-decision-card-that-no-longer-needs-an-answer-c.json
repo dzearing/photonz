@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "tools",
   "created": "2026-09-09T12:21:41.545Z",
-  "updated": "2026-09-15T12:14:53.396Z",
+  "updated": "2026-09-16T00:45:43.654Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, which hit exactly this. Two cards were open asking the same question about where a picked thing's settings belong: picking-a-text-layer-leaves-its-settings-below-t (2026-09-08) and two-panel-walks-are-failing-on-main (2026-09-09). The second task closed as done, and its card is still pending and moot, because queue.mjs has resolve but nothing else, and answering it myself would put words in the user's mouth.\n\nWhere it goes: readDecisions/resolveDecision in queue/bin/queue-lib.mjs, the pending filter is status === 'pending' so a third status is most of the work; queue/bin/decision-drill.mjs is the test; the dashboard reads decisions.pending out of aggregateState.",
@@ -47,6 +47,24 @@
     {
       "t": "2026-09-15T12:14:53.395Z",
       "note": "seq 40 -> 120"
+    },
+    {
+      "t": "2026-09-16T00:40:20.815Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T00:41:16.463Z",
+      "note": "ADVERSARIAL REVIEW before building. (1) Who actually takes a card down: mostly the loop's own triage/manager pass spotting a duplicate or an overtaken card, and the user staring at it on the dashboard. A CLI-only fix leaves the user's own view unchanged, so a quiet control on the card itself is part of the value, not a nicety. (2) The trap this must not fall into: taking a card down must never read as approval. So a third status that is not 'resolved', no answer field ever written, and the blocked task stays blocked. (3) The trap worth the most: settleAnsweredBlock treats 'not resolved' as 'still open'. A withdrawn card left in that test would freeze its task forever even after its other question was answered, which is a worse bug than the one being fixed. Every 'is a question still open here' test has to stop seeing withdrawn cards. (4) Cut as decorative: a reopen/undo verb. Opening a fresh card is one command and carries the question as it stands now, which is more honest than resurrecting an old one. (5) Shortest version that delivers the value: one verb, one status, one event, plus the filtering in (3)."
+    },
+    {
+      "t": "2026-09-16T00:45:40.063Z",
+      "note": "REVIEW OF THE BUILT THING, on the live dashboard in a browser and on a sandbox queue end to end. What I fixed while reviewing: the reason row was a zero-height grid row, which still holds a text field and a button, so tab landed in an invisible field next to a Take it down button nobody could see. It now goes visibility:hidden until the row is really open. What I could not fix and left rough, all in the audit: a card leaving because it was taken down animates out exactly like an answered one and nothing on the page afterwards distinguishes them; there is no undo, by choice, because resurrecting an old card re-asks a question in words that may not fit any more; and a task whose last question comes down stays blocked while the Summary tile still counts it under 'waiting on decisions', which reads slightly wrong. That last one is not filed: no such task exists today, it only arises after a withdrawal, and it is a label rather than a break. Left rough here per the follow-up bar."
+    },
+    {
+      "t": "2026-09-16T00:45:43.652Z",
+      "note": "queue.mjs withdraw <cardId> \"<reason>\" plus a 'This no longer needs an answer' control on the card itself. A card gets its own 'withdrawn' status and never an answer field, so it leaves the questions waiting for you without joining the answered ones; the reason is required and lands on the card, in the task history and in history.jsonl as decision_withdrawn; the task it was blocking stays blocked and its history says it is waiting with no question left. The freeze this could have caused is closed too: a card with no answer on it no longer holds a task open once its OTHER question is answered. Verified with 27 new checks in decision-drill (all pass), the four other queue drills, Scripts/test.sh (7192 tests), and end to end in a browser against a sandbox queue on its own port, then used for real to take down the moot 2026-09-15 timing card. Audit: queue/audits/2026-09-16-decision-withdraw.json."
     }
-  ]
+  ],
+  "started": "2026-09-16T00:40:20.814Z",
+  "completed": "2026-09-16T00:45:43.653Z"
 }

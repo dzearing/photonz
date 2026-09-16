@@ -118,6 +118,24 @@
   #dashboard .db-opt .db-opt-act{display:flex;gap:var(--s2);align-items:center;margin-top:auto;padding-top:var(--s2)}
   #dashboard .db-opt .db-opt-act .input{flex:1;min-width:0}
   #dashboard .db-opt .db-opt-act .btn{flex:none}
+  /* Taking a card down: the quiet way out for a question that stopped
+     mattering. Ghost, below the options, so it never competes with answering. */
+  #dashboard .db-tidy{margin:var(--s3) 0 0 var(--s5)}
+  #dashboard .db-tidytoggle .ic{transition:transform var(--dur-2) var(--ease-standard)}
+  #dashboard .db-tidytoggle.on .ic{transform:rotate(180deg)}
+  #dashboard .db-tidywrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-3) var(--ease-standard)}
+  #dashboard .db-tidywrap.on{grid-template-rows:1fr}
+  /* Collapsed means gone, not just unpainted: a zero-height row still holds a
+     text field and a button, and tabbing into something nobody can see is how
+     you take a card down by accident. visibility keeps them out of the tab
+     order until the row is really open, and waits out the open animation. */
+  #dashboard .db-tidywrap>div{overflow:hidden;min-height:0;visibility:hidden;transition:visibility 0s linear var(--dur-3)}
+  #dashboard .db-tidywrap.on>div{visibility:visible;transition-delay:0s}
+  #dashboard .db-tidy-why{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--s2) 0 0}
+  #dashboard .db-tidy-why.bad{color:var(--crit)}
+  #dashboard .db-tidy-row{display:flex;gap:var(--s2);align-items:center;margin-top:var(--s2)}
+  #dashboard .db-tidy-row .input{flex:1;min-width:0;max-width:420px}
+  #dashboard .db-tidy-row .btn{flex:none}
 
   /* ---- task rows ---- */
   #dashboard .db-row{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) 0;border-bottom:1px solid var(--line-soft);min-width:0}
@@ -700,6 +718,16 @@
       h += '<button class="btn sm ghost db-brieftoggle" data-act="dec-brief" data-id="' + esc(d.id) + '">Explain in more detail<i class="ic ic-chevron-down"></i></button>';
       h += '<div class="db-brief" data-brieffor="' + esc(d.id) + '"><div><div class="db-md"></div></div></div>';
     }
+    // The way out for a question nobody needs answered any more: a duplicate of
+    // another card, or a question something else already settled. It is not an
+    // answer, so it is kept quiet and says plainly what it does before it does it.
+    h += '<div class="db-tidy">';
+    h += '<button class="btn sm ghost db-tidytoggle" data-act="dec-tidy" data-id="' + esc(d.id) + '">This no longer needs an answer<i class="ic ic-chevron-down"></i></button>';
+    h += '<div class="db-tidywrap" data-tidyfor="' + esc(d.id) + '"><div>';
+    h += '<p class="db-tidy-why">Takes the question off this page without answering it. Nothing gets chosen and nothing gets built: the task it is holding up keeps waiting until someone opens a new question.</p>';
+    h += '<div class="db-tidy-row"><label class="input sm"><input data-tidynote="' + esc(d.id) + '" placeholder="Why it no longer needs an answer"></label>';
+    h += '<button class="btn sm secondary" data-act="dec-tidy-go" data-id="' + esc(d.id) + '">Take it down</button></div>';
+    h += '</div></div></div>';
     h += '<div class="db-task">blocks ' + esc(d.taskId) + ' · opened ' + rel(d.created) + '</div>';
     h += '</div>';
     return h;
@@ -734,6 +762,24 @@
   function decResolve(id, choice, note) {
     fetch('/api/decide', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: id, choice: choice, note: note }) })
       .then(function () {
+        S.decisions.pending = decPending().filter(function (d) { return d.id !== id; });
+        decSwap('out-done', 'in-right', function () { lastJSON = ''; load(); });
+      });
+  }
+
+  // Taking a card down is deliberately NOT decResolve: it posts nothing that
+  // could read as a choice, and the card leaving the carousel is the whole of
+  // what changes on screen. The task stays blocked, which is the point.
+  function decWithdraw(id, reason, btn) {
+    var why = btn.parentNode.parentNode.querySelector('.db-tidy-why');
+    fetch('/api/withdraw', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: id, reason: reason }) })
+      .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+      .then(function (r) {
+        if (!r.ok) {
+          btn.textContent = 'Take it down'; btn.disabled = false;
+          if (why) { why.textContent = r.body.error || 'That card could not be taken down.'; why.classList.add('bad'); }
+          return;
+        }
         S.decisions.pending = decPending().filter(function (d) { return d.id !== id; });
         decSwap('out-done', 'in-right', function () { lastJSON = ''; load(); });
       });
@@ -1761,6 +1807,25 @@
       var noteEl = document.querySelector('[data-notefor="' + b.dataset.id + '/' + b.dataset.choice + '"]');
       b.textContent = 'Sending…'; b.disabled = true;
       decResolve(b.dataset.id, b.dataset.choice, noteEl ? noteEl.value : '');
+      return;
+    }
+    if (b.dataset.act === 'dec-tidy') {
+      var tw = document.querySelector('[data-tidyfor="' + b.dataset.id + '"]');
+      if (!tw) return;
+      var openingT = !tw.classList.contains('on');
+      tw.classList.toggle('on', openingT);
+      b.classList.toggle('on', openingT);
+      if (openingT) { var fld = tw.querySelector('[data-tidynote]'); if (fld) setTimeout(function () { fld.focus(); }, 60); }
+      return;
+    }
+    if (b.dataset.act === 'dec-tidy-go') {
+      if (decAnim) return;
+      var tf = document.querySelector('[data-tidynote="' + b.dataset.id + '"]');
+      // The reason is the only record of why the question stopped mattering, so
+      // it is required here exactly as it is on the command line.
+      if (!tf || !tf.value.trim()) { if (tf) tf.focus(); return; }
+      b.textContent = 'Taking it down…'; b.disabled = true;
+      decWithdraw(b.dataset.id, tf.value.trim(), b);
       return;
     }
     if (b.dataset.act === 'dec-prev') { decStep(-1); return; }

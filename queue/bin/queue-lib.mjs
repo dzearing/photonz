@@ -417,9 +417,16 @@ export function setStatus(id, status, note = '') {
   if (status === 'done') t.completed = now();
   // Blocked with no card at all is the other way a task goes quiet. It is not
   // safe to auto-unblock (there is no answer to act on), so say it out loud in
-  // the history where the dashboard and the next reader will see it.
-  const noQuestion = status === 'blocked' && !decisionsFor(t.id).length;
-  if (noQuestion) appendLog(t, 'waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one.');
+  // the history where the dashboard and the next reader will see it. A card
+  // that was taken down is not a question either, so it lands here too, and
+  // the line says which of the two happened rather than claiming nobody asked.
+  const cards = status === 'blocked' ? decisionsFor(t.id) : [];
+  const noQuestion = status === 'blocked' && !cards.some(isOpenQuestion);
+  if (noQuestion) {
+    appendLog(t, cards.length
+      ? 'waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question.'
+      : 'waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one.');
+  }
   saveTask(t);
   appendEvent(`task_${status}`, { id, from: prev, ...(note ? { note } : {}), ...(noQuestion ? { noQuestion: true } : {}) });
   return t;
@@ -437,6 +444,13 @@ export function setStatus(id, status, note = '') {
 function decisionsFor(taskId, all = null) {
   return (all || readDecisions()).filter((d) => d.taskId === taskId);
 }
+// A card that was taken down is not a question any more. Nobody answered it, so
+// there is nothing to act on, and it must never hold a task open the way a
+// pending one does: leaving it in this test would freeze a task forever once
+// its OTHER question was answered. Everything that asks "is a question still
+// open on this task" reads through here.
+const isOpenQuestion = (d) => d.status !== 'withdrawn';
+const openDecisionsFor = (taskId, all = null) => decisionsFor(taskId, all).filter(isOpenQuestion);
 const chosenOption = (d) => (d && d.status === 'resolved' && d.answer)
   ? ((d.options || []).find((o) => o && o.id === d.answer.choice) || null) : null;
 const labelOf = (d) => (chosenOption(d) || {}).label || (d.answer || {}).choice || 'the answer';
@@ -450,7 +464,7 @@ function settleAnsweredBlock(t, note = '', reason = 'answered while this was sti
   // question is open. Answering some old card on it must not put it back in
   // front of the loop that could not finish it.
   if (t.parked) return null;
-  const mine = decisionsFor(t.id, allDecisions);
+  const mine = openDecisionsFor(t.id, allDecisions);
   if (!mine.length || mine.some((d) => d.status !== 'resolved')) return null;
   const declined = mine.find((d) => (chosenOption(d) || {}).declines);
   const prev = t.status;
@@ -847,6 +861,54 @@ export function resolveDecision(id, choice, note = '') {
       }
       saveTask(t);
       appendEvent('task_unblocked', { id: t.id, decision: id });
+    }
+  }
+  return d;
+}
+
+// Taking a card down: the way a question leaves the dashboard without anybody
+// answering it. Two runners ask the same thing, or the thing a card was about
+// gets settled some other way, and the card then sits there asking for an
+// answer that means nothing while the real questions get harder to find. The
+// rules that make this safe:
+//   - it is its own status, never `resolved`, and no `answer` is ever written,
+//     so nothing downstream can mistake tidying up for approval;
+//   - the reason is required, because it is the only record of why the question
+//     stopped mattering;
+//   - the task it was blocking stays exactly as blocked as it was. Taking a
+//     question down is not an answer, so it cannot start work (the one thing it
+//     does do is let an answer that ALREADY exists on another card apply, which
+//     a card with no answer on it was wrongly holding up);
+//   - an answered card cannot be taken back, because its answer has already
+//     moved its task. If the question changed, open a new card.
+export function withdrawDecision(id, reason = '') {
+  const file = join(DECISIONS, `${id}.json`);
+  const d = readJSON(file);
+  if (!d) throw new Error(`no decision ${id}`);
+  const why = String(reason || '').trim();
+  if (!why) throw new Error('taking a card down needs a reason: it is the only record of why the question stopped mattering');
+  if (d.status === 'resolved') throw new Error(`decision ${id} was already answered ("${labelOf(d)}"), and that answer has already moved its task. Open a new card if the question has changed.`);
+  if (d.status === 'withdrawn') throw new Error(`decision ${id} was already taken down${(d.withdrawn || {}).at ? ` on ${d.withdrawn.at}` : ''}: ${(d.withdrawn || {}).reason || 'no reason recorded'}`);
+  d.status = 'withdrawn';
+  d.withdrawn = { reason: why, at: now() };
+  writeJSON(file, d);
+  appendEvent('decision_withdrawn', { id, taskId: d.taskId, question: d.question, reason: why });
+  const t = d.taskId ? findTask(d.taskId) : null;
+  if (t) {
+    t.blockedBy = (t.blockedBy || []).filter((b) => b !== id);
+    appendLog(t, `the question "${d.question}" was taken down without an answer: ${why}. Nobody chose anything, so nothing here was decided.`);
+    saveTask(t);
+    // A finished or retired task is left exactly where it is, and a parked one
+    // is blocked over failing runners rather than over a question, so neither
+    // gets a story about questions written into it.
+    if (t.status === 'blocked' && !t.parked) {
+      const open = openDecisionsFor(t.id);
+      if (!open.length) {
+        appendLog(t, 'waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question.');
+        saveTask(t);
+      } else if (open.every((x) => x.status === 'resolved')) {
+        settleAnsweredBlock(t, '', 'the question this was waiting on has been answered');
+      }
     }
   }
   return d;

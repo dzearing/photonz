@@ -154,6 +154,13 @@ async function handleApi(req, res, url) {
       const { id, choice, note } = await readBody(req);
       return send(200, lib.resolveDecision(id, choice, note || ''));
     }
+    // Taking a card down is not answering it: the question leaves the page, the
+    // task it was blocking stays blocked, and the reason is kept in its place.
+    if (req.method === 'POST' && url === '/api/withdraw') {
+      const { id, reason } = await readBody(req);
+      try { return send(200, lib.withdrawDecision(id, reason || '')); }
+      catch (e) { return send(400, { error: String(e.message || e) }); }
+    }
     // Everything the queue knows about ONE task: goal, checklist, working
     // detail and the whole log. The dashboard's detail dialog fetches this when
     // it opens, so the poll can leave all of it out.

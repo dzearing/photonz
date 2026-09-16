@@ -68,6 +68,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-15T08:36:56.423Z"
+  "status": "withdrawn",
+  "created": "2026-09-15T08:36:56.423Z",
+  "withdrawn": {
+    "reason": "Overtaken before it was answered: the user had already settled this on the card 'Animating an icon and editing a video: one surface or two?' six hours earlier, and option a, the strip across the bottom, shipped on 2026-09-15 at 11:52. Three of the four options here would now mean unbuilding working software, so this is not a live question any more. If where the timing sits needs revisiting, it should be asked fresh against what is actually in the app.",
+    "at": "2026-09-16T00:43:05.880Z"
+  }
 }

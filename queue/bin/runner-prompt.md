@@ -187,6 +187,20 @@ Do not guess on anything the user would want to weigh in on (visual direction, s
    written into its log.
 4. If part of the task is decidable, finish that part first and say so in the log.
 
+A card that no longer needs an answer is taken down, never answered for them.
+If you find one on your task that has been overtaken — a duplicate of another
+card, or a question something else already settled — take it down with its
+reason instead of picking an option yourself:
+
+```
+node queue/bin/queue.mjs withdraw <decisionId> "<why it stopped mattering>"
+```
+
+It leaves the dashboard without ever looking answered, and it does NOT start the
+work it was blocking: a task blocked with no question left stays blocked and
+says so. If the question is still live but worded wrong, open a new card rather
+than taking the old one down and hoping.
+
 The user may answer while you are still working. If every question on your task
 has been answered by the time you write `blocked`, the queue applies the answer
 instead of leaving the task waiting: an approving answer puts it back in the

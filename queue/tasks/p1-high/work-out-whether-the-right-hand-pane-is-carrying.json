@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T01:52:13.923Z",
-  "updated": "2026-09-15T08:37:57.263Z",
+  "updated": "2026-09-16T00:43:05.900Z",
   "deps": [
     "mock-animating-any-property-of-a-layer-with-the"
   ],
@@ -69,6 +69,10 @@
     {
       "t": "2026-09-15T08:37:57.261Z",
       "note": "Measured the dock in the running app (1052 pt of sections against a 968 pt viewport at 1680x1000, Position & Size never whole on screen at any size), then answered: the pane is overloaded today and animation is not why. Study page docs/design/mocks/pages/pane-load.html shows the same bell in both arrangements, three window sizes, and the cost by surface; decision card opened recommending a timing strip across the bottom with Motion staying in the pane; audit queue/audits/2026-09-15-pane-load.json; overflow filed as position-and-size-stays-on-screen-when-you-pick."
+    },
+    {
+      "t": "2026-09-16T00:43:05.899Z",
+      "note": "the question \"When you animate an icon, where should the timing of the motion appear?\" was taken down without an answer: Overtaken before it was answered: the user had already settled this on the card 'Animating an icon and editing a video: one surface or two?' six hours earlier, and option a, the strip across the bottom, shipped on 2026-09-15 at 11:52. Three of the four options here would now mean unbuilding working software, so this is not a live question any more. If where the timing sits needs revisiting, it should be asked fresh against what is actually in the app.. Nobody chose anything, so nothing here was decided."
     }
   ],
   "started": "2026-09-15T08:31:23.017Z",
