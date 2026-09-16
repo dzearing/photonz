@@ -147,6 +147,36 @@ struct InspectorPanel: View {
     /// Scratch measurements for the Library reveal. A reference on purpose:
     /// see the note at the geometry reader.
     @State private var reveal = DockRevealScratch()
+    // WHAT A PICK ACTUALLY COSTS, measured 2026-09-16 by taking one piece out
+    // at a time and running the same walk again. Written down because three
+    // tasks in a row have gone looking for the cost in the machinery below it
+    // and it is not there.
+    //
+    // A blank 900x700 canvas with a rectangle and an arrow on it, picking one
+    // and then the other, twenty times, probe build, longest single run loop
+    // pass per pick (median of 38):
+    //
+    //   dock hidden altogether (`hideInspector`)                    9.8ms
+    //   dock shown, every section's body replaced by a blank       13.4ms
+    //   ...with the layers list put back, forms still blank        19.4ms
+    //   ...everything back: the app as it ships                    30.2ms
+    //
+    // So a pick is roughly 10ms of canvas and selection, 4ms of dock shell,
+    // 6ms of the layers list drawing itself again, and 10ms of building the
+    // arriving section's FORM. Taking a piece out of this file moved none of
+    // it: the per-section chrome (the tutorial anchor, the frame reader, the
+    // lift, the offsets, the drop target) is free, the `.regularMaterial` is
+    // free, and the height budget below is free — its writes are no-ops once a
+    // section's height has been seen once, which after the first pick is
+    // always. The arrival pass EARNS its keep: turning it off put the longest
+    // pass up from 29.7 to 33.3ms, because then all of it lands in one go.
+    //
+    // What is left is the cost of making AppKit controls. Two `TextField`s in
+    // the Canvas section are 6ms of it on their own; the colour well is 2ms.
+    // A section coming in builds its whole form from nothing, because a view
+    // taken out of a `ForEach` loses its identity and everything under it, so
+    // there is nothing in the dock to make that cheaper. Making it cheap means
+    // making the forms cheap, which is its own piece of work.
     /// Which sections have been built, so a new one can arrive a pass after
     /// the click rather than inside it. See `PanelSectionArrival`.
     @State private var arrivals = DockArrivals()
