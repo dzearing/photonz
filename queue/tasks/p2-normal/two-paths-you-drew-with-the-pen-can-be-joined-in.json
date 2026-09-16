@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T19:43:21.132Z",
-  "updated": "2026-09-16T21:10:06.543Z",
+  "updated": "2026-09-16T21:10:19.339Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-15 while building 'several-shapes-turn-into-one-path-joined-where-t'. The geometry is already done and tested: PathJoin.join in Sources/PhotonzCore/PathJoining.swift welds any list of PathContent, and PhotonzDocument.turningLayersIntoPath(ids:) already ADMITS open path layers as participants. What blocks it is only the gate: EditorState.canTurnLayersIntoPath(ids:) in Sources/Photonz/EditorState+LayerOps.swift requires at least one picked layer to still be a shape (layer.canTurnIntoPath), so two paths picked together offer no command at all. Reproduced by reading that gate and by the passing test 'An open path already on the canvas joins onto a line picked with it' in Tests/PhotonzCoreTests/PathJoiningTests.swift, which only passes because a LINE is in the selection. The open question is the NAME: Turn Into Path reads wrong over things that are already paths, and Illustrator calls this Join. Whoever takes it should settle the name first, and note that Photoshop and Illustrator both put Join on Command J, which is already New Layer via Copy here.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-16T21:10:06.542Z",
       "note": "filed: 'an-outline-you-already-finished-can-be-closed' (p2, icon-vector). Closing a finished outline is half built by accident here and deliberately unreachable, and somebody building an icon hits it."
+    },
+    {
+      "t": "2026-09-16T21:10:19.337Z",
+      "note": "Two open paths picked together now weld into one. The gate got its second half (PhotonzDocument.openPathsThatCouldJoin) and the ONE command retitles itself Join Paths when nothing picked has to be turned; the question, the button and the line under the canvas all lose the word shapes, and a join that finds nothing near enough names the 2 pt gap instead of going quiet. Core in PathJoining.swift and PathEditHint.swift, app glue in EditorState+LayerOps.swift, LayerCommandMenu.swift and EditorCommands.swift, design written up in docs/design/vector-paths.md. Verified by 12 new tests in PathJoiningTests plus the whole suite green at 7793 and a clean swift build. NOT verified on a running app: the Mac's screen was locked all task, so Scripts/playtest/join-two-pen-paths-walk.json parses (85 steps) but reported status locked / 0 steps twice, and queue/audits/2026-09-16-join-two-pen-paths.json says so and ships without pictures."
     }
   ],
-  "started": "2026-09-16T21:00:08.620Z"
+  "started": "2026-09-16T21:00:08.620Z",
+  "completed": "2026-09-16T21:10:19.338Z"
 }
