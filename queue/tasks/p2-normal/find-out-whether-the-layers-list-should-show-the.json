@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:21:46.712Z",
-  "updated": "2026-09-15T12:14:53.666Z",
+  "updated": "2026-09-16T07:31:17.932Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12 with Scripts/playtest/style-users-walk.json (run it with --no-build). The walk paints one rectangle, saves its fill as the style Accent, groups it with a second rectangle, makes a component and drops one copy. The style then reads 4 colors use this and Select What Uses This picks Rectangle, Rectangle 2, Rectangle, Rectangle 2 - the originals two children and the copys two pieces. See /tmp/photonz-playtest/style-users/styleusers-4-selected-sc.png and the earlier capture at /tmp/photonz-playtest/style-piece/stylepiece-5-typed-sc.png, which shows the list reading 4 layers selected over two visible rows.\\n\\nThe numbers themselves are honest: Position & Size shows over that mixed selection (the section is only taken away when a piece is picked ON ITS OWN, InspectorPanel.swift:791), and typing 900 into X moved the original with the copy following, so nothing on screen ended up saying two different things. This is about what the selection LOOKS like, not about a wrong number. Found while answering find-out-whether-position-and-size-takes-numbers.",
@@ -48,6 +48,35 @@
     {
       "t": "2026-09-15T12:14:53.665Z",
       "note": "seq 320 -> 360"
+    },
+    {
+      "t": "2026-09-16T07:22:53.273Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T07:31:17.715Z",
+      "note": "Adversarial review before building: the answered card asks for a second line; one line with a clause says both numbers, costs the panel no height, and cannot be misread as a separate fact about a different selection. Measured the longest wording at the real panel width (170pt of 236pt), so it never truncates. Kept the shut-group case OUT: a row inside a shut group exists and a twist brings it back, so counting it would explain a disagreement that is not one."
+    },
+    {
+      "t": "2026-09-16T07:31:17.758Z",
+      "note": "Built: LayersSelectionSummary in PhotonzCore (10 tests, written first) counts the picked layers with no row -- pieces inside a copy -- attributing a nested copy to the outermost copy, which is the one with a row. LayersListView.multiSelectionCount now reads its words from it and says them out loud to a walk (playtestField Selection + panelReadout). Shared file, no Next fork, so both releases have it."
+    },
+    {
+      "t": "2026-09-16T07:31:17.802Z",
+      "note": "Verified: Scripts/test.sh green, 7496 tests in 600 suites. The walk claims the sentence (style-users-walk.json, expect field Selection reads \"4 layers selected, 2 inside a copy\")."
+    },
+    {
+      "t": "2026-09-16T07:31:17.844Z",
+      "note": "The Mac reported its screen LOCKED for this whole task (CGSSessionScreenIsLocked=1), so the first walk run refused with status locked and 0 steps. Forced one through with PHOTONZ_ALLOW_LOCKED_WALK=1: it ran all 56 steps, the new claim resolved and matched, and the window capture came out real (queue/audits/2026-09-16-layers-selection-copies-1.png shows the line under the list). Per PlaytestScreenState that run buys the run and not the verdict, so it is written up as a photograph rather than as a pass. A sweep is ALREADY pending (queue/bin/sweep.sh status) and re-runs the walk once the screen is unlocked; no new sweep requested."
+    },
+    {
+      "t": "2026-09-16T07:31:17.887Z",
+      "note": "left rough: the line tells you pieces inside copies are picked but offers no way to reach them -- no row to click, nothing scrolls. It is a new feature rather than a defect and no open task covers it, so it stays here and in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-09-16T07:31:17.931Z",
+      "note": "left rough: two pieces in ONE copy read \"2 inside a copy\" and pieces in two copies read \"2 inside copies\". The difference is carried by one word and may be too quiet; in the audit for the user to judge."
     }
-  ]
+  ],
+  "started": "2026-09-16T07:22:53.272Z"
 }

@@ -514,17 +514,34 @@ struct LayersListView: View {
     /// The inspector shows no per-layer sections for a multi-selection, so
     /// this one line is what says the panel and the canvas agree: "3 layers
     /// selected". Absent for zero or one.
+    ///
+    /// It also says how many of them are pieces inside a copy of a component,
+    /// because those are the ones the list has no row for and so the ONE case
+    /// where this number and the highlighted rows can honestly disagree:
+    /// Select What Uses This on a colour worn inside a component picks the
+    /// original's layers and every copy's pieces, and the list read "4 layers
+    /// selected" over two highlights with nothing to explain it. The words and
+    /// the rules are `LayersSelectionSummary`; a selection that stays out of
+    /// copies reads exactly as it always did.
     private var multiSelectionCount: some View {
-        let count = editorState.multiSelectedLayerIDs.count
+        let summary = editorState.document?
+            .layersSelectionSummary(picked: editorState.multiSelectedLayerIDs)
         return Group {
-            if count >= 2 {
-                Text("\(count) layers selected")
+            if let words = summary?.text {
+                Text(words)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+                    // Wraps rather than trims: the longer sentence is the one
+                    // worth reading, and "4 layers selected, 2 insi…" would
+                    // cut off exactly the half that is new.
+                    .fixedSize(horizontal: false, vertical: true)
+                    .panelReadout(words)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.leading, EditorChromeLayout.panelEdgeInset)
                     .panelEdgePadding()
                     .padding(.top, 4)
+                    .playtestField("Selection")
             }
         }
     }

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/style-users",
-  "seed": "Select What Uses This, on a colour style worn by a component. A copy's pieces carry the original's style bindings, so the button picks the original's own layers AND every copy's pieces alongside them. It is the one thing in the app that puts a piece in the selection, which no click can do, so what it picks and what the panel offers afterwards both have to be right. The panel keeps Position and Size here, because that section is only taken away when a piece is picked ON ITS OWN; a number typed into it reaches the original, and every copy follows.",
+  "seed": "Select What Uses This, on a colour style worn by a component. A copy's pieces carry the original's style bindings, so the button picks the original's own layers AND every copy's pieces alongside them. It is the one thing in the app that puts a piece in the selection, which no click can do, so what it picks and what the panel offers afterwards both have to be right. The panel keeps Position and Size here, because that section is only taken away when a piece is picked ON ITS OWN; a number typed into it reaches the original, and every copy follows. The line under the list says how many of the picked layers are pieces inside copies, because those are the ones it has no rows for.",
   "setup": {
     "forget": [
       "text",
@@ -219,7 +219,15 @@
         "Rectangle 2"
       ]
     },
-    { "do": "action", "action": "positionAndSize" },
+    {
+      "do": "expect",
+      "field": "Selection",
+      "reads": "4 layers selected, 2 inside a copy"
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
     {
       "do": "expect",
       "field": "X",
@@ -228,7 +236,7 @@
     {
       "do": "describe",
       "stage": "4-selected",
-      "note": "THE TEST: four layers picked, and two of them are pieces inside the copy. Position and Size is still on the panel, because the section only goes away when a piece is picked on its own."
+      "note": "THE TEST: four layers picked, and two of them are pieces inside the copy, so the line under the list says both numbers instead of counting something with no row. Position and Size is still on the panel, because the section only goes away when a piece is picked on its own."
     },
     {
       "do": "snapshot",

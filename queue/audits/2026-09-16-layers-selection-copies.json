@@ -1,0 +1,28 @@
+{
+  "feature": "The Layers list says how many picked layers are inside copies",
+  "epic": "ui-components",
+  "summary": "When a selection reaches inside copies of a component, the line under the Layers list now says so: \"4 layers selected, 2 inside a copy\". Before this it said \"4 layers selected\" over two highlighted rows and left you to work out where the other two were.",
+  "setup": "Photonz Dev, release Next. Components and saved colours are on by default; no flag to find.",
+  "try": [
+    { "do": "Draw a rectangle." },
+    { "do": "Open Library, press Save Colour, and name it Accent." },
+    { "do": "Draw a second rectangle, sweep both, and press Command G." },
+    { "do": "Make it a component, then drag one copy of it out of the Comps shelf." },
+    { "do": "Open Library, pick Accent, and press Select What Uses This." },
+    { "do": "Read the line under the Layers list: it should say 4 layers selected, 2 inside a copy.", "shot": "2026-09-16-layers-selection-copies-1.png" },
+    { "do": "Click any single layer, then shift-click a second one, and check the line goes back to plain \"2 layers selected\"." }
+  ],
+  "evaluate": [
+    "Does \"2 inside a copy\" tell you where the missing highlights went, or does it raise a new question?",
+    "Is \"a copy\" the word you would use for what the shelf drops on the canvas?",
+    "The line sits under the list, quiet and to the right. Is that where your eye goes when the count and the highlights disagree?",
+    "Would you rather the list took you to those pieces than told you about them?",
+    "A layer inside a SHUT group is not counted here, because a twist brings its row back. Is that the right line to draw?"
+  ],
+  "rough": [
+    "The decision asked for a second short line; this is one line with a clause on the end instead. It says both numbers, it never truncates (the longest version measures 170pt in a 236pt space), and it costs the panel no extra height. Changing it back to two lines is a small edit if you want the separation.",
+    "The picture above is a real capture of the window, but the Mac reported its screen LOCKED for this whole task, so every walk refused to run and this one was forced through with PHOTONZ_ALLOW_LOCKED_WALK=1. The harness says a run in that state is not a verdict, so treat the picture as what it is, a photograph, and not as a passing walk. A sweep is already pending and re-runs the walk once the screen is unlocked.",
+    "The line tells you those pieces are picked but gives you no way to get to them: there is no row to click, and nothing scrolls anywhere. If that turns out to be the thing you want, it is a separate feature (reveal the copy, or open the original).",
+    "Two pieces inside ONE copy read as \"2 inside a copy\" and pieces spread over two copies read as \"2 inside copies\". That is a real difference and it is carried by one word, which may be too quiet to notice."
+  ]
+}

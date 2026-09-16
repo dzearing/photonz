@@ -16664,3 +16664,38 @@ wiring rather than the maths.
 
 Next: the sweep, and whether typing into words inside a turned card opens the
 field upright (filed, not reproduced).
+
+## 2026-09-16 — The Layers list says how many picked layers are inside copies
+
+Select What Uses This on a saved colour worn inside a component picks the
+original's own layers AND every copy's pieces, because "everywhere this colour
+is worn" has to mean everywhere. A copy's contents belong to its original, so
+`panelRows` gives them no rows, and the list was left reading "4 layers
+selected" over two highlighted rows with nothing to explain the gap. The user
+answered the card with "Say how many are inside copies".
+
+`LayersSelectionSummary` (PhotonzCore, tests first) counts the picked layers
+with no row and hands back the words: "4 layers selected, 2 inside a copy", and
+plain "4 layers selected" whenever the selection stays out of copies, so nothing
+changes for the ordinary case. A copy nested in a copy is attributed to the
+OUTERMOST copy, because that is the one with a row a person can see. A layer
+inside a SHUT group is deliberately not counted: its row exists and a twist
+brings it back, so that is a disagreement that resolves itself.
+
+The card asked for a second line and this is one line with a clause instead. It
+says both numbers, costs the panel no height, and the longest wording measures
+170pt in the 236pt the panel has, so it never truncates. The line now says
+itself out loud to a walk (`playtestField("Selection")` + `panelReadout`), which
+is how `style-users-walk.json` claims the exact sentence.
+
+**The Mac reported its screen locked for the whole session again.** The first
+walk run refused with `status: "locked"` and zero steps. One was forced through
+with `PHOTONZ_ALLOW_LOCKED_WALK=1` to check the wiring: all 56 steps ran, the
+new claim resolved and matched, and the window capture came out real, so the
+audit carries a photograph of the line in place. Per `PlaytestScreenState` that
+buys the run and not the verdict, so it is written up as a picture rather than
+as a pass. A sweep was already pending and re-runs the walk once the screen is
+unlocked.
+
+Next: the sweep, and whether a person wants to be TAKEN to those pieces rather
+than told about them (left rough, not filed).
