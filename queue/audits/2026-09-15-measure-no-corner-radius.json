@@ -1,0 +1,25 @@
+{
+  "feature": "A measurement stops offering a Corner Radius",
+  "epic": "measure-redline",
+  "summary": "Picking a measurement used to show a Corner Radius slider under Chip Text, reading 0 px, and pulling it changed nothing on the picture. A caliper is two feet, a line and a readout chip, so there is no outline for a radius to curve. The row is gone. Everything that really is a box keeps its own.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on.",
+  "try": [
+    { "do": "Open any screenshot." },
+    { "do": "Press I for the measure tool and drag a measurement across something." },
+    { "do": "Press V for the select tool and click the measurement." },
+    { "do": "Look at Appearance: it should end at Chip Text, with no Corner Radius row under it." },
+    { "do": "Draw a rectangle with the shape tool and click it. Corner Radius is there, as before." },
+    { "do": "Shift-click the measurement so both are picked. The row stays, and says it applies to 1 of the 2 selected layers." }
+  ],
+  "evaluate": [
+    "With the row gone, does Appearance for a measurement end where you expect it to, or does the section feel like it stops short?",
+    "When a measurement and a rectangle are picked together, is 'Applies to 1 of the 2 selected layers' enough to tell you which one the slider is about?",
+    "Did you ever want to round the readout chip itself? That is the chip's own corner, and there is no control for it anywhere.",
+    "Does anything else in Appearance on a measurement still read like a control that cannot answer?"
+  ],
+  "rough": [
+    "No screenshot with this one. The Mac's screen was locked for the whole task, so macOS refuses to draw the window and no walk could run at all: Scripts/playtest-all.sh reported COULD NOT RUN. The change is proven in PhotonzCore tests and the panel reads straight from the function those tests cover, but nobody has seen it on screen yet. A sweep is requested and will run the walk once the screen is unlocked.",
+    "The readout chip has rounded corners and there is still no way to change them. Taking the broken row away does not give anybody that, and if the chip's roundness is worth controlling it belongs in the Chip block beside Chip size, not in the layer's Corner Radius.",
+    "A group holding only measurements behaves differently now: its Corner Radius used to reach through to the measurements and do nothing, and it now falls back to masking the group's own box, which does clip. That is the same fallback every container with nothing roundable inside it already uses."
+  ]
+}

@@ -4023,3 +4023,13 @@
 {"t":"2026-09-16T03:11:26.301Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
 {"t":"2026-09-16T03:11:30.402Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
 {"t":"2026-09-16T03:11:30.446Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-16T03:11:40.688Z","ev":"task_done","id":"a-slider-says-where-its-track-starts-when-someth","from":"in_progress","note":"The Corner Radius row draws its wall: the refused stretch is spent with a keyline where it stops, the live slider starts at the wall so its fill measures what you added, and a track spent end to end keeps its row undimmed with the pointer refused. One sentence in PhotonzCore feeds the tip, a click on the row, and a corner typed under the wall. CornerRadiusSelection.wall/hasWall/isSpent/wallSentence + 9 new tests; 7326 pass. Audit queue/audits/2026-09-16-clamped-slider.json. Pushed as 2ff4c67f. Verified by tests and by rendering the row's own drawing in both themes: the screen was locked all run, so no walk could run and no window could be photographed, and a sweep is requested for Scripts/playtest/clamped-corner-wall-walk.json."}
+{"t":"2026-09-16T03:14:02.544Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T03:14:02.649Z","ev":"task_started","id":"a-measurement-offers-a-corner-radius-it-has-noth","title":"A measurement offers a corner radius it has nothing to round","priority":"p2-normal"}
+{"t":"2026-09-16T03:18:22.743Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:22.786Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:22.829Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:22.873Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:22.916Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:22.959Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-16T03:18:23.002Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}

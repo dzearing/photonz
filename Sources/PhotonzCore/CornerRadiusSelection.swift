@@ -207,6 +207,14 @@ extension Layer {
         // suffering (`CornerRadiusRow`). The way to round a path is to pull its
         // points, which is what it turned into a path for (`ShapeToPath.swift`).
         if path != nil { return false }
+        // A MEASUREMENT is not a box either. It is two feet, a line between
+        // them and a readout chip floating off to one side; its layer box is
+        // only how far that drawing reaches, and there is no outline round it
+        // for a radius to curve. The row was offered anyway, reading 0 px
+        // under Chip Text, and pulling it changed nothing anybody could see
+        // (seen on the probe, 2026-09-09). The chip's own rounding is the
+        // chip's, not the layer's, and it is not this slider.
+        if measure != nil { return false }
         guard let shape = annotation?.shape else { return true }
         switch shape {
         case .rectangle, .highlight: return true

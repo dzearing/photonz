@@ -114,6 +114,12 @@
     {
       "do": "expect",
       "control": "Slider",
+      "in": "Corner Radius",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
       "in": "Width",
       "present": true
     },

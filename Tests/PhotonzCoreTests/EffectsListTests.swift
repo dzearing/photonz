@@ -30,6 +30,33 @@ struct EffectsListTests {
               style: style)
     }
 
+    /// A measurement: two feet, a caliper line and a readout chip. Nothing
+    /// about it is a box, which is the point of `measurementHasNoCorners`.
+    private func measurement() -> Layer {
+        Layer(name: "Width",
+              content: .measure(MeasureContent(start: .zero,
+                                               end: CGPoint(x: 140, y: 0))),
+              frame: CGRect(x: 0, y: 0, width: 140, height: 40))
+    }
+
+    private func label() -> Layer {
+        Layer(name: "Label",
+              content: .text(TextContent(string: "Hello")),
+              frame: CGRect(x: 0, y: 0, width: 90, height: 30))
+    }
+
+    private func picture() -> Layer {
+        Layer(name: "Picture",
+              content: .image(ImageRef(pixelSize: CGSize(width: 200, height: 120))),
+              frame: CGRect(x: 0, y: 0, width: 200, height: 120))
+    }
+
+    private func frameLayer() -> Layer {
+        Layer(name: "Frame",
+              content: .group(GroupContent(children: [], isFrame: true)),
+              frame: CGRect(x: 0, y: 0, width: 300, height: 200))
+    }
+
     private func ellipse() -> Layer {
         Layer(name: "Ellipse",
               content: .annotation(AnnotationContent(shape: .ellipse,
@@ -85,6 +112,39 @@ struct EffectsListTests {
         // so, rather than vanishing or lying.
         let both = doc.cornerRadiusSelection(layerIDs: [round.id, square.id], cornersOnly: true)
         #expect(both.count == 1)
+        #expect(both.note == "Applies to 1 of the 2 selected layers.")
+    }
+
+    @Test("A measurement brings no Corner Radius, because it has nothing to round")
+    func measurementHasNoCorners() {
+        // A caliper is two feet, a line and a readout chip. There is no outline
+        // round the layer for a radius to curve, so the slider did nothing you
+        // could see: pulling it moved a number and the picture never changed
+        // (seen on the probe, 2026-09-09,
+        // `queue/audits/2026-09-09-measure-parts-1-panel-sc.png`). A control
+        // that can never answer is not offered at all.
+        let caliper = measurement()
+        let doc = document([caliper])
+        #expect(doc.cornerRadiusSelection(layerIDs: [caliper.id], cornersOnly: true).isEmpty)
+        #expect(!caliper.hasCorners)
+    }
+
+    @Test("Everything that IS a box still has its Corner Radius")
+    func boxesKeepTheirCorners() {
+        for layer in [box(), label(), picture(), frameLayer()] {
+            let doc = document([layer])
+            #expect(doc.cornerRadiusSelection(layerIDs: [layer.id], cornersOnly: true).count == 1,
+                    "\(layer.name) lost its Corner Radius row")
+        }
+    }
+
+    @Test("A measurement picked with a rectangle leaves the row to the rectangle")
+    func measurementBesideARectangle() {
+        let caliper = measurement(), square = box()
+        let doc = document([caliper, square])
+        let both = doc.cornerRadiusSelection(layerIDs: [caliper.id, square.id], cornersOnly: true)
+        #expect(both.count == 1)
+        #expect(both.members.first?.id == square.id)
         #expect(both.note == "Applies to 1 of the 2 selected layers.")
     }
 

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 220,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T14:39:42.635Z",
-  "updated": "2026-09-15T12:14:53.509Z",
+  "updated": "2026-09-16T03:18:23.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on the probe on 2026-09-09 while building a-measurement-s-parts-live-in-appearance-like-ev, and visible in every screenshot of that audit: queue/audits/2026-09-09-measure-parts-1-panel-sc.png shows Corner Radius 0 px under Chip Text on a picked measurement. Reproduce with Scripts/playtest.sh Scripts/playtest/measure-parts-walk.json and look at measure-parts-1-panel-sc.png. Not caused by that work: the row comes from EditorState.corneredRadiusSelection, which calls document.cornerRadiusSelection(layerIDs:cornersOnly:true) and evidently counts a measure layer as cornered. The fix belongs in whatever cornersOnly tests, in PhotonzCore, with a test first.",
@@ -46,6 +46,39 @@
     {
       "t": "2026-09-15T12:14:53.508Z",
       "note": "seq 180 -> 220"
+    },
+    {
+      "t": "2026-09-16T03:14:02.647Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T03:18:22.741Z",
+      "note": "Reproduced, at both ends. The panel: queue/audits/2026-09-09-measure-parts-1-panel-sc.png shows Corner Radius 0 px under Chip Text on a picked measurement. The model: a new test in EffectsListTests failed exactly as described, cornerRadiusSelection(layerIDs:[caliper], cornersOnly:true) came back with one member for a measure layer."
+    },
+    {
+      "t": "2026-09-16T03:18:22.784Z",
+      "note": "Fix is one clause in Layer.hasCorners (PhotonzCore/CornerRadiusSelection.swift): a layer whose content is .measure has no corners, beside the existing rule for a path. Three tests written first: a measurement brings no row; box, label, picture and frame each still bring one; a measurement plus a rectangle brings one row that says 'Applies to 1 of the 2 selected layers'. Scripts/test.sh green, 7329 tests."
+    },
+    {
+      "t": "2026-09-16T03:18:22.827Z",
+      "note": "Adversarial pass before building: the row could have been shown spent or clamped instead, but UX-PATTERNS section 4 sorts this as 'nothing to act on' rather than a clamped range, and the 2026-09-14 note on this task says the same. No row is the shortest thing that is also the honest thing. Checked nothing else reads hasCorners in a way a measurement cares about: CornerRadiusHandles needs an annotation, SelectionOutlineShape now marks a caliper square, which is what it was already drawing at radius 0."
+    },
+    {
+      "t": "2026-09-16T03:18:22.871Z",
+      "note": "Could NOT run any walk: the Mac's screen was locked for the whole task. Scripts/playtest.sh and playtest-all.sh both reported COULD NOT RUN, so there is no fresh picture of the panel and the app-level acceptance is proven through the core function the panel reads rather than on screen. Added the missing assertion to Scripts/playtest/measure-parts-walk.json (Slider in Corner Radius, present false) and asked for a sweep so it runs once the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T03:18:22.914Z",
+      "note": "left rough: the readout chip's own corners still have no control anywhere, and taking this row away does not give anybody one. It is a new idea rather than a defect, so no task: if it is wanted it belongs in the Chip block beside Chip size. In the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-16T03:18:22.957Z",
+      "note": "left rough: a group holding ONLY measurements used to reach its Corner Radius through to them and do nothing visible; it now falls back to masking the group's own box, which clips. Checked in a scratch test (members=1, reachedInto=0, the member is the group). That is the documented fallback every container with nothing roundable inside it already uses, so it is consistent rather than broken."
+    },
+    {
+      "t": "2026-09-16T03:18:23.000Z",
+      "note": "Audit: queue/audits/2026-09-15-measure-no-corner-radius.json. No screenshot, and it says why in rough."
     }
-  ]
+  ],
+  "started": "2026-09-16T03:14:02.646Z"
 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:08.148Z",
-  "updated": "2026-09-16T03:11:30.445Z",
+  "updated": "2026-09-16T03:11:40.687Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-12 design review in queue/audits/2026-09-12-corner-over-a-group.json, which says it plainly in its own rough notes:\n\n  \"The knob at the far left reading 18 looks exactly like the old knob at the far left reading 0. The number is right and the pull works from the first nudge, but nothing on the row itself says the track starts at 18. Only the tooltip does.\"\n  \"A group whose contents are already as round as the box goes, like a pill, has nothing left to pull, so the slider turns itself off. That is honest but silent: it looks the same as a slider you simply have not grabbed yet.\"\n\nUX-PATTERNS.md section 4 already rules that a control that cannot act must never explain itself with a hover tip alone: pressing it puts the reason in the line under the section straight away. That line under the section is section 4's own surface and is the obvious place for this. What the rule does NOT have is a row for a control that CAN act, but only over part of its range, which is what a clamped slider is. Filed alongside the scrub task for that gap.\n\nThis is separate from find-out-what-corner-radius-should-say-over-a-gr, which is blocked on a decision about a group with padding. This task is about the case that already shipped and works.",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-16T03:11:30.444Z",
       "note": "left rough: the line a click puts under this row sits under the ROW, because Appearance has no single line under the whole section the way Position and Size does. It works and nobody has been stopped by it, so it is in the audit's rough list for the user to react to rather than filed as its own task. Also left: the spent tone and the filled tone sit within about 30 values of each other while the accent picked in System Settings is grey; the keyline carries the difference and a coloured accent would separate them on its own."
+    },
+    {
+      "t": "2026-09-16T03:11:40.685Z",
+      "note": "The Corner Radius row draws its wall: the refused stretch is spent with a keyline where it stops, the live slider starts at the wall so its fill measures what you added, and a track spent end to end keeps its row undimmed with the pointer refused. One sentence in PhotonzCore feeds the tip, a click on the row, and a corner typed under the wall. CornerRadiusSelection.wall/hasWall/isSpent/wallSentence + 9 new tests; 7326 pass. Audit queue/audits/2026-09-16-clamped-slider.json. Pushed as 2ff4c67f. Verified by tests and by rendering the row's own drawing in both themes: the screen was locked all run, so no walk could run and no window could be photographed, and a sweep is requested for Scripts/playtest/clamped-corner-wall-walk.json."
     }
   ],
-  "started": "2026-09-16T02:59:31.604Z"
+  "started": "2026-09-16T02:59:31.604Z",
+  "completed": "2026-09-16T03:11:40.686Z"
 }
