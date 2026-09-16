@@ -1229,18 +1229,27 @@ public final class DocumentRenderer: @unchecked Sendable {
         let innerRect = outerRect.insetBy(dx: width, dy: width)
         var inner: CIImage?
         var band = outer
+        // The rectangle the ring cannot reach: what is left of the inner shape
+        // once its own corners are taken off it. Everything inside this is
+        // picture and nothing else, which is what lets `laid` do its
+        // arithmetic on four thin strips instead of the whole layer.
+        var middle = CGRect.null
         if !innerRect.isNull, !innerRect.isEmpty {
-            let hole = roundedRectMask(rect: innerRect, radii: outerRadii.grown(by: -width))
+            let innerRadii = outerRadii.grown(by: -width)
+            let hole = roundedRectMask(rect: innerRect, radii: innerRadii)
             inner = hole
             band = outer.applyingFilter("CISourceOutCompositing",
                                         parameters: [kCIInputBackgroundImageKey: hole])
+            let curve = innerRadii.fitted(in: innerRect.size).largest
+            middle = innerRect.insetBy(dx: curve, dy: curve)
         }
         // A flat ring is poured its one colour, a gradient one its ramp; both
         // go through the same band, so the two kinds cannot drift apart.
         band = paint.isGradient ? poured(paint, through: band, in: outerRect)
                                 : tinted(band, ciColor(hex: paint.hex))
         return laid(band, outerMask: outer, innerMask: inner,
-                    opacity: paintOpacity(paint), over: image, outerRect: outerRect)
+                    opacity: paintOpacity(paint), over: image, outerRect: outerRect,
+                    hole: middle)
     }
 
     /// The silhouette a ring hugs, DRAWN rather than generated.
@@ -1487,8 +1496,34 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// `opacity` is what stops this rubbing out what a SEE-THROUGH ring is
     /// meant to show: a ring painted at half strength keeps half the picture
     /// under its band, exactly as it did before.
+    ///
+    /// ## Only the band pays for it
+    ///
+    /// All of that is about ten filters, and a ring lands on a thin strip of a
+    /// picture that can be twelve megapixels. Everywhere outside the band the
+    /// arithmetic is an IDENTITY: there is no ring there, so `under` is nought,
+    /// the picture keeps the whole pixel and the answer is the picture. So the
+    /// filters are run only where the band can be — four strips round `hole`,
+    /// the rectangle known to be wholly inside the ring — and everywhere else
+    /// the picture is passed straight through untouched (`ringStrips`).
+    ///
+    /// The strips land on whole pixels and are added back together, so the
+    /// join cannot show; `hole` empty means the caller does not know one, and
+    /// the whole rectangle is done exactly as it was. `ringStrips` and the
+    /// note on the last line of this method are the two things that make it
+    /// exact, and each of them was a seam that came back at 2.75x zoom.
+    ///
+    /// Asking Core Image for a picture in pieces does cost one unit of
+    /// eight-bit rounding, since a chain asked for whole runs as a single
+    /// kernel and one asked for in pieces goes through a buffer. Measured
+    /// across flat, see-through and gradient rings, inside, centred and
+    /// outside, at four zooms, the worst any pixel moves is 2 parts in 255
+    /// (`BorderBandRenderTests`) — against a seam that showed as a whole
+    /// hairline of the wrong colour, and the same rounding every layer
+    /// composite in the app already carries.
     private func laid(_ band: CIImage, outerMask: CIImage, innerMask: CIImage?,
-                      opacity: CGFloat, over image: CIImage, outerRect: CGRect) -> CIImage {
+                      opacity: CGFloat, over image: CIImage, outerRect: CGRect,
+                      hole: CGRect = .null) -> CIImage {
         let extent = image.extent.union(outerRect)
         // Nothing to share out a pixel of: an unbounded picture has no edge to
         // meet, so it takes the plain composite it always took.
@@ -1522,9 +1557,122 @@ public final class DocumentRenderer: @unchecked Sendable {
         let picture = image.applyingFilter("CISourceInCompositing",
                                            parameters: [kCIInputBackgroundImageKey: stencil(left)])
             .cropped(to: extent)
-        return band.applyingFilter("CIAdditionCompositing",
-                                   parameters: [kCIInputBackgroundImageKey: picture])
-            .cropped(to: extent)
+        let shared = band.applyingFilter("CIAdditionCompositing",
+                                         parameters: [kCIInputBackgroundImageKey: picture])
+        let strips = laysRingsOverTheWholePicture ? []
+                                                  : Self.ringStrips(outer: outerRect, hole: hole)
+        guard !strips.isEmpty else { return shared.cropped(to: extent) }
+        // Each strip is asked for on its own, which is the whole point: Core
+        // Image works out what it has to compute from what it is asked for, so
+        // the middle of the picture is never put through the arithmetic above.
+        //
+        // They are ADDED back together, not laid over each other. The strips
+        // tile the band, and a layer that lands between two pixels of the
+        // canvas is sampled rather than copied, so the pixel the join runs
+        // through arrives as a share of one strip and the rest of the other:
+        // added, those shares come to the whole pixel, which is the picture
+        // the band was cut out of. Laid over each other instead they come to
+        // less than one and the layer goes see-through along the join, which
+        // is how the seam came back along the middle of a box at 2.75x zoom.
+        var confined = shared.cropped(to: strips[0])
+        var covered = CIImage(color: .white).cropped(to: strips[0])
+        for strip in strips.dropFirst() {
+            confined = shared.cropped(to: strip)
+                .applyingFilter("CIAdditionCompositing",
+                                parameters: [kCIInputBackgroundImageKey: confined])
+            covered = CIImage(color: .white).cropped(to: strip)
+                .applyingFilter("CIAdditionCompositing",
+                                parameters: [kCIInputBackgroundImageKey: covered])
+        }
+        // The strips REPLACE the picture rather than sitting over it: inside
+        // the band the answer already holds the picture's own share of every
+        // pixel, and dropping it over the picture again would count that share
+        // twice. `covered` is cut from the same four rectangles, so the two
+        // cannot disagree about where the join is.
+        //
+        // And the result is DRAWN OUT into a picture of its own rather than
+        // left as a recipe for whatever comes next to fold into itself. The
+        // strips only line up on the grid they were cut on: left as a recipe,
+        // the turn or the placement that follows samples each strip
+        // separately and the join comes out half there, which is the seam
+        // again. Drawn once, what follows samples one picture. It is also by
+        // some way the faster of the two — 35ms to 26ms on the twelve-
+        // megapixel benchmark — because everything downstream reads a picture
+        // instead of running the band again.
+        return confined.applyingFilter("CIBlendWithMask", parameters: [
+            kCIInputBackgroundImageKey: image,
+            kCIInputMaskImageKey: covered
+        ]).cropped(to: extent).insertingIntermediate()
+    }
+
+    /// `hole` shrunk to the whole pixels that lie inside it, or nil when there
+    /// are none. Both halves of the split measure the hole this way, so they
+    /// agree about where the join is to the pixel.
+    private static func wholePixels(_ hole: CGRect) -> CGRect? {
+        guard !hole.isNull, !hole.isEmpty else { return nil }
+        let left = hole.minX.rounded(.up), right = hole.maxX.rounded(.down)
+        let bottom = hole.minY.rounded(.up), top = hole.maxY.rounded(.down)
+        guard right > left, top > bottom else { return nil }
+        return CGRect(x: left, y: bottom, width: right - left, height: top - bottom)
+    }
+
+    /// Test hook: lays every ring over the WHOLE picture, the way it was done
+    /// before the band was confined. The two must draw the same pixels, which
+    /// is what `BorderBandRenderTests` checks, one border at a time.
+    var laysRingsOverTheWholePicture = false
+
+    /// How far the strips reach PAST the ring's own rectangle, in pixels.
+    ///
+    /// The outermost join is a hard edge, and a layer that lands between two
+    /// pixels of the canvas is sampled rather than copied, which smears a hard
+    /// edge across a pixel. Pushed clear of the ring, that smear lands off the
+    /// picture where nothing is left to smear; sitting on the ring's own
+    /// outline it put the seam back along the top of a box at 2.75x zoom, half
+    /// ring and half fill.
+    static let ringStripSlack: CGFloat = 2
+
+    /// Everything in `outer` that is not in `hole`, as up to four rectangles
+    /// on whole pixels: the top, the bottom and the two sides of the ring's
+    /// band.
+    ///
+    /// `hole` is a rectangle known to be wholly INSIDE the ring, so the strips
+    /// are guaranteed to hold every pixel the ring can touch. It is shrunk to
+    /// whole pixels before it is cut out, so a strip never lands between two
+    /// of them and nothing is resampled.
+    ///
+    /// The four TILE the band: they cover every pixel of it and no pixel
+    /// twice, which is what lets them be added back together (`laid`).
+    ///
+    /// Empty means "do the whole rectangle": no hole, a hole too small to be
+    /// worth the extra passes, or a ring so thick there is no middle left.
+    static func ringStrips(outer: CGRect, hole: CGRect) -> [CGRect] {
+        let box = outer.integral.insetBy(dx: -ringStripSlack, dy: -ringStripSlack)
+        guard !box.isNull, !box.isEmpty, let inner = wholePixels(hole) else { return [] }
+        let middle = inner.intersection(box)
+        guard !middle.isNull, middle.width > 0, middle.height > 0 else { return [] }
+        // A hole smaller than this saves less than the extra passes the join
+        // costs, so the whole rectangle is cheaper. A ring round a button is
+        // in this bracket; a ring round a card or a screen is not.
+        guard middle.width * middle.height >= box.width * box.height / 4,
+              middle.width * middle.height >= 64 * 64 else { return [] }
+        var strips: [CGRect] = []
+        if middle.maxY < box.maxY {
+            strips.append(CGRect(x: box.minX, y: middle.maxY,
+                                 width: box.width, height: box.maxY - middle.maxY))
+        }
+        if middle.minY > box.minY {
+            strips.append(CGRect(x: box.minX, y: box.minY,
+                                 width: box.width, height: middle.minY - box.minY))
+        }
+        if middle.minX > box.minX {
+            strips.append(CGRect(x: box.minX, y: middle.minY,
+                                 width: middle.minX - box.minX, height: middle.height))
+        }
+        if middle.maxX < box.maxX {
+            strips.append(CGRect(x: middle.maxX, y: middle.minY,
+                                 width: box.maxX - middle.maxX, height: middle.height))
+        }
+        return strips
     }
 
     /// An image's alpha as a plain opaque grey, so the blend filters below can

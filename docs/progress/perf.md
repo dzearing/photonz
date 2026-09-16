@@ -114,3 +114,50 @@ at once, so the silhouette cache misses on every layer on every frame — is
 15.4ms, still inside the 16ms target. The silhouettes share the same cache and
 the same pixel budget as every other mask, so moving a path is a cache hit and
 only reshaping one pays.
+
+## 2026-09-16 — a border costs the band it covers, not the layer
+
+Sharing a pixel out by area is what stopped the hairline seam the user reported
+on 2026-09-09 (`DocumentRenderer.laid`, `BorderSeamRenderTests`), and it was
+being done across the WHOLE layer: about ten filters over every pixel of a
+picture that can be twelve megapixels, to settle the thin band the ring
+actually lands on. In the benchmark document that is one ring round a
+full-canvas box, and it cost 13ms of every frame.
+
+Outside the band the arithmetic is an identity — no ring there, so the picture
+keeps the whole pixel — so the work now runs in the four strips round the hole
+and the rest of the picture is passed straight through
+(`DocumentRenderer.ringStrips`). Measured by rendering the same document both
+ways in one process, alternating, so the machine cannot drift between the two
+numbers:
+
+| Path | Whole layer | Band only |
+| --- | --- | --- |
+| 12MP/10-layer full render | 35.3ms | 25.8ms |
+| ...with five layers in one styled group | 37.9ms | 24.6ms |
+| Interactive edit inside that styled group | 46.6ms | 33.4ms |
+| 2x export | 112.5ms | 116.2ms |
+
+Export is the one path it does not help: it forces every pixel out, so there is
+no downstream saving to collect and the extra picture costs about 3%.
+
+Three things make it exact rather than merely close, and each of them was a
+seam that came back at 2.75x zoom before it was in:
+
+- The strips TILE the band and are added back together. A layer that lands
+  between two pixels of the canvas is sampled rather than copied, so the pixel
+  a join runs through arrives as a share of one strip and the rest of the
+  other; added, the shares come to the whole pixel. Laid over each other they
+  come to less than one and the layer goes see-through along the join.
+- The joined picture is drawn out once (`insertingIntermediate`) instead of
+  being left as a recipe for the placement to fold into itself, so what follows
+  samples one picture rather than four strips. That is also where most of the
+  speed came from: 35ms to 26ms.
+- The strips reach two pixels past the ring's own rectangle, so the outermost
+  join is off the picture rather than along its edge.
+
+One difference survives, and it is the new way round: at a zoom that puts a
+shape between two pixels, the row its edge runs through now reads as covered as
+it geometrically is (188 of green under a black border on green, dead on half)
+where laying the ring over the whole picture read 225, a border covering a
+quarter of a row it covers half of.

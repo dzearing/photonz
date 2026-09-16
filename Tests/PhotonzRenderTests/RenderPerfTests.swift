@@ -91,7 +91,10 @@ struct RenderPerfTests {
 
         // The 16ms product target is tracked in docs/progress/perf.md; this is
         // the regression guard.
-        MachineSpeed.check("12MP/10-layer full render", medianMS: median, baselineMS: 36)
+        // 36 until 2026-09-16, when a ring round a box stopped being laid
+        // across the whole layer and started being laid in the four strips its
+        // band covers (`DocumentRenderer.ringStrips`).
+        MachineSpeed.check("12MP/10-layer full render", medianMS: median, baselineMS: 26)
     }
 
     /// The same 12MP document with five of its layers wrapped in one styled
@@ -128,8 +131,9 @@ struct RenderPerfTests {
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
 
+        // 38 until the border band was confined on 2026-09-16.
         MachineSpeed.check("12MP/10-layer full render, five in one styled group",
-                           medianMS: median, baselineMS: 38)
+                           medianMS: median, baselineMS: 24)
     }
 
     /// The 16ms budget, on the path the budget is about, with a group in the
@@ -186,8 +190,11 @@ struct RenderPerfTests {
         // that runner can actually do.
         MachineSpeed.check("interactive edit inside a plain group of five",
                            medianMS: plain, baselineMS: 7)
+        // 46 until the border band was confined on 2026-09-16: this document
+        // carries a ring round a full-canvas box, and laying it across the
+        // whole canvas rather than in its own band was 13ms of every frame.
         MachineSpeed.check("interactive edit inside a styled group of five",
-                           medianMS: styled, baselineMS: 46)
+                           medianMS: styled, baselineMS: 32)
     }
 
     /// Zoomed in, the canvas asks for a crisp tile of just the part of the
@@ -321,8 +328,10 @@ struct RenderPerfTests {
         // forces every pixel back out, so it is scaled by the pixel-push
         // yardstick rather than the filter-graph one — that runner was roughly
         // 4.5x slower on a composite and 8x slower on this.
+        // 125 until 2026-09-16; export is the one path the band confinement
+        // does not speed up, since forcing every pixel out is what it costs.
         MachineSpeed.check("12MP/10-layer export at 2x", medianMS: median,
-                           baselineMS: 125, yardstick: .pixelPush)
+                           baselineMS: 113, yardstick: .pixelPush)
     }
 
     /// The 16ms budget applies to *re-renders during editing* — that's what

@@ -110,6 +110,13 @@ struct TurnIntoPathRenderTests {
     /// differently now and then. One part in 255 on tens of samples out of
     /// nearly three hundred thousand is below anything a screen can show, and
     /// every straight edge in the same picture still matches exactly.
+    ///
+    /// The counts went up by a few samples on 2026-09-16, when a ring round a
+    /// BOX started being drawn in the four strips its band covers rather than
+    /// across the whole layer: asking Core Image for a picture in pieces costs
+    /// one step of eight-bit rounding at the join, and a ring round a PATH
+    /// (which has no rectangle to skip) still takes the whole layer. The worst
+    /// any channel differs is still the one part in 255 below.
     private func expectSamePicture(_ layer: Layer, softEdgeBytes: Int = 0,
                                    sourceLocation: SourceLocation = #_sourceLocation) throws {
         let diff = try difference(layer)
@@ -151,7 +158,7 @@ struct TurnIntoPathRenderTests {
 
     @Test("A rounded box is the same picture")
     func roundedBox() throws {
-        try expectSamePicture(boxLayer(radius: 24), softEdgeBytes: 8)
+        try expectSamePicture(boxLayer(radius: 24), softEdgeBytes: 40)
     }
 
     @Test("...and so is one rounded a different amount at each corner")
@@ -162,7 +169,7 @@ struct TurnIntoPathRenderTests {
                                       fillColorHex: "#3478F6")
         shape.cornerRadii = CornerRadii(topLeft: 36, topRight: 0, bottomRight: 14, bottomLeft: 0)
         try expectSamePicture(Layer(name: "Card", content: .annotation(shape), frame: box),
-                              softEdgeBytes: 8)
+                              softEdgeBytes: 40)
     }
 
     @Test("A box with no fill keeps its hollow middle")
@@ -172,8 +179,8 @@ struct TurnIntoPathRenderTests {
 
     @Test("A box whose edge is centred, and one whose edge is outside")
     func theOtherTwoEdgePositions() throws {
-        try expectSamePicture(boxLayer(radius: 20, position: .center), softEdgeBytes: 24)
-        try expectSamePicture(boxLayer(radius: 20, position: .outside), softEdgeBytes: 24)
+        try expectSamePicture(boxLayer(radius: 20, position: .center), softEdgeBytes: 56)
+        try expectSamePicture(boxLayer(radius: 20, position: .outside), softEdgeBytes: 56)
     }
 
     @Test("A box with no edge at all, which is an ordinary filled icon")
@@ -272,7 +279,7 @@ struct TurnIntoPathRenderTests {
                                                        offset: CGSize(width: 4, height: 6),
                                                        colorHex: "#000000")))
         layer.style.opacity = 0.55
-        try expectSamePicture(layer, softEdgeBytes: 24)
+        try expectSamePicture(layer, softEdgeBytes: 48)
     }
 
     @Test("A second border, standing off the edge, still stands off the same edge")
@@ -294,7 +301,7 @@ struct TurnIntoPathRenderTests {
                                          GradientStop(hex: "#5856D6", position: 1)])
             layer.style.effects[index] = .border(border)
         }
-        try expectSamePicture(layer, softEdgeBytes: 24)
+        try expectSamePicture(layer, softEdgeBytes: 48)
     }
 
     // MARK: - The curve is really a curve
