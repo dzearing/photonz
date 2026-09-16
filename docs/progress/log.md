@@ -16594,3 +16594,35 @@ pictures. A sweep is requested.
 Open question for the user, in the audit: the panel reads 240 by 80 on the
 screenshot and 120 by 40 in the new document for a button that looks identical
 in both. Honest, but is it clear?
+
+## 2026-09-16 — A walk pressing Command Z really undoes
+
+A `shortcut` step on ⌘Z failed every walk outright: macOS will not give a
+script-launched background app the front, so SwiftUI never rebuilds the probe's
+menu bar after launch and every window-scoped command sits dimmed with nothing
+behind it. `PlaytestMenuStandIn` (PhotonzCore, tested) is now the table of what
+a chord means — ⌘Z, ⇧⌘Z, ⌘C, ⇧⌘C, ⌘X, ⌘=, ⌘-, ⌘0 — and the `shortcut` step
+runs the stand-in when the item carrying the chord is dead, writing one log line
+that names the frozen menu bar and says the walk ran the command directly. A
+chord with no stand-in still fails the walk and says to add one. `key` steps are
+deliberately untouched, since three walks exist to document that the chord does
+nothing.
+
+That uncovered a second problem the failure had been hiding:
+`turn-into-a-picture-walk` answered its confirmation sheet with `key return`,
+which never reaches an NSAlert's default button, so with the chord fixed the
+walk went green while the turn never happened (both document renders came back
+byte-identical and a capture after the press showed the sheet still standing).
+It now presses the button by name — `{ do: press, control: "Turn Into Picture",
+in: "Sheet" }` — and its whole story is true.
+
+Next: `pressing-return-answers-a-question-the-app-asks` is filed for
+`turn-into-a-path-walk`, which fails honestly on the same sheet problem; that
+one is worth diagnosing rather than swapping to `press`, since the sheet
+targeting in `.key` was added on 2026-09-08 and that walk landed green.
+
+Open question: the Mac's screen reported locked for this whole session, so every
+walk ran under `PHOTONZ_ALLOW_LOCKED_WALK=1` and one clean pass is still owed.
+Worth noting that the captures under that "locked" reading came out real and
+correct at 2560x1800, which may mean the lock check is over-firing and holding
+the sweep back for nothing. One sample, not enough to file.

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 340,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:47:48.900Z",
-  "updated": "2026-09-16T07:01:23.324Z",
+  "updated": "2026-09-16T07:02:21.645Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on a CLEAN tree (git stash, swift build, run), so this is not from the group turning work.\n\n$ Scripts/playtest.sh Scripts/playtest/turn-into-a-picture-walk.json\n  [37 shortcut] FAILED: command+z is Edit > Undo, but that item has no action behind it, so pressing it does nothing. macOS will not give a background app focus, so SwiftUI leaves the probes menu bar frozen at its launch state: every window-scoped command is dimmed and empty for the whole walk, however the document changes. Use an `action` step for the outcome and keep a `key` step if you want the press on record.\n  \"status\" : \"failed\"\n\nThe harness already suggests the workaround (an `action` step with action undo), which is what Scripts/playtest/turn-a-group-walk.json does. Either fix turn-into-a-picture-walk the same way, or make the harness fall back to the action when the menu item is dead so no walk has to know.",
@@ -73,7 +73,12 @@
     {
       "t": "2026-09-16T07:01:23.323Z",
       "note": "No audit written: this is harness plumbing with nothing in the app for the user to try. What a person would notice is only that walks stop lying about undo."
+    },
+    {
+      "t": "2026-09-16T07:02:21.643Z",
+      "note": "A chord a walk presses now carries a stand-in: PlaytestMenuStandIn (PhotonzCore, tested) says what Command Z, Shift Command Z, the copies, the cut and the zooms mean, and the harness's `shortcut` step runs it when the menu item it found is dimmed by the frozen menu bar, saying so in one line that cannot be read as the press having worked. Fixing the chord then exposed that turn-into-a-picture-walk was answering its confirmation sheet with `key return`, which never reaches an NSAlert's button, so the walk would have gone green while the turn, the piece and the undos never happened; it now presses the button by name and its whole story is true. Verified: Scripts/test.sh green (7472 tests, 598 suites); turn-into-a-picture-walk ok, 55 steps, 6 real window captures; the other ten shortcut-using walks re-run and their five failures reproduce on a clean tree. Caveat: the Mac's screen reported locked throughout, so every walk ran under PHOTONZ_ALLOW_LOCKED_WALK=1 and one clean pass on an unlocked screen is still owed. Filed pressing-return-answers-a-question-the-app-asks for turn-into-a-path-walk, which fails honestly on the same sheet problem. Commit 0411f2b1, pushed."
     }
   ],
-  "started": "2026-09-16T06:48:15.389Z"
+  "started": "2026-09-16T06:48:15.389Z",
+  "completed": "2026-09-16T07:02:21.644Z"
 }
