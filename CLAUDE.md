@@ -41,11 +41,17 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 
 ### A walk needs the screen unlocked
 
-A scripted walk drives a real window and then reads it. That needs the window
-server to have actually DRAWN it, so when the Mac's screen is locked no walk can
-say anything: the login window covers everything, layout and animations stop,
-the control names SwiftUI hands to AppKit never arrive, and screen capture is
-refused outright. The app is fine; the walk is reading a half-built window.
+A scripted walk finds every control BY NAME, and a locked screen takes that name
+away. With the login window up, each control is still on screen at the right
+size and still carries its tooltip, and the name SwiftUI hands to AppKit comes
+back empty, so step after step reports a control missing that is plainly there.
+
+Nothing else about the app stops. A run forced past the refusal on a locked Mac
+still drags, still lays out, still animates, and a snapshot step still
+photographs the window for real. That is worth knowing because the old wording
+here said the window was never drawn and that layout and animations stop, and
+four different runners each spent part of a turn re-running walks by hand to
+show that was not so. The app is fine; the walk simply cannot find anything.
 
 So a walk run on a locked screen **does not pass and does not fail**. It reports
 `status: "locked"`, `Scripts/playtest.sh` exits 3, `Scripts/playtest-all.sh`

@@ -5,17 +5,17 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:18.070Z",
-  "updated": "2026-09-16T12:23:33.356Z",
+  "updated": "2026-09-16T12:56:15.564Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED by the 2026-09-16 triage pass, and the reproduction is the evidence for every acceptance item.\n\n  ioreg / CGWindowList: loginwindow at layer 2004, 1728x1117, over everything. The Mac really is locked.\n  Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build          -> status locked, 0 steps, exit 3\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build -> 5 steps in 3.87s, exit 1, failed at step 6\n\nWhat the forced run's own log says, which is the whole point:\n  [4 drag] (320, 260) to (620, 460) document, cursor while down crosshair, ... grid lines caught 0, let go 0, changed 7 ... last 608.0/448.0\n  [5 wait] 0.5s, never went quiet (15 of 16 slices busy, 5 restless (animating CAShapeLayer transition)); mainBusy 764.4ms over 2491 passes\n  [6 panelMenu] FAILED: no menu called \"Add Effect\" is in the window; the ones that are: ... 25.0pt wide at x 1218.0 says \"Add an effect: a shadow, a glow, a border or a blur\"\n\nSo: the drag landed and moved things, layout ran, animations were actively running, and the control the step could not find was on screen at the right size with the right tooltip and an EMPTY name. Layout and animations do NOT stop. Accessibility identifiers do not arrive, and screen capture is refused (the run printed 'Window captures: none' and wrote no -sc.png, with no SCStreamErrorDomain error at all).\n\nThe wrong explanation lives in three places and they must agree: the printed message and Sources/Photonz/Playtest/PlaytestScreenState.swift, and the CLAUDE.md section 'A walk needs the screen unlocked' which says 'layout and animations stop, the control names SwiftUI hands to AppKit never arrive'. The middle clause is right; the first is not.\n\nWhy it earns a task: task logs on a-hundred-and-fifteen-walks-fail-on-code-that-pa carry four separate runner reproductions (2026-09-15 15:50, 2026-09-15 23:00, 2026-09-16 00:5x, 2026-09-16 02:24) each filed to argue the gate is too broad, each because what the runner saw did not match what it had been told. This does not change the gate. It stops the argument.",
   "acceptance": [
     "The message a refused run prints no longer claims the window is not drawn or that layout and animations stop",
-    "It says instead the two things that really fail: the app cannot be photographed, and the names the run looks controls up by never arrive even though the same controls are on screen with the right size and the right tooltip",
+    "It says instead the one thing that really fails: the names the run looks controls up by never arrive even though the same controls are on screen with the right size and the right tooltip. It does NOT claim the app cannot be photographed, because it can",
     "The repo rules (CLAUDE.md, the section headed A walk needs the screen unlocked) carry the same corrected reason, including that a forced run really does drive the app and move things",
     "The comment in the code that decides this says the same thing",
     "A run forced past the refusal is used to show it: name the walk, and quote both the step that drove the app and the step that could not find a control that was plainly there"
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-16T12:23:33.355Z",
       "note": "seq 2840 -> 10"
+    },
+    {
+      "t": "2026-09-16T12:49:06.899Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T12:56:15.344Z",
+      "note": "Reproduced on a locked Mac (CGSSessionScreenIsLocked 1, onConsole 1). Unforced: Scripts/playtest.sh Scripts/playtest/appearance-list-min.json -> status locked, 0 steps, exit 3. Forced with PHOTONZ_ALLOW_LOCKED_WALK=1 -> 5 steps, exit 1, failed at step 6. The drive worked: '[4 drag] (320,260) to (620,460) document ... grid lines caught 0, let go 0, changed 7 ... last 608.0/448.0'. Animations were running: '[5 wait] never went quiet (16 of 16 slices busy, 5 restless (animating CAShapeLayer transition)); mainBusy 757.3ms over 2488 passes'. And the control was plainly there with no name: '[6 panelMenu] FAILED: no menu called \"Add Effect\" is in the window; the ones that are: ... 25.0pt wide at x 1218.0 says \"Add an effect: a shadow, a glow, a border or a blur\"'."
+    },
+    {
+      "t": "2026-09-16T12:56:15.390Z",
+      "note": "CORRECTED acceptance item 2, which was wrong. It asked the message to say 'the app cannot be photographed'. It can. On the same locked Mac a two-snapshot walk (blank 640x480, snapshot 'before', key r, drag, snapshot 'after') wrote before-sc.png and after-sc.png, 2400x1600, DIFFERENT md5s, and after-sc.png shows the red rectangle the walk had just dragged out plus the Appearance panel that opened with it. Window captures line: '2 real pictures of the window: before-sc.png, after-sc.png'. Writing 'cannot be photographed' into the message would have planted the next false claim for the next runner to argue with, which is the exact failure this task exists to end."
+    },
+    {
+      "t": "2026-09-16T12:56:15.434Z",
+      "note": "Why a locked run LOOKS camera-less: the walk dies at a name lookup before it ever reaches a snapshot step (appearance-list-min fails at step 6 of 12; its snapshots come later), so no capture is ever attempted. On top of that PlaytestCaptureLedger.report hardcoded 'none. The screen was locked, so macOS refuses every one' whenever nothing was written and the screen was locked. That string, not a real refusal, is what the triage pass read as evidence of a refusal."
+    },
+    {
+      "t": "2026-09-16T12:56:15.478Z",
+      "note": "Shipped: PlaytestScreenState.swift header + lockedExplanation + allowedAnywayNote rewritten; PlaytestHarness.swift two comments; CLAUDE.md 'A walk needs the screen unlocked'; docs/design/playtest-harness.md. Scripts that repeated the wrong reason: playtest.sh, playtest-all.sh, probe-app.sh Grants block, queue/bin/sweep.sh (comment, status line, queue note). PlaytestCaptureLedger: dropped the screenLocked parameter from failure() and report() since the lock is neither an excuse nor an explanation; tests updated first (TDD). Only forced locked runs can reach that check, so the sweep is unaffected. Scripts/test.sh green: 7589 tests in 607 suites."
+    },
+    {
+      "t": "2026-09-16T12:56:15.520Z",
+      "note": "Verified each acceptance item by running it on the locked Mac, not by reading: refusal still exits 3 with the new wording; playtest-all.sh prints the new COULD NOT RUN block and exits 3; probe-app.sh Grants block prints the new text; the forced run's log carries the new allowed-anyway note; swift build clean."
+    },
+    {
+      "t": "2026-09-16T12:56:15.563Z",
+      "note": "left rough: PlaytestHarness.finish() still says a screen that locked mid-run 'takes the answer with it', which is true but for the name reason rather than the drawing reason. Left as is, the sentence does not assert the wrong cause. Also: the evidence is from this Mac with the login window up and the session still on console; nothing here claims capture survives every kind of lock, which is why the new wording tells the reader to believe the run's own Window captures line."
     }
-  ]
+  ],
+  "started": "2026-09-16T12:49:06.898Z"
 }

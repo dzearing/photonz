@@ -1,24 +1,41 @@
 // Whether this Mac's screen is locked, which decides whether a walk's answer
 // is worth anything at all.
 //
-// A scripted walk drives a real window and then reads it: the words on a
-// control, the rows in a list, where a tutorial's callout landed. All of that
-// needs the window to be COMPOSITED — actually drawn by the window server on a
-// real screen. When the screen is locked, the login window covers everything,
-// every other window goes occluded, and macOS stops the work it would otherwise
-// be wasting: layout and drawing are suspended, animations stop advancing, the
-// accessibility text SwiftUI hands to AppKit never materialises, and screen
-// capture refuses outright.
+// A scripted walk finds a control BY NAME: the button called "Add Effect", the
+// row called "Background". That name is the accessibility label SwiftUI hands
+// to AppKit, and it is the one thing a locked screen takes away. With the login
+// window up, every control still exists at the right place and the right size
+// and still carries its tooltip, and its name comes back EMPTY. So step after
+// step reports a control missing while it is plainly on screen, and a whole
+// sweep turns into failures that are not in the app.
 //
-// The app is fine. The walk is not: it reads a half-built window and reports
-// what it found as if the app had produced it.
+// Everything else about the app keeps working, and it is worth being exact
+// about that, because four separate runners have burned part of their turn
+// re-running walks by hand to disprove the old explanation. Forced past this
+// refusal with PHOTONZ_ALLOW_LOCKED_WALK=1 on 2026-09-16, one walk:
 //
-// That is not a hypothetical. The Mac locked at 2026-09-14 20:46:47. The sweep
-// that started at 20:42 collapsed four minutes in, with walks that take five
-// seconds taking a quarter of an hour; the last screen capture any walk managed
-// was written at 20:44; and the sweep at 00:09 reported 115 of 400 walks broken,
-// including every one of the 31 tutorial walks, on source that had passed all 31
-// eight hours earlier. Runners were then sent to hunt bugs that were not there.
+//   [4 drag] (320, 260) to (620, 460) document, ... changed 7 ... last 608.0/448.0
+//   [5 wait] never went quiet (16 of 16 slices busy, 5 restless (animating
+//            CAShapeLayer transition)); mainBusy 757.3ms over 2488 passes
+//   [6 panelMenu] FAILED: no menu called "Add Effect" is in the window; the ones
+//            that are: ... 25.0pt wide at x 1218.0 says "Add an effect: a
+//            shadow, a glow, a border or a blur"
+//
+// The drag drove the app and moved things, layout ran, animations were running,
+// and the control the step could not find was there at the right size with the
+// right tooltip and no name. Layout and animation do NOT stop. Nor does the
+// camera: a two-snapshot walk on the same locked Mac wrote before-sc.png and
+// after-sc.png, different pictures, the second one showing the rectangle the
+// walk had just dragged out. A locked run that photographed nothing had died at
+// a name lookup before it ever reached its snapshot step.
+//
+// The app is fine. The walk is not: it cannot find anything by name, so what it
+// reports is about the lock and not about the app.
+//
+// That is not a hypothetical. The Mac locked at 2026-09-14 20:46:47 and the
+// sweep at 00:09 reported 115 of 400 walks broken, including every one of the
+// 31 tutorial walks, on source that had passed all 31 eight hours earlier.
+// Runners were then sent to hunt bugs that were not there.
 //
 // So a walk run under a locked screen does not pass and does not fail. It did
 // not run, and it says so.
@@ -33,10 +50,13 @@ enum PlaytestScreenState {
 
     /// What to tell whoever reads the run, in words that say what to do.
     static let lockedExplanation =
-        "the Mac's screen was locked while this walk ran, so the window it drives was never "
-        + "drawn on screen: layout and animations stop, control names never arrive, and screen "
-        + "capture is refused. Nothing a walk reads in that state is worth reporting, so this "
-        + "run is not a pass and not a failure. Unlock the screen and run it again."
+        "the Mac's screen was locked while this walk ran. The app itself keeps working: it is "
+        + "still laid out, still animating, still driven by the walk's clicks and drags, and a "
+        + "snapshot step can still photograph it. What a locked screen takes away is the NAME on "
+        + "every control, which is how a walk finds one. Steps then report a control missing while "
+        + "it is on screen at the right size with the right tooltip, so the failures are in the "
+        + "walk and not in the app. This run is not a pass and not a failure. Unlock the screen "
+        + "and run it again."
 
     /// Whether the screen is locked right now.
     ///
@@ -54,9 +74,8 @@ enum PlaytestScreenState {
     /// `PHOTONZ_ALLOW_LOCKED_WALK=1`.
     ///
     /// For working on the harness itself, which is the one job that needs a
-    /// walk to run under a lock: the fix above was checked exactly this way,
-    /// by watching a tutorial step resolve its anchor with the window still
-    /// occluded. Nothing in the loop sets it.
+    /// walk to run under a lock: what the comment at the top of this file
+    /// knows about a locked screen was all learned this way.
     ///
     /// It buys the run, not the verdict. `done.json` still carries
     /// `screenLocked: true` and the log still says so in words, because a walk
@@ -68,8 +87,9 @@ enum PlaytestScreenState {
 
     /// What the log says when a run was let through.
     static let allowedAnywayNote =
-        "PHOTONZ_ALLOW_LOCKED_WALK=1, so this walk ran with the screen LOCKED. The window is "
-        + "not being drawn: layout and animations stop, control names never arrive and screen "
-        + "capture is refused. Whatever this run reports is not evidence about the app."
+        "PHOTONZ_ALLOW_LOCKED_WALK=1, so this walk ran with the screen LOCKED. The app is drawn "
+        + "and driven normally and can still be photographed, but no control carries a name, so "
+        + "every step that looks one up fails however healthy the app is. Whatever this run "
+        + "reports is not evidence about the app."
 }
 #endif

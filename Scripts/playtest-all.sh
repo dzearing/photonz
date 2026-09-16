@@ -72,12 +72,12 @@ fi
 
 # Hold the Mac awake for the length of the run.
 #
-# Every walk reads a window the window server has to have DRAWN. Let the screen
-# idle into sleep with a password asked for and it locks, the login window
-# covers everything, and from that moment every walk is reading a window that is
-# never drawn again: the sweep that started 2026-09-14 20:42 was four minutes in
-# when the Mac locked at 20:46:47, and it reported nineteen failures that were
-# not in the app. So a run that starts on an unlocked screen finishes on one.
+# Every walk finds its controls BY NAME. Let the screen idle into sleep with a
+# password asked for and it locks, and from that moment no control in the window
+# carries a name, so every walk reports things missing that are on screen: the
+# sweep that started 2026-09-14 20:42 was four minutes in when the Mac locked at
+# 20:46:47, and it reported nineteen failures that were not in the app. So a run
+# that starts on an unlocked screen finishes on one.
 #
 # -d -i holds off display sleep and idle sleep, which is what the screen saver
 # and the lock that follows it hang off. Deliberately NOT -u: that posts user
@@ -152,10 +152,11 @@ echo
 # on its own line, so nothing downstream reads the counts underneath as one.
 if (( LOCKED )); then
   echo "==> COULD NOT RUN: the Mac's screen is locked."
-  echo "    A locked screen puts the login window over everything, so the app's window is"
-  echo "    never drawn: layout and animations stop, control names never arrive and screen"
-  echo "    capture is refused. Every walk from that point reads a half-built window, so"
-  echo "    this run is not a pass and not a failure for any walk it did not reach."
+  echo "    The app keeps drawing, animating and taking the walk's clicks, and it can still"
+  echo "    be photographed. What a locked screen takes away is the NAME on every control,"
+  echo "    which is how a walk finds one, so every walk from that point reports controls"
+  echo "    missing that are on screen at the right size with the right tooltip. This run is"
+  echo "    not a pass and not a failure for any walk it did not reach."
   if (( RAN )); then
     echo "    It got through $RAN walk(s) before the lock; those counts are real."
     echo "==> $PASSED passed, ${#FAILED[@]} failed, then stopped"

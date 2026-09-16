@@ -149,11 +149,11 @@ private final class Run {
             return
         }
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
-        // Before anything is driven: a locked screen means the window this walk
-        // is about to read will never be drawn, so whatever it found would be a
-        // fact about the login window and not about the app
-        // (`PlaytestScreenState`). Stop here rather than spend five seconds
-        // producing an answer nobody may use.
+        // Before anything is driven: a locked screen strips the NAME off every
+        // control, and finding a control by name is how a walk does anything at
+        // all, so whatever this run found would be a fact about the lock and
+        // not about the app (`PlaytestScreenState`). Stop here rather than
+        // spend five seconds producing an answer nobody may use.
         if PlaytestScreenState.isLocked {
             guard PlaytestScreenState.isAllowedAnyway else {
                 finish(status: PlaytestScreenState.lockedStatus, steps: 0,
@@ -329,12 +329,13 @@ private final class Run {
         // line and nothing else: the walk stayed green, the offscreen drawing
         // was written under the name the audit copies, and two mornings of
         // audits carried drawings of the window in place of the window with
-        // nothing in the run to say so. Withheld in the two cases where no
-        // picture was ever possible — the screen was locked, or this copy of
-        // the app holds no Screen Recording grant — because neither is
-        // something the app did wrong, and both already say so out loud.
+        // nothing in the run to say so. Withheld in the one case where no
+        // picture was ever possible, which is this copy of the app holding no
+        // Screen Recording grant. A locked screen is NOT such a case: it still
+        // photographs fine, it only stops control names arriving
+        // (`PlaytestScreenState`).
         let granted = CGPreflightScreenCaptureAccess()
-        if status == "ok", let missed = captures.failure(screenLocked: locked, granted: granted) {
+        if status == "ok", let missed = captures.failure(granted: granted) {
             status = "failed"
             error = missed
         }
@@ -362,7 +363,7 @@ private final class Run {
         // it in words, so whoever writes the audit can see at a glance whether
         // there is a real picture of the app to ship or only a drawing of one.
         done["captures"] = captures.written
-        done["capturesSaid"] = captures.report(screenLocked: locked, granted: granted)
+        done["capturesSaid"] = captures.report(granted: granted)
         if !captures.refusals.isEmpty { done["capturesRefused"] = captures.refusals }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
         write(json: done, to: "done.json")

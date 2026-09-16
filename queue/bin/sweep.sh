@@ -80,7 +80,7 @@ status)
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
       const took = r.seconds >= 60 ? `${Math.round(r.seconds / 60)}m` : `${r.seconds}s`;
       if (r.screenLocked) {
-        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so the window was never drawn and no walk could read it.`);
+        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so no control carried a name and no walk could find anything.`);
         console.log("Nothing was filed from it and nothing is known about the walk set. It runs again once the screen is unlocked.");
       } else if (r.complete === false) {
         // Never let a cut-short run read as a clean bill of health: it only
@@ -188,8 +188,8 @@ run)
   took=$(( SECONDS - began_s ))
 
   # Exit 3 from playtest-all means the sweep DID NOT RUN: the Mac's screen was
-  # locked, so the app's window was never drawn and no walk's answer is about
-  # the app (Sources/Photonz/Playtest/PlaytestScreenState.swift). A sweep in
+  # locked, so no control in the window carried a name and no walk's answer is
+  # about the app (Sources/Photonz/Playtest/PlaytestScreenState.swift). A sweep in
   # that state files nothing and claims nothing. The request goes back on the
   # pile so the loop runs a real one once the screen is unlocked, which is the
   # difference between losing an hour and filing a hundred bugs that are not
@@ -214,7 +214,7 @@ run)
       }, null, 2) + "\n");
     ' "$LATEST" "$CLAIMED" "$REQ" "$began" "$(now)" "$took" "queue/sweep/$stamp.log"
     rm -f "$CLAIMED"
-    Q note "the walk sweep could not run: the Mac's screen is locked, so no walk can read the app's window. Nothing filed; the request is still pending." >/dev/null 2>&1
+    Q note "the walk sweep could not run: the Mac's screen is locked, so no control carries a name and no walk can find anything. Nothing filed; the request is still pending." >/dev/null 2>&1
     exit 3
   fi
 

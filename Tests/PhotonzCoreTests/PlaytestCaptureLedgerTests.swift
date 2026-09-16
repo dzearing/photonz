@@ -20,8 +20,8 @@ struct PlaytestCaptureLedgerTests {
     func neverAsked() {
         let ledger = PlaytestCaptureLedger()
         #expect(ledger.written.isEmpty)
-        #expect(ledger.failure(screenLocked: false, granted: true) == nil)
-        #expect(ledger.report(screenLocked: false, granted: true)
+        #expect(ledger.failure(granted: true) == nil)
+        #expect(ledger.report(granted: true)
             == "none. This walk never asked for one.")
     }
 
@@ -31,8 +31,8 @@ struct PlaytestCaptureLedgerTests {
         ledger.photographed("a-start")
         ledger.photographed("b-styled")
         #expect(ledger.written == ["a-start-sc.png", "b-styled-sc.png"])
-        #expect(ledger.failure(screenLocked: false, granted: true) == nil)
-        #expect(ledger.report(screenLocked: false, granted: true)
+        #expect(ledger.failure(granted: true) == nil)
+        #expect(ledger.report(granted: true)
             == "2 real pictures of the window: a-start-sc.png, b-styled-sc.png")
     }
 
@@ -40,7 +40,7 @@ struct PlaytestCaptureLedgerTests {
     func oneReadsAsOne() {
         var ledger = PlaytestCaptureLedger()
         ledger.photographed("only")
-        #expect(ledger.report(screenLocked: false, granted: true)
+        #expect(ledger.report(granted: true)
             == "1 real picture of the window: only-sc.png")
     }
 
@@ -49,20 +49,26 @@ struct PlaytestCaptureLedgerTests {
         var ledger = PlaytestCaptureLedger()
         ledger.photographed("a-start")
         ledger.refused("b-styled")
-        let failure = ledger.failure(screenLocked: false, granted: true)
+        let failure = ledger.failure(granted: true)
         #expect(failure != nil)
         #expect(failure?.contains("b-styled") == true)
         // The reason it matters, in the words the person reading it needs.
         #expect(failure?.contains("audit") == true)
     }
 
-    @Test("A locked screen is not the walk's failure")
-    func lockedIsNotAFailure() {
+    // A locked screen used to excuse every refusal and to explain away every
+    // run that photographed nothing, on the belief that macOS refuses a capture
+    // while the login window is up. It does not. Forced past the refusal with
+    // PHOTONZ_ALLOW_LOCKED_WALK=1 on 2026-09-16, a two-snapshot walk wrote
+    // before-sc.png and after-sc.png, different pictures, the second one showing
+    // the rectangle the walk had just dragged out. So the lock is not an excuse
+    // and is not an explanation, and neither call takes it any more.
+    @Test("A refusal is still a failure even with the screen locked")
+    func lockIsNoLongerAnExcuse() {
         var ledger = PlaytestCaptureLedger()
         ledger.refused("a-start")
-        #expect(ledger.failure(screenLocked: true, granted: true) == nil)
-        #expect(ledger.report(screenLocked: true, granted: true)
-            == "none. The screen was locked, so macOS refuses every one.")
+        #expect(ledger.failure(granted: true) != nil)
+        #expect(ledger.report(granted: true) == "none. 1 was refused: a-start")
     }
 
     @Test("No Screen Recording grant is not the walk's failure either")
@@ -71,8 +77,8 @@ struct PlaytestCaptureLedgerTests {
         ledger.skippedUngranted()
         ledger.skippedUngranted()
         #expect(ledger.ungranted == 2)
-        #expect(ledger.failure(screenLocked: false, granted: false) == nil)
-        #expect(ledger.report(screenLocked: false, granted: false)
+        #expect(ledger.failure(granted: false) == nil)
+        #expect(ledger.report(granted: false)
             == "none. This app holds no Screen Recording grant, so it may not photograph its own window.")
     }
 
@@ -82,7 +88,7 @@ struct PlaytestCaptureLedgerTests {
         ledger.photographed("a-start")
         ledger.refused("b-styled")
         ledger.refused("c-done")
-        #expect(ledger.report(screenLocked: false, granted: true)
+        #expect(ledger.report(granted: true)
             == "1 real picture of the window: a-start-sc.png; 2 more were refused: b-styled, c-done")
     }
 
@@ -90,15 +96,15 @@ struct PlaytestCaptureLedgerTests {
     func allRefused() {
         var ledger = PlaytestCaptureLedger()
         ledger.refused("a-start")
-        #expect(ledger.report(screenLocked: false, granted: true)
+        #expect(ledger.report(granted: true)
             == "none. 1 was refused: a-start")
     }
 
-    @Test("A locked screen wins over a missing grant in the explanation")
-    func lockedOutranksUngranted() {
+    @Test("A missing grant explains a run that photographed nothing")
+    func ungrantedExplainsAnEmptyRun() {
         var ledger = PlaytestCaptureLedger()
         ledger.skippedUngranted()
-        #expect(ledger.report(screenLocked: true, granted: false)
-            == "none. The screen was locked, so macOS refuses every one.")
+        #expect(ledger.report(granted: false)
+            == "none. This app holds no Screen Recording grant, so it may not photograph its own window.")
     }
 }

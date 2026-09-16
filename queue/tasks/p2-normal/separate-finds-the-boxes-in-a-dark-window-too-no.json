@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T09:27:13.999Z",
-  "updated": "2026-09-16T12:46:33.555Z",
+  "updated": "2026-09-16T12:46:47.238Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED, not read. Bench over six real captures (Tests/PhotonzRenderTests/SeparateBenchTests.swift, off unless you name files):\n\n  PHOTONZ_SEPARATE_BENCH=\"/tmp/separate-bench/settings-pane.png,/tmp/separate-bench/inspector-dark.png,/tmp/separate-bench/dashboard-web.png,/tmp/separate-bench/wikipedia-web.png,/tmp/separate-bench/photonz-fullscreen.png\" Scripts/test.sh -c release --filter SeparateBench\n\n  BENCH settings-pane.png | 1440 x 960 (1.4 MP) at 2x | 9 runs, 2 boxes, 2 left\n  BENCH inspector-dark.png | 602 x 704 (0.4 MP) at 2x | 10 runs, 0 boxes, 7 left\n  BENCH dashboard-web.png | 2880 x 1770 (5.1 MP) at 1x | 142 runs, 0 boxes, 580 left\n  BENCH wikipedia-web.png | 2880 x 1770 (5.1 MP) at 1x | 98 runs, 9 boxes, 118 left\n  BENCH photonz-fullscreen.png | 3456 x 2234 (7.7 MP) at 2x | 93 runs, 0 boxes, 26 left\n\nThree of five, including a capture of this app, return zero boxes. The cause is in the design doc (docs/design/separate-into-layers.md, The boxes, step 2): the page is the region holding most of the picture outer border, and if no one region holds half of it nothing is claimed at all. A window with a dark canvas, a toolbar and two panels has no such region, so the whole box pass gives up. Step 5 (something that fills the picture IS the picture) already descends one level; the fix is likely to let the sweep read a REGION of the picture against its own local background rather than demanding one page for the whole frame.",
@@ -106,7 +106,7 @@
     }
   ],
   "started": "2026-09-16T12:25:17.988Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-16T12:18:01.702Z",
     "exit": 0,

@@ -18,10 +18,20 @@ import Foundation
 ///
 /// So every attempt is recorded here, and the run answers for them at the end:
 /// a picture that could have been taken and was not is a FAILURE, while a
-/// picture that was never possible is only a fact worth saying out loud. Two
-/// things make it impossible and neither is the app's doing: the Mac's screen
-/// is locked, so macOS refuses every capture there is, or this copy of the app
-/// holds no Screen Recording grant, which only a person can give it.
+/// picture that was never possible is only a fact worth saying out loud. One
+/// thing makes it impossible and it is not the app's doing: this copy of the
+/// app holds no Screen Recording grant, which only a person can give it.
+///
+/// A locked screen used to be the other one, and it was wrong. The belief was
+/// that macOS refuses every capture while the login window is up, so a locked
+/// run's refusals were excused and a locked run that photographed nothing was
+/// explained by the lock. Forced past the walk-level refusal on 2026-09-16, a
+/// two-snapshot walk on a locked Mac wrote before-sc.png and after-sc.png:
+/// different pictures, the second showing the rectangle the walk had just
+/// dragged out. The lock stops control NAMES arriving, which is why walks under
+/// it are worthless, but it does not stop the camera. What made a locked run
+/// look camera-less was the walk dying at a name lookup before it ever reached
+/// a snapshot step.
 public struct PlaytestCaptureLedger: Sendable, Equatable {
 
     /// The `<name>-sc.png` files actually written, in the order they were taken.
@@ -50,21 +60,22 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
 
     /// Why this run failed to photograph the app, or nil when it did not fail.
     ///
-    /// Only a refusal that had no excuse counts: the screen was unlocked and
-    /// the grant was held, so the picture was there to be taken.
-    public func failure(screenLocked: Bool, granted: Bool) -> String? {
-        guard !refusals.isEmpty, !screenLocked, granted else { return nil }
+    /// Only a refusal that had no excuse counts, and the grant is now the only
+    /// excuse there is: hold it and the picture was there to be taken, locked
+    /// screen or not.
+    public func failure(granted: Bool) -> String? {
+        guard !refusals.isEmpty, granted else { return nil }
         let many = refusals.count != 1
         return "\(refusals.count) window capture\(many ? "s" : "") this walk asked for never happened "
             + "(\(refusals.joined(separator: ", "))), so only the offscreen drawings were written. "
-            + "The screen was unlocked and this app holds Screen Recording, so a picture was there to be "
-            + "taken: an audit built from this run would show a drawing of the window instead of the window. "
+            + "This app holds Screen Recording, so a picture was there to be taken: an audit built from "
+            + "this run would show a drawing of the window instead of the window. "
             + "Each refusal gives its reason in log.json under \"capture\"."
     }
 
     /// One line for whoever reads the run: what there is to look at, or why
     /// there is nothing.
-    public func report(screenLocked: Bool, granted: Bool) -> String {
+    public func report(granted: Bool) -> String {
         if !written.isEmpty {
             let many = written.count != 1
             var line = "\(written.count) real picture\(many ? "s" : "") of the window: "
@@ -75,9 +86,6 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
             }
             return line
         }
-        // A locked screen first: it refuses every capture there is, so it
-        // explains a missing grant's skip as well as a refusal.
-        if screenLocked { return "none. The screen was locked, so macOS refuses every one." }
         if !granted || ungranted > 0 {
             return "none. This app holds no Screen Recording grant, so it may not photograph its own window."
         }

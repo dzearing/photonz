@@ -167,11 +167,11 @@ echo "$LINE"
 # costs. Both survive rebuilds (the probe is signed with the stable dev
 # identity), so this is asked once per machine, not once per run.
 if [[ "$LOCKED" == "locked" ]]; then
-  echo "    THE SCREEN IS LOCKED, so this app is not being drawn at all: the login window"
-  echo "    covers it, layout and animations stop, control names never arrive and screen"
-  echo "    capture is refused. Every walk refuses to run and says so rather than report a"
-  echo "    pass or a failure, and nothing you see here is a fact about the app. Unlock the"
-  echo "    screen. (What this cost on 2026-09-14: Sources/Photonz/Playtest/PlaytestScreenState.swift)"
+  echo "    THE SCREEN IS LOCKED. The app still draws, animates, takes clicks and can be"
+  echo "    photographed, but no control carries a NAME, and a name is how a walk finds one."
+  echo "    So every walk refuses to run rather than report failures that are in the lock and"
+  echo "    not in the app, and nothing a forced run says here is a fact about the app."
+  echo "    Unlock the screen. (What this cost on 2026-09-14: Sources/Photonz/Playtest/PlaytestScreenState.swift)"
 fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"

@@ -97,13 +97,22 @@ typo comes back in a second rather than as a timeout on an empty folder:
 
 ## A locked screen means the walk did not run
 
-Everything above is read off a window the window server has actually DRAWN.
-Lock the Mac and it stops drawing it: the login window covers every other
-window, macOS suspends layout and drawing for what it now considers hidden,
-Core Animation stops advancing, the accessibility text SwiftUI hands to AppKit
-is never reconciled onto the control, and ScreenCaptureKit refuses with
-`SCStreamErrorDomain -3811`. A walk pointed at that window reads a half-built
-app and reports what it found as though the app had produced it.
+Everything above is found BY NAME: the button called "Add Effect", the row
+called "Background". That name is the accessibility label SwiftUI hands to
+AppKit, and it is the one thing a locked Mac takes away. With the login window
+up, every control is still laid out at the right place and the right size and
+still carries its tooltip, and its name comes back empty, so a walk reports
+control after control missing while they are on screen.
+
+The rest of the app carries on. Forced past the refusal with
+`PHOTONZ_ALLOW_LOCKED_WALK=1` on a locked Mac, a walk still dragged out a
+rectangle and moved things (`changed 7 ... last 608.0/448.0`), still had
+animations running (`5 restless (animating CAShapeLayer transition)`), and a
+two-snapshot walk still wrote `before-sc.png` and `after-sc.png`, different
+pictures, the second showing the rectangle it had just drawn. So layout,
+animation and screen capture all keep working; only the names go. A locked run
+that photographed nothing had died at a name lookup before reaching its
+snapshot step.
 
 So a locked screen is refused rather than waited out:
 
@@ -114,6 +123,11 @@ So a locked screen is refused rather than waited out:
 | `Scripts/playtest-all.sh` | Stops at the first locked walk (every walk after it would be locked too), prints `COULD NOT RUN`, exits 3. Counts from walks it reached before the lock are still real and still printed. |
 | `queue/bin/sweep.sh` | Files nothing, records `screenLocked: true`, and hands the request back so the loop runs a real sweep once the screen is unlocked. |
 | `Scripts/probe-app.sh` | Says `· screen locked` on its `Grants:` line, with the cost spelled out. |
+
+The lock is NOT an excuse for a missing picture. `PlaytestCaptureLedger` used to
+withhold a capture failure and report "macOS refuses every one" whenever the
+screen was locked; both were wrong and both are gone, so a refused capture is a
+failure whenever this app holds Screen Recording, locked or not.
 
 Nothing tries to unlock the Mac, and nothing fights a person who locked it on
 purpose. What the harness does do is hold a run that STARTED unlocked awake for

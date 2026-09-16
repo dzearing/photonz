@@ -61,14 +61,16 @@ if [[ -f "$OUT/done.json" ]]; then
   echo
   grep -q '"status" : "ok"' "$OUT/done.json" && STATUS=0
   # Exit 3 means THE WALK DID NOT RUN, which is not the same as failing. The
-  # screen was locked, so the window never got drawn and nothing the walk read
+  # screen was locked, so no control carried a name and nothing the walk read
   # was about the app. playtest-all.sh counts these apart from failures and the
   # sweep files no bugs from them. See Sources/Photonz/Playtest/PlaytestScreenState.swift.
   if grep -q '"status" : "locked"' "$OUT/done.json"; then
     STATUS=3
     echo "!! This walk could not run: the Mac's screen is locked."
-    echo "   A locked screen covers every window, so the app is never drawn and a walk"
-    echo "   reads a half-built window. Unlock the screen and run it again."
+    echo "   The app is fine and keeps drawing, animating and taking clicks. What a locked"
+    echo "   screen takes away is the NAME on every control, which is how a walk finds one,"
+    echo "   so steps report controls missing that are plainly on screen. Unlock the screen"
+    echo "   and run it again."
   fi
 else
   echo "!! No done.json after ${TIMEOUT}s. The probe may still be running; its log so far:" >&2
