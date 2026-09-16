@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T07:02:07.788Z",
+  "updated": "2026-09-16T08:16:59.157Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -235,6 +235,10 @@
     {
       "t": "2026-09-16T07:02:07.787Z",
       "note": "turn-into-a-path-walk now has an owner: pressing-return-answers-a-question-the-app-asks. It fails at step 42 (expectPath: no path in the document) because step 40 answers the confirmation sheet with `key return` and the press never reaches the button. Same root cause made turn-into-a-picture-walk pass while proving nothing until 2026-09-16."
+    },
+    {
+      "t": "2026-09-16T08:16:59.156Z",
+      "note": "one-outline-two-kinds-walk fails the same way highlight-one-outline-walk does, at panelMenu: 'no menu called \"Add Effect\" is in the window', and the listing right after names two 25.0pt menus with EMPTY names whose tooltips are the Add Effect and Add Motion ones. Seen 2026-09-16 01:0x on main plus an unrelated caption-caret change (PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build outline: 4 passed, 2 failed). Same root cause as the copy-a-look / motion-strip entries above: the menu is there, its accessibility name is not."
     }
   ]
 }

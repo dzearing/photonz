@@ -1999,7 +1999,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectCaption", "aligned": "centred", "caret": "centred",
                        "outline": "hugs the bubble" } ] }
         """)
-        guard case .expectCaption(let aligned, let caret, let outline) = script.steps[0] else {
+        guard case .expectCaption(let aligned, let caret, _, let outline) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(aligned == .centred)
@@ -2014,11 +2014,12 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectCaption", "caret": "left" } ] }
         """)
-        guard case .expectCaption(let aligned, let caret, let outline) = script.steps[0] else {
+        guard case .expectCaption(let aligned, let caret, let height, let outline) = script.steps[0] else {
             Issue.record("expectCaption"); return
         }
         #expect(aligned == nil)
         #expect(caret == .left)
+        #expect(height == nil)
         #expect(outline == nil)
     }
 
@@ -2028,6 +2029,44 @@ struct PlaytestScriptTests {
         #expect(throws: PlaytestScriptError.self) {
             try decode("""
             { "steps": [ { "do": "expectCaption" } ] }
+            """)
+        }
+    }
+
+    /// A caret can sit in the right place and still be drawn wrong: on an
+    /// empty new line it came out about three fifths of a line tall, because
+    /// the field was only as tall as the bubble and AppKit cut the caret off
+    /// at the field's edge. Where it sits and how tall it is are two claims.
+    @Test("An expectCaption step claims how tall the caret is drawn")
+    func expectCaptionClaimsCaretHeight() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCaption", "caret": "centred", "caretHeight": "full" } ] }
+        """)
+        guard case .expectCaption(let aligned, let caret, let height, let outline) = script.steps[0] else {
+            Issue.record("expectCaption"); return
+        }
+        #expect(aligned == nil)
+        #expect(caret == .centred)
+        #expect(height == .full)
+        #expect(outline == nil)
+    }
+
+    @Test("caretHeight is a claim on its own")
+    func expectCaptionCaretHeightAlone() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCaption", "caretHeight": "short" } ] }
+        """)
+        guard case .expectCaption(_, let caret, let height, _) = script.steps[0] else {
+            Issue.record("expectCaption"); return
+        }
+        #expect(caret == nil)
+        #expect(height == .short)
+    }
+
+    @Test func expectCaptionRefusesACaretHeightItDoesNotKnow() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectCaption", "caretHeight": "tall" } ] }
             """)
         }
     }

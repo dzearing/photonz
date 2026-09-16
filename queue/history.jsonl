@@ -4174,3 +4174,12 @@
 {"t":"2026-09-16T07:54:34.354Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
 {"t":"2026-09-16T07:54:34.398Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
 {"t":"2026-09-16T07:54:43.961Z","ev":"task_done","id":"find-out-whether-a-text-style-can-be-dragged-ont","from":"in_progress","note":"It did not work, and now it does. The canvas never registered com.photonz.text-style, so AppKit delivered a style dragged onto the picture to nobody; one type added to registerForDraggedTypes in CanvasView.swift fixes it. The walk harness now enforces AppKit's type gate (PlaytestPanelDrag.canReceive + dragTile), which is what makes the bug visible: backing the fix out fails text-style-drag-walk at step 35 and tutorial-text-styles-walk at step 38, putting it back runs 62 steps green with nine real window captures. Eight other dragTile walks checked unaffected, Scripts/test.sh green. Audit: queue/audits/2026-09-16-text-style-drag.json. Not confirmed with a real pointer: no script can start an AppKit drag session, so the audit asks the user to do that one step."}
+{"t":"2026-09-16T07:55:27.517Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T07:55:27.623Z","ev":"task_started","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn","title":"The caret on a caption's empty new line is drawn short","priority":"p2-normal"}
+{"t":"2026-09-16T08:16:59.158Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-16T08:16:59.199Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-16T08:17:07.706Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
+{"t":"2026-09-16T08:17:07.749Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
+{"t":"2026-09-16T08:17:07.793Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
+{"t":"2026-09-16T08:17:07.836Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
+{"t":"2026-09-16T08:17:07.879Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}

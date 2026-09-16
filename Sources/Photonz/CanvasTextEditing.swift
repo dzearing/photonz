@@ -369,7 +369,18 @@ extension CanvasNSView {
         // the label it is standing in for.
         let frame = CGRect(x: pillCenter.x - width / 2, y: pillCenter.y - height / 2,
                            width: width, height: height)
-        editor.frame = frame
+        // The FIELD is as tall as the draft is laid out, which is a line more
+        // than the bubble whenever the last keystroke was a bare Return. The
+        // bubble keeps following the committed text — that is what stops a
+        // Return you are about to throw away from resizing it — but the caret
+        // waiting on that empty line is a whole line tall, and AppKit cuts an
+        // insertion point off at the field's bottom edge: the caret came out
+        // about three fifths of a line (14.5 points against 23.8). The field
+        // draws nothing of its own here, so the extra height is invisible.
+        editor.frame = CGRect(origin: frame.origin,
+                              size: CGSize(width: frame.width,
+                                           height: max(frame.height,
+                                                       draftHeight(in: editor, inset: inset))))
         // The rasterizer's border straddles the pill's edge (a centered stroke)
         // while a layer's border is drawn inside its bounds, so the bubble is
         // grown by half a border and its inner stroke lands on the same band.
@@ -392,6 +403,24 @@ extension CanvasNSView {
             captionDraftPillRect = bubble
             refreshSelectionChrome()
         }
+    }
+
+    /// How tall the draft is actually laid out in the field, in VIEW points:
+    /// the lines AppKit made of it plus the pill's padding top and bottom.
+    ///
+    /// Asked of the layout, not measured a second way, so the one measurer
+    /// rule holds: `CaptionMetrics` still sizes the bubble, and this only says
+    /// how much room the text view needs to draw what it has already laid out.
+    /// The empty line a trailing Return leaves is a real line fragment with no
+    /// glyphs in it, which is why `usedRect` alone is not enough.
+    private func draftHeight(in editor: NSTextView, inset: CGFloat) -> CGFloat {
+        guard let layout = editor.layoutManager, let container = editor.textContainer else {
+            return 0
+        }
+        layout.ensureLayout(for: container)
+        let laidOut = max(layout.usedRect(for: container).maxY,
+                          layout.extraLineFragmentRect.maxY)
+        return laidOut + 2 * inset
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and
@@ -635,6 +664,9 @@ struct CaptionFieldGeometry {
     /// Where AppKit will draw the insertion point: the rect the input system
     /// is told about, so it is the caret a person sees.
     let caret: CGRect?
+    /// A whole line of the caption's face, to hold the caret's height against.
+    /// A caret shorter than this is being cut off by something.
+    let lineHeight: CGFloat
 }
 
 extension CanvasNSView {
@@ -654,9 +686,17 @@ extension CanvasNSView {
         if let window, screenRect.width.isFinite, screenRect.height.isFinite {
             caret = doc(convert(window.convertFromScreen(screenRect), from: nil))
         }
+        var lineHeight: CGFloat = 0
+        if let layout = editor.layoutManager, let font = editor.font {
+            lineHeight = layout.defaultLineHeight(for: font) / zoom
+        }
+        // The BUBBLE is the pill on screen, which the field is allowed to be
+        // taller than: a bare Return leaves an empty line for the caret to
+        // wait on that the bubble does not grow for.
         return CaptionFieldGeometry(layerID: layerID, draft: editor.string,
                                     centred: editor.alignment == .center,
-                                    bubble: doc(editor.frame), caret: caret)
+                                    bubble: captionDraftPillRect ?? doc(editor.frame),
+                                    caret: caret, lineHeight: lineHeight)
     }
 
     /// The same, in the words a walk's log prints.
@@ -668,7 +708,7 @@ extension CanvasNSView {
             // the caret sits, against how wide the bubble is. A caret at 0
             // with the words about to land in the middle is the reported bug.
             "\(rounded($0.minX - field.bubble.minX)) in of \(rounded(field.bubble.width))"
-                + ", tall \(rounded($0.height))"
+                + ", tall \(rounded($0.height)) of a \(rounded(field.lineHeight)) line"
         } ?? "unknown"
         return "draft \"\(draft)\" \(field.centred ? "centred" : "left"), "
             + "caret sits \(caret), bubble \(field.bubble.integral)"

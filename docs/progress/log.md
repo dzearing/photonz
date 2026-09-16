@@ -16739,3 +16739,29 @@ Next: a person still has to drag a style with a real pointer, which is what the
 audit asks for; and whether adding `.file` to the canvas registration wholesale
 would steal picture drags from the window-level drop is still an open question
 nobody needs answered yet.
+
+## 2026-09-16 — The caret on a caption's empty new line
+
+- Fixed: press Return in an arrow caption and the caret on the fresh line is a
+  whole line tall again, the same caret a line with words on it gets. It was
+  drawn at about three fifths of a line (14.5 points against 23.8).
+- The cause was not the one the task guessed. The line fragment was laid out
+  correctly all along, in the right font; AppKit was clipping the insertion
+  point at the text view's bottom edge, and the caption field's frame is the
+  bubble, which follows the committed text, which trims a trailing Return. So
+  the line the caret waits on hung below the field.
+- `layoutCaptionEditor` now sizes the FIELD to the laid-out draft while the
+  bubble keeps following the committed text, so a bare Return still cannot
+  resize the pill. The field paints nothing of its own, so the extra height is
+  invisible.
+- `expectCaption` gained a `caretHeight` claim ("full" or "short"), parsed in
+  PhotonzCore and checked in the harness against a line of the caption's face.
+  Reverting the fix fails the walk at step 17 with the numbers in the message.
+- Next: the audit asks the user whether a caret hanging half below the bubble
+  reads as the next line waiting or as a glitch. If it reads as a glitch, the
+  answer is to let the bubble grow on a bare Return, which is the rule the
+  2026-09-12 fix deliberately set the other way.
+- Open question: every walk tonight reported the screen locked and refused to
+  run, yet with the override the same walks pass, photograph the window fully
+  drawn, and report numbers identical to the ones recorded in daylight on
+  2026-09-12. Folded into a-hundred-and-fifteen-walks-fail-on-code-that-pa.

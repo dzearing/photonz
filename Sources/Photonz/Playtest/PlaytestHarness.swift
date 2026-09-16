@@ -1337,9 +1337,10 @@ private final class Run {
             note(number, step.name, try checkRegion(reads: reads, present: present),
                  state: describe())
 
-        case .expectCaption(let aligned, let caret, let outline):
+        case .expectCaption(let aligned, let caret, let caretHeight, let outline):
             note(number, step.name,
-                 try checkCaption(aligned: aligned, caret: caret, outline: outline),
+                 try checkCaption(aligned: aligned, caret: caret,
+                                  caretHeight: caretHeight, outline: outline),
                  state: describe())
 
         case .expectSectionFits(let section):
@@ -3835,6 +3836,7 @@ private final class Run {
     /// the shape it had when the field opened, and the two-line caption walk
     /// had been photographing both for a week.
     private func checkCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
+                              caretHeight: CaptionCaretHeight?,
                               outline: CaptionOutlineClaim?) throws -> String {
         let editor = try requireEditor()
         guard let canvas, let field = canvas.playtestCaptionGeometry else {
@@ -3873,6 +3875,30 @@ private final class Run {
                 }
             }
             held.append("caret \(caret.rawValue) at \(Self.round1(across)) in of \(Self.round1(field.bubble.width))")
+        }
+        if let caretHeight {
+            guard let box = field.caret else {
+                throw Failure(description: "the field will not say where its caret is")
+            }
+            // A point of slack: the caret is laid out in view points and read
+            // back in document ones, so a zoom that is not a whole number
+            // leaves a fraction behind.
+            let whole = box.height >= field.lineHeight - 1
+            switch caretHeight {
+            case .full:
+                guard whole else {
+                    throw Failure(description: "the caret is drawn \(Self.round1(box.height)) points tall "
+                        + "where a line of this caption is \(Self.round1(field.lineHeight)): it is being cut "
+                        + "off, most likely by a field that is not as tall as the line the caret waits on")
+                }
+                held.append("caret a full \(Self.round1(box.height)) point line tall")
+            case .short:
+                guard !whole else {
+                    throw Failure(description: "the caret is drawn \(Self.round1(box.height)) points tall, "
+                        + "a whole \(Self.round1(field.lineHeight)) point line, and the step claimed it would be short")
+                }
+                held.append("caret short at \(Self.round1(box.height)) of \(Self.round1(field.lineHeight))")
+            }
         }
         if let outline {
             let drawn = canvas.playtestSelectionOutlineBox

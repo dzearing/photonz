@@ -1181,6 +1181,23 @@ public enum CaptionCaretSpot: String, CaptionClaimWord {
     public static var claimWords: [String] { ["centred", "left"] }
 }
 
+/// How tall the caret is drawn, against a whole line of the caption's face.
+///
+/// Where the caret sits and how tall it is are two different wrongs. On
+/// 2026-09-12 it sat in the wrong place; the day after, on an empty new line,
+/// it sat in the right place and was drawn about three fifths of a line tall,
+/// because the field was only as tall as the bubble and the line the caret was
+/// waiting on hung below the field's bottom edge.
+public enum CaptionCaretHeight: String, CaptionClaimWord {
+    /// A whole line of the caption's face, the same caret a line with words on
+    /// it gets.
+    case full
+    /// Cut off short of a line, which nothing should be.
+    case short
+    public init?(claim: String) { self.init(rawValue: claim) }
+    public static var claimWords: [String] { ["full", "short"] }
+}
+
 /// What the blue selection outline must be doing while the field is open.
 /// A corner of a layer's box, named the way a person points at one.
 public enum LayerBoxCorner: String, Sendable {
@@ -1824,7 +1841,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// when the field opened — and a walk had photographed both without
     /// noticing either.
     case expectCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
-                       outline: CaptionOutlineClaim?)
+                       caretHeight: CaptionCaretHeight?, outline: CaptionOutlineClaim?)
     /// The named dock section must be drawing whatever it holds down to and
     /// including its first OPEN entry, whole.
     ///
@@ -2551,11 +2568,13 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let aligned: CaptionDraftAlignment? = try word("aligned")
             let caret: CaptionCaretSpot? = try word("caret")
+            let caretHeight: CaptionCaretHeight? = try word("caretHeight")
             let outline: CaptionOutlineClaim? = try word("outline")
-            guard aligned != nil || caret != nil || outline != nil else {
-                throw f.invalid("caret", "an expectCaption has to claim something: \"aligned\", \"caret\" or \"outline\". A step that claims nothing passes whatever the app does")
+            guard aligned != nil || caret != nil || caretHeight != nil || outline != nil else {
+                throw f.invalid("caret", "an expectCaption has to claim something: \"aligned\", \"caret\", \"caretHeight\" or \"outline\". A step that claims nothing passes whatever the app does")
             }
-            self = .expectCaption(aligned: aligned, caret: caret, outline: outline)
+            self = .expectCaption(aligned: aligned, caret: caret,
+                                  caretHeight: caretHeight, outline: outline)
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
         case "expectInView":

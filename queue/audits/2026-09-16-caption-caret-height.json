@@ -1,0 +1,26 @@
+{
+  "feature": "The caret on a caption's empty new line",
+  "epic": "measure-redline",
+  "summary": "Press Return in an arrow caption and the blinking caret on the fresh line is now a whole line tall, the same caret a line with words on it gets. It used to be drawn at about three fifths of a line while the bubble stayed put.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default. Nothing to switch on.",
+  "try": [
+    { "do": "Open any screenshot and press A for the Arrow tool." },
+    { "do": "Drag an arrow across the picture. A caption field opens on it." },
+    { "do": "Type Hello.", "shot": "2026-09-16-caption-caret-height.png" },
+    { "do": "Press Return once and stop. Watch the caret blinking below the word." },
+    { "do": "Type X and watch the bubble grow round the second line." },
+    { "do": "Press Return again, then Delete four times to come back to one line." },
+    { "do": "Press Command Return to land the caption.", "shot": "2026-09-16-caption-caret-height-committed.png" }
+  ],
+  "evaluate": [
+    "Does the caret on the empty new line now read as a caret rather than a glitch?",
+    "The caret sits on a line the bubble has not grown for yet, so about the bottom half of it hangs below the pill's edge. Does that read as the next line waiting, or does it look broken?",
+    "Would you rather the bubble grew a line the moment you press Return, even though it shrinks back if you leave the line empty?",
+    "Does anything jump when you type the first character of the new line?"
+  ],
+  "rough": [
+    "The caret hangs about halfway below the bubble's bottom edge on an empty new line, because the bubble is deliberately not allowed to grow for a Return you have not typed anything on yet. That is the trade this fix makes and it is the one thing here worth a second opinion.",
+    "The caret cannot be photographed at all: the walk drives a window that is never the active app, so macOS does not blink an insertion point in it. Both pictures here are real screen captures of the window, but the caret is not in them. The caret is checked as a number instead, and the walk now fails if it is drawn short.",
+    "The Mac's screen was reported locked for every run tonight, so the walks were run with the override that lets them run anyway. The numbers came back identical to the ones recorded for the same walk in daylight on 2026-09-12, and the window captures are fully drawn, so they are trustworthy here."
+  ]
+}
