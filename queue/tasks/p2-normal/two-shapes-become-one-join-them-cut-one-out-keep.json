@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 170,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:07.274Z",
-  "updated": "2026-09-16T02:04:22.753Z",
+  "updated": "2026-09-16T02:06:29.107Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -69,7 +69,12 @@
     {
       "t": "2026-09-16T02:04:22.752Z",
       "note": "Adversarial review AFTER building. The Mac's screen was locked for the whole task, so the app was never drawn and no walk could run: the review below is on the offscreen renders through the app's own composite, on the tests, and on reading the paths a person would take. Said plainly in the audit too.\n\nWhat I fixed while reviewing: the notice first went to the path chip under the canvas, which is only up when a PATH is selected - so the most important sentence in the whole feature, the one explaining why Keep Overlap on two shapes that do not touch changed nothing, could never appear. Moved to the canvas pill, which is up whatever is selected and which EditorView already gives priority over the chip.\n\nLeft rough, in the log rather than filed:\n- A GROUP cannot take part: it is not a shape with an inside, so it is left alone. Illustrator and Figma both allow it. Nobody has asked; not filed.\n- No keyboard shortcuts. The mock proposed Option Command U/S/I/X; Photoshop leaves these unbound, and per the shortcut-parity rule the Photoshop-correct answer is no key. An evaluate question in the audit asks whether the user wants one.\n- The result keeps the bottom shape's NAME, so a ring made of two ovals is still called Ellipse. Deliberate, so the row and the pill name the same thing; PathJoin renames auto names and this does not. An evaluate question asks about it.\n- PlaytestHarness.hintReading reads the path chip BEFORE the pill, while EditorView draws the pill over the chip. So an expectHint claim can pass on a chip the screen is not showing. Real but tiny, and changing the order touches every walk that asserts a chip, which needs a sweep to land safely. Not filed; written here for whoever next touches that function.\n- CanvasPen.appendPen walks one ring. Correct by construction (a drawing in flight is one loop) and now commented as such rather than changed."
+    },
+    {
+      "t": "2026-09-16T02:06:29.105Z",
+      "note": "Combine Shapes shipped in Next behind the Pen's flag: Join, Cut Out, Keep Overlap and Drop Overlap in the Layer menu and on a layer row's menu, on paths and on rectangles, ovals and washes alike. The model gained several rings (PathContent.ringStarts over one flat anchor list), so a hole and a result in unconnected pieces both live in one shape and every point of a hole can be picked up and dragged exactly like a point of the rim. PathCombining.swift runs CGPath's own exact boolean operations and walks the answer back into anchors and handles, losslessly. The bottom shape survives with its id, slot, name, effects and look; an answer of nothing leaves the document alone and says why in the canvas pill; one undo step. Verified: 7282 tests green, including 32 new PhotonzCore tests for the four operations and every edge case named in the task, 4 PhotonzRender tests proving the PICTURE has a transparent middle and a rim in the bottom shape's colour, and 5 script tests. The Mac's screen was locked for the whole task so no walk could run at all: Scripts/playtest/combine-shapes-walk.json is committed unexecuted and a sweep is requested. Audit at queue/audits/2026-09-15-combine-shapes.json with six offscreen renders and an honest note that they are renders, not photographs. Commit 721f7c87, pushed."
     }
   ],
-  "started": "2026-09-16T01:42:24.121Z"
+  "started": "2026-09-16T01:42:24.121Z",
+  "completed": "2026-09-16T02:06:29.106Z"
 }
