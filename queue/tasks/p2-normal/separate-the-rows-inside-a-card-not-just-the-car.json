@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 470,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T08:27:18.923Z",
-  "updated": "2026-09-16T10:57:02.875Z",
+  "updated": "2026-09-16T10:57:11.183Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the hierarchy slice (text-inside-a-box-comes-out-inside-that-box, landed 2026-09-13). The nesting RULE is done and depth-unlimited: PhotonzCore/LayerNesting.swift nests by containment, tested three deep. What is missing is detection. BoxSweep.sweep takes ONE level: islands are connected components of everything that is not the page backdrop, so a button sitting on a card is part of the card island and can never be a box of its own. The design doc says so deliberately (BoxSweep.swift:13, docs/design/separate-into-layers.md, The boxes, rule 4) because without hierarchy a deep tree was a pile nobody wanted. With hierarchy that reason is gone: a card that collapses to one row in the layers list is SHORTER than the flat list, not longer.\n\nThe machinery to descend already exists in the file. BoxSweep already grows the backdrop by an island dominant colour when the island fills the picture (maxDescents, dominantRegion); doing the same INSIDE an accepted box gives its children. Two things are genuinely new: (1) a child box must be cut out of its PARENT pixels and the parent own hole patched, not the page one, since LayerSeparator.cutBox today keeps every island pixel including the child; (2) a child whose parent was skipped must be skipped too, or the fixture switches would come out of cards that stayed in the picture. Keeping that rule is what should keep the fixture at 2 boxes and 9 runs.\n\nThis is a scope question as much as a code one: on a settings pane it turns 2 boxes into 2 boxes plus three switches and two fields nested under two cards. Worth asking the user in the audit before going wide.",
@@ -88,7 +88,12 @@
     {
       "t": "2026-09-16T10:57:02.874Z",
       "note": "Follow-up folded, not filed: six rows under one card makes the layers panel taller, which belongs to the open task find-out-how-a-hundred-and-forty-new-rows-should. Logged there with the new numbers."
+    },
+    {
+      "t": "2026-09-16T10:57:11.181Z",
+      "note": "Separate into Layers now looks one level inside every box it takes: a row, switch or field on a card comes out as its own layer nested under the card, the card is cut whole with its own colour where the child was, and a box whose holder stays in the picture stays with it. BoxSweep gains a second pass (parent/depth/ancestors/owns/isSurround, maxBoxDepth 2); LayerSeparator is three passes and spends the box ceiling outermost first. Fixture goes 4 boxes to 10 and 13 pieces to 19 with the same 9 runs and same 2 buttons; drawn card>row>label is three deep. Full suite green (7578). Perf 864->959 ms at 12.2 MP. NOT seen in the app: the screen was locked all task so no walk could run; sweep requested. Audit queue/audits/2026-09-16-rows-inside-a-card.json"
     }
   ],
-  "started": "2026-09-16T10:14:44.745Z"
+  "started": "2026-09-16T10:14:44.745Z",
+  "completed": "2026-09-16T10:57:11.182Z"
 }
