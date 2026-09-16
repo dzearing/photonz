@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:28:15.397Z",
-  "updated": "2026-09-16T16:21:15.504Z",
+  "updated": "2026-09-16T16:21:41.867Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, judging the focus feature as a user rather than as a builder.\n\nAudit 2026-09-13-turn-into-text asks it directly: \"Turn into Text sits directly under Separate into Layers in the same menu. Would you have found it there, or does it want to be offered on the row itself somehow?\" The app already teaches the two-step ceremony in its own refusal copy: PhotonzCore/TextReading.swift line 318 returns \"More than one run of text here. Separate into Layers first, \".\n\nWhat the recommendation has to weigh, from the same audit: the reader refuses anything it is not sure of (five font families, one line only, no italics), and it gets the weight wrong on small labels two times in six. So reading everything up front would be wrong; reading the confident ones might not be. The numbers are in the audit.\n\nSeparate reads its own budget from PhotonzCore/SeparateBudget.swift and lands in one mutation (PhotonzCore/Document.swift line 812), so folding the read into it does not break the one-undo promise.",
@@ -81,7 +81,12 @@
     {
       "t": "2026-09-16T16:21:15.503Z",
       "note": "FOLLOW-UPS: filed a-label-read-back-into-text-keeps-the-face-the-r (the four wrong faces are a defect in Turn into Text as it ships today, with the command and output in its notes). Folded into a-separated-run-of-text-says-the-words-in-it-wit (reading 142 runs costs 1.9s across the cores, not the 5.7s its notes estimate) and into find-out-whether-a-label-inside-a-group-can-be-d (double click should read the label first). Left rough, not filed: the weight wobble survives even with the family settled (Corner Radius reads Semibold while Border 1 reads Medium, both section labels of one style) and is already recorded in queue/audits/2026-09-13-turn-into-text; six runs of the app window hold no words at all and quietly stay pictures, which is correct and needs no message."
+    },
+    {
+      "t": "2026-09-16T16:21:41.865Z",
+      "note": "Study, not a build. Both shapes measured on three real captures (settings pane 9 runs, this app's window 40, the dashboard 142): reading every confident run gets the FAMILY wrong on 4 of 31 and 13 of 82, on pages set in one family, and the app calls all of those its confident verdict, so no bar and no provenance filter separates good from bad. It also takes the command from 155ms to 298ms and from 56ms to just under two seconds. Recommendation is no automatic reading; fix discovery with a read-the-words action on the separation pill (the only shape where the page can vote on one family, which takes strays to zero) and with double click on a separated label. Written up in docs/design/separate-reads-the-words.md, audited in queue/audits/2026-09-16-separate-reads-the-words.json, re-derivable with PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests. Full suite green, 7650 tests. Commit a4819c71."
     }
   ],
-  "started": "2026-09-16T15:51:44.254Z"
+  "started": "2026-09-16T15:51:44.254Z",
+  "completed": "2026-09-16T16:21:41.866Z"
 }
