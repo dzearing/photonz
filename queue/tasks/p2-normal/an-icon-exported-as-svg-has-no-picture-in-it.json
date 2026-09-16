@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:40.209Z",
-  "updated": "2026-09-16T01:02:21.779Z",
+  "updated": "2026-09-16T01:11:59.527Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from the walk that shipped with the SVG export task: Scripts/playtest/svg-export-walk.json writes /tmp/photonz-playtest/svg-export-walk/svg-export-3-icon.svg, and its log line reads 17270 bytes, every layer as shapes, of which about 17000 is the white background as base64 PNG. Two ways to tell a flat picture: ask the ImageStore for the bitmap and check every pixel is the same colour (cheap enough on export, and PixelField/BoxSweep already do this kind of scan), or catch it earlier where a blank canvas is made (BlankCanvas.swift) and give the document a flat background that is not a bitmap at all. The second is the better answer and the bigger change.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-16T01:11:53.935Z",
       "note": "Filed as its own task: an-icon-exported-as-svg-comes-out-with-nothing-b, the background still travelling as a white rectangle. Audit: queue/audits/2026-09-16-icon-export-no-bitmap.json."
+    },
+    {
+      "t": "2026-09-16T01:11:59.525Z",
+      "note": "A flat picture is written as a rect instead of embedded base64: FlatBitmap (PhotonzRender) reads whether a bitmap is exactly one colour, SVGExport writes it through the shapes path. An icon on a 900x700 blank canvas now exports at 266 bytes with no base64 at all; a photograph is unchanged. Verified by rendering the written file back and comparing it to the app's own render, plus Scripts/test.sh green (7227 tests). No walk could run: the screen was locked all task, so a sweep is requested. Audit: queue/audits/2026-09-16-icon-export-no-bitmap.json"
     }
   ],
-  "started": "2026-09-16T01:02:21.777Z"
+  "started": "2026-09-16T01:02:21.777Z",
+  "completed": "2026-09-16T01:11:59.526Z"
 }
