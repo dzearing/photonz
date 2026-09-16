@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T11:55:53.256Z",
-  "updated": "2026-09-16T16:39:55.566Z",
+  "updated": "2026-09-16T16:40:11.374Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while writing Scripts/playtest/separate-turn-into-text-walk.json on 2026-09-13. Reproduced in the walk only, which is why this is filed as something to look into rather than as a bug.\n\nWhat was run: the walk separated the settings-pane fixture, turned run Text 9 (the words Save Changes, white on the blue button) into a text layer inside group Box 4, then did tool select and three `click count 2` steps at document (360, 792) with waits between, then `type`.\n\nWhat it printed, every time:\n  [41 type] FAILED: no text field has the keyboard (first responder is CanvasNSView)\n\nThe same walk, double clicking a TOP LEVEL text layer (the heading at document (146, 85)) opens the editor on the first double click and types fine - that is the shipped walk today.\n\nThe code is Sources/Photonz/CanvasPointerDrags.swift:234: a double click always DESCENDS while `groupAwareDescent` returns a step, and only once it returns nil does the `case .text = hit.content` branch at :255 open the editor. The question is whether descent keeps returning a step for a child that is already picked, or whether the harness synthesises clicks in a way that never reaches the second branch.",
@@ -69,7 +69,12 @@
     {
       "t": "2026-09-16T16:39:55.565Z",
       "note": "Both walks ran with the screen LOCKED, using the documented PHOTONZ_ALLOW_LOCKED_WALK=1 override. Deliberate and bounded: neither walk looks up a single control by name (open, action, selectRow and expect all resolve out of the document model, and click/type go to the canvas and the responder chain), which is the one thing a lock takes away. Both still photographed the window for real. The sweep still owes them a run once the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T16:40:11.372Z",
+      "note": "The premise was wrong and is now guarded, and the study's gesture is built. A label inside a group could always be double clicked into typing (one click picks the button, one double click picks the label, the next opens the field); the walk that said otherwise clicked three times into a field that had already opened. Shipped Scripts/playtest/double-click-a-label-walk.json and Tests/PhotonzCoreTests/DoubleClickALabelTests.swift to hold it. Then built next-double-click-reads-a-label: double clicking a label the separation has not read yet reads it and puts the caret in it, offered only on a run the sweep lifted off as text so a photograph is never turned into a word. Walk read-a-label-by-double-click-walk.json, audit queue/audits/2026-09-16-double-click-reads-a-label.json with two real window photographs. 7662 tests pass; both walks pass under the documented locked-screen override and a sweep is requested. Commit 02000007."
     }
   ],
-  "started": "2026-09-16T16:23:58.554Z"
+  "started": "2026-09-16T16:23:58.554Z",
+  "completed": "2026-09-16T16:40:11.373Z"
 }

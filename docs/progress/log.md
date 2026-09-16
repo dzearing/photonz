@@ -17073,3 +17073,36 @@ was requested for it.
 forgive or the reason not to do it at all, and whether reading should be a
 whole-picture action on the pill. The reader's own family problem is filed as
 `a-label-read-back-into-text-keeps-the-face-the-r`.
+
+## 2026-09-16 — a label reads itself open
+
+`find-out-whether-a-label-inside-a-group-can-be-d` turned out to be two jobs.
+
+The reported bug was not one. A text label inside a group could always be double
+clicked into typing: `descendTarget` only descends while the CURRENT pick is a
+group, so once the pick is the label it returns nil and the double click means
+what it always meant. Reproduced in the app rather than read off the code — one
+click picks the button, one double click picks the label, the next opens the
+field — and the 2026-09-13 walk that said otherwise was clicking three times,
+with clicks two and three landing inside a field that had already opened.
+`Scripts/playtest/double-click-a-label-walk.json` guards it now, and
+`Tests/PhotonzCoreTests/DoubleClickALabelTests.swift` pins the chain.
+
+In its place, the shape the separate-reads-the-words study recommended: double
+clicking a label the separation has NOT read yet reads it and puts the caret in
+it (`next-double-click-reads-a-label`, on by default in Next). Offered only on a
+run the sweep lifted off as text, because reading replaces the picture with what
+was found in it and the same gesture on a photograph would be a photograph
+turned into a word.
+
+Next: the other half of that study,
+`the-separation-pill-offers-to-read-the-words-in` — an offer on the separation
+pill to read the whole picture at once, which is also the only shape in which
+the page can vote on one typeface.
+
+Open question: the screen has been locked all day, so both new walks ran under
+the documented `PHOTONZ_ALLOW_LOCKED_WALK` override (neither looks a control up
+by name, and both photographed the window for real). A sweep is requested. Five
+of the eight `separate-*` walks fail on clean main today for reasons that are
+not this change — baselined by stashing — and that is folded into
+`walks-that-fail-in-the-full-sweep`.
