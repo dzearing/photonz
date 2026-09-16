@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/svg-export-redline-walk",
+  "seed": "A marked up screenshot is what this app is used for most, and until 2026-09-16 it was the one thing SVG export could not hand over as shapes: an arrow, a highlight and a measurement all rode out as embedded pictures, so whoever received the file could not move a single mark. This walk marks a screenshot up all three ways and asks the file itself what it is made of.",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-open", "note": "a screenshot open, nothing marked up yet" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [236, 696] },
+    { "do": "move", "at": [476, 696] },
+    { "do": "click", "at": [476, 696] },
+    { "do": "move", "at": [476, 656] },
+    { "do": "click", "at": [476, 656] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 1 },
+
+    { "do": "tool", "tool": "highlight" },
+    { "do": "drag", "from": [236, 240], "to": [560, 276] },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [640, 880], "to": [420, 810] },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "type", "text": "Primary action" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-marked", "note": "the screenshot measured, highlighted and pointed at with a captioned arrow: the three marks a redline is made of" },
+    { "do": "snapshot", "name": "svg-redline-1-marked" },
+
+    { "do": "expectSVG", "pictured": 0, "contains": "mix-blend-mode:multiply" },
+    { "do": "writeSVG", "name": "svg-redline-2-file" },
+    { "do": "describe", "stage": "3-written", "note": "THE TEST: the file, written exactly as Export writes it. The line above says every layer went out as shapes, so the arrow's shaft, head and caption, the highlighter's wash and the caliper with its ticks and its number are all movable in whatever the file is opened in" },
+
+    { "do": "action", "action": "exportDialogAsSVG" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-sheet", "note": "the Export sheet on SVG: the screenshot itself is named as the one picture in the file, and none of the three marks is" },
+    { "do": "snapshot", "name": "svg-redline-3-sheet" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 }
+  ]
+}

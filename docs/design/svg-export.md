@@ -42,8 +42,47 @@ through to a picture, which is safe and lossy, and the export says so.
 | Text | `<path>` of the letters' outlines, with a `<title>` | See "Why text is outlined" below. |
 | Group | `<g transform="translate(…)">` | The nesting and the order the layers list shows. A frame's background is a `<rect>` under its children. A group that CUTS OFF what sticks out of it (a frame does by default, and so does any group with rounded corners) writes a `<clipPath>` of its box and holds its contents in one more `<g clip-path>`, so an icon drawn in a frame stays shapes. The ring round the box is written outside that cut, since a border is painted over the edge rather than cut by it. |
 | Picture | `<image href="data:image/png;base64,…">` | An untouched photograph goes out as its OWN pixels — smallest file, sharpest picture. One that is cropped, turned, rounded off or wearing an effect is re-rendered through the real renderer at 2× so it looks the way it looks on the canvas. |
-| Arrow, highlight, measurement, zoom callout, lens, collage | `<image>` | No vector answer yet. Each is reported. |
+| Arrow | `<line>` shaft, a `<path>` or `<circle>` head, and its caption on a plate | Every number comes off `Geometry.arrowShaftEnd` / `arrowhead` / `arrowheadCircle`, the same helpers the canvas draws from. An arrow with a caption needs a type engine, because the caption is type; without one it keeps its picture and says so. |
+| Highlight | `<rect style="mix-blend-mode:multiply">` | See "A highlighter paints through what is under it" below. |
+| Measurement | `<path>` legs with the corner arced, a `<line>` leader, and its readout on a plate | The legs stop on the readout's outline exactly where the canvas stops them, because both read one plan (`MeasurePlan`). An alignment check writes its dashed guide, its ticks and the bracket round the offender instead. Needs a type engine for the readout. |
+| Zoom callout, lens, collage | `<image>` | No vector answer yet. Each is reported. |
 | A shape's softness and its shadows | `<filter>` on the shape itself | See "A shadow and a blur" below. Everything else about a halo — a glow, an inner shadow, a spread one — still falls back. |
+
+### The plate a label sits on
+
+An arrow's caption and a measurement's readout are the same plate: a rounded
+`<rect>`, a ring round it in the same `<rect>` again, and the words as the
+outline of their letters with a `<title>` carrying the string. It is sized from
+the words, which is why the writer is handed a `TypeSetter` — PhotonzCore owns
+no fonts, so how big "16 px" comes out at 14pt is a question only the app layer
+can answer (`SVGExporter.typeSetter`).
+
+**No plate in a file carries the soft shadow the canvas draws behind a
+caption.** The lift is a filter, and Apple's SVG reader moves any filtered shape
+one more step along for every transform standing above it. A label is always
+inside the group that places the arrow it belongs to, so the halo would land
+somewhere else entirely in Preview, Quick Look and Xcode while a browser drew it
+where it belongs. Leaving it out is the one answer that looks the same in every
+reader, and it costs nothing that matters: the legibility was never in the
+shadow, it is in the opaque plate (`LabelPlate`), which the file carries in
+full. Measured on the render-back check, the missing halo is about a quarter of
+one part in 255 over the canvas.
+
+### A highlighter paints through what is under it
+
+A highlight is a rectangle that MULTIPLIES with the picture below it, and the
+one word for that is CSS's `mix-blend-mode: multiply`. Browsers honour it.
+**Apple's own SVG reader honours no blend mode at all** — not as a `style`, not
+as a presentation attribute, not inside an isolated group; all three were tried
+— so Preview, Quick Look and Xcode draw a flat bar of colour over the picture
+where a browser draws a highlighter.
+
+It is written anyway, because the alternative was worse in every reader. Until
+this landed a highlight went out as an embedded picture, and a picture of a
+highlight is its own pixels laid flat over the backdrop: it did not multiply in
+a browser either. The render-back check therefore measures a highlight over
+white, where multiplying and painting flat agree, and a separate test reads the
+file for the blend word.
 
 ### Paint
 
@@ -272,16 +311,20 @@ By **rendering the file back**, never by reading the text
 (`Tests/PhotonzRenderTests/SVGExportRenderTests.swift`). macOS can rasterize an
 SVG through `NSImage`, so every case — a path, a rounded box, an oval, a line, a
 group, an inside line, an outside line, a hole, a linear ramp, a radial ramp,
-outlined words, a shadowed shape, a photograph — is drawn twice, once by the app
+outlined words, a shadowed shape, a photograph, an arrow, its endings, its
+caption, a highlight, a caliper, a moved readout, an alignment check — is drawn
+twice, once by the app
 and once by the system's own SVG reader, and the two pictures must agree to
 within one part in 255 averaged over the canvas. `Tests/PhotonzCoreTests/SVGExportTests.swift`
 covers the writing itself.
 
 ## Known rough edges
 
-* **An arrow, a highlight, a measurement, a zoom callout, a lens and a collage
-  all fall back to pictures.** Arrows and measurements are the ones a redliner
-  would miss.
+* **A zoom callout, a lens and a collage still fall back to pictures.** An
+  arrow, a highlight and a measurement no longer do.
+* **A caption's plate loses its drop shadow**, and a highlight's blend is drawn
+  only by browsers. Both are above: the reasons are Apple's SVG reader, and both
+  are the least-bad answer rather than an oversight.
 * **A glow, an inner shadow and a spread shadow still cost a shape its
   vectors**, and so does a shadow on a shape that is faded, turned, moved by a
   group, or drawn in more than one piece. See "A shadow and a blur" above for
@@ -294,8 +337,9 @@ covers the writing itself.
 * **Anything moving inside a layer that goes out as a picture stops moving.**
   The picture holds one moment of it. Each piece is named in the result's
   `unmoved` list, by its own name, so the Export sheet says so before you save.
-* **Blend modes fall back.** `mix-blend-mode` exists in browsers but is not in
-  SVG itself, and the render-back check could not verify it.
+* **A blend mode on a LAYER still falls back to a picture.** Only a highlight,
+  whose mixing is part of what it is, writes `mix-blend-mode`, and only because
+  its picture was wrong everywhere.
 * **A fallback picture is rasterized at 2×.** It is the one part of the file
   that does not scale.
 * **A turn on a layer that is also flipped or skewed does not animate.** The two

@@ -83,6 +83,45 @@ public enum SVGExport {
     /// outlined.
     public typealias TextOutliner = @Sendable (_ layer: Layer, _ text: TextContent) -> String?
 
+    /// What the labels the app draws FOR ITSELF need from whoever owns the type
+    /// engine: how big the words come out, and what their outline is.
+    ///
+    /// A text layer is outlined through `TextOutliner`, which has a layer to
+    /// read the box off. A caption on an arrow and the readout on a
+    /// measurement have no layer of their own — they are parts of the thing
+    /// they belong to, and their plate is sized from the words inside it — so
+    /// the writer has to be able to ask, in the same words the canvas asks.
+    public struct TypeSetter: Sendable {
+        /// How big `text` is at `fontSize`, laid out unconstrained.
+        public var size: @Sendable (_ text: String, _ fontSize: CGFloat) -> CGSize
+        /// How far right of that box's left edge the ink really starts. The
+        /// box carries its slack on the right, so centring the box would leave
+        /// the word sitting left of the middle of its plate.
+        public var inkOffset: @Sendable (_ text: String, _ fontSize: CGFloat) -> CGFloat
+        /// The outline of `text` laid out in a box of `size`, as path data in
+        /// that box's OWN top-left coordinates.
+        public var outline: @Sendable (_ text: String, _ fontSize: CGFloat,
+                                       _ size: CGSize) -> String?
+
+        public init(size: @escaping @Sendable (String, CGFloat) -> CGSize,
+                    inkOffset: @escaping @Sendable (String, CGFloat) -> CGFloat,
+                    outline: @escaping @Sendable (String, CGFloat, CGSize) -> String?) {
+            self.size = size
+            self.inkOffset = inkOffset
+            self.outline = outline
+        }
+
+        /// The plate `text` is drawn in: its words plus `padding` on every
+        /// side, never narrower than `minWidth` — the same footprint
+        /// `PillRasterizer` bakes.
+        public func plateSize(for text: String, fontSize: CGFloat, padding: CGFloat,
+                              minWidth: CGFloat = 0) -> CGSize {
+            let words = size(text, fontSize)
+            return CGSize(width: max(words.width + 2 * padding, minWidth),
+                          height: words.height + 2 * padding)
+        }
+    }
+
     public struct Result: Sendable {
         /// The file.
         public var text: String
@@ -113,12 +152,14 @@ public enum SVGExport {
                              animation: Animation = .still,
                              picture: PictureMaker? = nil,
                              outlineText: TextOutliner? = nil,
+                             typeSetter: TypeSetter? = nil,
                              flatImages: [UUID: RGBA] = [:],
                              background: Background = .keep) -> Result {
         let omit = background == .drop
             ? backdrop(in: document, flatImages: flatImages)?.layerID
             : nil
         var writer = Writer(picture: picture, outlineText: outlineText,
+                            type: typeSetter,
                             animation: animation, flatImages: flatImages,
                             omitLayer: omit)
         return writer.run(document)
@@ -314,10 +355,16 @@ public enum SVGExport {
         case .annotation(let annotation):
             switch annotation.shape {
             case .arrow:
-                return .picture("an arrow is a shaft, a head and a label rather than one shape")
-            case .highlight:
-                return .picture("a highlight paints through what is under it")
-            case .rectangle, .ellipse, .line:
+                if let reason = sweepReason(annotation.paint) ?? sweepReason(annotation.headPaint) {
+                    return .picture(reason)
+                }
+                // The caption is type, and type is only shapes where somebody
+                // can turn letters into outlines.
+                if annotation.hasCaption, !canOutlineText {
+                    return .picture("its caption's letters could not be turned into outlines")
+                }
+                return .vector
+            case .highlight, .rectangle, .ellipse, .line:
                 if let reason = sweepReason(annotation.fill) ?? sweepReason(annotation.paint) {
                     return .picture(reason)
                 }
@@ -345,8 +392,11 @@ public enum SVGExport {
             return .picture("a zoom callout magnifies the picture under it")
         case .lens:
             return .picture("a lens adjusts the picture under it")
-        case .measure:
-            return .picture("a measurement is a caliper, ticks and a chip of type")
+        case .measure(let measure):
+            if measure.showLabel, !canOutlineText {
+                return .picture("its readout's letters could not be turned into outlines")
+            }
+            return .vector
         case .collage:
             return .picture("a collage is an arrangement of pictures")
         }
@@ -511,7 +561,11 @@ public enum SVGExport {
                 // A filled shape with a line round it is a fill and a stroke,
                 // drawn one after the other (`Writer.annotation`).
                 return (annotation.fill == nil) != (annotation.strokeWidth <= 0)
-            case .arrow, .highlight:
+            case .highlight:
+                // One rectangle, however it is mixed with what is under it.
+                return true
+            case .arrow:
+                // A shaft, a head, and often a label on a plate.
                 return false
             }
         default:
@@ -557,7 +611,7 @@ private extension LayerContent {
 
     var isDrawnAsShapes: Bool {
         switch self {
-        case .path, .annotation, .text: return true
+        case .path, .annotation, .text, .measure: return true
         default: return false
         }
     }
@@ -570,6 +624,8 @@ private extension LayerContent {
 private struct Writer {
     let picture: SVGExport.PictureMaker?
     let outlineText: SVGExport.TextOutliner?
+    /// How the labels the app draws for itself are measured and outlined.
+    let type: SVGExport.TypeSetter?
     var animation: SVGExport.Animation = .still
     /// Which of the document's bitmaps are one flat colour, by bitmap id.
     var flatImages: [UUID: RGBA] = [:]
@@ -588,11 +644,19 @@ private struct Writer {
     var nextClipNumber = 1
     var nextCutNumber = 1
     var nextFilterNumber = 1
+    var nextPlateNumber = 1
+    /// How many image pixels the document counts to the point, which is what a
+    /// measurement's readout is worded from.
+    var pixelScale: CGFloat = 1
+    /// Where on the canvas the layer being written sits, so a filter's region
+    /// can be stated in both the spaces the readers disagree about.
+    var placedAt: CGPoint = .zero
     /// Whether a group round whatever is being written moves it, which costs
     /// a shadow its filter (`SVGExport.effects(of:carried:)`).
     var carried = false
 
     mutating func run(_ document: PhotonzDocument) -> SVGExport.Result {
+        pixelScale = document.pixelScale
         let top = omitLayer.map { id in document.layers.filter { $0.id != id } }
             ?? document.layers
         let body = write(top, groupOffset: .zero, level: 1)
@@ -951,6 +1015,7 @@ private struct Writer {
 
     /// What the layer itself draws, in its own coordinates.
     mutating func content(of layer: Layer, canvasOrigin: CGPoint, level: Int) -> [String] {
+        placedAt = canvasOrigin
         switch layer.content {
         case .path(let path):
             return self.path(path, level: level)
@@ -960,6 +1025,8 @@ private struct Writer {
             return self.text(text, layer: layer, level: level)
         case .image:
             return flatPicture(of: layer, level: level)
+        case .measure(let measure):
+            return self.measure(measure, level: level)
         default:
             return []
         }
@@ -1097,10 +1164,138 @@ private struct Writer {
                                  paint: " fill=\"none\"" + ink, level: level))
             }
             return lines
-        case .arrow, .highlight:
-            return []
+        case .arrow:
+            return arrow(annotation, level: level)
+        case .highlight:
+            // A highlighter paints THROUGH what is under it, which CSS says
+            // with one word. Apple's own SVG reader ignores that word and
+            // draws the mark flat over the picture, so Preview, Quick Look
+            // and Xcode show a solid bar where a browser shows a highlight
+            // (`docs/design/svg-export.md`). The embedded picture this
+            // replaced was flat in every reader, browsers included.
+            let ink = annotation.paint
+            guard box.width > 0, box.height > 0 else { return [] }
+            return [indent(level) + "<rect x=\"\(n(box.minX))\" y=\"\(n(box.minY))\""
+                + " width=\"\(n(box.width))\" height=\"\(n(box.height))\""
+                + fill(ink, box: box)
+                + " style=\"mix-blend-mode:multiply\"/>"]
         }
     }
+
+    // MARK: An arrow
+
+    /// An arrow as the pieces it is drawn in: the shaft, the ending it stops
+    /// in, and the caption on its tail. The same pieces, from the same
+    /// geometry, that `AnnotationRasterizer` paints.
+    mutating func arrow(_ annotation: AnnotationContent, level: Int) -> [String] {
+        var lines: [String] = []
+        let style = annotation.arrowheadStyle
+        let end = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
+                                         strokeWidth: annotation.strokeWidth,
+                                         scale: annotation.arrowheadScale, style: style)
+        if annotation.strokeWidth > 0 {
+            // What the two ends of the line look like. An arrow's own ending
+            // is the head; the choice only reaches the tail
+            // (`AnnotationContent.showsLineEnds`).
+            let cap = annotation.showsLineEnds ? annotation.lineEnd.svgName : "round"
+            let ink = stroke(annotation.paint,
+                             box: reach(annotation.start, end)
+                                 .insetBy(dx: -annotation.strokeWidth / 2,
+                                          dy: -annotation.strokeWidth / 2))
+            lines.append(indent(level) + "<line x1=\"\(n(annotation.start.x))\""
+                + " y1=\"\(n(annotation.start.y))\" x2=\"\(n(end.x))\""
+                + " y2=\"\(n(end.y))\"\(ink)" + width(annotation.strokeWidth)
+                + " stroke-linecap=\"\(cap)\"/>")
+        }
+        lines.append(contentsOf: arrowhead(annotation, style: style, level: level))
+        lines.append(contentsOf: caption(annotation, level: level))
+        return lines
+    }
+
+    /// The mark an arrow ends in: a solid triangle, a fine open V, a dot or a
+    /// hollow one — whichever `Geometry` says this arrow wears.
+    mutating func arrowhead(_ annotation: AnnotationContent, style: ArrowheadStyle,
+                            level: Int) -> [String] {
+        if let circle = Geometry.arrowheadCircle(at: annotation.end,
+                                                 strokeWidth: annotation.strokeWidth,
+                                                 scale: annotation.arrowheadScale, style: style) {
+            let box = CGRect(x: circle.center.x - circle.radius,
+                             y: circle.center.y - circle.radius,
+                             width: 2 * circle.radius, height: 2 * circle.radius)
+            let dot = "<circle cx=\"\(n(circle.center.x))\" cy=\"\(n(circle.center.y))\""
+                + " r=\"\(n(circle.radius))\""
+            if style == .dot {
+                return [indent(level) + dot + ownPaint(annotation.headPaint, box: box,
+                                                       as: "fill") + "/>"]
+            }
+            guard annotation.strokeWidth > 0 else { return [] }
+            let ink = ownPaint(annotation.headPaint,
+                               box: box.insetBy(dx: -annotation.strokeWidth / 2,
+                                                dy: -annotation.strokeWidth / 2), as: "stroke")
+            return [indent(level) + dot + " fill=\"none\"\(ink)"
+                + width(annotation.strokeWidth) + "/>"]
+        }
+        let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
+                                      strokeWidth: annotation.strokeWidth,
+                                      scale: annotation.arrowheadScale, style: style)
+        guard head.count == 3 else { return [] }
+        let box = reach(head[1], head[2]).union(reach(head[0], head[0]))
+        if style == .open {
+            // Two fine strokes through the tip, not a filled body: wing, tip,
+            // wing, left open at the back.
+            guard annotation.strokeWidth > 0 else { return [] }
+            let ink = ownPaint(annotation.headPaint,
+                               box: box.insetBy(dx: -annotation.strokeWidth / 2,
+                                                dy: -annotation.strokeWidth / 2), as: "stroke")
+            let data = "M\(n(head[1].x)) \(n(head[1].y)) L\(n(head[0].x)) \(n(head[0].y))"
+                + " L\(n(head[2].x)) \(n(head[2].y))"
+            return [indent(level) + "<path d=\"\(data)\" fill=\"none\"\(ink)"
+                + width(annotation.strokeWidth)
+                + " stroke-linejoin=\"round\" stroke-linecap=\"round\"/>"]
+        }
+        let data = head.enumerated().map { index, point in
+            "\(index == 0 ? "M" : "L")\(n(point.x)) \(n(point.y))"
+        }.joined(separator: " ") + " Z"
+        return [indent(level) + "<path d=\"\(data)\""
+            + ownPaint(annotation.headPaint, box: box, as: "fill") + "/>"]
+    }
+
+    /// The caption on an arrow's tail, on the plate every label in this app is
+    /// drawn on.
+    mutating func caption(_ annotation: AnnotationContent, level: Int) -> [String] {
+        guard annotation.hasCaption, let type else { return [] }
+        let words = ArrowCaptionEntry.caption(from: annotation.caption ?? "") ?? ""
+        guard !words.isEmpty else { return [] }
+        let chip = annotation.captionPillSize(forTextSize: type.size(words,
+                                                                    annotation.captionFontSize))
+        return plate(Plate(center: annotation.captionPillCenter(forPillSize: chip),
+                           size: chip,
+                           cornerRadius: annotation.captionCornerRadius(pillHeight: chip.height),
+                           fill: plateColour(annotation.captionFill),
+                           border: plateColour(annotation.captionBorder),
+                           borderWidth: annotation.drawnCaptionBorderWidth,
+                           text: words, fontSize: annotation.captionFontSize,
+                           textHex: annotation.captionTextHex),
+                     level: level)
+    }
+
+    /// The box two points make between them.
+    func reach(_ a: CGPoint, _ b: CGPoint) -> CGRect {
+        CGRect(x: min(a.x, b.x), y: min(a.y, b.y),
+               width: abs(b.x - a.x), height: abs(b.y - a.y))
+    }
+
+    /// A paint that belongs to a PART rather than to the layer: an arrowhead's
+    /// own colour, a plate's fill. A group animating the layer's colour must
+    /// not reach these, so the attribute is written even where the shape's own
+    /// paint would have been left to inherit.
+    mutating func ownPaint(_ paint: Paint, box: CGRect, as role: String) -> String {
+        let held = omitPaint
+        omitPaint = []
+        defer { omitPaint = held }
+        return paints(paint, box: box, as: role)
+    }
+
 
     /// A box, as the simplest element that can say its rounding.
     func boxElement(_ rect: CGRect, radii: CornerRadii, paint: String, level: Int) -> String {
@@ -1114,6 +1309,276 @@ private struct Writer {
         let rounding = (radii.uniform ?? 0) > 0 ? " rx=\"\(n(radii.uniform ?? 0))\"" : ""
         return indent(level) + "<rect x=\"\(n(rect.minX))\" y=\"\(n(rect.minY))\""
             + " width=\"\(n(rect.width))\" height=\"\(n(rect.height))\"\(rounding)\(paint)/>"
+    }
+
+    // MARK: The plate a label sits on
+
+    /// A caption's bubble and a measurement's readout are the same plate: a
+    /// rounded fill, a ring round it, and words centred on it
+    /// (`PillRasterizer`, `LabelPlate`).
+    ///
+    /// **No plate in a file carries the soft lift the canvas draws behind a
+    /// caption.** That lift is a filter, and Apple's SVG reader moves any
+    /// filtered shape one more step along for every transform standing above
+    /// it; a label is always inside the group that places the arrow or the
+    /// caliper it belongs to, so the halo would land somewhere else entirely
+    /// in Preview, Quick Look and Xcode while a browser drew it in the right
+    /// place. Leaving it out is the one answer that looks the same in every
+    /// reader, and it costs nothing that matters: the legibility was never in
+    /// the shadow, it is in the opaque plate (`LabelPlate`), which the file
+    /// carries in full (`docs/design/svg-export.md`).
+    struct Plate {
+        var center: CGPoint
+        var size: CGSize
+        var cornerRadius: CGFloat
+        var fill: RGBA
+        var border: RGBA
+        var borderWidth: CGFloat
+        var text: String
+        var fontSize: CGFloat
+        var textHex: String
+    }
+
+    mutating func plate(_ plate: Plate, level: Int) -> [String] {
+        guard plate.size.width > 0, plate.size.height > 0 else { return [] }
+        let rect = CGRect(x: plate.center.x - plate.size.width / 2,
+                          y: plate.center.y - plate.size.height / 2,
+                          width: plate.size.width, height: plate.size.height)
+        let radius = min(max(plate.cornerRadius, 0), min(rect.width, rect.height) / 2)
+        func capsule(_ attributes: String) -> String {
+            indent(level) + "<rect x=\"\(n(rect.minX))\" y=\"\(n(rect.minY))\""
+                + " width=\"\(n(rect.width))\" height=\"\(n(rect.height))\""
+                + (radius > 0 ? " rx=\"\(n(radius))\"" : "") + attributes + "/>"
+        }
+        var lines: [String] = []
+        if plate.fill.a > 0 {
+            lines.append(capsule(colour(plate.fill, as: "fill")))
+        }
+        if plate.border.a > 0 {
+            lines.append(capsule(" fill=\"none\"" + colour(plate.border, as: "stroke")
+                + " stroke-width=\"\(n(max(1, plate.borderWidth)))\""))
+        }
+        return lines + words(plate, level: level)
+    }
+
+    /// The label's own words, as the outline of their letters, centred on the
+    /// plate exactly as the canvas centres them.
+    mutating func words(_ plate: Plate, level: Int) -> [String] {
+        guard let type, !plate.text.isEmpty else { return [] }
+        let box = type.size(plate.text, plate.fontSize)
+        guard box.width > 0, box.height > 0,
+              let data = type.outline(plate.text, plate.fontSize, box), !data.isEmpty
+        else { return [] }
+        // Centre the INK, not the measured box: the box carries its slack
+        // entirely to the right of the glyphs, so centring it would leave the
+        // word a couple of points left of the middle of the plate. Rounded to
+        // a whole point, which is what the canvas rounds it to at document
+        // scale (`PillRasterizer.draw`).
+        let ink = type.inkOffset(plate.text, plate.fontSize).rounded()
+        let corner = CGPoint(x: plate.center.x - box.width / 2 - ink,
+                             y: plate.center.y - box.height / 2)
+        return [indent(level) + "<path d=\"\(data)\""
+            + " transform=\"translate(\(n(corner.x)) \(n(corner.y)))\""
+            + colour(RGBA(hex: plate.textHex) ?? RGBA(r: 1, g: 1, b: 1), as: "fill") + ">"
+            + "<title>\(SVGExport.escaped(plate.text))</title></path>"]
+    }
+
+    /// One of a plate's own colours, which may be nothing at all: a caption
+    /// with no fill really shows what is behind it rather than a black bubble.
+    func plateColour(_ paint: Paint?) -> RGBA {
+        guard let paint, let rgba = RGBA(hex: paint.hex) else {
+            return RGBA(r: 0, g: 0, b: 0, a: 0)
+        }
+        return rgba
+    }
+
+    /// A flat colour as the one or two attributes that say it.
+    func colour(_ rgba: RGBA, as role: String) -> String {
+        var text = " \(role)=\"\(rgba.hexString)\""
+        if rgba.a < 1 { text += " \(role)-opacity=\"\(n(CGFloat(rgba.a)))\"" }
+        return text
+    }
+
+    // MARK: A measurement
+
+    /// A caliper as the shapes it is drawn in: two rounded legs that stop on
+    /// the readout, the leader that keeps a moved readout attached, and the
+    /// plate the number sits on. An alignment check draws a dashed guide, its
+    /// ticks and its bracket instead (`MeasureRasterizer` paints the same
+    /// pieces from the same plan).
+    mutating func measure(_ measure: MeasureContent, level: Int) -> [String] {
+        guard let type else { return [] }
+        let g = measure.caliperGeometry()
+        let words = measure.chipText(pixelScale: pixelScale)
+        let chip = measure.showLabel
+            ? type.plateSize(for: words, fontSize: measure.labelPointSize,
+                             padding: measure.labelPadding,
+                             minWidth: measure.labelMinPillWidth)
+            : .zero
+        let plan = MeasurePlan.make(measure, geometry: g, chipSize: chip)
+        let ink = RGBA(hex: measure.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        // Round caps and joins, so the corners read refined rather than sharp.
+        let stroke = colour(ink, as: "stroke") + " fill=\"none\""
+            + " stroke-width=\"\(n(measure.strokeWidth))\""
+            + " stroke-linecap=\"round\" stroke-linejoin=\"round\""
+
+        var lines: [String] = []
+        if let check = measure.alignment {
+            lines.append(contentsOf: alignmentCheck(measure, check: check, geometry: g,
+                                                    plan: plan, stroke: stroke, level: level))
+        } else {
+            for (foot, head) in [(g.footA, g.headA), (g.footB, g.headB)] {
+                if let data = side(foot: foot, head: head, mid: g.labelAnchor, plan: plan) {
+                    lines.append(indent(level) + "<path d=\"\(data)\"\(stroke)/>")
+                }
+            }
+        }
+        if let leader = plan.leader {
+            lines.append(indent(level) + "<line x1=\"\(n(leader.from.x))\""
+                + " y1=\"\(n(leader.from.y))\" x2=\"\(n(leader.to.x))\""
+                + " y2=\"\(n(leader.to.y))\"\(stroke)/>")
+        }
+        guard measure.showLabel, !words.isEmpty else { return lines }
+        lines.append(contentsOf: plate(Plate(center: plan.center, size: plan.size,
+                                             cornerRadius: LabelCapsule.capsuleRadius(for: plan.size),
+                                             fill: chipFill(measure),
+                                             border: chipEdge(measure),
+                                             borderWidth: measure.chipBorderWidth,
+                                             text: words, fontSize: measure.labelPointSize,
+                                             textHex: measure.textColorHex),
+                                       level: level))
+        return lines
+    }
+
+    /// One side of the caliper: foot, a rounded corner at the head, and as far
+    /// along the head bar as the readout allows.
+    func side(foot: CGPoint, head: CGPoint, mid: CGPoint, plan: MeasurePlan) -> String? {
+        guard let pill = plan.pill else { return leg(foot: foot, head: head, toward: mid) }
+        if let armEnd = pill.entry(from: head, toward: pill.center) {
+            return leg(foot: foot, head: head, toward: armEnd)
+        }
+        // The plate has swallowed the corner, so the leg ends on its outline
+        // and there is no corner left to round. Wider still and it has
+        // swallowed the foot too, and this side draws nothing at all.
+        guard let legEnd = pill.entry(from: foot, toward: head) else { return nil }
+        return "M\(n(foot.x)) \(n(foot.y)) L\(n(legEnd.x)) \(n(legEnd.y))"
+    }
+
+    /// `foot → (rounded corner at head) → toward`, the same corner Core
+    /// Graphics draws from a tangent radius.
+    func leg(foot: CGPoint, head: CGPoint, toward: CGPoint) -> String {
+        let legLength = hypot(head.x - foot.x, head.y - foot.y)
+        let armLength = hypot(toward.x - head.x, toward.y - head.y)
+        let radius = max(0, min(MeasureContent.cornerRadius, legLength / 2, armLength))
+        var parts = ["M\(n(foot.x)) \(n(foot.y))"]
+        guard radius > 0.5, armLength > 0.5, legLength > 0 else {
+            parts.append("L\(n(head.x)) \(n(head.y))")
+            if armLength > 0.5 { parts.append("L\(n(toward.x)) \(n(toward.y))") }
+            return parts.joined(separator: " ")
+        }
+        // Where the curve leaves each straight run: back along the leg and out
+        // along the arm by the tangent length the corner's own angle asks for.
+        let into = CGPoint(x: (head.x - foot.x) / legLength, y: (head.y - foot.y) / legLength)
+        let outOf = CGPoint(x: (toward.x - head.x) / armLength,
+                            y: (toward.y - head.y) / armLength)
+        let cosine = min(max(-into.x * outOf.x - into.y * outOf.y, -1), 1)
+        let halfAngle = acos(cosine) / 2
+        let tangent = halfAngle > 0.0001 ? radius / tan(halfAngle) : 0
+        guard tangent > 0, tangent.isFinite, tangent <= legLength, tangent <= armLength else {
+            parts.append("L\(n(head.x)) \(n(head.y))")
+            parts.append("L\(n(toward.x)) \(n(toward.y))")
+            return parts.joined(separator: " ")
+        }
+        let start = CGPoint(x: head.x - into.x * tangent, y: head.y - into.y * tangent)
+        let finish = CGPoint(x: head.x + outOf.x * tangent, y: head.y + outOf.y * tangent)
+        // y grows downwards here, so a positive turn is the clockwise one SVG
+        // calls the positive sweep.
+        let sweep = into.x * outOf.y - into.y * outOf.x > 0 ? 1 : 0
+        parts.append("L\(n(start.x)) \(n(start.y))")
+        parts.append("A\(n(radius)) \(n(radius)) 0 0 \(sweep) \(n(finish.x)) \(n(finish.y))")
+        parts.append("L\(n(toward.x)) \(n(toward.y))")
+        return parts.joined(separator: " ")
+    }
+
+    /// An alignment check: a dashed guide along the feet, a short tick where
+    /// each element that agrees crosses it, and a heavier bracket enclosing
+    /// the gap where one does not.
+    mutating func alignmentCheck(_ measure: MeasureContent, check: AlignmentCheck,
+                                 geometry g: CaliperGeometry, plan: MeasurePlan,
+                                 stroke: String, level: Int) -> [String] {
+        var lines: [String] = []
+        let dashed = stroke + " stroke-dasharray=\"6 4\""
+        func line(_ a: CGPoint, _ b: CGPoint, _ paint: String) {
+            lines.append(indent(level) + "<line x1=\"\(n(a.x))\" y1=\"\(n(a.y))\""
+                + " x2=\"\(n(b.x))\" y2=\"\(n(b.y))\"\(paint)/>")
+        }
+        // The guide is split around the plate ONLY while the plate still rides
+        // it: once the verdict has moved out of the way of the rows it judges,
+        // a gap in the guide would be decoration.
+        if let pill = plan.pill {
+            for foot in [g.footA, g.footB] {
+                guard let cut = pill.entry(from: foot, toward: pill.center) else { continue }
+                line(foot, cut, dashed)
+            }
+        } else {
+            line(g.footA, g.footB, dashed)
+        }
+
+        let vertical = measure.mode == .vertical
+        let guidePos = vertical ? g.footA.x : g.footA.y
+        let outlier = check.verdict?.outlierIndex
+        let tick = MeasureBuilder.alignmentTickHalf
+        let gap = plan.guideGap(vertical: vertical)
+        for (index, item) in check.items.enumerated() {
+            let lo = min(item.spanStart, item.spanEnd)
+            let hi = max(item.spanStart, item.spanEnd)
+            if index == outlier {
+                // The offender gets a bracket, not a tick: out from the guide
+                // to where this element's edge really sits, down that edge for
+                // the element's whole run, and back to the guide.
+                let heavy = stroke.replacingOccurrences(
+                    of: " stroke-width=\"\(n(measure.strokeWidth))\"",
+                    with: " stroke-width=\"\(n(max(measure.strokeWidth * 2, 2)))\"")
+                let corners = [MeasurePlan.point(cross: guidePos, along: lo, vertical: vertical),
+                               MeasurePlan.point(cross: item.edge, along: lo, vertical: vertical),
+                               MeasurePlan.point(cross: item.edge, along: hi, vertical: vertical),
+                               MeasurePlan.point(cross: guidePos, along: hi, vertical: vertical)]
+                let data = corners.enumerated().map { spot, point in
+                    "\(spot == 0 ? "M" : "L")\(n(point.x)) \(n(point.y))"
+                }.joined(separator: " ")
+                lines.append(indent(level) + "<path d=\"\(data)\"\(heavy)/>")
+            } else {
+                // The dashes are the guide travelling; solid is the guide
+                // confirming, so what the check covered is visible without
+                // counting anything.
+                for run in MeasurePlan.clip(lo...hi, around: gap) {
+                    line(MeasurePlan.point(cross: guidePos, along: run.lowerBound,
+                                           vertical: vertical),
+                         MeasurePlan.point(cross: guidePos, along: run.upperBound,
+                                           vertical: vertical), stroke)
+                }
+                let middle = (item.spanStart + item.spanEnd) / 2
+                line(MeasurePlan.point(cross: guidePos - tick, along: middle, vertical: vertical),
+                     MeasurePlan.point(cross: guidePos + tick, along: middle, vertical: vertical),
+                     stroke)
+            }
+        }
+        return lines
+    }
+
+    /// The readout plate's fill: its own colour at its own strength.
+    func chipFill(_ measure: MeasureContent) -> RGBA {
+        var tone = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        tone.a = Double(min(max(measure.chipOpacity, 0), 1))
+        return tone
+    }
+
+    /// Its ring, or nothing at all where the ring has been switched off.
+    func chipEdge(_ measure: MeasureContent) -> RGBA {
+        guard measure.hasChipBorder, let rgba = RGBA(hex: measure.chipBorderColorHex) else {
+            return RGBA(r: 0, g: 0, b: 0, a: 0)
+        }
+        return rgba
     }
 
     /// Words, as the outline of their letters.

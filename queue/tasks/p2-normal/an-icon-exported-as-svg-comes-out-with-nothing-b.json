@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 320,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T01:11:41.298Z",
-  "updated": "2026-09-16T12:23:34.726Z",
+  "updated": "2026-09-16T22:46:05.256Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Falls out of an-icon-exported-as-svg-has-no-picture-in-it (2026-09-16): a flat background is now written as <rect x=\"0\" y=\"0\" width=\"900\" height=\"700\" fill=\"#FFFFFF\"/> rather than embedded as a PNG, so the background is now one easy element to leave out. This is a UX question rather than a technical one, so it likely wants a decision card first: always drop a flat background on export, offer a Background toggle in the Export sheet beside the format row, or leave it as it is. SVGExport.flatColor / Writer.flatPicture in Sources/PhotonzCore/SVGExport.swift is where it would be skipped.",
@@ -27,6 +27,32 @@
     {
       "t": "2026-09-16T12:23:34.725Z",
       "note": "seq 2770 -> 320"
+    },
+    {
+      "t": "2026-09-16T22:27:20.691Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T22:45:55.465Z",
+      "note": "Reproduced first through the real export path before deciding anything: a pen-drawn shape on a blank 900x700 canvas wrote <rect x=\"0\" y=\"0\" width=\"900\" height=\"700\" fill=\"#FFFFFF\"/> above the path."
+    },
+    {
+      "t": "2026-09-16T22:45:55.512Z",
+      "note": "Decided rather than carded. The notes suggested a decision card over three options, but acceptance item 3 (the choice is visible in the Export sheet before you save) already rules out both always-drop-silently and leave-as-is, so the only live question was the default. Chose leave it out: a flat colour is one line for whoever places the file to put back, while a white box makes the file unusable anywhere else, and the sheet states it every time."
+    },
+    {
+      "t": "2026-09-16T22:45:55.557Z",
+      "note": "Adversarial review before building. (1) What counts as the background had to be tight or acceptance 2 breaks: settled on the bottom-most visible layer only, flat colour, reaching every edge, no transform, blend or effects. A screenshot is a photograph so it never qualifies; a frame exported alone is scoped to the frame group so its surface is inside it; a flat swatch drawn on top is not the bottom layer. (2) Cut a remembered setting: a preference somebody ticked months ago quietly putting a white box back is worse than asking on a sheet that is already open. (3) Cut PNG from scope as the shortest version, filed separately."
+    },
+    {
+      "t": "2026-09-16T22:45:55.605Z",
+      "note": "Adversarial review of the built thing, on the real app. Found the Export sheet reading every pixel of every picture three or four times per SwiftUI pass (36 ms each on 12 megapixels, measured) because unwritable, photographs and the handoff list each called FlatBitmap.colors from body. Fixed in the same file: one read when the sheet opens, handed to all four lines. Left rough: the swatch sits on the sheet's trailing edge rather than beside the label, which reads slightly detached but matches the macOS value-on-the-right pattern; did not earn a task."
+    },
+    {
+      "t": "2026-09-16T22:46:05.254Z",
+      "note": "An SVG export now leaves the canvas out. SVGExport.Background plus SVGExport.backdrop(in:flatImages:) in PhotonzCore name the layer that is only the canvas (bottom-most visible, one flat colour reaching every edge, no transform, blend or effects) and skip it; the Export sheet asks with an unticked Include the background row carrying a swatch of the colour that would go in, and the row is absent when there is nothing to leave out. A screenshot and a frame exported on its own keep their backgrounds unasked. Verified end to end: a pen-drawn icon on a blank 900x700 canvas wrote a 251 byte file with no rect and a 313 byte one with it, and the render-back tests check the pixels behind the icon come back empty. 17 new tests, new walk svg-export-background-walk.json, full suite green at 7869. Audit: queue/audits/2026-09-16-icon-export-background.json. Commit 1c7b42ec."
     }
-  ]
+  ],
+  "started": "2026-09-16T22:27:20.690Z",
+  "completed": "2026-09-16T22:46:05.255Z"
 }

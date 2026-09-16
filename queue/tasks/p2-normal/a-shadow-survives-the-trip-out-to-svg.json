@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 310,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:33.122Z",
-  "updated": "2026-09-16T12:23:34.682Z",
+  "updated": "2026-09-16T22:26:01.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SVG has feDropShadow and feGaussianBlur, both in a <filter> in <defs>, referenced with filter=url(#...). The reach: a filter region defaults to -10%/+10% of the bounding box, which clips a long shadow, so x/y/width/height on the filter have to be set from the shadows own reach (LayerStyle.previewPadding already knows it). Spread has no direct answer: feMorphology dilate is the usual trick. The decision to write down in docs/design/svg-export.md is which of those are exact and which are approximations, because the render-back check holds everything to one part in 255. Where it is written: Sources/PhotonzCore/SVGExport.swift, styleReason() is what currently sends these layers to a picture.",
@@ -39,6 +39,32 @@
     {
       "t": "2026-09-16T12:23:34.681Z",
       "note": "seq 570 -> 310"
+    },
+    {
+      "t": "2026-09-16T22:07:20.765Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T22:12:09.148Z",
+      "note": "Adversarial review first, by probing the rasterizer the render-back tests use (Apple's CoreSVG, via NSImage). Findings that decide the design: (1) feDropShadow is parsed and IGNORED - two wildly different shadows render byte-identical; (2) feMerge is ignored the same way; (3) feGaussianBlur, feOffset, feFlood, feComposite (in and over), SourceAlpha and SourceGraphic all work, and stdDeviation matches Core Image's gaussian sigma exactly (best match at k=1.00, mean diff 0.64 at sigma 6); (4) a filter on a <g> is ignored entirely, on a shape or a nested <svg> it is honoured; (5) CoreSVG applies a filter in the element's PARENT space while browsers apply it in the element's own space, so a filter must never ride an element that carries a transform or the two readers disagree about where the region is. So: shadows are written as the long-hand chain (blur SourceAlpha, offset, flood, composite in, composite over), never feDropShadow or feMerge; the filter rides the drawing and the placing goes on a group round it."
+    },
+    {
+      "t": "2026-09-16T22:25:42.612Z",
+      "note": "Shipped. A shape wearing a plain drop shadow or a blur now goes out as a <path> with one <filter> on it instead of an embedded picture, and the Export sheet stops naming it. The filter is written the long way round (feGaussianBlur on SourceAlpha, feOffset, feFlood, feComposite in, feComposite over) because Apple's reader ignores feDropShadow and feMerge; several shadows stack in Appearance-list order; the layer's own softness goes on first so a soft shape throws a soft shadow; the region is stated outright from Layer.renderBounds, as the union of the shape's own space and the space it is placed in, because the readers disagree about whose units it is in. Six cases still keep their picture and every one is a CoreSVG limit rather than an SVG one: a glow, an inner shadow, a shadow with spread, a faded layer, a turned layer, and a layer drawn in more than one piece or moved by a group. Checked by 14 new tests: SVGExportRenderTests renders the written file back through the system's own SVG reader and compares it to the canvas inside one part in 255 (a shadow, a blur, two shadows, soft-and-shadowed, and the fallbacks), plus a new expectADifferentPicture check so a file that quietly lost its effect cannot pass by being close enough. Full suite green, 7854 tests."
+    },
+    {
+      "t": "2026-09-16T22:25:42.657Z",
+      "note": "Fixed a separate bug found on the way, in the path this task touches: any faded layer that falls back to a picture was drawn TWICE as faint as the canvas, because DocumentRenderer baked the opacity into the rendered picture and the writer then wrote opacity= on the <image> as well. Reproduced at mean 22.07/255 off the app's own render for a faded glowing shape; 0.48 after. SVGExporter.picture(of:) now renders the layer at full strength. Not filed separately: it is fixed here and covered by aFadedShapeThatThrowsAShadowKeepsItsPicture."
+    },
+    {
+      "t": "2026-09-16T22:25:42.703Z",
+      "note": "left rough, not filed: the glow, the inner shadow and the spread shadow all need feMorphology, which grows a shape with square corners where the canvas grows it with round ones, so shipping it would trade one wrong picture for another; it is in the audit's rough list for the user to judge. Also left: a faded filtered shape could keep its vectors by writing fill-opacity and stroke-opacity instead of opacity, but only on a shape that has one of the two, so it was not worth the branch. The remaining big one, a bordered or grouped shape, IS filed as a-shadow-round-a-bordered-or-grouped-shape-leave."
+    },
+    {
+      "t": "2026-09-16T22:26:01.661Z",
+      "note": "A shape wearing a plain drop shadow or a blur now exports as a <path> with one <filter> on it instead of an embedded picture, and the Export sheet stops naming it. Written as the five primitives feDropShadow is shorthand for, stacked with feComposite over, because Apple's SVG reader draws nothing for feDropShadow or feMerge. Several shadows stack in Appearance-list order; the layer's softness goes on first so a soft shape throws a soft shadow; the filter region is stated from Layer.renderBounds and covers both spaces the readers disagree about. A glow, an inner shadow, a spread shadow, a faded layer, a turned layer and a layer drawn in more than one piece still fall back and say why. Also fixed: a faded layer that falls back to a picture was drawn twice as faint (22.07/255 off, now 0.48). Verified by 14 new tests including render-back through the system's own SVG reader inside one part in 255; full suite green at 7854. Commit c158cc07, audit queue/audits/2026-09-16-shadow-in-svg.json. The Mac was locked all task, so no walk could run: svg-export-walk.json was rewritten to match and a sweep is requested."
     }
-  ]
+  ],
+  "started": "2026-09-16T22:07:20.764Z",
+  "completed": "2026-09-16T22:26:01.662Z"
 }

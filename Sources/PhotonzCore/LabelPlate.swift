@@ -32,6 +32,21 @@ public enum LabelPlate {
     /// The words on a plate. One colour, because the plate is always dark.
     public static let inkHex = "#FFFFFF"
 
+    /// The soft drop shadow behind a caption's plate, so the label reads over
+    /// any screenshot. Only the caption wears one: a measurement's readout sits
+    /// on its own caliper and needs no lift.
+    ///
+    /// `blur` is the number Core Graphics is handed; `blurSigma` is the same
+    /// softness said the way a file says it. They differ because the two
+    /// measure a blur differently, and an exported caption drawn with the raw
+    /// number came out with a visibly heavier shadow than the canvas's.
+    public static let shadowBlur: CGFloat = 4
+    public static let shadowBlurSigma: CGFloat = 2
+    /// Positive moves the shadow DOWN, in the top-left space everything here
+    /// draws in.
+    public static let shadowOffset = CGSize(width: 0, height: 2)
+    public static let shadowColor = RGBA(r: 0, g: 0, b: 0, a: 0.35)
+
     /// The plate for something painted `color`: its own tone taken down until
     /// white sits on it.
     ///

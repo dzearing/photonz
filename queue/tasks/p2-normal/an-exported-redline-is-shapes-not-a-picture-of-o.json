@@ -5,14 +5,14 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 330,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:40.129Z",
-  "updated": "2026-09-16T12:23:34.771Z",
+  "updated": "2026-09-16T23:14:39.895243Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Where it is written: SVGExport.answer(for:) in Sources/PhotonzCore/SVGExport.swift returns .picture for arrow, highlight, measure. The geometry is all pure already: Geometry.arrowhead / arrowShaftEnd / arrowheadCircle build the head, CaptionMetrics sizes the pill, MeasureRasterizer draws the caliper from numbers Measure.swift owns. A caption pill and a measurement chip both hold TYPE, so they need the same glyph outlining text layers use (TextRasterizer.outlinePath). A highlight is composited with multiply: mix-blend-mode is CSS and browsers honour it, but the render-back check uses CoreSVG through NSImage, so check first whether CoreSVG honours it before relying on it, and if it does not, say so in docs/design/svg-export.md rather than shipping a file that looks different in the checker than in a browser.",
+  "notes": "Where it is written: SVGExport.answer(for:) in Sources/PhotonzCore/SVGExport.swift returns .picture for arrow, highlight, measure. The geometry is all pure already: Geometry.arrowhead / arrowShaftEnd / arrowheadCircle build the head, CaptionMetrics sizes the pill, MeasureRasterizer draws the caliper from numbers Measure.swift owns. A caption pill and a measurement chip both hold TYPE, so they need the same glyph outlining text layers use (TextRasterizer.outlinePath). A highlight is composited with multiply: mix-blend-mode is CSS and browsers honour it, but the render-back check uses CoreSVG through NSImage, so check first whether CoreSVG honours it before relying on it, and if it does not, say so in docs/design/svg-export.md rather than shipping a file that looks different in the checker than in a browser.\n\n--- 2026-09-16 ---\n- adversarial review before building: the mock is the canvas itself here, so the question was what to cut. Cut nothing from the arrow or the caliper: a caption pill that came out as a picture while its arrow came out as shapes would be the worst of both. Cut the plate's DROP SHADOW, which is the only thing SVG cannot carry safely (below).\n- reproduced the two platform limits before relying on either, with throwaway swift scripts against NSImage/CoreSVG. (1) CoreSVG honours NO blend mode: style attribute, presentation attribute and an isolated group all drew #FF8000 flat over #00C8FF instead of the (0,100,0) multiply. (2) CoreSVG DISPLACES any filtered element by one extra step for every transform above it: a filtered rect at (40,40) inside <g translate(60 60)> drew at (160,160), and feDropShadow moved the SHAPE itself the same way. A filter on a <g> is ignored outright but draws its contents correctly placed.\n- so: a highlight writes mix-blend-mode:multiply (right in browsers, flat in Apple readers) because the picture it replaced was flat EVERYWHERE, browsers included - measured: a highlight over a checkerboard exported today drew 17.875 off the canvas. A label plate writes NO shadow, because every label sits inside the group that places its arrow or caliper, so the halo would land somewhere else entirely in Preview. Both written up in docs/design/svg-export.md.\n- MeasurePlan.swift is new in PhotonzCore: the capsule the caliper's legs stop on, where the readout lands, the leader, and the guide gap. Moved out of MeasureRasterizer so the rasterizer and the SVG writer read ONE plan; all 419 measure tests passed unchanged across the move.\n- SVGExport.TypeSetter is the new hand-in: PhotonzCore owns no fonts, so how big '16 px' is at 14pt comes from SVGExporter.typeSetter, which asks PillRasterizer/TextRasterizer - the same measuring the canvas uses.\n- render-back differences, mean per channel out of 255 over the whole canvas: arrow 0.0001, arrow endings 0.0007, highlight over white 0.0, caliper 0.058, vertical caliper 0.049, moved readout 0.028, alignment check 0.33, captioned arrow 0.245 (that last one is the missing plate shadow, and it is the whole difference).\n- new expectSVG walk step: a walk can now claim how many layers would go out as pictures and what text the file must carry. Scripts/playtest/svg-export-redline-walk.json uses it. Printing was not checking - writeSVG already printed the fallback list and a walk stayed green whatever it said.\n- left rough, not filed: the measure chip can land on top of the words underneath it (that is where the canvas puts it, not something export changed); a zoom callout, a lens and a collage still go out as pictures.",
   "acceptance": [
     "An arrow exports as shapes: the shaft, the head and the caption pill, each drawn where the canvas draws them",
     "A highlight exports as shapes and still reads as a highlighter over what is under it",
@@ -40,6 +40,23 @@
     {
       "t": "2026-09-16T12:23:34.770Z",
       "note": "seq 580 -> 330"
+    },
+    {
+      "t": "2026-09-16T22:48:37.432Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T23:14:39.895243Z",
+      "note": "shipped: arrow, highlight and measurement all write as SVG shapes. New MeasurePlan in PhotonzCore shared by the rasterizer and the writer; SVGExport.TypeSetter hands in the type engine. 9 render-back tests, 5 core tests, 2 script tests; full suite 7889 green. Audit queue/audits/2026-09-16-redline-as-shapes.json."
+    },
+    {
+      "t": "2026-09-16T23:14:39.895243Z",
+      "note": "could not run the walk: the Mac's screen was locked for the whole task, so Scripts/playtest.sh reported status locked and macOS refuses every capture. The new walk Scripts/playtest/svg-export-redline-walk.json parsed (37 steps) but never ran. Evidence in the audit is an offscreen render of the canvas beside the written file read back, plus the written file opened in a real browser. Sweep requested."
+    },
+    {
+      "t": "2026-09-16T23:14:39.895243Z",
+      "note": "left rough: a measurement's readout can sit on top of the words underneath it, which is where the canvas puts it rather than anything export changed; a zoom callout, a lens and a collage still go out as embedded pictures. Neither earns its own task - the first is not a defect and the second is already named in docs/design/svg-export.md as what is left."
     }
-  ]
+  ],
+  "started": "2026-09-16T22:48:37.431Z"
 }

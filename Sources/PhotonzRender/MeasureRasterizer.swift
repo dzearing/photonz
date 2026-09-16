@@ -84,9 +84,7 @@ public enum MeasureRasterizer {
 
         // Where the readout lands, and what the line has to do about it.
         let labelText = measure.chipText(pixelScale: pixelScale)
-        let plan = labelPlan(measure, geometry: g, text: labelText,
-                             attachments: [(g.footA, g.headA), (g.headA, g.headB),
-                                           (g.headB, g.footB)])
+        let plan = labelPlan(measure, geometry: g, text: labelText)
 
         // Two rounded L legs, each running as far as the chip and no further.
         drawSide(foot: g.footA, head: g.headA, mid: g.labelAnchor, plan: plan, in: context)
@@ -118,8 +116,7 @@ public enum MeasureRasterizer {
                                            in context: CGContext) {
         guard let check = measure.alignment else { return }
         let labelText = measure.chipText(pixelScale: pixelScale)
-        let plan = labelPlan(measure, geometry: g, text: labelText,
-                             attachments: [(g.footA, g.footB)])
+        let plan = labelPlan(measure, geometry: g, text: labelText)
 
         // Dashed guide. It is split around the chip ONLY while the chip still
         // rides it: once the verdict has moved out of the way of the rows it is
@@ -146,12 +143,7 @@ public enum MeasureRasterizer {
         // The stretch of the guide the pill is sitting on, if it still is: the
         // solid runs below have to leave it alone for the same reason the dashes
         // do — a translucent pill must never show a stroke through it.
-        let gap: ClosedRange<CGFloat>? = {
-            guard let pill = plan.pill else { return nil }
-            let centre = vertical ? pill.center.y : pill.center.x
-            let half = vertical ? pill.rect.height / 2 : pill.rect.width / 2
-            return (centre - half)...(centre + half)
-        }()
+        let gap = plan.guideGap(vertical: vertical)
         for (index, item) in check.items.enumerated() {
             let spanMid = (item.spanStart + item.spanEnd) / 2
             if index == outlier {
@@ -165,10 +157,10 @@ public enum MeasureRasterizer {
                 let hi = max(item.spanStart, item.spanEnd)
                 context.saveGState()
                 context.setLineWidth(max(measure.strokeWidth * 2, 2))
-                context.move(to: point(cross: guidePos, along: lo, vertical: vertical))
-                context.addLine(to: point(cross: item.edge, along: lo, vertical: vertical))
-                context.addLine(to: point(cross: item.edge, along: hi, vertical: vertical))
-                context.addLine(to: point(cross: guidePos, along: hi, vertical: vertical))
+                context.move(to: MeasurePlan.point(cross: guidePos, along: lo, vertical: vertical))
+                context.addLine(to: MeasurePlan.point(cross: item.edge, along: lo, vertical: vertical))
+                context.addLine(to: MeasurePlan.point(cross: item.edge, along: hi, vertical: vertical))
+                context.addLine(to: MeasurePlan.point(cross: guidePos, along: hi, vertical: vertical))
                 context.strokePath()
                 context.restoreGState()
             } else {
@@ -177,14 +169,14 @@ public enum MeasureRasterizer {
                 // dashes are the guide travelling; solid is the guide confirming,
                 // so what the check actually covered is visible without counting
                 // anything.
-                for run in clip(min(item.spanStart, item.spanEnd)...max(item.spanStart, item.spanEnd),
+                for run in MeasurePlan.clip(min(item.spanStart, item.spanEnd)...max(item.spanStart, item.spanEnd),
                                 around: gap) {
-                    context.move(to: point(cross: guidePos, along: run.lowerBound, vertical: vertical))
-                    context.addLine(to: point(cross: guidePos, along: run.upperBound, vertical: vertical))
+                    context.move(to: MeasurePlan.point(cross: guidePos, along: run.lowerBound, vertical: vertical))
+                    context.addLine(to: MeasurePlan.point(cross: guidePos, along: run.upperBound, vertical: vertical))
                     context.strokePath()
                 }
-                context.move(to: point(cross: guidePos - tick, along: spanMid, vertical: vertical))
-                context.addLine(to: point(cross: guidePos + tick, along: spanMid, vertical: vertical))
+                context.move(to: MeasurePlan.point(cross: guidePos - tick, along: spanMid, vertical: vertical))
+                context.addLine(to: MeasurePlan.point(cross: guidePos + tick, along: spanMid, vertical: vertical))
                 context.strokePath()
             }
         }
@@ -202,100 +194,19 @@ public enum MeasureRasterizer {
 
     // MARK: - Where the readout lands (UX-PATTERNS D14)
 
-    /// Everything drawing needs to know about the readout: where the pill
-    /// centres, the outline the measurement's own line has to stop on while the
-    /// pill still rides it, and the leader that keeps a relocated pill attached
-    /// to its subject.
-    private struct LabelPlan {
-        var center: CGPoint
-        var size: CGSize
-        /// The pill's outline while it still rides the line; nil = the line is
-        /// drawn whole, because the readout has moved off it.
-        var pill: Pill?
-        var leader: (from: CGPoint, to: CGPoint)?
-    }
-
-    /// The pill as a shape to run into: the capsule `PillRasterizer` draws, so
-    /// a line meeting it lands on the actual curve rather than on a bounding
-    /// box corner that is not there.
-    private struct Pill {
-        var rect: CGRect
-        var radius: CGFloat
-
-        var center: CGPoint { CGPoint(x: rect.midX, y: rect.midY) }
-
-        /// True while `p` is within the outline.
-        ///
-        /// A capsule is every point no further than `radius` from the rect
-        /// shrunk by `radius`, which is one test for the flat sides and the
-        /// round caps alike.
-        func contains(_ p: CGPoint) -> Bool {
-            let r = clampedRadius
-            let core = rect.insetBy(dx: r, dy: r)
-            let dx = max(core.minX - p.x, 0, p.x - core.maxX)
-            let dy = max(core.minY - p.y, 0, p.y - core.maxY)
-            return dx * dx + dy * dy <= r * r
-        }
-
-        private var clampedRadius: CGFloat {
-            max(0, min(radius, rect.width / 2, rect.height / 2))
-        }
-
-        /// Where the straight run `from → toward` crosses the outline, or nil
-        /// when there is no crossing to find — `from` is already inside, which
-        /// is the caller's signal that the pill has swallowed it.
-        ///
-        /// The shape is convex and `toward` is inside it, so there is exactly
-        /// one crossing and halving the run converges straight onto it. Thirty
-        /// odd containment tests per line is nothing beside the thousands of
-        /// pixels the same raster is about to paint, and it keeps the caps and
-        /// the sides on one code path.
-        func entry(from: CGPoint, toward: CGPoint) -> CGPoint? {
-            guard !contains(from), contains(toward) else { return nil }
-            func point(_ t: CGFloat) -> CGPoint {
-                CGPoint(x: from.x + (toward.x - from.x) * t, y: from.y + (toward.y - from.y) * t)
-            }
-            var outside: CGFloat = 0, inside: CGFloat = 1
-            for _ in 0..<32 {
-                let mid = (outside + inside) / 2
-                if contains(point(mid)) { inside = mid } else { outside = mid }
-            }
-            return point(inside)
-        }
-    }
-
-    /// A relocated readout has to keep reading as part of its measurement. Up
-    /// to this far (px) plain adjacency does that on its own; past it, a leader
-    /// line draws the connection.
-    private static let adjacencyReach: CGFloat = 10
-
+    /// Where this measurement's readout lands, with its words measured here —
+    /// the plan itself is `MeasurePlan` in PhotonzCore, so the SVG writer puts
+    /// the plate and stops the line in exactly the same places this does.
     private static func labelPlan(_ measure: MeasureContent, geometry g: CaliperGeometry,
-                                  text: String,
-                                  attachments: [(CGPoint, CGPoint)]) -> LabelPlan {
+                                  text: String) -> MeasurePlan {
         guard measure.showLabel else {
-            return LabelPlan(center: g.labelAnchor, size: .zero, pill: nil, leader: nil)
+            return MeasurePlan(center: g.labelAnchor, size: .zero)
         }
-        let size = chipFootprint(for: text, fontSize: measure.labelPointSize,
-                                 padding: measure.labelPadding,
-                                 minWidth: measure.labelMinPillWidth)
-        let center = measure.labelPosition(chipSize: size)
-        let outline = Pill(rect: CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
-                                        width: size.width, height: size.height),
-                           radius: PillRasterizer.cornerRadius(for: size))
-
-        // The measurement's own line stops on the outline only while the pill
-        // is still riding it; once the readout has moved, the line is whole.
-        let rides = measure.labelRidesTheLine(chipSize: size)
-
-        // Attach: from the closest point of the measurement's own strokes to
-        // where that line meets the pill.
-        var leader: (from: CGPoint, to: CGPoint)?
-        if !rides, let anchor = nearestPoint(on: attachments, to: center),
-           let entry = outline.entry(from: anchor, toward: center),
-           hypot(entry.x - anchor.x, entry.y - anchor.y) > adjacencyReach {
-            leader = (anchor, entry)
-        }
-        return LabelPlan(center: center, size: size, pill: rides ? outline : nil, leader: leader)
+        return MeasurePlan.make(measure, geometry: g,
+                                chipSize: chipFootprint(for: text,
+                                                        fontSize: measure.labelPointSize,
+                                                        padding: measure.labelPadding,
+                                                        minWidth: measure.labelMinPillWidth))
     }
 
     /// One side of the caliper, drawn as far as the readout and no further.
@@ -312,7 +223,7 @@ public enum MeasureRasterizer {
     /// swallows the foot too, and this side draws nothing at all — a stroke
     /// there could only ever be seen through the pill.
     private static func drawSide(foot: CGPoint, head: CGPoint, mid: CGPoint,
-                                 plan: LabelPlan, in context: CGContext) {
+                                 plan: MeasurePlan, in context: CGContext) {
         guard let pill = plan.pill else {
             drawLeg(foot: foot, head: head, toward: mid, in: context)
             return
@@ -326,26 +237,9 @@ public enum MeasureRasterizer {
         }
     }
 
-    /// Closest point on any of the measurement's own segments to `p`.
-    private static func nearestPoint(on segments: [(CGPoint, CGPoint)], to p: CGPoint) -> CGPoint? {
-        var best: CGPoint?
-        var bestDistance = CGFloat.greatestFiniteMagnitude
-        for (a, b) in segments {
-            let dx = b.x - a.x, dy = b.y - a.y
-            let lengthSquared = dx * dx + dy * dy
-            let t = lengthSquared > 0
-                ? min(max(((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared, 0), 1)
-                : 0
-            let q = CGPoint(x: a.x + dx * t, y: a.y + dy * t)
-            let d = hypot(q.x - p.x, q.y - p.y)
-            if d < bestDistance { bestDistance = d; best = q }
-        }
-        return best
-    }
-
     /// The leader: a plain solid line, never dashed, so it reads as "this label
     /// belongs to that measurement" and not as more measurement.
-    private static func drawLeader(_ leader: (from: CGPoint, to: CGPoint),
+    private static func drawLeader(_ leader: MeasurePlan.Leader,
                                    in context: CGContext) {
         context.saveGState()
         context.setLineDash(phase: 0, lengths: [])
@@ -353,22 +247,6 @@ public enum MeasureRasterizer {
         context.addLine(to: leader.to)
         context.strokePath()
         context.restoreGState()
-    }
-
-    /// `run` with `gap` cut out of it: nothing, one piece or two.
-    private static func clip(_ run: ClosedRange<CGFloat>,
-                             around gap: ClosedRange<CGFloat>?) -> [ClosedRange<CGFloat>] {
-        guard let gap, gap.overlaps(run) else { return [run] }
-        var pieces: [ClosedRange<CGFloat>] = []
-        if run.lowerBound < gap.lowerBound { pieces.append(run.lowerBound...gap.lowerBound) }
-        if gap.upperBound < run.upperBound { pieces.append(gap.upperBound...run.upperBound) }
-        return pieces
-    }
-
-    /// A point from guide-relative coordinates: `cross` is the guide's own axis
-    /// position (x for a vertical guide), `along` the span axis.
-    private static func point(cross: CGFloat, along: CGFloat, vertical: Bool) -> CGPoint {
-        vertical ? CGPoint(x: cross, y: along) : CGPoint(x: along, y: cross)
     }
 
     /// The chip's footprint = measured text (at `fontSize`) + padding on all

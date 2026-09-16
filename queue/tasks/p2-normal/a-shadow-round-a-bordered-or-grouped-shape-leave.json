@@ -1,0 +1,28 @@
+{
+  "id": "a-shadow-round-a-bordered-or-grouped-shape-leave",
+  "title": "A shadow round a bordered or grouped shape leaves as a shape too",
+  "goal": "A shape with a shadow now leaves the app as a real shape, but only when it is drawn as one piece and sits on the canvas itself. Put a border on it, or draw it inside a frame, and it still leaves as a flat picture. Those are the two shapes people draw most, so close the gap.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2830,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T22:25:34.502Z",
+  "updated": "2026-09-16T22:25:34.505Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The blocker is not SVG, it is Apple CoreSVG (what NSImage, Preview, Quick Look and Xcode use), measured in the task log of a-shadow-survives-the-trip-out-to-svg: it ignores a filter on a <g> outright, and it draws a filtered element one extra step along for every transform standing above it. Hence the two restrictions in SVGExport.effects(of:carried:) and drawsAsOnePiece. Two leads, both probed: (1) CoreSVG DOES honour a filter on a nested <svg> element, so the pieces of a multi-element layer could be wrapped in <svg x y width height viewBox> carrying the filter, which also fixes the transform problem since a nested viewport places itself; (2) writing the drawing in absolute canvas coordinates instead of a translate would leave no transform above it at all. Probe scripts are throwaway but the numbers are in the task log.",
+  "acceptance": [
+    "A shape with both a border and a drop shadow exports as shapes, not as an embedded picture, and the Export sheet stops naming it",
+    "A shape wearing a shadow inside a frame that sits anywhere but the canvas corner does the same",
+    "Both are checked by rendering the written file back and comparing it to the app own render, inside one part in 255, the way every other case in SVGExportRenderTests is",
+    "The file still draws right in Preview and Quick Look, not only in a browser"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T22:25:34.504Z",
+      "note": "created (manual)"
+    }
+  ]
+}

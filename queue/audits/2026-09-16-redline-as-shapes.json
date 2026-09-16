@@ -1,0 +1,29 @@
+{
+  "feature": "An exported redline is shapes, not a picture of one",
+  "epic": "icon-export",
+  "summary": "Mark a screenshot up with an arrow, a highlighter and a measurement, export it as SVG, and all three now arrive as movable shapes instead of embedded pictures. Whoever you hand the file to can drag the arrow, retype the caption and recolour the caliper.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Any screenshot will do.",
+  "try": [
+    { "do": "Open a screenshot." },
+    { "do": "Press I, measure something with three clicks." },
+    { "do": "Pick the Highlight tool and drag a wash over a line of text." },
+    { "do": "Press A, drag an arrow at a control, type a caption, press Command Return." },
+    { "do": "Open Export and pick SVG.", "shot": "2026-09-16-svg-redline-1-canvas-and-file.png" },
+    { "do": "Read the list of what goes out as a picture: only the screenshot itself should be named." },
+    { "do": "Save the file and open it in a browser.", "shot": "2026-09-16-svg-redline-2-browser.png" },
+    { "do": "Open the same file in Preview and compare the highlighter." }
+  ],
+  "evaluate": [
+    "Handed this file, could somebody move the arrow and retype its caption without asking you for the original?",
+    "Does the caption still read over the screenshot without the soft shadow the canvas draws behind it?",
+    "Does the caliper's number sit exactly where the canvas puts it, with the line stopping on the pill the same way?",
+    "The highlighter mixes with the picture in a browser and paints flat over it in Preview. Is that the right trade, or should a highlight keep going out as a picture?",
+    "Is the file small enough to send? A marked up screenshot is about 100 KB, nearly all of it the screenshot."
+  ],
+  "rough": [
+    "No real screenshot of the app in this audit: the Mac's screen was locked for the whole task, so no walk could run and macOS refuses every capture. The first picture is the offscreen render instead, canvas on top and the written file read back underneath; the second is the written file opened in a real browser.",
+    "The caption's plate has no drop shadow in the file. Apple's SVG reader moves any filtered shape one step along for every transform above it, and a caption is always inside the group that places its arrow, so the halo would land somewhere else entirely in Preview and Quick Look. The plate itself carries the legibility, and it is all there.",
+    "A highlight writes mix-blend-mode, which browsers honour and Apple's reader ignores outright, so it reads as a highlighter in a browser and as a flat bar in Preview. It was flat in every reader before, picture and all, so this is strictly better, but it is a difference between readers and worth knowing.",
+    "The measure chip can still land on top of the words underneath it, as the second picture shows over Copy to clipboard. That is where the canvas puts it, not something the export changed."
+  ]
+}

@@ -47,6 +47,132 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "shapes")
     }
 
+    // MARK: - The marks a redline is made of
+
+    @Test func anArrowComesBackAsShapes() throws {
+        let arrow = AnnotationContent(shape: .arrow, strokeWidth: 5, colorHex: "#FF3B30")
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [
+            AnnotationBuilder.layer(content: arrow, from: CGPoint(x: 30, y: 130),
+                                    to: CGPoint(x: 160, y: 40))
+        ])
+        try Self.expectTheSamePicture(of: document, name: "arrow")
+    }
+
+    @Test func anOpenHeadAndADotComeBackAsShapes() throws {
+        var open = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#0A84FF")
+        open.arrowheadStyle = .open
+        var dot = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#34C759")
+        dot.arrowheadStyle = .hollowDot
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [
+            AnnotationBuilder.layer(content: open, from: CGPoint(x: 25, y: 110),
+                                    to: CGPoint(x: 80, y: 40)),
+            AnnotationBuilder.layer(content: dot, from: CGPoint(x: 115, y: 40),
+                                    to: CGPoint(x: 165, y: 110))
+        ])
+        try Self.expectTheSamePicture(of: document, name: "arrow-endings")
+    }
+
+    /// The caption is the piece of this that is TYPE: its plate is sized from
+    /// the words in it and its letters go out as outlines like any other.
+    @Test func anArrowsCaptionComesBackAsShapes() throws {
+        var arrow = AnnotationContent(shape: .arrow, strokeWidth: 5, colorHex: "#FF3B30")
+        arrow.captionFontSize = 14
+        arrow.caption = "16 px"
+        let document = PhotonzDocument(canvasSize: CGSize(width: 320, height: 220), layers: [
+            AnnotationBuilder.layer(content: arrow, from: CGPoint(x: 150, y: 170),
+                                    to: CGPoint(x: 270, y: 60))
+        ])
+        // The canvas lifts the plate off the picture with a soft shadow and the
+        // file leaves it out on purpose, because Apple's SVG reader would put
+        // it somewhere else entirely (`SVGExport.Writer.Plate`). That halo is
+        // the whole of the difference allowed here.
+        try Self.expectTheSamePicture(of: document, name: "arrow-caption")
+    }
+
+    @Test func aHighlightComesBackAsShapes() throws {
+        // Over white, where multiplying and painting straight over agree, so
+        // the mark's place and its colour are what is being judged. Apple's SVG
+        // reader honours no blend mode at all (`docs/design/svg-export.md`).
+        let store = ImageStore()
+        let white = SolidImage.make(size: CGSize(width: 200, height: 160), hex: "#FFFFFF")!
+        var document = PhotonzDocument.withBaseImage(store.register(white))
+        let mark = AnnotationContent(shape: .highlight, strokeWidth: 0, colorHex: "#FFD60A",
+                                     start: .zero, end: CGPoint(x: 120, y: 26))
+        document.layers.append(Layer(name: "Mark", content: .annotation(mark),
+                                     frame: CGRect(x: 30, y: 50, width: 120, height: 26)))
+        try Self.expectTheSamePicture(of: document, name: "highlight", store: store)
+    }
+
+    @Test func aHighlightSaysItPaintsThroughWhatIsUnderIt() throws {
+        let mark = AnnotationContent(shape: .highlight, strokeWidth: 0, colorHex: "#FFD60A",
+                                     start: .zero, end: CGPoint(x: 120, y: 26))
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [
+            Layer(name: "Mark", content: .annotation(mark),
+                  frame: CGRect(x: 30, y: 50, width: 120, height: 26))
+        ])
+        let file = SVGExporter.export(document, store: ImageStore()).text
+        #expect(file.contains("mix-blend-mode:multiply"))
+        #expect(!file.contains("<image"))
+    }
+
+    @Test func aMeasurementComesBackAsShapes() throws {
+        var content = MeasureContent(start: CGPoint(x: 40, y: 110), end: CGPoint(x: 210, y: 110),
+                                     mode: .horizontal)
+        content.labelScale = 0.7
+        let layer = MeasureBuilder.layer(content: content, from: CGPoint(x: 40, y: 110),
+                                         to: CGPoint(x: 210, y: 110))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 320, height: 220),
+                                       layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "measure", tolerance: 2)
+    }
+
+    @Test func aVerticalMeasurementComesBackAsShapes() throws {
+        var content = MeasureContent(start: CGPoint(x: 120, y: 40), end: CGPoint(x: 120, y: 180),
+                                     mode: .vertical)
+        content.labelScale = 0.7
+        let layer = MeasureBuilder.layer(content: content, from: CGPoint(x: 120, y: 40),
+                                         to: CGPoint(x: 120, y: 180))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 320, height: 220),
+                                       layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "measure-vertical", tolerance: 2)
+    }
+
+    @Test func anAlignmentCheckComesBackAsShapes() throws {
+        // A guide down three left edges, one of which is out by six: the
+        // dashed run, the ticks, the bracket round the offender and the
+        // verdict chip, all of it shapes.
+        var content = MeasureContent(start: CGPoint(x: 90, y: 40), end: CGPoint(x: 90, y: 190),
+                                     mode: .vertical)
+        content.labelScale = 0.6
+        content.alignment = AlignmentCheck(items: [
+            AlignmentItem(edge: 90, spanStart: 50, spanEnd: 80),
+            AlignmentItem(edge: 96, spanStart: 100, spanEnd: 130),
+            AlignmentItem(edge: 90, spanStart: 150, spanEnd: 180)
+        ], tolerance: 1)
+        let layer = MeasureBuilder.layer(content: content, from: CGPoint(x: 90, y: 40),
+                                         to: CGPoint(x: 90, y: 190))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 320, height: 240),
+                                       layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "alignment-check")
+    }
+
+    /// A readout that has been moved off the line it measures keeps a leader
+    /// back to it, and the caliper draws whole instead of stopping on a plate
+    /// that is no longer there (UX-PATTERNS D14).
+    @Test func aMovedReadoutKeepsItsLeader() throws {
+        var content = MeasureContent(start: CGPoint(x: 60, y: 140), end: CGPoint(x: 230, y: 140),
+                                     mode: .horizontal)
+        content.labelScale = 0.6
+        content.labelPlacement = .clearNegative
+        content.labelCrossReach = 46
+        content.labelPinned = true
+        let layer = MeasureBuilder.layer(content: content, from: CGPoint(x: 60, y: 140),
+                                         to: CGPoint(x: 230, y: 140))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 320, height: 240),
+                                       layers: [layer])
+        try Self.expectTheSamePicture(of: document, name: "measure-moved-readout")
+    }
+
     // MARK: - A file that moves
 
     @Test func anAnimatedFileStillDrawsTheIconWhereTheLapStarts() throws {
@@ -454,6 +580,9 @@ struct SVGExportRenderTests {
                                   sourceLocation: sourceLocation)
         let difference = meanDifference(between: pixels(of: mine, size: document.canvasSize),
                                         and: theirs)
+        if ProcessInfo.processInfo.environment["PHOTONZ_SVG_DIFF"] != nil {
+            print("SVGDIFF \(name): \(difference)")
+        }
         #expect(difference <= tolerance,
                 "\(name): the exported file draws \(difference) off the canvas's own render",
                 sourceLocation: sourceLocation)

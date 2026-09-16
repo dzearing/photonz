@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 300,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T11:16:55.818Z",
-  "updated": "2026-09-16T12:23:34.640Z",
+  "updated": "2026-09-16T22:06:45.500Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The live area and the center lines landed in Sources/PhotonzCore/IconKeylines.swift and Sources/Photonz/CanvasIconKeylines.swift; the shapes go in the same two files, as more entries on IconKeylineGuides and more subpaths on the same CGPath, so they inherit the casing, the ink and the switch for free. The mock (docs/design/mocks/pages/icon-draw-wt.html) draws an 18x18 square and a 17.2 circle inside a 24 unit artboard; Material Design uses 18x18 square, 20 circle, and 20x16 and 16x20 rectangles. Walk to extend: Scripts/playtest/icon-keylines-walk.json. Blocked on the decision card until the user answers.",
@@ -47,6 +47,36 @@
     {
       "t": "2026-09-16T12:23:34.639Z",
       "note": "seq 640 -> 300"
+    },
+    {
+      "t": "2026-09-16T21:57:41.188Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T22:06:28.435Z",
+      "note": "Before building: the mock's numbers are wrong. It draws the circle at 17.2 against an 18 square, which is SMALLER, while its own caption says the two then read as the same size. A circle drawn to a square's width holds a fifth less ink and reads shrunken, which is why Material and every mainstream set make the circle the bigger of the two. Built the standard pair (square 18, circle 20 in a 24 unit artboard) and corrected the mock page to match."
+    },
+    {
+      "t": "2026-09-16T22:06:28.482Z",
+      "note": "Shipped: IconKeylines gains keylineSquareSide/squareInset(forSide:)/squareCornerRadius(forSide:) and IconKeylineGuides gains squareKeyline (optional, nil on frames with no room) plus circleKeyline (the circle that fills the live area, so the two stay tangent at every size as the margin rounds). CanvasIconKeylines adds both as subpaths on the SAME CGPath, so they inherit the casing, the violet ink, the dash and the one View switch for free. 7835 tests pass."
+    },
+    {
+      "t": "2026-09-16T22:06:28.528Z",
+      "note": "Legibility gate: on a 24 point frame the square sits ONE document point inside the margin, so at normal zoom the two dashed outlines land on each other (the casing alone is 3 points wide). The shapes are therefore drawn only once that gap is 3 view points or more, which is about 300% zoom on a 24 frame; below it the frame shows the margin and the center lines exactly as before. Same rule the frame already followed when it got too small to have an inside."
+    },
+    {
+      "t": "2026-09-16T22:06:28.573Z",
+      "note": "left rough: the shapes needing ~300% zoom means somebody who makes a 24 icon frame and never zooms in sees no change. Deliberate rather than broken, and tutorials already frame an icon when a sample opens, so it did not earn a task; it is an evaluate question and a rough line in the audit for the user to react to."
+    },
+    {
+      "t": "2026-09-16T22:06:31.495Z",
+      "note": "Verified under a locked screen. icon-keylines-walk.json could not run (a walk finds controls by name and the lock takes the names away), so the checking was done with a name-free diagnostic walk driven only by coordinates and menu commands, run with PHOTONZ_ALLOW_LOCKED_WALK=1, which DID take four real window captures. Evidence: the report reads 'Frame 24 live 20x20 margin 2 square 18 circle 20 · drawn' from 359% up; measuring the capture's violet pixels along the frame's center row puts the live area at half-width 90px and the square at 82px, which at 449% on a retina screen is 20 and 18.3 document points; the one View switch takes the violet count 2794 -> 0 -> 2794; the offscreen render has zero violet pixels and the exported SVG carries only the frame and its background rect."
+    },
+    {
+      "t": "2026-09-16T22:06:45.498Z",
+      "note": "An icon frame now draws the square (18 of 24) and the circle (20, filling the live area) alongside the margin and the center lines, in Sources/PhotonzCore/IconKeylines.swift and Sources/Photonz/CanvasIconKeylines.swift, on the same path and the same View switch. Verified with 7835 passing tests, and under a locked screen with a name-free diagnostic walk that took real window captures: report reads 'square 18 circle 20 · drawn' past 359%, pixel-measured at 20 and 18.3 document points in the capture, the switch takes all of it away and brings it back, and the render and the SVG come back with the artwork alone. Audit: queue/audits/2026-09-16-icon-keyline-shapes.json. The mock's backwards 17.2 circle was corrected to 20. icon-keylines-walk.json gained a 4b-shapes stage that needs one unlocked run; a sweep is requested."
     }
-  ]
+  ],
+  "started": "2026-09-16T21:57:41.187Z",
+  "completed": "2026-09-16T22:06:45.499Z"
 }

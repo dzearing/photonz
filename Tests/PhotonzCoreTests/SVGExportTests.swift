@@ -643,6 +643,63 @@ struct SVGExportTests {
         #expect(SVGExport.fallbacks(in: document).isEmpty)
     }
 
+    // MARK: - The marks a redline is made of
+
+    /// The Export sheet asks `fallbacks` and `embeddedPictures` before you
+    /// save, so this is what it would have told you: nothing, because an
+    /// arrow, a highlight and a measurement all go out as shapes now.
+    @Test func aRedlineIsNotNamedAsSomethingThatGoesOutAsAPicture() {
+        var arrow = AnnotationContent(shape: .arrow, strokeWidth: 5, colorHex: "#FF3B30")
+        arrow.caption = "16 px"
+        let highlight = AnnotationContent(shape: .highlight, strokeWidth: 0, colorHex: "#FFD60A")
+        let document = Self.document([
+            AnnotationBuilder.layer(content: arrow, from: CGPoint(x: 20, y: 120),
+                                    to: CGPoint(x: 140, y: 40)),
+            AnnotationBuilder.layer(content: highlight, from: CGPoint(x: 20, y: 160),
+                                    to: CGPoint(x: 160, y: 186)),
+            MeasureBuilder.layer(content: MeasureContent(mode: .horizontal),
+                                 from: CGPoint(x: 30, y: 210), to: CGPoint(x: 200, y: 210))
+        ])
+        #expect(SVGExport.fallbacks(in: document).isEmpty)
+        #expect(SVGExport.embeddedPictures(in: document).isEmpty)
+    }
+
+    /// Without a type engine the labels cannot be outlined, and a caption that
+    /// went missing would be worse than a picture, so an arrow wearing one
+    /// keeps its picture and says why. An arrow with nothing written on it is
+    /// shapes either way.
+    @Test func aCaptionWithNoTypeEngineKeepsItsPicture() {
+        var arrow = AnnotationContent(shape: .arrow, strokeWidth: 5, colorHex: "#FF3B30")
+        arrow.caption = "16 px"
+        let written = SVGExport.write(Self.document([
+            AnnotationBuilder.layer(content: arrow, from: CGPoint(x: 20, y: 120),
+                                    to: CGPoint(x: 140, y: 40))
+        ]))
+        #expect(written.fallbacks.map(\.reason)
+            == ["its caption's letters could not be turned into outlines"])
+
+        let bare = SVGExport.write(Self.document([
+            AnnotationBuilder.layer(
+                content: AnnotationContent(shape: .arrow, strokeWidth: 5, colorHex: "#FF3B30"),
+                from: CGPoint(x: 20, y: 120), to: CGPoint(x: 140, y: 40))
+        ]))
+        #expect(bare.fallbacks.isEmpty)
+        #expect(bare.text.contains("<line"))
+    }
+
+    /// A highlighter paints through what is under it, and the file says so in
+    /// the one word CSS has for it.
+    @Test func aHighlightSaysItMixesWithWhatIsUnderIt() {
+        let highlight = AnnotationContent(shape: .highlight, strokeWidth: 0, colorHex: "#FFD60A")
+        let document = Self.document([
+            AnnotationBuilder.layer(content: highlight, from: CGPoint(x: 20, y: 160),
+                                    to: CGPoint(x: 160, y: 186))
+        ])
+        let text = SVGExport.write(document).text
+        #expect(text.contains("mix-blend-mode:multiply"))
+        #expect(text.contains("fill=\"#FFD60A\""))
+    }
+
     // MARK: - A picture that is one flat colour
 
     /// The blank canvas's background: a real bitmap on the canvas, and four

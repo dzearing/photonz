@@ -1,0 +1,27 @@
+{
+  "id": "the-word-format-in-the-export-sheet-is-broken-ac",
+  "title": "The word Format in the Export sheet is broken across three lines",
+  "goal": "Open Export and the word beside the format buttons reads Fo / r / m / at, one or two letters per line, three lines tall. It is the first thing your eye lands on in the sheet and it looks broken. The row needs to fit its label or stop showing one.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2840,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T22:45:05.939Z",
+  "updated": "2026-09-16T22:45:05.942Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-16 on main at c158cc07 plus the background work. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/svg-export-background-walk.json ; the sheet render is /tmp/photonz-playtest/svg-export-background-walk/svg-export-background-4-sheet.png and the window capture is the matching -sc.png, both showing Fo/r/m/at stacked. Not caused by the background row, which sits below it: the cause is the segmented Picker in ExportDialog.swift having five segments (PNG JPEG HEIC WebP SVG, WebP added 2026-09-15) inside .frame(width: 320), so SwiftUI gives the leading label almost no room. Either widen the sheet, drop to .labelsHidden() on that Picker (the segments say what they are), or move the label above the row.",
+  "acceptance": [
+    "The Export sheet shows Format on one line, or shows no label at all, with every format button still readable",
+    "The sheet still fits PNG, JPEG, HEIC, WebP and SVG without any of them being clipped",
+    "A walk photographs the sheet and the word is on one line in the picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T22:45:05.941Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1295,6 +1295,10 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectSVG(let pictured, let contains):
+            note(number, step.name, try checkSVG(pictured: pictured, contains: contains),
+                 state: describe())
+
         case .expectWindows(let titled, let count):
             note(number, step.name, try checkWindows(titled: titled, count: count),
                  state: describe())
@@ -3495,6 +3499,42 @@ private final class Run {
         return count == 0
             ? "nothing has been measured, as claimed"
             : "\(count) \(plural(count)) on the canvas, as claimed"
+    }
+
+    /// What the document would be WRITTEN as, without saving anything.
+    ///
+    /// The whole file is built here, because the question is about the file
+    /// rather than about the canvas: a mark that has quietly gone back to
+    /// riding out as a picture looks exactly the same on screen.
+    private func checkSVG(pictured: Int?, contains: String?) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "there is no document to write")
+        }
+        let animation: SVGExport.Animation = document.hasMotion
+            ? .moving(cycleMS: document.motionCycleLengthMS) : .still
+        let written = SVGExporter.export(document, store: editor.store, animation: animation)
+        var said: [String] = []
+        if let pictured {
+            let names = written.fallbacks.map(\.layerName)
+            guard names.count == pictured else {
+                let listed = written.fallbacks
+                    .map { "\($0.layerName) (\($0.reason))" }.joined(separator: ", ")
+                throw Failure(description: "\(names.count) of the drawing's layers would go out"
+                    + " as pictures, not \(pictured)"
+                    + (listed.isEmpty ? "" : ": \(listed)"))
+            }
+            said.append(pictured == 0
+                ? "every layer would go out as shapes, as claimed"
+                : "\(pictured) would go out as a picture, as claimed")
+        }
+        if let contains {
+            guard written.text.contains(contains) else {
+                throw Failure(description: "the file does not carry \"\(contains)\"")
+            }
+            said.append("the file carries \"\(contains)\"")
+        }
+        return said.joined(separator: "; ")
     }
 
     /// Where a measurement's two ends are, and what it reads.

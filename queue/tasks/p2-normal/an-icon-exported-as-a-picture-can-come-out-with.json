@@ -1,0 +1,28 @@
+{
+  "id": "an-icon-exported-as-a-picture-can-come-out-with",
+  "title": "An icon exported as a picture can come out with nothing behind it too",
+  "goal": "Export an icon you drew on a blank canvas as a PNG and the white canvas is baked into every pixel behind it, with nothing in the sheet to say otherwise. SVG now lets you leave the canvas out; a picture should too, so an icon handed over as a PNG can sit on a coloured page or a dark theme.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2850,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T22:45:42.591Z",
+  "updated": "2026-09-16T22:45:42.594Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Falls out of an-icon-exported-as-svg-comes-out-with-nothing-b (2026-09-16), which fixed SVG only. Reproduced the same day: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-walk.json --no-build wrote icon-as-png.png (900x700, hasAlpha yes) from a pen-drawn shape on a blank 900x700 canvas, and reading it back gave top-left (5,5) r255 g255 b255 a255 and bottom-right (895,695) r255 g255 b255 a255: opaque white, not empty. The SVG side is SVGExport.Background plus SVGExport.backdrop(in:flatImages:) in PhotonzCore, and ExportDialog.backgroundRow already holds the control and already knows the backdrop for the target (it reads FlatBitmap.colors once per sheet). The picture path is EditorState.exportComposite plus ExportSizer; the smallest version is to render with the backdrop layer set isVisible = false. JPEG and HEIC hold no transparency, so the row must not appear for them.",
+  "acceptance": [
+    "Exporting an icon drawn on a blank canvas as PNG can produce a file that is see-through behind the shapes",
+    "The same Include the background control appears for PNG, in the same place it appears for SVG, and is not offered for a format that cannot hold transparency",
+    "Exporting a screenshot or a whole screen still carries its background, unasked",
+    "A walk writes the picture and proves the corner pixels are empty"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T22:45:42.593Z",
+      "note": "created (manual)"
+    }
+  ]
+}

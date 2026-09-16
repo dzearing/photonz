@@ -12,9 +12,10 @@ enum PillRasterizer {
     /// moves the shadow DOWN in the flipped (top-left) space the rasterizers
     /// draw in.
     struct Shadow {
-        var blur: CGFloat = 4
-        var offset = CGSize(width: 0, height: 2)
-        var color = CGColor(gray: 0, alpha: 0.35)
+        var blur: CGFloat = LabelPlate.shadowBlur
+        var offset = LabelPlate.shadowOffset
+        var color = CGColor(gray: CGFloat(LabelPlate.shadowColor.r),
+                            alpha: CGFloat(LabelPlate.shadowColor.a))
     }
 
     /// The pill's footprint = measured text (at `fontSize`) + padding all
@@ -54,7 +55,7 @@ enum PillRasterizer {
     /// that has to MEET the pill's outline reads it from here, so the curve a
     /// line stops on is the same curve the pill is drawn with.
     static func cornerRadius(for chipSize: CGSize) -> CGFloat {
-        min(chipSize.width, chipSize.height) / 2
+        LabelCapsule.capsuleRadius(for: chipSize)
     }
 
     /// How many pixels one point of `context` covers: 1 for a document-sized

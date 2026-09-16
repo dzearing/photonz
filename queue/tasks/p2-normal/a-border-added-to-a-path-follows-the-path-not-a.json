@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 280,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:36:47.966Z",
-  "updated": "2026-09-16T12:23:34.551Z",
+  "updated": "2026-09-16T21:26:40.045Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-13 with a throwaway render test (triangle path, anchors (60,0),(120,100),(0,100), no stroke of its own, one BorderEffect width 6 position outside painted #FF0000, layer at (40,40), 200x200 canvas):\n\n  box top-left corner, outside the triangle: (255,0,0,255)\n  beside the apex, outside the triangle: (0,0,0,0)\n  on the triangle's own left edge: (47,111,237,255)\n\nThe corner of the BOX is pure border red although the triangle is nowhere near it. Also confirmed at the model level: Layer.ringShape answers .box for a path.\n\nThis is exactly the bug an ellipse had on 2026-09-08, fixed then by RingShape.swift (Sources/PhotonzCore/RingShape.swift). RingShape is a String-backed enum of .box and .ellipse, and DocumentRenderer.ringed generates its rings with Core Image filters (roundedRectMask / ellipseRing), so a path needs a third answer that carries real geometry rather than a case name: most likely a drawn mask from PathRasterizer.cgPath, stroked at the border width, rather than a CI generator.\n\nA path arrives with its own edge (PathContent.strokeWidth), so nobody has to add a Border to get a line, which is why this is p2 rather than p1. See docs/design/vector-paths.md, \"Known rough edges\".",
@@ -39,6 +39,40 @@
     {
       "t": "2026-09-16T12:23:34.550Z",
       "note": "seq 550 -> 280"
+    },
+    {
+      "t": "2026-09-16T21:11:44.019Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T21:13:49.744Z",
+      "note": "Reproduced before building. The CLOSED-path half of this bug is already fixed: cb69185e (2026-09-13 12:17, five hours after this task was filed) gave ringed() an outline route that bakes the silhouette from PathRasterizer.cgPath, so a triangle path with an outside border now leaves its box corners clear. Re-ran the task's own repro: box top-left (42,42) = [0,0,0,0], apex outside (100,36) = [255,0,0,255]. Swept widths 1/6/20 x inside/center/outside on a closed triangle: every box corner clear."
+    },
+    {
+      "t": "2026-09-16T21:13:52.660Z",
+      "note": "What IS still broken, reproduced on an open chevron (anchors (0,0),(60,100),(120,0), not closed, no stroke of its own, one 8pt red Border, layer at (40,50), 220x220 canvas), alpha sampled: pos=inside -> box bottom-left corner (44,146) alpha 255 and the arm itself (70,100) alpha 0, i.e. a plain rectangle and no line on the path at all; pos=outside -> 4132 inked pixels against centre's 2166, so an 8pt border is painted 16pt wide. pos=center is already right. Root cause: pathSilhouette() refuses an open outline when reaching == 0, which is exactly what BorderPosition.inside asks for, so ringed() falls through to the rounded-rect route; and outside asks for a sweep of the full width, which on a line with no inside paints both sides."
+    },
+    {
+      "t": "2026-09-16T21:13:55.629Z",
+      "note": "Adversarial review of the idea before building. (1) The mock is not the guide here; the app's OWN precedent is: PathContent.effectiveStrokePosition already says isClosed ? strokePosition : .center, because an open line has no inside. A Border must answer the same question the same way, or the layer's own edge and a Border on it sit in different places for the same three words. (2) Shortest version that delivers the value: collapse the position to centre for an open outline, in the model, and let every reader of the outset agree. No new RingShape case is needed, and the note in this task suggesting one is out of date. (3) What a first-time user gets wrong: they pick Inside on a line and nothing happens, or they pick Outside and get double the width they typed. So the control that cannot mean anything goes away rather than lying, the way the Position popup already goes away on a border following a label's letters. (4) Decorative and cut: nothing added to the panel beyond one line of small print where the popup was."
+    },
+    {
+      "t": "2026-09-16T21:23:35.672Z",
+      "note": "Adversarial review of the BUILT thing. Could not drive the app: the Mac's screen was locked for the whole task (every launch printed 'screen locked'), so the new walk Scripts/playtest/border-follows-the-path-walk.json parsed (53 steps, release next) and refused to run, and no window capture was possible. Judged on offscreen document renders instead, which is what CLAUDE.md says to do when TCC or the lock takes the screen away. What the renders show: an outside border grows the triangle and an inside one eats into it, both on the outline; the open chevron gets a line down its middle where it used to get an empty square. What I could not judge without the app: whether the small print replacing the Position popup reads well in the dock's narrow column, and whether losing the popup mid-selection (pick a line and a box together and it comes back) feels like a flicker. Both go in the audit's rough list for the user to judge."
+    },
+    {
+      "t": "2026-09-16T21:26:28.961Z",
+      "note": "Rough edges, and where each one went. (1) No real screenshot and no walk run, because the screen was locked the whole task: in the audit's rough list, and a sweep is ALREADY pending (queue/bin/sweep.sh status says the 2026-09-16T21:11:43Z one could not run for the same reason), so I filed no new request. (2) The Position popup vanishing on a line rather than staying and saying it cannot act: audit rough, for the user to judge; it follows the panel's own precedent so it is not a defect to file. (3) I nearly filed the two-megapixel silhouette bake cap as a case where a path's ring still falls back to a rectangle, and could NOT reproduce it: a triangle path with an 8.5 megapixel ring (anchors (1500,0),(3000,2800),(0,2800), 10pt outside border, 3200x3000 canvas) still leaves both top box corners at alpha 0 and paints alpha 255 above the apex. So the claim came back out of the audit rather than going in unverified, and no task was filed. Left rough with no task: the fallback comment in DocumentRenderer.ringed describes a path falling through to the box that I could not make happen, which is a comment only an agent reads."
+    },
+    {
+      "t": "2026-09-16T21:26:36.850Z",
+      "note": "Acceptance, each one checked rather than assumed. (1) 'closed path, every width and all three positions' — PathBorderRenderTests.theBoxCornerStaysEmpty runs widths 1/6/20 against inside/center/outside and reads both top corners of the box; plus theRingFollowsTheOutline and anInsideRingStaysOnTheOutline read the apex and the bottom edge. (2) 'open path follows its line, or the row says plainly that it cannot' — BOTH: aLineIsNeverBoxed and aLineGetsTheWidthItAsksFor prove the band runs down the line at the asked width in all three positions, and the Border row now drops its Position popup on a line and puts one line of small print there (EffectsListInspector.BorderPositionRow.lineNote), which OpenLineBorderTests.theRowKnows and theSelectionCarriesIt pin at the model level. (3) 'a pixel test proves the corner of a triangle's bounding box is NOT painted' — theBoxCornerStaysEmpty, six cases. (4) 'nothing changes for a picture, a frame, a group or an oval' — everythingElseIsUntouched reads an oval still ringing as an oval and a frame still ringing as its box, aClosedPathKeepsItsPositions proves the collapse reaches lines only, and the whole 7819-test suite passes."
+    },
+    {
+      "t": "2026-09-16T21:26:40.043Z",
+      "note": "A Border on an open path now runs down the line at the width asked for, in all three positions, instead of drawing a rectangle round the layer's box; the closed-path half was already fixed on 2026-09-13 and is now pinned by pixel tests. Shipped in PhotonzCore (BorderEffect.ringOutset(aroundOpenLine:), Layer.ringsAnOpenLine, LayerStyleSelection.isOpenLineEverywhere), PhotonzRender (DocumentRenderer.borderEffects), SVGExport.pathRings so the exported file stops writing a <rect> for a ring round a path, and EffectsListInspector, which drops the Position popup on a line and says why. Verified by 26 new tests (9 pixel-level render, 7 export, 10 model) inside a green 7819-test run, and by offscreen document renders committed beside the audit. The screen was locked for the whole task so no walk could run and no window could be photographed; the new walk border-follows-the-path-walk.json parses at 53 steps and a sweep is already pending. Commits 476c40c1, d3046eb1."
     }
-  ]
+  ],
+  "started": "2026-09-16T21:11:44.018Z",
+  "completed": "2026-09-16T21:26:40.044Z"
 }

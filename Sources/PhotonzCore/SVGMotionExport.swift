@@ -164,7 +164,7 @@ enum MotionSVG {
                 push(" \(role)=\"\(track.base)\"", [track.element])
             case .strokeWidth:
                 guard !isPicture, canInheritStrokeWidth(layer) else {
-                    drop(property, "belongs to a line the file draws in two halves")
+                    drop(property, widthReason(for: layer, isPicture: isPicture))
                     continue
                 }
                 wrap.omitsStrokeWidth = true
@@ -204,6 +204,21 @@ enum MotionSVG {
             return "fill"
         default:
             return nil
+        }
+    }
+
+    /// Why a width written on the group would not reach the line this layer
+    /// draws, in words a person can read on the Export sheet.
+    static func widthReason(for layer: Layer, isPicture: Bool) -> String {
+        if isPicture { return "belongs to a layer that goes out as a picture" }
+        switch layer.content {
+        case .annotation(let annotation)
+            where annotation.shape == .arrow || annotation.shape == .highlight:
+            return "belongs to a mark the file draws in several pieces"
+        case .measure:
+            return "belongs to a mark the file draws in several pieces"
+        default:
+            return "belongs to a line the file draws in two halves"
         }
     }
 

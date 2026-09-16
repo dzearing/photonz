@@ -1795,6 +1795,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// What the document would be WRITTEN as, asked without saving anything.
+    ///
+    /// `pictured` is how many layers have no vector answer and would ride out
+    /// as embedded pictures; zero is the usual claim and the one that says a
+    /// drawing really is shapes. `contains` is a run of text the file must
+    /// carry, for the handful of things a picture of the file cannot show —
+    /// that a highlight says it mixes with what is under it, say.
+    ///
+    /// A `writeSVG` step already prints both, but printing is not checking: a
+    /// walk stays green while the line quietly changes. This is the claim.
+    case expectSVG(pictured: Int?, contains: String?)
     /// How many editor WINDOWS carrying this title are open right now.
     ///
     /// The one claim about the app that is not about anything inside a window,
@@ -2168,7 +2179,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2220,6 +2231,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
         case .expectTutorialTracks: "expectTutorialTracks"
         case .expectFeet: "expectFeet"
@@ -2648,6 +2660,22 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectSVG":
+            let pictured: Int?
+            if fields["pictured"] != nil {
+                let howMany = try f.number("pictured")
+                guard howMany >= 0, howMany == howMany.rounded() else {
+                    throw f.invalid("pictured", "a count of layers that go out as pictures is a whole number, zero or more, not \(howMany)")
+                }
+                pictured = Int(howMany)
+            } else {
+                pictured = nil
+            }
+            let contains = fields["contains"] != nil ? try f.string("contains") : nil
+            guard pictured != nil || contains != nil else {
+                throw f.invalid("pictured", "expectSVG has to claim something: how many layers would go out as pictures, or a run of text the file must carry")
+            }
+            self = .expectSVG(pictured: pictured, contains: contains)
         case "expectWindows":
             let titled = try f.string("titled")
             guard fields["count"] != nil else {

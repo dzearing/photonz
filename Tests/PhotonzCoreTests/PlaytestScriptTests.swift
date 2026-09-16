@@ -1924,6 +1924,34 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectMeasures"))
     }
 
+    // A walk that exports and photographs the sheet proves the sheet opened,
+    // not that the file is shapes: a mark that has quietly gone back to riding
+    // out as a picture looks exactly the same on screen. `expectSVG` is the
+    // step that asks the file.
+    @Test("An expectSVG step says how much of the drawing would go out as pictures")
+    func expectSVGNamesWhatWouldBePictured() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSVG", "pictured": 0,
+                       "contains": "mix-blend-mode:multiply" } ] }
+        """)
+        guard case .expectSVG(let pictured, let contains) = script.steps[0] else {
+            Issue.record("expectSVG"); return
+        }
+        #expect(pictured == 0)
+        #expect(contains == "mix-blend-mode:multiply")
+        #expect(script.steps[0].name == "expectSVG")
+        #expect(PlaytestStep.names.contains("expectSVG"))
+    }
+
+    @Test("expectSVG has to claim something")
+    func expectSVGWithNoClaimIsRefused() {
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectSVG" } ] }
+            """)
+        }
+    }
+
     // Working a whole track back to back used to open a window per guide, five
     // of them all called Tutorial Sample, and no screenshot of any one of them
     // could show it: each window looked exactly right. `expectWindows` is the

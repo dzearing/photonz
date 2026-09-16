@@ -32,9 +32,28 @@ public enum SVGExporter {
                             else { return nil }
                             return SVGExport.pathData(outline)
                         },
+                        typeSetter: typeSetter,
                         flatImages: FlatBitmap.colors(in: document, store: store),
                         background: background)
     }
+
+    /// How the labels the app draws for itself — an arrow's caption, a
+    /// measurement's readout — are measured and outlined. Every one of them is
+    /// the same plate set in the same face, so they all come through
+    /// `PillRasterizer.content`, which is what the canvas sets them with.
+    static let typeSetter = SVGExport.TypeSetter(
+        size: { text, fontSize in
+            TextRasterizer.naturalSize(PillRasterizer.content(text, fontSize: fontSize))
+        },
+        inkOffset: { text, fontSize in
+            TextRasterizer.inkOffset(PillRasterizer.content(text, fontSize: fontSize))
+        },
+        outline: { text, fontSize, size in
+            guard let path = TextRasterizer.outlinePath(PillRasterizer.content(text,
+                                                                               fontSize: fontSize),
+                                                        size: size) else { return nil }
+            return SVGExport.pathData(path)
+        })
 
     /// The canvas this drawing sits on, when it is a flat colour Export could
     /// offer to leave out. Nil for a screenshot, a photograph, or anything
