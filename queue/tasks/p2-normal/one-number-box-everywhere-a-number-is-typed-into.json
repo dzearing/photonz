@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 225,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:15:25.894Z",
-  "updated": "2026-09-15T12:15:30.862Z",
+  "updated": "2026-09-16T03:21:07.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the design review of 2026-09-15, counting what the motion work hand-rolled.\n\nThree implementations today:\n  Sources/Photonz/GeometryInspector.swift:291  GeometryNumberField\n  Sources/Photonz/ArrangementInspector.swift:836  LayoutNumberField\n  Sources/Photonz/MotionListInspector.swift:583  MotionNumberField   (new, 2026-09-15)\n\nThe key handling is ALREADY shared, as the .numberFieldKeys modifier, so the hard part is not the keys. What is not shared is everything each one learned:\n\n- GeometryNumberField knows a layer can refuse part of what was typed and that the box has to show what was TAKEN, not what was asked for, or the next arrow key steps from a number nothing has. Its own comment says this was worked out after the change rather than before it.\n- LayoutNumberField knows Mixed has to be the field TEXT and not its placeholder so it is drawn at the one strength every other Mixed in the dock is drawn at. Its own comment says this made it the fifth answer to the same question, and points at MixedLook.swift. It also knows the difference between a box that is empty and a box standing in for several values that disagree, and when emptying means something.\n- MotionNumberField, written today, has none of that.\n\nThe fourth is already queued: type-a-number-into-any-effects-slider-not-just-d asks for typing on Effects sliders, which have no box at all. Doing that task before this one makes a fourth hand-roll.",
@@ -29,6 +29,15 @@
     {
       "t": "2026-09-15T12:15:30.861Z",
       "note": "seq 2640 -> 225"
+    },
+    {
+      "t": "2026-09-16T03:19:46.145Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T03:21:07.662Z",
+      "note": "Adversarial review BEFORE building. Read all three fields plus their call sites (ComponentPanel InstanceNumberKnob/InstanceRoomKnob, FourSidedPopout, MotionStripView cycle field). Findings:\n\n1. The risk is a box with a long parameter list that is three boxes in a trench coat. Guard: the box owns the BEHAVIOUR (what lands, what a refused value shows, what Mixed looks like, what an arrow steps by, what emptying does); panels only declare their DOMAIN (a floor, whole numbers or not, a unit mark, the words they stand in with).\n\n2. The three disagree on five things, not one: (a) select-all on focus, geometry always, layout only over the word Mixed, motion never; (b) rounding on step, geometry rounds the base, layout rounds the result, motion does not round at all; (c) whether a value change clobbers what you are typing, layout guards on focus, geometry does not; (d) an arrow with nothing to step from, geometry steps each layer, the other two do nothing; (e) emptying.\n\n3. The motion field has the geometry bug live today. Start and Over clamp through MotionTiming.setStart/setDuration (max(0) and max(1)). Type -5 into Start: the model holds 0, the incoming text prop was already the string \"0\" so onChange never fires, and the box goes on showing -5. Same class as the 50-typed-into-a-stack-held-at-160 case geometry wrote its comment about.\n\n4. Emptying a Mixed layout box has a smaller version of it: land() returns early when value is nil, so the box is left BLANK rather than back on the word Mixed.\n\n5. Shortest version that delivers the value: one SwiftUI box in Sources/Photonz plus the decidable rules in PhotonzCore where they can be tested. Nothing new on screen, no new control, no mock to follow.\n\n6. Cut: nothing was decorative. What I am NOT doing is converting CanvasInspector, CanvasGridSettingsView and FrameColumnsInspector, which also hand-roll on top of .numberFieldKeys. Three at a time keeps the diff reviewable and they are not what the task counted."
     }
-  ]
+  ],
+  "started": "2026-09-16T03:19:46.144Z"
 }

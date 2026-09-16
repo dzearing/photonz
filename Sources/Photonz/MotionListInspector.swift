@@ -256,7 +256,7 @@ private struct MotionValueSetting: View {
                                       : "What it has become by the end") {
             switch value {
             case let .number(number):
-                MotionNumberField(text: MotionEntry.text(number),
+                MotionNumberField(value: number,
                                   label: "\(motion.property.title) \(label)",
                                   suffix: MotionEntry.suffix(motion.property)) { typed in
                     editorState.updateMotion(id: motion.id) { edited in
@@ -265,14 +265,14 @@ private struct MotionValueSetting: View {
                 }
             case let .point(point):
                 HStack(spacing: 4) {
-                    MotionNumberField(text: MotionEntry.text(Double(point.x)),
+                    MotionNumberField(value: Double(point.x),
                                       label: "\(motion.property.title) \(label) X", suffix: nil) { typed in
                         editorState.updateMotion(id: motion.id) { edited in
                             let moved = CGPoint(x: typed, y: point.y)
                             if isFrom { edited.from = .point(moved) } else { edited.to = .point(moved) }
                         }
                     }
-                    MotionNumberField(text: MotionEntry.text(Double(point.y)),
+                    MotionNumberField(value: Double(point.y),
                                       label: "\(motion.property.title) \(label) Y", suffix: nil) { typed in
                         editorState.updateMotion(id: motion.id) { edited in
                             let moved = CGPoint(x: point.x, y: typed)
@@ -350,12 +350,12 @@ private struct MotionPivotSetting: View {
                              help: "The same point as two numbers on the canvas, for when a "
                                  + "number is what you want rather than a drag") {
                 HStack(spacing: 4) {
-                    MotionNumberField(text: MotionEntry.text(Double(point.x)),
+                    MotionNumberField(value: Double(point.x),
                                       label: "Around X", suffix: nil) { typed in
                         editorState.setMotionPivot(
                             MotionPivot(at: CGPoint(x: typed, y: point.y), in: box), of: motion.id)
                     }
-                    MotionNumberField(text: MotionEntry.text(Double(point.y)),
+                    MotionNumberField(value: Double(point.y),
                                       label: "Around Y", suffix: nil) { typed in
                         editorState.setMotionPivot(
                             MotionPivot(at: CGPoint(x: point.x, y: typed), in: box), of: motion.id)
@@ -400,9 +400,14 @@ private struct MotionMillisecondSetting: View {
                             ? "How long after the top of the loop this starts, in milliseconds. "
                               + "That gap is how one part of an icon lags behind another."
                             : "How long the change takes, in milliseconds") {
-            MotionNumberField(text: String(isStart ? motion.timing.startMS : motion.timing.durationMS),
+            // A lap starts at nought at the earliest and a change takes at
+            // least a millisecond, so the box holds those two floors itself
+            // and shows what was TAKEN. It used to show -5 over a start of 0.
+            MotionNumberField(value: Double(isStart ? motion.timing.startMS : motion.timing.durationMS),
                               label: "\(motion.property.title) \(isStart ? "Start" : "Over")",
-                              suffix: "ms") { typed in
+                              suffix: "ms",
+                              floor: isStart ? 0 : 1,
+                              wholeNumbers: true) { typed in
                 editorState.updateMotion(id: motion.id) { edited in
                     if isStart { edited.timing.setStart(Int(typed.rounded())) }
                     else { edited.timing.setDuration(Int(typed.rounded())) }
@@ -573,66 +578,36 @@ enum MotionEntry {
 
 /// One number on a motion row.
 ///
-/// The draft lives in the box until it lands, and it lands on Return, on Tab
-/// and on clicking away, which is the rule every other number field in this app
-/// follows (`NumberFieldEntry`): a number typed and then abandoned is the most
-/// common way a person loses an edit. Text that is not a number snaps back to
-/// what the motion really says rather than being guessed at.
+/// It is a `PanelNumberField`, the one number box every panel types into, with
+/// the motion panel's own spelling on it: no trailing zeroes, because a row of
+/// "12.00" reads as a spreadsheet rather than as a drawing. Everything else —
+/// Return landing the number, Escape putting it back, both handing the
+/// keyboard to the picture, the arrow keys, and showing what was TAKEN when a
+/// floor holds the number — is decided once, over there.
+///
 /// Shared with the timing strip's own lap-length readout, so the two number
 /// fields that mean milliseconds behave identically.
 struct MotionNumberField: View {
-    let text: String
+    let value: Double
     let label: String
     let suffix: String?
+    /// The smallest this number may be, for the two that have a floor.
+    var floor: CGFloat?
+    var wholeNumbers = false
     let land: (Double) -> Void
 
-    @State private var draft = ""
-    @State private var isFinishing = false
-    @FocusState private var isFocused: Bool
-
     var body: some View {
-        HStack(spacing: 3) {
-            TextField(label, text: $draft)
-                .textFieldStyle(.roundedBorder)
-                .controlSize(.small)
-                .multilineTextAlignment(.trailing)
-                .monospacedDigit()
-                .frame(width: 52)
-                .focused($isFocused)
-                .onSubmit { commit() }
-                .numberFieldKeys(commit: { finish { commit() } },
-                                 revert: { finish { draft = text } },
-                                 step: { direction, coarse in step(direction, coarse) })
-            if let suffix {
-                Text(suffix).font(.caption2).foregroundStyle(.tertiary)
-            }
-        }
-        .playtestControl(label, detail: "Motion")
-        .onAppear { draft = text }
-        .onChange(of: text) { draft = text }
-        .onChange(of: isFocused) { _, focused in
-            if !focused {
-                if isFinishing { isFinishing = false } else { commit() }
-            }
-        }
-    }
-
-    private func finish(_ body: () -> Void) {
-        body()
-        isFinishing = true
-    }
-
-    private func commit() {
-        guard let typed = Double(draft.trimmingCharacters(in: .whitespaces)) else {
-            draft = text
-            return
-        }
-        land(typed)
-    }
-
-    private func step(_ direction: Int, _ coarse: Bool) {
-        let base = Double(draft) ?? Double(text) ?? 0
-        land(base + Double(direction) * (coarse ? 10 : 1))
+        PanelNumberField(showing: .number(MotionEntry.text(value)),
+                         label: label,
+                         suffix: suffix,
+                         floor: floor,
+                         wholeNumbers: wholeNumbers,
+                         playtest: (label, "Motion"),
+                         spell: { MotionEntry.text(Double($0)) },
+                         land: { typed in
+                             land(Double(typed))
+                             return nil
+                         })
     }
 }
 

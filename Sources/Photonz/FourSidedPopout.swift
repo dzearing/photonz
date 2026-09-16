@@ -126,12 +126,16 @@ struct FourSidedPopout: View {
         if numbers.indices.contains(index) {
             let number = numbers[index]
             VStack(spacing: 1) {
-                LayoutNumberField(
-                    title: number.title,
-                    value: number.value,
-                    placeholder: FourSidedNumber.standIn(uniform: number.value),
+                PanelNumberField(
+                    showing: NumberBox.showing(
+                        number.value,
+                        standingIn: FourSidedNumber.standIn(uniform: number.value)),
+                    label: number.title,
+                    width: .fitting(least: 62, most: 148),
+                    floor: 0,
+                    wholeNumbers: true,
                     help: number.help,
-                    commit: number.commit
+                    land: { number.commit($0); return nil }
                 )
                 .playtestField(number.title)
                 Text(number.title)

@@ -1,0 +1,29 @@
+{
+  "feature": "One number box, everywhere a number is typed into a panel",
+  "epic": "ui-building",
+  "summary": "Every number you can type into a panel is now the same box: Position & Size, Layout's gap and padding and limits, the four sides in their popout, a number knob on a copy, a motion row and the timing strip. Typing, stepping, the word Mixed, a value the thing refuses and what emptying the box means are decided once instead of five times.",
+  "setup": "Photonz Dev, release Next. Nothing new to turn on: every panel that already had a number box is on the new one.",
+  "try": [
+    { "do": "Draw a rectangle, open Position & Size, click into W and type 296, then press Return." },
+    { "do": "Click into X and press the up arrow four times, then Shift and up once." },
+    { "do": "Draw a second rectangle, select both, and use Arrange to stack them." },
+    { "do": "Click into the Gap box, type 24, press Return, then click into it again and notice the whole number is selected." },
+    { "do": "Open the four sides beside Padding, type 24 into Top only, close it, and read what the Padding box now says." },
+    { "do": "Add a Rotation motion to a layer, open Start on the motion row, and type -5 into it." },
+    { "do": "Put the keyboard in that Start box and press the down arrow twice." }
+  ],
+  "evaluate": [
+    "Does clicking into a number box and finding the whole number selected feel right, or do you want the caret where you clicked?",
+    "Typing -5 into a motion Start now leaves 0 in the box rather than the -5 you typed. Is showing what was taken the right answer, or do you want it to say so out loud the way Position & Size does?",
+    "Is the word Mixed in the Gap and Padding boxes as quiet as the Mixed everywhere else in the dock?",
+    "An arrow key on a Padding box that is standing in for four sides that disagree does nothing. Should it step all four instead?",
+    "Does anything about typing a number feel different between the Position, Layout and Motion panels now? It should not."
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this task, so not one walk could be run: a locked screen means macOS never draws the window, and every walk reports locked rather than passing or failing. There are no screenshots and no offscreen renders with this audit. A full sweep has been requested and will run when the screen is unlocked.",
+    "An arrow key on a box standing in for several values that disagree still does nothing outside Position & Size. Only the geometry fields know how to step every layer from its own value; Gap, Padding and the knobs on a copy would need the same and do not have it yet.",
+    "Motion numbers now step the number on screen rather than a rounded one, so a pivot at 12.5 steps to 13.5. That is new; it used to be the same but the milliseconds rounded differently.",
+    "Typing the number a box is already showing no longer reaches the model at all, so it spends no undo step on a change nobody can see. The one thing lost with it: typing 296 over a layer whose real width is 295.5 no longer snaps that fraction away.",
+    "Three more places still hand-roll on top of the shared keys rather than using the box: the canvas size fields, the grid spacing in its popover, and the frame columns row. They were not in this task's count and were left alone to keep the change reviewable."
+  ]
+}

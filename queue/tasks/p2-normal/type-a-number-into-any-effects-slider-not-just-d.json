@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-15T12:15:30.905Z",
+  "updated": "2026-09-16T03:30:44.378Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-15T12:15:30.904Z",
       "note": "DESIGN REVIEW 2026-09-15: do not write a fourth number box for this. The app already has three, each hand-rolled and each knowing something the others do not (GeometryInspector.swift:291, ArrangementInspector.swift:836, and MotionListInspector.swift:583 added today). The extraction is filed as one-number-box-everywhere-a-number-is-typed-into and this task is its fourth customer: an Effects slider that can be typed into should be that box, so it inherits what happens when a layer refuses part of the number and what the box says when several picked layers disagree, rather than rediscovering both."
+    },
+    {
+      "t": "2026-09-16T03:30:44.377Z",
+      "note": "Do NOT write a fourth number box for this. The one box landed on 2026-09-16: Sources/Photonz/PanelNumberField.swift, on top of NumberBox in PhotonzCore (tested, Tests/PhotonzCoreTests/NumberBoxTests.swift). Geometry, Arrangement, the knobs on a copy, the four sides popout, the motion rows and the timing strip are all this one control now.\n\nWhat you pass it for an Effects slider:\n  showing:      NumberBox.showing(value, standingIn: isMixed ? MixedValue.text : \"\")\n  label:        the slider's own name (it becomes the placeholder AND the accessibility label, so a walk's focus step finds it by name)\n  suffix:       the unit mark, where the number means nothing without one\n  floor/ceiling: the ends of the slider's range. The box holds the number inside them BEFORE it reaches the model, so a typed 140 on a 0-100 strength shows 100 rather than 140 over a slider at the top\n  wholeNumbers: true for the strengths that count in whole numbers\n  spell:        how this panel writes a number, if it is not whole points\n  land:         set it, and hand back what it really became (nil where it took what it was given)\n\nYou get for free, decided once: Return and Tab land it, Escape puts it back, both hand the keyboard to the picture; clicking in selects the whole number; up and down step by 1 and Shift by 10 from the number ON SCREEN; the word Mixed as the box's own text at the dock strength (MixedLook); landing nothing again when the number is already there, so no undo step is spent on a change nobody can see; and emptying the box is a property you set (clear:) rather than something to re-decide."
     }
   ]
 }

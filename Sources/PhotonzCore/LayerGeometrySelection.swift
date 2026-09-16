@@ -501,3 +501,17 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return moves
     }
 }
+
+extension LayerGeometryReading {
+    /// The same three states, as the one number box reads them: a number, the
+    /// word for "they differ", or room to type. One bridge rather than each
+    /// panel spelling the mapping out, so the box and the readout beside it
+    /// can never disagree about what the selection is saying.
+    public func showing(for field: LayerGeometryField) -> NumberBox.Showing {
+        switch self {
+        case .empty: .nothing
+        case .mixed: .standIn(MixedValue.text)
+        case .agreed: .number(draftText(for: field))
+        }
+    }
+}

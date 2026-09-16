@@ -16359,3 +16359,61 @@ picture of the three ends side by side rendered through the app's own composite.
 Next: the audit asks whether Flat and Square are tellable apart at that size,
 whether a new line should remember the last end chosen, and whether a dashed
 redline arrow is something anybody reaches for.
+
+## 2026-09-16 — One number box, everywhere a number is typed into a panel
+
+**What changed.** The three hand-rolled number fields became one control.
+
+- `Sources/PhotonzCore/NumberBox.swift` (new) holds the decidable half: what the
+  box is showing (a number, a word standing in for several that disagree, or
+  nothing), what landing a draft does, what an arrow key does, and whether a
+  number is already the one on screen. 23 tests in
+  `Tests/PhotonzCoreTests/NumberBoxTests.swift`, written first.
+- `Sources/Photonz/PanelNumberField.swift` (new) is the view. Everything that
+  used to be re-decided per panel is a property on it: `floor`, `ceiling`,
+  `wholeNumbers`, `prompt`, `suffix`, `leading`, `width`, `clear`, `stepEach`,
+  `spell`, and a `land` closure that hands back what the thing REALLY became.
+- `GeometryNumberField`, `LayoutNumberField` and `MotionNumberField` are gone.
+  `MotionNumberField` survives as a nine-line wrapper that only carries the
+  motion panel's spelling. Call sites converted: `GeometryInspector` (layer and
+  region), `ArrangementInspector` (gap, padding, limits, counts),
+  `ComponentPanel` (number knob, room knob), `FourSidedPopout`,
+  `MotionListInspector`, `MotionStripView`.
+
+**What is now true everywhere, that only one of the three knew.**
+
+- The box shows what was TAKEN. `land` hands back a `NumberBox.Showing`, so a
+  refusal, a floor, or five layers landing differently all reach the box.
+  Motion had this wrong and you could see it: typing `-5` into a motion Start
+  left `-5` in the box over a model holding `0`, because the incoming text prop
+  never changed and so never fired.
+- Mixed is the box's own TEXT at the one dock strength (`MixedLook`), not a
+  placeholder. A stand-in naming a real state ("Spread", four sides written
+  out) stays a value and is drawn like one.
+- Clicking in selects the whole number, the way it does in every design tool.
+  Geometry did this; Layout did it only over the word Mixed; Motion never did.
+- An arrow steps the number ON SCREEN. This is a real change from
+  `LayerGeometry.stepped`, which rounds its base: that is right for geometry,
+  whose display is always whole, and wrong for a motion angle of 12.5, which
+  used to step to 14. A box that counts in whole numbers rounds the RESULT
+  instead.
+- Landing the number the box already shows does nothing, so a down arrow held
+  at a floor no longer grows the undo stack.
+- Emptying the box is `clear:`, set once by the panel. Emptying a box that is
+  only standing in for values that disagree puts the WORD back rather than
+  leaving the box blank, which is what Layout used to do.
+
+**Not verified.** The Mac's screen was locked for the whole task, so not one
+walk could run: `Scripts/playtest-all.sh` reports `COULD NOT RUN` rather than a
+pass or a failure, and there are no screenshots or offscreen renders with the
+audit. All 7351 unit tests pass. A full sweep was requested
+(`queue/bin/sweep.sh request`) and the loop runs it once the screen is
+unlocked; anything it breaks comes back as a task.
+
+**Next.** `type-a-number-into-any-effects-slider-not-just-d` is the fourth panel
+and now needs no fourth box: its task log spells out exactly what to pass.
+
+**Open question.** An arrow key on a Gap or Padding box standing in for values
+that disagree still does nothing. Only the geometry fields know how to step
+every layer from its own value (`stepEach`). Raised in the audit for the user to
+call.

@@ -1678,10 +1678,10 @@ private struct InstanceShowKnob: View {
 /// A number knob on a copy: the same typed field every number in the inspector
 /// is, speaking for the copies it is given rather than for a layer.
 ///
-/// It is a `LayoutNumberField`, the same control the Gap and Padding rows on the
-/// canvas are, so the arrow keys, Return landing the number and handing the
-/// keyboard back to the picture, the rounding and the word Mixed are all decided
-/// in one place and the two can never drift apart.
+/// It is a `PanelNumberField`, the one number box every panel types into, so
+/// the arrow keys, Return landing the number and handing the keyboard back to
+/// the picture, the rounding and the word Mixed are all decided in one place
+/// and no two of them can drift apart.
 private struct InstanceNumberKnob: View {
     @Environment(EditorState.self) private var editorState
     /// The copies this row answers for. Mixed is what it says when they differ.
@@ -1691,17 +1691,20 @@ private struct InstanceNumberKnob: View {
     let value: CGFloat?
 
     var body: some View {
-        LayoutNumberField(
-            title: property.name,
-            value: value,
+        PanelNumberField(
             // Mixed is a report about the selection, so it stands in the
             // field's own place, drawn the one strength every other Mixed in
             // the dock is drawn at.
-            placeholder: value == nil ? MixedValue.text : "",
+            showing: NumberBox.showing(value, standingIn: value == nil ? MixedValue.text : ""),
+            label: property.name,
+            width: .fitting(least: 62, most: 148),
+            floor: 0,
+            wholeNumbers: true,
             help: property.numberSlot?.help ?? ""
         ) { number in
             editorState.setInstanceOverride(instances: instances, property: property.id,
                                             value: .number(number))
+            return nil
         }
         .playtestField(property.name)
     }
@@ -1729,14 +1732,17 @@ private struct InstanceRoomKnob: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            LayoutNumberField(
-                title: property.name,
-                value: room?.uniform,
-                placeholder: standIn,
+            PanelNumberField(
+                showing: NumberBox.showing(room?.uniform, standingIn: standIn),
+                label: property.name,
+                width: .fitting(least: 62, most: 148),
+                floor: 0,
+                wholeNumbers: true,
                 help: help
             ) { number in
                 editorState.setInstanceOverride(instances: instances, property: property.id,
                                                 value: .room(GroupPadding(number)))
+                return nil
             }
             .playtestField(property.name)
             // The control goes beside the FIELD rather than beside the word:

@@ -712,10 +712,11 @@ Everything below is a consequence of that table.
 - **No toast, no flash, no error.** The number changing under your hand from 200
   to 204 IS the message. Refusing a width is ordinary, not an incident.
 
-*(Done for the Position & Size fields on 2026-09-06: `GeometryNumberField` in
-`GeometryInspector.swift` sets the layers and then reads `geometrySelection`
-again, and `LayerGeometrySelection` no longer offers a landing worked out in
-advance at all. It could not have been right: a group held to a smallest width
+*(Done for the Position & Size fields on 2026-09-06, and true of every typed
+number in a panel since 2026-09-16, when the three hand-rolled boxes became one
+`PanelNumberField` on top of `NumberBox` in PhotonzCore: the panel sets the
+layers and then reads `geometrySelection` again, and `LayerGeometrySelection`
+no longer offers a landing worked out in advance at all. It could not have been right: a group held to a smallest width
 by its own flow refused a typed 50 and kept 160, and the box went on showing a
 50 that nothing on the canvas had. The saying-why half landed 2026-09-08,
 `a-number-that-springs-back-says-why-it-did`: `LayerGeometrySelection.refusal`

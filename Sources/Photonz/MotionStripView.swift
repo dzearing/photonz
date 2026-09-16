@@ -139,8 +139,9 @@ struct MotionStripView: View {
     /// which is what it does until somebody says otherwise.
     private var cycleField: some View {
         HStack(spacing: 6) {
-            MotionNumberField(text: String(editorState.motionStripCycleMS),
-                              label: "Cycle Length", suffix: "ms") { typed in
+            MotionNumberField(value: Double(editorState.motionStripCycleMS),
+                              label: "Cycle Length", suffix: "ms",
+                              floor: 1, wholeNumbers: true) { typed in
                 editorState.setMotionCycleMS(Int(typed.rounded()))
             }
             if editorState.motionCycleIsAutomatic {

@@ -379,9 +379,18 @@ struct ArrangementInspector: View {
                 .playtestControl("Spread", detail: "Layout")
             }
             Spacer(minLength: 8)
-            LayoutNumberField(
-                title: "Gap", value: spreading ? nil : gap.value,
-                placeholder: spreading ? "Spread" : (gap.isMixed ? MixedValue.text : ""),
+            PanelNumberField(
+                // Spread is a real state rather than an absence, so it stands
+                // in the box's own place and is drawn like a value; Mixed is
+                // the one stand-in that goes quiet.
+                showing: NumberBox.showing(spreading ? nil : gap.value,
+                                           standingIn: spreading
+                                               ? "Spread"
+                                               : (gap.isMixed ? MixedValue.text : "")),
+                label: "Gap",
+                width: .fitting(least: 62, most: 148),
+                floor: 0,
+                wholeNumbers: true,
                 help: spreading
                     ? "The room left over is shared between them. Type a number to hold one gap instead."
                     : "The space between one thing and the next."
@@ -390,6 +399,7 @@ struct ArrangementInspector: View {
                     $0.gap = value
                     $0.spreadsGap = false
                 }
+                return nil
             }
         }
         .playtestField("Gap")
@@ -483,11 +493,17 @@ struct ArrangementInspector: View {
                 .foregroundStyle(.secondary)
                 .fixedSize()
             Spacer(minLength: 8)
-            LayoutNumberField(
-                title: "Padding", value: reading.isMixed ? nil : room.uniform,
-                placeholder: standIn(reading), help: paddingHelp(reading)
+            PanelNumberField(
+                showing: NumberBox.showing(reading.isMixed ? nil : room.uniform,
+                                           standingIn: standIn(reading)),
+                label: "Padding",
+                width: .fitting(least: 62, most: 148),
+                floor: 0,
+                wholeNumbers: true,
+                help: paddingHelp(reading)
             ) { value in
                 editorState.updateArrangement(ids: ids) { $0.padding = GroupPadding(value) }
+                return nil
             }
             FourSidedButton(
                 isOpen: $sidesOpen,
@@ -653,10 +669,21 @@ struct ArrangementInspector: View {
         // Height, and a field two rows answer to is a field neither of them
         // owns, for a screen reader as much as for a scripted walk.
         row(title, field: "\(title) \(axis.noun)") {
-            LayoutNumberField(title: "\(title) \(axis.noun)",
-                              value: reading.value ?? nil, prompt: "None",
-                              placeholder: reading.isMixed ? MixedValue.text : "",
-                              help: help, clear: { commit(nil) }, commit: { commit($0) })
+            PanelNumberField(
+                showing: NumberBox.showing(reading.value ?? nil,
+                                           standingIn: reading.isMixed ? MixedValue.text : ""),
+                label: "\(title) \(axis.noun)",
+                // Empty is what "no limit" looks like, and the box says so in
+                // words rather than sitting blank.
+                prompt: "None",
+                width: .fitting(least: 62, most: 148),
+                floor: 0,
+                wholeNumbers: true,
+                help: help,
+                // Emptying this one MEANS something: a limit cleared is no
+                // limit, one keystroke away from the limit itself.
+                clear: { commit(nil) },
+                land: { commit($0); return nil })
         }
     }
 
@@ -770,9 +797,15 @@ struct ArrangementInspector: View {
                         minimum: CGFloat = 0, help: String,
                         commit: @escaping (CGFloat) -> Void) -> some View {
         row(title) {
-            LayoutNumberField(title: title, value: reading.value, minimum: minimum,
-                              placeholder: reading.isMixed ? MixedValue.text : "",
-                              help: help, commit: commit)
+            PanelNumberField(
+                showing: NumberBox.showing(reading.value,
+                                           standingIn: reading.isMixed ? MixedValue.text : ""),
+                label: title,
+                width: .fitting(least: 62, most: 148),
+                floor: minimum,
+                wholeNumbers: true,
+                help: help,
+                land: { commit($0); return nil })
         }
     }
 
@@ -821,153 +854,3 @@ extension PlacementReading where Value == Int {
     }
 }
 
-/// One typed number on an arrangement.
-///
-/// The draft lives in the field until it lands, and it lands on Return and on
-/// clicking away, because a number typed and then abandoned is the most common
-/// way a person loses an edit. Up and down step it by 1, Shift by 10, without
-/// leaving the field — the same keys the geometry fields answer to, through the
-/// same `NumberFieldEntry` rules, so no two number fields in this app can drift
-/// apart.
-/// Shared, not private: a number knob on a copy of a component is this same
-/// field (`ComponentPanel.swift`), so the arrow keys, the rounding and the word
-/// Mixed are decided once rather than twice.
-struct LayoutNumberField: View {
-    /// The row's own word, which is also what the field answers to by name:
-    /// it is the placeholder and the accessibility label, so a walk can put
-    /// the keyboard in "Gap" the way a person puts the pointer there.
-    let title: String
-    /// The number this field holds, or nil where there is no one number to
-    /// show — four sides that disagree have none, and the field says so rather
-    /// than picking one of them and lying.
-    let value: CGFloat?
-    var minimum: CGFloat = 0
-    /// What the box says while it is EMPTY, which is a different thing from
-    /// standing in for a value that is not one value: a limit nobody has set
-    /// says None, and typing a number is what sets it.
-    var prompt: String?
-    /// What stands in the field when there is no one number to show: the word
-    /// Mixed. It is the field's TEXT, not its placeholder, so it is drawn at
-    /// the one strength every other Mixed in the dock is drawn at; a
-    /// placeholder is a paler grey again, which made this the fifth answer to
-    /// the same question (`MixedLook.swift`).
-    var placeholder: String = ""
-    let help: String
-    /// Emptying the box, where emptying it means something. A limit cleared is
-    /// no limit; a gap cleared is not a thing, so those fields leave this out
-    /// and go on snapping back to the number they had.
-    var clear: (() -> Void)?
-    let commit: (CGFloat) -> Void
-
-    @State private var text = ""
-    @State private var isFinishing = false
-    @FocusState private var isFocused: Bool
-
-    /// True while the field is standing in for four sides that disagree.
-    private var showsMixed: Bool { !placeholder.isEmpty && text == placeholder }
-
-    /// True where what stands in is the four numbers rather than the word
-    /// Mixed. Read off the stand-in itself rather than passed in beside it,
-    /// so there is no second flag that can disagree with the text.
-    private var standsInForNumbers: Bool { placeholder.contains(where: \.isNumber) }
-
-    /// How wide the box is.
-    ///
-    /// Every field in this panel is pinned by its TRAILING edge, so the one
-    /// holding four numbers grows leftwards into space that was empty anyway
-    /// and the column of right edges stays flush. The width comes off the
-    /// stand-in and not off what is being typed, so it is settled before the
-    /// keyboard arrives and does not twitch a point per keystroke.
-    private var fieldWidth: CGFloat {
-        guard standsInForNumbers else { return 62 }
-        let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize,
-                                                   weight: .regular)
-        let ink = (placeholder as NSString).size(withAttributes: [.font: font]).width
-        return min(148, max(62, (ink + 22).rounded(.up)))
-    }
-
-    var body: some View {
-        // The field wears its own word until there is no one number to show:
-        // then the word Mixed sits where the number would be, which is what
-        // every other control in the dock does with a value the picked things
-        // do not agree on.
-        TextField(title, text: $text, prompt: prompt.map { Text($0) })
-            .textFieldStyle(.roundedBorder)
-            .controlSize(.small)
-            .multilineTextAlignment(.trailing)
-            .monospacedDigit()
-            // Grey is what a value that is not one value looks like. A stand-in
-            // that names a real state — a gap that is being spread rather than
-            // held — is a value, so it is drawn like one; greying it would
-            // read as a field somebody had switched off.
-            .foregroundStyle(MixedLook.style(showsMixed && placeholder == MixedValue.text,
-                                             otherwise: .primary))
-            .frame(width: fieldWidth)
-            .focused($isFocused)
-            .panelHelp(help)
-            .accessibilityLabel(title)
-            .onAppear { text = display(value) }
-            .onChange(of: value) { if !isFocused { text = display(value) } }
-            // The stand-in can change while the number behind it does not: the
-            // four sides closing over room that disagrees swaps the word Mixed
-            // for the four numbers without the field ever having a value. The
-            // box has to be refilled for that too, or it goes on showing the
-            // word after the row it belonged to has gone.
-            .onChange(of: placeholder) { if !isFocused { text = display(value) } }
-            .onChange(of: isFocused) { _, focused in
-                if focused {
-                    isFinishing = false
-                    // Typing over a word has to replace it, not append to it.
-                    // Only the word: a number in the box still takes a caret
-                    // where it was clicked, the way it always did.
-                    if showsMixed {
-                        DispatchQueue.main.async {
-                            NSApp.keyWindow?.firstResponder?.trySelectAllText()
-                        }
-                    }
-                } else if !isFinishing { land() }
-            }
-            .numberFieldKeys(commit: { isFinishing = true; land() },
-                             revert: { isFinishing = true; text = display(value) },
-                             step: { direction, coarse in
-                                 step(direction: direction, coarse: coarse)
-                             })
-    }
-
-    /// The draft, landed. Text that is not a number snaps back to the number
-    /// the group really has rather than being guessed at.
-    private func land() {
-        let typed = text.trimmingCharacters(in: .whitespaces)
-        if typed.isEmpty, let clear {
-            guard value != nil else { return }
-            clear()
-            return
-        }
-        guard let typed = Double(typed) else {
-            text = display(value)
-            return
-        }
-        let clamped = max(minimum, CGFloat(typed).rounded())
-        text = display(clamped)
-        guard clamped != value else { return }
-        commit(clamped)
-    }
-
-    /// Up and down step the number in the field. An empty field with no one
-    /// number behind it has nothing to step from, so the keys do nothing there
-    /// rather than inventing a nought and flattening four sides into one.
-    private func step(direction: Int, coarse: Bool) {
-        let typed = Double(text.trimmingCharacters(in: .whitespaces))
-        guard let base = typed.map({ CGFloat($0) }) ?? value else { return }
-        let next = max(minimum, (base + CGFloat(direction * (coarse ? 10 : 1))).rounded())
-        text = display(next)
-        guard next != value else { return }
-        commit(next)
-    }
-
-    /// What the box shows: the number the sides agree on, or the word that says
-    /// they do not, or nothing at all on a row that has no word to fall back on.
-    private func display(_ value: CGFloat?) -> String {
-        value.map { "\(Int($0.rounded()))" } ?? placeholder
-    }
-}
