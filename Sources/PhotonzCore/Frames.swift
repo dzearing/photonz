@@ -505,7 +505,14 @@ extension PhotonzDocument {
         frame.frame = CGRect(origin: .zero, size: box.size)
         frame.isVisible = true
         frame.isLocked = false
-        return PhotonzDocument(canvasSize: box.size, layers: [frame], pixelScale: pixelScale)
+        var scoped = PhotonzDocument(canvasSize: box.size, layers: [frame],
+                                     pixelScale: pixelScale)
+        // The lap belongs to the whole document, so one frame taken out of it
+        // loops at the same length the canvas plays it at. Without this the
+        // frame falls back to a lap as long as its own last motion, and an icon
+        // exported on its own runs faster than the icon on the canvas.
+        scoped.motionCycleMS = motionCycleMS
+        return scoped
     }
 
     /// What Export is actually going to write: this document, or one frame of

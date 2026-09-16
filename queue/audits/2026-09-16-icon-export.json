@@ -1,0 +1,43 @@
+{
+  "feature": "An animated icon leaves the app as an animated SVG",
+  "epic": "icon-export",
+  "summary": "An icon drawn inside an icon frame now exports as real shapes that move. It used to come out as one still photograph of the icon with every motion baked into the pixels.",
+  "setup": "Photonz Dev, Experiments window, release Next. SVG export and motion are on by default. No screenshots of the app itself: the Mac's screen was locked for this whole task, so no walk could run and nothing could be photographed.",
+  "try": [
+    {
+      "do": "New Frame, pick an icon size (32 or 64)."
+    },
+    {
+      "do": "Draw two shapes on the frame, and drag one of them so it hangs off the edge."
+    },
+    {
+      "do": "Select the other shape and give it a Position motion in the inspector."
+    },
+    {
+      "do": "File > Export, pick the frame in the Export menu, choose Animated SVG."
+    },
+    {
+      "do": "Read the size line and the warning line before saving: the sheet can now weigh the file, and says nothing was left behind."
+    },
+    {
+      "do": "Save it and open the file in a browser.",
+      "shot": "2026-09-16-icon-export-1.png"
+    },
+    {
+      "do": "Put a shadow on the frame, export again, and read the warning line."
+    }
+  ],
+  "evaluate": [
+    "Does the icon in the browser move the way it moves on the canvas, at the same speed?",
+    "Is the piece hanging off the edge cut at exactly the frame's edge, the way the canvas cuts it?",
+    "When the frame wears a shadow and the icon has to go out as a picture, does the sheet tell you which piece stopped moving, in words you would act on?",
+    "Is the file small enough and readable enough to hand to a developer?",
+    "Does a rounded icon frame come out rounded, without a square white corner behind it?"
+  ],
+  "rough": [
+    "No pictures of the app in this audit. The screen was locked for the whole task, so every walk refuses to run and macOS will not photograph the window. The one picture here (2026-09-16-icon-export-1.png) is a real screenshot of an exported file open in a browser: a rounded icon frame, a red bar cut at the frame's edge, and a blue dot part way through its slide.",
+    "A frame wearing a shadow, a blur, a glow or a blend mode still goes out as one picture, so everything inside it stops moving. That is now SAID rather than silently true, but SVG can express a drop shadow and a blur and we do not yet.",
+    "A frame sitting at the canvas origin writes an empty <g> wrapper round itself. Harmless, and true of any group at the origin, but it is a line of noise in a file meant to be readable.",
+    "Exporting one frame carries the document's loop length with it now. It did not before, so an icon whose motion finished early looped faster in the file than it did on the canvas."
+  ]
+}

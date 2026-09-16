@@ -279,6 +279,84 @@ struct SVGExportTests {
         #expect(!svg.contains("<g"))
     }
 
+    // MARK: - A frame, and anything else that cuts off what sticks out
+
+    /// A frame the size of an icon, with one shape inside it and the shape
+    /// half off the edge — the case the file used to answer with a photograph.
+    static func iconFrame(radius: CGFloat = 0,
+                          child: Layer? = nil,
+                          at origin: CGPoint = CGPoint(x: 40, y: 50)) -> Layer {
+        let inside = child ?? Self.pathLayer(at: CGPoint(x: 60, y: 10))
+        var frame = Layer(name: "Icon",
+                          content: .group(GroupContent(children: [inside], isFrame: true,
+                                                       backgroundHex: "#FFFFFF")),
+                          frame: CGRect(origin: origin, size: CGSize(width: 120, height: 120)))
+        frame.style.cornerRadii = CornerRadii(radius)
+        return frame
+    }
+
+    @Test func aFrameWritesWhatIsInsideItAsShapes() {
+        let result = Self.write(Self.document([Self.iconFrame()]))
+        #expect(result.text.contains("<path "))
+        #expect(!result.text.contains("<image "))
+        #expect(result.fallbacks.isEmpty)
+    }
+
+    @Test func aFrameCutsOffWhatSticksOutOfIt() {
+        let svg = Self.write(Self.document([Self.iconFrame()])).text
+        #expect(svg.contains("<clipPath id=\"clip-1\">"))
+        #expect(svg.contains("<rect x=\"0\" y=\"0\" width=\"120\" height=\"120\"/>"))
+        #expect(svg.contains("clip-path=\"url(#clip-1)\""))
+    }
+
+    @Test func aFrameWithRoundedCornersCutsRound() {
+        let svg = Self.write(Self.document([Self.iconFrame(radius: 12)])).text
+        #expect(svg.contains("<clipPath id=\"clip-1\">"))
+        #expect(svg.contains("rx=\"12\""))
+    }
+
+    @Test func theCutSitsInsideTheFramesOwnPlaceSoItsEdgeIsWhereTheFrameIs() {
+        let svg = Self.write(Self.document([Self.iconFrame()])).text
+        // The frame is placed once, and the cut is stated in the space that
+        // placing makes, so the box it cuts at is the frame's own box.
+        let placed = svg.range(of: "<g transform=\"translate(40 50)\">")
+        let cut = svg.range(of: "<g clip-path=\"url(#clip-1)\">")
+        #expect(placed != nil && cut != nil)
+        if let placed, let cut { #expect(placed.lowerBound < cut.lowerBound) }
+    }
+
+    @Test func aFrameStillPaintsItsSurfaceUnderWhatIsOnIt() {
+        let svg = Self.write(Self.document([Self.iconFrame()])).text
+        let surface = svg.range(of: "#FFFFFF")
+        let shape = svg.range(of: "<path ")
+        #expect(surface != nil && shape != nil)
+        if let surface, let shape { #expect(surface.lowerBound < shape.lowerBound) }
+    }
+
+    @Test func nothingWarnsThatAFrameCouldNotBeSaidInShapes() {
+        #expect(SVGExport.fallbacks(in: Self.document([Self.iconFrame()])).isEmpty)
+        #expect(SVGExport.embeddedPictures(in: Self.document([Self.iconFrame()])).isEmpty)
+    }
+
+    @Test func aPlainGroupWithNoBoxOfItsOwnCutsNothing() {
+        // Told to clip, but a group's box is whatever is inside it, so there
+        // is no edge to cut at and the canvas cuts nothing either.
+        let group = Layer(name: "Pieces",
+                          content: .group(GroupContent(children: [Self.pathLayer(at: .zero)],
+                                                       clipsContents: true)),
+                          frame: CGRect(x: 10, y: 10, width: 0, height: 0))
+        let svg = Self.write(Self.document([group])).text
+        #expect(!svg.contains("clip-path"))
+        #expect(svg.contains("<path "))
+    }
+
+    @Test func twoFramesEachGetTheirOwnCut() {
+        let svg = Self.write(Self.document([Self.iconFrame(),
+                                            Self.iconFrame(at: CGPoint(x: 0, y: 0))])).text
+        #expect(svg.contains("id=\"clip-1\""))
+        #expect(svg.contains("id=\"clip-2\""))
+    }
+
     @Test func aHiddenLayerIsNotWritten() {
         var hidden = Self.pathLayer()
         hidden.isVisible = false

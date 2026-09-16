@@ -40,7 +40,7 @@ through to a picture, which is safe and lossy, and the export says so.
 | Ellipse | `<ellipse>` | |
 | Line | `<line>` | Round cap, like the canvas. |
 | Text | `<path>` of the letters' outlines, with a `<title>` | See "Why text is outlined" below. |
-| Group | `<g transform="translate(…)">` | The nesting and the order the layers list shows. A frame's background is a `<rect>` under its children. |
+| Group | `<g transform="translate(…)">` | The nesting and the order the layers list shows. A frame's background is a `<rect>` under its children. A group that CUTS OFF what sticks out of it (a frame does by default, and so does any group with rounded corners) writes a `<clipPath>` of its box and holds its contents in one more `<g clip-path>`, so an icon drawn in a frame stays shapes. The ring round the box is written outside that cut, since a border is painted over the edge rather than cut by it. |
 | Picture | `<image href="data:image/png;base64,…">` | An untouched photograph goes out as its OWN pixels — smallest file, sharpest picture. One that is cropped, turned, rounded off or wearing an effect is re-rendered through the real renderer at 2× so it looks the way it looks on the canvas. |
 | Arrow, highlight, measurement, zoom callout, lens, collage | `<image>` | No vector answer yet. Each is reported. |
 
@@ -178,8 +178,12 @@ covers the writing itself.
   `feDropShadow` and `feGaussianBlur`; neither is wired up yet.
 * **A sweeping gradient falls back.** A conic ramp can be approximated with
   wedges, at the cost of a big file.
-* **A group that clips its contents falls back**, and so does a shape whose
-  LAYER box is rounded off (as opposed to the shape's own corners).
+* **A shape whose LAYER box is rounded off falls back** (as opposed to the
+  shape's own corners). A GROUP that cuts off what sticks out of it does not:
+  it writes a `<clipPath>`.
+* **Anything moving inside a layer that goes out as a picture stops moving.**
+  The picture holds one moment of it. Each piece is named in the result's
+  `unmoved` list, by its own name, so the Export sheet says so before you save.
 * **Blend modes fall back.** `mix-blend-mode` exists in browsers but is not in
   SVG itself, and the render-back check could not verify it.
 * **A fallback picture is rasterized at 2×.** It is the one part of the file

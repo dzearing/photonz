@@ -164,6 +164,62 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "hole")
     }
 
+    // MARK: - An icon drawn in a frame
+
+    /// An icon frame with one shape on it that hangs off the edge, which is
+    /// what the frame is for: the file has to cut it at the same place the
+    /// canvas does.
+    static func iconFrame(radius: CGFloat = 0,
+                          at origin: CGPoint = CGPoint(x: 20, y: 20),
+                          motions: [LayerMotion] = []) -> Layer {
+        var content = bowedSquare().normalized()
+        content.fillColorHex = "#2E6BFF"
+        content.colorHex = "#2E6BFF"
+        content.strokeWidth = 0
+        var shape = Layer(name: "Shape", content: .path(content),
+                          frame: CGRect(origin: CGPoint(x: 40, y: 20), size: content.bounds.size))
+        shape.motions = motions
+        var frame = Layer(name: "Icon",
+                          content: .group(GroupContent(children: [shape], isFrame: true,
+                                                       backgroundHex: "#FFFFFF")),
+                          frame: CGRect(origin: origin, size: CGSize(width: 100, height: 80)))
+        frame.style.cornerRadii = CornerRadii(radius)
+        return frame
+    }
+
+    @Test func aFrameCutsOffWhatSticksOutOfItJustAsTheCanvasDoes() throws {
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [Self.iconFrame()])
+        try Self.expectTheSamePicture(of: document, name: "frame-clip")
+    }
+
+    @Test func aFrameWithRoundedCornersCutsRound() throws {
+        let document = PhotonzDocument(canvasSize: Self.canvas,
+                                       layers: [Self.iconFrame(radius: 16)])
+        try Self.expectTheSamePicture(of: document, name: "frame-rounded", tolerance: 2)
+    }
+
+    @Test func anIconDrawnInAFrameLeavesAsShapesThatMove() throws {
+        let motion = LayerMotion(property: .position,
+                                 from: .point(CGPoint(x: 40, y: 20)),
+                                 to: .point(CGPoint(x: 10, y: 20)),
+                                 timing: MotionTiming(startMS: 0, durationMS: 600),
+                                 curve: .linear, repeats: .forever)
+        var whole = PhotonzDocument(canvasSize: Self.canvas,
+                                    layers: [Self.iconFrame(motions: [motion])])
+        whole.motionCycleMS = 1200
+        let document = try #require(whole.frameDocument(id: whole.layers[0].id))
+        let result = SVGExporter.export(document, store: ImageStore(),
+                                        animation: .moving(cycleMS: document.motionCycleLengthMS))
+        // The whole point: shapes that move, not one photograph of the icon.
+        #expect(result.text.contains("<animateTransform"))
+        #expect(!result.text.contains("base64"))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.unmoved.isEmpty)
+        #expect(document.motionCycleLengthMS == 1200)
+        try Self.expectTheSamePicture(of: document, name: "frame-moving",
+                                      animation: .moving(cycleMS: 1200))
+    }
+
     // MARK: - Gradients
 
     @Test func aGradientFillAndAGradientOutlineSurviveTheTrip() throws {

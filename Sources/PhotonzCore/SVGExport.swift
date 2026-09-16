@@ -269,10 +269,10 @@ public enum SVGExport {
                 return .picture("its letters wear a line of their own")
             }
             return .vector
-        case .group(let group):
-            if group.clipsContents {
-                return .picture("a group that cuts off what sticks out of it")
-            }
+        case .group:
+            // A frame cuts off what sticks out of it, and so does anything
+            // else told to; SVG says that with a `<clipPath>`, so the drawing
+            // stays shapes (`Writer.cut`).
             return .vector
         case .zoomCallout:
             return .picture("a zoom callout magnifies the picture under it")
@@ -384,6 +384,7 @@ private struct Writer {
     var omitsStrokeWidth = false
     var nextPaintNumber = 1
     var nextClipNumber = 1
+    var nextCutNumber = 1
 
     mutating func run(_ document: PhotonzDocument) -> SVGExport.Result {
         let body = write(document.layers, groupOffset: .zero, level: 1)
@@ -435,6 +436,7 @@ private struct Writer {
             if let reason {
                 fallbacks.append(SVGExport.Fallback(layerName: layer.name, reason: reason))
             }
+            if animation.cycleMS != nil { reportMotionsBaked(into: layer) }
             body = picture(of: layer, canvasOrigin: canvasOrigin,
                            groupOffset: groupOffset, level: inner, wrap: wrap)
         case .vector:
@@ -444,6 +446,29 @@ private struct Writer {
         // A layer that drew nothing needs no groups round the nothing.
         guard !body.isEmpty else { return [] }
         return wrap.opens + body + wrap.closes
+    }
+
+    /// Names everything moving INSIDE a layer that goes out as a picture.
+    ///
+    /// The picture holds one moment of the drawing, so a piece moving inside it
+    /// is painted where it happened to be and never moves again. The layer's
+    /// OWN motions are not lost — a picture can still be slid, turned and faded
+    /// — so only what is under it is named here, and it is named before you save
+    /// rather than noticed later by an icon that sits still.
+    mutating func reportMotionsBaked(into layer: Layer) {
+        guard case .group(let group) = layer.content else { return }
+        func walk(_ layers: [Layer]) {
+            for child in layers where child.isVisible {
+                if child.motions?.contains(where: \.isOn) == true {
+                    unmoved.append(SVGExport.Fallback(
+                        layerName: child.name,
+                        reason: "motion is drawn into the picture of "
+                            + "\(layer.name) and cannot play"))
+                }
+                if case .group(let inside) = child.content { walk(inside.children) }
+            }
+        }
+        walk(group.children)
     }
 
     /// A layer with no vector answer, as the picture somebody else made of it,
@@ -474,11 +499,27 @@ private struct Writer {
         let inner = level + 1
 
         if case .group(let group) = layer.content {
-            inside.append(contentsOf: surface(of: layer, group: group, level: inner))
-            inside.append(contentsOf: write(group.children,
-                                            groupOffset: CGPoint(x: canvasOrigin.x,
-                                                                 y: canvasOrigin.y),
-                                            level: inner))
+            // A frame is a window: what hangs off its edge is not in the file.
+            // The cut sits on a group of its own, INSIDE the one that places
+            // the layer, so its box is stated in the frame's own coordinates
+            // and nothing has to reason about a transform; the ring round the
+            // frame is written outside it, since a border is painted over the
+            // edge rather than cut by it.
+            let cut = cutBox(of: layer)
+            let held = cut == nil ? inner : inner + 1
+            var body = surface(of: layer, group: group, level: held)
+            body.append(contentsOf: write(group.children,
+                                          groupOffset: CGPoint(x: canvasOrigin.x,
+                                                               y: canvasOrigin.y),
+                                          level: held))
+            if let cut, !body.isEmpty {
+                let name = defineCut(cut, radii: layer.style.cornerRadii)
+                inside.append(indent(inner) + "<g clip-path=\"url(#\(name))\">")
+                inside.append(contentsOf: body)
+                inside.append(indent(inner) + "</g>")
+            } else {
+                inside.append(contentsOf: body)
+            }
         } else {
             // What the group around this layer is animating, the shape leaves
             // unsaid: an inherited colour or width is how the animation
@@ -504,6 +545,31 @@ private struct Writer {
             return [fold(place + fade, into: inside[0], level: level)]
         }
         return [indent(level) + "<g\(place)\(fade)>"] + inside + [indent(level) + "</g>"]
+    }
+
+    /// The box a group cuts its contents at, in the group's OWN coordinates,
+    /// or nil where it cuts nothing.
+    ///
+    /// Two things cut: being told to (a frame is told to by default), and
+    /// having rounded corners, which the canvas cuts round whether or not
+    /// anything asked it to (`DocumentRenderer.groupImage`).
+    func cutBox(of layer: Layer) -> CGRect? {
+        guard layer.isGroup, layer.clipsToBounds || layer.style.cornerRadii.isRound
+        else { return nil }
+        let box = layer.localBounds.offsetBy(dx: -layer.frame.origin.x,
+                                             dy: -layer.frame.origin.y)
+        guard box.width > 0, box.height > 0 else { return nil }
+        return box
+    }
+
+    /// Writes one cut into the definitions and hands back its name.
+    mutating func defineCut(_ box: CGRect, radii: CornerRadii) -> String {
+        let name = "clip-\(nextCutNumber)"
+        nextCutNumber += 1
+        defs.append("    <clipPath id=\"\(name)\">")
+        defs.append(boxElement(box, radii: radii.fitted(in: box.size), paint: "", level: 3))
+        defs.append("    </clipPath>")
+        return name
     }
 
     /// A frame's own surface, under everything in it.

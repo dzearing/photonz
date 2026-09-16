@@ -292,6 +292,73 @@ struct SVGMotionExportTests {
         #expect(Self.attribute("keySplines", in: svg) == "0.1 0.8 0.9 0.2")
     }
 
+    // MARK: - Inside an icon frame
+
+    /// What the tutorials tell you to draw: an icon frame with one moving
+    /// piece inside it, exported as the frame on its own.
+    static func iconInAFrame(cycleMS: Int = 900) -> PhotonzDocument {
+        var dot = Self.layer([LayerMotion(property: .position,
+                                          from: .point(CGPoint(x: 4, y: 4)),
+                                          to: .point(CGPoint(x: 14, y: 4)),
+                                          timing: MotionTiming(startMS: 0, durationMS: 500),
+                                          curve: .linear, repeats: .forever)],
+                             at: CGPoint(x: 4, y: 4), size: 10)
+        dot.name = "Dot"
+        let icon = Layer(name: "Icon",
+                         content: .group(GroupContent(children: [dot], isFrame: true,
+                                                      backgroundHex: "#FFFFFF")),
+                         frame: CGRect(x: 0, y: 0, width: 32, height: 32))
+        var document = Self.document([icon], cycleMS: cycleMS)
+        document = document.frameDocument(id: icon.id) ?? document
+        document.motionCycleMS = cycleMS
+        return document
+    }
+
+    @Test("A piece moving inside an icon frame still moves in the file")
+    func aMotionInsideAFrameTravelsWithTheFile() {
+        let result = SVGExport.write(Self.iconInAFrame(),
+                                     animation: .moving(cycleMS: 900),
+                                     picture: SVGExportTests.stubPicture)
+        #expect(result.text.contains("<animateTransform"))
+        #expect(!result.text.contains("<image "))
+        #expect(result.unmoved.isEmpty)
+    }
+
+    @Test("A piece moving inside something drawn as a picture is named as lost")
+    func aMotionBakedIntoAPictureIsNamed() {
+        var document = Self.iconInAFrame()
+        // A shadow on the frame is something SVG cannot say, so the frame goes
+        // out as one picture and everything moving inside it is baked into it.
+        document.layers[0].style.effects = [.shadow(ShadowStyle())]
+        let result = SVGExport.write(document, animation: .moving(cycleMS: 900),
+                                     picture: SVGExportTests.stubPicture)
+        #expect(result.text.contains("<image "))
+        #expect(result.unmoved.contains { $0.layerName == "Dot" })
+        #expect(result.unmoved.first { $0.layerName == "Dot" }?.reason.contains("Icon") == true)
+    }
+
+    @Test("A still export of a frame says nothing about motion it never carried")
+    func aStillExportOfAFrameNamesNothingUnmoved() {
+        var document = Self.iconInAFrame()
+        document.layers[0].style.effects = [.shadow(ShadowStyle())]
+        let result = SVGExport.write(document, picture: SVGExportTests.stubPicture)
+        #expect(result.unmoved.isEmpty)
+    }
+
+
+
+    @Test("Exporting one frame keeps the lap the whole document set")
+    func aFrameOnItsOwnKeepsTheLap() {
+        var document = Self.iconInAFrame(cycleMS: 2000)
+        document.motionCycleMS = nil
+        // The dot finishes in 500ms, so an automatic lap would be 500: the lap
+        // the document was given is the one the file has to loop at.
+        var whole = Self.document(document.layers, cycleMS: 2000)
+        whole.canvasSize = CGSize(width: 64, height: 64)
+        let scoped = whole.frameDocument(id: whole.layers[0].id)
+        #expect(scoped?.motionCycleLengthMS == 2000)
+    }
+
     // MARK: - Small enough to read
 
     @Test("An animated icon is a file you could read in a terminal")
