@@ -35,6 +35,54 @@ struct TurnIntoPathRenderTests {
         return DocumentRenderer().render(document, store: ImageStore())!
     }
 
+    private func render(_ layers: [Layer]) -> CGImage {
+        var document = PhotonzDocument(canvasSize: canvas)
+        for layer in layers { document.addLayer(layer) }
+        return DocumentRenderer().render(document, store: ImageStore())!
+    }
+
+    /// The same comparison with something UNDERNEATH, which is the only way to
+    /// judge a mark that mixes: a highlighter over nothing is just a coloured
+    /// box, and whether it went on mixing is invisible.
+    private func expectSamePictureOver(_ backdrop: Layer, _ layer: Layer,
+                                       sourceLocation: SourceLocation = #_sourceLocation) throws {
+        let turned = try #require(layer.turnedIntoPath(), sourceLocation: sourceLocation)
+        let before = rgba(render([backdrop, layer]))
+        let after = rgba(render([backdrop, turned]))
+        #expect(before.count == after.count, sourceLocation: sourceLocation)
+        var worst = 0, differing = 0
+        for i in 0..<min(before.count, after.count) where before[i] != after[i] {
+            differing += 1
+            worst = max(worst, abs(Int(before[i]) - Int(after[i])))
+        }
+        #expect(differing == 0, "\(differing) bytes differ, worst \(worst)",
+                sourceLocation: sourceLocation)
+    }
+
+    /// A plain opaque backdrop to lay a wash over, filling the whole canvas.
+    private func backdropLayer(_ hex: String = "#3478F6") -> Layer {
+        let shape = AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: hex,
+                                      start: .zero,
+                                      end: CGPoint(x: canvas.width, y: canvas.height),
+                                      fillColorHex: hex)
+        return Layer(name: "Backdrop", content: .annotation(shape),
+                     frame: CGRect(origin: .zero, size: canvas))
+    }
+
+    /// The highlighter's own mark, laid across the middle of the canvas.
+    private func washLayer(_ hex: String = "#FFD60A") -> Layer {
+        let shape = AnnotationContent(shape: .highlight, strokeWidth: 4, colorHex: hex,
+                                      start: .zero, end: CGPoint(x: box.width, y: box.height))
+        return Layer(name: "Highlight", content: .annotation(shape), frame: box)
+    }
+
+    /// The colour one pixel of the composite came out, as four channels.
+    private func pixel(_ image: CGImage, x: Int, y: Int) -> [UInt8] {
+        let data = rgba(image)
+        let i = (y * image.width + x) * 4
+        return Array(data[i..<(i + 4)])
+    }
+
     /// The worst any one colour channel differs between the shape and the path
     /// it became, and how many bytes differ at all.
     @discardableResult
@@ -181,6 +229,38 @@ struct TurnIntoPathRenderTests {
                                                           from: CGPoint(x: 60, y: 120),
                                                           to: CGPoint(x: 240, y: 120)))
         }
+    }
+
+    // MARK: - A highlighter wash
+
+    @Test("A wash over a picture is the same picture after it becomes a path")
+    func washOverABackdrop() throws {
+        try expectSamePictureOver(backdropLayer(), washLayer())
+    }
+
+    @Test("...and it really is still mixing, not painting flat over the top")
+    func theWashStillMixes() throws {
+        let turned = try #require(washLayer().turnedIntoPath())
+        let composite = render([backdropLayer(), turned])
+        // Middle of the wash. Yellow #FFD60A multiplied into blue #3478F6 is
+        // dark blue, nothing like either of them, so a flat paint or a lost
+        // blend mode both show up here.
+        let middle = pixel(composite, x: Int(box.midX), y: Int(box.midY))
+        // (255, 214, 10) multiplied into (52, 120, 246) is about (52, 101, 10):
+        // a dark olive that is neither of them. A wash painting FLAT over the
+        // top would leave red at 0xFF, and no wash at all would leave blue at
+        // 0xF6, so the two channels together pin it down.
+        #expect(middle[0] < 0x80)
+        #expect(middle[2] < 0x20)
+        #expect(middle[1] < 0x78)
+        // Off the wash, the backdrop is untouched.
+        let outside = pixel(composite, x: 5, y: 5)
+        #expect(outside[0] == 0x34 && outside[1] == 0x78 && outside[2] == 0xF6)
+    }
+
+    @Test("A wash of another colour over another backdrop, same answer")
+    func anotherWash() throws {
+        try expectSamePictureOver(backdropLayer("#F2F2F7"), washLayer("#34C759"))
     }
 
     // MARK: - Everything it was wearing

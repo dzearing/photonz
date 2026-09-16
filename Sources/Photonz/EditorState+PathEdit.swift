@@ -67,6 +67,9 @@ extension EditorState {
     var pathEditHintText: String {
         guard let layer = pathEditChipLayer else { return PathEditHint.opening }
         guard layer.transform.isIdentity else { return PathEditHint.turned }
+        // A shape that has JUST been turned says so first, because the question
+        // that would have said it can be silenced and then nothing does.
+        if let turnedIntoPathNotice { return turnedIntoPathNotice }
         return pathEditHint
             ?? PathEditHint.line(picked: 0, penInHand: activeTool == .pen)
     }

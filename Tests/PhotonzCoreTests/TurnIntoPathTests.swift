@@ -40,6 +40,16 @@ struct TurnIntoPathTests {
                                        to: CGPoint(x: 120, y: 80))
     }
 
+    /// The highlighter's own mark: a wash of colour, no line round it, laid
+    /// over whatever is under it. Built as a LAYER, so the mixing rule that
+    /// makes it a highlighter (`Layer.mixingIsFixed`) is in play.
+    private func highlightLayer(size: CGSize = CGSize(width: 180, height: 40)) -> Layer {
+        let wash = AnnotationContent(shape: .highlight, strokeWidth: 4, colorHex: "#FFD60A",
+                                     start: .zero, end: CGPoint(x: size.width, y: size.height))
+        return Layer(name: "Highlight", content: .annotation(wash),
+                     frame: CGRect(origin: CGPoint(x: 24, y: 64), size: size))
+    }
+
     private func near(_ a: CGFloat, _ b: CGFloat, _ slack: CGFloat = 1e-9) -> Bool {
         abs(a - b) <= slack
     }
@@ -58,21 +68,20 @@ struct TurnIntoPathTests {
         #expect(lineLayer().canTurnIntoPath)
     }
 
-    @Test("An arrow and a highlight do not: their ink is not an outline")
-    func arrowAndHighlightRefuse() {
+    @Test("So can a highlighter wash, which is a box with mixing on it")
+    func aWashConverts() {
+        #expect(highlightLayer().canTurnIntoPath)
+        #expect(highlightLayer().turnedIntoPath() != nil)
+    }
+
+    @Test("An arrow does not: its head is how it is drawn, not part of an outline")
+    func arrowRefuses() {
         let arrow = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30",
                                       start: .zero, end: CGPoint(x: 100, y: 0))
         let arrowLayer = Layer(name: "Arrow", content: .annotation(arrow),
                                frame: CGRect(x: 0, y: 0, width: 100, height: 20))
         #expect(!arrowLayer.canTurnIntoPath)
         #expect(arrowLayer.turnedIntoPath() == nil)
-
-        let wash = AnnotationContent(shape: .highlight, strokeWidth: 0, colorHex: "#FFCC00",
-                                     start: .zero, end: CGPoint(x: 100, y: 20))
-        let washLayer = Layer(name: "Highlight", content: .annotation(wash),
-                              frame: CGRect(x: 0, y: 0, width: 100, height: 20))
-        #expect(!washLayer.canTurnIntoPath)
-        #expect(washLayer.turnedIntoPath() == nil)
     }
 
     @Test("Nor does a picture, a label, a group or a path that already is one")
@@ -382,6 +391,54 @@ struct TurnIntoPathTests {
         #expect(document.cornerRadiusSelection(layerIDs: [layer.id], cornersOnly: true).isEmpty)
     }
 
+    // MARK: - A highlighter wash
+
+    @Test("A wash becomes a closed box of four corners in its own colour")
+    func washBecomesABox() throws {
+        let layer = highlightLayer()
+        let converted = try #require(layer.turnedIntoPath())
+        let path = try #require(converted.path)
+        #expect(path.isClosed)
+        #expect(path.anchors.count == 4)
+        // No line round it at any width: a wash is ink and nothing else, so a
+        // path of one that carried a stroke would grow an edge it never had.
+        #expect(path.strokeWidth == 0)
+        // The inside is the wash's own paint, which is what the highlighter
+        // actually fills with.
+        #expect(path.fill?.hex == "#FFD60A")
+        #expect(path.paintsAnInside)
+    }
+
+    @Test("It keeps mixing with what is under it, which is the whole point of a highlighter")
+    func theMixingSurvives() throws {
+        let layer = highlightLayer()
+        #expect(layer.mixingIsFixed)
+        #expect(layer.effectiveBlendMode == .multiply)
+
+        let converted = try #require(layer.turnedIntoPath())
+        // It is no longer a highlight mark, so nothing FORCES the mixing any
+        // more. It has to be carried into the style, or the wash would go flat
+        // and paint straight over the words the instant it converted.
+        #expect(!converted.mixingIsFixed)
+        #expect(converted.style.blendMode == .multiply)
+        #expect(converted.effectiveBlendMode == .multiply)
+    }
+
+    @Test("...and keeps the box it was drawn in, so the wash does not move")
+    func theWashStaysPut() throws {
+        let layer = highlightLayer()
+        let converted = try #require(layer.turnedIntoPath())
+        #expect(near(converted.frame.origin, layer.frame.origin))
+        #expect(near(converted.frame.width, layer.frame.width))
+        #expect(near(converted.frame.height, layer.frame.height))
+    }
+
+    @Test("A shape that never mixed does not come out mixing")
+    func anOrdinaryBoxIsNotToldToMix() throws {
+        let converted = try #require(rectangleLayer().turnedIntoPath())
+        #expect(converted.style.blendMode == .normal)
+    }
+
     // MARK: - The question it asks first
 
     @Test("The question names the layer and says what is lost")
@@ -401,6 +458,15 @@ struct TurnIntoPathTests {
         let prompt = try #require(TurnIntoPathPrompt(layer: ellipseLayer()))
         #expect(!prompt.message.lowercased().contains("corner"))
         #expect(prompt.title.contains("Ellipse"))
+    }
+
+    @Test("A wash's question says what happens to its mixing, not to corners")
+    func theWashQuestionReads() throws {
+        let prompt = try #require(TurnIntoPathPrompt(layer: highlightLayer()))
+        #expect(prompt.title.contains("Highlight"))
+        #expect(!prompt.message.lowercased().contains("corner"))
+        #expect(prompt.message.lowercased().contains("mix"))
+        #expect(!prompt.message.contains("\u{2014}"))
     }
 
     @Test("There is no question over a layer that cannot convert")

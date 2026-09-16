@@ -79,6 +79,22 @@ struct PathEditHintTests {
         #expect(PathEditHint.line(picked: 3, penInHand: true) == PathEditHint.severalPicked)
     }
 
+    /// The turn itself says so, because the question that would have said it
+    /// carries a "Don't ask again" and is gone the second time.
+    @Test func aShapeThatJustBecameAPathSaysSo() {
+        let one = PathEditHint.justTurned(paths: 1)
+        #expect(one.contains("Turned into a path"))
+        #expect(one.contains("Drag any point"), "and what to do with it now")
+        #expect(one.contains("Command Z"), "and the way back out")
+        #expect(!one.contains("\u{2014}"))
+
+        // Several shapes at once can come out as several paths, or welded into
+        // fewer, so the line counts what you actually got.
+        #expect(PathEditHint.justTurned(paths: 3).contains("3 paths"))
+        #expect(PathEditHint.justTurned(paths: 0) == one, "nothing left to count is still one line")
+        #expect(PathEditHint.justTurned(paths: 1) != PathEditHint.opening)
+    }
+
     /// A turned path cannot be reshaped, and until now it said nothing at all:
     /// the points simply were not there. The line has to name the way back.
     @Test func aTurnedPathSaysWhyItsPointsAreNotThere() {

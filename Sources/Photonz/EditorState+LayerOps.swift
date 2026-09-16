@@ -427,6 +427,10 @@ extension EditorState {
             .sorted { (document.path(of: $0)?.last ?? 0) < (document.path(of: $1)?.last ?? 0) }
         multiSelectedLayerIDs = alive.count > 1 ? Set(alive) : []
         selectedLayerID = alive.last
+        // ...and the chip under the canvas says what just happened, in one
+        // line, so the second time somebody uses this (with the question
+        // silenced) the row does not quietly change kind with nothing said.
+        turnedIntoPathNotice = PathEditHint.justTurned(paths: alive.count)
     }
 
     // MARK: - Restacking (Photoshop ⌘] ⌘[ ⇧⌘] ⇧⌘[)

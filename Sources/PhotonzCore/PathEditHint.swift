@@ -70,6 +70,23 @@ public enum PathEditHint {
     public static let severalPicked = "Arrow keys nudge the points you picked. "
         + "Delete takes them out."
 
+    /// The line the chip leads with the instant a shape has been turned into a
+    /// path, before you touch anything.
+    ///
+    /// The question asked beforehand says what the command will do, but it
+    /// carries a "Don't ask again", and the second time somebody uses this
+    /// there is no question at all: a rectangle becomes a path with nothing
+    /// said, and the row in the layers list quietly stops being the kind of
+    /// thing it was. One line naming what just happened, and what to do with
+    /// it, is the difference between a command that worked and a command you
+    /// have to take on trust. It steps aside for the ordinary reshaping lines
+    /// the moment a point is picked.
+    public static func justTurned(paths: Int) -> String {
+        let what = paths <= 1 ? "a path" : "\(paths) paths"
+        return "Turned into \(what). Drag any point to reshape it, "
+            + "or Command Z to put the shape back."
+    }
+
     /// The line for a path with `picked` of its points selected, and `anchor`
     /// the one point picked where there is exactly one.
     ///

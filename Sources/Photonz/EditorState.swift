@@ -588,6 +588,9 @@ final class EditorState {
                 // goes back to its opening one rather than talking about a
                 // point nobody has picked.
                 if pathEditHint != nil { pathEditHint = nil }
+                // ...and so does the line saying a shape had just become one:
+                // it is about the layer that was turned, not the next one.
+                if turnedIntoPathNotice != nil { turnedIntoPathNotice = nil }
                 // A fresh primary selection is what the next shift-click in
                 // a list ranges from, wherever it came from (canvas, panel,
                 // a new layer).
@@ -1110,7 +1113,23 @@ final class EditorState {
     /// points are on the canvas, which changes with how many of them are
     /// picked. Nil when no path is showing its points, which is also what
     /// takes the chip down.
-    var pathEditHint: String?
+    var pathEditHint: String? {
+        didSet {
+            // "Turned into a path" is about a moment, and the moment is over
+            // the instant the canvas has something to say about a point you
+            // picked: from there on the chip belongs to the point in your hand.
+            guard let pathEditHint, pathEditHint != PathEditHint.opening,
+                  pathEditHint != PathEditHint.penOpening else { return }
+            if turnedIntoPathNotice != nil { turnedIntoPathNotice = nil }
+        }
+    }
+
+    /// Next (`next-turn-into-path`): the one line saying a shape has just
+    /// BECOME a path, up from the turn until the first point is picked.
+    ///
+    /// It is here rather than pushed from the canvas because the canvas only
+    /// knows what is picked, not how it got there (`PathEditHint.justTurned`).
+    var turnedIntoPathNotice: String?
 
     /// Next (`next-measure-panel`): the "Copied" notice that is up right now,
     /// if any. Raised by Copy as Spec List, Copy Measurement and Copy Image,

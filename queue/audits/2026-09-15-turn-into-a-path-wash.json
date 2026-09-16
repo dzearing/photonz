@@ -1,0 +1,30 @@
+{
+  "feature": "Turn Into Path takes a highlighter wash, and says what it did",
+  "epic": "icon-vector",
+  "summary": "A highlighter wash can now become a path, and it goes on highlighting: the picture is identical and it still mixes with what is under it, so from here a wash can be any shape rather than only a box. And after any turn, the chip under the canvas says in one line what just happened, which is what stands in for the question once you have ticked Don't ask again.",
+  "setup": "Photonz Dev, release Next. next-turn-into-path is on by default and needs next-reshape-a-path and next-pen, which are too.",
+  "try": [
+    { "do": "Open a screenshot, or draw a big rounded rectangle to stand in for one." },
+    { "do": "Press H and drag a highlighter wash straight across it.", "shot": "2026-09-15-turn-into-a-path-wash-before.png" },
+    { "do": "Right click the Highlight row in the Layers panel and choose Turn Into Path." },
+    { "do": "Read the question: it should talk about mixing, not about corners." },
+    { "do": "Press Return and look hard at the wash. Nothing should have moved, and it should still be mixing rather than a flat yellow slab.", "shot": "2026-09-15-turn-into-a-path-wash-after.png" },
+    { "do": "Read the one line on the chip under the canvas before you touch anything." },
+    { "do": "Drag one of the four points somewhere a rectangle could never go, and watch it go on highlighting.", "shot": "2026-09-15-turn-into-a-path-wash-reshaped.png" },
+    { "do": "Press Command Z once: the wash comes back as a highlight mark in one step." }
+  ],
+  "evaluate": [
+    "A wash that is no longer stuck being a box: is that something you would reach for when redlining, for a run of words that wraps onto two lines or a panel with a notch out of it?",
+    "The question tells you the mixing becomes a setting under Blending rather than a rule. Is that the thing you would want to be told, or would you rather it just said nothing changes?",
+    "The line on the chip after the turn says 'Turned into a path. Drag any point to reshape it, or Command Z to put the shape back.' Does that land where your eye already is, or should the properties panel be the one saying it?",
+    "That line goes the moment you pick a point. Is that too fast, or right?",
+    "An arrow is still the one shape that does not convert, and the command is missing rather than dimmed on one. Its head is painted rather than outlined, so a path of it would be the silhouette of the whole arrow with the points on the outside. Is leaving it out right, or would you rather have a way to bend an arrow's shaft?"
+  ],
+  "rough": [
+    "THE PICTURES HERE ARE NOT PHOTOGRAPHS OF THE APP. The Mac's screen was locked when this ran, so the walk reported status locked and did not run a single step, and macOS refuses every capture in that state. These three are renders of the document itself, which is the same ink without the window round it. I have asked for a sweep so the walk runs once the screen is unlocked. wash-before and wash-after are the SAME FILE, byte for byte, which is the claim this audit is making.",
+    "The mixing surviving is proved on pixels rather than by eye: a wash over an opaque backdrop composites identically before and after the turn, and a second test pins the middle pixel at the multiply result so a flat repaint or a lost blend mode cannot slip through.",
+    "The line after the turn went on the canvas chip rather than in the properties panel, which is the word the task used. The chip is the app's established place for what just happened, it already shares that slot with Copied, and it sits beside the shape you converted rather than across the window. Worth disagreeing with if the panel is where you would look.",
+    "A wash that has become a path picks up a Blending row it never had, set to Multiply. That is honest, because it really is a setting now, but it does mean somebody can turn a highlight into a path and then quietly stop it highlighting. Undo brings the real highlight back in one step.",
+    "Exporting a converted wash to SVG embeds it as a picture rather than a shape, with the reason shown in the Export sheet, because nothing in SVG carries the mixing on its own. That is the same answer a highlight already got before this change, so nothing got worse, but it does mean the reshaping you can now do does not travel as vector."
+  ]
+}

@@ -530,15 +530,40 @@ because it is the gentler of the two: this one keeps the shape editable.
 | Per-corner rounded | one anchor per square corner, two per round one |
 | Ellipse | four smooth anchors on its compass points |
 | Line | an open path of two anchors |
+| Highlighter wash | four corner anchors, filled in the wash's colour, no line |
+
+A **highlight** was left out at first, for a reason that turned out not to hold.
+A wash is a filled box, and the thing that makes it a highlighter rather than a
+coloured slab is that it MIXES with what is under it. That mixing is not lost by
+becoming a path: a highlight mark multiplies because `Layer.mixingIsFixed` says
+it must, and the turn carries that into the layer's own `style.blendMode`, where
+the picture is identical and it is a setting rather than a rule. Proved on
+pixels, over a backdrop, in `TurnIntoPathRenderTests`. What it buys is a wash
+that is no longer stuck being a rectangle: a run of words that wraps onto two
+lines, or a panel with a notch out of it, can be highlighted in one mark.
 
 An **arrow** does not convert, and it is the one worth saying out loud. Its head
 is part of how it is DRAWN rather than part of its outline: the shaft is a
 stroke and the tip is a solid triangle sized off that stroke, so a path of it
 would either arrive with no head at all or be one closed silhouette of the whole
 arrow whose points sit on the outside of a shape nobody thinks of as an outline.
-A **highlight** is a wash rather than a shape: its colour IS the fill and it
-always mixes with what is under it. Both keep "Turn Into Picture", which is the
-honest answer for a mark whose look is how it is painted.
+Three of its four heads — the open chevron and the two dots — are separate
+contours, and `PathContent` holds ONE, so for those the picture could not
+survive the turn at all. It keeps "Turn Into Picture", which is the honest
+answer for a mark whose look is how it is painted. What somebody actually wants
+from an arrow they cannot reshape is a curved shaft, which is a change to the
+arrow rather than a conversion away from it.
+
+### What it says afterwards
+
+The question asked beforehand says what the command will do, and it carries a
+"Don't ask again". The second time somebody uses it there is no question at all,
+so the row in the layers list would quietly stop being the kind of thing it was
+with nothing said. So the chip under the canvas leads with one line naming what
+just happened — `PathEditHint.justTurned`, held in `EditorState`
+`turnedIntoPathNotice` — and steps aside for the ordinary reshaping lines the
+moment a point is picked, or the selection changes, or an undo takes the shape
+back.
 
 ### The constant, and why it is exact rather than close
 

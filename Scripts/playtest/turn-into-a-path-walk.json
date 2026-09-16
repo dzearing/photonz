@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/turn-into-a-path",
-  "seed": "A rectangle is a fixed thing: you can resize it but you cannot move one corner. This walk rounds a box, turns it into a path from its own row menu, checks the picture did not move, then pulls one of the points the rounding made and puts it all back with two undos. It ends on an ellipse, because a circle turning into a lumpy approximation is the other way this can go wrong.",
+  "seed": "A rectangle is a fixed thing: you can resize it but you cannot move one corner. This walk rounds a box, turns it into a path from its own row menu, checks the picture did not move, then pulls one of the points the rounding made and puts it all back with two undos. It goes on to an ellipse, because a circle turning into a lumpy approximation is the other way this can go wrong, and finishes on a highlighter wash laid across both of them: a wash that stopped mixing with what is under it would have stopped being a highlighter, which is the reason it was left out of this command at first.",
   "setup": { "forget": ["shapes", "color", "panel", "tools"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
@@ -49,6 +49,8 @@
     { "do": "wait", "seconds": 1.0 },
 
     { "do": "expectPath", "anchors": 8, "closed": true, "curves": 4 },
+    { "do": "expectHint", "contains": "Turned into a path" },
+    { "do": "expectHint", "contains": "Command Z" },
     { "do": "describe", "stage": "4-turned", "note": "THE POINT: the picture is the same rounded box it was, and the layer is now a path of eight points, four runs of it curved. Compare doc-1-rounded-rectangle with doc-4-turned. The panel has lost its Corner Radius row, because a path has points rather than corners, and the canvas shows those points instead of resize squares" },
     { "do": "panel", "stage": "4-turned" },
     { "do": "render", "name": "doc-4-turned" },
@@ -91,6 +93,31 @@
 
     { "do": "rightClick", "on": "Ellipse", "shot": "8-already-a-path" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "describe", "stage": "8-it-is-not-offered-twice", "note": "the same row menu on the layer that is already a path: 'Turn Into Path…' is gone, because there is nothing left to turn" }
+    { "do": "describe", "stage": "8-it-is-not-offered-twice", "note": "the same row menu on the layer that is already a path: 'Turn Into Path…' is gone, because there is nothing left to turn" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "key", "key": "h" },
+    { "do": "drag", "from": [250, 300], "to": [860, 350] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "escape" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [560, 325] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Highlight"] },
+    { "do": "describe", "stage": "9-a-wash-over-both-shapes", "note": "a yellow highlighter wash laid straight across the rectangle and the circle. It is MIXING with them: where it crosses a shape you can still see the shape through it, which is the whole difference between a highlighter and a coloured box" },
+    { "do": "render", "name": "doc-9-wash-before" },
+    { "do": "snapshot", "name": "9-wash-before" },
+
+    { "do": "rightClick", "on": "Highlight", "choose": "Turn Into Path…" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "snapshot", "name": "10-wash-question" },
+    { "do": "describe", "stage": "10-the-wash-is-asked-about-too", "note": "the sheet asks about the highlight and says its mixing becomes a setting under Blending rather than a rule. It does not talk about corners, which a wash never had" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectPath", "anchors": 4, "closed": true },
+    { "do": "expectHint", "contains": "Turned into a path" },
+    { "do": "describe", "stage": "11-the-wash-goes-on-highlighting", "note": "THE POINT OF THIS LEG: compare doc-9-wash-before with doc-11-wash-after. They are the same picture. The wash is now a path of four points and it is STILL mixing with the shapes under it rather than painting a flat yellow slab over them. From here it can be reshaped, so a wash no longer has to be a rectangle" },
+    { "do": "render", "name": "doc-11-wash-after" },
+    { "do": "snapshot", "name": "11-wash-after" }
   ]
 }

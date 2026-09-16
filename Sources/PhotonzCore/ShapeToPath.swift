@@ -132,20 +132,30 @@ extension AnnotationContent {
     /// A box, an oval and a line do: what you see is a shape drawn along a
     /// line, and that line is what a path holds.
     ///
+    /// A HIGHLIGHT does too, and it was left out at first for a reason that
+    /// turned out not to hold. A wash is a filled box, and the thing that makes
+    /// it a highlighter rather than a coloured slab is that it MIXES with what
+    /// is under it. That mixing is not lost by becoming a path: it is carried
+    /// into the layer's own Blending (`Layer.turnedIntoPath`), where the
+    /// picture is identical and it can now be changed rather than only obeyed.
+    /// What it buys is a wash that is not stuck being a rectangle, so a run of
+    /// words that wraps, or a panel with a notch in it, can be highlighted in
+    /// one mark.
+    ///
     /// An ARROW does not, and this is the one worth saying out loud. Its head
     /// is part of how it is DRAWN rather than part of its outline: the shaft is
     /// a stroke and the tip is a solid triangle sized off the stroke, so a path
     /// of it would either arrive with no head at all or be one closed
     /// silhouette of the whole arrow, whose points sit on the outside of a
-    /// shape nobody thinks of as an outline. A HIGHLIGHT is a wash rather than
-    /// a shape: its colour IS the fill and it always mixes with what is under
-    /// it, so a path of it would be a flat slab that had stopped highlighting.
-    /// Both keep "Turn Into Picture", which is the honest answer for a mark
-    /// whose look is how it is painted.
+    /// shape nobody thinks of as an outline. Three of its four heads (the open
+    /// chevron and the two dots) are separate contours, and a path holds ONE,
+    /// so for those the picture could not survive the turn at all. It keeps
+    /// "Turn Into Picture", which is the honest answer for a mark whose look is
+    /// how it is painted.
     public var turnsIntoAPath: Bool {
         switch shape {
-        case .rectangle, .ellipse, .line: return true
-        case .arrow, .highlight: return false
+        case .rectangle, .ellipse, .line, .highlight: return true
+        case .arrow: return false
         }
     }
 
@@ -184,7 +194,19 @@ extension AnnotationContent {
             // one that would never be painted.
             path.fill = nil
             return path
-        case .arrow, .highlight:
+        case .highlight:
+            // A wash is ink and nothing else: the rasterizer fills its box and
+            // never draws a line round it at any width. So the path is that
+            // box, painted INSIDE in the wash's own colour, with no line on it
+            // — one that carried the stroke width a highlight happens to store
+            // would grow an edge the wash never had.
+            var path = PathContent.rectangle(in: box, radii: .none)
+            path.paint = paint
+            path.strokeWidth = 0
+            path.strokePosition = .center
+            path.fill = paint
+            return path
+        case .arrow:
             return nil
         }
     }
@@ -229,6 +251,12 @@ extension Layer {
               let content = annotation.asPath() else { return nil }
         var turned = self
         turned.content = .path(content)
+        // A highlighter mixes with what is under it because of what it IS, not
+        // because of anything its style says (`mixingIsFixed`). The instant it
+        // stops being a highlight mark nothing is forcing that any more, so the
+        // mixing moves into the style it now carries: same picture, and from
+        // here on it is a setting rather than a rule.
+        if mixingIsFixed { turned.style.blendMode = effectiveBlendMode }
         return PathBuilder.refit(turned, content: content)
     }
 }
@@ -252,13 +280,15 @@ extension Layer {
 public struct TurnIntoPathPrompt: Hashable, Sendable {
 
     /// What the layer is, in the noun a person would use for it, because what
-    /// they lose is different: a box loses its corner radius, an oval loses
+    /// changes is different: a box loses its corner radius, an oval loses
     /// nothing but the promise of being round, a line loses being two points
-    /// you drag by the ends.
+    /// you drag by the ends, and a highlighter keeps its mixing but stops
+    /// being forced into it.
     public enum Subject: Hashable, Sendable {
         case rectangle
         case ellipse
         case line
+        case highlight
     }
 
     /// The name the layer wears in the layers panel, so the question is about
@@ -281,7 +311,8 @@ public struct TurnIntoPathPrompt: Hashable, Sendable {
         case .rectangle: self.init(name: layer.name, subject: .rectangle)
         case .ellipse: self.init(name: layer.name, subject: .ellipse)
         case .line: self.init(name: layer.name, subject: .line)
-        case .arrow, .highlight: return nil
+        case .highlight: self.init(name: layer.name, subject: .highlight)
+        case .arrow: return nil
         }
     }
 
@@ -298,6 +329,7 @@ public struct TurnIntoPathPrompt: Hashable, Sendable {
         case .rectangle: return "rectangle"
         case .ellipse: return "ellipse"
         case .line: return "line"
+        case .highlight: return "highlight"
         }
     }
 
@@ -320,6 +352,9 @@ public struct TurnIntoPathPrompt: Hashable, Sendable {
             lost = "It stops being an ellipse, so dragging it will no longer keep it oval"
         case .line:
             lost = "It stops being a line, so it no longer has two ends to drag"
+        case .highlight:
+            lost = "It goes on mixing with what is under it, but as a setting "
+                + "under Blending rather than a rule, so it can be turned off"
         }
         return "Every point on it becomes yours to move, curve or delete. "
             + "\(lost). Undo puts it back."
