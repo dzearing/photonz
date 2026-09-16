@@ -1,0 +1,29 @@
+{
+  "feature": "An icon leaves as pure shapes",
+  "epic": "icon-export",
+  "summary": "Draw an icon on a blank canvas, export it as SVG, and the file is now shapes and nothing else. The white the canvas starts as is written as one rectangle instead of being embedded whole as a picture, so a 900 by 700 canvas with one shape on it went from a file with a photograph of white inside it to 266 bytes.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: it is how SVG export writes every document now.",
+  "try": [
+    { "do": "File > New Canvas, take the default size, Create." },
+    { "do": "Press P for the Pen and draw a closed shape, a few clicks and back to the first point." },
+    { "do": "File > Export, pick SVG in the format row." },
+    { "do": "Read the line about what rides along as a picture. The background is no longer named there, and Sharp at every size stays ticked." },
+    { "do": "Save it, then open the .svg in any text editor." },
+    { "do": "Look for the word base64. There is none: the first element is a plain rect of the canvas colour." },
+    { "do": "Open the same file in a browser and check it draws what the canvas drew." },
+    { "do": "Now open a screenshot instead and export that as SVG. It still goes out as its own pixels, unchanged." }
+  ],
+  "evaluate": [
+    "Is the file small enough to paste into a code review or a chat without apologising for it?",
+    "The background comes out as a white rectangle the size of the canvas. Handing that icon to a developer, do you want that rectangle, or do you want the icon on its own with nothing behind it?",
+    "Drawn on a canvas you painted some other colour, the rectangle is that colour. Is that the right answer, or should the background never travel?",
+    "Erase or paint a single pixel of the background and it goes back to riding along as a picture, because it is no longer one flat colour. Is that the behaviour you expect, or is it surprising?",
+    "Does Export feel any slower to open on a big photograph than it did?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and there are no pictures of the window here: every launch reported status locked, and macOS refuses every capture in that state. The evidence is the written file itself, checked by rendering it back through the system's own SVG reader and comparing it to the app's own render of the same document, which needs no screen. A sweep is requested so svg-export-walk runs once the screen is unlocked.",
+    "The background still travels. An icon handed over now carries an opaque white rectangle the size of the canvas, which is faithful to what you drew but is usually not what an icon wants. That is a question about what export should DO rather than about what it can say, so it is filed as its own task rather than decided here.",
+    "A picture is only written as a rectangle when every single pixel of it is exactly the same colour. A photograph of a white wall keeps its pixels, which is right, but so does a background somebody has drawn one stroke on, and that stroke may be invisible.",
+    "A cropped flat colour still goes out as a picture. A crop can reach past the edge of the bitmap, and what shows out there is not the colour inside it, so it was not worth the risk of getting it wrong."
+  ]
+}

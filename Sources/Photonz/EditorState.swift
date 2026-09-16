@@ -1826,7 +1826,7 @@ final class EditorState {
         guard let document else { return nil }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
-        guard SVGExport.embeddedPictures(in: target).isEmpty else { return nil }
+        guard SVGExporter.embeddedPictures(in: target, store: store).isEmpty else { return nil }
         let animation: SVGExport.Animation = animated && target.hasMotion
             ? .moving(cycleMS: target.motionCycleLengthMS) : .still
         guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer,

@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:40.209Z",
-  "updated": "2026-09-15T12:14:53.418Z",
+  "updated": "2026-09-16T01:02:21.779Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from the walk that shipped with the SVG export task: Scripts/playtest/svg-export-walk.json writes /tmp/photonz-playtest/svg-export-walk/svg-export-3-icon.svg, and its log line reads 17270 bytes, every layer as shapes, of which about 17000 is the white background as base64 PNG. Two ways to tell a flat picture: ask the ImageStore for the bitmap and check every pixel is the same colour (cheap enough on export, and PixelField/BoxSweep already do this kind of scan), or catch it earlier where a blank canvas is made (BlankCanvas.swift) and give the document a flat background that is not a bitmap at all. The second is the better answer and the bigger change.",
@@ -43,6 +43,39 @@
     {
       "t": "2026-09-15T12:14:53.417Z",
       "note": "seq 100 -> 140"
+    },
+    {
+      "t": "2026-09-16T01:02:21.778Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Reproduced first. A 900x700 blank canvas with one pen shape on it exported as an SVG whose first element was <image ... base64>, the white background embedded whole. Test: Tests/PhotonzRenderTests/SVGExportRenderTests.swift anIconOnABlankCanvasCarriesNoPictureAtAll, which failed on the old code with the whole file printed in the failure."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Adversarial review before building. The task's own notes preferred changing what a blank canvas IS (a flat background rather than a bitmap). I built the other one, detection at export time, on purpose: the bitmap background is what makes a marquee fill or an eraser stroke on the background redraw at full resolution (EditorState.newBlankCanvas says so), so replacing it changes painting behaviour to fix a file format; and detection also covers a background somebody flood-filled another colour, a flat PNG dropped in, and a flat frame surface, none of which the blank-canvas change would have touched. No visible difference between the two answers in the written file, so it is an engineering call rather than a decision card."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Built: FlatBitmap (PhotonzRender) reads whether every pixel of a bitmap is exactly one colour, cheap sample of 32x32 first then the whole picture in bands so an 8192-wide canvas never needs a buffer its own size, and the per-band compare is one memcmp of the buffer against itself shifted a pixel. SVGExport (pure) takes flatImages: [UUID: RGBA] and writes such a layer through the normal shapes path, so it picks up its placement, opacity, corner rounding, border rings and motion for free. SVGExporter, ExportDialog and EditorState.svgPreflight read it through the store, so the Export sheet stops naming a flat background as a photograph riding along and Sharp at every size stays ticked."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Verified. All four acceptance items: a flat background writes <rect ...fill=\"#FFFFFF\"/>; the icon file has no base64 in it at all and is 266 bytes where it used to carry the background whole; a photograph (and a background with one pixel painted on it) still exports as its own pixels; and every one of these is checked by rendering the written file back through the system's SVG reader and comparing it to the app's own render, within one level out of 255. Scripts/test.sh green: 7227 tests, 577 suites."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Could not run a single walk: the Mac's screen was locked for the whole task, so every launch reported status locked and playtest.sh exited 3 (tried twice). Asked for a sweep with that reason so svg-export-walk, tutorial-get-a-clean-svg-out-walk and tutorial-export-an-animated-svg-walk run once it is unlocked."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "left rough: the flat scan runs twice per Export sheet refresh, once for the warning list and once for the file itself, about 10ms each on a 1.4 megapixel flat canvas and near zero on a photograph (the cheap 32x32 look answers it). Not worth a cache yet; it is in the log in case the sheet ever feels slow."
+    },
+    {
+      "t": "2026-09-16T01:11:53.935Z",
+      "note": "Filed as its own task: an-icon-exported-as-svg-comes-out-with-nothing-b, the background still travelling as a white rectangle. Audit: queue/audits/2026-09-16-icon-export-no-bitmap.json."
     }
-  ]
+  ],
+  "started": "2026-09-16T01:02:21.777Z"
 }

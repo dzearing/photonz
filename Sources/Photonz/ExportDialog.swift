@@ -267,7 +267,7 @@ struct ExportDialog: View {
     /// could not say them in shapes.
     private var unwritable: [SVGExport.Fallback] {
         guard choice.isVector, let target else { return [] }
-        return SVGExport.fallbacks(in: target)
+        return SVGExporter.fallbacks(in: target, store: editorState.store)
     }
 
     /// The pictures that are simply pictures: a photograph was never shapes,
@@ -276,7 +276,7 @@ struct ExportDialog: View {
     private var photographs: [String] {
         guard choice.isVector, let target else { return [] }
         let problems = Set(unwritable.map(\.layerName))
-        return SVGExport.embeddedPictures(in: target)
+        return SVGExporter.embeddedPictures(in: target, store: editorState.store)
             .map(\.layerName)
             .filter { !problems.contains($0) }
     }
@@ -454,7 +454,9 @@ struct ExportDialog: View {
     @ViewBuilder private var handoffNote: some View {
         if let target {
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(SVGHandoff.lines(for: destination, in: target)) { line in
+                ForEach(SVGHandoff.lines(for: destination, in: target,
+                                         flatImages: FlatBitmap.colors(in: target,
+                                                                       store: editorState.store))) { line in
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: line.survives ? "checkmark" : "xmark")
                             .font(.caption)

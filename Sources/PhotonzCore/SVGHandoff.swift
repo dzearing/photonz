@@ -124,8 +124,12 @@ public enum SVGHandoff {
     }
 
     /// What this document, sent to this destination, keeps and loses.
+    /// `flatImages` is the same reading `SVGExport` takes: a background that is
+    /// one flat colour is a rectangle in the file, so it must not be listed as
+    /// a photograph riding along.
     public static func lines(for destination: Destination,
-                             in document: PhotonzDocument) -> [Line] {
+                             in document: PhotonzDocument,
+                             flatImages: [UUID: RGBA] = [:]) -> [Line] {
         let format = format(for: destination, in: document)
         let moves = document.hasMotion && destination.carriesMotion
         var lines: [Line] = []
@@ -140,7 +144,7 @@ public enum SVGHandoff {
         // Sharpness is the SVG's whole argument, so it is only claimed where
         // it is true: a picture has one size, and a drawing carrying a
         // photograph has one part of it that does.
-        let photographs = embedded(in: document)
+        let photographs = embedded(in: document, flatImages: flatImages)
         if format == .picture {
             lines.append(Line(text: "Sharp at every size",
                               detail: "A picture has one size. Send it at the size it will be"
@@ -181,8 +185,9 @@ public enum SVGHandoff {
     }
 
     /// The layers that go out as pixels inside the file.
-    static func embedded(in document: PhotonzDocument) -> [String] {
-        SVGExport.embeddedPictures(in: document).map(\.layerName)
+    static func embedded(in document: PhotonzDocument,
+                         flatImages: [UUID: RGBA] = [:]) -> [String] {
+        SVGExport.embeddedPictures(in: document, flatImages: flatImages).map(\.layerName)
     }
 
     // MARK: - The one it opens on

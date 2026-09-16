@@ -79,23 +79,30 @@ public enum SVGExport {
     ///
     /// `animation` decides whether the motions in the document travel with it.
     /// A document with nothing moving writes exactly the same file either way.
+    /// `flatImages` says which of the document's bitmaps are one flat colour,
+    /// by the id of the bitmap. A picture that is one colour is a rectangle,
+    /// and a rectangle is something this can write, which is what keeps a
+    /// blank canvas's white background out of the file as base64
+    /// (`FlatBitmap` in PhotonzRender is what reads the pixels).
     public static func write(_ document: PhotonzDocument,
                              animation: Animation = .still,
                              picture: PictureMaker? = nil,
-                             outlineText: TextOutliner? = nil) -> Result {
+                             outlineText: TextOutliner? = nil,
+                             flatImages: [UUID: RGBA] = [:]) -> Result {
         var writer = Writer(picture: picture, outlineText: outlineText,
-                            animation: animation)
+                            animation: animation, flatImages: flatImages)
         return writer.run(document)
     }
 
     /// What WOULD go out as a picture, asked before anything is written, so
     /// the export dialog can say so before you save rather than after you
     /// open the file.
-    public static func fallbacks(in document: PhotonzDocument) -> [Fallback] {
+    public static func fallbacks(in document: PhotonzDocument,
+                                 flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
         var found: [Fallback] = []
         func walk(_ layers: [Layer]) {
             for layer in layers where layer.isVisible {
-                switch answer(for: layer, canOutlineText: true) {
+                switch answer(for: layer, canOutlineText: true, flatImages: flatImages) {
                 case .picture(let reason?):
                     found.append(Fallback(layerName: layer.name, reason: reason))
                 case .picture:
@@ -115,11 +122,12 @@ public enum SVGExport {
     /// A photograph is not a failure — it was never shapes — but somebody about
     /// to hand an SVG to somebody else still wants to know there is a bitmap
     /// inside it, so the Export sheet asks this rather than `fallbacks(in:)`.
-    public static func embeddedPictures(in document: PhotonzDocument) -> [Fallback] {
+    public static func embeddedPictures(in document: PhotonzDocument,
+                                        flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
         var found: [Fallback] = []
         func walk(_ layers: [Layer]) {
             for layer in layers where layer.isVisible {
-                switch answer(for: layer, canOutlineText: true) {
+                switch answer(for: layer, canOutlineText: true, flatImages: flatImages) {
                 case .picture(let reason):
                     found.append(Fallback(layerName: layer.name,
                                           reason: reason ?? "it is a picture rather than shapes"))
@@ -214,11 +222,12 @@ public enum SVGExport {
         case picture(String?)
     }
 
-    static func answer(for layer: Layer, canOutlineText: Bool) -> Answer {
+    static func answer(for layer: Layer, canOutlineText: Bool,
+                       flatImages: [UUID: RGBA] = [:]) -> Answer {
         if let reason = styleReason(layer) { return .picture(reason) }
         switch layer.content {
         case .image:
-            return .picture(nil)
+            return flatColor(of: layer, in: flatImages) == nil ? .picture(nil) : .vector
         case .path(let path):
             if let reason = sweepReason(path.fill) ?? sweepReason(path.paint) {
                 return .picture(reason)
@@ -263,6 +272,17 @@ public enum SVGExport {
         case .collage:
             return .picture("a collage is an arrangement of pictures")
         }
+    }
+
+    /// The one flat colour this layer's picture is, where that is what lets it
+    /// go out as a rectangle instead of as pixels.
+    ///
+    /// A CROPPED picture keeps its pixels even when they are all one colour: a
+    /// crop can reach past the edge of the bitmap, and what shows there is not
+    /// the colour inside it.
+    static func flatColor(of layer: Layer, in flatImages: [UUID: RGBA]) -> RGBA? {
+        guard case .image(let ref) = layer.content, layer.crop == nil else { return nil }
+        return flatImages[ref.id]
     }
 
     /// Why this layer's STYLING has no vector answer, or nil when it has one.
@@ -341,6 +361,8 @@ private struct Writer {
     let picture: SVGExport.PictureMaker?
     let outlineText: SVGExport.TextOutliner?
     var animation: SVGExport.Animation = .still
+    /// Which of the document's bitmaps are one flat colour, by bitmap id.
+    var flatImages: [UUID: RGBA] = [:]
     var defs: [String] = []
     var fallbacks: [SVGExport.Fallback] = []
     var unmoved: [SVGExport.Fallback] = []
@@ -384,7 +406,8 @@ private struct Writer {
     mutating func write(_ layer: Layer, groupOffset: CGPoint, level: Int) -> [String] {
         let canvasOrigin = CGPoint(x: groupOffset.x + layer.frame.minX,
                                    y: groupOffset.y + layer.frame.minY)
-        let answer = SVGExport.answer(for: layer, canOutlineText: outlineText != nil)
+        let answer = SVGExport.answer(for: layer, canOutlineText: outlineText != nil,
+                                      flatImages: flatImages)
         let isPicture: Bool = if case .picture = answer { true } else { false }
         // What this layer is told to do over time, as the groups that do it.
         // A still export asks for none of this, and a layer with nothing
@@ -491,9 +514,25 @@ private struct Writer {
             return self.annotation(annotation, size: layer.frame.size, level: level)
         case .text(let text):
             return self.text(text, layer: layer, level: level)
+        case .image:
+            return flatPicture(of: layer, level: level)
         default:
             return []
         }
+    }
+
+    /// A picture that is one flat colour, as the rectangle it really is.
+    ///
+    /// Reached only for a layer `answer` already called vector, so the colour
+    /// is there. Whatever rounds the layer's box rounds the rectangle with it,
+    /// exactly as the rendered picture used to carry its own corners.
+    mutating func flatPicture(of layer: Layer, level: Int) -> [String] {
+        guard let colour = SVGExport.flatColor(of: layer, in: flatImages), colour.a > 0,
+              layer.frame.width > 0, layer.frame.height > 0 else { return [] }
+        let box = CGRect(origin: .zero, size: layer.frame.size)
+        let paint = fill(Paint(hex: colour.hexStringWithAlpha), box: box)
+        return [boxElement(box, radii: layer.style.cornerRadii.fitted(in: box.size),
+                           paint: paint, level: level)]
     }
 
     // MARK: The shapes themselves

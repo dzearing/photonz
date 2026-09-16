@@ -237,6 +237,58 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "photo", store: store)
     }
 
+    /// The whole point of the task: an icon drawn on a blank canvas, written
+    /// exactly as Export writes it. The document is built the way the app
+    /// builds one (`EditorState.newBlankCanvas`) — a real full-size white
+    /// bitmap as a locked Background layer — so this is the same file the
+    /// `svg-export-walk` puts on disk.
+    @Test func anIconOnABlankCanvasCarriesNoPictureAtAll() throws {
+        let store = ImageStore()
+        let size = CGSize(width: 900, height: 700)
+        let white = try #require(SolidImage.make(size: size, hex: "#FFFFFF"))
+        var document = PhotonzDocument.withBaseImage(store.register(white))
+        var icon = Self.bowedSquare().normalized()
+        icon.fillColorHex = "#2E6BFF"
+        icon.colorHex = "#2E6BFF"
+        icon.strokeWidth = 0
+        document.layers.append(Layer(name: "Icon", content: .path(icon),
+                                     frame: CGRect(origin: CGPoint(x: 220, y: 200),
+                                                   size: icon.bounds.size)))
+        let result = SVGExporter.export(document, store: store)
+        #expect(!result.text.contains("base64"),
+                "a flat background went out as an embedded picture")
+        #expect(result.text.contains("<rect"))
+        // It used to be seventeen kilobytes of white; an icon is a few hundred
+        // bytes of shapes.
+        let bytes = try #require(result.text.data(using: .utf8)).count
+        #expect(bytes < 1000, "the file is \(bytes) bytes")
+        try Self.expectTheSamePicture(of: document, name: "icon-on-white", store: store)
+    }
+
+    @Test func aBackgroundPaintedAnyOtherColourIsARectangleToo() throws {
+        let store = ImageStore()
+        let green = try #require(SolidImage.make(size: Self.canvas, hex: "#34C759"))
+        let document = PhotonzDocument.withBaseImage(store.register(green))
+        let result = SVGExporter.export(document, store: store)
+        #expect(result.text.contains("fill=\"#34C759\""))
+        #expect(!result.text.contains("base64"))
+        try Self.expectTheSamePicture(of: document, name: "green-canvas", store: store)
+    }
+
+    /// A canvas somebody has drawn pixels onto is not flat any more, and it
+    /// must keep every one of them.
+    @Test func aBackgroundWithOnePixelPaintedOnItKeepsItsPixels() throws {
+        let store = ImageStore()
+        let marked = try #require(FlatBitmapTests.white(Int(Self.canvas.width),
+                                                        Int(Self.canvas.height),
+                                                        mark: CGRect(x: 97, y: 61,
+                                                                     width: 1, height: 1)))
+        let document = PhotonzDocument.withBaseImage(store.register(marked))
+        let result = SVGExporter.export(document, store: store)
+        #expect(result.text.contains("base64"))
+        try Self.expectTheSamePicture(of: document, name: "marked-canvas", store: store)
+    }
+
     // MARK: - The comparison itself
 
     /// Renders the document through the real engine, renders the exported file

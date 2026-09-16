@@ -377,6 +377,81 @@ struct SVGExportTests {
         #expect(SVGExport.fallbacks(in: document).isEmpty)
     }
 
+    // MARK: - A picture that is one flat colour
+
+    /// The blank canvas's background: a real bitmap on the canvas, and four
+    /// numbers in the file.
+    static func flatBackground(_ colour: RGBA = RGBA(r: 1, g: 1, b: 1),
+                               size: CGSize = CGSize(width: 240, height: 240))
+        -> (layer: Layer, flatImages: [UUID: RGBA]) {
+        let ref = ImageRef(pixelSize: size)
+        let layer = Layer(name: "Background", content: .image(ref),
+                          frame: CGRect(origin: .zero, size: size))
+        return (layer, [ref.id: colour])
+    }
+
+    @Test func aFlatBackgroundGoesOutAsARectangleRatherThanAPicture() {
+        let (background, flat) = Self.flatBackground()
+        let result = SVGExport.write(Self.document([background, Self.pathLayer()]),
+                                     picture: Self.stubPicture,
+                                     outlineText: Self.stubOutliner,
+                                     flatImages: flat)
+        #expect(!result.text.contains("<image "))
+        #expect(!result.text.contains("base64"))
+        #expect(result.text.contains("<rect x=\"0\" y=\"0\" width=\"240\" height=\"240\""))
+        #expect(result.text.contains("fill=\"#FFFFFF\""))
+        #expect(result.fallbacks.isEmpty)
+    }
+
+    @Test func aFlatColourKeepsItsOwnColourAndItsSeeThroughness() {
+        let (background, flat) = Self.flatBackground(RGBA(r: 0, g: 0.5, b: 1, a: 0.6))
+        let result = SVGExport.write(Self.document([background]), flatImages: flat)
+        #expect(result.text.contains("fill=\"#0080FF\""))
+        #expect(result.text.contains("fill-opacity=\"0.6\""))
+    }
+
+    @Test func aFlatColourNobodyCanSeeDrawsNothingAtAll() {
+        let (background, flat) = Self.flatBackground(RGBA(r: 1, g: 1, b: 1, a: 0))
+        let result = SVGExport.write(Self.document([background]), flatImages: flat)
+        #expect(!result.text.contains("<rect"))
+        #expect(!result.text.contains("<image "))
+    }
+
+    @Test func aRoundedOffFlatPictureKeepsItsCorners() {
+        var (background, flat) = Self.flatBackground()
+        background.style.cornerRadii = CornerRadii(24)
+        let result = SVGExport.write(Self.document([background]), flatImages: flat)
+        #expect(result.text.contains("rx=\"24\""))
+    }
+
+    @Test func aCroppedFlatPictureStaysAPicture() {
+        // A crop can reach past the edge of the bitmap, and what shows there is
+        // not the colour inside it.
+        var (background, flat) = Self.flatBackground()
+        background.crop = CGRect(x: 0, y: 0, width: 0.5, height: 0.5)
+        let result = SVGExport.write(Self.document([background]),
+                                     picture: Self.stubPicture, flatImages: flat)
+        #expect(result.text.contains("<image "))
+    }
+
+    @Test func aFlatBackgroundIsNotReportedAsAPhotographRidingAlong() {
+        let (background, flat) = Self.flatBackground()
+        let document = Self.document([background, Self.pathLayer()])
+        #expect(SVGExport.embeddedPictures(in: document, flatImages: flat).isEmpty)
+        #expect(SVGExport.fallbacks(in: document, flatImages: flat).isEmpty)
+        // ...and with nobody to say the bitmap is flat, it is a picture again.
+        #expect(SVGExport.embeddedPictures(in: document).map(\.layerName) == ["Background"])
+    }
+
+    @Test func aFlatPictureWearingAShadowIsStillAPicture() {
+        var (background, flat) = Self.flatBackground()
+        background.style.effects = [.shadow(ShadowStyle())]
+        let result = SVGExport.write(Self.document([background]),
+                                     picture: Self.stubPicture, flatImages: flat)
+        #expect(result.text.contains("<image "))
+        #expect(result.fallbacks.count == 1)
+    }
+
     // MARK: - Reading a value back out of the file
 
     /// The first value of `name` in `svg`, for tests that care what a number
