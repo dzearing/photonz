@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 220,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T13:57:28.830Z",
-  "updated": "2026-09-16T12:23:34.288Z",
+  "updated": "2026-09-16T20:07:50.769Z",
   "deps": [],
   "blockedBy": [],
   "notes": "NOT REPRODUCED IN THE RUNNING APP: the Mac screen was locked all through 2026-09-15 06:47-07:10 so no walk could run (Scripts/playtest.sh exits 3, status locked). What I have is a simulation of the exact migration chain in Sources/Photonz/InspectorPanel.swift orderMigrations() against InspectorSectionID.allCases, which prints:\n  layers > annotation > callout > lens > text > measure > collage > canvas > arrange > component > geometry > color > effects > measureTool > wandTool > cropTool > calloutTool > lensTool > measurements > frame > columns > placement > motion > shadow > library > libraryItem\nMotion is eleven sections below Effects. The cause looks structural rather than accidental: motion is declared straight after effects in InspectorSectionID, but migration 4 moves color and effects up under layers and leaves motion behind, and PanelSectionOrder.merged splices a section the saved order has never seen at its CANONICAL rank, which for motion is between effects and shadow, and shadow is still down at the bottom. So both a fresh order and an upgraded one land it above shadow rather than below effects.\nThe fix is one more numbered migration in orderMigrations(), .init(version: 7, sections: [motion], .after, effects, isEnabled: split), plus a test in Tests/PhotonzCoreTests/PanelSectionOrderUpgradeTests.swift. FIRST STEP when the screen is unlocked: run Scripts/playtest.sh Scripts/playtest/position-and-size-on-screen-walk.json and read dockSections in its describe steps, which will say where Motion really lands.\nFound while moving Position & Size above Appearance (position-and-size-stays-on-screen-when-you-pick).",
@@ -30,6 +30,40 @@
     {
       "t": "2026-09-16T12:23:34.287Z",
       "note": "seq 2660 -> 220"
+    },
+    {
+      "t": "2026-09-16T19:59:45.410Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:07:48.355Z",
+      "note": "REPRODUCED at the order level, not in the app: the Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true; Scripts/playtest.sh exits 3 with status locked on every walk, twice). Simulated the real chain with the real canonical list and the real migrations: NEXT came out 'layers > annotation > ... > color > effects > measureTool > wandTool > cropTool > calloutTool > lensTool > measurements > frame > columns > placement > motion > shadow', Motion ten sections below Effects. Current release is unaffected (motion is already right after effects there)."
+    },
+    {
+      "t": "2026-09-16T20:07:48.400Z",
+      "note": "SHIPPED, commit fe6e4cf9. (1) Migration 7 in InspectorPanel.orderMigrations(): motion after effects, Next only, so only Motion relocates and any hand arrangement survives. Same simulation now prints motion one section below effects. (2) The Motion section stays on the panel with two or more layers picked, holding one line saying it is set on one layer at a time, instead of vanishing (the 2026-09-16 design review note on this task). New EditorState.motionNeedsOneLayer, new oneLayerOnly line in MotionListInspector, playtestField 'Motion One Layer'. (3) New walk condition waitFor sectionDirectlyUnder (value + under), in PhotonzCore's PlaytestScript and the harness, reading the dock's drawn sections; a failed wait prints the whole drawn order."
+    },
+    {
+      "t": "2026-09-16T20:07:48.446Z",
+      "note": "VERIFIED: Scripts/test.sh green, 7738 tests in 620 suites. Four new core tests (motionSitsDirectlyUnderEffects, anOrderAlreadyAtTheLastMoveStillGetsMotion, waitForReadsOneSectionSittingDirectlyUnderAnother, waitForRejectsASectionWithNothingToSitUnder) plus the existing chain tests updated to version 7. NOT verified in the running app: acceptance 1 and 3 could not be watched happen, because no walk can run on a locked screen. The probe does now parse the extended walk (85 steps, no step error), and a sweep has been requested with that reason."
+    },
+    {
+      "t": "2026-09-16T20:07:48.492Z",
+      "note": "The walk that guards this is motion-swings-a-layer-walk.json, extended with a coda: draw a screen, leave it picked, and fail unless Motion is the next section under Effects (a screen is the case that was broken, because Frame, Columns and Layout sat in the gap); then pick two rectangles and check the section is still there with its one line, and back to one to check the line goes. It was written to fail on the old code and cannot be run until the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T20:07:48.537Z",
+      "note": "left rough: PanelSectionOrderUpgradeTests mirrors the app's migration list by hand, so it proves what the chain DOES with a list and cannot notice a move missing from InspectorPanel.swift. The walk is the only guard on the app's own list. Not filed: no person would see it, and moving the list into PhotonzCore is a refactor with no user-visible change."
+    },
+    {
+      "t": "2026-09-16T20:07:48.584Z",
+      "note": "left rough: with two layers picked the plus on the Motion header dims and the play button beside it stays live, because play is a fact about the document rather than the selection. Correct, possibly odd-looking; it is in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-09-16T20:07:50.767Z",
+      "note": "Migration 7 puts Motion directly under Effects in the Next panel order (only Motion moves, hand arrangements survive), and the section now stays on the panel with two layers picked holding one line saying why. New waitFor sectionDirectlyUnder condition guards it, added to motion-swings-a-layer-walk.json with a screen-picked coda. Scripts/test.sh green (7738 tests); commit fe6e4cf9. Not watched in the running app: the screen was locked all task, so no walk could run; a sweep is requested. Audit: queue/audits/2026-09-16-motion-under-effects.json"
     }
-  ]
+  ],
+  "started": "2026-09-16T19:59:45.409Z",
+  "completed": "2026-09-16T20:07:50.768Z"
 }

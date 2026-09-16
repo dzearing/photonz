@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 190,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:28:42.799Z",
-  "updated": "2026-09-16T12:23:34.154Z",
+  "updated": "2026-09-16T19:49:28.978Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-15 while fixing the-name-that-floats-over-a-component-can-be-rea.\n\nRun: drew a rectangle, painted it crimson (paintSelectionColor, #B0184A), drew a second rectangle inside it, Layer > frame the selection, captured the window. Walk kept at /tmp/chipwork/screen-name-evidence-walk.json (throwaway, not checked in - it is four steps to rewrite).\n\nMeasured off the capture, converted to sRGB: the name renders #868485 (L=0.2326) on the crimson #AF184A (L=0.1026), which is 1.9:1. WCAG fail. On plain white it is 4.8:1, which is why nobody noticed.\n\nThe code: Sources/Photonz/CanvasFrames.swift refreshFrameChrome() paints the label CGColor(gray: 0.45, alpha: 1) with no plate, and its own comment already argues the case (a neutral grey, NOT a theme label color, because the text sits on the picture). A neutral grey is still an ink on an unknown picture, which is the thing that cannot work.\n\nThe fix that landed next door is Sources/PhotonzCore/LabelPlate.swift: the measure/caption pill rule, an opaque plate in the object own colour taken down until white reads on it, plus CanvasNameLabels.plateBox. A screen has no colour of its own, so the open question is what its plate is painted - graphite, or the app chrome grey - and that is a look question worth the user seeing before it ships. Deliberately NOT done inside the component fix: a plate under every frame label changes the look of every canvas.",
@@ -31,6 +31,36 @@
     {
       "t": "2026-09-16T12:23:34.153Z",
       "note": "seq 2680 -> 190"
+    },
+    {
+      "t": "2026-09-16T19:33:32.251Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T19:44:06.583Z",
+      "note": "Adversarial review before building. The task left one question open: what colour a screen's plate is, since a screen has no colour of its own. I decided it rather than filing a card, because the acceptance items already ask for four captures and a six-screen picture, which is a thing to LOOK at rather than a thing to read about, and an audit line the user can disagree with carries that better than a text card could. The answer: run a plain grey through the same LabelPlate rule the component chip uses, which clamps it to the lightest plate the rule allows. That makes a screen's chip a shade lighter than a component's on purpose (a canvas holds many screens and few components), and it is the one line to change if the user wants them identical. The second thing I cut: I did NOT add an outline to the plate to fix the weak plate-against-dark-picture edge, because that would change the component chip too and it is the same look call. Measured and reported instead."
+    },
+    {
+      "t": "2026-09-16T19:44:06.634Z",
+      "note": "Built it: ScreenPaint.greyHex in PhotonzCore/LabelPlate.swift, and CanvasFrames now calls the same drawNameChip() CanvasComponents uses (it took an 'into' layer and a screen branch with no glyph) rather than painting its own CATextLayer. One code path means the two labels cannot drift apart. Tests first, in Tests/PhotonzCoreTests/LabelPlateTests.swift: white on a screen's plate is at least the 9.9:1 the component chip reads at, the plate is grey rather than a hue, and the two plates are within 0.02 luminance of each other so neither reads as the heavier chip."
+    },
+    {
+      "t": "2026-09-16T19:49:28.839Z",
+      "note": "Verified on the real app, not calculated. The Mac's screen was locked the whole task, so the walk was forced past the refusal (PHOTONZ_ALLOW_LOCKED_WALK=1); a locked screen stops a walk finding controls BY NAME, and this walk looks up none, so it ran all 95 steps and photographed the window five times for real. Measured off screen-name-1-four-backgrounds-sc.png with PIL: plate #3D3D3F, white letters, 10.84:1 on plain canvas, 10.84:1 on the saturated shape, 10.89:1 on the crimson shape, 10.84:1 on the screenshot, and 10.84:1 again in light mode. The plate's own edge, which the 12:23 note asked for: 10.84:1 against white canvas, 2.94:1 against the orange shape, 1.52:1 against the deep crimson (the component plate reads 1.44:1 on that same crimson, so this is the same weakness, slightly better, not fixed). Live name under the pointer: accent plate #19428 7, white at 9.68:1."
+    },
+    {
+      "t": "2026-09-16T19:49:28.884Z",
+      "note": "Regression checks: Scripts/test.sh green, 7725 tests in 619 suites. Walks re-run on a probe built from the change: screen-name-reads-anywhere ok, frame-name-rename ok, corner-names ok (this is the picture that answers 'same family': the violet component chip and the grey screen chip stacked in one corner, same pill, same height, same white letters, different hue), screen-click ok, frame-selection ok, screen-adoption ok. Asked for a full sweep with queue/bin/sweep.sh request because every walk that puts a frame on the canvas now draws through drawNameChip."
+    },
+    {
+      "t": "2026-09-16T19:49:28.929Z",
+      "note": "left rough: the plate's own edge against a dark picture (1.52:1) is not fixed and is the same on the component chip. Not filed as its own task - it is written into queue/audits/2026-09-16-screen-name-plate.json as a rough line and into the design doc, where the user can react to it; a plate outline or a lighter hairline would change BOTH chips and that is a look decision, not a defect."
+    },
+    {
+      "t": "2026-09-16T19:49:28.976Z",
+      "note": "A screen's name now draws on a grey plate with white letters, through the same drawNameChip the component name uses (Sources/Photonz/CanvasFrames.swift, CanvasComponents.swift, ScreenPaint in PhotonzCore/LabelPlate.swift). Measured off real window captures: 10.8:1 on plain canvas, a saturated shape, a crimson shape and a screenshot, and in light mode, against 1.9:1 before. New walk screen-name-reads-anywhere-walk.json; Scripts/test.sh green (7725); audit at queue/audits/2026-09-16-screen-name-plate.json. Committed as bd58d3c2 and pushed."
     }
-  ]
+  ],
+  "started": "2026-09-16T19:33:32.250Z",
+  "completed": "2026-09-16T19:49:28.977Z"
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-16T16:39:46.787Z",
-  "updated": "2026-09-16T16:39:46.790Z",
+  "updated": "2026-09-16T18:22:40.612Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the study docs/design/separate-reads-the-words.md, which recommended AGAINST reading inside the command and FOR two ways of asking: this pill offer, and a double click on one label. The double click landed on 2026-09-16 (next-double-click-reads-a-label, see docs/design/separate-into-layers.md). This is the other half and it is the one that fixes discovery, since nothing points at the double click.\n\nThe study measured what reading everything at once is worth: letting the page vote on one family and accepting each run where that family still clears the bar takes the strays to zero by construction, at a cost of 1 reading of 31 on app-window-2x and 8 of 82 on the dense page. Per-run reading can never do this because it only ever sees one run.\n\nCost, measured on a release build: settings-pane-2x 143 ms for 9 runs, app-window-2x 477 ms for 40, dense-page-1x 1910 ms for 142, spread over the cores. Past a second this owes a progress indicator. Re-derive with PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests.\n\nThe pill is SeparationLeftover / raiseCanvasNotice(.separatedIntoLayers(...)); the reading is EditorState+ReadText.swift.",
@@ -17,12 +17,17 @@
     "The line that appears after Separate into Layers carries a control that reads the words in every run it found",
     "Pressing it turns every run it is confident about into real words, and one undo press takes the whole lot back",
     "Where the page is set in one typeface, every label that comes back is in that typeface",
-    "Runs it cannot read stay as pictures and the line says how many"
+    "Runs it cannot read stay as pictures and the line says how many",
+    "The layer row menu's Turn into Text reads every label you picked, not just the row you right clicked"
   ],
   "log": [
     {
       "t": "2026-09-16T16:39:46.789Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T18:22:40.611Z",
+      "note": "Folded in from turn-into-picture-takes-every-layer-you-picked (2026-09-16). The SAME batch this task needs is also wanted from the layer row menu: right clicking one of five picked labels and choosing Turn into Text reads only the row you clicked today, while Duplicate, Delete, Group, Merge Down, Turn Into Path and now Turn Into Picture all act on the whole pick. Build the batch once and give it two ways in - the pill's control this task describes, and EditorState.turnIntoText(id:) reading rowMenuTargets(id) - rather than two batches. Shape of the work: turnIntoText(id:) becomes turnIntoTextForLayers(ids:) plus turnIntoTextForSelection() for the Layer menu, mirroring rasterizeLayers/rasterizeSelection which landed on 2026-09-16 in EditorState+LayerOps.swift; run the N TextReader.read calls in one detached Task, await them all, then apply every success in ONE perform so undo takes the batch. THE HARD PART, and the reason the other task did not just do it: applyTextReading ends in raiseCanvasNotice(.turnedIntoText(read.outcome)) and that notice is singular by construction - its title is 'Turned into text' or 'Still a picture' and its detail names the face ONE reading came out in (CopyConfirmation.swift lines 232 and 319). Over five readings it would raise five pills, last one wins. This task's fourth acceptance item ('the line says how many') is exactly the new plural case that fixes it, so it belongs here. ALSO LEFT OPEN by that task and NOT part of this one: Separate into Layers over a selection. Its result model is singular all the way down - one pill counting runs and boxes, one 'what is left in this bitmap' memory keyed to one ImageRef, one rule about which single piece ends up picked, and the 'run it again for more' offer under the layers list that speaks for ONE picture. Nobody has asked to separate two screenshots at once; decide whether it is wanted before building it."
     }
   ]
 }

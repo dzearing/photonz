@@ -1,0 +1,81 @@
+{
+  "out": "/tmp/photonz-playtest/pen-width-before-you-draw",
+  "seed": "With the Pen in hand the tool bar offered a colour and nothing else, so the only way to say how thick a line should be was to draw one, pick it, and thin it. Drawing an icon at 2 px meant doing that every single time you started. Every other drawing tool sets its weight up front, behind the same swatch. This walk opens the Pen's swatch, types a weight, draws, and claims the number, then draws a second path to show the Pen kept it.",
+  "setup": {
+    "forget": ["shapes", "frames", "tools", "color"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "tooltip": "Color", "in": "Toolbar", "reads": "Path Style" },
+    { "do": "describe", "stage": "1-not-just-colour", "note": "the swatch the Pen wears says Path Style now, not Path Color: behind a swatch there is nothing else to say the weight is in there too" },
+
+    { "do": "press", "control": "Color", "in": "Toolbar" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Width", "reads": "4" },
+    { "do": "describe", "stage": "2-width-row", "note": "THE TEST: the Pen's own controls hold a Width beside the colour, and it opens on the weight the Pen is actually armed with. There used to be no row here at all" },
+    { "do": "snapshot", "name": "2-width-row" },
+
+    { "do": "focus", "field": "Width" },
+    { "do": "type", "text": "2" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Width", "reads": "2" },
+    { "do": "describe", "stage": "3-armed-thin", "note": "two points, chosen before a single anchor has gone down" },
+    { "do": "snapshot", "name": "3-armed-thin" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [300, 620] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "click", "at": [500, 620] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "move", "at": [570, 720] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-under-the-hand", "note": "the line under the hand is already at the chosen two, so what is on screen while you draw is what lands" },
+    { "do": "snapshot", "name": "4-under-the-hand" },
+
+    { "do": "click", "at": [570, 720] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": false, "width": 2 },
+    { "do": "describe", "stage": "5-drawn", "note": "the path arrived at 2, with nothing to fix afterwards" },
+    { "do": "snapshot", "name": "5-drawn" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Thickness", "reads": "2" },
+    { "do": "describe", "stage": "6-agrees", "note": "the drawn path's own Thickness row says the same number the Pen's Width did, so the two places cannot disagree about one line" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Color", "in": "Toolbar" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Width", "reads": "2" },
+    { "do": "describe", "stage": "7-kept", "note": "the row opens on 2 the next time too: the Pen holds what it was set to rather than snapping back to four" },
+    { "do": "snapshot", "name": "7-kept" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [860, 380] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "click", "at": [1060, 380] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "click", "at": [1130, 480] },
+    { "do": "wait", "seconds": 0.25 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "width": 2 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "8-second-stroke", "note": "the second stroke of the icon matches the first without a trip to the panel, which is the whole point of setting the weight up front" },
+    { "do": "snapshot", "name": "8-second-stroke" },
+    { "do": "render", "name": "9-final-render" }
+  ]
+}

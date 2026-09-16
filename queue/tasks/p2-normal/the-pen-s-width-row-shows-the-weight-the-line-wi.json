@@ -1,0 +1,29 @@
+{
+  "id": "the-pen-s-width-row-shows-the-weight-the-line-wi",
+  "title": "The Pen's Width row shows the weight the line will actually land at",
+  "goal": "On a 24 pixel icon frame a line that has never been given a weight is drawn thin, at 2, so it survives the icon. The Width row on the tool bar still says 4. Open the Pen's controls on an icon frame and the number you read is not the number you get, which is the one thing a box you can type into must not do. Change the weight to anything at all and the two agree again, so it is only wrong for the weight the app ships with.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2810,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T20:15:34.058Z",
+  "updated": "2026-09-16T20:15:34.061Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced at the model level while shipping choose-how-thick-the-pen-draws-before-you-draw. Both halves are asserted side by side in one passing test, IconStrokeWeightTests.aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt:\n\n  Scripts/test.sh --filter aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt\n  -> Test \"A weight set on the bar is the weight the Pen draws with\" passed\n\nThe two lines that are the bug:\n  #expect(styles.strokeWidth(for: .pen) == stock)                       // the row shows 4\n  #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),\n                                       drawnAt: onTheIcon) == 2)        // the line lands at 2\n\nNOT confirmed in the running app: the Mac was locked for that whole task, so no walk could run. Filed p2 for that reason.\n\nCause: IconStrokeWeight.startingWidth thins only a line whose armed width is still AnnotationContent.defaultStrokeWidth (4), because that is the app's single signal for \"nobody has chosen\". The store cannot tell a stock 4 from a deliberately typed 4, so the rule cannot step aside for a real choice of 4 either. This predates the Pen's Width row; it has been true of every shape tool's Width since the icon rule landed (a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei). The row just made it visible.\n\nLikely shape of a fix: record that a weight was CHOSEN rather than inferring it from the value (a flag beside penStrokeWidth and each shape bucket in AnnotationStyles), and have EditorView.editedStrokeWidth show the started weight for the frame under the canvas rather than the raw armed one. Both halves are needed: one without the other trades a wrong number for a different wrong number.",
+  "acceptance": [
+    "With the Pen in hand over a 24 px icon frame and nothing chosen yet, the Width row reads the weight a line drawn there would really come out at",
+    "Typing that same weight into the row and drawing produces a line at it, rather than a thinner one",
+    "On bare canvas and on a large frame the row is unchanged: it reads the weight the Pen is armed with",
+    "The same rule holds for a box's and a line's Width rows, which have the same gap",
+    "A walk opens the row on an icon frame and claims the number, then draws and claims it again"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T20:15:34.060Z",
+      "note": "created (manual)"
+    }
+  ]
+}

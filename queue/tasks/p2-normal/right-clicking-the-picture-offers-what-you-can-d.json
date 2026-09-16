@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T03:34:24.928Z",
-  "updated": "2026-09-16T18:13:12.597Z",
+  "updated": "2026-09-16T18:13:33.051Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding Group to the layer row menu on 2026-09-13. Today only LayersRow, EffectsListInspector and MeasurementsListView carry a .contextMenu; CanvasView has none. The row menu is Sources/Photonz/LayersRow.swift `menu`, and what it acts on is EditorState.rowMenuTargets(_:) (docs/design/layers.md, \"What a layer row context menu acts on\"). A canvas menu wants the same targets rule with the hit-tested layer standing in for the clicked row. Open question worth deciding before building: whether right clicking something not in the selection should pick it first, which is what most editors do on canvas even where they do not do it in a list.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-16T18:13:12.596Z",
       "note": "left rough: the bare-picture menu has no Cut/Copy even though it has Paste, and the layer menu has neither. That is a gap in both menus rather than a defect in this one, and it is written up in the audit's rough list where the user can turn it into a task if they want the clipboard trio. Not filed: no open task covers it and nobody is currently stopped by it."
+    },
+    {
+      "t": "2026-09-16T18:13:33.049Z",
+      "note": "Right clicking the picture raises the same menu the layers list has for that layer, and bare picture raises the canvas's own commands. Shipped in 069bbba7, Next only behind next-canvas-menu (on by default). The command list moved into LayerCommandList as plain rows drawn two ways (SwiftUI for the panel row, an NSMenu for the canvas) so the two cannot drift apart. Verified: Scripts/test.sh green (7676 tests), canvas-menu-walk passes all 46 steps, row-menu-walk and row-menu-group-walk still pass. A right click on something unpicked picks it first (CanvasMenuAim, 6 new core tests). Audit: queue/audits/2026-09-16-canvas-context-menu.json with three real window captures. Caveat recorded in the audit: the Mac's screen was locked all session so every walk ran forced and is not a verdict; a sweep is requested."
     }
   ],
-  "started": "2026-09-16T17:52:00.163Z"
+  "started": "2026-09-16T17:52:00.163Z",
+  "completed": "2026-09-16T18:13:33.050Z"
 }

@@ -1,0 +1,27 @@
+{
+  "feature": "Choose how thick the Pen draws before you draw",
+  "epic": "icon-vector",
+  "summary": "The Pen's tool bar swatch now opens on a Width beside its colour, so you say how thick the next line is before a single anchor goes down. Drawing an icon at 2 px no longer means drawing at 4, picking it, and thinning it every time you start.",
+  "setup": "Photonz Dev, Experiments window, release Next, Pen enabled. Nothing to switch on.",
+  "try": [
+    { "do": "Open a new document and press P for the Pen." },
+    { "do": "Hover the one swatch in the Color group on the tool bar: it says Path Style now, where it used to say Path Color." },
+    { "do": "Click that swatch. There is a Width row under the colour picker, showing 4." },
+    { "do": "Type 2 into the Width box and press Return, then press Escape to close it." },
+    { "do": "Click three points on the canvas and press Return. Watch the line under your hand before the last click: it is already thin." },
+    { "do": "Press V and read the path's Thickness row in Appearance. It says 2, the same number you typed." },
+    { "do": "Press P again and reopen the swatch. Width still reads 2, so the second stroke of an icon matches the first." }
+  ],
+  "evaluate": [
+    "Behind a swatch, does Path Style tell you a weight is in there, or would you still never open it looking for one?",
+    "Is a Width row inside the colour popover where your hand goes for it, or does the Pen want its weight out on the bar where you can see the number without clicking?",
+    "Drawing a real icon: does setting the weight once at the start actually remove the drawn-then-thinned step, or does the weight still need changing stroke by stroke?",
+    "The row sits under the whole colour picker, so it is the last thing in a fairly tall popover. Is it far enough down to be missed?",
+    "With a path already picked and the Pen back in hand, the Width row arms the Pen and leaves the picked path alone, exactly as the colour row above it does. Is that the right split, or should the popover edit what is picked?"
+  ],
+  "rough": [
+    "No walk could be run and no picture of this exists: the Mac's screen was locked for the whole task, which takes the name off every control and stops a walk before it starts. The walk that claims all of this is written (Scripts/playtest/pen-width-before-you-draw-walk.json) and a sweep is requested, so it runs the moment the screen is unlocked. What IS proven is the model underneath it, by test: the number the row shows is the number the Pen draws with, on an icon frame and off it.",
+    "One number still lies, and only one. A 24 px icon frame thins a line that is still at the stock 4, so a Pen that has never been told otherwise shows 4 in the row and draws a 2. Choose any other weight and the two agree again. The app cannot tell 'still at the default' from 'deliberately 4', so this is not the Pen's problem: a rectangle's Width row has had it since the icon rule landed.",
+    "The row went behind the existing swatch rather than onto the bar as its own control, so the weight is one click away instead of readable at a glance. That is what every other drawing tool does, and a pen-only width chip would have been a second idiom for one number, but for icon work in particular the weight is the setting you change most."
+  ]
+}

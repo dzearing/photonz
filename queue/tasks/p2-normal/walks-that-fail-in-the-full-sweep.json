@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T18:13:12.550Z",
+  "updated": "2026-09-16T19:44:02.354Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -263,6 +263,14 @@
     {
       "t": "2026-09-16T18:13:12.549Z",
       "note": "measure-row-menu-walk still fails today (2026-09-16, screen locked so PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build row-menu): step 13 (rightClick) \"Height\" is not where a person could right click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across it. It is already in the 2026-09-15 sweep's failing list. row-menu-walk, also on that list, now passes."
+    },
+    {
+      "t": "2026-09-16T19:28:57.239Z",
+      "note": "turned-piece-walk fails for a reason that has nothing to do with the screen lock, and the fix is one line in the walk. Reproduced three times, and again with every source change of mine stashed: [15 expectBox] FAILED: no layer called \"Rectangle 2\" in the document; there is Background, Rectangle. Cause: a shape tool now hands the pointer back to Select the moment it has drawn ONE shape. A four-step walk shows it plainly (tool rectangle, describe, one drag, describe): 'a-picked -> rectangle | layers 1' then 'b-drawn -> select | layers 2'. turned-piece-walk picks the rectangle tool once and then drags twice, so its second drag is a Select drag and no Rectangle 2 is ever made; every step after it fails on a layer that was never drawn. The walk needs a second { \"do\": \"tool\", \"tool\": \"rectangle\" } before its second drag. Worth checking whether any other walk in the failing list draws two shapes off one tool press, because they will all fail the same way and none of them is an app bug."
+    },
+    {
+      "t": "2026-09-16T19:44:02.353Z",
+      "note": "name-chip-reads-anywhere-walk fails on today's main, and it is the walk that is out of date rather than the app. Reproduced twice, the second time with every source change of mine stashed and the probe rebuilt from clean main (screen locked, so PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/name-chip-reads-anywhere-walk.json). Both runs: step 25 (dragTile): no tile called \"Badge\" is in the panel; the ones that are: Button / Components, Text Field / Components, Card / Components. All five starter components still exist in Sources/PhotonzCore/StarterComponents.swift (button, textField, card, navBar, badge), so the shelf is only offering the three that fit: the walk drags Badge and Nav Bar, which are below the fold in that window size. Either the walk scrolls the shelf first or it uses the three tiles it can reach."
     }
   ]
 }

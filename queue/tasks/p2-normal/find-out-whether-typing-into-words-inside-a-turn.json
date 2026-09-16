@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T07:21:44.491Z",
-  "updated": "2026-09-16T12:23:34.109Z",
+  "updated": "2026-09-16T19:32:57.396Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "NOT REPRODUCED. The Mac's screen was locked for the whole of the task that noticed this (2026-09-16, a-piece-inside-a-turned-card-moves-on-its-own), so no walk could run and no picture could be taken: Scripts/playtest.sh reported status \"locked\" and exited 3 on three attempts. This is a reading of the code, not a sighting.\n\nWhat the code says: CanvasPointerDrags.mouseDown passes hit.frame.origin (canvas-upright space) to beginTextSession(layerID:at:), and CanvasTextEditing places the inline editor as an axis-aligned NSView at that document point. Nothing on that path asks PhotonzDocument.inheritedTurn, so a card turned 20 degrees should put the field 20 degrees off the words. It predates the handles work: the piece was already reachable for wording before that (see queue/audits/2026-09-12-group-turn.json, which says a turned piece \"still takes colour and wording\").\n\nTo reproduce: Scripts/probe-app.sh, draw a rectangle and a line of text, group them, turn the group with the knob, double click into the group and then double click the words. Or run Scripts/playtest/turned-piece-walk.json with a text layer swapped in for the second rectangle.",
+  "notes": "REPRODUCED, then fixed. The reading of the code was right.\n\nWhat was wrong: CanvasTextEditing.layoutTextEditor put the inline field at viewport.viewPoint(fromDocument: session.origin) with no rotation. session.origin is the layer's canvas-UPRIGHT corner, which is the space every layer's numbers are stated in, so on a card turned twenty degrees the field opened about sixty document points from the words and upright over slanted words.\n\nThe fix: PhotonzDocument.turnedOverlay(for:upright:) in PhotonzCore (LayerGrouping.swift) answers with the corner a turned layer's box is really drawn at and the angle it wears — the layer's own knob about its own middle, then every card above it, the same composition CanvasDisplay.inkTransform uses for the selection outline. layoutTextEditor places the field at that corner and sets NSView.frameRotation to the angle in degrees (positive is clockwise because the canvas view is flipped). The commit path never used the editor's frame — it passes session.origin to onTextCommit — so nothing there had to change, and the committed wording was already landing correctly.\n\nShared code, not Releases/Next: CanvasTextEditing.swift is shared and has no Next fork. A field that opens away from the words it belongs to is a plain defect, and forking the file to fix it in one release only would be worse than the bug. Both releases get it.\n\nNew walk: Scripts/playtest/turned-words-walk.json, and a new step expectField (onScreen, degrees, within) that reads the open field's own corner and lean, because a picture cannot tell a field on the words from one a little off. Documented in docs/design/playtest-harness.md.\n\nScreen was locked throughout, so every run used PHOTONZ_ALLOW_LOCKED_WALK=1. Nothing in this walk looks a control up by name, which is the one thing a lock breaks; its claims are numbers read off the document and off the field itself. The window captures are real.",
   "acceptance": [
     "The behaviour is reproduced on the probe with a card on a slant and a screen capture of where the field opens",
     "If the field really does open in the wrong place, it opens over the words instead",
@@ -26,6 +26,36 @@
     {
       "t": "2026-09-16T12:23:34.108Z",
       "note": "seq 2810 -> 180"
+    },
+    {
+      "t": "2026-09-16T18:56:11.225Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T18:59:14.245Z",
+      "note": "REPRODUCED on the probe. Walk: rectangle (300,300,400x200), text \"Save\" at (340,340) size 54x32, grouped, turnKnob (20 deg about (500,400)). expectBox says the words' top left is at (370, 289) on screen; the field opens at the UPRIGHT (340, 340) and is axis-aligned. Picture: /tmp/photonz-playtest/turned-words4/c-field-open-sc.png. Commit is fine: \"Retitled\" lands on the slant in the right place (d-committed-sc.png). Screen was locked so the walk ran under PHOTONZ_ALLOW_LOCKED_WALK=1; no step in it looks a control up by name, and the evidence is expectBox numbers off the document plus real window captures, both of which a lock does not touch."
+    },
+    {
+      "t": "2026-09-16T19:35:00.000Z",
+      "note": "Fixed. Walk turned-words-walk passes: field opens at (370.2, 288.9) leaning 20 degrees, which is the words' turned corner (370, 289); after typing a longer word it is still at (370.2, 288.9) leaning 20; the commit lands the layer back at (340, 340) / on screen (370, 289). Scripts/test.sh green: 7722 tests in 619 suites."
+    },
+    {
+      "t": "2026-09-16T19:36:00.000Z",
+      "note": "Ran the neighbouring walks rather than a sweep: text- (16 of 18), words (6 of 7), label (8 of 11), turn (4 of 8), caption (12 of 12), double-click (4 of 4). Every failure but one is a control missing its NAME, which is the locked screen's signature (\"no menu called Add Effect\" listed a 25pt button with the right tooltip and an empty name). text-style-arming-walk failed once that way and passed twice more. The one real failure, turned-piece-walk, reproduces with all my changes stashed and is folded into walks-that-fail-in-the-full-sweep."
+    },
+    {
+      "t": "2026-09-16T19:37:00.000Z",
+      "note": "left rough: the draft text does not appear inside the field in a window capture taken with the screen locked — the outline draws, the glyphs do not — and it happens with no turn at all, so it is the lock. Written into the audit's rough and not filed: it is about the camera, not the app, and nobody using the app sees it."
+    },
+    {
+      "t": "2026-09-16T19:38:00.000Z",
+      "note": "left rough: a label that is mirrored or leaning, not just turned, gets a field in the right place at the right angle and no more, because a text view is a plain rectangle. turnedOverlay reports it as beyondATurn and the walk's field report says so out loud. Not filed: nothing in the app puts a skew or a flip on a text layer today, so no person can reach it."
+    },
+    {
+      "t": "2026-09-16T19:32:57.394Z",
+      "note": "Reproduced and fixed. The inline typing field was placed at the layer's canvas-upright corner with no rotation, so on a card turned twenty degrees it opened about sixty points from the words and upright over slanted ones. PhotonzDocument.turnedOverlay (PhotonzCore, 8 new tests) answers with the corner a turned layer is really drawn at and the angle it wears, and layoutTextEditor puts the field there and leans it. Verified on the probe by Scripts/playtest/turned-words-walk.json: the field opens at (370.2, 288.9) leaning 20 degrees where the words' turned corner is (370, 289), keeps both as a longer word grows it, and the commit lands the layer back at (340, 340). Scripts/test.sh green, 7722 tests. New expectField walk step, documented. Audit: queue/audits/2026-09-16-turned-words-field.json with two real window captures. Commit 7ff27d92, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-16T18:56:11.224Z",
+  "completed": "2026-09-16T19:32:57.395Z"
 }

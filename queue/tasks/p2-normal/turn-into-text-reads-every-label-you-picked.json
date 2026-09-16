@@ -1,0 +1,33 @@
+{
+  "id": "turn-into-text-reads-every-label-you-picked",
+  "title": "Turn into Text reads every label you picked",
+  "goal": "Separate a screenshot, pick five of the labels it produced, right click one and choose Turn into Text: only the one you clicked becomes words you can retype, and the other four stay pictures. Reading all five at once is what a person wants after a separation, so the command should read every picked label and land them together, with one line at the bottom of the canvas saying how many came back as words and how many could not be read.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2800,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T18:22:32.982Z",
+  "updated": "2026-09-16T18:22:40.661Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split off from turn-into-picture-takes-every-layer-you-picked on 2026-09-16, which batched Turn Into Picture and left this one. Why it was split rather than done: the batch itself is easy (EditorState+ReadText.swift turnIntoText(id:) already does one picture in, one text layer out), but the PILL is not. applyTextReading ends in raiseCanvasNotice(.turnedIntoText(read.outcome)) and that notice is singular by construction: its title is \"Turned into text\" or \"Still a picture\" and its detail names the face ONE reading came out in (CopyConfirmation.swift lines 232 and 319). Over five readings with three successes it would either raise five pills, last one wins, or say something true about one of them and nothing about the other four. So it needs a new plural case on CanvasNotice.Subject with its own title and detail, and that is new user-facing copy that deserves its own considered pass with tests, not a tail-end of another task. Shape of the work: turnIntoText(id:) becomes turnIntoTextForLayers(ids: rowMenuTargets(id)) plus turnIntoTextForSelection() for the Layer menu, mirroring rasterizeLayers/rasterizeSelection which landed on 2026-09-16; run the N TextReader.read calls in one detached Task, await them all, then apply every success in ONE perform so undo takes the batch. separationsInFlight is keyed by layer id and already stops a second run on the same layer. ALSO STILL OPEN, and argued against in that task log: Separate into Layers over a selection. Its whole result model is singular - one canvas pill counting runs and boxes, one \"what is left in this bitmap\" memory keyed to one ImageRef (separationLeftovers), one rule about which single piece ends up picked, and the \"run it again for more\" offer under the layers list that speaks for ONE picture. Batching it means growing plural forms for all four, and nobody has asked to separate two screenshots at once. Decide whether it is wanted before building it.",
+  "acceptance": [
+    "With five separated labels picked, Turn into Text on one of them reads all five",
+    "One undo takes the whole batch back to pictures",
+    "Labels the reader cannot make out are left as pictures rather than failing the whole command, and the line under the canvas says how many",
+    "A label picked on its own still reads on its own and says what face it came out in, exactly as it does today",
+    "A playtest walk separates a capture, picks two labels, right clicks one and gets both back as words"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T18:22:32.984Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T18:22:40.660Z",
+      "note": "folded into the-separation-pill-offers-to-read-the-words-in, which already owns the batch read and the plural line that says how many came back"
+    }
+  ]
+}

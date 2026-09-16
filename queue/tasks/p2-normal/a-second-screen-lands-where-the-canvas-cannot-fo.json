@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T01:59:27.378Z",
-  "updated": "2026-09-16T12:23:33.977Z",
+  "updated": "2026-09-16T18:34:08.454Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-13 on the probe, and it has nothing to do with icon sizes: it happens with two plain Desktop screens.\n\nWalk (temporary, /tmp/offcanvas-walk.json): blank canvas 1600 x 1100 in a 1240 x 900 window, then Layer > New Frame > Desktop > Add Frame, twice.\n\n  Scripts/playtest.sh /tmp/offcanvas-walk.json --no-build\n\nWhat the log said at the end (log.json, `describe` step \"two\"):\n\n  second desktop screen, placed to the right of the first | zoom 64 | centre (843, 550)\n      Background [image] (0.0, 0.0, 1600.0, 1100.0)\n      Frame [frame] (80.0, 38.0, 1440.0, 1024.0)\n      Frame 2 [frame] (1600.0, 38.0, 1440.0, 1024.0)\n\nFrame 2 starts at x = 1600 on a canvas that is 1600 wide, so all 1440 points of it are outside the canvas. The camera could not follow: the view centre moved from (800, 550) to (843, 550) and stopped.\n\nWhere it comes from: PhotonzDocument.placementForNewFrame in Sources/PhotonzCore/Frames.swift puts every frame after the first at rightmost.maxX + frameGutter with no regard for canvasSize, and Viewport.clamped() in Sources/PhotonzCore/Viewport.swift pins the camera inside the document, so nothing outside the canvas can ever be scrolled to. Both are older than this report.\n\nTwo plausible answers, and picking between them is a product call: place the new frame somewhere the canvas already covers (wrapping to a second row when the first is full), or grow the canvas to take in the frames on it. The second is probably what a person expects from a document that is a wall of screens, but it changes what Canvas means, so it may deserve a decision card.",
@@ -38,6 +38,48 @@
     {
       "t": "2026-09-16T12:23:33.976Z",
       "note": "seq 610 -> 150"
+    },
+    {
+      "t": "2026-09-16T18:23:43.361Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T18:33:51.545Z",
+      "note": "Adversarial review before building. The two answers the report offered were wrap-inside-the-canvas and grow-the-canvas. Wrapping cannot work at the size that was reported: a 1440x1024 Desktop has nowhere to go on a 1600x1100 canvas except on top of the screen already there. A third answer, let the camera travel outside the canvas, is worse than it sounds: the renderer paints a bitmap of exactly canvasSize (DocumentRenderer.renderInteractive), so a frame outside the canvas is not merely unreachable, it is never drawn. Scrolling to it would show an empty outline. So growing is the only answer that makes the screen both reachable and visible, and it is what the report guessed a person expects."
+    },
+    {
+      "t": "2026-09-16T18:33:51.589Z",
+      "note": "Growth cannot be unbounded: every interactive re-render paints the whole canvas, so a canvas that grew forever would cost more to draw with every screen added. Capped at PhotonzDocument.maximumCanvasSide = BlankCanvas.maximumSide (8192), the same ceiling a canvas typed by hand answers to, and the row of screens wraps to a second row when it reaches it (about five desktop screens)."
+    },
+    {
+      "t": "2026-09-16T18:33:51.636Z",
+      "note": "Decided this without a decision card. The visible consequence (your canvas gets wider when you add a screen that does not fit) is real, but the alternatives are not live options: one overlaps screens and one shows an outline with nothing in it. Recorded as the first and last questions in the audit instead, where the user can disagree and it becomes a task."
+    },
+    {
+      "t": "2026-09-16T18:33:51.683Z",
+      "note": "left rough: growing the canvas clears a marching-ants selection, because EditorState.rerender throws the selection away whenever canvasSize changes. For a top-left-pinned grow the selection is still valid, so it is an unnecessary loss. Did not earn a task: frames and a pixel selection in the same document at the same moment is rare, and it is one line in a guard that several other paths depend on."
+    },
+    {
+      "t": "2026-09-16T18:33:51.728Z",
+      "note": "left rough: nothing tells you the canvas grew. No pill, nothing in the layers list. Left unfiled because whether it should speak is exactly what the audit asks the user."
+    },
+    {
+      "t": "2026-09-16T18:33:55.561Z",
+      "note": "Verified: 8 new unit tests in Tests/PhotonzCoreTests/FrameCanvasRoomTests.swift, and the old rule reproduced failing first (a throwaway test replaying the pre-fix placement printed 'second frame box (1600.0, 38.0, 1440.0, 1024.0) on canvas (1600.0, 1100.0)' and failed the containment check; the new path puts the same frame on a 3120 x 1100 canvas). Scripts/test.sh green: 7696 tests, 618 suites, including the render perf budgets."
+    },
+    {
+      "t": "2026-09-16T18:33:55.608Z",
+      "note": "NOT verified in the app: the Mac's screen was locked for this entire task, so every walk refused to run (status locked, exit 3) and no snapshot or offscreen render exists. Scripts/playtest/frame-second-screen-walk.json is written and every one of its 28 steps parses, but it has never run. Asked for a sweep (queue/bin/sweep.sh request) so the loop runs it when the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T18:33:55.655Z",
+      "note": "Perf note: the composite path is unchanged, but documents get bigger. Two desktop screens now paint a 3120 x 1100 canvas (3.4 MP) where before they painted 1600 x 1100 (1.8 MP) with the second screen invisible. That is the cost of drawing content that should always have been drawn; the 8192 ceiling is what stops it running away. The 12MP/10-layer interactive budget still measures 6.0ms against 37ms."
+    },
+    {
+      "t": "2026-09-16T18:34:08.452Z",
+      "note": "The canvas now grows to take in a new frame, so a second screen lands somewhere the camera can reach and the renderer paints. Core: PhotonzDocument.addFrameMakingRoom + growCanvas(toTakeIn:) + row-wrapping placement in Sources/PhotonzCore/Frames.swift, wired through EditorState.addFrame so the frame tool and Layer > New Frame both get it. expectBox gained a reachable claim. Verified by 8 new tests (FrameCanvasRoomTests) with the old rule reproduced failing first; Scripts/test.sh green at 7696 tests. The walk (frame-second-screen-walk.json) is written and parses but could not RUN: the Mac's screen was locked all task, so a sweep was requested instead. Audit: queue/audits/2026-09-16-frame-second-screen.json. Commit 9fccbace."
     }
-  ]
+  ],
+  "started": "2026-09-16T18:23:43.360Z",
+  "completed": "2026-09-16T18:34:08.453Z"
 }

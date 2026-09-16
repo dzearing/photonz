@@ -694,7 +694,15 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
 extension Tool {
     /// Whether the stroke width control applies to this tool. Highlight is a
     /// fill, everything else strokes.
+    ///
+    /// The Pen is a stroke tool with no `AnnotationShape`: what it draws is a
+    /// path, and a path is a line before it is anything else. So it answers
+    /// yes here on its own, which is what puts a Width beside its colour on
+    /// the tool bar. Where that width is KEPT is `penStrokeWidth`, reached
+    /// through `strokeWidth(for:)`/`setStrokeWidth(_:for:)`, both of which
+    /// answer for the Pen before they ever look for a shape bucket.
     public var usesStrokeWidth: Bool {
+        if self == .pen { return true }
         guard let shape = annotationShape else { return false }
         return shape != .highlight
     }

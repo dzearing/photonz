@@ -457,8 +457,27 @@ extension EditorState {
             // a box's first edge comes in an ink that reads against its inside
             // rather than a copy of it (`BorderInk.swift`).
             annotationStyles.armEdge(width: width, forShape: shape)
+        } else if penIsTheOneBeingStyled {
+            annotationStyles.setStrokeWidth(width, for: .pen)
         }
         saveAnnotationStyles()
+    }
+
+    /// Whether this popover's rows are arming the PEN rather than editing a
+    /// shape: the Pen in hand, with no annotation picked for it to speak for.
+    ///
+    /// The Pen has no `AnnotationShape`, so `styleTargetShape` comes back nil
+    /// for it and every shape-keyed line above quietly does nothing. This is
+    /// the branch that catches it.
+    ///
+    /// A PATH picked with the Pen in hand still lands here, and arming is all
+    /// that happens: this popover is what the NEXT path comes out as, exactly
+    /// as its colour row already is (`setAnnotationPaint` arms and repaints
+    /// nothing when what is picked is not an annotation). A picked path's own
+    /// weight is the Thickness row in Appearance, which reaches paths and
+    /// feeds the armed weight back through `rememberAnnotationDefaults`.
+    private var penIsTheOneBeingStyled: Bool {
+        activeTool == .pen && selectedAnnotationLayer == nil
     }
 
     /// Live slider drag: restyle the selected stroke/arrow WITHOUT recording an
@@ -469,6 +488,11 @@ extension EditorState {
         if let shape = styleTargetShape {
             if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
             if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+        } else if let strokeWidth, penIsTheOneBeingStyled {
+            // The Pen arms as the knob moves, not only when it is let go of,
+            // so a drag the popover dismisses part way through still leaves
+            // the Pen holding the weight the number was showing.
+            annotationStyles.setStrokeWidth(strokeWidth, for: .pen)
         }
         guard let layer = selectedAnnotationLayer, var doc = document else { return }
         discardDragPreview()

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 230,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:28:44.771Z",
-  "updated": "2026-09-16T12:23:34.331Z",
+  "updated": "2026-09-16T20:09:40.416232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping the-pen-keeps-the-thickness-you-last-chose, which made the Pen REMEMBER a weight (AnnotationStyles.penStrokeWidth, read through EditorState.armedPenStrokeWidth). What is missing is a way to SET it without a path to set it on.\n\nThe gate is EditorView.showsStrokeWidthRow, which falls back to activeTool.usesStrokeWidth; that is false for .pen because Tool.usesStrokeWidth is written as \"has an annotationShape that is not highlight\" and a path is not an AnnotationShape (VectorPath.swift). The store already answers for the Pen: AnnotationStyles.strokeWidth(for: .pen) and setStrokeWidth(_:for: .pen) both route to penStrokeWidth, exactly the way paint(for:)/setPaint(for:) route to penInk. So this is mostly showing the row and wiring its commit to setStrokeWidth(_:for: activeTool), plus deciding what EditorView.editedStrokeWidth reads when a PATH rather than an annotation is picked (selectedAnnotation is nil for a path today).\n\nWatch the icon-frame rule while doing it: IconStrokeWeight.startingWidth only thins a line whose armed width is still the stock 4, so arming the Pen at anything else correctly stops a 24px frame thinning it (IconStrokeWeightTests.anArmedPenIsNotThinned). A row that writes 4 back on open would silently re-enable the thinning.",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-16T12:23:34.330Z",
       "note": "seq 2670 -> 230"
+    },
+    {
+      "t": "2026-09-16T20:08:25.872Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:09:40.416232Z",
+      "note": "Adversarial review before building. (1) Shortest version: do NOT invent a new bar control. Every other drawing tool's Width lives INSIDE the popover the one toolbar swatch opens (EditorView.strokeWidthSlider in stylePopover); the Pen already wears that same one swatch (Tool.colorControl == .toolColor). So the whole feature is letting that row through for the Pen and routing its commit. A bespoke pen-only width chip on the bar would be a second idiom for one number."
+    },
+    {
+      "t": "2026-09-16T20:09:40.416232Z",
+      "note": "Adversarial review (2): discoverability. With the Pen in hand the swatch's tooltip says 'Path Color', which actively says colour is all that is behind it. Putting a Width row behind a swatch that promises only colour is a row nobody opens. Changing the tip to 'Path Style' (matching 'Text Style' / 'Annotation Style') is part of the work, not a nicety."
+    },
+    {
+      "t": "2026-09-16T20:09:40.416232Z",
+      "note": "Adversarial review (3): the icon-frame rule collides with the number shown. IconStrokeWeight.startingWidth only thins a line whose armed width is still the stock 4, so on a 24px icon frame a Pen that still says 4 draws a 2. The row will therefore read 4 while the path lands at 2, for exactly one value. Choosing any other weight makes them agree again. This ambiguity is not the Pen's: a rectangle's Width row has had it since the icon rule landed, because the model cannot tell 'still stock' from 'deliberately 4'. Out of scope here; recorded in the audit's rough and checked against the queue."
+    },
+    {
+      "t": "2026-09-16T20:09:40.416232Z",
+      "note": "Adversarial review (4): Pen in hand with a path PICKED (press P over a finished path). The Width row will arm the Pen and NOT restyle the picked path. That is deliberate: the Colour row in the same popover already behaves exactly that way (setAnnotationPaint falls through to arming when selectedAnnotationLayer is nil, and a path is not an annotation), and a picked path's weight already has a home in Appearance > Outline > Thickness, which also feeds the Pen back (rememberAnnotationDefaults). Two rows in one popover disagreeing about what they touch would be worse than one rule: this popover is what the NEXT path comes out as."
     }
-  ]
+  ],
+  "started": "2026-09-16T20:08:25.871Z"
 }

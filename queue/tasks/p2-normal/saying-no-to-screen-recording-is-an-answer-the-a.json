@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 170,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T09:08:45.953Z",
-  "updated": "2026-09-16T12:23:34.065Z",
+  "updated": "2026-09-16T18:55:37.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is a UX and positioning question, not an engineering one: whoever picks it up should open a decision card rather than choose. The question is what Photonz is for somebody who never gives it the screen, now that it is also a place to build UI, draw icons and animate SVGs, none of which touch screen capture.\n\nReproduced: Tests/PhotonzCoreTests/FirstRunOfferTests.swift neverGrantingStillLeavesTheSetupWindowComingBack drives five launches with nothing granted and asserts the setup window presents on every one. Run with: Scripts/test.sh --filter FirstRunOfferTests. It passes, which is the bug.\n\nWhy: WelcomeController.windowWillClose only sets welcome.setupCompleted when state.screenRecordingGranted is true, and FirstRunOffer.presentsAtLaunch returns true unconditionally while setupCompleted is false. So there is no dismissal that sticks.\n\nFiled 2026-09-16 out of find-out-whether-somebody-who-never-turns-on-scr, which fixed the tour half of this (the offer no longer waits on the grant, so that person is now shown round once) and deliberately left this half alone because it is the bigger question. The contradiction that task introduced and could not resolve inside its scope: the window now offers a way past a step still badged Required. See docs/design/tutorials.md, The first launch.",
@@ -28,6 +28,32 @@
     {
       "t": "2026-09-16T12:23:34.064Z",
       "note": "seq 2820 -> 170"
+    },
+    {
+      "t": "2026-09-16T18:46:03.977Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T18:47:37.674Z",
+      "note": "Adversarial review before building. (1) The task notes ask for a decision card, but the acceptance list already IS the decision: all five items are concrete behaviours with no taste left to settle, and the one that sounds like positioning (item 5, the Required badge) is settled by fact rather than preference. Photonz plainly does not require the screen: you can draw an icon, build a screen and edit a picture without it, so the badge saying Required is a false statement, not a product choice. Blocking this on a card would leave the nagging in place while the card waits. Building it, and logging the bigger positioning question (what Photonz is for somebody who never gives it the screen) as left rough. (2) The danger of a no that sticks is somebody who DID want capture, closes the window by accident, and never sees it again while capture silently does nothing. Mitigation has to be real: the capture-time hint (HistoryOverlay permissionHint, fired by CaptureCenter.ensurePermission) and Welcome and Permissions in the menu. Verified both paths exist before relying on them. (3) Shortest version: no new surface, no new dialog. One remembered fact, honest words in the window that is already there. (4) Cut: an explicit I do not capture choice reshaping the window. It asks somebody to declare an identity on launch day to escape a window, which is worse than the window."
+    },
+    {
+      "t": "2026-09-16T18:55:26.962Z",
+      "note": "left rough, not filed: the task notes asked for a decision card on the bigger positioning question, what Photonz is for somebody who never gives it the screen now that it is also where you draw icons and build UI. It did not get one. Nothing a person hits is left broken by that question (the nagging is fixed and the window no longer demands anything), so it does not clear the follow up bar as a bug, and it is strategy rather than a UX choice with a visible consequence, so it is not a decision card either. If it ever becomes one it is about what the app leads with at first launch, not about this window's wording."
+    },
+    {
+      "t": "2026-09-16T18:55:27.009Z",
+      "note": "left rough, not filed: the first capture attempt of a launch still opens System Settings by itself (CaptureCenter.ensurePermission, once per launch). Useful at that moment and long standing behaviour, and nobody is stopped by it, so it stays here rather than becoming a task. Worth revisiting if the capture strip hint turns out to be enough on its own."
+    },
+    {
+      "t": "2026-09-16T18:55:27.056Z",
+      "note": "adversarial review of the built thing: could not be done on the real app. The Mac's screen was locked for the whole session, so Scripts/playtest.sh refused never-granting-walk and first-run-walk (status locked, exit 3, zero steps run) and the probe could not be watched. What IS verified: swift build clean, Scripts/test.sh green (7714 tests, 618 suites), and the probe build compiled with PHOTONZ_PLAYTEST and parsed all 22 steps of the new walk including screenRecordingOff and tryToCapture. What is NOT verified: the window on screen, and the launch by launch behaviour anywhere except in the pure rules. Sweep requested so both walks run the moment the screen is unlocked; folded the same finding into an-audit-gets-a-real-picture-of-the-app-again."
+    },
+    {
+      "t": "2026-09-16T18:55:37.037Z",
+      "note": "Closing the setup window is now a remembered no (welcome.setupDismissed), so it stops opening itself at every launch at somebody who will never grant Screen Recording. The step is badged Needed to capture instead of Required, says everything else works without it, and the way out says Done instead of Not Now. Next only, behind next-setup-takes-no-for-an-answer; Current writes and reads nothing so its first run is untouched. Rules in PhotonzCore/FirstRunOffer.swift, driven launch by launch in FirstRunOfferTests. Verified: swift build clean, Scripts/test.sh green (7714 tests). NOT verified on the running app: the Mac's screen was locked all session so every walk refused (status locked, exit 3). Scripts/playtest/never-granting-walk.json is written and its 22 steps parse in the probe build; a sweep is requested so it and first-run-walk run the moment the screen is unlocked. Audit: queue/audits/2026-09-16-a-no-that-sticks.json."
     }
-  ]
+  ],
+  "started": "2026-09-16T18:46:03.976Z",
+  "completed": "2026-09-16T18:55:37.038Z"
 }

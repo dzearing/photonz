@@ -2201,13 +2201,18 @@ struct EditorView: View {
     /// What the one swatch says it is for, when it is not holding a name.
     ///
     /// Each tool names the thing it is about to draw, because that is what the
-    /// swatch decides. The Pen draws a PATH rather than an annotation, and its
-    /// popover holds one row: the colour that path comes out in, inside and
-    /// edge alike.
+    /// swatch decides. The Pen draws a PATH rather than an annotation: its
+    /// popover holds the colour that path comes out in, inside and edge alike,
+    /// and the weight its line comes out at.
+    ///
+    /// It said "Path Color" while colour was genuinely all that was behind it.
+    /// A tip that names only the colour is a tip that says the Width is not
+    /// there, and behind a swatch there is nothing else to go on, so the tip
+    /// widened the moment the row did.
     private var styleButtonTip: String {
         switch editorState.activeTool {
         case .text: "Text Style"
-        case .pen: "Path Color"
+        case .pen: "Path Style"
         default: "Annotation Style"
         }
     }

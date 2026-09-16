@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T00:59:18.907Z",
-  "updated": "2026-09-16T12:23:34.198Z",
+  "updated": "2026-09-16T19:59:09.347Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Falls out of find-out-what-corner-radius-should-say-over-a-gr, where the user chose 'Round what is inside it' on 2026-09-13. The card's own con in that decision said so: cropping a group by its own corners stops being something this row does, so it needs another way in if anyone wants it.\n\nReproduced on this tree with a throwaway test against PhotonzCore (a group sized 100x100, clipsContents true, holding a 200x200 filled rectangle):\n\n  CLIPPING CARD: clipsToBounds true, reaching true, row speaks for what is inside it\n  CLIPPING CARD after a pull to 20: card mask CornerRadii(0,0,0,0), photo curve CornerRadii(20,20,20,20)\n\nSo the pull rounds the photo, the square crop then cuts the rounded photo back to a hard box, and the card looks exactly as it did. Files: Sources/PhotonzCore/ContainerRounding.swift (roundingReachesItsContents deliberately has no exception for a clipping group), Sources/Photonz/PartsInspector.swift. Likeliest shape of the fix is a separate way in for the crop rather than overloading the same row again: the Layout section already owns hiding what sticks out, and the curve it crops with belongs beside it.",
@@ -27,6 +27,48 @@
     {
       "t": "2026-09-16T12:23:34.197Z",
       "note": "seq 2760 -> 200"
+    },
+    {
+      "t": "2026-09-16T19:50:10.845Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T19:59:04.528Z",
+      "note": "Adversarial review before building: the task's own note proposed a SECOND corner control beside Clip contents in Layout. Rejected. Two rounding numbers for one card in two sections is a card you round in Appearance, watch do nothing, and then have to go hunting for. Worse, it fails the task's own second acceptance item on its own: the Appearance row would still reach through and round the photo. The shortest version that delivers the same value is one row that means the right thing: a card that crops has an edge you can SEE, which is the exact reason the row reaches through every other group, so the reason does not apply and the row stays on the card."
+    },
+    {
+      "t": "2026-09-16T19:59:04.571Z",
+      "note": "Shipped in 94753d45. roundingReachesItsContents stops at a clipping container; containedCornerRadii now asks whether a child IS the box rather than covers it, so a photo bigger than the card puts the knob at nought; the row's own sentence says 'This card cuts off what sticks out, so this rounds the edge it cuts with'; the probe's cornerRadiusShown gains ' cropping'. Renderer untouched: it already cut a clipping group's buffer with the corner."
+    },
+    {
+      "t": "2026-09-16T19:59:04.620Z",
+      "note": "Verified: ContainerRoundingTests gains the suite 'Rounding a card that crops' (9 tests, model + row + write), GroupClipRenderingTests gains pullingTheRowOnACroppingCardRoundsWhatItCrops which goes panel to pixels and checks the card's corner pixel is canvas rather than photo. Full suite green, 7734 tests in 620 suites."
+    },
+    {
+      "t": "2026-09-16T19:59:04.666Z",
+      "note": "COULD NOT RUN THE WALK: the Mac's screen was locked for the whole task (checked at the start and again at the end with CGSessionCopyCurrentDictionary). Scripts/playtest.sh reported status locked and exited without running a step, so Scripts/playtest/crop-rounds-the-card-walk.json has never been run and there is no photograph of the app. A sweep was already pending, so it runs the new walk as soon as the screen is unlocked; no second request filed."
+    },
+    {
+      "t": "2026-09-16T19:59:04.709Z",
+      "note": "The audit's picture is an offscreen render from PhotonzRender (the same card cropping at 0 and at 28, side by side on a dark ground), written by a throwaway test that was deleted after it ran. It is labelled as a render in the audit's rough, not passed off as the app."
+    },
+    {
+      "t": "2026-09-16T19:59:04.753Z",
+      "note": "left rough: rounding the photo INSIDE a cropping card now means picking the photo, one more click than before, and only the row's own sentence says so. Did not earn a task: it is the correct behaviour rather than a defect, and the sentence covers it. Worth revisiting if a playtester trips on it."
+    },
+    {
+      "t": "2026-09-16T19:59:04.796Z",
+      "note": "left rough: round a card, then untick Clip contents, and the curve stays on the card as a plain mask, so the row stops reaching through that group from then on. That is the existing rule for a group somebody masked by hand, so it is consistent rather than new, and it did not earn a task."
+    },
+    {
+      "t": "2026-09-16T19:59:04.842Z",
+      "note": "audit: queue/audits/2026-09-16-crop-rounds-the-card.json"
+    },
+    {
+      "t": "2026-09-16T19:59:09.345Z",
+      "note": "A card told to crop keeps the Corner Radius row for itself: the number is the curve it crops with, and the photo inside is untouched. Shipped in 94753d45 (PhotonzCore/ContainerRounding.swift, CornerRadiusSelection.swift, AnnotationInspector.swift, PlaytestHarness.swift). Verified by new tests in ContainerRoundingTests and a panel-to-pixels test in GroupClipRenderingTests; full suite green (7734 tests). The new walk crop-rounds-the-card could not be run and there is no photograph of the app: the screen was locked all task, so the pending sweep runs it once it is unlocked. Audit: queue/audits/2026-09-16-crop-rounds-the-card.json"
     }
-  ]
+  ],
+  "started": "2026-09-16T19:50:10.844Z",
+  "completed": "2026-09-16T19:59:09.346Z"
 }

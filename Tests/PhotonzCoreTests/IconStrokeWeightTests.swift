@@ -138,6 +138,39 @@ struct IconStrokeWeightTests {
         #expect(document.startingStrokeWidth(armed: stock, drawnAt: CGPoint(x: 110, y: 110)) == 2)
     }
 
+    @Test("A weight set on the bar is the weight the Pen draws with")
+    func aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt() {
+        // The whole chain the Pen's Width row rides on, end to end: the row
+        // shows `strokeWidth(for: .pen)`, its commit writes the same place,
+        // and the canvas reads it back as the first anchor goes down
+        // (`EditorState.armedPenStrokeWidth`).
+        var styles = AnnotationStyles()
+        let document = document()
+        let onTheIcon = CGPoint(x: 110, y: 110)   // inside the 24px frame
+        let onBareCanvas = CGPoint(x: 500, y: 300)
+
+        // Untouched, the row shows the four every line ships with, and the
+        // 24px frame is still allowed to rescue it.
+        #expect(styles.strokeWidth(for: .pen) == stock)
+        #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),
+                                             drawnAt: onTheIcon) == 2)
+
+        // Set it to two on the bar and that is what lands, on the icon frame
+        // and off it alike: a weight somebody chose is never re-decided.
+        styles.setStrokeWidth(2, for: .pen)
+        #expect(styles.strokeWidth(for: .pen) == 2)
+        #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),
+                                             drawnAt: onTheIcon) == 2)
+        #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),
+                                             drawnAt: onBareCanvas) == 2)
+
+        // And a heavy one is not thinned either, which is what a row that
+        // wrote the stock four back on open would have quietly undone.
+        styles.setStrokeWidth(9, for: .pen)
+        #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),
+                                             drawnAt: onTheIcon) == 9)
+    }
+
     // MARK: - The line lands wherever this shape keeps it
 
     @Test("A line and an arrow are thinned on their own stroke")

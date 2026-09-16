@@ -19,7 +19,7 @@
     { "do": "waitFor", "condition": "tool", "value": "pen" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Color", "in": "Toolbar", "present": true },
-    { "do": "expect", "tooltip": "Color", "in": "Toolbar", "reads": "Path Color" },
+    { "do": "expect", "tooltip": "Color", "in": "Toolbar", "reads": "Path Style" },
     { "do": "describe", "stage": "2-pen", "note": "the Pen wears the same one swatch in the same Color group: toolbar-pen.json says where it sits and how big it is, against toolbar-arrow.json above" },
     { "do": "toolBar", "stage": "pen" },
     { "do": "snapshot", "name": "pen-colour-1-capsule" },

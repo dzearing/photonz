@@ -90,6 +90,22 @@ struct AnnotationStylesTests {
         }
     }
 
+    // The Pen draws a LINE, so it has a weight to set before drawing, even
+    // though a path is not an AnnotationShape and has no bucket in `shapes`.
+    // This is what lets the Width row through on the tool bar; the routing
+    // below is what makes that row reach the Pen's own remembered weight.
+    @Test func thePenHasAWidthToSet() {
+        #expect(Tool.pen.usesStrokeWidth)
+        #expect(Tool.pen.annotationShape == nil)
+
+        var styles = AnnotationStyles()
+        #expect(styles.strokeWidth(for: .pen) == PathContent.defaultStrokeWidth)
+        styles.setStrokeWidth(2, for: .pen)
+        #expect(styles.strokeWidth(for: .pen) == 2)
+        // Arming the Pen arms nothing else: a line tool keeps its own weight.
+        #expect(styles.strokeWidth(for: .line) == AnnotationContent.defaultStrokeWidth)
+    }
+
     // Shape routing and tool routing land in the same per-shape bucket.
     @Test func shapeRoutingMatchesToolRouting() {
         var styles = AnnotationStyles()

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T12:56:28.667Z",
+  "updated": "2026-09-16T19:59:04.889Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -120,6 +120,14 @@
     {
       "t": "2026-09-16T12:56:28.666Z",
       "note": "Evidence this may already be fixed, or was diagnosed off a misleading string. On 2026-09-16, on a LOCKED Mac, forced with PHOTONZ_ALLOW_LOCKED_WALK=1, a two-snapshot walk wrote real captures beside its offscreen drawings: 'Window captures: 2 real pictures of the window: before-sc.png, after-sc.png', 2400x1600, different md5s, and after-sc.png genuinely shows the rectangle the walk had just dragged out. The probe's Grants line said 'Screen Recording granted' and the camera agreed with it. So acceptance 1 and 3 hold right now even in the worst conditions this task assumed were fatal. What probably produced the original report: PlaytestCaptureLedger.report() used to hardcode 'none. The screen was locked, so macOS refuses every one' whenever nothing had been written and the screen was locked, regardless of whether any capture was ever attempted, and a locked walk usually dies at a name lookup long before its snapshot step. That hardcoded string is now gone (the-locked-screen-message-says-the-real-reason-a). Re-check this task against a run on an unlocked screen before spending a p1 slot on it."
+    },
+    {
+      "t": "2026-09-16T18:55:22.563Z",
+      "note": "also hit by saying-no-to-screen-recording-is-an-answer-the-a on 2026-09-16: the screen was locked for the whole task, so Scripts/playtest.sh refused every walk (status locked, exit 3) and the audit queue/audits/2026-09-16-a-no-that-sticks.json shipped with no pictures at all, not even offscreen renders, because the walk never ran a step. queue/bin/sweep.sh status says the same: last sweep COULD NOT RUN, 56 requests pending behind it. So the gap is not only that a picture may be an offscreen render rather than a real capture, it is that a locked Mac leaves an audit with nothing to look at and a whole day's walks unrun."
+    },
+    {
+      "t": "2026-09-16T19:59:04.888Z",
+      "note": "2026-09-16: happened again. a-card-that-crops-what-is-inside-it-can-have-rou shipped with no photograph of the app at all, because the screen was locked for the whole task and a walk will not run at all then. Its audit had to fall back to an offscreen render written by a throwaway test."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"
