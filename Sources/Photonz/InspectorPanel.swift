@@ -538,11 +538,14 @@ struct InspectorPanel: View {
             // A picked callout's own settings. Present whenever one is
             // picked, the way Color and Effects are: what a callout magnifies
             // is a property of the callout, not of the tool in your hand.
-            if layer.zoomCallout != nil { set.insert(.callout) }
+            // ...except in a release where the Lens tool is in hand, where a
+            // callout IS the Lens set to Magnify and says so in the Lens
+            // section below. One section, not two (`LensKind`).
+            if layer.zoomCallout != nil, !Experiments.shared.lensEnabled { set.insert(.callout) }
             // A picked lens's own settings, on the same terms: what it does to
             // the picture underneath is a property of the lens, not of the tool
             // in your hand.
-            if Experiments.shared.lensEnabled, layer.lens != nil { set.insert(.lens) }
+            if Experiments.shared.lensEnabled, layer.lensKind != nil { set.insert(.lens) }
             // With the parts split on, everything that said how a measurement
             // LOOKS is in Appearance, so this section is here only for what it
             // is called and the numbers it can tell you about itself. Where
@@ -621,7 +624,8 @@ struct InspectorPanel: View {
         // (`next-callout-shape`). Same test as the wand's tolerance: it changes
         // what the drag produces, not what the pointer does, so it is a setting
         // and settings live here.
-        if editorState.activeTool == .zoomCallout, CalloutToolInspector.hasAnySetting {
+        if editorState.activeTool == .zoomCallout, !Experiments.shared.lensEnabled,
+           CalloutToolInspector.hasAnySetting {
             set.insert(.calloutTool)
         }
         // The Lens tool's own settings, while the tool is in hand
@@ -865,7 +869,7 @@ struct InspectorPanel: View {
                 CalloutInspector(layer: layer)
             }
         case .lens:
-            if let layer = selectedLayer, layer.lens != nil {
+            if let layer = selectedLayer, layer.lensKind != nil {
                 LensInspector(layer: layer)
             }
         case .text:

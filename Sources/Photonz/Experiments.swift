@@ -334,6 +334,12 @@ extension Experiments {
     /// flagged: a document that already holds a lens opens and draws correctly
     /// either way, because turning a flag off takes away a way IN, never a
     /// document's contents.
+    ///
+    /// It also decides which of the two the bar and the panel show, because the
+    /// Lens absorbed the Zoom Callout rather than sitting beside it: with it ON
+    /// the callout is the Lens set to Magnify, so there is one slot and one Lens
+    /// section; with it OFF the Zoom Callout tool and the Zoom Callout section
+    /// are back, exactly as Current has them (`LensKind`).
     var lensEnabled: Bool { isEnabled(FeatureCatalog.lensFlag) }
 
     /// `next-pen`: whether the Pen tool exists at all — the slot at the end of

@@ -302,7 +302,7 @@ extension CanvasNSView {
             return SelectionCursor.cursor(for: selectionMode)
         }
         if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
-            || tool == .measure || tool == .pen { return .crosshair }
+            || tool == .lens || tool == .measure || tool == .pen { return .crosshair }
         if tool == .text { return .iBeam }
         return nil
     }

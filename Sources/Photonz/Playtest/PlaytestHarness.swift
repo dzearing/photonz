@@ -1921,9 +1921,15 @@ private final class Run {
             case .armCalloutDefaultMagnification:
                 editor.calloutToolMagnification = ZoomCalloutBuilder.defaultMagnification
             case .armLensBlur:
-                editor.lensToolAdjustment = .blur
+                // The KIND, not just the adjustment: a walk arming Blur after
+                // one that armed Magnify must actually get a blur.
+                editor.lensToolKind = .blur
             case .armLensPixelate:
-                editor.lensToolAdjustment = .pixelate
+                editor.lensToolKind = .pixelate
+            case .armLensMagnify:
+                editor.lensToolKind = .magnify
+            case .lensMagnify:
+                editor.setLensKind(.magnify)
             case .lensBlur:
                 editor.setLensAdjustment(.blur)
             case .lensPixelate:

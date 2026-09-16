@@ -171,56 +171,13 @@ struct CropToolInspector: View {
 /// Same order as the capsule above the tool bar, because they are the same two
 /// settings: whichever place you learn them in, the other reads the same.
 struct CalloutToolInspector: View {
-    @Environment(EditorState.self) private var editorState
 
     /// Either half can be off on its own, so each row asks for itself.
-    static var hasAnySetting: Bool {
-        Experiments.shared.calloutShapeEnabled || Experiments.shared.calloutMagnificationEnabled
-    }
+    static var hasAnySetting: Bool { MagnifierToolSettingsRows.hasAnySetting }
 
     var body: some View {
-        @Bindable var state = editorState
-        VStack(alignment: .leading, spacing: 10) {
-            if Experiments.shared.calloutShapeEnabled {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Shape").font(.caption).foregroundStyle(.secondary)
-                    Picker("Shape", selection: $state.calloutToolShape) {
-                        ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
-                            Text(shape.title).tag(shape)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .controlSize(.small)
-                    .panelHelp("What the next callout is drawn in. The box you drag out previews "
-                          + "in the same shape, and a callout already on the canvas is "
-                          + "switched in its own section.")
-                }
-            }
-            if Experiments.shared.calloutMagnificationEnabled {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text("Magnification").font(.caption).foregroundStyle(.secondary)
-                        Spacer()
-                        Text(ZoomCalloutBuilder
-                            .magnificationLabel(editorState.calloutToolMagnification))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                    // The tool's number is not a document edit, so unlike the
-                    // picked callout's slider there is nothing to preview and
-                    // nothing to undo: it just moves.
-                    Slider(value: Binding(get: { state.calloutToolMagnification },
-                                          set: { state.calloutToolMagnification = $0 }),
-                           in: ZoomCalloutBuilder.magnificationRange)
-                        .controlSize(.small)
-                        .panelHelp("How much bigger the next callout draws the region it points at. "
-                              + "A callout already on the canvas is resized by the slider in "
-                              + "its own section.")
-                }
-            }
-        }
-        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
-        .padding(.vertical, 8)
+        MagnifierToolSettingsRows()
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+            .padding(.vertical, 8)
     }
 }

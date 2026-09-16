@@ -34,6 +34,30 @@ struct ZoomCalloutOverlayTests {
         return style
     }
 
+    /// A lens switched to Magnify in the panel must draw a magnifier a person
+    /// can SEE. A lens wears no ring, and this overlay is drawn entirely in the
+    /// ring's colour and weight, so without the ring `LensConversion` now hands
+    /// it, the outline and the leader lines come out a one-point black hairline.
+    /// Drawn end to end here rather than trusted: the conversion's style, fed to
+    /// the rasterizer that actually paints it.
+    @Test func aLensSwitchedToMagnifyDrawsAnOutlineYouCanSee() throws {
+        let lens = Layer(name: "Blur", content: .lens(LensContent(adjustment: .blur)),
+                         frame: CGRect(x: 10, y: 10, width: 20, height: 20),
+                         style: LensBuilder.defaultStyle)
+        let magnifier = LensConversion.layer(lens, becoming: .magnify,
+                                             canvas: CGSize(width: 200, height: 200))
+        let callout = try #require(magnifier.zoomCallout)
+        let overlay = try #require(ZoomCalloutOverlayRasterizer.rasterize(
+            source: callout.sourceRect, callout: magnifier.frame,
+            style: magnifier.style, magnification: callout.magnification,
+            shape: callout.shape))
+
+        // The callout red (#FF3B30) on the source's top edge, not black.
+        let edge = sample(overlay, canvasX: 20, canvasY: 10)
+        #expect(edge.r > 200 && edge.g < 120 && edge.a > 200,
+                "source outline drawn in the callout's own red — got \(edge)")
+    }
+
     @Test func outlineStrokesSourceRect() {
         let overlay = ZoomCalloutOverlayRasterizer.rasterize(
             source: CGRect(x: 10, y: 10, width: 20, height: 20),

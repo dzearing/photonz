@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:01:09.379Z",
-  "updated": "2026-09-15T12:14:53.564Z",
+  "updated": "2026-09-16T05:27:23.791743Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Held back from the lens task on purpose, on the task file's own instruction: the callout carries canvas-space chrome (leader lines, source outline drawn OUTSIDE the layer frame by ZoomCalloutOverlayRasterizer) and a source rect that is not the layer's own box, and it is shipped. The lens model was shaped so this can happen: LayerContent.lens holds an adjustment enum, Layer.readsBackdrop and Layer.backdropSource are already generic over both kinds, and DocumentRenderer builds the backdrop for any layer that answers readsBackdrop. The work is (a) a .magnify case with a sourceRect and a magnification, (b) migrating .zoomCallout on decode, (c) moving the overlay rasterizer call onto the lens path, (d) merging CalloutInspector into LensInspector.",
@@ -43,6 +43,63 @@
     {
       "t": "2026-09-15T12:14:53.563Z",
       "note": "seq 230 -> 270"
+    },
+    {
+      "t": "2026-09-16T05:03:45.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review, before building. (1) The task notes propose migrating LayerContent.zoomCallout to .lens(.magnify) on decode. That is a CURRENT-release regression and I am not doing it: the lens tool and the Lens panel section are behind next-lens, which ships in Next only, while the zoom callout ships in BOTH releases. Migrating on decode would leave a Current user who picks their callout with no Magnification and no Shape at all, because Current has no Lens section to show them in. The runner contract forbids touching current-release behaviour."
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review (2). So the merge is a UI merge, flag-scoped to Next: LayerContent.zoomCallout stays the stored shape, and in Next the Lens tool offers Magnify as a sixth thing it can do, drawing exactly the callout it draws today. That satisfies all four acceptance items, keeps the renderer, the SVG exporter, the dirty-region logic and every callout walk untouched, and is a tenth of the blast radius of a model migration. Current keeps its Zoom Callout tool and its Zoom Callout section, unchanged."
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review (3). Magnify is NOT just a sixth adjustment with a different number: its source is a region somewhere else on the picture, so it has a source rect, a magnification and a shape where the other five have one amount. Modelling it as a sixth LensAdjustment case would put a magnification field on LensContent that no lens layer ever uses, and would let LensBuilder build a nonsense magnify lens. So the six live in a new LensKind (the five adjustments plus magnify), which is what the two pickers offer, and LensAdjustment and LensContent are untouched."
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review (4), first-time user walk. Pick up Lens, set Does to Magnify, drag a box: the drag marks the SOURCE and the magnified box flies out beside it, which is not what the other five do (their drag marks the box itself). That is the callout's own long-standing behaviour and the drag preview already shows the callout's ring while you drag, so what lands is what the draft promised. Left as is."
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review (5), the Does picker on a PICKED layer now has to convert between a magnifier and a lens. Decided both directions rather than hiding Magnify on a plain lens, since a picker with an entry that only appears when already chosen is its own puzzle. Magnify to an adjustment keeps the frame exactly where it is and blurs what is under it, no jump. An adjustment to Magnify takes the lens's frame as the SOURCE (that is the region it was covering, which is what you would want magnified) and re-places the box the same way a freshly drawn callout is placed. The box moves, which is what a magnifier IS, and it is one undo away."
+    },
+    {
+      "t": "2026-09-16T05:05:46.737444Z",
+      "note": "adversarial review (6), the keyboard. Z has meant zoom callout since the tool existed and its bar slot is going away in Next, so Z would silently do nothing. Z now hands you the Lens set to Magnify and K hands you the Lens as you left it, which is the same letter-owns-a-member idiom ToolGroup already uses. Scripts/playtest/tool-bar-families.json presses z and waits for tool zoomCallout, so it needs updating with the bar."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "built. Core: LensKind (the five adjustments plus magnify) and LensConversion in Sources/PhotonzCore/Lens.swift, Layer.lensKind, ToolBarLayout.bar(withLens:) puts .lens in the callout's SLOT instead of beside it, ToolSettingsBar.settings gains a lensKind so Magnify's capsule carries Shape and Magnification rather than a dead Amount slider. 19 new tests in Tests/PhotonzCoreTests/LensKindTests.swift plus one end-to-end render test in ZoomCalloutOverlayTests. App: LensInspector and LensToolInspector pick over six kinds, the callout's two rows extracted to MagnifierSettingsRows / MagnifierToolSettingsRows so Current's sections and Next's Lens section share one copy, InspectorPanel drops the Zoom Callout sections when the lens is on, EditorState.setLensKind / addLensDrag / lensToolKind, the drag preview and the flight and the commit all follow the Lens set to Magnify, and EditorView.magnifyShortcut keeps Z alive."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "acceptance, item by item. (1) The Lens picker is LensKind.allCases, so it offers Magnify after the five: Tests/PhotonzCoreTests/LensKindTests.swift theToolOffersTheFiveAdjustmentsAndMagnify. (2) A saved callout is byte for byte the callout it was, because nothing in the model moved, and it answers Magnify: aSavedCalloutOpensAsAMagnifyLensAndIsUnchanged. (3) theLensTakesTheZoomCalloutsSlot asserts one slot and the same position, and the panel's Zoom Callout sections are not inserted when the lens flag is on. (4) NOT VERIFIED and could not be: the Mac's screen was locked for the whole task, so not one walk ran, callout or otherwise. A full sweep is requested for when it is unlocked."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "the Mac's screen was locked the whole time (probe reported 'screen locked' on every launch, and Scripts/playtest.sh Scripts/playtest/magnify-lens-walk.json --no-build wrote status: locked with 0 steps). So there is no picture of any of this. What IS verified: swift build clean, Scripts/test.sh green at 7416 tests. Nothing tried to unlock anything."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "fixed on the way past, in shared code, because Magnify's drag now goes through it: CanvasPointerDrags built the flight layer with ZoomCalloutBuilder's DEFAULT magnification rather than the tool's, so with the slider at 4x the box flew to a 2x frame and then jumped to the 4x one the moment the real layer landed. calloutMagnification is plumbed to the canvas now. This does change Current, which the runner contract otherwise forbids, and I judged a wrong-sized animation a defect rather than a design somebody chose. Nothing open in the queue covers it (searched 'callout flight magnification')."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "second adversarial review, on the built thing, read rather than used, since no window could be drawn. It found one real defect and I fixed it: a lens wears no ring on purpose, and ZoomCalloutOverlayRasterizer draws the source outline and the leader lines ENTIRELY in the ring's colour and weight, so a lens switched to Magnify came out as a one-point BLACK hairline that would vanish on a dark screenshot. LensConversion now gives a ringless layer the callout's own ring, covered by switchingToMagnifyGivesAPlainLensTheRingItNeeds and by an end-to-end render test. It also found that the Lens tool had no crosshair where the callout did, which would have been a loss now that Magnify lives there, so the Lens has one."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "left rough, no task earned: the Lens section header still says Lens when what is picked is a magnifier, which is the point of the merge but may read oddly to somebody who came looking for Zoom Callout. Also the flat (tool-groups-off) bar has never carried a Lens button at all, which this change did not create; it now swaps the callout for the lens there too, so the two bar paths agree."
+    },
+    {
+      "t": "2026-09-16T05:27:23.791743Z",
+      "note": "new walk Scripts/playtest/magnify-lens-walk.json covers the whole thing (one slot on the bar, Z landing on Magnify, the drag, the Does row both ways, undo, and the same tool still drawing a plain lens). It has never been run. Scripts/playtest/tool-bar-families.json pressed z and waited for tool zoomCallout, which is now lens; updated with the bar and likewise unrun. New playtest actions armLensMagnify and lensMagnify; armLensBlur and armLensPixelate now set the KIND so a walk arming Blur after one that armed Magnify really gets a blur."
     }
-  ]
+  ],
+  "started": "2026-09-16T05:03:45.390Z"
 }

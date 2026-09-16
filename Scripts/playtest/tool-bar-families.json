@@ -371,7 +371,7 @@
     {
       "do": "waitFor",
       "condition": "tool",
-      "value": "zoomCallout"
+      "value": "lens"
     },
     {
       "do": "key",

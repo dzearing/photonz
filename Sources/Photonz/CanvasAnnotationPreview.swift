@@ -57,6 +57,13 @@ extension CanvasNSView {
         AnnotationContent(shape: .rectangle, strokeWidth: 1, colorHex: "#0A84FF")
     }
 
+    /// Whether the drag under the hand is marking a region to magnify, which is
+    /// the Zoom Callout tool and the Lens set to Magnify — the same tool in two
+    /// releases (`LensKind`).
+    var toolDragsOutAMagnifiedRegion: Bool {
+        tool == .zoomCallout || (tool == .lens && lensMagnifies)
+    }
+
     /// In-flight drag-to-create: preview the active tool's styled content.
     func refreshAnnotationPreview(constrained: Bool) {
         guard let drag = annotationDrag else {
@@ -66,14 +73,17 @@ extension CanvasNSView {
         // The callout draft is rounded from the box being dragged, so it is
         // built here where the box is known.
         let docEnd = drag.end(constrained: constrained, shape: .rectangle)
-        var draft = tool == .zoomCallout
+        // The Lens set to Magnify draws a callout, so it drags out a callout's
+        // draft: the ring you are dragging is the region that gets magnified,
+        // not the box the layer lands in.
+        var draft = toolDragsOutAMagnifiedRegion
             ? calloutDraftContent(docBox: CGRect(x: min(drag.anchor.x, docEnd.x),
                                                  y: min(drag.anchor.y, docEnd.y),
                                                  width: abs(docEnd.x - drag.anchor.x),
                                                  height: abs(docEnd.y - drag.anchor.y)))
             : nil
         if tool == .frame { draft = frameDraftContent }
-        if tool == .lens { draft = lensDraftContent }
+        if tool == .lens, !lensMagnifies { draft = lensDraftContent }
         guard let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return

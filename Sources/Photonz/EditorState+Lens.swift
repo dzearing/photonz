@@ -14,7 +14,7 @@ enum LensCopy {
     static let toolTitle = "Lens"
     static let sectionTitle = "Lens"
     static let toolHelp = "Drag a box over anything to change what is underneath it: "
-        + "blur an address, pixelate a name, grey out a region."
+        + "blur an address, pixelate a name, grey out a region, or magnify it."
     /// Said once, where somebody hiding something can read it. Not a second
     /// mechanism: export and copy already flatten. This is the LONG wording,
     /// which is what the Does picker says on hover.
@@ -67,6 +67,48 @@ extension EditorState {
         }
     }
 
+    static let lensToolKindKey = "tool.lens.kind"
+
+    /// What the NEXT thing the Lens tool draws will be: one of the five
+    /// adjustments, or Magnify (`LensKind`).
+    ///
+    /// Kept apart from `lensToolAdjustment` rather than replacing it, so
+    /// switching to Magnify and back hands your blur strength back instead of
+    /// forgetting which adjustment you were on. The same reason each adjustment
+    /// keeps its own number.
+    ///
+    /// Magnify's own two settings are the callout's — `calloutToolMagnification`
+    /// and `calloutToolShape` — rather than copies, so the number you set here
+    /// is the number the callout is drawn at, with nothing to keep in step.
+    /// The stored kind with no editor to hand, for the capsule's static policy
+    /// call. Falls back to the first of the six rather than to the remembered
+    /// adjustment, which is a detail only reachable from an instance.
+    static var lensToolKindSetting: LensKind {
+        UserDefaults.standard.string(forKey: lensToolKindKey)
+            .flatMap(LensKind.init(rawValue:)) ?? .blur
+    }
+
+    var lensToolKind: LensKind {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: Self.lensToolKindKey),
+                  let kind = LensKind(rawValue: raw) else { return LensKind(lensToolAdjustment) }
+            return kind
+        }
+        set {
+            guard lensToolKind != newValue else { return }
+            UserDefaults.standard.set(newValue.rawValue, forKey: Self.lensToolKindKey)
+            // Picking an adjustment from the Lens picker is also picking it as
+            // THE adjustment, so the amount slider beside it is that one's.
+            if let adjustment = newValue.adjustment { lensToolAdjustment = adjustment }
+            lensToolRevision &+= 1
+        }
+    }
+
+    /// Whether the Lens tool in your hand is set to magnify, which is the one
+    /// kind whose drag marks a region somewhere else on the picture rather than
+    /// the box the layer lands in.
+    var lensToolMagnifies: Bool { lensToolKind.magnifies }
+
     var lensToolAmount: CGFloat {
         get { lensToolContent.amount }
         set {
@@ -75,6 +117,18 @@ extension EditorState {
             content.amount = newValue
             lensToolContent = content
             lensToolRevision &+= 1
+        }
+    }
+
+    /// Completed drag from the Lens tool, whichever of the six kinds it is set
+    /// to. Magnify draws the zoom callout it has always drawn — the box you
+    /// dragged is the region magnified, and the magnified copy flies out beside
+    /// it — and the other five draw a lens the size of the box.
+    func addLensDrag(from start: CGPoint, to end: CGPoint) {
+        if lensToolMagnifies {
+            addZoomCallout(from: start, to: end)
+        } else {
+            addLens(from: start, to: end)
         }
     }
 
@@ -99,17 +153,42 @@ extension EditorState {
     /// Switches what the picked lens does. One undo step, and the number that
     /// adjustment was last set to comes back with it.
     func setLensAdjustment(_ adjustment: LensAdjustment) {
-        guard let picked = selectedLens, picked.content.adjustment != adjustment else { return }
+        setLensKind(LensKind(adjustment))
+    }
+
+    /// What the picked layer does to the picture underneath it, nil when what
+    /// is picked does nothing to it. A magnifier answers Magnify.
+    var selectedLensKind: LensKind? {
+        guard let id = selectedLayerID else { return nil }
+        return document?.layer(id: id)?.lensKind
+    }
+
+    /// Switches the picked lens or magnifier to another of the six kinds. One
+    /// undo step.
+    ///
+    /// Between the five adjustments this is what it has always been: the number
+    /// that adjustment was last set to comes back with it and the box does not
+    /// move. Crossing to or from Magnify is a bigger change and
+    /// `LensConversion` decides it — the short version is that a magnifier
+    /// switched to Blur keeps its box exactly where it is, and a lens switched
+    /// to Magnify magnifies the region it was covering with the box placed
+    /// clear of it, the way a freshly drawn callout is.
+    func setLensKind(_ kind: LensKind) {
+        guard let id = selectedLayerID, let document,
+              let was = document.layer(id: id)?.lensKind, was != kind else { return }
+        let canvas = document.canvasSize
+        let settings = lensToolContent
+        let magnification = calloutToolMagnification
+        let shape = calloutToolShape
+        // Only the lens-to-Magnify direction reads this, and a lens is never in
+        // the list, so there is nothing of this layer's own to leave out.
+        let occupied = document.placedZoomCalloutRects
         perform { document in
-            document.updateLayer(id: picked.id) { layer in
-                guard var lens = layer.lens else { return }
-                lens.adjustment = adjustment
-                layer.content = .lens(lens)
-                // The row in the layers list is named after what the lens does,
-                // unless somebody has named it themselves.
-                if LensAdjustment.allCases.contains(where: { $0.title == layer.name }) {
-                    layer.name = adjustment.title
-                }
+            document.updateLayer(id: id) { layer in
+                layer = LensConversion.layer(layer, becoming: kind, canvas: canvas,
+                                             lensSettings: settings,
+                                             magnification: magnification, shape: shape,
+                                             avoiding: occupied)
             }
         }
     }

@@ -151,15 +151,20 @@ public struct ToolBarLayout: Hashable, Sendable {
     ///
     /// Every tool a flag adds joins the END of the drawing family, never the
     /// middle: a slot a person has already learned the position of must not
-    /// move because they turned something else on. The lens sits right after
-    /// the zoom callout because the two are the same idea — a box that shows
-    /// the picture underneath differently — and one day the callout becomes a
-    /// Magnify lens.
+    /// move because they turned something else on.
+    ///
+    /// The one exception is the lens, which takes the ZOOM CALLOUT'S slot
+    /// rather than joining the end. The two were the same idea drawn twice — a
+    /// box that shows the picture underneath differently — so the callout is
+    /// now what the Lens does when it is set to Magnify (`LensKind`), and the
+    /// bar carries one box for both instead of two side by side. The lens
+    /// inherits the slot rather than the callout keeping it because the slot is
+    /// now the wider thing: six kinds, of which magnify is one.
     public static func bar(withFrame: Bool, withLens: Bool = false,
                            withPen: Bool = false) -> ToolBarLayout {
         var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
-                                .tool(.text), .tool(.zoomCallout)]
-        if withLens { drawing.append(.tool(.lens)) }
+                                .tool(.text)]
+        drawing.append(withLens ? .tool(.lens) : .tool(.zoomCallout))
         if withFrame { drawing.append(.tool(.frame)) }
         if withPen { drawing.append(.tool(.pen)) }
         return ToolBarLayout(families: [

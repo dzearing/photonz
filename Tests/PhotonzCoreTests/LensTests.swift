@@ -252,15 +252,20 @@ struct LensTests {
         #expect(Tool.lens.shortcutKey == "k")
     }
 
-    @Test func theLensToolJoinsTheBarNextToTheZoomCallout() {
-        let bar = ToolBarLayout.bar(withFrame: false, withLens: true)
-        #expect(bar.entries.contains(.tool(.lens)))
-        let drawing = bar.families[1]
-        let callout = drawing.firstIndex(of: .tool(.zoomCallout))
-        let lens = drawing.firstIndex(of: .tool(.lens))
-        #expect(callout != nil && lens != nil)
-        if let callout, let lens { #expect(lens == callout + 1) }
-        #expect(!ToolBarLayout.bar(withFrame: false, withLens: false).entries.contains(.tool(.lens)))
+    /// One box, not two. The lens TAKES the zoom callout's slot rather than
+    /// sitting beside it, because the callout is now the Lens set to Magnify.
+    @Test func theLensTakesTheZoomCalloutsSlot() {
+        let merged = ToolBarLayout.bar(withFrame: false, withLens: true)
+        let apart = ToolBarLayout.bar(withFrame: false, withLens: false)
+        #expect(merged.entries.contains(.tool(.lens)))
+        #expect(!merged.entries.contains(.tool(.zoomCallout)))
+        #expect(apart.entries.contains(.tool(.zoomCallout)))
+        #expect(!apart.entries.contains(.tool(.lens)))
+        // Same slot, same position: nothing anybody has learned the place of
+        // moves when the two become one.
+        #expect(merged.families[1].firstIndex(of: .tool(.lens))
+                == apart.families[1].firstIndex(of: .tool(.zoomCallout)))
+        #expect(merged.families[1].count == apart.families[1].count)
     }
 
     /// Every tool that draws by dragging gets its choices in the capsule over
@@ -271,6 +276,18 @@ struct LensTests {
         // The lens tool is itself behind a flag, so its two settings need no
         // flag of their own: a tool you cannot pick up shows no capsule.
         #expect(ToolSettingsBar.settings(for: .lens, availability: .none) == settings)
+    }
+
+    /// Set to Magnify, the capsule carries the callout's own two instead of an
+    /// Amount slider with nothing to set: what it magnifies by, and whether it
+    /// comes out a box or a circle.
+    @Test func theCapsuleCarriesMagnifysOwnTwo() {
+        #expect(ToolSettingsBar.settings(for: .lens, availability: .all, lensKind: .magnify)
+                == [.lensAdjustment, .calloutShape, .calloutMagnification])
+        // They ARE the callout's settings, so they answer to the callout's own
+        // flags: with both off the capsule is just the Lens picker.
+        #expect(ToolSettingsBar.settings(for: .lens, availability: .none, lensKind: .magnify)
+                == [.lensAdjustment])
     }
 
     // MARK: - Redrawing

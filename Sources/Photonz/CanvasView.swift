@@ -60,6 +60,9 @@ struct CanvasView: NSViewRepresentable {
     /// What the Zoom Callout tool is set to draw (`next-callout-shape`), so the
     /// box you drag out previews and flies in the shape that lands.
     let calloutShape: ZoomCalloutShape
+    let calloutMagnification: CGFloat
+    /// Whether the Lens tool in hand is set to Magnify (Next, `LensKind`).
+    let lensMagnifies: Bool
     /// The non-destructive style a freshly drawn shape inherits (border, corner
     /// radius…). The live preview needs it because a shape's visible outline can
     /// live in the LAYER border (rectangles) instead of the annotation's own
@@ -300,6 +303,8 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, captionCloseRequest: captionCloseRequest,
                    annotationContent: annotationContent,
                    calloutShape: calloutShape,
+                   calloutMagnification: calloutMagnification,
+                   lensMagnifies: lensMagnifies,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
                    measureToolMode: measureToolMode,
@@ -1020,6 +1025,13 @@ final class CanvasNSView: NSView {
     /// drag box previews in it and the creation flight lands in it, so choosing
     /// Circle is visible from the first drag rather than after it.
     var calloutShape: ZoomCalloutShape = .rectangle
+    /// How much the next magnifier magnifies, echoed from EditorState so the
+    /// box that flies out of the drag is the size the one that lands will be.
+    var calloutMagnification: CGFloat = ZoomCalloutBuilder.defaultMagnification
+    /// Whether the Lens tool in hand is set to Magnify (Next, `LensKind`). It
+    /// is the one lens kind whose drag marks a region somewhere ELSE on the
+    /// picture, so the draft, the flight and the commit are the callout's.
+    var lensMagnifies: Bool = false
     /// The draft layer style for the active shape tool (border/corner radius);
     /// the create preview draws its border so outline-only rectangles show.
     var annotationStyle: LayerStyle?

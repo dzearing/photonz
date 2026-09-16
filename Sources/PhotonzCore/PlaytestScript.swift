@@ -925,9 +925,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// and before any lens exists. They live in the dock and in the capsule
     /// over the tool bar, so a pointer cannot reach them.
     case armLensBlur, armLensPixelate
+    /// ...and the sixth kind, Magnify, which is what the Zoom Callout became:
+    /// the next drag marks a region to magnify rather than a box to blur.
+    case armLensMagnify
     /// A PICKED lens's Does row: what the lens on the canvas does to the
     /// picture underneath it. Also in the dock, so also out of reach.
     case lensBlur, lensPixelate, lensGreyscale, lensInvert, lensBrightness
+    /// The same row switched TO Magnify, which turns the picked lens into a
+    /// magnifier of the region it was covering (`LensConversion`).
+    case lensMagnify
     /// A PICKED lens's own slider, pulled the way a finger pulls it: live
     /// previews, then one committed undo step on release. `pullLensAmount`
     /// takes it to the strong end and `pullLensAmountBack` to the gentle one,

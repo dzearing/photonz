@@ -28,6 +28,8 @@ extension CanvasNSView {
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int,
                annotationContent: AnnotationContent?,
                calloutShape: ZoomCalloutShape,
+               calloutMagnification: CGFloat,
+               lensMagnifies: Bool,
                annotationStyle: LayerStyle?,
                textContent: TextContent?, measureContent: MeasureContent?,
                measureToolMode: MeasureToolMode,
@@ -78,6 +80,8 @@ extension CanvasNSView {
         }
         self.annotationContent = annotationContent
         self.calloutShape = calloutShape
+        self.calloutMagnification = calloutMagnification
+        self.lensMagnifies = lensMagnifies
         self.annotationStyle = annotationStyle
         self.textContent = textContent
         self.measureContent = measureContent

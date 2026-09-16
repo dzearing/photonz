@@ -446,17 +446,21 @@ struct ToolBarLayoutTests {
     @Test func everyToolAppearsExactlyOnce() {
         // The frame tool (`next-frames`), the lens (`next-lens`) and the Pen
         // (`next-pen`) are each behind a flag, so a bar either holds one
-        // exactly once or not at all.
+        // exactly once or not at all. The zoom callout is the flip side of the
+        // lens: the Lens set to Magnify IS the callout, so exactly one of the
+        // two holds the slot.
         for frames in [false, true] {
             for lens in [false, true] {
                 for pen in [false, true] {
                     let counts = counts(in: ToolBarLayout.bar(withFrame: frames, withLens: lens,
                                                               withPen: pen))
-                    for tool in Tool.allCases where !Self.flaggedTools.contains(tool) {
+                    for tool in Tool.allCases where !Self.flaggedTools.contains(tool)
+                        && tool != .zoomCallout {
                         #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
                     }
                     #expect(counts[.frame] == (frames ? 1 : nil))
                     #expect(counts[.lens] == (lens ? 1 : nil))
+                    #expect(counts[.zoomCallout] == (lens ? nil : 1))
                     #expect(counts[.pen] == (pen ? 1 : nil))
                 }
             }

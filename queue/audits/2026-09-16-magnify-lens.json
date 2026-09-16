@@ -1,0 +1,31 @@
+{
+  "feature": "A zoom callout is the Lens set to Magnify",
+  "epic": "measure-redline",
+  "summary": "The Zoom Callout and the Lens were two tools doing the same kind of thing, so they are one tool now: the Lens offers Magnify alongside Blur, Pixelate, Greyscale, Invert and Brightness, and there is one box on the tool bar and one Lens section in the panel instead of two of each.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"A layer that changes what is under it\" on (it is on by default). Open any screenshot.",
+  "try": [
+    { "do": "Look at the tool bar: there is a Lens box and no separate Zoom Callout beside it." },
+    { "do": "Press Z. It hands you the Lens already set to Magnify." },
+    { "do": "Drag a box around some small detail. The magnified copy flies out to the side with the most room, with lines back to where it came from." },
+    { "do": "In the panel's Lens section, pull Magnification, then switch Shape to Circle." },
+    { "do": "In the same section, change the Does row from Magnify to Blur. The box stays where it is and softens what it is sitting on." },
+    { "do": "Change Does back to Magnify. It now magnifies the region that lens was covering, with the box placed clear of it." },
+    { "do": "Press ⌘Z twice to step back over both switches." },
+    { "do": "Press K, set Does to Pixelate, and drag a box over a name. The same one tool still draws a plain lens." }
+  ],
+  "evaluate": [
+    "With one box on the bar instead of two, is it obvious that magnifying is still there?",
+    "Does the word \"Magnify\" in the Does row tell you it will draw a callout with a line back to the source, or do you expect it to magnify what is directly under the box?",
+    "When you switch a magnifier to Blur, is the box staying put the right thing, or did you expect it to go back where the source is?",
+    "When you switch a blur to Magnify, the box jumps to the side of what it was covering. Is that a pleasant surprise or a jarring one?",
+    "Z gives Magnify and K gives whatever you last used. Is that the split you would guess, or should K be the only letter?"
+  ],
+  "rough": [
+    "There are NO pictures with this audit, and none were possible. The Mac's screen was locked for the whole task, so macOS stopped drawing the app and every walk refused to run and reported \"locked\" rather than a pass or a failure. What is verified is the build and the whole test suite, 7416 tests green, including the conversion between the six kinds and an end-to-end render check that a lens switched to Magnify draws an outline you can see. What is NOT verified is anything on screen. A full sweep is requested and will run once the screen is unlocked.",
+    "The mock and the task file both asked for the model to be migrated: LayerContent.zoomCallout becoming LayerContent.lens with a magnify adjustment, on decode. I did not do that, and I think the task was wrong to ask. The Lens ships in Next only while the Zoom Callout ships in both releases, so migrating on decode would leave somebody in Current who picks their callout with no Magnification and no Shape at all, because Current has no Lens section to show them in. So the merge is a UI merge: the stored shape is unchanged, which is also why every saved document draws exactly as it drew.",
+    "Magnify's drag does not work like the other five, and cannot. The five mark the box the layer lands in; Magnify marks the region somewhere else that gets magnified. The draft you drag out already shows the callout's ring so what lands is what was promised, but it is still one picker with two kinds of drag behind it.",
+    "The Does row on a picked layer offers all six, so it can turn a magnifier into a blur and back. The blur direction is quiet (the box stays put); the magnify direction moves the box, which is what a magnifier is, but it is the one place in this feature where something jumps.",
+    "Fixed on the way past, because Magnify's drag now goes through it: the box that flew out of a callout drag was always built at 2x whatever the Magnification slider said, so with the slider at 4x the box flew to a frame the wrong size and then jumped to the right one the moment the real layer landed. The flight is handed the real magnification now.",
+    "The Lens tool had no crosshair pointer, where the Zoom Callout did. Since Magnify now lives on the Lens, that would have been a loss, so the Lens has one."
+  ]
+}

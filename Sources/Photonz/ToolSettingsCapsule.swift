@@ -29,7 +29,8 @@ struct ToolSettingsCapsule: View {
     static func settings(for tool: Tool) -> [ToolSetting] {
         guard Experiments.shared.toolSettingsEnabled else { return [] }
         return ToolSettingsBar.settings(for: tool,
-                                        availability: Experiments.shared.toolSettingsAvailability)
+                                        availability: Experiments.shared.toolSettingsAvailability,
+                                        lensKind: EditorState.lensToolKindSetting)
     }
 
     var body: some View {
@@ -89,8 +90,8 @@ struct ToolSettingsCapsule: View {
             .labelsHidden()
             .controlSize(.small)
             .fixedSize()
-            .help("What the next callout is drawn in. A callout already on the "
-                  + "canvas is switched in its own section of the panel.")
+            .help("What the next one is drawn in. One already on the canvas is "
+                  + "switched in its own section of the panel.")
         case .calloutMagnification:
             // The same short track and readout the wand's tolerance uses, and
             // the same number the picked callout's slider shows, so the one
@@ -106,8 +107,8 @@ struct ToolSettingsCapsule: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 30, alignment: .trailing)
             }
-            .help("How much bigger the next callout draws the region it points at. "
-                  + "A callout already on the canvas is resized in its own section "
+            .help("How much bigger the next one draws the region it points at. "
+                  + "One already on the canvas is resized in its own section "
                   + "of the panel.")
         case .wandTolerance:
             // Short track plus the number: the panel has the long track and the
@@ -137,9 +138,9 @@ struct ToolSettingsCapsule: View {
             // A menu rather than five segments: five words side by side is
             // wider than the narrowest window, and the capsule may never be
             // wider than the picture.
-            Picker("Lens", selection: $state.lensToolAdjustment) {
-                ForEach(LensAdjustment.allCases, id: \.self) { adjustment in
-                    Text(adjustment.title).tag(adjustment)
+            Picker("Lens", selection: $state.lensToolKind) {
+                ForEach(LensKind.allCases, id: \.self) { kind in
+                    Text(kind.title).tag(kind)
                 }
             }
             .labelsHidden()

@@ -25,6 +25,13 @@ struct LensInspector: View {
         editorState.document?.layer(id: layer.id)?.lens ?? LensContent()
     }
 
+    /// What this layer is one of the six: an adjustment, or Magnify. A
+    /// magnifier is a zoom callout under the hood, which is why this is asked
+    /// of the layer rather than read off `lens`.
+    private var kind: LensKind {
+        editorState.document?.layer(id: layer.id)?.lensKind ?? LensKind(lens.adjustment)
+    }
+
     /// Live through a slider pull, so the thumb does not snap back mid-drag.
     private var amount: CGFloat {
         editorState.selectedLensAmount ?? lens.amount
@@ -36,10 +43,10 @@ struct LensInspector: View {
                 Text("Does").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 8)
                 Picker("Does", selection: Binding(
-                    get: { lens.adjustment },
-                    set: { editorState.setLensAdjustment($0) })) {
-                    ForEach(LensAdjustment.allCases, id: \.self) { adjustment in
-                        Text(adjustment.title).tag(adjustment)
+                    get: { kind },
+                    set: { editorState.setLensKind($0) })) {
+                    ForEach(LensKind.allCases, id: \.self) { kind in
+                        Text(kind.title).tag(kind)
                     }
                 }
                 .labelsHidden()
@@ -48,9 +55,12 @@ struct LensInspector: View {
                 .panelHelp("What this layer does to the picture underneath it. "
                            + LensCopy.safety)
             }
-            // Invert is the one adjustment with nothing to set, so it gets no
-            // slider rather than a dead one.
-            if let title = lens.adjustment.settingTitle {
+            // Magnify's picture comes from somewhere else on the canvas, so it
+            // has a magnification and a shape where the other five have one
+            // number. Same two rows a callout has always had.
+            if kind.magnifies {
+                MagnifierSettingsRows(layer: layer)
+            } else if let title = lens.adjustment.settingTitle {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
                         Text(title).font(.caption).foregroundStyle(.secondary)
@@ -105,9 +115,9 @@ struct LensToolInspector: View {
             HStack(spacing: 8) {
                 Text("Does").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Picker("Does", selection: $state.lensToolAdjustment) {
-                    ForEach(LensAdjustment.allCases, id: \.self) { adjustment in
-                        Text(adjustment.title).tag(adjustment)
+                Picker("Does", selection: $state.lensToolKind) {
+                    ForEach(LensKind.allCases, id: \.self) { kind in
+                        Text(kind.title).tag(kind)
                     }
                 }
                 .labelsHidden()
@@ -117,7 +127,9 @@ struct LensToolInspector: View {
                            + "A lens already on the canvas is switched in its own section. "
                            + LensCopy.safety)
             }
-            if let title = editorState.lensToolAdjustment.settingTitle {
+            if editorState.lensToolKind.magnifies {
+                MagnifierToolSettingsRows()
+            } else if let title = editorState.lensToolAdjustment.settingTitle {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
                         Text(title).font(.caption).foregroundStyle(.secondary)
@@ -135,10 +147,14 @@ struct LensToolInspector: View {
             // One line, because covering an address is the one thing here that
             // is worth being sure about. The rest of it, that the saved
             // document still holds the original, is on the Does picker's tip.
-            Text(LensCopy.safetyCaption)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            // Magnify hides nothing, so it is not told this: a reassurance
+            // about the wrong thing is one more sentence to read past.
+            if !editorState.lensToolKind.magnifies {
+                Text(LensCopy.safetyCaption)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)

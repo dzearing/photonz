@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/magnify-lens",
+  "seed": "The Zoom Callout and the Lens were two tools doing the same kind of thing: both draw the picture underneath, one magnified and one changed. They are now one tool. This walk shows the bar carrying ONE box where it used to carry two, Z and K both landing on it, a Magnify drag making the callout it always made, the one Lens section in the panel carrying Magnification and Shape, and the Does row switching that layer between Magnify and an adjustment and back. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-open", "note": "the capture as it arrived. THE TEST for the bar: there is one box for both, so the tool bar must show the Lens and NO separate Zoom Callout beside it" },
+    { "do": "snapshot", "name": "1-open" },
+
+    { "do": "key", "key": "z" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-z-magnifies", "note": "THE TEST for the keyboard: Z used to hand you the Zoom Callout and its slot is gone, so it must hand you the Lens already set to Magnify. The capsule over the bar should say Lens: Magnify, with Shape and Magnification beside it, and the panel should have one Lens Tool section saying the same" },
+    { "do": "panel", "stage": "2-z-magnifies" },
+    { "do": "snapshot", "name": "2-z-magnifies" },
+
+    { "do": "drag", "from": [300, 300], "to": [420, 400], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-magnified", "note": "THE TEST: one drag with the Lens set to Magnify made exactly the callout the Zoom Callout tool always made. The box flew out to the side with the most room, the region it came from is outlined, and lines join the two" },
+    { "do": "panel", "stage": "3-magnified" },
+    { "do": "snapshot", "name": "3-magnified" },
+    { "do": "render", "name": "4-magnified-render" },
+
+    { "do": "action", "action": "lensBlur" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-became-blur", "note": "THE TEST for the one section: the same Does row that picked Magnify switches this layer to Blur, and the box stays exactly where it is rather than jumping. It now softens what it is sitting on" },
+    { "do": "panel", "stage": "5-became-blur" },
+    { "do": "snapshot", "name": "5-became-blur" },
+
+    { "do": "action", "action": "lensMagnify" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-back-to-magnify", "note": "and back: switching to Magnify takes the region that lens was covering as the thing to magnify, and places the box clear of it the way a freshly drawn one is placed" },
+    { "do": "snapshot", "name": "6-back-to-magnify" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-undone", "note": "each switch is one undo step, so two undos put the magnifier back as it was drawn" },
+    { "do": "snapshot", "name": "7-undone" },
+
+    { "do": "key", "key": "k" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "action", "action": "armLensPixelate" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [88, 560], "to": [376, 610], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-still-a-lens", "note": "THE TEST that nothing was lost: the same one tool set back to an adjustment still draws a plain lens the size of the box you drag, with the magnifier from earlier untouched above it" },
+    { "do": "snapshot", "name": "8-still-a-lens" },
+    { "do": "render", "name": "9-both-render" }
+  ]
+}

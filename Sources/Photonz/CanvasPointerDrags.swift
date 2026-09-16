@@ -1107,7 +1107,7 @@ extension CanvasNSView {
                     ? drag.anchor
                     : drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
                 onFrameCreate(drag.anchor, end)
-            } else if tool == .lens, !drag.isClick(atZoom: viewport.zoom) {
+            } else if tool == .lens, !lensMagnifies, !drag.isClick(atZoom: viewport.zoom) {
                 // The composite has to be redrawn for a lens anyway — its
                 // picture is whatever is underneath it — so the draft box goes
                 // now rather than being held over a commit it cannot match.
@@ -1120,13 +1120,17 @@ extension CanvasNSView {
                 // The press only dismissed the caption field: the arrow is
                 // finished, so Select comes back as it does for Return or Esc.
                 if closedField { onToolChange(ArrowCaptionEntry.toolAfterClosing(tool)) }
-            } else if tool == .zoomCallout {
+            } else if toolDragsOutAMagnifiedRegion {
                 clearAnnotationPreview()
                 let end = drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
                 // Build the same layer EditorState will commit, to drive the
-                // flight animation from source box to placed frame.
+                // flight animation from source box to placed frame. The
+                // magnification comes in with it: built at the default instead,
+                // the box flew to a frame the wrong size and then jumped to the
+                // right one the moment the real layer landed.
                 if let layer = ZoomCalloutBuilder.layer(from: drag.anchor, to: end,
                                                         canvas: viewport.documentSize,
+                                                        magnification: calloutMagnification,
                                                         shape: calloutShape,
                                                         avoiding: document?.placedZoomCalloutRects ?? []) {
                     beginCalloutFlight(for: layer)

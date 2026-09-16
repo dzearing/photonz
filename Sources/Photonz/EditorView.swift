@@ -823,6 +823,7 @@ struct EditorView: View {
                 flatToolRow
             }
         }
+        .background { magnifyShortcut }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
         .frame(height: EditorChromeLayout.toolBarGroupHeight)
@@ -893,7 +894,13 @@ struct EditorView: View {
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
             resizeButton
-            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
+            // One slot for both, the same swap the grouped bar makes: a callout
+            // is the Lens set to Magnify (`LensKind`).
+            if Experiments.shared.lensEnabled {
+                toolButton(.lens, LensCopy.symbol, LensCopy.toolTitle)
+            } else {
+                toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
+            }
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
             measureToolButton
@@ -921,6 +928,7 @@ struct EditorView: View {
             contextualToolOptions
         }
         .background { overflowShortcuts(overflow) }
+        .background { magnifyShortcut }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
         .frame(height: EditorChromeLayout.toolBarGroupHeight)
@@ -1149,7 +1157,7 @@ struct EditorView: View {
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
                 $0 != .shapes && ($0 != .frame || frames) && ($0 != .lens || lens)
-                    && ($0 != .pen || pen)
+                    && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
             }
         }
         var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens, withPen: pen)
@@ -1233,6 +1241,28 @@ struct EditorView: View {
         .opacity(0)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    /// Z, once the Zoom Callout has become the Lens set to Magnify.
+    ///
+    /// Z has meant "magnify a bit of this picture" since the callout existed,
+    /// and the slot it belonged to is gone, so without this the letter would
+    /// quietly do nothing. It hands you the Lens already set to Magnify, while
+    /// K hands you the Lens set to whatever you left it on: the same idiom a
+    /// tool family already uses, where the family has a letter and a member can
+    /// have its own (`ToolGroup`). Nothing at all in a release where the two
+    /// tools are still two, because there Z is the callout button's own.
+    @ViewBuilder private var magnifyShortcut: some View {
+        if Experiments.shared.lensEnabled {
+            Button("") {
+                editorState.lensToolKind = .magnify
+                editorState.setTool(.lens)
+            }
+            .keyboardShortcut(KeyEquivalent("z"), modifiers: [])
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 
     /// Activate a slot picked from the overflow menu.

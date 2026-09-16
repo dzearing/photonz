@@ -81,7 +81,13 @@ public enum ToolSettingsBar {
     /// The settings `tool` puts in the capsule, in the order they are laid
     /// out. Empty means no capsule at all: no glass, no gap, nothing over the
     /// picture.
-    public static func settings(for tool: Tool, availability: Availability) -> [ToolSetting] {
+    ///
+    /// `lensKind` is what the Lens tool is set to do, and it is read only for
+    /// the Lens: Magnify has a magnification and a shape where the other five
+    /// have one amount, so the capsule carries different controls
+    /// (`LensKind`).
+    public static func settings(for tool: Tool, availability: Availability,
+                                lensKind: LensKind = .blur) -> [ToolSetting] {
         switch tool {
         case .zoomCallout:
             // Shape first because it was there first: a setting added later
@@ -100,7 +106,18 @@ public enum ToolSettingsBar {
         case .lens:
             // No flag of their own: the lens tool is itself behind `next-lens`,
             // so a release that cannot pick the tool up never draws the capsule.
-            [.lensAdjustment, .lensAmount]
+            //
+            // Magnify's two keep the order the callout's capsule taught — shape,
+            // then magnification — so the pair sits the way somebody who drew
+            // callouts before already learned it, just with the Lens picker in
+            // front. They answer to the callout's own flags because they ARE
+            // the callout's settings.
+            lensKind.magnifies
+                ? [.lensAdjustment] + [.calloutShape, .calloutMagnification].filter {
+                    $0 == .calloutShape ? availability.calloutShape
+                                        : availability.calloutMagnification
+                  }
+                : [.lensAdjustment, .lensAmount]
         default:
             []
         }

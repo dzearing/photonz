@@ -317,8 +317,13 @@ extension EditorState {
                                                    magnification: calloutToolMagnification,
                                                    shape: calloutToolShape,
                                                    avoiding: document.placedZoomCalloutRects) else { return }
-        perform { $0.addLayerDrawnOnFrame(layer) }
-        finishCreating(layer.id)
+        var named = layer
+        // The row in the layers list says what the panel says. In a release
+        // where this is the Lens set to Magnify, that word is Magnify; where it
+        // is still the Zoom Callout, it is the Zoom it has always been.
+        if Experiments.shared.lensEnabled { named.name = LensKind.magnify.title }
+        perform { $0.addLayerDrawnOnFrame(named) }
+        finishCreating(named.id)
     }
 
     // MARK: - Annotation styling
