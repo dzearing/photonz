@@ -40,6 +40,13 @@
     { "do": "expectLanding", "near": [105, 572], "within": 1 },
     { "do": "describe", "stage": "the-arrow-aims-the-same-way", "note": "the same ring on the same border under the arrow tool: aiming is one rule across the drawing tools rather than one tool's feature" },
 
+    { "do": "key", "key": "l" },
+    { "do": "waitFor", "condition": "tool", "value": "line" },
+    { "do": "move", "at": [104, 560] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [105, 572], "within": 1 },
+    { "do": "describe", "stage": "the-line-aims-the-same-way", "note": "and under the line tool: rectangle, arrow and line all read the same answer off the same snap" },
+
     { "do": "key", "key": "r" },
     { "do": "waitFor", "condition": "tool", "value": "rectangle" },
     { "do": "drag", "from": [104, 560], "to": [420, 700] },
