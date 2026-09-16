@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 460,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T05:12:44.706Z",
-  "updated": "2026-09-16T10:02:35.114Z",
+  "updated": "2026-09-16T10:12:24.622Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-13 while building the Colours and Styles track.\n\n  Scripts/playtest.sh Scripts/playtest/tutorial-save-a-colour-as-a-style-walk.json --no-build\n\nThen look at /tmp/photonz-playtest/tutorial-save-a-colour-as-a-style-walk/3-on-the-shelf-sc.png: the ring is round the Library section, the Styles shelf is showing, and the Brand tile that just landed is cut in half by the bottom edge of the window. Same in tutorial-the-library-walk 3-a-tile-is-a-handle-sc.png.\n\nWhy it happens: TutorialController asks for .revealTarget, which scrolls until TutorialAnchorView.isWhollyShown, and the Library section is taller than the room left under the sections above it, so the reveal can never be satisfied and stops after its fixed number of tries wherever it got to. Options worth weighing: reveal to the section HEADER plus one tile row rather than the whole section; or let a step name how much of its target it needs.",
@@ -50,7 +50,24 @@
     {
       "t": "2026-09-16T10:02:35.113Z",
       "note": "Reproduced from the 02:31 sweep (screen was unlocked then; it is locked now). The task's stated cause is WRONG: the reveal is not failing and the ring is not half off the window. In tutorial-save-a-colour-as-a-style the dock reads dockViewport 621, dockSections ['Layers -67-96','Appearance 96-327','Effects 327-395','Motion 395-476','Library 476-621'] - the Library section is entirely inside the dock. What is cut is its BODY: dockListRoom says 'Library 112/157', i.e. the height budget squeezed it to DockMetrics.listFloor (112) when it wants 157. The body scroller then cuts through the tile row, and what it cuts away is the caption UNDER the picture, which is the tile's name. The guide says 'the Brand tile that just landed' and you cannot read the word Brand. Same in five more walks: the-library 112/305, make-a-component 112/233, text-styles 112/157, use-it-again-and-again 112/233, change-it-everywhere 112/157."
+    },
+    {
+      "t": "2026-09-16T10:12:21.570Z",
+      "note": "Built: the Library shelf takes the dock's ceiling itself (LibraryPanel.dockCeiling/onMetrics, the shape LayersListView has used since the budget was written) instead of being wrapped in a second scroller by CollapsibleSection, and its squeeze floor is LibraryShelfLayout.oneRowHeight (72) rather than DockMetrics.listFloor (112). The scope tabs, search box and grab bar are paid up front as listExtras, so the dock can only ever take whole ROWS of tiles away. Pinned by new tests in LibraryShelfLayoutTests and DockHeightBudgetTests (the second models the exact 621pt dock the tutorial walk measured). Scripts/test.sh: 7569 tests, green, twice."
+    },
+    {
+      "t": "2026-09-16T10:12:21.614Z",
+      "note": "NOT VERIFIED LIVE. The Mac's screen was locked for the whole of this task (CGSSessionScreenIsLocked = 1, checked four times, first to last), so every walk refused to run and no picture of the fix exists. The three tutorial walks that ring the shelf now carry an expectInView step with whole:true on the tile the guide names (Brand, Brand, Section Heading), which is the check that would have caught this, and it has never been executed. Asked for a sweep with that reason; it stays pending until the screen is unlocked and any failure comes back as a task."
+    },
+    {
+      "t": "2026-09-16T10:12:21.656Z",
+      "note": "left rough: the shelf drops straight from what it was to a single row when the dock gets tight; an in-between of two rows plus a sliver of a third would say 'there is more below' more clearly. Did not earn a task - nothing is broken and no open task covers the shelf's step sizes; a later pass in this area should pick it up. Also left: an empty Library now costs the panel its whole sentence rather than being cut in half, which is right but makes a short window scroll a little more."
+    },
+    {
+      "t": "2026-09-16T10:12:24.620Z",
+      "note": "The dock can no longer cut the Library shelf through a tile: the shelf takes the dock's ceiling itself and its floor is one whole row, so the scope tabs, search box and grab bar stay put and only whole rows are taken away. Shipped in c0f62008 (LibraryPanel, InspectorPanel, InspectorDockLayout, LibraryShelfLayout). Verified by unit tests only - Scripts/test.sh green twice, 7569 tests, with new cases pinning the floor and modelling the exact 621pt dock the failing walk measured. NOT verified live: the Mac's screen was locked for the whole task so no walk could run and no picture could be taken; the three tutorial walks that ring the shelf carry a new expectInView whole-tile check and a sweep is requested to run them. Audit: queue/audits/2026-09-16-library-shelf-whole-tiles.json"
     }
   ],
-  "started": "2026-09-16T09:59:33.899Z"
+  "started": "2026-09-16T09:59:33.899Z",
+  "completed": "2026-09-16T10:12:24.621Z"
 }
