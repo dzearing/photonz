@@ -1,0 +1,29 @@
+{
+  "feature": "A shelf tile says where the component came from",
+  "epic": "ui-components",
+  "summary": "The Components shelf mixes three kinds of tile in one list, and until now they were impossible to tell apart. A tile for a component you shared from another file now wears the word \"shared\" in the corner of its picture, and one of the app's own wears \"starter\". A component already in the file you have open wears nothing, so the unmarked tiles are yours and the marked ones are what a drop would bring in.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs \"Use a component you made in every document\" and \"Components in the Library from the start\"; both are on by default in Next.",
+  "try": [
+    { "do": "Open the Library and switch the shelf to Comps. Five tiles, each wearing \"starter\" in its bottom left corner." },
+    { "do": "Draw a box and some words, select both, and press ⌘G to group them." },
+    { "do": "Press ⌥⌘K to make it a component and name it Panel. Its tile joins the shelf ahead of the starters, wearing no word." },
+    { "do": "Click it on the canvas and turn on Share across documents in the Component section." },
+    { "do": "File ▸ New, then open the Library on Comps in the new window. Panel is there, wearing \"shared\"." },
+    { "do": "Rest the pointer on the Panel tile. The tooltip says it is a component you made in another document." },
+    { "do": "Look at the shelf as a whole: the tiles are the same size they were, and the same number fit across and down." }
+  ],
+  "evaluate": [
+    "Is a small word in the corner of the picture enough to see at a glance, or does it want to be under the name where there is more room?",
+    "Does \"starter\" read as \"one the app gave you\", or does it read like something unfinished?",
+    "A component already in your file wears no word at all. Does that absence read as \"this one is mine\", or as a tile the app forgot to label?",
+    "The word sits on the bottom left of the picture. Does it ever cover the part of a component you use to recognise it?",
+    "A component of yours that you HAVE shared still wears nothing, because a drop places a copy of it exactly like any other local one. Should its tile say it is published, or is the switch in the Component section enough?"
+  ],
+  "rough": [
+    "There is no picture of any of this. This Mac's screen was locked for the whole of the task, so no walk could run at all: it does not even produce the offscreen renders, it stops at the first step and says the screen is locked. Everything here was checked by building it and by tests that pin the tile metrics, not by looking at it.",
+    "The walk that photographs a shelf holding all three kinds at once is written and its script is validated by the test suite, but it has never been run: Scripts/playtest/shelf-origin-walk.json. A sweep has been requested so it runs as soon as the screen is unlocked.",
+    "That walk gets a shared tile and a local tile onto one shelf by making a component, sharing it, then deleting it out of the document. A person would get there by opening a second document instead; the walk does it in one window because a second window's screen capture has come back blank before.",
+    "The word is 8 point, the same size as the version badge that already sits in the other corner. If it reads too small, both should grow together rather than one of them.",
+    "It was not put under the name, which is what the task asked for, because the tile is 68 points tall exactly and the shelf is height-capped: a second caption line costs every row of tiles some of the shelf, which the task also forbade. The corner of the picture is free."
+  ]
+}

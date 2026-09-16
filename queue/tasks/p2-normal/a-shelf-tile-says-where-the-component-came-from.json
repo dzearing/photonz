@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 320,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:06:37.792Z",
-  "updated": "2026-09-15T12:14:53.620Z",
+  "updated": "2026-09-16T06:32:05.185Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The detail line is already on every LibraryEntry and already correct (\"shared\", \"starter\", \"2 copies\"); LibraryComponentTile just never draws it. See Sources/Photonz/ComponentPanel.swift, LibraryComponentTile, and LibraryShelfLayout for the room a caption has. Raised by the audit queue/audits/2026-09-12-shared-components.json.",
@@ -43,6 +43,27 @@
     {
       "t": "2026-09-15T12:14:53.619Z",
       "note": "seq 280 -> 320"
+    },
+    {
+      "t": "2026-09-16T06:21:43.056Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T06:22:44.952Z",
+      "note": "pre-build review. The goal asks for 'one plain word under it', but acceptance 3 forbids making a tile taller, and the tile is 68pt tall exactly (4+4 padding + 44 well + 3 + 13 caption). A second caption line costs ~16pt, 24% taller, and the shelf is height-capped so that is directly fewer tiles in view. Rejected. Rejected too: suffixing the name line (a tile is 68pt wide, the name already truncates in the middle), and section headers on the shelf (same cost in shelf room, and they fall apart the moment you type in the search field, which re-filters one flat list). Building instead: a small word in the corner of the picture well, the same capsule the version badge already uses at bottom-trailing, placed at bottom-leading. Costs no height at all. Only the two kinds that are NOT in your document get one ('shared', 'starter'); a component already in your file wears nothing, because that is the ordinary case and marking every tile of it would say nothing. The version badge and the origin badge can never collide: shelfVersion is nil for starter and shared tiles by construction."
+    },
+    {
+      "t": "2026-09-16T06:32:05.096Z",
+      "note": "built. PhotonzCore gains ComponentShelfOrigin (thisDocument / shared / starter) with the corner word and the tooltip sentence for each, 10 tests. LibraryShelfLayout gains the corner-word metrics and two tests proving they cost the tile no height (tileHeight stays 68, pinned). LibraryComponentTile draws the word at bottomLeading of the picture well through one cornerWord() builder the version badge now shares, and its tooltip explains the word. Current release is untouched: both next-shared-library and next-starter-components are releases:[.next], so Current never shows a starter or shared tile and every tile there is thisDocument, which wears nothing."
+    },
+    {
+      "t": "2026-09-16T06:32:05.140Z",
+      "note": "COULD NOT PHOTOGRAPH IT. The Mac's screen was locked for the whole task (CGSessionCopyCurrentDictionary CGSSessionScreenIsLocked = 1, checked twice, and Scripts/playtest.sh shared-component-walk.json exited 3 with 'this walk could not run: the Mac's screen is locked', 0 steps). A locked screen produces no screen captures AND no offscreen renders, because the harness stops before step one. So acceptance 4 is written but unrun: Scripts/playtest/shelf-origin-walk.json exists and its script decodes under PlaytestWalkShelfTests/PlaytestScriptTests (which read every walk in Scripts/playtest), but nothing has photographed it. Sweep requested with that reason."
+    },
+    {
+      "t": "2026-09-16T06:32:05.184Z",
+      "note": "left rough: a component of yours that IS shared wears no word either, so the shelf still cannot tell you which of your own components are published (only the Component section can). Did not file it: it is a feature idea rather than a defect, nothing in the queue covers it, and it is the fifth question in the audit so the user can turn it into a task by reacting if they want it. Also left rough: the drag preview for a starter or shared tile carries the corner word with it, since the preview is the same thumbnail view. Harmless and arguably useful."
     }
-  ]
+  ],
+  "started": "2026-09-16T06:21:43.055Z"
 }

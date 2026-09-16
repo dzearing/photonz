@@ -38,6 +38,33 @@ public enum LibraryShelfLayout {
     /// that has to be cut off gives this up and goes edge to edge.
     public static let picturePadding: CGFloat = 3
 
+    // MARK: The words in the corners of a tile picture
+
+    /// A tile picture wears at most two little words: which drawing it shows,
+    /// in the bottom right, and where the component came from, in the bottom
+    /// left. Both sit INSIDE the picture well, which is the whole point of
+    /// putting them there: the shelf is height-capped, so a word under the
+    /// name would cost every row of tiles and the tile is 68 points exactly.
+    public static let tileBadgeFontSize: CGFloat = 8
+    /// One line of that word, measured the way the caption is.
+    public static let tileBadgeLineHeight: CGFloat = 10
+    /// The capsule's own breathing room around the word.
+    public static let tileBadgeHorizontalPadding: CGFloat = 3
+    public static let tileBadgeVerticalPadding: CGFloat = 1
+    /// How far in from the corner of the well the capsule sits.
+    public static let tileBadgeInset: CGFloat = 2
+
+    /// The capsule itself, word and padding. This is the part that actually
+    /// covers picture, so it is what has to stay small against
+    /// `thumbnailHeight`.
+    public static let tileBadgeCapsuleHeight: CGFloat =
+        tileBadgeLineHeight + tileBadgeVerticalPadding * 2
+
+    /// The capsule plus the air it sits in from the corner: how much of the
+    /// well's height one corner word claims in all.
+    public static let tileBadgeFootprint: CGFloat =
+        tileBadgeCapsuleHeight + tileBadgeInset * 2
+
     /// One tile, top to bottom.
     public static let tileHeight: CGFloat =
         tilePadding * 2 + thumbnailHeight + captionSpacing + captionHeight

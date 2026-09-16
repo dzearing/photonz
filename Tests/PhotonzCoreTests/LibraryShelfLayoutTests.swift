@@ -98,6 +98,38 @@ struct LibraryShelfLayoutTests {
         #expect(LibraryShelfLayout.tileHeight == 68)
     }
 
+    @Test func aCornerWordOnAPictureCostsTheTileNoHeightAtAll() {
+        // The origin word ("shared", "starter") and the version word both sit
+        // inside the picture well. If either ever needed room of its own, the
+        // tile would grow and a height-capped shelf would hold fewer of them,
+        // which is the thing that must not happen.
+        let withoutBadges = LibraryShelfLayout.tilePadding * 2
+            + LibraryShelfLayout.thumbnailHeight
+            + LibraryShelfLayout.captionSpacing
+            + LibraryShelfLayout.captionHeight
+        #expect(withoutBadges == LibraryShelfLayout.tileHeight)
+        // ...and the word has to leave most of the well to the picture. A
+        // capsule taking more than a third of the height is a label wearing
+        // the picture rather than the other way round; the inset around it is
+        // air the picture still shows through, so it is counted separately.
+        #expect(LibraryShelfLayout.tileBadgeCapsuleHeight
+                    < LibraryShelfLayout.thumbnailHeight / 3)
+        #expect(LibraryShelfLayout.tileBadgeFootprint
+                    < LibraryShelfLayout.thumbnailHeight * 0.4)
+    }
+
+    @Test func theTwoCornerWordsAreBuiltToTheSameSize() {
+        // One badge idiom, not two: the version word and the origin word are
+        // the same capsule so the corners of a tile read as a pair.
+        #expect(LibraryShelfLayout.tileBadgeFontSize == 8)
+        #expect(LibraryShelfLayout.tileBadgeCapsuleHeight
+                    == LibraryShelfLayout.tileBadgeLineHeight
+                        + LibraryShelfLayout.tileBadgeVerticalPadding * 2)
+        #expect(LibraryShelfLayout.tileBadgeFootprint
+                    == LibraryShelfLayout.tileBadgeCapsuleHeight
+                        + LibraryShelfLayout.tileBadgeInset * 2)
+    }
+
     // MARK: What the picture in a tile well does
 
     /// The starter set's real sizes, which are what this math was tuned

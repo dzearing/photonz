@@ -597,22 +597,47 @@ struct LibraryComponentTile: View {
             // on a nine point badge is a gesture nobody lands. Choosing happens
             // in the section below, where the names have room to be read.
             .overlay(alignment: .bottomTrailing) {
-                if let shelfVersion {
-                    Text(shelfVersion.name)
-                        .font(.system(size: 8, weight: .medium))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 3)
-                        .padding(.vertical, 1)
-                        .background(Capsule().fill(.regularMaterial))
-                        .padding(2)
-                }
+                if let shelfVersion { cornerWord(shelfVersion.name) }
+            }
+            // Where this component came from, for the two kinds a drop would
+            // bring INTO the document: one you shared from another file, and
+            // one of the app's own. A component already in this file wears
+            // nothing, because that is the shelf's ordinary case and marking
+            // every one of those tiles would say nothing.
+            //
+            // In the corner of the picture rather than under the name on
+            // purpose: the shelf is height-capped, so a second caption line
+            // would cost every row of tiles some of the shelf. The two words
+            // can never collide, because a starter and a shared component
+            // never have a version to name.
+            .overlay(alignment: .bottomLeading) {
+                if let tag = origin.tag { cornerWord(tag) }
             }
             // The tile's own width, which is whatever the adaptive grid handed
             // it. How much of a long component fits depends on it, so the tile
             // has to know rather than assume.
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { wellWidth = $0 }
+    }
+
+    /// Which of the shelf's three kinds this tile is, which is the one thing
+    /// the picture, the violet mark and the name cannot say for themselves.
+    private var origin: ComponentShelfOrigin {
+        ComponentShelfOrigin(isStarter: starter != nil, isShared: shared != nil)
+    }
+
+    /// One little word in the corner of the picture. A LABEL, not a control:
+    /// the tile is already a click, a double click and a drag, and a fourth
+    /// gesture on a nine point badge is a gesture nobody lands.
+    private func cornerWord(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: LibraryShelfLayout.tileBadgeFontSize, weight: .medium))
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, LibraryShelfLayout.tileBadgeHorizontalPadding)
+            .padding(.vertical, LibraryShelfLayout.tileBadgeVerticalPadding)
+            .background(Capsule().fill(.regularMaterial))
+            .padding(LibraryShelfLayout.tileBadgeInset)
     }
 
     /// How big the component itself is, which is all that is needed to place
@@ -659,14 +684,19 @@ struct LibraryComponentTile: View {
     }
 
     private var helpText: String {
+        // The corner word is four to seven letters; the tooltip is where it
+        // gets explained, for whoever does not recognise it yet.
+        let arrival = origin.arrivalNote.map { "\($0) " } ?? ""
         guard let starter else {
             if let shelfVersion {
-                return "\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one, "
+                return "\(entry.name), \(entry.detail). \(arrival)"
+                    + "Drag it onto the canvas, or double click to place one, "
                     + "showing \(shelfVersion.name). Pick the tile to place a different look."
             }
-            return "\(entry.name), \(entry.detail). Drag it onto the canvas, or double click to place one."
+            return "\(entry.name), \(entry.detail). \(arrival)"
+                + "Drag it onto the canvas, or double click to place one."
         }
-        return "\(starter.summary) Drag it onto the canvas, or double click to place one."
+        return "\(starter.summary) \(arrival)Drag it onto the canvas, or double click to place one."
     }
 
     private func place() {

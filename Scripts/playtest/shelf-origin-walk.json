@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/shelf-origin-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 420] },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [340, 480] },
+    { "do": "type", "text": "Save" },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [220, 220], "to": [860, 600] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Save Button" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [500, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "shareSelectedComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-shared", "note": "Save Button is on the shelf every document reaches" },
+
+    { "do": "action", "action": "deleteLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-only-on-the-shelf", "note": "taken out of THIS document but left on the shared shelf, which is exactly what a document you start tomorrow sees: a component you made somewhere else" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [640, 400] },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [340, 470] },
+    { "do": "type", "text": "Panel" },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [220, 220], "to": [860, 600] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Panel" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "describe", "stage": "3-three-kinds", "note": "the Components shelf now holds all three kinds at once: Panel, which is in this document and wears no word; Save Button, from the shared shelf, wearing 'shared' in the corner of its picture; and the app's five, each wearing 'starter'. The tiles are the same size they have always been: the words sit inside the picture well, not under the name" },
+    { "do": "snapshot", "name": "shelf-origin-1-three-kinds" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-picked", "note": "picking the first tile, which is the one in this document: its section opens and the shelf keeps its words" },
+    { "do": "snapshot", "name": "shelf-origin-2-picked" }
+  ]
+}
