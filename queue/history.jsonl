@@ -4407,3 +4407,16 @@
 {"t":"2026-09-16T15:40:45.902Z","ev":"task_note","id":"what-separate-left-behind-is-still-there-after-t"}
 {"t":"2026-09-16T15:42:08.770Z","ev":"task_note","id":"what-separate-left-behind-is-still-there-after-t"}
 {"t":"2026-09-16T15:44:24.392Z","ev":"task_note","id":"what-separate-left-behind-is-still-there-after-t"}
+{"t":"2026-09-16T15:49:25.460Z","ev":"task_done","id":"what-separate-left-behind-is-still-there-after-t","from":"in_progress","note":"The count the notice pill fades away with now stays in two places, behind next-what-a-separation-left-behind (on by default in Next). A line under the layers list reads '365 left in the picture' with 'Separate again' beside it, for the last picture separated and only while another run would reach something; the picture's own row carries the same count on its second line as a readout, for good. Held against the patched bitmap, so undo takes it away with the separation and the document is untouched. Verified on the probe: 173 pieces out and the line reading 365, matching the pill exactly; a second run took 143 more and the line came down to 203; two undos put the picture back and the line went. Full suite green, 7649 tests. Audit plus five real window captures in queue/audits/2026-09-16-what-a-separation-left-behind.json. Walk Scripts/playtest/what-a-separation-left-behind-walk.json could not run because the Mac's screen is locked and a walk finds controls by name; a sweep is requested. Commit 782a4976."}
+{"t":"2026-09-16T15:51:44.149Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":16,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T15:51:44.257Z","ev":"task_started","id":"find-out-whether-separating-should-hand-you-text","title":"Find out whether separating should hand you text, not a picture of text","priority":"p2-normal"}
+{"t":"2026-09-16T16:18:40.347Z","ev":"task_created","id":"a-label-read-back-into-text-keeps-the-face-the-r","priority":"p2-normal","title":"A label read back into text keeps the face the rest of the panel is in"}
+{"t":"2026-09-16T16:18:45.448Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-16T16:18:45.495Z","ev":"task_note","id":"find-out-whether-a-label-inside-a-group-can-be-d"}
+{"t":"2026-09-16T16:21:15.237Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.281Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.327Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.371Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.416Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.461Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}
+{"t":"2026-09-16T16:21:15.505Z","ev":"task_note","id":"find-out-whether-separating-should-hand-you-text"}

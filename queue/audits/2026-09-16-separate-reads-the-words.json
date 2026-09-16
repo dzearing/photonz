@@ -1,0 +1,28 @@
+{
+  "feature": "Should separating a screenshot hand you text, or a picture of text?",
+  "epic": "ui-building",
+  "summary": "A study, not a build. Both shapes were tried on three real captures: separating as it works today, and separating that reads every run it is confident about. The recommendation is no, keep the reading as something you ask for, because the app's own confidence does not tell a right answer from a wrong one. Full reasoning in docs/design/separate-reads-the-words.md.",
+  "setup": "Nothing to install and nothing changed in the app. The pictures below were made by the real engine from the fixtures in Tests/PhotonzRenderTests/Fixtures. Re-derive every number with: PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests",
+  "try": [
+    { "do": "Look at the Effects panel as it really is in the capture: Border 1 and Border 2 are one weight, and so are Width and Offset.", "shot": "2026-09-16-separate-reads-text-shape-a.png" },
+    { "do": "Look at the same corner after every run was read. Border 1 is now heavier than Border 2, and Offset is heavier than the Width above it.", "shot": "2026-09-16-separate-reads-text-shape-b.png" },
+    { "do": "Look at the four labels of this app's own window that came back in a face the window does not contain, against the ink they were meant to match.", "shot": "2026-09-16-separate-reads-text-wrong-face.png" },
+    { "do": "Look at the good case: a settings pane read nine runs of nine, all one family, and the page is indistinguishable from the capture.", "shot": "2026-09-16-separate-reads-text-settings.png" },
+    { "do": "Read the four numbers that decide it: 31 of 40 runs read on this app's window, 4 of them in the wrong family, all 4 called an answer rather than a fallback, and no bar drops those 4 without also dropping 24 of the 27 correct ones." },
+    { "do": "Read the recommendation and what it rejects, in docs/design/separate-reads-the-words.md." }
+  ],
+  "evaluate": [
+    "Separating gets three to thirty-four times slower if it reads the words: 155 ms to 298 ms on a settings pane, 56 ms to just under two seconds on a dense page. Is that a trade you would take for labels you can retype?",
+    "Four labels out of thirty-one come back in a face the screenshot does not contain, and nothing says so. Is that a bug you would forgive, or the reason not to do it at all?",
+    "The recommendation is that the pill offers to read the words once you have seen what came out, instead of the command doing it for you. Would you press that, or would you rather it just happened?",
+    "Reading the whole picture at once is the only way the runs can be compared with each other, and that alone takes the wrong faces to zero on both captures. Is that enough of a reason to make reading a whole-picture action rather than a per-label one?",
+    "Double clicking a separated label would read it and put the caret in it, which is the gesture you already have for changing words. Is that where you would have looked for this?"
+  ],
+  "rough": [
+    "There are no window captures here at all. The Mac's screen was locked for this whole run, so no walk could find a control by name and Scripts/playtest.sh refused to start; the pictures are renders made by the real separator, rasterizer and placement code from the real fixtures. The walk that photographs both shapes in the app is written and committed as Scripts/playtest/separate-reads-text-study-walk.json, and it needs one run on an unlocked screen.",
+    "Shape B was reproduced by reading every run and putting the words back exactly where the app puts them, rather than by building the fork into the command. The layers, the faces and the placement are the real ones; what is not shown is the layers list, which is the part that would look different.",
+    "The weight wobble survives even if the family is settled: two section labels of one panel come back Medium and Semibold, and six row labels of one pane come back four Regular and two Medium. That is the least consistent part of the reader and it is not fixed by anything recommended here.",
+    "The four wrong faces are a defect in Turn into Text as it ships today, not only in the shape that was rejected. Filed separately.",
+    "The page renders are composed from a text-only separation, so the boxes and toggles stay in the background. That keeps the words the only thing that differs between the two pictures, and it means the pictures are not what the layers list would show."
+  ]
+}

@@ -631,6 +631,19 @@ It is offered on any picture Separate is offered on, INCLUDING the whole
 screenshot, where it refuses with a signpost: *more than one run of text here,
 separate it first*. A menu row that is not there teaches nothing.
 
+That "separate step" was re-examined on 2026-09-16 against the obvious
+alternative — Separate reading every run it is confident about, so nobody has to
+find a second command — and the answer came back no, on measurement rather than
+on taste. The short version: on this app's OWN window four of the thirty-one
+runs that read come back in a family the window does not contain, and the app
+calls all four `matched`, its confident verdict, so there is no bar and no
+provenance filter that keeps the good ones and drops those. Folding it in would
+also take the command from 155 ms to 298 ms on a settings pane and from 56 ms to
+just under two seconds on a dense page. The numbers, the pictures and what to do
+about the discovery problem instead are in
+`docs/design/separate-reads-the-words.md`; the study that produced them is
+`Tests/PhotonzRenderTests/SeparateAutoReadStudyTests.swift`.
+
 ### The words
 
 `VNRecognizeTextRequest`, on device. This is the only place in the app that uses

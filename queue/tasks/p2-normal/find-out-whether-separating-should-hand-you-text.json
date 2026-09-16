@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:28:15.397Z",
-  "updated": "2026-09-16T12:23:33.663Z",
+  "updated": "2026-09-16T16:21:15.504Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, judging the focus feature as a user rather than as a builder.\n\nAudit 2026-09-13-turn-into-text asks it directly: \"Turn into Text sits directly under Separate into Layers in the same menu. Would you have found it there, or does it want to be offered on the row itself somehow?\" The app already teaches the two-step ceremony in its own refusal copy: PhotonzCore/TextReading.swift line 318 returns \"More than one run of text here. Separate into Layers first, \".\n\nWhat the recommendation has to weigh, from the same audit: the reader refuses anything it is not sure of (five font families, one line only, no italics), and it gets the weight wrong on small labels two times in six. So reading everything up front would be wrong; reading the confident ones might not be. The numbers are in the audit.\n\nSeparate reads its own budget from PhotonzCore/SeparateBudget.swift and lands in one mutation (PhotonzCore/Document.swift line 812), so folding the read into it does not break the one-undo promise.",
@@ -49,6 +49,39 @@
     {
       "t": "2026-09-16T12:23:33.662Z",
       "note": "seq 540 -> 80"
+    },
+    {
+      "t": "2026-09-16T15:51:44.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T16:21:15.235Z",
+      "note": "BEFORE BUILDING, walking the idea as a first-time user: somebody separates a screenshot to move a button. Reading every label is work they did not ask for, applied to every label at once, and the one thing it can get wrong (the face) is the one thing they cannot check without knowing what the face was. That framing turned out to be the answer, but it was tested rather than assumed: the whole study is three real captures read both ways."
+    },
+    {
+      "t": "2026-09-16T16:21:15.279Z",
+      "note": "MEASURED, release build, Tests/PhotonzRenderTests/SeparateAutoReadStudyTests.swift (off unless PHOTONZ_STUDY=1). settings-pane-2x: 9 runs, separate 155ms, reading all across the cores +143ms, 9 of 9 read, 0 in the wrong family. app-window-2x: 40 runs, 262ms, +477ms, 31 of 40 read, 4 in the wrong family. dense-page-1x: 142 runs, 56ms, +1910ms, 82 of 142 read, 13 in the wrong family. Every one of the three captures is set in ONE family, so the last column is pure error."
+    },
+    {
+      "t": "2026-09-16T16:21:15.325Z",
+      "note": "THE FINDING THAT DECIDES IT: the app's confidence does not tell right from wrong. All four wrong faces on app-window-2x are provenance .matched (its confident verdict) at 0.72 to 0.81, while correct readings go down to 0.56. Filtering to matched keeps all four and loses eight correct ones; raising agreementBar until all four drop means 0.82, which keeps three readings of thirty-one. So 'wherever the app is sure enough' has no setting."
+    },
+    {
+      "t": "2026-09-16T16:21:15.369Z",
+      "note": "RECOMMENDATION (docs/design/separate-reads-the-words.md): no automatic reading. Fix the discovery problem instead, two ways. (1) The separation pill offers to read the words once you have seen what came out: one press, one undo step, and it is the only shape in which the page can VOTE on one family, which the study measured takes the strays to zero for the cost of one reading of thirty-one. (2) Double clicking a separated label reads it and opens it for typing, which is the gesture that already means 'change these words'. Rejected: read everything; read only where matched; raise the bar; vote AND automate; do nothing."
+    },
+    {
+      "t": "2026-09-16T16:21:15.414Z",
+      "note": "ACCEPTANCE CHECK. (1) both shapes on the same three captures: done, table above. (2) a number per capture: done, 9/9, 31/40, 82/142. (3) the wrong case looked at honestly: done, queue/audits/2026-09-16-separate-reads-text-shape-a.png vs -shape-b.png show Border 1 coming back heavier than Border 2 in the same panel, and the cost of getting back is the whole separation because a folded-in read is one undo step. (4) one undo still takes the whole thing back: the recommendation changes nothing here and it is already pinned by Tests/PhotonzCoreTests/SeparateIntoLayersTests.theWholeThingIsOneUndoStep, which passes. (5) recommendation written with what was rejected: done. (6) audit with captures of each shape: done, but they are ENGINE RENDERS, not window captures, because the screen was locked all run."
+    },
+    {
+      "t": "2026-09-16T16:21:15.459Z",
+      "note": "SCREEN LOCKED the whole task: Grants line said 'probe Screen Recording granted, screen locked', and Scripts/playtest.sh exited 3 without running a step. So there are no window captures anywhere in this audit. The walk that would photograph both shapes in the app is written and committed (Scripts/playtest/separate-reads-text-study-walk.json) and has NEVER been run; a sweep was requested for it. The pictures that did ship are made by the real separator, rasterizer and placement code from the real fixtures."
+    },
+    {
+      "t": "2026-09-16T16:21:15.503Z",
+      "note": "FOLLOW-UPS: filed a-label-read-back-into-text-keeps-the-face-the-r (the four wrong faces are a defect in Turn into Text as it ships today, with the command and output in its notes). Folded into a-separated-run-of-text-says-the-words-in-it-wit (reading 142 runs costs 1.9s across the cores, not the 5.7s its notes estimate) and into find-out-whether-a-label-inside-a-group-can-be-d (double click should read the label first). Left rough, not filed: the weight wobble survives even with the family settled (Corner Radius reads Semibold while Border 1 reads Medium, both section labels of one style) and is already recorded in queue/audits/2026-09-13-turn-into-text; six runs of the app window hold no words at all and quietly stay pictures, which is correct and needs no message."
     }
-  ]
+  ],
+  "started": "2026-09-16T15:51:44.254Z"
 }

@@ -17034,3 +17034,42 @@ has been handed to a sweep.
 **Next:** the audit asks whether eighteen characters is too tight to be worth
 having on the row at all, and whether the pill should stop saying "run it again"
 now that a button says it.
+
+## 2026-09-16 — separating should not hand you text, and here is the number that says so
+
+`find-out-whether-separating-should-hand-you-text`. A study, not a build. Both
+shapes on three real captures: separating as it works today, and separating that
+reads every run it is confident about.
+
+| capture | runs | separate | + reading them all | read | wrong family |
+| --- | --- | --- | --- | --- | --- |
+| settings pane 2x | 9 | 155 ms | +143 ms | 9 of 9 | 0 |
+| this app's window 2x | 40 | 262 ms | +477 ms | 31 of 40 | 4 |
+| dashboard 1x | 142 | 56 ms | +1910 ms | 82 of 142 | 13 |
+
+All three captures are set in one family, so the last column is pure error.
+
+**The finding that decides it:** the app's confidence does not tell right from
+wrong. All four wrong faces on the app window are `matched`, its confident
+verdict, at 0.72 to 0.81, while correct readings go down to 0.56. Filter to
+`matched` and you keep all four and lose eight correct ones; raise the bar until
+all four drop and it sits at 0.82, keeping three readings of thirty-one. So
+"wherever the app is sure enough" has no setting.
+
+**Recommended instead:** the separation pill offers to read the words once you
+have seen what came out (one press, one undo step, and the only shape in which
+the page can vote on one family, which takes the strays to zero for the cost of
+one reading of thirty-one), and double clicking a separated label reads it and
+opens it for typing. Written up in `docs/design/separate-reads-the-words.md`
+with what was rejected and why.
+
+The screen was locked the whole run, so no walk could start and there are no
+window captures: the pictures in the audit are made by the real separator,
+rasterizer and placement code from the real fixtures.
+`separate-reads-text-study-walk.json` is committed, has never run, and a sweep
+was requested for it.
+
+**Next:** the audit asks whether four wrong labels in thirty-one is a bug to
+forgive or the reason not to do it at all, and whether reading should be a
+whole-picture action on the pill. The reader's own family problem is filed as
+`a-label-read-back-into-text-keeps-the-face-the-r`.

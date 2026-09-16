@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-16T15:00:09.671Z",
-  "updated": "2026-09-16T15:00:09.674Z",
+  "updated": "2026-09-16T16:18:45.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "FOUND WHILE MEASURING find-out-how-a-hundred-and-forty-new-rows-should on 2026-09-16, reproduced on the real app. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/find-a-layer-walk.json. The walk separates Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png (pill: \"142 runs of text and 30 boxes\"), types \"recommended\" into the layers find field, and the list says \"No layer says that\" while the word (Recommended) is plainly on the canvas. Picture: queue/audits/2026-09-16-list-3-nothing-says-that.png. Headless confirmation over the same fixture: HOW-MANY-SAY-WORDS=0, SEARCH-recommended=0, SEARCH-decision=0.\n\nWHY: Layer.displayName (Sources/PhotonzCore/LayerNaming.swift) returns the words only when the layer HAS text, and a separated run is .image until somebody runs Turn into Text on it, one row at a time (Sources/Photonz/EditorState+ReadText.swift). So next-a-row-says-its-words, which landed 2026-09-16, does not reach the case it was written for.\n\nCOST TO WEIGH: TextReader is documented at about 40ms per run in a release build, so 142 runs is roughly 5.7s, far too slow to do inside the command. Two cheaper shapes worth trying: read only the runs whose rows the list is actually drawing (it is lazy, five at a time) and fill the name in as you scroll; or read in the background after the command lands, so the numbers turn into words a second later. Either keeps Separate as fast as it is now.\n\nThis is the follow-up the audit 2026-09-16-a-hundred-and-forty-rows names in its rough notes as the real fix.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-16T15:00:09.673Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T16:18:45.446Z",
+      "note": "MEASURED 2026-09-16 by find-out-whether-separating-should-hand-you-text: reading every run is cheaper than this task's notes estimate. On a release build, spread over the cores, the dense-page fixture's 142 runs read in 1910 ms, not 5.7s (one after another it is 3643 ms); the app window's 40 read in 477 ms and the settings pane's 9 in 143 ms. Command: PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests. Still too slow to put inside the command, so the lazy or background shapes this task already names are right. ONE THING TO CARRY OVER: reading gets the FAMILY wrong on 4 of the 31 runs it reads on the app window and 13 of 82 on the dense page, and the app calls most of those its confident verdict. That does not matter for a NAME (the words are right; it is the face that is wrong) which is another reason this task's rule that nothing is written into the document is the right one. The reader's family problem is now its own task, a-label-read-back-into-text-keeps-the-face-the-r. Full study: docs/design/separate-reads-the-words.md"
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "id": "a-label-read-back-into-text-keeps-the-face-the-r",
+  "title": "A label read back into text keeps the face the rest of the panel is in",
+  "goal": "Right clicking a separated label and choosing Turn into Text is meant to give you the same words in the same type. On a screenshot of this app's own window, four labels out of the thirty-one that read come back in a different typeface from everything around them: Border 1 comes back heavier than Border 2, and Offset heavier than the Width directly above it, when in the screenshot they are identical. Make a label come back in the face the rest of its page is in.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2770,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T16:18:40.343Z",
+  "updated": "2026-09-16T16:18:40.346Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-16 while running the queue task find-out-whether-separating-should-hand-you-text.\n\nCommand:\n  PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests\n\nOutput (app-window-2x, 40 runs, release build):\n  read 31/40 (78%)  an answer 23  a fallback 8\n  families SF Pro 27, Helvetica Neue 4\n  off the page's own family: 4, of which the app called 4 an answer rather than a fallback\n     Text 9   \"Corner Radius\" Helvetica Neue Bold 0.78 matched\n     Text 12  \"Border 1\"      Helvetica Neue Bold 0.81 matched\n     Text 21  \"Offset\"        Helvetica Neue Bold 0.72 matched\n     Text 30  \"Width\"         Helvetica Neue Bold 0.74 matched\nThe same capture reads \"Width\" correctly at Text 19 (SF Pro Medium 0.74) and \"Border 2\" correctly at Text 23 (SF Pro Medium 0.66), so it is the same word in the same panel answered two ways.\n\nThe dense page is worse: 13 of the 82 that read come back off the page's family (Georgia 5, Helvetica Neue 5, Times New Roman 2, SF Mono 1), 10 of them called an answer.\n\nPictures: queue/audits/2026-09-16-separate-reads-text-wrong-face.png (the four, against the ink they were meant to match), and -shape-a.png / -shape-b.png (the same corner of the panel before and after).\n\nWHY NO THRESHOLD FIXES IT: all four are provenance .matched, and their agreement (0.72 to 0.81) sits in the upper half of the correct readings' range (0.56 to 0.87). Filtering to matched keeps all four and drops eight correct ones. Raising TextReading.agreementBar until all four drop means 0.82, which keeps three of the thirty-one.\n\nTHE SHAPE THAT WAS MEASURED TO WORK: let the page vote. Take the family that won the most runs of the capture, then set each run in its own best weight of that family and accept it where it still clears agreementBar. Strays go to zero by construction, costing 1 reading of 31 on app-window and 8 of 82 on the dense page (measured, same test). The catch is the last acceptance item: Turn into Text today sees ONE run, so a vote needs either a whole-picture reading pass or a family remembered on the source picture's ImageRef from a previous read. See docs/design/separate-reads-the-words.md.\n\nThis does NOT fix the weight wobble (Corner Radius reads Semibold while Border 1 reads Medium, both section labels of one style); that is recorded in queue/audits/2026-09-13-turn-into-text.",
+  "acceptance": [
+    "On the app-window fixture, every run that reads comes back in one family, because the capture only contains one",
+    "On the settings pane and the dense page, the number of runs that read does not drop by more than a couple",
+    "The fix is measured rather than assumed: the study test prints the count of runs read and the count in a family the page does not contain, before and after",
+    "Turning one label into text on its own still works: whatever the fix is, it cannot need the whole page to have been read"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T16:18:40.345Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:42.726Z",
-  "updated": "2026-09-16T15:44:24.391Z",
+  "updated": "2026-09-16T15:49:25.459Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Four audits in one day each ask a version of \"is the pill enough\": 2026-09-13-separate-into-layers (\"the only thing that tells you is a pill that fades\"), 2026-09-13-separate-whole-screenshot (\"the pill ends with run it again for more rather than offering a button\"), 2026-09-13-separate-boxes, and 2026-09-13-turn-into-text (\"is the pill enough to tell you it worked\").\n\nUX-PATTERNS section 3 files a pill of this kind under \"Modal + toast\" as a transient confirmation (\"Saved\", \"42 instances updated\"). A count you are expected to act on later is not a confirmation, which is why this keeps coming up. The rule scrub is a separate task; this one is the behaviour.\n\nMeasured numbers to design against, from 2026-09-13-separate-whole-screenshot: the project dashboard capture is 142 pieces out of 724, so 580 stay in the picture; this app own window is 93 out and 26 left; a photograph is 0 and 0 with a sentence instead of a count.",
@@ -69,7 +69,12 @@
     {
       "t": "2026-09-16T15:44:24.390Z",
       "note": "Change after looking at the built row: the Separate again button came OFF the picture's row. Measured in the app, the row's second line has about 95 points, and '365 left' plus a button needs half as much again - the label came out 'Separate agai...'. The press lives under the list where there is a whole row's width for it, and the row is a readout that stays with THIS picture whatever gets separated next. Acceptance 2 (one action from the lasting place) is met by the line under the list. Left rough, not filed: scrolling the layers list far past its end with the harness's scrollPanel leaves it drawing no rows at all; a wheel clamps and a person cannot reach that state, so it is a harness path rather than a user one."
+    },
+    {
+      "t": "2026-09-16T15:49:25.457Z",
+      "note": "The count the notice pill fades away with now stays in two places, behind next-what-a-separation-left-behind (on by default in Next). A line under the layers list reads '365 left in the picture' with 'Separate again' beside it, for the last picture separated and only while another run would reach something; the picture's own row carries the same count on its second line as a readout, for good. Held against the patched bitmap, so undo takes it away with the separation and the document is untouched. Verified on the probe: 173 pieces out and the line reading 365, matching the pill exactly; a second run took 143 more and the line came down to 203; two undos put the picture back and the line went. Full suite green, 7649 tests. Audit plus five real window captures in queue/audits/2026-09-16-what-a-separation-left-behind.json. Walk Scripts/playtest/what-a-separation-left-behind-walk.json could not run because the Mac's screen is locked and a walk finds controls by name; a sweep is requested. Commit 782a4976."
     }
   ],
-  "started": "2026-09-16T15:20:36.840Z"
+  "started": "2026-09-16T15:20:36.840Z",
+  "completed": "2026-09-16T15:49:25.458Z"
 }

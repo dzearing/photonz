@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T11:55:53.256Z",
-  "updated": "2026-09-16T12:23:33.707Z",
+  "updated": "2026-09-16T16:18:45.494Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while writing Scripts/playtest/separate-turn-into-text-walk.json on 2026-09-13. Reproduced in the walk only, which is why this is filed as something to look into rather than as a bug.\n\nWhat was run: the walk separated the settings-pane fixture, turned run Text 9 (the words Save Changes, white on the blue button) into a text layer inside group Box 4, then did tool select and three `click count 2` steps at document (360, 792) with waits between, then `type`.\n\nWhat it printed, every time:\n  [41 type] FAILED: no text field has the keyboard (first responder is CanvasNSView)\n\nThe same walk, double clicking a TOP LEVEL text layer (the heading at document (146, 85)) opens the editor on the first double click and types fine - that is the shipped walk today.\n\nThe code is Sources/Photonz/CanvasPointerDrags.swift:234: a double click always DESCENDS while `groupAwareDescent` returns a step, and only once it returns nil does the `case .text = hit.content` branch at :255 open the editor. The question is whether descent keeps returning a step for a child that is already picked, or whether the harness synthesises clicks in a way that never reaches the second branch.",
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-16T12:23:33.706Z",
       "note": "seq 490 -> 90"
+    },
+    {
+      "t": "2026-09-16T16:18:45.493Z",
+      "note": "RECOMMENDED SHAPE, from the 2026-09-16 study find-out-whether-separating-should-hand-you-text (docs/design/separate-reads-the-words.md): once double click reaches a separated label, it should READ the label first and then put the caret in it, rather than doing nothing because the layer is still a picture. Double click already means 'I want to change these words', and it is the answer to the discovery problem that study was about: the reading costs 25 to 56 ms on the one run being touched, the guess lands on the label the person is looking straight at, and one undo press takes back exactly that. The study recommends AGAINST reading every run inside Separate into Layers, so this gesture and a 'read the words' action on the separation pill are the two ways the words should be reachable."
     }
   ]
 }
