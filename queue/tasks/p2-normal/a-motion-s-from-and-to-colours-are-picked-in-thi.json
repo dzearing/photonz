@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 250,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:56.140Z",
-  "updated": "2026-09-16T20:38:09.449Z",
+  "updated": "2026-09-16T20:38:18.299Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-layer-motion.json: \"Colour From and To open the system colour panel rather than this app's own picker, so they do not offer the saved colours the rest of the panel does.\"\n\nThis is a regression against an already finished task, which is why it is filed rather than folded: one-colour-picker-the-designed-one-everywhere-a (p1, done) settled that the designed picker is used everywhere a colour is chosen. The motion rows are new since then and did not get the memo. Worth checking the same day whether anything else added since that task also reaches for NSColorPanel.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-16T20:38:09.448Z",
       "note": "left rough, no task filed: a motion's From/To cannot FOLLOW a saved style, only copy its colour. That is a feature idea rather than a defect, it is in the audit's evaluate list for the user to rule on, and no open task covers it. Doing it needs a ColorTarget case for a motion endpoint plus somewhere in LayerMotion to record the binding."
+    },
+    {
+      "t": "2026-09-16T20:38:18.297Z",
+      "note": "The From and To swatches on a Colour motion now open the app's own picker (ColorWellButton in Sources/Photonz/MotionListInspector.swift), with the saved colours offered by name on the swatchpalette mark beside each one; picking stays one undo step via the new motionValuePreview, and the loop plays the colour under your hand while you drag. Verified: swift build clean, Scripts/test.sh green (7759 tests). NOT verified: the new walk Scripts/playtest/motion-colour-picker-walk.json has never run, because the Mac's screen was locked all task and every walk refuses on a locked screen; a sweep is requested. Audit: queue/audits/2026-09-16-motion-colour-picker.json. Committed b4e96d9f."
     }
   ],
-  "started": "2026-09-16T20:29:41.523Z"
+  "started": "2026-09-16T20:29:41.523Z",
+  "completed": "2026-09-16T20:38:18.298Z"
 }
