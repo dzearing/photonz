@@ -895,14 +895,34 @@ selection latency (numbers from 2026-09-03 in its commit).
   live values into the Undo item's own title mid-walk, which came back reading
   the launch-time values.)
 
-  So a `key` step's old "taken by menu" was never a pass. It now names the
-  item and says outright when nothing was behind it. Use `shortcut` when you
-  want that to be a failure rather than a log line.
+  So a `key` step's old "taken by menu" was never a pass. It names the item
+  and says outright when nothing is behind it, **however the press was
+  routed** — which is the whole point, because a dead item does not take the
+  press at all: `performKeyEquivalent` returns false for it and the press
+  falls through, so the line used to read a bare "command+z taken by responder
+  chain". It now reads:
+
+  ```
+  command+z taken by responder chain (Edit ▸ Undo carries this chord, but that
+  item is dimmed and empty, so the MENU did not run: … use an `action` step.)
+  ```
+
+  Use `shortcut` when you want that to be a failure rather than a log line.
 
   What this means for undo: a walk proves undo WORKS with `action` (draw, then
   `{ "do": "action", "action": "undo" }`, and watch `layers` and `canRedo` in
   the log). It cannot prove ⌘Z is wired to it. `Scripts/playtest/undo-shortcut-walk.json`
   walks the whole story end to end.
+
+  **⌘Z after clicking something in the right hand panel is not a bug, and it
+  has now been chased twice.** A walk presses a panel switch, presses ⌘Z,
+  reads the switch unchanged, and it looks as though the panel broke undo. It
+  did not: the identical walk with NO panel press anywhere does the identical
+  nothing, because no walk can press ⌘Z at all. What a walk CAN check is that
+  the panel change is undoable, and it is: `canUndo` stays true across the
+  press and an `action` undo puts the switch back.
+  `Scripts/playtest/panel-change-can-be-taken-back-walk.json` holds exactly
+  that, with the dead ⌘Z in the middle so the log says why.
 - **A letter typed into a panel field is typing, and a walk sees that now.**
   A plain letter pressed while one of the right hand panel's boxes has the
   keyboard goes into the box. It does not fire the tool letter that character

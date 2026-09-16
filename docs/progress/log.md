@@ -16506,3 +16506,30 @@ at the box as stored, so at 40 degrees it stops about 60 points short of the
 frame you can see (`the-line-back-from-a-turned-magnifier-points-at`).
 
 Next: whatever the queue holds, and the sweep the moment the screen is unlocked.
+
+## 2026-09-15 (UTC 2026-09-16) — Command Z after a panel click: not the app, the walk
+
+Chased the report that pressing Command Z after clicking a control in the right
+hand panel does nothing. It is not real for a person and it is not about the
+panel: no scripted walk can press Command Z at all. Ran the control the original
+report was missing (no panel press anywhere) and the chord did the identical
+nothing, for the reason found on 2026-09-03 — macOS refuses a script-launched
+app focus, so SwiftUI leaves the probe's menu bar frozen with Edit ▸ Undo dimmed
+and empty.
+
+What went wrong in the reading: the harness's loud "no action behind it, so
+NOTHING HAPPENED" note hung off `takenBy == "menu"`, which is the one case where
+it can never fire, since a dead item does not take the press. The line read a
+bare "command+z taken by responder chain" and two runners read it as an app bug.
+It now names the item however the press was routed.
+
+Landed `Scripts/playtest/panel-change-can-be-taken-back-walk.json`: a panel
+change goes on the undo stack and Undo takes it back, with the dead chord in the
+middle so the log says why. `docs/design/playtest-harness.md` says it plainly.
+
+The Mac's screen was locked throughout, so the walks ran under
+`PHOTONZ_ALLOW_LOCKED_WALK=1` and read only model state and key routing; no
+captures were possible. Next: the pending sweep re-runs the new walk unlocked,
+and `queue/audits/2026-09-16-undo-after-a-panel-click.json` asks the user the one
+question the loop can never answer — does Command Z undo for you, in one press,
+after clicking the Fill switch?

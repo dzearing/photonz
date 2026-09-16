@@ -4085,3 +4085,12 @@
 {"t":"2026-09-16T05:28:16.358Z","ev":"task_started","id":"a-lens-turned-on-its-side-still-shows-the-pictur","title":"A lens turned on its side still shows the picture straight","priority":"p2-normal"}
 {"t":"2026-09-16T05:40:09.269Z","ev":"task_created","id":"the-line-back-from-a-turned-magnifier-points-at","priority":"p2-normal","title":"The line back from a turned magnifier points at its frame"}
 {"t":"2026-09-16T05:40:30.224Z","ev":"task_done","id":"a-lens-turned-on-its-side-still-shows-the-pictur","from":"in_progress","note":"Turning a lens or a magnifier now turns the box alone; the picture inside stays lined up with the canvas. DocumentRenderer.canvasTurn/upright read the canvas over the turned box and take the turn back out; Layer.backdropSource applies the turn. Six new tests (three failed first), full suite green at 7422, zero degrees proved byte identical by SHA256 against the stashed source at 1x and 2x. Audit: queue/audits/2026-09-16-lens-turn.json. No walk could run: screen locked, sweep requested."}
+{"t":"2026-09-16T05:41:08.396Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T05:41:08.503Z","ev":"task_started","id":"find-out-whether-command-z-works-after-clicking","title":"Find out whether Command Z works after clicking a control in the right hand panel","priority":"p2-normal"}
+{"t":"2026-09-16T05:47:10.817Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:10.861Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:10.905Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:10.949Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:10.991Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:11.036Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}
+{"t":"2026-09-16T05:47:11.078Z","ev":"task_note","id":"find-out-whether-command-z-works-after-clicking"}

@@ -429,10 +429,27 @@ private final class Run {
             // "taken by menu" on its own has read like a pass for chords that
             // did nothing at all, which is how ⌘Z came to look checked when it
             // was not. Name the item and say when there is nothing behind it.
-            if takenBy == "menu", let destination {
-                detail += destination.item.action != nil
-                    ? " (\(destination.path), which ran)"
-                    : " (\(destination.path), which has no action behind it, so NOTHING HAPPENED: \(Self.frozenMenuBar))"
+            //
+            // The warning cannot hang off "taken by menu", which is the one
+            // case where it is not needed: a DEAD item does not take the press
+            // at all. `NSApp.mainMenu.performKeyEquivalent` returns false for
+            // it, so the press falls through to the responder chain and the
+            // line read "command+z taken by responder chain" with nothing
+            // more — which is exactly what sent two runners hunting a panel
+            // bug that was never there (2026-09-12, 2026-09-16). So the item
+            // is named however the press was routed.
+            if let destination {
+                if destination.item.action == nil {
+                    detail += " (\(destination.path) carries this chord, but that item is dimmed and"
+                        + " empty, so the MENU did not run: \(Self.frozenMenuBar)"
+                        + " Whatever this press did came from the window itself, and for the command"
+                        + " use an `action` step.)"
+                } else if takenBy == "menu" {
+                    detail += " (\(destination.path), which ran)"
+                } else {
+                    detail += " (\(destination.path) carries this chord and is live, but \(takenBy)"
+                        + " took the press first)"
+                }
             }
             note(number, step.name, detail, state: describe())
 
@@ -5737,7 +5754,7 @@ private final class Run {
         "macOS will not give a background app focus, so SwiftUI leaves the probe's menu bar frozen at its launch state: "
         + "every window-scoped command is dimmed and empty for the whole walk, however the document changes."
 
-    /// What a person has to hold down for this item.    /// What a person has to hold down for this item. AppKit spells ⇧⌘Z two
+    /// What a person has to hold down for this item. AppKit spells ⇧⌘Z two
     /// ways — an uppercase "Z" with ⌘, or a lowercase "z" with ⇧⌘ — and a
     /// lookup that knew only one of them would miss half the menu bar.
     private static func effectiveFlags(of item: NSMenuItem) -> NSEvent.ModifierFlags {

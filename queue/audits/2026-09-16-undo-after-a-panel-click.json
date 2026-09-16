@@ -1,0 +1,25 @@
+{
+  "feature": "Undo after clicking something in the right hand panel",
+  "epic": "measure-redline",
+  "summary": "A report said Command Z did nothing after clicking a control in the right hand panel. It turns out no scripted walk can press Command Z at all, with or without a panel click, so the walks were never evidence about the app. What a walk can check now passes: a panel change goes on the undo stack and Undo takes it back. The one thing the loop cannot check is the keystroke itself in a real, frontmost app, which is this audit's whole ask.",
+  "setup": "Photonz Dev, any document. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle with the Rectangle tool." },
+    { "do": "Switch to the Select tool so the rectangle is selected." },
+    { "do": "Click the Fill switch in the right hand panel, turning Fill off." },
+    { "do": "Press Command Z once, without clicking the canvas first." },
+    { "do": "Look at the Fill switch." },
+    { "do": "Press Command Z again and watch the rectangle itself go." }
+  ],
+  "evaluate": [
+    "Did the first Command Z put the Fill switch back on?",
+    "Did it take exactly one press, or did you have to click the canvas first to give the keyboard back?",
+    "Does Command Z also take back a change made from a panel menu, like Blending set to Multiply?",
+    "When it does undo, does anything on screen tell you what was undone, or do you have to spot it?"
+  ],
+  "rough": [
+    "No pictures with this one: the Mac's screen was locked for the whole task, so macOS refuses every window capture, and the offscreen renders would have shown nothing about a keystroke anyway.",
+    "The loop cannot answer question one by itself, today or ever: macOS refuses a script-launched app the focus that Command Z needs, proven four ways on 2026-09-03. So if undo really does fail for you here, a person has to say so, and this audit is the place.",
+    "The walks that started this were fine as walks and wrong as evidence. Their log line now names Edit > Undo and says the item is dimmed and empty, so the next runner reads the reason instead of filing the app."
+  ]
+}

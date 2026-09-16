@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/panel-change-can-be-taken-back",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [320, 260], "to": [620, 460], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, on" },
+
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
+    { "do": "describe", "stage": "1-fill-off", "note": "the switch is off and canUndo is still true, so the panel change went on the undo stack like a canvas one" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
+    { "do": "describe", "stage": "2-after-cmd-z", "note": "the chord changed NOTHING, and the key line above says why: a walk's menu bar is frozen, so no walk can press Command Z. This is not the app. The same press does the same nothing with no panel press anywhere in the walk" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, on" },
+    { "do": "describe", "stage": "3-taken-back", "note": "Undo put the switch back on: the command Command Z is wired to reverses a panel change" }
+  ]
+}
