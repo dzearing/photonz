@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 450,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T03:36:30.090Z",
-  "updated": "2026-09-16T09:58:36.930Z",
+  "updated": "2026-09-16T09:58:53.632Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Components tutorial track on 2026-09-13. Reproduce: Help > Tutorials > Components > Override one copy, then open the Layers list. Three rows reading Save Button. Captured in queue/audits/2026-09-13-components-track-4-overridden.png, top right.\n\nThe track works round it: no guide in it sends anybody into the layers list, and a test enforces that (TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem). That workaround costs the guides the one single-click way to reach a piece inside an original, so they use a canvas double click instead, which is why the sample button had to be widened to 240 so a double click can land clear of its label.\n\nOptions worth weighing rather than picking here: a quiet suffix on a copy row, the version name already printed beside the mark being extended to plain copies, or a stronger mark. This is a UX call.",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-16T09:58:36.930Z",
       "note": "left rough: the Components tutorial track still routes round the identical rows (no guide enters the layers list, TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem enforces it, and the sample button is 240 wide so a canvas double click clears its label). That workaround is now removable, but undoing it means rewriting guides and re-running the tutorial walks, which a locked screen forbids. Did not earn its own task: nobody using the app is stopped by it, the track works as written, and it is homework rather than a defect."
+    },
+    {
+      "t": "2026-09-16T09:58:53.630Z",
+      "note": "The layers list now says Original or Copy under a component row's name (Copy of <name> once a copy has been renamed, and the version rides on the end: 'Copy, Disabled'). Policy in PhotonzCore/ComponentRowNote.swift, carried on LayerRowDisplay.componentNote, drawn by LayersRow on the line that used to hold the bare version name. Nothing renamed, the violet mark kept. Verified by Scripts/test.sh, 7563 tests green with 15 new ones covering the exact original-plus-two-copies case, and by an offscreen render at the dock's real width showing the second line costs no row height. NOT verified in the running app: the Mac's screen was locked for the whole task so no walk could run; the already pending sweep covers it. Audit: queue/audits/2026-09-16-copy-vs-original-rows.json. Commit 7ee010a4."
     }
   ],
-  "started": "2026-09-16T09:49:16.504Z"
+  "started": "2026-09-16T09:49:16.504Z",
+  "completed": "2026-09-16T09:58:53.631Z"
 }
