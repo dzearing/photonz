@@ -1,0 +1,27 @@
+{
+  "feature": "A motion's From and To colours",
+  "epic": "icon-animate",
+  "summary": "The two colour swatches on a Colour motion now open the app's own colour picker instead of the Mac's colour window, and the colours you have saved are offered beside them by name.",
+  "setup": "Photonz Dev, Experiments window, release Next. Motion and colour styles are on by default.",
+  "try": [
+    { "do": "Draw a rectangle and give it a colour you like from the Fill row." },
+    { "do": "On the Fill row's swatchpalette menu choose Save as Style and call it Brand." },
+    { "do": "With the shape still picked, press the plus on the Motion header and choose Color." },
+    { "do": "Click the From swatch. The app's picker opens, with shades, the document's colours and your recents." },
+    { "do": "Drag the hue slider and watch the shape recolour as you drag, then let go." },
+    { "do": "Click the swatchpalette mark beside the To swatch and choose Brand." },
+    { "do": "Press Command Z twice and check each pick comes back in one step." }
+  ],
+  "evaluate": [
+    "Does the From swatch feel like every other colour swatch in the panel now, or does it read as something different?",
+    "While you drag a colour in the picker, does the looping preview show the change fast enough to judge it?",
+    "The saved colours menu here copies the colour and does NOT make the motion follow the style the way a Fill row does. Is that the right call, or should a motion's From be able to follow Brand and change when Brand changes?",
+    "Two swatches and two palette marks stacked in the settings column: is that too busy for a row that only holds two colours?",
+    "Does one undo per pick match what you expect, given the picture was changing while you dragged?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and there are no pictures of the app at all: the new walk Scripts/playtest/motion-colour-picker-walk.json is written and parses but has never been executed. A sweep has been requested so the loop runs it once the screen is unlocked.",
+    "The saved colours menu copies a colour and hands over no name. A motion endpoint has nowhere in the model to record that it follows a style, and what a running animation should do the moment that style is repainted is a question worth asking before answering, so the shorter half of the menu is what shipped.",
+    "With nothing saved yet the palette mark is absent, so the row is slightly narrower than it is once you save your first colour. Every other colour row in the panel behaves the same way."
+  ]
+}

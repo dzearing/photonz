@@ -755,6 +755,13 @@ final class EditorState {
     /// one step to undo rather than forty.
     var motionPivotPreview: (motionID: UUID, pivot: MotionPivot)?
 
+    /// The colour under the hand while a motion's From or To is being chosen
+    /// in the picker (`next-motion`). Kept out of the document for the reason
+    /// the pivot drag is: sliding the hue wheel would otherwise write one undo
+    /// step per frame. The swatch, the row's summary and the canvas all read
+    /// it, so the picture follows the pull and the whole pick is one step.
+    var motionValuePreview: (motionID: UUID, isFrom: Bool, value: MotionValue)?
+
     // MARK: Motion (`next-motion`)
 
     /// How far into one cycle of the loop the canvas is drawing, in
@@ -3019,6 +3026,11 @@ final class EditorState {
         // you started moving it (`EditorState+MotionStrip`). The held lap comes
         // with it, so the loop does not change length mid-drag either.
         document = withDraggedMotionTiming(document)
+        // A colour being chosen for a From or a To, before the blend below
+        // reads the pair: the loop keeps running while the picker is open, so
+        // the swing you are watching is painted the colour under your hand
+        // rather than the one still written down (`EditorState+Motion`).
+        document = withPreviewedMotionValue(document)
         if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
         }

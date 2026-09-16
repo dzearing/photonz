@@ -101,6 +101,12 @@ extension EditorState {
            let index = rows.firstIndex(where: { $0.id == drag.motionID }) {
             rows[index].timing = drag.timing
         }
+        // ...and the same for a colour still being chosen: the swatch and the
+        // summary beside it show what the hand is on, not what is written down.
+        if let preview = motionValuePreview,
+           let index = rows.firstIndex(where: { $0.id == preview.motionID }) {
+            if preview.isFrom { rows[index].from = preview.value } else { rows[index].to = preview.value }
+        }
         return rows
     }
 
@@ -153,6 +159,45 @@ extension EditorState {
             }
         }
         motionChanged()
+    }
+
+    // MARK: A colour being chosen for a From or a To
+
+    /// The colour under the hand in the picker: painted straight away and kept
+    /// out of history, so the swing recolours as you slide and the whole pick
+    /// is one step to undo rather than one per frame.
+    func previewMotionValue(id: UUID, isFrom: Bool, _ value: MotionValue) {
+        guard motionLayer != nil else { return }
+        motionValuePreview = (id, isFrom, value)
+        // Redrawn through `displayDocument` rather than by handing a changed
+        // copy to the renderer, for the reason `previewMotionPivot` gives: the
+        // preview's own frame loop submits the STORED document thirty times a
+        // second and would paint straight back over it.
+        rerender()
+    }
+
+    /// The pick landed: one step for undo covering the whole of it.
+    func commitMotionValue(id: UUID, isFrom: Bool, _ value: MotionValue) {
+        motionValuePreview = nil
+        updateMotion(id: id) { edited in
+            if isFrom { edited.from = value } else { edited.to = value }
+        }
+    }
+
+    /// What the CANVAS is handed while a colour is being chosen: the same
+    /// document with the half-chosen endpoint written onto it, so the blend
+    /// that runs after this reads the pair the hand has (`displayDocument`).
+    func withPreviewedMotionValue(_ document: PhotonzDocument) -> PhotonzDocument {
+        guard Experiments.shared.motionEnabled,
+              let preview = motionValuePreview, let layer = motionLayer else { return document }
+        var document = document
+        document.updateLayer(id: layer.id) { edited in
+            guard var motions = edited.motions,
+                  let index = motions.firstIndex(where: { $0.id == preview.motionID }) else { return }
+            if preview.isFrom { motions[index].from = preview.value } else { motions[index].to = preview.value }
+            edited.motions = motions
+        }
+        return document
     }
 
     /// The switch on a row.

@@ -1081,10 +1081,15 @@ extension EditorState {
     /// would keep showing a colour the document does not have until the next
     /// edit. A no-op the rest of the time, which is nearly always.
     func discardPickerPreview() {
-        guard paintPreview != nil || stylePreview != nil || knobPaintPreview != nil else { return }
+        guard paintPreview != nil || stylePreview != nil || knobPaintPreview != nil
+                || motionValuePreview != nil else { return }
         paintPreview = nil
         stylePreview = nil
         knobPaintPreview = nil
+        // A motion's From or To half chosen goes back the same way: the row
+        // reads the document again and the loop plays the colours it stores
+        // (`EditorState+Motion`).
+        motionValuePreview = nil
         rerender()
     }
 

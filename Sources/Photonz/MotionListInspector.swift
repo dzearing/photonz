@@ -304,6 +304,12 @@ private struct MotionValueSetting: View {
 }
 
 /// From and To for a colour, which is a well rather than a number.
+///
+/// The same well every other colour in the app is chosen from
+/// (`ColorPickerEntry`), so the colours you have saved are on offer here too.
+/// It used to raise the Mac's own colour window, which was the one place in the
+/// panel where your own styles were not offered — and the one place you most
+/// need them, since a motion's two colours have to match the rest of the icon.
 private struct MotionColorSetting: View {
     @Environment(EditorState.self) private var editorState
     let motion: LayerMotion
@@ -319,17 +325,82 @@ private struct MotionColorSetting: View {
         MotionSettingRow(label: label,
                          help: isFrom ? "The colour this layer starts out"
                                       : "The colour it has become by the end") {
-            ColorPicker("\(motion.property.title) \(label)", selection: Binding(
-                get: { Color(hex: hex) },
-                set: { picked in
-                    guard let landed = picked.hexString else { return }
-                    editorState.updateMotion(id: motion.id) { edited in
-                        if isFrom { edited.from = .color(landed) } else { edited.to = .color(landed) }
+            // Two wells sit in one row, so each needs a key of its own or
+            // pressing To would open the popover hanging off From.
+            HStack(alignment: .center, spacing: ColorPartLayout.styleGap) {
+                ColorWellButton(hex: hex,
+                                name: label,
+                                wellKey: "motion-\(motion.id.uuidString)-\(isFrom ? "from" : "to")",
+                                // The loop keeps playing while the picker is
+                                // open, so the swing is painted as you slide
+                                // and the whole pick is still one step to undo.
+                                onPreview: { picked in
+                    editorState.previewMotionValue(id: motion.id, isFrom: isFrom, .color(picked))
+                }, onCommit: pick)
+                .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading)
+                MotionColorStylesMenu(current: hex, onPick: pick)
+            }
+            // The colour itself, said out loud, so a walk can read back what
+            // landed: a swatch draws a colour and publishes no words at all.
+            .panelReadout(hex)
+            // The row named, so the two wells and the two menus in this one
+            // section can be told apart: `press "Color" in "From"`.
+            .playtestField(label)
+        }
+    }
+
+    private func pick(_ picked: String) {
+        editorState.commitMotionValue(id: motion.id, isFrom: isFrom, .color(picked))
+        editorState.recordRecentColor(hex: picked)
+    }
+}
+
+/// The saved colours, offered beside a motion's From and To.
+///
+/// The same glyph and the same place every other colour row keeps its styles
+/// menu, so the one column of swatchpalette marks down the panel does not skip
+/// these two rows. What it does is deliberately the SHORTER half of what that
+/// menu does elsewhere: it paints the colour and hands over no name.
+///
+/// A motion endpoint cannot wear a style today — the model has nowhere to write
+/// "this From follows Brand", and what a running animation should do the moment
+/// Brand is repainted is a question worth asking before answering. So this is
+/// the copy-a-colour half, which the app already has words for, rather than a
+/// link that half works.
+private struct MotionColorStylesMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let current: String
+    let onPick: (String) -> Void
+
+    var body: some View {
+        let styles = editorState.colorStyles
+        // Nothing saved yet is no menu rather than an empty one: a mark that
+        // opens onto nothing is a control that appears not to work.
+        if !styles.isEmpty {
+            Menu {
+                Section("Copy a saved color") {
+                    ForEach(styles) { style in
+                        Button {
+                            onPick(style.colorHex)
+                        } label: {
+                            Label {
+                                Text(style.name)
+                            } icon: {
+                                Image(systemName: style.colorHex.caseInsensitiveCompare(current) == .orderedSame
+                                      ? "checkmark.circle.fill" : "circle.fill")
+                            }
+                        }
                     }
-                }), supportsOpacity: false)
-            .labelsHidden()
-            .controlSize(.small)
-            .playtestControl("Color", detail: "\(label), \(hex)")
+                }
+            } label: {
+                Image(systemName: "swatchpalette")
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            // A menu drawn as a glyph has no words of its own, so a walk reads
+            // it by this (`PlaytestPanelMenu.title`).
+            .accessibilityLabel("Saved colors")
+            .panelHelp("Paints this with a color you have saved. The color comes over, the name does not.")
         }
     }
 }

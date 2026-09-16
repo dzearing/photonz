@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 250,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:56.140Z",
-  "updated": "2026-09-16T12:23:34.420Z",
+  "updated": "2026-09-16T20:38:09.449Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-layer-motion.json: \"Colour From and To open the system colour panel rather than this app's own picker, so they do not offer the saved colours the rest of the panel does.\"\n\nThis is a regression against an already finished task, which is why it is filed rather than folded: one-colour-picker-the-designed-one-everywhere-a (p1, done) settled that the designed picker is used everywhere a colour is chosen. The motion rows are new since then and did not get the memo. Worth checking the same day whether anything else added since that task also reaches for NSColorPanel.",
@@ -27,6 +27,43 @@
     {
       "t": "2026-09-16T12:23:34.419Z",
       "note": "seq 2860 -> 250"
+    },
+    {
+      "t": "2026-09-16T20:29:41.524Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:38:09.130Z",
+      "note": "adversarial review before building: the ask is a regression, not a mock, so the only judgement was how far to go. Grep confirmed the note's suspicion list is empty: the ONLY raw ColorPicker left in Sources/Photonz is ColorPickerEntry's own flag-off fallback (intentional) and the two motion rows. Nothing else added since the p1 picker task reaches for NSColorPanel."
+    },
+    {
+      "t": "2026-09-16T20:38:09.175Z",
+      "note": "shortest version that delivers the value: swap the two ColorPicker wells for ColorWellButton (Sources/Photonz/MotionListInspector.swift), which is the ONE door to the designed picker. That alone brings shades, the document's colours, recents, save-a-style, drag a style tile onto the swatch, and drag a colour off it."
+    },
+    {
+      "t": "2026-09-16T20:38:09.221Z",
+      "note": "...but that alone does not answer the user's actual sentence, which is that the SAVED colours are not offered. Everywhere else they are offered by NAME on a swatchpalette menu beside the well. That menu is built on ColorTarget, which is layer-slot shaped; a motion endpoint is not a slot, and making it one means model work plus a real product question (should a running animation follow Brand and change when Brand is repainted). So the motion rows get the shorter half of that menu: MotionColorStylesMenu lists every saved colour by name and PAINTS it, handing over no name, which is an idiom the app already has words for (\"Copy a color from another style\")."
+    },
+    {
+      "t": "2026-09-16T20:38:09.267Z",
+      "note": "undo and live preview: updateMotion goes through perform, so wiring the picker's onPreview to it would have written one undo step per frame of a hue drag. Added motionValuePreview on EditorState, read by motionRows (swatch + summary follow the hand) and by displayDocument via withPreviewedMotionValue, applied BEFORE moved(toMotionTimeMS:) so the loop plays the colour under the hand. Committed once on release. The stray-preview path is the existing one: DesignedColorPicker.onDisappear calls discardPickerPreview, which now clears it too."
+    },
+    {
+      "t": "2026-09-16T20:38:09.313Z",
+      "note": "readback for the walk: a swatch draws a colour and publishes no words, so each motion colour row carries .panelReadout(hex) inside a .playtestField(\"From\"/\"To\"). A walk reads it as expect field \"From\" reads \"#2D7FF9\"."
+    },
+    {
+      "t": "2026-09-16T20:38:09.358Z",
+      "note": "VERIFIED: swift build clean; Scripts/test.sh green (7759 tests, 621 suites), which includes the suites that decode every walk file, so the new walk parses and its steps are all real steps."
+    },
+    {
+      "t": "2026-09-16T20:38:09.402Z",
+      "note": "NOT VERIFIED: the walk has never been run. The Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true, locked at epoch 1789487066) and a locked screen strips the name off every control, so Scripts/playtest.sh exits 3 with status locked and refuses. Nothing can unlock it. Asked for a sweep (61 pending) so the loop runs motion-colour-picker-walk.json once the screen is unlocked; a failure comes back as a task with the walk name in it."
+    },
+    {
+      "t": "2026-09-16T20:38:09.448Z",
+      "note": "left rough, no task filed: a motion's From/To cannot FOLLOW a saved style, only copy its colour. That is a feature idea rather than a defect, it is in the audit's evaluate list for the user to rule on, and no open task covers it. Doing it needs a ColorTarget case for a motion endpoint plus somewhere in LayerMotion to record the binding."
     }
-  ]
+  ],
+  "started": "2026-09-16T20:29:41.523Z"
 }
