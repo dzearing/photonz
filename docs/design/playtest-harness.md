@@ -48,8 +48,11 @@ points to write a new one.
 
 ## What you get back
 
-Everything lands in the script's `out` folder (default: `out` beside the
-script; a relative path is relative to the script). A script that does not
+Everything lands in the script's `out` folder. A walk that names none gets
+`/tmp/photonz-playtest/<walk name>`: never a folder inside the repository,
+because renders and captures run to megabytes and a default that lands in the
+working copy gets committed by accident. A relative `out` is still relative to
+the script, for the rare walk that wants its pictures beside it. A script that does not
 parse lands there too, with `done.json` naming the step and the field, so a
 typo comes back in a second rather than as a timeout on an empty folder:
 

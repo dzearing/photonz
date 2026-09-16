@@ -61,8 +61,19 @@ public struct PlaytestScript: Sendable, Equatable {
                               steps: steps)
     }
 
-    /// The folder renders and the log land in, resolved against the script's
-    /// own location so a script folder can travel with its output.
+    /// Where a walk writes when it does not say: a folder of its own under
+    /// `/tmp/photonz-playtest`, named after the walk.
+    ///
+    /// This used to be `out` beside the script, which sounds harmless and was
+    /// not: every walk lives inside the repository, so a walk written without
+    /// an `out` quietly dropped its renders, captures and logs into the working
+    /// copy, where `git add -A` sweeps them into a commit. The default a walk
+    /// falls into by silence must land somewhere throwaway.
+    public static let scratchRoot = "/tmp/photonz-playtest"
+
+    /// The folder renders and the log land in. An `out` the walk names itself
+    /// is resolved against the script's own location, so a script folder can
+    /// travel with its output; a walk that names none gets `scratchRoot`.
     public func outputDirectory(besides scriptURL: URL) -> URL {
         Self.outputDirectory(besides: scriptURL, out: out)
     }
@@ -71,19 +82,28 @@ public struct PlaytestScript: Sendable, Equatable {
     ///
     /// A run has to know where to write BEFORE it knows whether the script is
     /// any good, because the report a bad script most needs to leave is the one
-    /// saying why it was bad. Anything unreadable falls back to the default
-    /// folder beside the script rather than throwing: this answers a question
-    /// about a path, not about whether the walk is valid.
+    /// saying why it was bad. Anything unreadable falls back to the scratch
+    /// folder named after the walk rather than throwing: this answers a
+    /// question about a path, not about whether the walk is valid.
     public static func outputDirectory(besides scriptURL: URL, in data: Data) -> URL {
         let top = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         return outputDirectory(besides: scriptURL, out: top?["out"] as? String)
     }
 
     private static func outputDirectory(besides scriptURL: URL, out: String?) -> URL {
-        let folder = scriptURL.deletingLastPathComponent()
-        guard let out, !out.isEmpty else { return folder.appendingPathComponent("out") }
+        guard let out, !out.isEmpty else { return defaultOutputDirectory(for: scriptURL) }
         if out.hasPrefix("/") { return URL(fileURLWithPath: out) }
-        return folder.appendingPathComponent(out).standardizedFileURL
+        return scriptURL.deletingLastPathComponent()
+            .appendingPathComponent(out).standardizedFileURL
+    }
+
+    /// `/tmp/photonz-playtest/<walk name>`. Naming it after the walk rather
+    /// than sharing one `out` keeps two walks run back to back from reading
+    /// each other's pictures.
+    private static func defaultOutputDirectory(for scriptURL: URL) -> URL {
+        let name = scriptURL.deletingPathExtension().lastPathComponent
+        let folder = name.isEmpty ? "walk" : name
+        return URL(fileURLWithPath: scratchRoot).appendingPathComponent(folder)
     }
 }
 

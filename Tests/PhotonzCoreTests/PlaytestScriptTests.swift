@@ -524,16 +524,36 @@ struct PlaytestScriptTests {
         #expect(plain == 1)
     }
 
-    @Test func theOutputFolderDefaultsToOutBesideTheScript() throws {
+    // A walk that says nothing about where to write used to write BESIDE its
+    // own file, and every walk lives in the repo, so the default dropped
+    // megabytes of renders into the working copy where a `git add -A` could
+    // sweep them into a commit. The default is now the scratch folder every
+    // walk already names by hand, under the walk's own name so two walks
+    // running in a row do not read each other's pictures.
+    @Test func theOutputFolderDefaultsToTheScratchFolderNamedAfterTheWalk() throws {
         let beside = try decode("{ \"steps\": [] }")
-        let request = URL(fileURLWithPath: "/tmp/photonz-playtest/walk.json")
-        #expect(beside.outputDirectory(besides: request).path == "/tmp/photonz-playtest/out")
+        let request = URL(fileURLWithPath: "/Users/someone/photonz/Scripts/playtest/panel-walk.json")
+        #expect(beside.outputDirectory(besides: request).path == "/tmp/photonz-playtest/panel-walk")
         let explicit = try decode("{ \"out\": \"/var/tmp/renders\", \"steps\": [] }")
         #expect(explicit.outputDirectory(besides: request).path == "/var/tmp/renders")
         // A relative `out` is relative to the script, so a script folder can
-        // travel with its renders.
+        // travel with its renders. That one is the author's own choice, spelled
+        // out in the file, rather than something a walk falls into by silence.
         let relative = try decode("{ \"out\": \"renders/one\", \"steps\": [] }")
-        #expect(relative.outputDirectory(besides: request).path == "/tmp/photonz-playtest/renders/one")
+        #expect(relative.outputDirectory(besides: request).path
+                == "/Users/someone/photonz/Scripts/playtest/renders/one")
+    }
+
+    // The default never lands inside the repository, whatever the walk is
+    // called or wherever it sits, because that is the whole point of it.
+    @Test func theDefaultOutputFolderIsNeverInsideTheRepository() throws {
+        let script = try decode("{ \"steps\": [] }")
+        for name in ["walk.json", "a.b.walk.json", "no-extension", "Odd Name Walk.json"] {
+            let request = URL(fileURLWithPath: "/Users/someone/photonz/Scripts/playtest/\(name)")
+            let out = script.outputDirectory(besides: request).path
+            #expect(out.hasPrefix("/tmp/photonz-playtest/"), "\(name) resolved to \(out)")
+            #expect(!out.contains("/photonz/Scripts"), "\(name) resolved to \(out)")
+        }
     }
 
     // The unmanned loop reads the app's own menu bar this way. Reading another
@@ -1531,7 +1551,7 @@ struct PlaytestScriptTests {
         #expect(PlaytestScript.outputDirectory(besides: request, in: relative).path
                 == "/tmp/photonz-playtest/renders")
         #expect(PlaytestScript.outputDirectory(besides: request, in: Data("not json".utf8)).path
-                == "/tmp/photonz-playtest/out")
+                == "/tmp/photonz-playtest/walk")
     }
 
     // Actions are written `{ "do": "action", "action": "frameSelection" }`, but

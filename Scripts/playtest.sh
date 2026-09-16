@@ -3,7 +3,8 @@
 # it to finish. The script is a JSON file of steps (open a file, press keys,
 # click, drag, snapshot the window, describe the editor); the harness in the
 # probe build performs them and writes renders, log.json and done.json into
-# the script's `out` folder. Full reference: docs/design/playtest-harness.md.
+# the script's `out` folder, or /tmp/photonz-playtest/<walk name> when the walk
+# names none. Full reference: docs/design/playtest-harness.md.
 #
 #   Scripts/playtest.sh <script.json>             build, run, wait, quit
 #   Scripts/playtest.sh <script.json> --no-build  reuse the built probe
@@ -32,9 +33,14 @@ SCRIPT_ABS="$(cd "$(dirname "$SCRIPT")" && pwd)/$(basename "$SCRIPT")"
 # The harness resolves `out` the same way (PlaytestScript.outputDirectory).
 OUT="$(node -e '
   const path = require("path");
-  const s = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  // A walk too broken to parse still has to be watched somewhere, because the
+  // one report it most needs to leave is the one saying why it was broken.
+  // PlaytestScript.outputDirectory(besides:in:) falls back the same way.
+  let s = {};
+  try { s = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")) || {}; } catch {}
   const dir = path.dirname(process.argv[1]);
-  const out = s.out && s.out.length ? s.out : "out";
+  const name = path.basename(process.argv[1], path.extname(process.argv[1]));
+  const out = s.out && s.out.length ? s.out : "/tmp/photonz-playtest/" + (name || "walk");
   console.log(path.isAbsolute(out) ? out : path.resolve(dir, out));
 ' "$SCRIPT_ABS")"
 mkdir -p "$OUT"
