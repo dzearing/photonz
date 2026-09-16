@@ -185,7 +185,12 @@ struct TutorialCueView: View {
     static let padding: CGFloat = 5
     /// Room for the pulse to expand into, outside the ring.
     static let pulseRoom: CGFloat = 14
-    let cornerRadius: CGFloat
+
+    /// The shape of the CONTROL the ring goes round, taken off the step's
+    /// anchor (`TutorialAnchor.cueShape`). The ring pushes it out by `padding`
+    /// so the two stay concentric: a pill bar gets a pill, a round tool button
+    /// gets a circle, and a run of panel rows keeps its squarer corner.
+    let shape: TutorialCueShape
 
     @State private var pulsing = false
 
@@ -195,18 +200,12 @@ struct TutorialCueView: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Color.accentColor, lineWidth: 2)
-                .background {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .strokeBorder(Color.accentColor.opacity(0.22), lineWidth: 5)
-                }
+            ring(lineWidth: 2, color: .accentColor)
+                .background { ring(lineWidth: 5, color: Color.accentColor.opacity(0.22)) }
             if reduceMotion {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(Color.accentColor.opacity(0.4), lineWidth: 2)
+                ring(lineWidth: 2, color: Color.accentColor.opacity(0.4))
             } else {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                ring(lineWidth: 2, color: .accentColor)
                     .scaleEffect(pulsing ? 1.28 : 1)
                     .opacity(pulsing ? 0 : 0.75)
                     .animation(.easeOut(duration: 1.9).repeatForever(autoreverses: false),
@@ -216,5 +215,25 @@ struct TutorialCueView: View {
         .padding(Self.pulseRoom)
         .allowsHitTesting(false)
         .onAppear { pulsing = true }
+    }
+
+    /// One outline, in the control's own shape. Written as a switch over the
+    /// two concrete shapes rather than through `AnyShape`, because
+    /// `strokeBorder` — the stroke that stays INSIDE the outline, so the ring
+    /// never creeps over the control — is only offered by an insettable shape
+    /// and `AnyShape` is not one.
+    @ViewBuilder
+    private func ring(lineWidth: CGFloat, color: Color) -> some View {
+        switch shape.outset(by: Self.padding) {
+        case .pill:
+            // Plain `Capsule()`, which is `.circular`: the same curve the tool
+            // bar's own glass and the round tool buttons are drawn with. A
+            // continuous capsule here would miss them by a hair, which is the
+            // whole complaint this shape exists to answer.
+            Capsule().strokeBorder(color, lineWidth: lineWidth)
+        case .rounded(let radius):
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(color, lineWidth: lineWidth)
+        }
     }
 }

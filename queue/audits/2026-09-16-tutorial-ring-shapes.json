@@ -1,0 +1,25 @@
+{
+  "feature": "A tutorial's ring takes the shape of the control it is round",
+  "epic": "ui-building",
+  "summary": "The highlight ring a guide draws is no longer always the same rounded box. It now takes the shape of the thing it is round: a pill on the floating tool bar, a circle on a round tool button, and the squarer corner it always had on a run of panel rows.",
+  "setup": "Photonz Dev, release Next. Help menu, Take the Tour. Nothing to switch on.",
+  "try": [
+    { "do": "Open any picture." },
+    { "do": "Choose Help, then Take the Tour." },
+    { "do": "Look at step one: the ring is round the floating tool bar.", "shot": "2026-09-16-tutorial-ring-shapes.png" },
+    { "do": "Press Next and look at step two: the ring is round the Measure button." },
+    { "do": "Press I to pick Measure for real, and look at step three: the ring is round the Layers list." },
+    { "do": "Press Back twice and forward twice, watching the ring change shape as it moves." }
+  ],
+  "evaluate": [
+    "Does the ring round the tool bar now read as the bar itself rather than a box parked over it?",
+    "On the Measure button, is the circle the right distance out, or is it tight enough to look like part of the button?",
+    "Round the Layers list, is the 10pt corner still right, or should a run of panel rows ring squarer than that?",
+    "When a step moves from the bar to a panel section, does the ring changing shape read as one ring moving, or as two different rings?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so macOS would not draw the app and no walk could run: there is no photograph of the real window here. The picture is an offscreen render of the shipping ring code drawn round stand-ins of the three controls, so the shapes are the real ones but the surroundings are not. A sweep has been asked for so the tutorial walks run once the screen is unlocked.",
+    "The tool bar anchor covers the tools capsule AND the small settings capsules beside it, with a gap between them, so one pill rings the pair rather than each. It is much closer than the old box, but on a wide window the ring crosses a gap.",
+    "The ring's distance from the control is still one number for everything (5pt). On the 28pt tool button that reads tight and deliberate; round the whole docked panel it is barely visible against the window edge."
+  ]
+}

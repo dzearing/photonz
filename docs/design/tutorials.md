@@ -246,6 +246,17 @@ Two surfaces, kept apart because they want opposite things from the mouse.
   the mouse completely, so the control under it is pressed exactly as it would
   be with no guide running. This is the mock's `.wt-cue`
   (`docs/design/mocks/shared/components/walkthrough.css`).
+
+  **The ring takes the control's own shape.** Each anchor says which it is
+  (`TutorialAnchor.cueShape`): the floating tool bar and every round button on
+  it are `.pill`, a recording's picture is `.rounded(12)`, and everything else
+  is the barely rounded `.default`. The ring sits `TutorialCueView.padding`
+  outside the control and widens its corners by the same amount
+  (`TutorialCueShape.outset(by:)`), so the two stay concentric instead of the
+  ring's corner tightening as it goes out. There is no round case on purpose: a
+  pill round a control as tall as it is wide IS a circle, which is what the tool
+  buttons get. When a control's corners change, the line in `cueShape` changes
+  with it; nothing at the place the ring is drawn knows about any control.
 - The **card**: the step number, the title, the copy, "n of m", Back, the one
   button, and a close. Its panel takes clicks for its own buttons and never
   takes key focus away from the window you are working in.

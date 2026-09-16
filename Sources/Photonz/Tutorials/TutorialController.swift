@@ -41,6 +41,7 @@ final class TutorialController {
     @ObservationIgnored private var cardPanel: NSPanel?
     @ObservationIgnored private var cuePanel: NSPanel?
     @ObservationIgnored private var cardHost: NSHostingView<TutorialCalloutView>?
+    @ObservationIgnored private var cueHost: NSHostingView<TutorialCueView>?
     @ObservationIgnored private var follow: Timer?
     @ObservationIgnored private var lastAnchorFrame: CGRect?
     @ObservationIgnored private var lastWindowFrame: CGRect?
@@ -246,6 +247,7 @@ final class TutorialController {
         tearDown(&cardPanel)
         tearDown(&cuePanel)
         cardHost = nil
+        cueHost = nil
     }
 
     private func tearDown(_ panel: inout NSPanel?) {
@@ -408,7 +410,7 @@ final class TutorialController {
             return
         }
         placeCallout(anchor: anchor, container: container, window: window, run: run)
-        placeCue(anchor: anchor, window: window)
+        placeCue(anchor: anchor, shape: run.step.anchor.cueShape, window: window)
     }
 
     private func placeCallout(anchor: CGRect, container: CGRect, window: NSWindow,
@@ -480,11 +482,23 @@ final class TutorialController {
         attach(panel, to: window)
     }
 
-    private func placeCue(anchor: CGRect, window: NSWindow) {
+    /// The ring on the control, in the control's OWN shape.
+    ///
+    /// The shape is re-applied on every placement rather than only when the
+    /// panel is built. The ring used to be made once and never touched again,
+    /// which was invisible while every ring was the same rounded rectangle and
+    /// would have left a step that moved from the tool bar to a panel section
+    /// still wearing the pill it was born with.
+    private func placeCue(anchor: CGRect, shape: TutorialCueShape, window: NSWindow) {
         let panel = cuePanel ?? makePanel(ignoresMouse: true)
-        if cuePanel == nil {
-            panel.contentView = NSHostingView(rootView: TutorialCueView(cornerRadius: 10))
-            cuePanel = panel
+        cuePanel = panel
+        let view = TutorialCueView(shape: shape)
+        if let host = cueHost {
+            host.rootView = view
+        } else {
+            let host = NSHostingView(rootView: view)
+            panel.contentView = host
+            cueHost = host
         }
         let room = TutorialCueView.padding + TutorialCueView.pulseRoom
         panel.setFrame(anchor.insetBy(dx: -room, dy: -room), display: true)

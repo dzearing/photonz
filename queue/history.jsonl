@@ -4183,3 +4183,10 @@
 {"t":"2026-09-16T08:17:07.793Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
 {"t":"2026-09-16T08:17:07.836Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
 {"t":"2026-09-16T08:17:07.879Z","ev":"task_note","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn"}
+{"t":"2026-09-16T08:17:30.210Z","ev":"task_done","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn","from":"in_progress","note":"The caption field is now as tall as the draft is laid out while the bubble keeps following the committed text, so the caret on an empty new line is a whole line tall (23.8 of a 23.8 line, was 14.5) and a bare Return still does not resize the pill. Cause was not the guess on the task: the line fragment and its font were right, AppKit was clipping the insertion point at the field's bottom edge. Sources/Photonz/CanvasTextEditing.swift layoutCaptionEditor; expectCaption gained a caretHeight claim (PhotonzCore, tests first) that fails the walk when the fix is reverted. Scripts/test.sh green 7499; caption 12/12, text 17/17, select 10/10. Audit queue/audits/2026-09-16-caption-caret-height.json with two real window captures. Pushed as 0b0542ae."}
+{"t":"2026-09-16T08:18:04.444Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T08:18:04.563Z","ev":"task_started","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d","title":"The ring a guide draws matches the shape it is drawn round","priority":"p2-normal"}
+{"t":"2026-09-16T08:25:25.660Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}
+{"t":"2026-09-16T08:25:25.709Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}
+{"t":"2026-09-16T08:25:29.061Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}
+{"t":"2026-09-16T08:25:29.111Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}

@@ -22,6 +22,47 @@ import Foundation
 // Placement of the callout is its own file (`TutorialCallout.swift`) because it
 // is pure geometry with its own tests.
 
+// MARK: - The outline a ring takes
+
+/// The outline the highlight ring round a control is drawn with.
+///
+/// A guide's ring is only convincing when it reads as the shape of the thing it
+/// is round. Drawn as one fixed rounded rectangle it looked like a box parked
+/// near the control: on the floating tool bar, which is a pill, the ring's
+/// corners cut across the bar's ends.
+///
+/// There is deliberately no round case. A pill's ends are half circles at any
+/// size, so a pill round a control that is as tall as it is wide IS a circle,
+/// and that is what the round tool buttons get. One case fewer is one case
+/// fewer to hang on the wrong control.
+public enum TutorialCueShape: Hashable, Codable, Sendable {
+    /// A pill: straight sides, a half circle at each end.
+    case pill
+    /// A rounded rectangle with the corner radius THE CONTROL ITSELF is drawn
+    /// with. The ring sits a little outside the control, so what gets drawn is
+    /// this radius pushed out by that much (`outset(by:)`), which keeps the two
+    /// concentric instead of leaving a corner that tightens as it goes out.
+    case rounded(CGFloat)
+
+    /// What a control gets when nothing says otherwise: the barely rounded
+    /// corner almost everything in the app is drawn with. Pushed out to where
+    /// the ring lives this is the 10pt corner every ring has had.
+    public static let `default` = TutorialCueShape.rounded(5)
+
+    /// The same shape `distance` further out from the middle.
+    ///
+    /// A corner that is `r` from the middle of its arc is `r + distance` once
+    /// the whole outline moves out by `distance`; a negative distance pulls it
+    /// in, and a corner pulled in past its own radius goes square rather than
+    /// inside out.
+    public func outset(by distance: CGFloat) -> TutorialCueShape {
+        switch self {
+        case .pill: return .pill
+        case .rounded(let radius): return .rounded(max(0, radius + distance))
+        }
+    }
+}
+
 // MARK: - Anchors
 
 /// The name of a place in the app a tutorial step can point at.
@@ -63,7 +104,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// One tool's button in the floating tool bar. Named off the tool, so the
     /// button's words and its tooltip can change freely.
     public static func tool(_ tool: Tool) -> TutorialAnchor {
-        TutorialAnchor("tool.\(tool.rawValue)")
+        TutorialAnchor(Prefix.tool + tool.rawValue)
     }
 
     /// The tool bar slot a whole FAMILY of tools shares: the shapes, the
@@ -77,13 +118,13 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// a tutorial is written for. Found on 2026-09-13 by the walk that drives
     /// that guide, once a missing control started failing the walk.
     public static func toolGroup(_ group: ToolGroup) -> TutorialAnchor {
-        TutorialAnchor("toolGroup.\(group.rawValue)")
+        TutorialAnchor(Prefix.toolGroup + group.rawValue)
     }
 
     /// One section of the docked panel: Layers, Effects, Colour. Named off the
     /// section's id rather than its heading, for the same reason.
     public static func panelSection(_ id: String) -> TutorialAnchor {
-        TutorialAnchor("panel.\(id)")
+        TutorialAnchor(Prefix.panelSection + id)
     }
 
     /// One part of a recording's window: the picture itself, or a control on
@@ -94,7 +135,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// docked panel and no layers, so none of the names above reach anything in
     /// it and these are the only ones a video guide may use.
     public static func video(_ part: VideoPart) -> TutorialAnchor {
-        TutorialAnchor("video.\(part.rawValue)")
+        TutorialAnchor(Prefix.video + part.rawValue)
     }
 
     /// The parts of a recording's window a guide is allowed to point at.
@@ -130,7 +171,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// here. These are the only places in a window where getting a picture IN
     /// is a control rather than a key, which is why a guide can point at them.
     public static func startHere(_ action: String) -> TutorialAnchor {
-        TutorialAnchor("start.\(action)")
+        TutorialAnchor(Prefix.startHere + action)
     }
 
     /// A sheet the app drops over the window, named by what the sheet is FOR
@@ -145,7 +186,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// The name only answers while the sheet is up, which is why a step may
     /// only use one AFTER a step that waited for the sheet to open.
     public static func dialog(_ dialog: Dialog) -> TutorialAnchor {
-        TutorialAnchor("dialog.\(dialog.rawValue)")
+        TutorialAnchor(Prefix.dialog + dialog.rawValue)
     }
 
     /// The sheets a guide is allowed to point at. Short on purpose: each one is
@@ -160,9 +201,63 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// The panel section this anchor names, or nil when it names something
     /// else. What the app reads to scroll a step's target into view.
     public var panelSectionID: String? {
-        let prefix = "panel."
+        part(after: Prefix.panelSection)
+    }
+
+    /// What a family of names starts with. Written down once so the factory
+    /// that builds a name and the reader that takes one apart cannot drift.
+    private enum Prefix {
+        static let tool = "tool."
+        static let toolGroup = "toolGroup."
+        static let panelSection = "panel."
+        static let video = "video."
+        static let startHere = "start."
+        static let dialog = "dialog."
+    }
+
+    private func part(after prefix: String) -> String? {
         guard name.hasPrefix(prefix) else { return nil }
         return String(name.dropFirst(prefix.count))
+    }
+
+    /// The outline a highlight ring round this control should take.
+    ///
+    /// Read off the NAME rather than carried alongside it, so an anchor that
+    /// came back off disk and one the app just built are the same value in
+    /// every way, and a step written down last month rings today's control.
+    ///
+    /// This is the one place that knows how the app draws each of these, and it
+    /// is here rather than at the place the ring is drawn because the ring is
+    /// drawn once for every anchor there is. When a control's own corners
+    /// change, this line changes with it.
+    public var cueShape: TutorialCueShape {
+        // The bar is a glass pill, and so is every round button on it: a pill
+        // round a button as tall as it is wide comes out a circle.
+        if name == Self.toolBar.name { return .pill }
+        if part(after: Prefix.tool) != nil || part(after: Prefix.toolGroup) != nil {
+            return .pill
+        }
+        if let part = part(after: Prefix.video).flatMap(VideoPart.init(rawValue:)) {
+            switch part {
+            // The round buttons on a recording's floating controller, and the
+            // transport, which is a row of them.
+            case .transport, .trim, .save, .copy, .export: return .pill
+            // The recording itself, drawn with the same 12pt corner the window
+            // clips it to.
+            case .preview: return .rounded(12)
+            // The clip with a handle at each end, and the button that keeps
+            // what is between them: both plain rounded controls.
+            case .timeline, .trimDone: return .rounded(6)
+            }
+        }
+        // A row of the empty window's card, and a sheet over the middle of the
+        // window: both carry a corner of their own.
+        if part(after: Prefix.startHere) != nil { return .rounded(8) }
+        if part(after: Prefix.dialog) != nil { return .rounded(12) }
+        // Everything left is a surface or a run of rows with square corners:
+        // the canvas, the docked panel and its sections, the title bar, the
+        // timing strip. They keep the barely rounded ring they have always had.
+        return .default
     }
 
     /// The panel sections a guide is allowed to name. Kept here rather than

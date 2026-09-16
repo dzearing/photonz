@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 390,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T17:32:07.933Z",
-  "updated": "2026-09-16T08:17:07.878Z",
+  "updated": "2026-09-16T08:17:30.209Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CAUSE (the guess in the original note was wrong, kept here so nobody re-runs it): the extra line fragment was NOT losing the caption font. Measured in the probe, the fragment is 16.0 view points, the same as the line above it, and both the typing attributes and the newline character carry .SFNS-Regular at 13.43, which is the 20pt caption face at the walk's 0.6715 zoom. The CARET rect was the thing being cut: AppKit clips an insertion point at the text view's bottom edge, and the caption field's frame is the BUBBLE, which follows the committed text, which trims a trailing Return. So the line the caret waits on hangs below the field and only the part inside it was drawn (9.741 of 16 view points, 14.5 of 23.8 document points).\n\nFIX: Sources/Photonz/CanvasTextEditing.swift layoutCaptionEditor now sizes the FIELD to the laid-out draft (draftHeight: usedRect or the extra line fragment, plus the pill's padding) while the pill view and the published captionDraftPillRect keep following the committed text. The field paints nothing of its own in a caption session so the extra height is invisible. playtestCaptionGeometry reports the pill rect as `bubble` now, not the editor frame, and carries `lineHeight`. Guarded by a new expectCaption claim, \"caretHeight\": \"full\" | \"short\".",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-16T08:17:07.877Z",
       "note": "left rough, not filed: on an empty new line about the bottom half of the caret now hangs below the bubble's edge, because the bubble is deliberately not allowed to grow for a Return with nothing on it. That is the trade the acceptance asks for and it cannot be photographed (the probe window is never the active app, so macOS never blinks an insertion point in it), so rather than file a task on my own judgement it is the second question in the audit for the user to react to. Also left rough: the taller field extends the invisible click target a few points below the pill while a trailing Return is pending, so a click there moves the caret instead of committing."
+    },
+    {
+      "t": "2026-09-16T08:17:30.207Z",
+      "note": "The caption field is now as tall as the draft is laid out while the bubble keeps following the committed text, so the caret on an empty new line is a whole line tall (23.8 of a 23.8 line, was 14.5) and a bare Return still does not resize the pill. Cause was not the guess on the task: the line fragment and its font were right, AppKit was clipping the insertion point at the field's bottom edge. Sources/Photonz/CanvasTextEditing.swift layoutCaptionEditor; expectCaption gained a caretHeight claim (PhotonzCore, tests first) that fails the walk when the fix is reverted. Scripts/test.sh green 7499; caption 12/12, text 17/17, select 10/10. Audit queue/audits/2026-09-16-caption-caret-height.json with two real window captures. Pushed as 0b0542ae."
     }
   ],
-  "started": "2026-09-16T07:55:27.620Z"
+  "started": "2026-09-16T07:55:27.620Z",
+  "completed": "2026-09-16T08:17:30.208Z"
 }
