@@ -122,24 +122,32 @@ struct PanelSectionsList: View {
 
     @ViewBuilder private func line(_ section: InspectorSectionID,
                                   _ row: PanelSectionVisibility.Row) -> some View {
+        // The words and the switch are laid out side by side rather than as a
+        // Toggle's own label, because a switch sizes itself to its label and
+        // these labels are not the same height: "Automatic" is one line and
+        // "Automatic, not needed in this document yet" wraps onto two. Inside a
+        // Toggle that put Motion's and Arrange's switches half way across the
+        // row while everybody else's sat at the right edge, which a capture of
+        // the list on 2026-09-16 shows plainly. Held apart by a Spacer, every
+        // switch lands in the same column whatever its row says.
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Toggle(isOn: Binding(
+            VStack(alignment: .leading, spacing: 0) {
+                Text(section.title)
+                    .font(.callout)
+                Text(Self.reason(row.reason))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer(minLength: 8)
+            Toggle(section.title, isOn: Binding(
                 get: { row.isShown },
                 set: { store.set(section, shown: $0) }
-            )) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(section.title)
-                        .font(.callout)
-                    Text(Self.reason(row.reason))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
+            ))
+            .labelsHidden()
             .toggleStyle(.switch)
             .controlSize(.mini)
             .playtestControl("\(section.title) section switch",
                              detail: "shows or hides that section of the panel")
-            Spacer(minLength: 0)
             // Only a row you have answered for offers the way back, because
             // only that row has anything to go back to.
             if store.choices.isCustom(row.section) {

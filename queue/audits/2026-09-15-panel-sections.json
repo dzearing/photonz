@@ -1,30 +1,29 @@
 {
-  "feature": "The panel shows the sections that matter, and you can say which",
+  "feature": "The Sections row: choosing which parts of the panel you get",
   "epic": "ui-building",
-  "summary": "The right hand panel now has a Sections row at its foot. It lists every section that answers for a job rather than for every layer, and you can turn any of them off for good or pin any of them on. Left alone, each follows one written rule, and that rule is only ever allowed to read what the document holds and what you asked for, never what you have picked, so the panel holds still as you click around.",
-  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"The panel shows the sections that matter\" (next-panel-sections), on by default. Open any document.",
+  "summary": "The right hand panel now has a Sections row at its foot that opens a list of the sections you are allowed to say no to, and the panel has been photographed and measured for the first time. Turning Motion off saves 81 points of panel, which is a real number and a smaller one than the feature's own claim implies.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Window 1280x900, which gives the panel a scrolling area 841 points tall.",
   "try": [
-    { "do": "Pick a shape on the canvas and look at the very bottom of the right hand panel. It reads Sections." },
-    { "do": "Press Sections." },
-    { "do": "Read the word under each name: it says whether that section is there automatically, hidden automatically, or set by you." },
-    { "do": "Turn Motion off." },
-    { "do": "Press Escape and look at the foot of the panel again: it now reads Sections · 1 hidden." },
-    { "do": "Quit Photonz, reopen it, pick a shape: Motion is still gone." },
-    { "do": "Press Sections, then Use Automatic For All: Motion is back and the panel is the height it was." },
-    { "do": "Choose View ▸ Show Library and watch the Library section arrive, then turn it off in the Sections list and watch it go even though the shelf is still asked for." }
+    { "do": "Draw a rectangle and click it with the Select tool.", "shot": "2026-09-16-panel-sections-1-shape-automatic.png" },
+    { "do": "Read the row at the very foot of the panel. It says \"Sections · 5 hidden\" before you have hidden anything." },
+    { "do": "Click that row to open the list.", "shot": "2026-09-16-panel-sections-2-sections-list.png" },
+    { "do": "Turn the Motion switch off.", "shot": "2026-09-16-panel-sections-3-motion-off.png" },
+    { "do": "Click the Sections row again to close the list, and look at how much shorter the panel got." },
+    { "do": "Open the list again and press Use Automatic For All. Motion comes back." },
+    { "do": "Type some text, click it, and see the panel grow past the bottom of the window." }
   ],
   "evaluate": [
-    "Is the Sections row quiet enough at the foot of the panel, or does it read as one more thing competing with the settings above it?",
-    "Is \"Sections · 1 hidden\" the right thing for it to say, or would you rather it always named a count, or never did?",
-    "The word under each name (Automatic, not needed in this document yet) is there so you can tell a section you hid from one the document has nothing for. Does it earn its line, or is the list better as plain names?",
-    "Nine sections are offered. Is that the right set? Would you rather be able to turn off Appearance or Effects too, or is it right that those can never go?",
-    "Motion still arrives on every picked layer, because the plus on its header is the only way to make a first motion. Is turning it off once by hand good enough, or should a document with nothing animated in it not offer it at all?"
+    "Turning Motion off saves 81 points out of a panel that is 552 points tall for a plain box in an 841 point space. It was not scrolling before and it is not scrolling now. Is 81 points worth a control at the foot of the panel?",
+    "With a piece of text picked the panel is 1046 points in an 841 point space, and with Motion off it is 965. Still scrolling. Is the feature aimed at the wrong thing, given that the sections that actually cost room are Effects and Layout rather than Motion?",
+    "The row says \"5 hidden\" in a brand new document where you have hidden nothing. Those five are sections the automatic rule left out because the document has no measurement, no component and no layout yet. Should the count only ever mean sections YOU turned off?",
+    "The list says the difference in words under each name (\"Automatic, not needed in this document yet\" against \"Always hidden\"), but the row's count does not. Is the word in the list enough, or does the count have to agree with it?",
+    "Does the foot of the panel feel like the right home for this, or would you look for it in a menu?"
   ],
   "rough": [
-    "NO PICTURES AND NO MEASURED HEIGHTS IN THIS AUDIT. The Mac's screen was locked for the whole of this task, so macOS was not drawing the app at all: every walk refused to run and reported status locked rather than passing or failing, and screen capture is refused outright in that state. The walk that takes the pictures and reads the dock's heights back exists and parses (Scripts/playtest/panel-sections-walk.json, six stages); it has never been executed. A sweep has been requested so the loop runs it once the screen is unlocked.",
-    "So acceptance item 6, the panel being measurably shorter in points for a shape, a piece of text and a component copy, is NOT verified. The walk reads dockSections at stage 1 (everything automatic) and stage 3 (Motion turned off) for exactly that comparison, and neither number exists yet.",
-    "The automatic half of this saves very little on its own, and it would be dishonest to sell it otherwise. The panel was already selection-driven: Measurements only ever showed when the document held a measurement, Component only when a component was involved. Writing those down as one rule is worth doing, but it moves few points. The value is that you can now say \"I never want Layout\" and mean it.",
-    "Motion was nearly the big win here and was deliberately left alone. It arrives on every picked layer and costs about 130 points, so gating it on the document already moving looked obvious, until the bootstrap: the plus on the Motion section's own header is how the first motion is made, and the timing strip does not exist until something moves. Hiding the section would have left nothing in the window that could start an animation. That is written down in docs/design/panel-sections.md rather than left as a silent choice.",
-    "Turning a section off is per section and forever. There is no named preset yet, which is what the modes task is for: a mode will be a named set of these same answers and must not grow a second mechanism."
+    "The Mac's screen has been locked since 2026-09-15 08:44, so a walk refuses to run. These five pictures ARE real captures of the window, taken by forcing the run with PHOTONZ_ALLOW_LOCKED_WALK=1 after confirming the camera still works on a locked Mac. The picture is real; the walk is not an official pass.",
+    "The count on the row is wrong in spirit: \"5 hidden\" the moment you open a new document, when the whole point of printing a count was to be the one cue that something is missing. A cue that is always on says nothing. Written up as its own question above rather than changed, because which of the two meanings it should carry is a call for the user, not for the loop.",
+    "The switches in the list did not line up: Motion's and Arrange's sat half way across the row because their one line of small print made the switch shrink to fit, while everybody else's sat at the right edge. Fixed in this task, and the second picture is the fixed version.",
+    "The walk written for this feature had never run, and two things in it were wrong. It committed a piece of text with Escape, which throws the text away, so the stage that was meant to prove a Text section arrives proved nothing. And it closed the Sections list with Escape, which in a scripted run reaches the canvas and clears the selection while the list stays open. Both fixed.",
+    "Whether Escape closes this list for a person at the keyboard is still unknown. A walk posts keys at the editor window and this list lives in a window of its own, so the walk cannot tell. Filed as a question to look into rather than as a bug."
   ]
 }
