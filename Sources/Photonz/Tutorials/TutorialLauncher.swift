@@ -11,9 +11,16 @@ import SwiftUI
 /// window you are already in, and says so in its first step.
 @MainActor
 enum TutorialLauncher {
-    /// Windows a guide has opened, so picking the same tutorial twice comes
-    /// back to the one already on screen rather than piling up windows.
-    private static var windows: [String: EditorWindowID] = [:]
+    /// Windows a guide has opened, keyed by the SAMPLE they hold rather than by
+    /// the guide that opened them.
+    ///
+    /// By the guide, working a track back to back left one window per guide:
+    /// five identical windows all called Tutorial Sample after the five
+    /// Redlining guides, and every one of them a made up screen nobody asked
+    /// for. The sample is what a window really holds, and guides on a track
+    /// deliberately share theirs, so keying on it means the track teaches in
+    /// ONE window that carries on from where the last guide left it.
+    private static var windows: [TutorialSample: EditorWindowID] = [:]
 
     static func start(_ guide: TutorialGuide, coordinator: AppCoordinator,
                       editor: EditorState?) {
@@ -24,24 +31,34 @@ enum TutorialLauncher {
             startInRecording(guide, coordinator: coordinator)
             return
         }
-        guard guide.sample != nil else {
+        guard let sample = guide.sample else {
             guard let editor else { return }
             TutorialController.shared.start(guide, in: editor)
             return
         }
-        let id = windows[guide.id] ?? .tutorial(UUID(), guide.id)
-        windows[guide.id] = id
+        let id = windows[sample] ?? .tutorial(UUID(), guide.id)
+        windows[sample] = id
         coordinator.openWindow(id)
         // A brand new window starts the guide itself as it seeds its sample
         // (`ImageEditorRootView`). Re-opening a window that is ALREADY on
         // screen only focuses it, and nothing seeds, so the guide has to be
-        // restarted from here. Either way it picks up the saved place.
+        // restarted from here. That is also the whole of how a track carries
+        // on in one window: the second guide finds the first one's window
+        // standing and teaches in it. Either way it picks up the saved place.
         DispatchQueue.main.async {
             guard !TutorialController.shared.isRunning,
-                  let open = TutorialController.shared.lastEditor(forGuide: guide.id),
-                  open.hostWindow?.isVisible == true
+                  let open = editorHolding(sample)
             else { return }
             TutorialController.shared.start(guide, in: open)
+        }
+    }
+
+    /// The open window already holding this sample, if there is one. Swept on
+    /// every read like every other registry here.
+    private static func editorHolding(_ sample: TutorialSample) -> EditorState? {
+        editors.removeAll { $0.value == nil }
+        return editors.compactMap(\.value).first {
+            $0.tutorialSample == sample && $0.hostWindow?.isVisible == true
         }
     }
 

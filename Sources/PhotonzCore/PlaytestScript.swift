@@ -420,6 +420,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// "picking the Measure tool really moved the guide on" is a step the walk
     /// fails on rather than a claim in a report.
     case tutorialStep(String)
+    /// A guide has FINISHED and the card it ends on is up, named by the guide's
+    /// id. What a walk waits on before photographing the moment a guide ends,
+    /// which used to be a moment nothing could describe: the callout simply
+    /// vanished (`TutorialFinish`).
+    case tutorialFinished(String)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -467,6 +472,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the walk is already driving, so the walk can press real controls with
     /// real coordinates and prove a waiting step advances on the thing itself.
     case startTour, startTourHere, tutorialNext, tutorialBack, tutorialClose
+    /// The rows on the card a guide ENDS on (`TutorialFinish`): carry on with
+    /// the track, leave the practice picture for an empty window of your own,
+    /// or go to the list of every guide. Pressed by what the row does rather
+    /// than by the words on it, so rewording the card never breaks a walk.
+    case tutorialFinishNext, tutorialFinishStartYourOwn, tutorialFinishMoreGuides
     /// Open (or close) the Tutorials window, the hub every guide is listed in.
     /// It is an ordinary app window, so a walk photographs it by name:
     /// `{ "do": "snapshot", "name": "hub", "window": "Tutorials" }`.
@@ -506,7 +516,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// answered without one.
     public var drivesGuide: Bool {
         switch self {
-        case .tutorialNext, .tutorialBack, .tutorialClose: true
+        case .tutorialNext, .tutorialBack, .tutorialClose,
+             .tutorialFinishNext, .tutorialFinishStartYourOwn, .tutorialFinishMoreGuides: true
         default: false
         }
     }
@@ -1677,6 +1688,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// How many editor WINDOWS carrying this title are open right now.
+    ///
+    /// The one claim about the app that is not about anything inside a window,
+    /// and the only way a walk can hold the guides to leaving at most one
+    /// practice window behind. Working a track back to back used to open a
+    /// window per guide, five of them all called Tutorial Sample, and no
+    /// screenshot of any one of those windows could show it: each one looked
+    /// exactly right (`TutorialLauncher`). Panels do not count, so a callout or
+    /// a tooltip floating over a window is never mistaken for one.
+    case expectWindows(titled: String, count: Int)
     /// Where a measurement's ends are right now, and what it reads.
     ///
     /// A picture cannot settle this. The feet are two dots a few points across
@@ -2002,7 +2023,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2054,6 +2075,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectWindows: "expectWindows"
         case .expectFeet: "expectFeet"
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
@@ -2195,7 +2217,8 @@ public enum PlaytestStep: Sendable, Equatable {
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
             case "layerRowInView": .layerRowInView(try f.string("value"))
             case "tutorialStep": .tutorialStep(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, layerRowInView or tutorialStep")
+            case "tutorialFinished": .tutorialFinished(try f.string("value"))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, layerRowInView, tutorialStep or tutorialFinished")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":
@@ -2466,6 +2489,16 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectWindows":
+            let titled = try f.string("titled")
+            guard fields["count"] != nil else {
+                throw f.invalid("count", "expectWindows has to say how many windows with that title must be open; 1 is the usual claim and 0 says there should be none left")
+            }
+            let howMany = try f.number("count")
+            guard howMany >= 0, howMany == howMany.rounded() else {
+                throw f.invalid("count", "a count of windows is a whole number, zero or more, not \(howMany)")
+            }
+            self = .expectWindows(titled: titled, count: Int(howMany))
         case "expectFeet":
             let start = fields["start"] == nil ? nil : try f.point("start")
             let end = fields["end"] == nil ? nil : try f.point("end")

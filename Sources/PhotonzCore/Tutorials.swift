@@ -645,6 +645,16 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// a guide is started.
     public var isVideo: Bool { self == .sampleRecording }
 
+    /// Whether this sample fills its window with something made up.
+    ///
+    /// An empty window IS a sample, and a real one: it is the only state that
+    /// shows the card offering the ways to get a picture in. But it is already
+    /// somewhere you can start work, so a guide taught in one has nothing to
+    /// move anybody on from, and calling what is on screen practice would be
+    /// calling an empty window practice. Every other sample is a drawing or a
+    /// recording somebody did not ask for (`TutorialFinish`).
+    public var isMadeUpPicture: Bool { self != .emptyWindow }
+
     /// Whether this sample's drawing is baked into the picture before the
     /// window opens. A guide that measures needs this; a guide about layers
     /// needs the opposite.

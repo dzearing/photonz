@@ -30,6 +30,15 @@ final class TutorialController {
     /// Where the person is, or nil when no guide is running.
     private(set) var run: TutorialRun?
 
+    /// The card a finished guide leaves behind, or nil.
+    ///
+    /// A guide used to end by vanishing: the callout disappeared on Done and
+    /// whoever had just been shown round was left alone in the little made up
+    /// picture it had opened to teach in, with nothing saying what to do next.
+    /// So the last press swaps the step card for this one, in the same plate,
+    /// in the middle of the guide's own window (`TutorialFinish`).
+    private(set) var finished: TutorialFinish?
+
     /// What they have finished, and where they stopped in anything they left
     /// part way. Written on every step, so quitting mid guide loses nothing.
     private(set) var progress: TutorialProgress
@@ -40,7 +49,7 @@ final class TutorialController {
     @ObservationIgnored private weak var host: (any TutorialHost)?
     @ObservationIgnored private var cardPanel: NSPanel?
     @ObservationIgnored private var cuePanel: NSPanel?
-    @ObservationIgnored private var cardHost: NSHostingView<TutorialCalloutView>?
+    @ObservationIgnored private var cardHost: NSHostingView<AnyView>?
     @ObservationIgnored private var cueHost: NSHostingView<TutorialCueView>?
     @ObservationIgnored private var follow: Timer?
     @ObservationIgnored private var lastAnchorFrame: CGRect?
@@ -93,15 +102,6 @@ final class TutorialController {
             lastTick = now
         }
     }
-    /// The window each guide last ran in, so picking the same tutorial again
-    /// comes back to the window already holding its sample.
-    @ObservationIgnored private var hostsByGuide: [String: WeakHost] = [:]
-
-    private final class WeakHost {
-        weak var value: (any TutorialHost)?
-        init(_ value: any TutorialHost) { self.value = value }
-    }
-
     /// Where progress is written. Not private: a walk that photographs the
     /// Tutorials window forgets this key first, and it reads the name off here
     /// rather than spelling it again.
@@ -120,6 +120,10 @@ final class TutorialController {
 
     var isRunning: Bool { run != nil }
 
+    /// Whether anything of the guide is still on screen, a running step or the
+    /// card it ended on. What decides whether the panels are drawn at all.
+    private var isShowing: Bool { run != nil || finished != nil }
+
     /// The guide running right now, for a menu that wants to say so.
     var runningGuideID: String? { run?.guide.id }
 
@@ -127,7 +131,7 @@ final class TutorialController {
     /// render of that window can include them. Same hook the tooltip offers,
     /// for the same reason.
     func panels(over window: NSWindow?) -> [NSPanel] {
-        guard let window, run != nil else { return [] }
+        guard let window, isShowing else { return [] }
         return [cuePanel, cardPanel].compactMap { $0 }
             .filter { $0.isVisible && $0.parent === window }
     }
@@ -137,6 +141,11 @@ final class TutorialController {
     /// guide is running. This is what lets a walk FAIL on a callout pointing at
     /// nothing instead of a person noticing it in a picture later.
     func liveDescription(in window: NSWindow?) -> String {
+        if let finished {
+            return "finished \(finished.guideID); card \"\(finished.title)\" offering "
+                + finished.choices.map(\.name).joined(separator: ", ")
+                + (cardPanel?.isVisible == true ? "" : "; CARD NOT UP")
+        }
         guard let run else { return "none" }
         let anchor = run.step.anchor
         // Through the stand-in chain, the same way the ring is placed, and it
@@ -199,14 +208,6 @@ final class TutorialController {
         anchorVerdicts = []
     }
 
-    /// The window a guide last ran in, while it is still around.
-    func lastHost(forGuide id: String) -> (any TutorialHost)? { hostsByGuide[id]?.value }
-
-    /// The same, when the caller needs the picture editor in particular.
-    func lastEditor(forGuide id: String) -> EditorState? {
-        hostsByGuide[id]?.value as? EditorState
-    }
-
     // MARK: - Starting and stopping
 
     /// Runs `guide` over `host`. Picks up where the person left off if they
@@ -214,7 +215,6 @@ final class TutorialController {
     func start(_ guide: TutorialGuide, in host: any TutorialHost) {
         stop(remembering: true)
         self.host = host
-        hostsByGuide[guide.id] = WeakHost(host)
         host.tutorialRunning(true)
         run = TutorialRun(guide: guide, startingAt: progress.startIndex(for: guide))
         beginStep()
@@ -233,16 +233,91 @@ final class TutorialController {
         stop(remembering: true)
     }
 
+    /// The last step's Done. The guide is over, but the person is not: the
+    /// step card is swapped for the finish card and the window it was teaching
+    /// in is kept, so there is something on screen saying what just happened
+    /// and where to go (`TutorialFinish`).
     private func finish() {
-        if let guide = run?.guide {
-            progress.complete(guide.id)
-            saveProgress()
+        guard let guide = run?.guide, let host else {
+            stop(remembering: false)
+            return
         }
+        progress.complete(guide.id)
+        saveProgress()
+        closeStepVerdict()
+        run = nil
+        finished = TutorialFinish.make(after: guide, offered: TutorialLauncher.offered,
+                                       inSampleWindow: host.isTutorialSampleWindow)
+        // The ring belonged to a step, and there is no step now.
+        tearDown(&cuePanel)
+        cueHost = nil
+        revealTries = 0
+        lastAnchorFrame = nil
+        lastWindowFrame = nil
+        drawnStepID = nil
+        drawnStandIn = nil
+        place()
+    }
+
+    // MARK: - What a finished guide offers
+
+    /// The person pressed one of the rows on the finish card.
+    func choose(_ choice: TutorialFinishChoice) {
+        guard finished != nil else { return }
+        switch choice {
+        case .nextGuide(let id, _):
+            guard let guide = TutorialCatalog.guide(id: id),
+                  let coordinator = AppDelegate.coordinator else { return }
+            // Straight into the next one. `start` closes this card itself, and
+            // a guide sharing this guide's sample carries on in this very
+            // window rather than opening a second one (`TutorialLauncher`).
+            TutorialLauncher.start(guide, coordinator: coordinator,
+                                   editor: host as? EditorState)
+        case .startYourOwn:
+            startYourOwn()
+        case .moreGuides:
+            let coordinator = AppDelegate.coordinator
+            dismissFinish()
+            coordinator?.showTutorials()
+        }
+    }
+
+    /// Leave the practice picture behind for an empty window, which is the one
+    /// place in the app where every way of getting a picture in is a row you
+    /// can press rather than a key you have to already know.
+    ///
+    /// The new window is opened FIRST and the sample closed after, so the
+    /// person is never looking at an empty screen in between, and the sample is
+    /// only closed when closing it would lose nothing. A practice picture
+    /// somebody has drawn on is still something they made, and throwing it away
+    /// on their behalf, or asking them to save "Tutorial Sample" in a sheet
+    /// they did not go looking for, are both worse than one extra window.
+    private func startYourOwn() {
+        let sample = host?.isTutorialSampleWindow == true ? hostWindow : nil
+        dismissFinish()
+        AppDelegate.coordinator?.newDocumentWindow()
+        guard let sample, !sample.isDocumentEdited else { return }
+        // One turn later, so the empty window asked for above has arrived
+        // before this one leaves. Closing first would take the app down to no
+        // windows for a beat, and an app with no windows hands focus to
+        // whatever was behind it (`AppCoordinator.editorWindowWillClose`).
+        DispatchQueue.main.async {
+            // Through the window's own close, not straight past it: if
+            // anything still thinks there is something in there worth keeping,
+            // the person gets asked rather than losing it.
+            sample.performClose(nil)
+        }
+    }
+
+    /// Take the finish card down and leave the window as it is.
+    func dismissFinish() {
+        guard finished != nil else { return }
         stop(remembering: false)
     }
 
     private func stop(remembering: Bool) {
         closeStepVerdict()
+        finished = nil
         if remembering, let run {
             progress.record(guide: run.guide.id, step: run.index)
             saveProgress()
@@ -355,8 +430,13 @@ final class TutorialController {
     private var hostWindow: NSWindow? { host?.tutorialWindow }
 
     private func place() {
-        guard let run, let window = hostWindow else { return }
+        guard let window = hostWindow else { return }
         watchForClose(window)
+        if let finished {
+            placeFinish(finished, in: window)
+            return
+        }
+        guard let run else { return }
         if revealTries > 0 {
             revealTries -= 1
             if run.step.prepare.contains(.revealTarget) {
@@ -497,6 +577,31 @@ final class TutorialController {
              at: TutorialGeometry.flip(frame, in: container), in: window)
     }
 
+    /// The finish card, in the middle of the window the guide taught in. No
+    /// beak and no ring: it is not about a control, it is about the guide being
+    /// over.
+    private func placeFinish(_ finish: TutorialFinish, in window: NSWindow) {
+        guard !window.isMiniaturized, window.occlusionState.contains(.visible) else {
+            cardPanel?.orderOut(nil)
+            lastWindowFrame = nil
+            return
+        }
+        let container = window.frame
+        // Nothing moved and the card is up: leave it alone, the same shortcut a
+        // still step takes, so a still window is a still card.
+        if container == lastWindowFrame, cardPanel?.isVisible == true { return }
+        lastWindowFrame = container
+        let view = AnyView(TutorialFinishCardView(
+            finish: finish,
+            onChoose: { [weak self] in self?.choose($0) },
+            onClose: { [weak self] in self?.dismissFinish() }))
+        let size = CGSize(width: TutorialCalloutView.width, height: measuredHeight(of: view))
+        let frame = CGRect(x: container.midX - size.width / 2,
+                           y: container.midY - size.height / 2,
+                           width: size.width, height: size.height)
+        show(view, at: frame, in: window)
+    }
+
     private func placeCentred(in container: CGRect, window: NSWindow) {
         guard let run else { return }
         let size = CGSize(width: TutorialCalloutView.width, height: measuredCardHeight(run))
@@ -529,7 +634,18 @@ final class TutorialController {
         return max(80, fitted - TutorialCalloutView.beakHeight)
     }
 
+    /// The same measurement for a card that has no beak to take back out.
+    private func measuredHeight(of view: AnyView) -> CGFloat {
+        let probe = NSHostingView(rootView: view)
+        probe.frame.size.width = TutorialCalloutView.width
+        return max(80, probe.fittingSize.height)
+    }
+
     private func show(_ view: TutorialCalloutView, at frame: CGRect, in window: NSWindow) {
+        show(AnyView(view), at: frame, in: window)
+    }
+
+    private func show(_ view: AnyView, at frame: CGRect, in window: NSWindow) {
         let panel = cardPanel ?? makePanel(ignoresMouse: false)
         cardPanel = panel
         if let host = cardHost {

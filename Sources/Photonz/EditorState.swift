@@ -995,6 +995,11 @@ final class EditorState {
             }
         case .tutorial(_, let guideID):
             untitledName = TutorialSampleScreen.documentName
+            tutorialSample = TutorialCatalog.guide(id: guideID)?.sample
+            // A guide started from the Tutorials window has to be able to find
+            // the window already holding its sample, and an empty-window sample
+            // never gets a canvas, so nothing else would announce this one.
+            TutorialLauncher.register(self)
             openTutorialSample(for: guideID)
             #if PHOTONZ_PLAYTEST
             // A walk that starts a guide has to be able to take over the window
@@ -1005,6 +1010,13 @@ final class EditorState {
             break // routed to the video editor (VideoEditorState), never here
         }
     }
+
+    /// The sample this window was opened to hold, when a guide opened it.
+    /// Nil for every window somebody opened for themselves, which is what
+    /// makes it safe for a finished guide to offer to close this one and how a
+    /// second guide on the same track finds the window already holding its
+    /// sample rather than opening another (`TutorialFinish`).
+    private(set) var tutorialSample: TutorialSample?
 
     /// The picture a guide brings with it. A tutorial must never edit what you
     /// already have open, so it opens a window of its own holding a small made

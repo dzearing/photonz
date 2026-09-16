@@ -1856,6 +1856,75 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectMeasures"))
     }
 
+    // Working a whole track back to back used to open a window per guide, five
+    // of them all called Tutorial Sample, and no screenshot of any one of them
+    // could show it: each window looked exactly right. `expectWindows` is the
+    // step that counts them.
+    @Test("An expectWindows step says how many windows with that title must be open")
+    func expectWindowsNamesTheCount() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWindows", "titled": "Tutorial Sample", "count": 1 } ] }
+        """)
+        guard case .expectWindows(let titled, let count) = script.steps[0] else {
+            Issue.record("expectWindows"); return
+        }
+        #expect(titled == "Tutorial Sample")
+        #expect(count == 1)
+        #expect(script.steps[0].name == "expectWindows")
+        #expect(PlaytestStep.names.contains("expectWindows"))
+    }
+
+    @Test("expectWindows takes zero, which is how a walk claims a window went away")
+    func expectWindowsTakesZero() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWindows", "titled": "Tutorial Sample", "count": 0 } ] }
+        """)
+        guard case .expectWindows(_, let count) = script.steps[0] else {
+            Issue.record("expectWindows"); return
+        }
+        #expect(count == 0)
+    }
+
+    @Test("expectWindows has to say how many")
+    func expectWindowsNeedsACount() throws {
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectWindows", "titled": "Tutorial Sample" } ] }
+            """)
+        }
+    }
+
+    // The moment a guide ENDS used to be a moment nothing could describe: the
+    // callout simply vanished, so a walk had nothing to wait on and nothing to
+    // photograph.
+    @Test("A walk can wait for a guide to have finished, and press the card it ends on")
+    func aWalkCanDriveTheEndOfAGuide() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "waitFor", "condition": "tutorialFinished", "value": "take-the-tour" },
+            { "do": "action", "action": "tutorialFinishNext" },
+            { "do": "action", "action": "tutorialFinishStartYourOwn" },
+            { "do": "action", "action": "tutorialFinishMoreGuides" }
+        ] }
+        """)
+        guard case .waitFor(let condition, _) = script.steps[0],
+              case .tutorialFinished(let guideID) = condition else {
+            Issue.record("tutorialFinished"); return
+        }
+        #expect(guideID == "take-the-tour")
+        for (index, action) in [PlaytestAction.tutorialFinishNext,
+                                .tutorialFinishStartYourOwn,
+                                .tutorialFinishMoreGuides].enumerated() {
+            guard case .action(let found) = script.steps[index + 1] else {
+                Issue.record("action \(action.rawValue)"); return
+            }
+            #expect(found == action)
+            // Each one presses the card rather than a window, so a walk in a
+            // recording's window can press them with no editor to ask.
+            #expect(found.drivesGuide)
+        }
+    }
+
     // A command that makes a HUNDRED layers cannot be checked by naming rows:
     // the panel only renders the handful you can see, so a walk asking for
     // "Text 100" is told it is not there when it is. `expectLayers` asks the

@@ -41,7 +41,15 @@
     { "do": "snapshot", "name": "4-the-gap-is-measured" },
 
     { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialFinished", "value": "measure-a-gap", "timeout": 6 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5-finished", "note": "Done closed the guide and left the measured sample alone" }
+    { "do": "describe", "stage": "5-finished", "note": "Done ends the guide on its card rather than on nothing" },
+    { "do": "snapshot", "name": "5-the-finish-card" },
+
+    { "do": "action", "action": "tutorialFinishStartYourOwn" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "6-started-own", "note": "a sample with a measurement drawn on it is somebody's work now, so starting your own opens a window and leaves this one exactly where it was" },
+    { "do": "expectWindows", "titled": "Tutorial Sample", "count": 1, "stage": "6-sample-kept" },
+    { "do": "expectMeasures", "count": 1, "stage": "6-measure-kept" }
   ]
 }

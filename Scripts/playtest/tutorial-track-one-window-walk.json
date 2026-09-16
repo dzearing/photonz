@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-track-one-window-walk",
+  "setup": { "forget": ["tutorials", "measure"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "measure-a-gap" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 10 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectWindows", "titled": "Tutorial Sample", "count": 1, "stage": "1-one-sample" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "switch-to-gap", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "rest-on-the-space", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "click-the-gap", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "it-is-a-layer", "timeout": 5 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialFinished", "value": "measure-a-gap", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-finished", "note": "the first Redlining guide ends on its card, offering the next one on the track" },
+    { "do": "snapshot", "name": "2-finish-card-offers-the-next-one" },
+
+    { "do": "action", "action": "tutorialFinishNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-next-guide", "note": "the next guide on the track picked up in the SAME window, because it teaches on the same sample" },
+    { "do": "expectWindows", "titled": "Tutorial Sample", "count": 1, "stage": "3-still-one-sample" },
+    { "do": "snapshot", "name": "3-the-next-guide-in-the-same-window" }
+  ]
+}

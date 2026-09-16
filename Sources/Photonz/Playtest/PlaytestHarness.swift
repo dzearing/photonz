@@ -1280,6 +1280,10 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectWindows(let titled, let count):
+            note(number, step.name, try checkWindows(titled: titled, count: count),
+                 state: describe())
+
         case .expectFeet(let layerName, let start, let end, let reads, let within):
             note(number, step.name,
                  try checkFeet(layerName, start: start, end: end, reads: reads, within: within),
@@ -1710,7 +1714,7 @@ private final class Run {
             case .tutorialNext: TutorialController.shared.next()
             case .tutorialBack: TutorialController.shared.back()
             case .tutorialClose: TutorialController.shared.close()
-            default: break
+            default: try pressFinishRow(action)
             }
             await sleep(0.3)
             note(number, step.name,
@@ -2241,6 +2245,8 @@ private final class Run {
             case .tutorialNext: TutorialController.shared.next()
             case .tutorialBack: TutorialController.shared.back()
             case .tutorialClose: TutorialController.shared.close()
+            case .tutorialFinishNext, .tutorialFinishStartYourOwn, .tutorialFinishMoreGuides:
+                try pressFinishRow(action)
             case .toggleGrid: editor.toggleCanvasGrid()
             case .showGrid: if !editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
             case .hideGrid: if editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
@@ -3349,6 +3355,54 @@ private final class Run {
     /// The failure names what a half-placed caliper is still waiting for, so a
     /// walk that stops one click short of landing one reads as a walk that
     /// stopped one click short, rather than as an empty list nobody explains.
+    /// How many editor windows are wearing this title.
+    ///
+    /// Panels are left out: a guide's own callout and the app's tooltip are
+    /// both panels, and neither is a window somebody was left holding. The
+    /// release badge is left out too, because Next writes its name into every
+    /// window title ("Tutorial Sample (Next)") and a walk claiming what is on
+    /// screen is not claiming which release wrote it.
+    private func checkWindows(titled: String, count: Int) throws -> String {
+        func wears(_ title: String) -> Bool {
+            title == titled || (title.hasPrefix(titled + " (") && title.hasSuffix(")"))
+        }
+        let open = NSApp.windows.filter {
+            $0.isVisible && !($0 is NSPanel) && wears($0.title)
+        }
+        func plural(_ n: Int) -> String { n == 1 ? "window" : "windows" }
+        guard open.count == count else {
+            let others = NSApp.windows.filter { $0.isVisible && !($0 is NSPanel) }
+                .map { $0.title.isEmpty ? "(untitled)" : $0.title }
+            throw Failure(description: "\(open.count) \(plural(open.count)) called "
+                + "\"\(titled)\" are open, not \(count); every window up: "
+                + others.joined(separator: ", "))
+        }
+        return count == 0
+            ? "no window called \"\(titled)\" is left, as claimed"
+            : "\(count) \(plural(count)) called \"\(titled)\", as claimed"
+    }
+
+    /// One of the rows on the card a guide ends on, pressed by what it does.
+    private func pressFinishRow(_ action: PlaytestAction) throws {
+        guard let finish = TutorialController.shared.finished else {
+            throw Failure(description: "no guide has finished, so there is no card to press"
+                + "; the guide is \(TutorialController.shared.liveDescription(in: window))")
+        }
+        let wanted: String
+        switch action {
+        case .tutorialFinishNext: wanted = "next"
+        case .tutorialFinishStartYourOwn: wanted = "startYourOwn"
+        case .tutorialFinishMoreGuides: wanted = "moreGuides"
+        default: return
+        }
+        guard let choice = finish.choices.first(where: { $0.name == wanted }) else {
+            throw Failure(description: "the card at the end of \(finish.guideID) does not offer "
+                + "\"\(wanted)\"; it offers "
+                + finish.choices.map(\.name).joined(separator: ", "))
+        }
+        TutorialController.shared.choose(choice)
+    }
+
     private func checkMeasures(_ count: Int) throws -> String {
         let editor = try requireEditor()
         let landed = (editor.document?.allLayers ?? []).filter { $0.measure != nil }
@@ -6493,9 +6547,12 @@ private final class Run {
     }
 
     private func holds(_ condition: PlaytestCondition, editor: EditorState?) -> Bool {
-        // The one condition that is about the guide rather than about a window.
+        // The two conditions that are about the guide rather than about a window.
         if case .tutorialStep(let id) = condition {
             return TutorialController.shared.run?.step.id == id
+        }
+        if case .tutorialFinished(let id) = condition {
+            return TutorialController.shared.finished?.guideID == id
         }
         guard let editor else { return false }
         return switch condition {
@@ -6518,6 +6575,8 @@ private final class Run {
             LayersListProbe.shared.isInView(name)
         case .tutorialStep(let id):
             TutorialController.shared.run?.step.id == id
+        case .tutorialFinished(let id):
+            TutorialController.shared.finished?.guideID == id
         }
     }
 

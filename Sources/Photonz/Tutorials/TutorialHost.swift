@@ -35,16 +35,31 @@ protocol TutorialHost: AnyObject {
     /// running, because otherwise every control a video guide points at fades
     /// out two seconds after the pointer leaves it.
     func tutorialRunning(_ running: Bool)
+
+    /// Whether this window is one a guide opened FOR ITSELF, holding a made up
+    /// picture rather than anything of the person's own.
+    ///
+    /// What the card at the end of a guide asks before it offers to move
+    /// somebody on: there is only somewhere to move on FROM when the window is
+    /// practice, and offering to leave a window somebody was already working in
+    /// would be the guide taking their work off the screen (`TutorialFinish`).
+    var isTutorialSampleWindow: Bool { get }
 }
 
 extension TutorialHost {
     func tutorialRunning(_ running: Bool) {}
+    var isTutorialSampleWindow: Bool { false }
 }
 
 // MARK: - The picture editor
 
 extension EditorState: TutorialHost {
     var tutorialWindow: NSWindow? { hostWindow }
+
+    /// Only a window seeded from a `.tutorial` id holds a sample, and only a
+    /// sample that is a made up PICTURE is something to be moved on from: an
+    /// empty window is already the place a person starts work.
+    var isTutorialSampleWindow: Bool { tutorialSample?.isMadeUpPicture == true }
 
     func tutorialPrepare(_ prep: TutorialPrep) {
         switch prep {
@@ -98,6 +113,12 @@ extension EditorState: TutorialHost {
 
 extension VideoEditorState: TutorialHost {
     var tutorialWindow: NSWindow? { hostWindow }
+
+    /// A recording window is practice when it is holding the clip the video
+    /// guides bring with them, and somebody's own work otherwise.
+    var isTutorialSampleWindow: Bool {
+        url?.standardizedFileURL == TutorialSampleRecording.url.standardizedFileURL
+    }
 
     /// Nothing to prepare. There is no docked panel and no shelf in here, and
     /// the one thing that DOES need revealing, the floating controller, is

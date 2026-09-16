@@ -57,8 +57,13 @@
     { "do": "snapshot", "name": "6-last-step" },
 
     { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialFinished", "value": "take-the-tour", "timeout": 6 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide and left the window alone" },
-    { "do": "snapshot", "name": "7-finished" }
+    { "do": "describe", "stage": "7-finished", "note": "Done ends the tour on a card saying what just finished and offering the ways on, rather than leaving somebody alone in a sample picture" },
+    { "do": "snapshot", "name": "7-finished" },
+
+    { "do": "action", "action": "tutorialClose" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-card-closed", "note": "Close takes the card down and leaves the sample window standing, for anybody who wants to keep poking at it" }
   ]
 }

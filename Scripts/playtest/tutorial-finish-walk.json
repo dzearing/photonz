@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-finish-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "action", "action": "startTour" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "tool-bar", "timeout": 10 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-started", "note": "the tour opened its own window holding the sample screen" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "layers-list", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-layer", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "properties", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "back-to-select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialFinished", "value": "take-the-tour", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-finished", "note": "Done did not leave an empty window: the guide ends on a card naming what just finished and offering the ways on" },
+    { "do": "snapshot", "name": "1-the-finish-card" },
+
+    { "do": "expectWindows", "titled": "Tutorial Sample", "count": 1, "stage": "1b-one-sample" },
+
+    { "do": "action", "action": "tutorialFinishStartYourOwn" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-started-own", "note": "starting your own work opened an empty window and took the practice one away, since nothing had been changed in it" },
+    { "do": "expectWindows", "titled": "Tutorial Sample", "count": 0, "stage": "2b-sample-gone" },
+    { "do": "menus", "stage": "2c-windows", "menu": "Help" }
+  ]
+}
