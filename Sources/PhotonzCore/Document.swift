@@ -1048,6 +1048,25 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         }
     }
 
+    /// Which of the picked rows "Turn Into Picture" would really take, bottom
+    /// of the stack first.
+    ///
+    /// A pick is a set, and a set has no order, so a command that walked it
+    /// straight would bake three shapes in whatever order the hash happened to
+    /// give — harmless here, where each layer is baked on its own, and still
+    /// worth fixing, because the question counts what comes back and a number
+    /// that depends on hash order is a number nobody can write a test for.
+    ///
+    /// Everything picked that CANNOT be turned is simply absent: a picture is
+    /// already pixels, a group holds other layers, a measurement re-reads
+    /// itself. One picture picked alongside two shapes must not stop the two
+    /// shapes turning, which is the rule Turn Into Path already follows.
+    public func rasterizableLayers(ids: Set<UUID>) -> [Layer] {
+        ids.compactMap { layer(id: $0) }
+            .filter(\.isRasterizable)
+            .sorted { (path(of: $0.id) ?? []).lexicographicallyPrecedes(path(of: $1.id) ?? []) }
+    }
+
     /// Turns a box, an oval or a line into a path in one step, keeping every
     /// paint, every effect and the layer's own place in the stack
     /// (`ShapeToPath.swift`). Nothing happens on a layer that has no outline to

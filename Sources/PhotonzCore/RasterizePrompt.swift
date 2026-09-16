@@ -84,3 +84,89 @@ public struct RasterizePrompt: Hashable, Sendable {
 
     public var cancel: String { "Cancel" }
 }
+
+/// The question asked before SEVERAL layers become pictures at once.
+///
+/// `RasterizePrompt` names the one layer it is about, which is the right
+/// sentence for one row and a lie about three: "Turn “Rectangle” into a
+/// picture?" over a pick of three says nothing about the other two, and they
+/// are about to change as well. So a batch asks its own question, and the
+/// question's whole job is to say HOW MANY rows change and what each of them
+/// loses, before the button is pressed.
+///
+/// It counts only the rows the command will really take: a picture picked
+/// alongside two shapes is already pixels and is left exactly where it is, so
+/// it is not in the number and not in the sentence.
+///
+/// Pure copy, like the singular one: it holds no document, so the words can be
+/// read in a test without an app around them.
+public struct RasterizeQuestion: Hashable, Sendable {
+    /// How many of the picked rows are shapes, and how many are text. The two
+    /// are counted apart because they lose different things, and the sentence
+    /// has to say which.
+    public var shapes: Int
+    public var texts: Int
+
+    /// How many rows change. The question exists to say this number.
+    public var takes: Int { shapes + texts }
+
+    public init(shapes: Int, texts: Int) {
+        self.shapes = shapes
+        self.texts = texts
+    }
+
+    /// The question these layers would raise, or nil when fewer than two of
+    /// them can be turned — one layer asks `RasterizePrompt`, which can name it,
+    /// and none asks nothing.
+    public init?(layers: [Layer]) {
+        var shapes = 0
+        var texts = 0
+        for layer in layers where layer.isRasterizable {
+            if case .text = layer.content { texts += 1 } else { shapes += 1 }
+        }
+        guard shapes + texts > 1 else { return nil }
+        self.init(shapes: shapes, texts: texts)
+    }
+
+    /// What the rows ARE, in the plural. "Layers" only where they are a mix,
+    /// because a person who picked three rectangles thinks of them as shapes
+    /// and being told about "layers" is the app talking about its own model.
+    private var noun: String {
+        if shapes > 0 && texts > 0 { return "layers" }
+        return texts > 0 ? "pieces of text" : "shapes"
+    }
+
+    /// "Turn both shapes into pictures?", "Turn all 3 layers into pictures?" —
+    /// counting where counting starts being useful (`CrowdWords`), because
+    /// nobody says "all 2".
+    public var title: String {
+        let crowd = CrowdWords.all(takes) ?? "both"
+        return "Turn \(crowd) \(noun) into pictures?"
+    }
+
+    /// What you gain, then what it costs, then the way back — the same order
+    /// the singular question uses, so the two read as one sentence learnt once.
+    ///
+    /// The last line is the part only a batch needs: three rows just changed
+    /// together and it says, before the press, that one undo takes all three
+    /// back rather than leaving somebody pressing ⌘Z three times and hoping.
+    public var message: String {
+        let lost: String
+        if shapes > 0 && texts > 0 {
+            lost = "The shapes and the words stop being editable."
+        } else if texts > 0 {
+            lost = "The words stop being editable."
+        } else {
+            lost = "The shapes stop being editable."
+        }
+        return "They become pixels, so a marquee can cut a piece out of them. "
+            + "\(lost) One undo puts them all back."
+    }
+
+    /// The button, carrying the verb in the plural: a person reading only the
+    /// buttons still knows which one does the thing, and that it does it to
+    /// more than one row.
+    public var confirm: String { "Turn Into Pictures" }
+
+    public var cancel: String { "Cancel" }
+}

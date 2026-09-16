@@ -1,0 +1,29 @@
+{
+  "feature": "Turn Into Picture over everything you picked",
+  "epic": "ui-building",
+  "summary": "Pick several shapes or pieces of text, right click one of them, and Turn Into Picture now turns all of them into pictures in one undo step. It used to turn only the row under the pointer and leave the rest as shapes, which is not what any other command in that menu does.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag: Turn Into Picture is always on. If you have ever ticked \"Don't ask again\" on this command, the question below will not appear for you.",
+  "try": [
+    { "do": "Draw two rectangles side by side with the rectangle tool." },
+    { "do": "Click the first rectangle's row in the layers list, then shift-click the second so both are picked." },
+    { "do": "Right click the SECOND row and choose \"Turn Into Picture…\"." },
+    { "do": "Read the question before you answer it: it should say \"Turn both shapes into pictures?\" and promise that one undo puts them all back." },
+    { "do": "Press \"Turn Into Pictures\"." },
+    { "do": "Take the rectangular marquee, drag it over the left third of the FIRST rectangle (the one you never right clicked) and press delete. The piece should come out, with no refusal." },
+    { "do": "Press Command Z twice: the piece comes back, then both rectangles are editable shapes again." },
+    { "do": "Now click one row on its own, right click it, and choose \"Turn Into Picture…\": the question should name that one layer and say \"shape\", singular." }
+  ],
+  "evaluate": [
+    "Does the plural question tell you enough to press the button without hesitating, or do you want it to name the rows it is about?",
+    "\"Turn both shapes into pictures?\" over a pick that also holds a photo counts only the two shapes and says nothing about the photo it will leave alone. Is that silence right, or should it say the photo is untouched?",
+    "The menu row still reads \"Turn Into Picture…\", singular, even when it will turn three. Does that read wrong, or is the question the right place for the plural?",
+    "With \"Don't ask again\" ticked, turning three rows happens with nothing said at all and the canvas looks identical. Do you want a line under the canvas saying what just happened, the way Turn Into Path has one?",
+    "After the batch the same rows stay picked. Is that what you expect, or did you want the new pictures deselected?"
+  ],
+  "rough": [
+    "NOT PHOTOGRAPHED, AND NOT RUN. The Mac's screen was locked for the whole of this task, so every walk refused to run and there are no pictures of any of this, real or offscreen. The new walk Scripts/playtest/turn-two-shapes-into-pictures-walk.json is written and decodes cleanly, but it has never been run; a sweep has been requested so it runs when the screen is unlocked. Everything above is what the code does, checked by tests, not what I watched it do.",
+    "Turning several rows with the question silenced says nothing. That is true of one row too and is not new, but a batch makes it worse: three rows change kind at once with no word anywhere. Turn Into Path raises a chip for exactly this reason. Left rough rather than invented on the way past.",
+    "A LOCKED shape in the pick is turned along with the rest. Turn Into Path does the same, so the two agree, but neither of them asks about the lock the way Delete does. Worth a look, not changed here.",
+    "The menu row's name stays singular. Pluralising it would make the layers list and the Layer menu disagree about what the command is called depending on how many rows are picked, which seemed worse than a singular row followed by a plural question."
+  ]
+}

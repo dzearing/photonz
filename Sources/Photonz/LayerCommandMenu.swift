@@ -70,7 +70,11 @@ enum LayerCommandList {
                                      }
                                  }))
         }
-        if display.isRasterizable {
+        // Not gated on THIS layer being a shape, for the same reason Turn Into
+        // Path is not: with three picked the command acts on all of them, so a
+        // picture right clicked alongside two rectangles still offers it and
+        // leaves the picture alone.
+        if editorState.canRasterizeLayer(id: id) {
             rows.append(.command(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) })
         }
         // On a PICTURE, including the locked Background, which is what a person

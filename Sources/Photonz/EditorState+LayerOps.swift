@@ -229,32 +229,85 @@ extension EditorState {
     /// question off for the release app.
     static let silencedQuestions = SilencedQuestions(defaults: UserDefaultsSilenceDefaults())
 
-    /// Whether "Turn Into Picture" applies to the given layer (menu enablement).
+    /// Whether "Turn Into Picture" applies from a layer ROW's menu.
+    ///
+    /// It asks about everything the row menu would act on — the whole selection
+    /// when the row you right clicked is part of it, else that row alone
+    /// (`rowMenuTargets`) — and answers yes as soon as ONE of them is a shape
+    /// or a piece of text. A picture picked alongside two rectangles does not
+    /// stop the rectangles turning; it is simply left where it is.
     func canRasterizeLayer(id: UUID) -> Bool {
-        document?.layer(id: id)?.isRasterizable ?? false
+        canRasterizeLayers(ids: rowMenuTargets(id))
     }
 
-    /// Asks the question, then turns the layer into a picture if the answer is
-    /// yes (`RasterizePrompt`).
+    /// Whether Layer ▸ Turn Into Picture has anything to act on: the whole
+    /// selection, the same targets Duplicate and Delete read.
+    var canRasterizeSelection: Bool { canRasterizeLayers(ids: actionableLayerIDs) }
+
+    /// Whether any of these layers is a shape or a piece of text. Internal
+    /// rather than private because the marquee's refusal pill asks it about the
+    /// ONE layer the marquee hit (`raiseRegionSliceRefusal`).
+    func canRasterizeLayers(ids: Set<UUID>) -> Bool {
+        guard let document else { return false }
+        return !document.rasterizableLayers(ids: ids).isEmpty
+    }
+
+    /// The layer row menu's Turn Into Picture, on the whole selection when the
+    /// row you right clicked is one of it.
+    func rasterizeLayer(id: UUID) {
+        rasterizeLayers(ids: rowMenuTargets(id))
+    }
+
+    /// Layer ▸ Turn Into Picture over the selection.
+    func rasterizeSelection() {
+        rasterizeLayers(ids: actionableLayerIDs)
+    }
+
+    /// Asks the question, then turns the layers into pictures if the answer is
+    /// yes (`RasterizePrompt`, `RasterizeQuestion`).
     ///
     /// It asks because what the command takes away is invisible: the picture is
     /// identical the instant after, and the thing that is gone is that the shape
     /// or the words could be edited at all. The question rides the window as a
     /// sheet rather than blocking the app, and it carries "Don't ask again" so
     /// somebody cutting up half a mockup is asked once and never again.
-    func rasterizeLayer(id: UUID) {
-        guard let document, let layer = document.layer(id: id),
-              let prompt = RasterizePrompt(layer: layer) else { return }
+    ///
+    /// With SEVERAL layers picked the sentence has one more job, which is why
+    /// the plural form exists: the singular one names the layer it is about,
+    /// and over three rows that is a true sentence about one of them and
+    /// silence about the other two. The plural says how many change, what each
+    /// kind loses, and that one undo puts them all back.
+    func rasterizeLayers(ids: Set<UUID>) {
+        guard let document else { return }
+        let takes = document.rasterizableLayers(ids: ids)
+        guard let first = takes.first else { return }
+        let targets = Set(takes.map(\.id))
+
+        // One layer asks the question it has always asked, word for word.
+        guard let question = RasterizeQuestion(layers: takes) else {
+            guard let prompt = RasterizePrompt(layer: first) else { return }
+            askBeforeRasterizing(title: prompt.title, message: prompt.message,
+                                 confirm: prompt.confirm, cancel: prompt.cancel,
+                                 ids: targets)
+            return
+        }
+        askBeforeRasterizing(title: question.title, message: question.message,
+                             confirm: question.confirm, cancel: question.cancel,
+                             ids: targets)
+    }
+
+    private func askBeforeRasterizing(title: String, message: String, confirm: String,
+                                      cancel: String, ids: Set<UUID>) {
         guard !Self.silencedQuestions.isSilenced(.turnIntoPicture) else {
-            applyRasterize(id: id)
+            applyRasterize(ids: ids)
             return
         }
 
         let alert = NSAlert()
-        alert.messageText = prompt.title
-        alert.informativeText = prompt.message
-        alert.addButton(withTitle: prompt.confirm)
-        alert.addButton(withTitle: prompt.cancel)
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: confirm)
+        alert.addButton(withTitle: cancel)
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = RasterizePrompt.suppression
         let answer: @MainActor (NSApplication.ModalResponse) -> Void = { [weak self] response in
@@ -262,7 +315,7 @@ extension EditorState {
                 Self.silencedQuestions.silence(.turnIntoPicture)
             }
             guard response == .alertFirstButtonReturn else { return }
-            self?.applyRasterize(id: id)
+            self?.applyRasterize(ids: ids)
         }
         if let window = hostWindow {
             alert.beginSheetModal(for: window) { response in
@@ -273,43 +326,70 @@ extension EditorState {
         }
     }
 
-    /// Bakes a shape or a piece of text into pixels in one undo step: the layer
-    /// is rendered WITH all its style effects (blur, shadow, border, corner
-    /// radius, opacity) and geometry (crop, transform) into a bitmap covering its
-    /// padded on-canvas footprint, that bitmap is stored, and the layer's content
-    /// becomes `.image` with its now-baked style reset. Looks pixel-identical;
-    /// undo restores the editable shape. The layer keeps its slot/name/id, and
-    /// what comes out is an ordinary picture, so a marquee can take a piece out
-    /// of it (`RegionTarget.canSlice`).
-    private func applyRasterize(id: UUID) {
-        guard let document, let layer = document.layer(id: id), layer.isRasterizable else { return }
-
-        // The baked bitmap covers everything the layer can draw: its transformed
-        // bounds padded by the style's reach (shadow/blur), clamped to canvas —
-        // exactly how merge-down sizes its result, so nothing is clipped.
-        var bounds = layer.frame
-        if !layer.transform.isIdentity {
-            let corners = layer.transformedCorners
-            if let first = corners.first {
-                bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
-                    $0.union(CGRect(origin: $1, size: .zero))
+    /// Bakes every shape and piece of text in `ids` into pixels in ONE undo
+    /// step: each layer is rendered WITH all its style effects (blur, shadow,
+    /// border, corner radius, opacity) and geometry (crop, transform) into a
+    /// bitmap covering its padded on-canvas footprint, that bitmap is stored,
+    /// and the layer's content becomes `.image` with its now-baked style reset.
+    /// Looks pixel-identical; undo restores the editable shapes. Every layer
+    /// keeps its slot/name/id, and what comes out is an ordinary picture, so a
+    /// marquee can take a piece out of it (`RegionTarget.canSlice`).
+    ///
+    /// Three picked shapes come out as THREE pictures and never as one. Making
+    /// one thing out of several is Merge Down, which is a different command
+    /// under a different name; this one promises that the canvas is identical
+    /// the instant after and that every row is still there, and a batch that
+    /// merged would break both promises at once.
+    ///
+    /// The baking happens BEFORE the mutation and the mutation happens once, so
+    /// no half-baked state can reach the document: a layer whose bitmap could
+    /// not be rendered is left as it was and the rest still turn.
+    private func applyRasterize(ids: Set<UUID>) {
+        guard let document else { return }
+        var baked: [(id: UUID, ref: ImageRef, region: CGRect)] = []
+        for layer in document.rasterizableLayers(ids: ids) {
+            // The baked bitmap covers everything the layer can draw: its
+            // transformed bounds padded by the style's reach (shadow/blur),
+            // clamped to canvas — exactly how merge-down sizes its result, so
+            // nothing is clipped.
+            var bounds = layer.frame
+            if !layer.transform.isIdentity {
+                let corners = layer.transformedCorners
+                if let first = corners.first {
+                    bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
+                        $0.union(CGRect(origin: $1, size: .zero))
+                    }
                 }
             }
-        }
-        let pad = layer.reachPadding
-        let region = Geometry.clampCrop(bounds.insetBy(dx: -pad, dy: -pad), toCanvas: document.canvasSize)
-        guard region.width >= 1, region.height >= 1 else { return }
+            let pad = layer.reachPadding
+            let region = Geometry.clampCrop(bounds.insetBy(dx: -pad, dy: -pad),
+                                            toCanvas: document.canvasSize)
+            guard region.width >= 1, region.height >= 1 else { continue }
 
-        // Composite ONLY this layer (over transparency) so nothing below leaks in.
-        var temp = document
-        var only = layer
-        only.isVisible = true
-        temp.layers = [only]
-        guard let raster = previewRenderer.rasterize(region: region, of: temp, store: store) else { return }
-        let ref = store.register(raster)
+            // Composite ONLY this layer (over transparency) so nothing below
+            // leaks in, and so the layers below it in the same batch cannot
+            // print themselves into its bitmap.
+            var temp = document
+            var only = layer
+            only.isVisible = true
+            temp.layers = [only]
+            guard let raster = previewRenderer.rasterize(region: region, of: temp, store: store)
+            else { continue }
+            baked.append((layer.id, store.register(raster), region))
+        }
+        guard !baked.isEmpty else { return }
         discardDragPreview()
-        perform { $0.rasterizeLayer(id: id, rasterized: ref, frame: region) }
-        selectedLayerID = id
+        perform { doc in
+            for bake in baked {
+                doc.rasterizeLayer(id: bake.id, rasterized: bake.ref, frame: bake.region)
+            }
+        }
+        // The layers kept their ids, so what was picked is still picked and
+        // nothing has to be rebuilt. A single row turned from outside the
+        // selection becomes the selection, which is what it did before.
+        if baked.count == 1, let only = baked.first, multiSelectedLayerIDs.isEmpty {
+            selectedLayerID = only.id
+        }
     }
 
     // MARK: - Turn Into Path (a box, an oval or a line → an outline)

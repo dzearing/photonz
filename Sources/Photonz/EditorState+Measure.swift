@@ -354,7 +354,9 @@ extension EditorState {
             self.copyConfirmation = nil
             self.canvasNoticeHeld = false
             switch action {
-            case .turnIntoPicture(let id): self.rasterizeLayer(id: id)
+            // The one layer the marquee hit, never the selection around it:
+            // the pill named that layer, so the button may not change others.
+            case .turnIntoPicture(let id): self.rasterizeLayers(ids: [id])
             }
         }
     }
@@ -365,7 +367,7 @@ extension EditorState {
     /// which layer the refusal was about.
     func raiseRegionSliceRefusal(_ refusal: RegionSliceRefusal, layer id: UUID?) {
         var action: CanvasNoticeAction?
-        if refusal.offersTurnIntoPicture, let id, canRasterizeLayer(id: id) {
+        if refusal.offersTurnIntoPicture, let id, canRasterizeLayers(ids: [id]) {
             action = .turnIntoPicture(layer: id)
         }
         raiseCanvasNotice(.regionSliceRefused(refusal), action: action)
