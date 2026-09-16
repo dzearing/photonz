@@ -64,6 +64,85 @@ struct IconKeylineTests {
         #expect(guides?.centerY == 12)
     }
 
+    // MARK: - The square and the circle
+
+    @Test("A 24 pixel frame reads as an 18 square and a 20 circle")
+    func twentyFourShapes() {
+        let guides = IconKeylines.guides(in: square(24))
+        // The pair every mainstream icon set is drawn to: the square a boxy
+        // glyph fills is SMALLER than the circle a round one fills, which is
+        // the whole point — equal widths would make the circle look shrunken.
+        #expect(guides?.squareKeyline == CGRect(x: 3, y: 3, width: 18, height: 18))
+        #expect(guides?.circleKeyline == CGRect(x: 2, y: 2, width: 20, height: 20))
+    }
+
+    @Test("The square is inset on whole pixels at every icon size")
+    func squareInsetPerSize() {
+        // Three twenty-fourths of the frame on each side, rounded, for the
+        // same reason the margin rounds: the icon grid IS pixels.
+        #expect(IconKeylines.squareInset(forSide: 16) == 2)
+        #expect(IconKeylines.squareInset(forSide: 24) == 3)
+        #expect(IconKeylines.squareInset(forSide: 32) == 4)
+        #expect(IconKeylines.squareInset(forSide: 48) == 6)
+        #expect(IconKeylines.squareInset(forSide: 64) == 8)
+        #expect(IconKeylines.squareInset(forSide: 512) == 64)
+    }
+
+    @Test("The circle fills the live area, so it is tangent to it on all four sides")
+    func circleFillsTheLiveArea() {
+        for side in [CGFloat(16), 24, 32, 48, 64, 512] {
+            let guides = IconKeylines.guides(in: square(side))
+            #expect(guides?.circleKeyline == guides?.liveArea)
+        }
+    }
+
+    @Test("The square always sits inside the live area, never on it")
+    func squareIsInsideTheLiveArea() {
+        for side in [CGFloat(16), 24, 32, 40, 48, 64, 512] {
+            guard let guides = IconKeylines.guides(in: square(side)),
+                  let box = guides.squareKeyline else {
+                Issue.record("no square at \(side)")
+                continue
+            }
+            let live = guides.liveArea
+            #expect(box.width < live.width)
+            #expect(live.insetBy(dx: -0.01, dy: -0.01).contains(box))
+            // Centred: the same gap on the left as on the right.
+            #expect(box.minX - live.minX == live.maxX - box.maxX)
+        }
+    }
+
+    @Test("The shapes move with the frame")
+    func shapesFollowTheFrame() {
+        let guides = IconKeylines.guides(in: CGRect(x: 300, y: 120, width: 24, height: 24))
+        #expect(guides?.squareKeyline == CGRect(x: 303, y: 123, width: 18, height: 18))
+        #expect(guides?.circleKeyline == CGRect(x: 302, y: 122, width: 20, height: 20))
+    }
+
+    @Test("A frame too small to hold a square inside the margin draws no square")
+    func tinyFramesSkipTheSquare() {
+        // At six and eight points the square rounds onto the live area itself,
+        // and a guide drawn on top of another guide is not a guide.
+        #expect(IconKeylines.guides(in: square(6))?.squareKeyline == nil)
+        #expect(IconKeylines.guides(in: square(8))?.squareKeyline == nil)
+        // Twelve is the first size with room for both.
+        #expect(IconKeylines.guides(in: square(12))?.squareKeyline
+            == CGRect(x: 2, y: 2, width: 8, height: 8))
+    }
+
+    @Test("The square's corners round by the same amount the margin does")
+    func squareCorners() {
+        #expect(IconKeylines.squareCornerRadius(forSide: 24) == 2)
+        #expect(IconKeylines.squareCornerRadius(forSide: 48) == 4)
+        // Never more than a circle's worth: a radius that outgrew the square
+        // would draw the circle twice.
+        for side in [CGFloat(6), 8, 12, 16, 24, 512] {
+            if let box = IconKeylines.guides(in: square(side))?.squareKeyline {
+                #expect(IconKeylines.squareCornerRadius(forSide: side) <= box.width / 2)
+            }
+        }
+    }
+
     // MARK: - Which frames get them at all
 
     @Test("A screen gets nothing")

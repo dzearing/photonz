@@ -38,6 +38,13 @@ extension CanvasNSView {
     /// edge rather than as a margin.
     private static let smallestDrawableIcon: CGFloat = 24
 
+    /// How far apart two dashed outlines have to be ON SCREEN before they read
+    /// as two guides rather than as one thickened one. Below it the square and
+    /// the circle are left off and the frame shows the margin and the center
+    /// lines alone, which is the same rule the frame itself already follows
+    /// when it gets too small to have an inside.
+    private static let smallestGuideGap: CGFloat = 3
+
     /// How wide the casing under the dashes is. Wide enough to show either side
     /// of a one point line, narrow enough that on a pale surface, where it is
     /// invisible anyway, it costs nothing.
@@ -78,6 +85,25 @@ extension CanvasNSView {
             path.move(to: CGPoint(x: across.minX, y: y))
             path.addLine(to: CGPoint(x: across.maxX, y: y))
 
+            // The two shapes that make a boxy glyph and a round one look the
+            // same size. They are the finest thing on the frame — the square
+            // sits a single document point inside the live area — so they only
+            // come out once there is enough room on screen for the two dashed
+            // outlines to read as two.
+            if iconKeylineShapesFit(frameSide: box.width, onScreenWidth: onScreen.width) {
+                let circle = pixelAligned(viewRect(forDocRect: guides.circleKeyline, in: viewport))
+                if circle.width >= 2, circle.height >= 2 { path.addEllipse(in: circle) }
+                if let squareBox = guides.squareKeyline {
+                    let square = pixelAligned(viewRect(forDocRect: squareBox, in: viewport))
+                    if square.width >= 2, square.height >= 2 {
+                        let scale = onScreen.width / box.width
+                        let radius = min(IconKeylines.squareCornerRadius(forSide: box.width) * scale,
+                                         min(square.width, square.height) / 2)
+                        path.addRoundedRect(in: square, cornerWidth: radius, cornerHeight: radius)
+                    }
+                }
+            }
+
             // Casing first, ink on top: two strokes of the same path, so the
             // dashes line up exactly and the casing reads as a halo rather
             // than as a second guide.
@@ -100,6 +126,18 @@ extension CanvasNSView {
             spare.isHidden = true
         }
         iconKeylineLayerGroup.isHidden = drawn.isEmpty
+    }
+
+    /// Whether the square and the circle have room to be themselves on screen.
+    ///
+    /// The square is inset from the live area by about a twenty-fourth of the
+    /// frame, so on a 24 point icon at 100% that is one view point and the two
+    /// dashed rectangles would land on top of each other. Zoomed in there is
+    /// room, and an icon is drawn zoomed in.
+    private func iconKeylineShapesFit(frameSide: CGFloat, onScreenWidth: CGFloat) -> Bool {
+        guard frameSide > 0, onScreenWidth > 0 else { return false }
+        let gap = IconKeylines.squareInset(forSide: frameSide) - IconKeylines.margin(forSide: frameSide)
+        return gap * (onScreenWidth / frameSide) >= Self.smallestGuideGap
     }
 
     /// A rectangle on whole view points with its stroke centred on a device
@@ -190,9 +228,22 @@ extension CanvasNSView {
         let names = icons.map { frame -> String in
             let guides = IconKeylines.guides(in: frame.frame)
             let live = guides?.liveArea ?? .zero
+            let onScreen = liveCanvasBounds(of: frame.id).flatMap { box in
+                viewport.map { port in viewRect(forDocRect: box, in: port) }
+            }
+            let shapes: String
+            if let onScreen, iconKeylineShapesFit(frameSide: frame.frame.width,
+                                                  onScreenWidth: onScreen.width) {
+                let square = guides?.squareKeyline.map { Int($0.width) }
+                shapes = " square \(square.map(String.init) ?? "none")"
+                    + " circle \(Int(guides?.circleKeyline.width ?? 0))"
+            } else {
+                shapes = " shapes too close together to draw"
+            }
             return "\(frame.name) \(Int(frame.frame.width))"
                 + " live \(Int(live.width))×\(Int(live.height))"
                 + " margin \(Int(IconKeylines.margin(forSide: frame.frame.width)))"
+                + shapes
         }.joined(separator: " · ")
         return "\(names) · \(iconKeylineLayerGroup.isHidden ? "nothing drawn" : "drawn")"
     }

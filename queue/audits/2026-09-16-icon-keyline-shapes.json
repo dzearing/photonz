@@ -1,0 +1,29 @@
+{
+  "feature": "An icon frame shows the shapes a set is drawn to",
+  "epic": "icon-grid",
+  "summary": "An icon frame already drew the margin a glyph stays inside and the two lines through its middle. It now also draws the two shapes that make glyphs of different shapes look the same size: the square a boxy glyph fills, and the slightly bigger circle a round one fills.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on; View has one Show Icon Keylines switch and it was already on.",
+  "try": [
+    { "do": "Layer, New Frame, pick Icons and 24, then Add Frame.", "shot": "2026-09-16-icon-keyline-shapes-window.png" },
+    { "do": "Press Command plus until the zoom readout is past 300%.", "shot": "2026-09-16-icon-keyline-shapes-detail.png" },
+    { "do": "Look at the frame: the margin, the two center lines, a rounded square inside the margin, and a circle that touches the margin at the middle of all four sides." },
+    { "do": "Press O and drag a circle out until it sits on the circle guide." },
+    { "do": "Press R and drag a square out until it sits on the square guide." },
+    { "do": "Sit back and judge whether the circle and the square read as the same size." },
+    { "do": "View, Show Icon Keylines: everything goes at once, and comes back the same way." },
+    { "do": "Press Command minus back below 300% and watch the square and the circle drop out while the margin stays." }
+  ],
+  "evaluate": [
+    "Does the pair actually do its job: drawn to their guides, do a round glyph and a boxy one look like they belong in one set?",
+    "Are three dashed outlines inside a 24 point box too many to draw against, or does it read as one diagram?",
+    "The square's corners are rounded so it cannot be mistaken for the margin. Near the corners it weaves in and out of the circle. Is that fine, or does it read as clutter?",
+    "The shapes only appear past about 300% zoom, because below that they land on top of the margin. Does that feel like the app looking after you, or like a feature that went missing?",
+    "Only the square and the circle were built, which is what you picked. Drawing an arrow or a bar, do you miss having a tall and a wide rectangle to aim at?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so Scripts/playtest/icon-keylines-walk.json could not run: a walk finds controls by name and a locked screen takes the names away. Both pictures here ARE real photographs of the app window, taken by a name-free diagnostic walk driven with coordinates and menu commands only, and the second is a crop of the first. The walk itself still needs one unlocked run; a sweep is requested.",
+    "On a 24 point frame the square sits a single document point inside the margin, so the two shapes stay off until the frame is about 72 points across on screen, which is roughly 300% zoom. A person who makes a 24 icon frame and never zooms in sees only the margin and the center lines and may think nothing shipped. Tutorials are safe: opening an icon sample already frames the icon.",
+    "The mock (docs/design/mocks/pages/icon-draw-wt.html) drew the circle SMALLER than the square, at 17.2 against 18, which contradicts its own caption that the two then read as the same size. The app ships the pair every mainstream icon set uses, 18 square and 20 circle, and the mock page was corrected to match.",
+    "The square and the circle cross four times near each corner. That is what a keyline diagram looks like everywhere else, but it is the busiest part of the picture."
+  ]
+}
