@@ -17173,3 +17173,32 @@ goal with the right target and the reproduction.
 Open question for a later pass: with the dock hidden altogether a pick is
 still 9.8ms in its longest pass, and the layers list is 6ms on three rows, so
 one frame may not be reachable even with the forms made free.
+
+## 2026-09-16 — Right clicking the picture offers what you can do with it
+
+Right clicking a layer on the canvas now raises the same menu the layers list
+has always had for it, and right clicking bare picture raises the canvas's own
+commands instead of nothing (Next, `next-canvas-menu`, on by default).
+
+- The list of commands moved out of `LayersRow` into `LayerCommandList` as plain
+  rows (`MenuRow`), drawn two ways: SwiftUI for the panel row, an AppKit
+  `NSMenu` for the canvas. One list, so the names, the order and the shortcuts
+  cannot drift apart.
+- **The canvas menu cannot be a SwiftUI `.contextMenu`.** That was the first
+  attempt and it is broken by design: SwiftUI resolves a context menu's contents
+  when the view around it updates, not when the menu pops up, so a menu aimed at
+  a POINT is always about the previous right click. Reproduced — right clicking a
+  fresh group and choosing Delete removed one of its children and left the group
+  standing. `CanvasNSView.menu(for:)` builds the menu there and then instead.
+- A right click on something not already picked PICKS it first
+  (`CanvasMenuAim` in PhotonzCore, tested). The layers list keeps its own rule:
+  a row menu never moves the selection.
+- Rename is left off the canvas menu: the field lives in the layers row and the
+  dock may be shut.
+- The `rightClick` playtest step takes `at: [x, y]` as well as `on: "<row>"`, so
+  a walk can right click the picture. New walk: `canvas-menu-walk.json`.
+
+Next: the audit is `queue/audits/2026-09-16-canvas-context-menu.json`. Open
+question in it: whether picking-on-right-click is wanted, and whether the two
+menus should carry Cut/Copy/Paste at all. The Mac's screen was locked all
+session, so the walk ran forced and a sweep is still pending.

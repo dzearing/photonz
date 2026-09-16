@@ -81,6 +81,10 @@ struct EditorCanvasSurface: View {
                        editorState.renameComponentVersion(componentID: $0, version: $1, to: $2)
                    },
                    onExitGroup: { editorState.exitGroupContext() },
+                   canvasMenu: { hit, context in
+                       editorState.aimCanvasMenu(at: hit, inside: context)
+                       return editorState.canvasMenuRows
+                   },
                    onClickedNothing: { editorState.clearLibraryPick() },
                    onDragBegin: { editorState.beginLayerDrag(id: $0) },
                    onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
@@ -192,5 +196,6 @@ struct EditorCanvasSurface: View {
             // the anchor is worked out in the canvas view's own coordinates,
             // and this view IS the canvas view.
             .exactPlacementPopover(editorState)
+
     }
 }

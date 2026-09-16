@@ -1163,8 +1163,8 @@ private final class Run {
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
 
-        case .rightClick(let on, let shot, let choose, let ticked, let unticked):
-            try await openRowMenu(on, shot: shot, choose: choose, ticked: ticked,
+        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked):
+            try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
                                   unticked: unticked, number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
@@ -4748,16 +4748,33 @@ private final class Run {
         return nil
     }
 
-    private func openRowMenu(_ name: String, shot: String?, choose: String?,
+    /// One step, two things to right click: a row in the panel named by `name`,
+    /// or a spot on the picture given by `at`. Everything after the point is
+    /// worked out is identical, because a menu is a menu wherever it hangs
+    /// from.
+    private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], number: Int) async throws {
-        let target = try rightClickTarget(name)
-        guard let window = target.window, let content = window.contentView else {
-            throw Failure(description: "\"\(target.name)\" is in no window, so there is nothing to right click")
+        let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
+        if let name {
+            let target = try rightClickTarget(name)
+            guard let window = target.window else {
+                throw Failure(description: "\"\(target.name)\" is in no window, so there is nothing to right click")
+            }
+            guard Self.isInReach(target) else {
+                throw Failure(description: "\"\(target.name)\" is not where a person could right click it: it is "
+                    + "off the window, or the dock has scrolled it far enough that the panel's edge cuts across "
+                    + "it. Scroll to it with a \"scrollPanel\" step first.")
+            }
+            aimed = (target.name, target.detail, target.point, window)
+        } else if let at {
+            aimed = ("the picture at \(short(at.point))", "", try windowPoint(at), try requireWindow())
+        } else {
+            throw Failure(description: "a rightClick step needs a row to click (\"on\") or a spot on the "
+                + "picture (\"at\")")
         }
-        guard Self.isInReach(target) else {
-            throw Failure(description: "\"\(target.name)\" is not where a person could right click it: it is "
-                + "off the window, or the dock has scrolled it far enough that the panel's edge cuts across "
-                + "it. Scroll to it with a \"scrollPanel\" step first.")
+        let (window, target) = (aimed.window, aimed)
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view, so there is nothing to right click")
         }
         guard let (menu, view) = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content,
                                                         window: window) else {

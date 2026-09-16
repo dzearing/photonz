@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/canvas-menu",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "what-this-proves", "note": "Right clicking a layer row has always given a menu; right clicking the same layer on the picture gave nothing. This walk right clicks the boxes themselves. It shows that a right click on a box nobody has picked picks it first, that right clicking one of two picked boxes offers Group and makes one group of both, and that a right click on the bare picture gives the picture's own commands rather than an empty menu." },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 80], "to": [300, 200], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [340, 80], "to": [520, 200], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [560, 80], "to": [740, 200], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [820, 480] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "expectLayers", "count": 4 },
+    { "do": "panel", "stage": "1-three-boxes" },
+
+    { "do": "rightClick", "at": [430, 140], "shot": "canvas-menu-1-on-a-box" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Rectangle 2"] },
+    { "do": "describe", "stage": "2-a-right-click-picks", "note": "nothing was picked; right clicking the middle box picked it and opened its own menu, the same rows the layer row menu has always carried" },
+
+    { "do": "click", "at": [210, 140] },
+    { "do": "click", "at": [430, 140], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
+    { "do": "describe", "stage": "3-two-picked", "note": "two boxes picked on the picture, the way a person picks the things they want held together" },
+
+    { "do": "rightClick", "at": [430, 140], "shot": "canvas-menu-2-over-a-selection" },
+    { "do": "describe", "stage": "4-menu-over-a-selection", "note": "right clicking one of the two moved nothing: the menu is about both, and it carries Group with Command G printed against it" },
+
+    { "do": "rightClick", "at": [430, 140], "choose": "Group" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expectLayers", "count": 5 },
+    { "do": "expectPicked", "layers": ["Group"] },
+    { "do": "panel", "stage": "5-grouped" },
+    { "do": "snapshot", "name": "canvas-menu-3-grouped" },
+    { "do": "describe", "stage": "5-grouped", "note": "Group out of the canvas menu did exactly what Command G does: the two picked boxes went into one group and the third was left alone, so the list is a group and a rectangle" },
+
+    { "do": "rightClick", "at": [430, 140], "choose": "Ungroup" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expectLayers", "count": 4 },
+    { "do": "panel", "stage": "6-ungrouped" },
+    { "do": "describe", "stage": "6-ungrouped", "note": "Ungroup from the same menu put the two boxes back loose, exactly where they were" },
+
+    { "do": "rightClick", "at": [820, 480], "shot": "canvas-menu-4-bare-picture" },
+    { "do": "describe", "stage": "7-bare-picture", "note": "a right click where there is no layer is not an empty menu and not a menu about a layer that is not there: it is the picture's own commands, on the same shortcuts the menu bar prints for them" },
+
+    { "do": "rightClick", "at": [820, 480], "choose": "Select All" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "rightClick", "at": [820, 480], "choose": "Deselect" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-the-picture-commands-work", "note": "Select All then Deselect, both taken from the bare picture's own menu; Deselect is only there while there is a marked region to drop, which is why it is asked for second" },
+
+    { "do": "expectLayers", "count": 4 }
+  ]
+}

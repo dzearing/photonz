@@ -80,6 +80,8 @@ public enum FeatureCatalog {
 
     public static let layersFollowPickFlag = "next-layers-follow-pick"
 
+    public static let canvasMenuFlag = "next-canvas-menu"
+
     public static let alignLayersFlag = "next-align-layers"
 
     public static let framesFlag = "next-frames"
@@ -456,6 +458,15 @@ public enum FeatureCatalog {
                     name: layersFollowPickFlag,
                     title: "The layers list follows what you pick",
                     description: "Click something on the picture and the layers list brings that layer's row into view, so what you have in your hand and what the list is showing are never two different things. It moves as little as it has to and never centres the row, a row you can already see does not move the list at all, and a layer inside a shut group opens that group first. It follows the arrow keys, a newly drawn shape and an undo that puts a selection back, the same as a click. Off means the list stays exactly where it was and the row you picked can be sitting off the bottom of a long list with nothing to say so.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: canvasMenuFlag,
+                    title: "Right click the picture",
+                    description: "Right click something on the picture and get a menu of what you can do with it: duplicate it, group it with the rest of what you picked, send it behind, hide it, delete it. It is the same menu the layers list on the right has always had, on the thing itself. Right clicking something you have not picked yet picks it first, the way it works everywhere else on a canvas. Right click the empty picture instead and you get what belongs there: paste, select all, zoom to fit. Off means a right click on the picture does nothing, which is how it was.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

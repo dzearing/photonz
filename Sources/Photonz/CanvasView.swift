@@ -138,6 +138,12 @@ struct CanvasView: NSViewRepresentable {
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
     let onExitGroup: () -> Bool
+    /// A right click asking for a menu: told the layer it landed on (nil for
+    /// bare picture) and the group it resolved inside, it hands back the rows
+    /// the menu should carry. One call, because the aim and the rows have to be
+    /// worked out in the same breath — the menu opens in this very event, and a
+    /// menu built from an older aim is a menu about the wrong thing.
+    var canvasMenu: (UUID?, UUID?) -> [MenuRow] = { _, _ in [] }
     /// A click that landed on nothing. The Library needs it: a tile stays
     /// picked until something else is, and clicking past every layer is a
     /// person saying they are done with it, even though the canvas selection
@@ -349,6 +355,7 @@ struct CanvasView: NSViewRepresentable {
         view.onRenameComponentVersion = onRenameComponentVersion
         view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
+        view.canvasMenu = canvasMenu
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
@@ -466,6 +473,7 @@ final class CanvasNSView: NSView {
     var onRenameComponentVersion: ((UUID, UUID, String) -> Void) = { _, _, _ in }
     var onClickedNothing: (() -> Void) = {}
     var onExitGroup: (() -> Bool) = { false }
+    var canvasMenu: ((UUID?, UUID?) -> [MenuRow]) = { _, _ in [] }
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }

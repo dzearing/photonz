@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T03:34:24.928Z",
-  "updated": "2026-09-16T12:23:33.886Z",
+  "updated": "2026-09-16T18:13:12.597Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding Group to the layer row menu on 2026-09-13. Today only LayersRow, EffectsListInspector and MeasurementsListView carry a .contextMenu; CanvasView has none. The row menu is Sources/Photonz/LayersRow.swift `menu`, and what it acts on is EditorState.rowMenuTargets(_:) (docs/design/layers.md, \"What a layer row context menu acts on\"). A canvas menu wants the same targets rule with the hit-tested layer standing in for the clicked row. Open question worth deciding before building: whether right clicking something not in the selection should pick it first, which is what most editors do on canvas even where they do not do it in a list.",
@@ -40,6 +40,23 @@
     {
       "t": "2026-09-16T12:23:33.885Z",
       "note": "seq 620 -> 130"
+    },
+    {
+      "t": "2026-09-16T17:52:00.164Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T17:54:05.352Z",
+      "note": "Adversarial review before building. (1) The open question in the notes is decided rather than asked: right clicking a layer that is NOT already picked PICKS IT FIRST. Every peer app on a canvas does this (Figma, Illustrator, Photoshop, Sketch, Keynote, Preview), and without it the canvas menu is about a thing with no handles on it while the handles sit somewhere else on screen. The list keeps its own rule (a row menu never moves the selection) because a list row is a name you aimed at, not a picture you are looking at. It goes in the audit's evaluate so one click can overturn it. (2) Rename is left OFF the canvas menu: the rename field is @State inside LayersListView and only exists while the layers dock is on screen, so a canvas Rename would be a dead row whenever the dock is shut. Recorded as rough. (3) The menu is offered for the Select tool only. Every drawing tool owns its clicks in this app on purpose (see the double-click-zooms comment in CanvasPointerDrags), and picking a layer out from under a half-drawn pen stroke is not what the hand meant. (4) Right clicking empty canvas does NOT clear the selection: an accidental right click must not destroy what you picked."
+    },
+    {
+      "t": "2026-09-16T18:05:50.615Z",
+      "note": "Reproduced a real defect in the first attempt, which used a SwiftUI .contextMenu on the canvas with the aim recorded in menu(for:). Instrumented run (/tmp/photonz-aim.log): 'AIM (430,140) -> Rectangle 2', then 'AIM (430,140) -> Group', then 'AIM (430,140) -> Group' — the aim was right every time. But the menu that opened on clicks 2 and 3 was Rectangle 2's (no Ungroup row, and choosing Delete removed Rectangle 2 and left the Group standing with one child: 'expectLayers FAILED: 3 layers ... Background, Group, Rectangle'). SwiftUI resolves .contextMenu content when the modifier is re-applied during a body update, not when the menu pops up, so a menu that has to be aimed at a POINT cannot be a SwiftUI contextMenu: the aim is set inside the same event that opens it and no body update happens in between. Rebuilding it as one shared list of commands rendered two ways — SwiftUI rows for the layers list, an AppKit NSMenu for the canvas — so there is still exactly one list and the canvas one is built at the moment it opens."
+    },
+    {
+      "t": "2026-09-16T18:13:12.596Z",
+      "note": "left rough: the bare-picture menu has no Cut/Copy even though it has Paste, and the layer menu has neither. That is a gap in both menus rather than a defect in this one, and it is written up in the audit's rough list where the user can turn it into a task if they want the clipboard trio. Not filed: no open task covers it and nobody is currently stopped by it."
     }
-  ]
+  ],
+  "started": "2026-09-16T17:52:00.163Z"
 }

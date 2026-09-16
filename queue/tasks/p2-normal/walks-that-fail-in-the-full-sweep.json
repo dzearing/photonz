@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T17:19:02.725Z",
+  "updated": "2026-09-16T18:13:12.550Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -259,6 +259,10 @@
     {
       "t": "2026-09-16T17:19:02.724Z",
       "note": "Two more walks fail on today's main, and both fail identically on unmodified source (checked by stashing an in-flight change and re-running): corner-drag-rounds-walk step 17, the field \"Top Left\" reads \"52\", not \"50\" after dragging a corner handle; four-sided-popout-walk step 33, no editable field labelled \"Padding\" is on screen, the ones that are: none. Neither was in the 2026-09-15 sweep's failing list, so both broke since. Run: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/corner-drag-rounds-walk.json (the Mac was locked, so these two were forced; the failures are value and layout failures rather than the lock's name lookups, which look like 'no menu called \"Add Effect\"')."
+    },
+    {
+      "t": "2026-09-16T18:13:12.549Z",
+      "note": "measure-row-menu-walk still fails today (2026-09-16, screen locked so PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build row-menu): step 13 (rightClick) \"Height\" is not where a person could right click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across it. It is already in the 2026-09-15 sweep's failing list. row-menu-walk, also on that list, now passes."
     }
   ]
 }

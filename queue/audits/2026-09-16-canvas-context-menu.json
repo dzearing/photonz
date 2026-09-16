@@ -1,0 +1,29 @@
+{
+  "feature": "Right click the picture",
+  "epic": "ui-building",
+  "summary": "Right clicking something on the picture now gives you the same menu the layers list has always had for it, on the thing itself. Right clicking bare picture gives the picture's own commands instead of nothing at all.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Right click the picture\" (next-canvas-menu) and it is on by default. Start with a blank canvas.",
+  "try": [
+    { "do": "Draw three rectangles side by side with the Rectangle tool, then press V for the pointer." },
+    { "do": "Right click the middle rectangle. It gets picked as the menu opens.", "shot": "canvas-menu-1-on-a-box-sc.png" },
+    { "do": "Click the first rectangle, then shift click the middle one so two are picked." },
+    { "do": "Right click either of the two picked ones and read the menu: Group is there with Command G printed against it.", "shot": "canvas-menu-2-over-a-selection-sc.png" },
+    { "do": "Choose Group. Both go into one group and the third is left alone." },
+    { "do": "Right click the group and choose Ungroup." },
+    { "do": "Right click an empty part of the picture, well away from any rectangle.", "shot": "canvas-menu-4-bare-picture-sc.png" },
+    { "do": "Right click a rectangle with the Rectangle tool in hand. Nothing happens, on purpose." }
+  ],
+  "evaluate": [
+    "Right clicking a shape you had not picked PICKS it first. Every other canvas app does this; is it what you expect here, or would you rather the menu acted on what you already had picked and left your selection alone?",
+    "With two picked and one of them right clicked, does it read clearly that the menu is about both of them rather than about the one under the pointer?",
+    "The canvas menu has no Rename row, because the name is typed into the row in the layers list and the dock may be shut. Do you miss it?",
+    "On bare picture you get Paste, New Layer, Select All, Deselect, Zoom to Fit, Actual Size and Canvas Size. Is that the right handful, or is something obviously missing (Cut, Copy, Paste in Place, Undo)?",
+    "The menu is offered only with the pointer in hand. Should a right click with the Rectangle or Pen tool in hand do something instead of nothing?"
+  ],
+  "rough": [
+    "The screen on this machine was locked while the walk ran, so the run was forced through and does not count as a verdict on the app. The pictures in this audit are real screen captures taken during that run and show the window as it actually drew, but the walk should be run again on an unlocked screen before anyone leans on it.",
+    "A screenshot's Background layer still cannot be right clicked on the picture: a click anywhere over it reads as bare canvas, which is what a left click has always done there. So Separate into Layers is still only reachable from the Background row in the list, and that is the row a redliner actually wants.",
+    "Right clicking bare picture does not clear the selection, so with three shapes picked you can get the picture's menu while three shapes wear handles. That was chosen so an accidental right click never throws away a selection, but it may read as the menu ignoring what is picked.",
+    "Cut and Copy are not on the bare picture menu even though Paste is. They act on a layer rather than on the picture, so they belong on the layer menu, which does not carry them either. Neither menu has the clipboard trio and that is worth revisiting as one decision rather than two."
+  ]
+}

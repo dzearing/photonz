@@ -1546,8 +1546,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `ticked` and `unticked` name the rows that must, and must not, be
     /// wearing a checkmark, so the step is a test and not only a picture.
     case menuShot(menu: String, name: String, ticked: [String], unticked: [String])
-    /// Open the menu you get by RIGHT CLICKING something in the right hand
-    /// panel — a layer row, a measurement row — and photograph it.
+    /// Open the menu you get by RIGHT CLICKING something — a layer row or a
+    /// measurement row in the right hand panel (`on`), or a spot on the picture
+    /// itself (`at`) — and photograph it.
     ///
     /// The other two menu steps reach menus that hang off something visible: a
     /// menu bar title, or a button in the panel. This one reaches the menus
@@ -1557,7 +1558,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// rows, and `ticked` and `unticked` name the rows that must, and must
     /// not, be wearing a checkmark, so the step is a test and not only a
     /// picture.
-    case rightClick(on: String, shot: String?, choose: String?, ticked: [String], unticked: [String])
+    ///
+    /// Exactly one of `on` and `at`. The picture has no rows to name — the
+    /// thing you right click on it is a SPOT — so `at` is a point in the same
+    /// coordinates every other canvas step is written in, document pixels
+    /// unless `space` says otherwise.
+    case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
+                    ticked: [String], unticked: [String])
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -2344,7 +2351,13 @@ public enum PlaytestStep: Sendable, Equatable {
                               choose: try f.optionalString("choose"),
                               clicking: try f.optionalString("clicking"))
         case "rightClick":
-            self = .rightClick(on: try f.string("on"),
+            let onRow = try f.optionalString("on")
+            let onCanvas = fields["at"] == nil ? nil : try f.point("at")
+            guard onRow != nil || onCanvas != nil else {
+                throw f.invalid("on", "must name a row, or the step must name a spot "
+                              + "on the picture with \"at\": [x, y]")
+            }
+            self = .rightClick(on: onRow, at: onCanvas,
                                shot: try f.optionalString("shot"),
                                choose: try f.optionalString("choose"),
                                ticked: try f.optionalStrings("ticked"),

@@ -224,7 +224,13 @@ struct LayersRow: View, Equatable {
             editorState.clickRow(id, RowClick(modifiers: NSEvent.modifierFlags),
                                  in: editorState.panelRows.map(\.id))
         }
-        .contextMenu { menu }
+        .contextMenu {
+            LayerCommandMenu(display: display,
+                             offersMakeComponent: offersMakeComponent,
+                             offersDetachInstance: offersDetachInstance,
+                             beginRename: beginRename,
+                             editorState: editorState)
+        }
     }
 
     /// What the row SAYS it is: the name, with the component mark beside it,
@@ -410,143 +416,4 @@ struct LayersRow: View, Equatable {
         }
     }
 
-    @ViewBuilder
-    private var menu: some View {
-        Button("Duplicate") { editorState.duplicateLayer(id: id) }
-            .keyboardShortcut("d", modifiers: .command)
-        // Where Photoshop keeps them, under the names it uses for the same
-        // pair, so the two moves that make one shape match another are one
-        // right click away (`EditorState+Look.swift`).
-        if Experiments.shared.copyALookEnabled {
-            Button("Copy Look") { editorState.copyLookOfRow(id: id) }
-            Button("Paste Look") { editorState.pasteLookOntoRow(id: id) }
-                .disabled(!editorState.canPasteLookOntoRow(id: id))
-        }
-        Button("Select Pixels") { editorState.selectLayerPixels(id: id) }
-        Button("Merge Down") { editorState.mergeDown(id: id) }
-            .keyboardShortcut("e", modifiers: .command)
-        // Before "Turn Into Picture", because it is the gentler of the two:
-        // one keeps the shape editable and takes away only its being a
-        // rectangle, the other makes it pixels. A row that cannot take it does
-        // not show it (`ShapeToPath.swift`).
-        // Not gated on THIS row having an outline: with three rows picked the
-        // command acts on all of them, so a picture right clicked alongside two
-        // lines still offers it and simply leaves the picture alone.
-        if editorState.canTurnLayerIntoPath(id: id) {
-            Button(TurnIntoPathPrompt.menuItem) { editorState.turnLayerIntoPath(id: id) }
-        }
-        // The four ways two shapes become one, on the row where every other
-        // command about a layer already lives (`PathCombining.swift`). Absent
-        // rather than dimmed when there are not two shapes to combine, the
-        // rule this menu follows for everything that does not apply.
-        if editorState.canCombineLayers(id: id) {
-            Menu(PathCombine.menuItem) {
-                ForEach(PathCombine.Operation.allCases, id: \.self) { operation in
-                    Button(operation.title) { editorState.combineLayers(id: id, operation) }
-                }
-            }
-        }
-        if display.isRasterizable {
-            Button(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) }
-        }
-        // On a PICTURE, including the locked Background, which is the row a
-        // person actually right clicks when they want a screenshot taken apart
-        // (Next, `next-separate-into-layers`).
-        if editorState.canSeparateIntoLayers(id: id) {
-            Button("Separate into Layers") { editorState.separateIntoLayers(id: id) }
-            // Directly under it, because it is the next thing you want on the
-            // rows Separate just made: the run is on its own layer, and now the
-            // words in it become words you can retype.
-            Button("Turn into Text") { editorState.turnIntoText(id: id) }
-        }
-        Divider()
-        // Group and Ungroup, on Photoshop's keys, directly above the arrange
-        // commands so the structure commands sit together, which is the order
-        // the Layer menu already uses. They act on the whole selection when the
-        // row you right clicked is part of it, so picking three rows and right
-        // clicking one of them makes one group of the three; on a row outside
-        // the selection there is nothing to group, and a row that cannot act is
-        // absent rather than dimmed, like everything else in this menu.
-        if editorState.canGroupRow(id: id) {
-            Button("Group") { editorState.groupRow(id: id) }
-                .keyboardShortcut("g", modifiers: .command)
-        }
-        if editorState.canUngroupRow(id: id) {
-            Button("Ungroup") { editorState.ungroupRow(id: id) }
-                .keyboardShortcut("g", modifiers: [.command, .shift])
-        }
-        Button("Bring to Front") { editorState.bringLayerToFront(id: id) }
-            .keyboardShortcut("]", modifiers: [.command, .shift])
-        Button("Bring Forward") { editorState.bringLayerForward(id: id) }
-            .keyboardShortcut("]", modifiers: .command)
-        Button("Send Backward") { editorState.sendLayerBackward(id: id) }
-            .keyboardShortcut("[", modifiers: .command)
-        Button("Send to Back") { editorState.sendLayerToBack(id: id) }
-            .keyboardShortcut("[", modifiers: [.command, .shift])
-        // Only on a row that IS out of view, which is the only row where it
-        // would do anything. Same move as the mark on the row, named, for
-        // anybody who goes to the menu before they go to a small orange glyph.
-        if display.outOfView?.canReturn == true {
-            Divider()
-            Button("Bring into View") { editorState.bringLayerIntoView(id: id) }
-        } else if let container = display.outOfView?.container,
-                  display.outOfView?.growsContainer != nil {
-            // The same move as the mark on the row, named, for anybody who goes
-            // to the menu before they go to a small orange glyph. It names the
-            // container because that is the thing that changes.
-            Divider()
-            Button("Make \(container) Fit") { editorState.makeRoomForLayer(id: id) }
-        }
-        Divider()
-        // The user's own suggestion for where these went: right click the
-        // layer and ask for the numbers (`ExactPlacement`). It acts on the
-        // whole selection when the row you right clicked is part of it, like
-        // everything else in this menu.
-        if Experiments.shared.geometryFieldsEnabled {
-            Button(ExactPlacement.menuItem) {
-                if !display.isSelected {
-                    editorState.clickRow(id, .plain, in: editorState.panelRows.map(\.id))
-                }
-                editorState.openExactPlacement()
-            }
-        }
-        Divider()
-        Button("Rename") { beginRename(id, display.name) }
-        if offersMakeComponent {
-            Button("Make Component") { editorState.makeComponent() }
-                .keyboardShortcut("k", modifiers: [.command, .option])
-        }
-        if offersDetachInstance {
-            Button("Detach Instance") { editorState.detachInstance() }
-                .keyboardShortcut("b", modifiers: [.command, .option])
-        }
-        // Only on an original, and only when it would work: a row that means
-        // nothing on the layer you right-clicked is a row people hunt the
-        // reason for.
-        if display.isMainComponent, editorState.canAddComponentVersion {
-            Button("Add Variant") { editorState.addComponentVersion() }
-        }
-        // Only on a piece of an original that has other looks, and it names
-        // them, so the row answers "what would this touch" before it is
-        // pressed. Same rule as the Layer menu.
-        if let title = editorState.applyToOtherComponentVersionsTitle {
-            Button(title) { editorState.applyToOtherComponentVersions() }
-                .disabled(!editorState.canApplyToOtherComponentVersions)
-        }
-        // Settings, not actions: the row says what it IS and wears a checkmark,
-        // so the menu reads the same whichever state the layer is in and the
-        // Delete below it never shifts under the pointer (MenuToggleNames).
-        Toggle(MenuToggleNames.layerVisible, isOn: Binding(
-            get: { display.isVisible },
-            set: { _ in editorState.toggleLayerVisibility(id: id) }))
-        Toggle(MenuToggleNames.layerLocked, isOn: Binding(
-            get: { display.isLocked },
-            set: { _ in editorState.toggleLayerLock(id: id) }))
-        Divider()
-        // Dimmed on a locked layer, with the Locked toggle right above it: the
-        // way out of the greyed row is the line you just read.
-        Button("Delete", role: .destructive) { editorState.deleteLayer(id: id) }
-            .keyboardShortcut(.delete, modifiers: .command)
-            .disabled(display.isLocked)
-    }
 }

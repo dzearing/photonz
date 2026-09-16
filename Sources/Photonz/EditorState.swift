@@ -1308,6 +1308,19 @@ final class EditorState {
     /// list draws. Written only by `publishRowInHand`.
     var layerRowLanding: LayerDrop?
 
+    /// What the last right click on the picture was aimed at: the layer under
+    /// the pointer and everything the menu about it acts on, or the canvas
+    /// itself. Set by the canvas the instant the menu is asked for and read
+    /// while it is being built, so the menu is about where the pointer WAS
+    /// rather than about whatever was picked last. See `CanvasMenuAim` and
+    /// `EditorState+CanvasMenu.swift`.
+    ///
+    /// Not watched: nothing on screen draws from it except the menu, and the
+    /// menu is built fresh out of the tracking loop every time it opens. Left
+    /// observable it would re-run the canvas body on every right click, which
+    /// is exactly what `EditorCanvasSurface` exists to stop.
+    @ObservationIgnored var canvasMenuAim: CanvasMenuAim = .canvas
+
     /// The mark ONE row in the layers list wears while a saved text style is
     /// held over it, and the deadline that takes it away when the drag ends
     /// without telling anyone. A style aimed at a row lights up that row and

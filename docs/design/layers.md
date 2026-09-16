@@ -62,6 +62,39 @@ missing on a row outside the selection: grouping takes two siblings, so one row
 on its own has nothing to group. (The Layer MENU dims the same command instead,
 because a menu bar menu is always there and has to say the command exists.)
 
+### The same menu on the picture (2026-09-16, `next-canvas-menu`)
+
+Right clicking a layer on the CANVAS raises the same menu, built from the same
+list of rows (`LayerCommandList`), so the commands, their order and the
+shortcuts printed against them cannot drift apart. Two differences, both
+deliberate:
+
+- **A right click on the canvas picks what you point at** when it is not
+  already picked (`CanvasMenuAim`, tested in `CanvasMenuAimTests`). A row in a
+  list is a NAME you aimed at and the menu plainly belongs to it; a shape on the
+  picture is something you are LOOKING at, and the only thing on screen saying
+  what the app thinks you mean is the selection outline. Without the pick, right
+  clicking one box while another wears the handles opens a menu about the box
+  with no handles on it. Right clicking something already in the selection
+  brings the rest of the selection with it and moves nothing, exactly like the
+  row rule. Once the pick has landed the two rules are the same rule.
+- **No Rename.** The name is typed into the row itself in the layers list, so
+  with the dock shut there would be nowhere for the field to appear.
+
+Right clicking bare picture gives the canvas's own commands instead — Paste,
+New Layer, Select All, Deselect, Zoom to Fit, Actual Size, Canvas Size — on the
+same shortcuts the menu bar prints for them, and never an empty menu. It leaves
+the selection alone: an accidental right click on the matte must not throw away
+what you had picked.
+
+The canvas menu is an AppKit `NSMenu` built in `CanvasNSView.menu(for:)`, not a
+SwiftUI `.contextMenu`, and that is not a style choice. SwiftUI resolves a
+context menu's contents when the view around it updates, not when the menu pops
+up, so a menu aimed at a POINT is always about the previous right click: wired
+that way, right clicking a fresh group and choosing Delete removed one of its
+children and left the group standing. The walk is
+`Scripts/playtest/canvas-menu-walk.json`.
+
 Commands in the row menu that are single-row **by nature**: Rename, Select
 Pixels (one layer's transparency), Bring into View and Make … Fit (they read
 that row's own out-of-view mark). Make Component, Detach Instance and Add

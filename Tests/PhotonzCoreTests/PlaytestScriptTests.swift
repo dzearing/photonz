@@ -115,10 +115,11 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(let on, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
+        #expect(at == nil)
         #expect(shot == nil)
         #expect(choose == nil)
         #expect(ticked.isEmpty)
@@ -134,7 +135,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
                        "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
         """)
-        guard case .rightClick(let on, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -142,6 +143,33 @@ struct PlaytestScriptTests {
         #expect(choose == "Duplicate")
         #expect(ticked == ["Visible"])
         #expect(unticked == ["Locked"])
+    }
+
+    /// The picture has no rows to name: the thing you right click on it is a
+    /// spot, so the step takes a point in the same coordinates every other
+    /// canvas step is written in.
+    @Test("A rightClick step can name a spot on the picture instead of a row")
+    func rightClickStepCanNameASpotOnThePicture() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "at": [140, 120], "choose": "Group" } ] }
+        """)
+        guard case .rightClick(let on, let at, _, let choose, _, _) = script.steps[0] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(on == nil)
+        #expect(at == PlaytestPoint(CGPoint(x: 140, y: 120), space: .document))
+        #expect(choose == "Group")
+    }
+
+    @Test("A rightClick spot can be written in view or window coordinates like any other")
+    func rightClickSpotTakesASpace() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "at": [40, 40], "space": "window" } ] }
+        """)
+        guard case .rightClick(_, let at, _, _, _, _) = script.steps[0] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(at == PlaytestPoint(CGPoint(x: 40, y: 40), space: .window))
     }
 
     @Test("A rightClick step with nothing to click is refused with a readable reason")

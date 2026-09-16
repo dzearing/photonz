@@ -341,6 +341,12 @@ extension Experiments {
     /// is the flat one it always was.
     var layersListShowsGroups: Bool { layerGroupsEnabled }
 
+    /// `next-canvas-menu`: whether a right click on the picture raises a menu
+    /// — the layer menu on whatever is under the pointer, or the canvas's own
+    /// commands on bare picture. Off, a right click on the canvas does nothing,
+    /// which is what Current does and what Next did before this.
+    var canvasMenuEnabled: Bool { isEnabled(FeatureCatalog.canvasMenuFlag) }
+
     /// `next-layers-follow-pick`: whether picking a layer brings its row into
     /// view in the layers list. Only the SCROLL is flagged — opening the groups
     /// above a picked layer is what the list has always done, in both releases,

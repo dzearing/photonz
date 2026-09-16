@@ -4456,3 +4456,9 @@
 {"t":"2026-09-16T17:50:21.497Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
 {"t":"2026-09-16T17:50:21.541Z","ev":"task_note","id":"picking-a-layer-stops-re-measuring-the-whole-rig"}
 {"t":"2026-09-16T17:50:23.621Z","ev":"task_dropped","id":"picking-a-layer-stops-re-measuring-the-whole-rig","from":"in_progress","note":"Measured by ablation before building: the dock's height budget, the arrival bookkeeping and the per-section chrome this task names cost nothing. A pick's panel cost is building the arriving section's form out of AppKit controls, ~3-5ms each, which no bookkeeping in InspectorPanel can reach. The measurement is committed (e43154ad) next to the machinery, and a-section-that-appears-in-the-right-hand-panel-a carries the user-facing goal with the right target."}
+{"t":"2026-09-16T17:52:00.063Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T17:52:00.167Z","ev":"task_started","id":"right-clicking-the-picture-offers-what-you-can-d","title":"Right clicking the picture offers what you can do with it","priority":"p2-normal"}
+{"t":"2026-09-16T17:54:05.354Z","ev":"task_note","id":"right-clicking-the-picture-offers-what-you-can-d"}
+{"t":"2026-09-16T18:05:50.617Z","ev":"task_note","id":"right-clicking-the-picture-offers-what-you-can-d"}
+{"t":"2026-09-16T18:13:12.551Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-16T18:13:12.598Z","ev":"task_note","id":"right-clicking-the-picture-offers-what-you-can-d"}
