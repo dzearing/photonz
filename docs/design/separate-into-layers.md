@@ -671,6 +671,15 @@ and three in another, which is the thing a person would actually notice.
 asked and what turns a list of Text 1…Text 9 into a list you can read. A name a
 PERSON typed is theirs and is kept (`LayerNaming.isAutoName`).
 
+Nothing is renamed to do it. A piece of text nobody has named by hand simply
+wears its own words in the layers list, read off the layer each time the list is
+built (`Layer.displayName`), shortened at a word boundary when it runs past
+thirty two characters. That is why retyping the words on the canvas moves the row
+with them, why this costs no undo step of its own, and why the rule holds for
+every piece of text in the app rather than only the ones this command made. The
+moment somebody types a name of their own the stored name stops being one the app
+wrote, and from then on it is theirs and the words have no say.
+
 Deliberately no auto-contrast shadow, which is what typing fresh text on a
 picture gets. These words were already legible where they came from and they are
 going back exactly where they were.

@@ -435,6 +435,14 @@ extension Experiments {
             && isEnabled(FeatureCatalog.animatedSVGExportFlag)
     }
 
+    /// `next-a-row-says-its-words`: whether a piece of text nobody has named by
+    /// hand wears its own words in the layers list instead of "Text 9". It
+    /// takes away nothing and writes nothing down — the name is read off the
+    /// layer as the list is built (`Layer.displayName`) — so a document made
+    /// with it on is byte for byte an ordinary document and turning it off puts
+    /// every row back to the number it had.
+    var rowSaysItsWordsEnabled: Bool { isEnabled(FeatureCatalog.rowSaysItsWordsFlag) }
+
     /// `next-turn-into-path`: whether a box, an oval or a line can be turned
     /// into a path from the two menus. It needs the reshaping work, because
     /// converting a shape you then cannot edit is a command with no payoff: the

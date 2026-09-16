@@ -55,7 +55,7 @@
     { "do": "panel", "stage": "1-rectangle" },
     { "do": "snapshot", "name": "dock-picked-first-1-rectangle" },
 
-    { "do": "selectRow", "row": "Text" },
+    { "do": "selectRow", "row": "Label" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "waitFor", "condition": "sectionInView", "value": "Text", "timeout": 4 },
     { "comment": "...and the layers list you clicked in is still all there. Nothing scrolled, so the next row you want is under your hand where you left it.", "do": "waitFor", "condition": "sectionInView", "value": "Layers", "timeout": 4 },

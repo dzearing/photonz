@@ -92,7 +92,17 @@ extension EditorState {
             selected: selected,
             // Cutting off what does not fit is auto layout's doing, so the mark
             // that says a container has cut something off ships with it.
-            marksOutOfView: Experiments.shared.autoLayoutEnabled) ?? []
+            marksOutOfView: Experiments.shared.autoLayoutEnabled,
+            saysItsWords: Experiments.shared.rowSaysItsWordsEnabled) ?? []
+    }
+
+    /// What the layers list is CALLING this layer right now, which is what a
+    /// rename field has to open filled with. Usually its stored name; a piece
+    /// of text nobody has named by hand says its own words instead, while
+    /// `next-a-row-says-its-words` is on (`Layer.displayName`).
+    func rowName(of id: UUID) -> String? {
+        guard let layer = document?.layer(id: id) else { return nil }
+        return Experiments.shared.rowSaysItsWordsEnabled ? layer.displayName : layer.name
     }
 
     /// How many rows the layers area keeps room for: every row a twist could
@@ -437,9 +447,7 @@ extension EditorState {
     }
 
     func renameLayer(id: UUID, to name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        perform { $0.updateLayer(id: id) { $0.name = trimmed } }
+        perform { $0.renameLayer(id: id, to: name) }
     }
 
     func deleteLayer(id: UUID) {

@@ -186,7 +186,7 @@
     },
     {
       "do": "selectRow",
-      "row": "Text"
+      "row": "Everything you missed while you…"
     },
     {
       "do": "wait",

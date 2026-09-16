@@ -457,9 +457,9 @@ struct LayersListView: View {
         }
         .onChange(of: editorState.layerAwaitingRename) { _, id in
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),
-                  let layer = editorState.document?.layer(id: id) else { return }
+                  let name = editorState.rowName(of: id) else { return }
             editorState.layerAwaitingRename = nil
-            beginRename(id: layer.id, name: layer.name)
+            beginRename(id: id, name: name)
         }
     }
 

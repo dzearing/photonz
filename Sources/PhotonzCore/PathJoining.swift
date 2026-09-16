@@ -346,6 +346,11 @@ extension PhotonzDocument {
     /// keeps its name too, unless that name was one the app wrote, in which
     /// case it becomes "Path" — "Line 3" is a poor name for a triangle.
     ///
+    /// The question's wording uses the names the rows were wearing BEFORE any
+    /// of this. A shape stops calling itself a shape the moment it becomes a
+    /// path, so by the time a survivor is picked its row already says something
+    /// the person has never seen and cannot find in the list.
+    ///
     /// What does NOT join: a rectangle or an oval, which is closed and has no
     /// free ends; a layer somebody has locked; a layer that has been rotated or
     /// flipped, whose outline is not where its anchors say it is; and anything
@@ -357,7 +362,22 @@ extension PhotonzDocument {
         -> (document: PhotonzDocument, plan: TurnIntoPathPlan) {
         var next = self
         var plan = TurnIntoPathPlan()
-        for id in ids where layer(id: id)?.canTurnIntoPath == true {
+        // What every row SAYS before any of this happens, because that is the
+        // name the question is allowed to use. Turning a shape into a path
+        // renames it off the shape it stopped being, so by the time the weld
+        // picks a survivor its row already reads "Path 2" — a name the person
+        // has never seen and cannot look for in the list.
+        let namesBefore = Dictionary(allLayers.map { ($0.id, $0.displayName) },
+                                     uniquingKeysWith: { first, _ in first })
+        // Bottom of the stack first, so a batch of shapes takes its Path, Path
+        // 2, Path 3 in the order they are stacked rather than in whatever order
+        // a set happens to hand them over. A command that numbers rows
+        // differently on two identical documents is a command nobody can write
+        // a test for.
+        let inOrder = ids.sorted {
+            (path(of: $0) ?? []).lexicographicallyPrecedes(path(of: $1) ?? [])
+        }
+        for id in inOrder where layer(id: id)?.canTurnIntoPath == true {
             next.turnLayerIntoPath(id: id)
             plan.takes += 1
         }
@@ -381,7 +401,8 @@ extension PhotonzDocument {
         var welded: Set<UUID> = []
         for parent in byParent.keys.sorted(by: { $0.lexicographicallyPrecedes($1) }) {
             guard let members = byParent[parent] else { continue }
-            next.join(members, tolerance: tolerance, into: &plan, welded: &welded)
+            next.join(members, tolerance: tolerance, named: namesBefore,
+                      into: &plan, welded: &welded)
         }
         // A path already on the canvas only counts as one of the layers the
         // command acts on when it actually took part in a weld: picking a path
@@ -394,6 +415,7 @@ extension PhotonzDocument {
 
     /// Welds one list of sibling outlines together, writing the result back.
     private mutating func join(_ members: [UUID], tolerance: CGFloat,
+                               named namesBefore: [UUID: String],
                                into plan: inout TurnIntoPathPlan,
                                welded: inout Set<UUID>) {
         // Topmost first, so the outline that survives a weld is the one nearest
@@ -416,14 +438,27 @@ extension PhotonzDocument {
             // takes, so the first MIXED run owns it: naming a run that matched
             // would point at the wrong row.
             if run.sources.contains(where: { !outlines[$0].looksLike(outlines[owner]) }) {
-                if !plan.mixedLooks { plan.keeper = layer(id: keeper)?.name ?? "" }
+                if !plan.mixedLooks { plan.keeper = namesBefore[keeper] ?? "" }
                 plan.mixedLooks = true
             } else if plan.keeper.isEmpty, !plan.mixedLooks {
-                plan.keeper = layer(id: keeper)?.name ?? ""
+                plan.keeper = namesBefore[keeper] ?? ""
             }
             removeLayers(ids: Set(run.sources.filter { $0 != owner }.map { ordered[$0] }))
-            let renamed = LayerNaming.isAutoName(layer(id: keeper)?.name ?? "")
-                && run.sources.count > 1 ? freshLayerName(base: PathBuilder.defaultName) : nil
+            // "Line 3" is a poor name for a triangle, and by now it is already
+            // gone: every shape that took part stopped calling itself a shape
+            // as it became a path (`turnLayerIntoPath`), so the survivor is
+            // "Path 3" and the two it absorbed have just been deleted. All that
+            // is left is to close the gap they left, which is why the keeper's
+            // own name is the one name that does not count as taken: three
+            // lines welded into one triangle leave a row reading "Path", not
+            // "Path 3" with no Path or Path 2 anywhere in the list. A name a
+            // person typed is theirs and is never in this at all.
+            let keeperName = layer(id: keeper)?.name ?? ""
+            let renamed = run.sources.count > 1 && LayerNaming.isAutoName(keeperName)
+                ? LayerNaming.firstFree(base: PathBuilder.defaultName,
+                                        taken: Set(allLayers.lazy
+                                            .filter { $0.id != keeper }.map(\.name)))
+                : nil
             updateLayer(id: keeper) { layer in
                 let local = run.path.offsetBy(dx: -layer.frame.origin.x, dy: -layer.frame.origin.y)
                 layer = PathBuilder.refit(layer, content: local)

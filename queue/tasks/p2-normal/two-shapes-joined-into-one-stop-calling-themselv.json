@@ -1,0 +1,29 @@
+{
+  "id": "two-shapes-joined-into-one-stop-calling-themselv",
+  "title": "Two shapes joined into one stop calling themselves a shape",
+  "goal": "Join two ovals into a single outline and the row in the layers list still says Ellipse, even though what you now have is one shape neither oval could be. A layer nobody has named by hand should say what it IS, so this row should read Path, the way it already does when you turn a single box into one.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2750,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T14:37:46.815Z",
+  "updated": "2026-09-16T14:37:46.818Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while landing a-text-layer-s-row-says-the-words-that-are-in-it, which made Turn Into Path rename its layer (PhotonzDocument.turnLayerIntoPath) and left the boolean combines as the one command that does not.\n\nReproduced on 2026-09-16 with a throwaway test against PathCombining, since combining has no walk that reads the row name back:\n\n  var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))\n  // two ellipse layers, \"Ellipse\" and \"Ellipse 2\", overlapping\n  document.combineLayers(ids: ids, .join)\n  print(document.layers.map(\\.displayName))\n\nOutput:\n\n  PROBE combine union leaves rows: [\"Ellipse\"]\n  PROBE is it a path: [true]\n\nSo the layer IS a path and its row says Ellipse. The fix mirrors turnLayerIntoPath: in PhotonzDocument.combiningLayers, work out freshLayerName(base: PathBuilder.defaultName) before the mutation when LayerNaming.isAutoName(keeper.name), and set it inside the same updateLayer that swaps the content, so it rides in the one undo step. Watch combine-shapes-walk.json, which picks rows called Ellipse 2 and Ellipse 3 AFTER a combine and will need those names updated.\n\nNot folded into the task that found it on purpose: the Mac's screen was locked for that whole task, so not one walk could be run to check it, and combining is a different command with its own question and its own walk.",
+  "acceptance": [
+    "Joining two unnamed ovals leaves one row called Path, not Ellipse",
+    "Cut Out, Keep Overlap and Drop Overlap read the same way",
+    "A layer somebody renamed to Card keeps that name through any of the four",
+    "The new name is part of the same single undo step as the combine, so one undo puts both back",
+    "The question asked beforehand still names the row the way the person sees it now, not the name it would have afterwards"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T14:37:46.817Z",
+      "note": "created (manual)"
+    }
+  ]
+}

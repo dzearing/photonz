@@ -11,7 +11,7 @@
     { "do": "type", "text": "Save all the changes" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "selectRow", "row": "Text" },
+    { "do": "selectRow", "row": "Save all the changes" },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.9 },
 

@@ -196,7 +196,17 @@
     {
       "do": "describe",
       "stage": "5-retyped",
-      "note": "THE FOURTH TEST, and the whole point of the feature: the heading has been RETYPED. It reads Appearance in the same bold face, the same size and the same colour the screenshot's own heading was in, sitting exactly where that heading sat. That is changing a label rather than covering it up."
+      "note": "THE FOURTH TEST, and the whole point of the feature: the heading has been RETYPED. It reads Appearance in the same bold face, the same size and the same colour the screenshot's own heading was in, sitting exactly where that heading sat. That is changing a label rather than covering it up. Its ROW followed the words: it said General a moment ago and says Appearance now, without anyone renaming anything."
+    },
+    {
+      "do": "expect",
+      "row": "Appearance",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "General",
+      "present": false
     },
     {
       "do": "snapshot",
@@ -235,6 +245,94 @@
     {
       "do": "snapshot",
       "name": "text-6-undone"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "row": "Appearance",
+      "present": true
+    },
+    {
+      "do": "selectRow",
+      "row": "Appearance"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "renameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Renamed Layer",
+      "present": true
+    },
+    {
+      "do": "click",
+      "at": [
+        146,
+        85
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "7-a-name-somebody-typed-stays",
+      "note": "THE SIXTH TEST: the heading was renamed by hand, then retyped again. The canvas says Sign in and the ROW still says the name that was typed for it. A name a person gave a layer is theirs, and the words have no say from then on."
+    },
+    {
+      "do": "expect",
+      "row": "Renamed Layer",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Sign in",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "text-7-hand-name-stays"
     }
   ],
   "setup": {

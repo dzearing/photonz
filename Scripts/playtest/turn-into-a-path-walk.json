@@ -49,9 +49,11 @@
     { "do": "wait", "seconds": 1.0 },
 
     { "do": "expectPath", "anchors": 8, "closed": true, "curves": 4 },
+    { "do": "expect", "row": "Path", "present": true },
+    { "do": "expect", "row": "Rectangle", "present": false },
     { "do": "expectHint", "contains": "Turned into a path" },
     { "do": "expectHint", "contains": "Command Z" },
-    { "do": "describe", "stage": "4-turned", "note": "THE POINT: the picture is the same rounded box it was, and the layer is now a path of eight points, four runs of it curved. Compare doc-1-rounded-rectangle with doc-4-turned. The panel has lost its Corner Radius row, because a path has points rather than corners, and the canvas shows those points instead of resize squares" },
+    { "do": "describe", "stage": "4-turned", "note": "THE POINT: the picture is the same rounded box it was, and the layer is now a path of eight points, four runs of it curved. Its row says Path rather than Rectangle, because it is not a rectangle any more. Compare doc-1-rounded-rectangle with doc-4-turned. The panel has lost its Corner Radius row, because a path has points rather than corners, and the canvas shows those points instead of resize squares" },
     { "do": "panel", "stage": "4-turned" },
     { "do": "render", "name": "doc-4-turned" },
     { "do": "snapshot", "name": "4-turned" },
@@ -69,7 +71,9 @@
     { "do": "expectPath", "anchors": 8, "closed": true },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6-two-undos-put-the-rectangle-back", "note": "one undo puts the point back, a second takes the path back to being a real rectangle with its Corner Radius row: turning is ONE step, not eight" },
+    { "do": "expect", "row": "Rectangle", "present": true },
+    { "do": "expect", "row": "Path", "present": false },
+    { "do": "describe", "stage": "6-two-undos-put-the-rectangle-back", "note": "one undo puts the point back, a second takes the path back to being a real rectangle with its Corner Radius row: turning is ONE step, not eight. The ROW came back with it, saying Rectangle again, because the new name rode in the same step as the new shape" },
     { "do": "panel", "stage": "6-rectangle-back" },
     { "do": "render", "name": "doc-6-rectangle-back" },
 
@@ -87,11 +91,13 @@
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectPath", "anchors": 4, "closed": true, "curves": 4, "smooth": 4 },
+    { "do": "expect", "row": "Path", "present": true },
+    { "do": "expect", "row": "Ellipse", "present": false },
     { "do": "describe", "stage": "7-a-circle-stays-a-circle", "note": "the circle became four smooth points and is still a circle, not a lumpy approximation. Compare doc-7-circle-before with doc-7-circle-after" },
     { "do": "render", "name": "doc-7-circle-after" },
     { "do": "snapshot", "name": "7-circle-after" },
 
-    { "do": "rightClick", "on": "Ellipse", "shot": "8-already-a-path" },
+    { "do": "rightClick", "on": "Path", "shot": "8-already-a-path" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "8-it-is-not-offered-twice", "note": "the same row menu on the layer that is already a path: 'Turn Into Path…' is gone, because there is nothing left to turn" },
 

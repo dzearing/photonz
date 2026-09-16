@@ -368,19 +368,18 @@ public enum TextReading {
 
     // MARK: - Naming
 
-    /// What the new layer is called: the words themselves, which is the whole
+    /// What a run of words is called: the words themselves, which is the whole
     /// visible reward for having asked. A run long enough to push every other
     /// row out of the layers list is cut at a word boundary and ended with an
     /// ellipsis, the way every other long name in the app is.
-    public static let nameLimit = 32
+    ///
+    /// One rule, in one place: this is the same shortening the layers list
+    /// does when it reads a piece of text's own words off it
+    /// (`LayerNaming.name(fromWords:)`), so the pill that says what landed and
+    /// the row it landed in cannot say different things.
+    public static var nameLimit: Int { LayerNaming.wordsLimit }
 
     public static func layerName(for string: String) -> String {
-        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.count > nameLimit else { return trimmed }
-        let cut = trimmed.prefix(nameLimit)
-        guard let space = cut.lastIndex(of: " "), space > cut.startIndex else {
-            return cut + "\u{2026}"
-        }
-        return trimmed[trimmed.startIndex..<space] + "\u{2026}"
+        LayerNaming.name(fromWords: string)
     }
 }

@@ -455,8 +455,13 @@ extension PhotonzDocument {
     /// `marksOutOfView` is the Next auto-layout flag: with it off no row is
     /// marked and no clipping box is ever measured, so the list costs exactly
     /// what it always did.
+    /// `saysItsWords` is the Next flag that lets a piece of text nobody has
+    /// named by hand wear its own words instead of the number the app gave it
+    /// (`Layer.displayName`). With it off every row says exactly what it is
+    /// stored as, which is what Current shows.
     public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
-                          marksOutOfView: Bool = true) -> [LayerRowDisplay] {
+                          marksOutOfView: Bool = true,
+                          saysItsWords: Bool = true) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
         // Which components hold more than one drawing of themselves, and what
         // those drawings are called. A version name is only worth printing
@@ -523,7 +528,9 @@ extension PhotonzDocument {
                     row: LayerPanelRow(id: layer.id, depth: depth, isGroup: openable,
                                        childCount: openable ? layer.children.count : 0,
                                        isExpanded: open, parentID: parent),
-                    name: layer.name,
+                    // Not `layer.name`: a piece of text nobody has renamed by
+                    // hand says the words it holds (`Layer.displayName`).
+                    name: saysItsWords ? layer.displayName : layer.name,
                     isVisible: layer.isVisible,
                     isLocked: layer.isLocked,
                     isSelected: selected.contains(layer.id),
@@ -533,7 +540,7 @@ extension PhotonzDocument {
                     componentNote: ComponentRowNote.forRow(
                         isMain: layer.isMainComponent,
                         isInstance: layer.isComponentInstance,
-                        rowName: layer.name,
+                        rowName: saysItsWords ? layer.displayName : layer.name,
                         componentName: layer.instanceOf.flatMap { componentNames[$0] },
                         versionName: version),
                     isRasterizable: layer.isRasterizable,

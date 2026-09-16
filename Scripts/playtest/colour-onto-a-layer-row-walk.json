@@ -60,7 +60,7 @@
     { "do": "render", "name": "4-canvas" },
 
     {
-      "do": "dragTile", "tile": "Brand", "onto": "Text",
+      "do": "dragTile", "tile": "Brand", "onto": "Sign in",
       "expect": "takes", "says": "Paints Text with Brand",
       "hold": "5-over-a-text-row"
     },
@@ -70,15 +70,15 @@
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
 
-    { "do": "press", "control": "Lock", "in": "Text" },
+    { "do": "press", "control": "Lock", "in": "Sign in" },
     { "do": "wait", "seconds": 0.6 },
     {
-      "do": "dragTile", "tile": "Brand", "onto": "Text",
+      "do": "dragTile", "tile": "Brand", "onto": "Sign in",
       "expect": "refuses", "says": "is locked",
       "hold": "6-over-a-locked-row"
     },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Lock", "in": "Text" },
+    { "do": "press", "control": "Lock", "in": "Sign in" },
     { "do": "wait", "seconds": 0.6 },
 
     { "do": "press", "control": "Lock", "in": "Background", "comment": "A blank document's picture arrives locked, and a locked row refuses every tile; unlocked, it is the one row in the app with no colour at all." },

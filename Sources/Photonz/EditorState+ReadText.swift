@@ -101,18 +101,18 @@ extension EditorState {
         let layerScale = sx > 0 ? 1 / sx : 1
         let box = TextReader.frame(for: text, placingInkAt: inkFrame, scale: layerScale)
 
-        // The name becomes the words — the visible reward for having asked, and
-        // the thing that turns a list of Text 1…Text 9 into a list you can
-        // read. A name a PERSON typed is theirs and is kept; the app's own
-        // numbering is not.
-        let name = LayerNaming.isAutoName(layer.name)
-            ? TextReading.layerName(for: reading.string) : nil
+        // Nothing renames the layer here, and that is the point: a piece of
+        // text nobody has named by hand already wears its own words in the
+        // layers list, so the row turns from `Text 9` into `Save Changes` the
+        // instant the words land — and follows them if they are retyped
+        // afterwards, which a name written down once could not
+        // (`Layer.displayName`).
         // Deliberately no auto-contrast shadow, which is what typing fresh text
         // on a picture gets. These words were already legible where they came
         // from — they are going back exactly where they were — and a shadow
         // nobody asked for is the difference between a label that matches the
         // screenshot and one that nearly does.
-        perform { $0.makeTextEditable(id: id, text: text, frame: box, name: name) }
+        perform { $0.makeTextEditable(id: id, text: text, frame: box) }
         selectedLayerID = id
         multiSelectedLayerIDs = []
         raiseCanvasNotice(.turnedIntoText(read.outcome))

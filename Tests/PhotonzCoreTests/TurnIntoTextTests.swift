@@ -36,25 +36,27 @@ struct TurnIntoTextTests {
         var document = self.document()
         let id = try #require(document.layers.last?.id)
         let box = CGRect(x: 98, y: 74, width: 190, height: 52)
-        document.makeTextEditable(id: id, text: words, frame: box, name: "Save Changes")
+        document.makeTextEditable(id: id, text: words, frame: box)
         let layer = try #require(document.layer(id: id))
         #expect(layer.text?.string == "Save Changes")
         #expect(layer.imageRef == nil)
         #expect(layer.frame == box)
-        #expect(layer.name == "Save Changes")
+        // The row says the words the instant they land, without anything being
+        // written down as a rename (`Layer.displayName`).
+        #expect(layer.displayName == "Save Changes")
         // Same slot, same count: this replaces a layer, it does not add one.
         #expect(document.layers.count == 2)
         #expect(document.layers.last?.id == id)
     }
 
     @Test func aNameSomebodyTypedIsNotTakenAway() throws {
-        // The caller decides, because only the caller knows whether the name
-        // was the app's own numbering or a person's word. Passing nothing has
-        // to leave the name exactly alone.
+        // A name a person typed is theirs: the words landing inside the layer
+        // never push it aside, and the row goes on saying what they wrote.
         var document = self.document(named: "Primary button label")
         let id = try #require(document.layers.last?.id)
-        document.makeTextEditable(id: id, text: words, frame: .zero, name: nil)
+        document.makeTextEditable(id: id, text: words, frame: .zero)
         #expect(document.layer(id: id)?.name == "Primary button label")
+        #expect(document.layer(id: id)?.displayName == "Primary button label")
     }
 
     @Test func anAppWrittenNameIsTheOneThisReplaces() throws {
@@ -68,9 +70,11 @@ struct TurnIntoTextTests {
     @Test func nothingHappensToSomethingThatIsNotAPicture() throws {
         var document = self.document()
         let id = try #require(document.layers.last?.id)
-        document.makeTextEditable(id: id, text: words, frame: .zero, name: "Save Changes")
+        document.makeTextEditable(id: id, text: words, frame: .zero)
         let before = document
-        document.makeTextEditable(id: id, text: words, frame: .zero, name: "Twice")
+        var twice = words
+        twice.string = "Twice"
+        document.makeTextEditable(id: id, text: twice, frame: .zero)
         #expect(document.layer(id: id)?.name == before.layer(id: id)?.name)
         #expect(document.layer(id: id)?.text?.string == "Save Changes")
     }
@@ -86,7 +90,7 @@ struct TurnIntoTextTests {
             $0.crop = CGRect(x: 2, y: 2, width: 10, height: 10)
             $0.transform = LayerTransform(rotation: 0.3)
         }
-        document.makeTextEditable(id: id, text: words, frame: .zero, name: nil)
+        document.makeTextEditable(id: id, text: words, frame: .zero)
         #expect(document.layer(id: id)?.crop == nil)
         #expect(document.layer(id: id)?.transform.isIdentity == true)
     }

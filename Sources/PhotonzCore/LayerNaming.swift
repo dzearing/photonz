@@ -29,18 +29,23 @@ public enum LayerNaming {
     ///
     /// Components and starter pieces are absent too: their name comes from the
     /// original they copy, and copies of one component are meant to share it.
-    public static var autoStems: [String] {
+    ///
+    /// Held rather than rebuilt: the layers list asks whether each row's name
+    /// is one the app wrote every time it is built, so a hundred-row document
+    /// would otherwise mint a hundred copies of this list on every click in
+    /// the dock.
+    public static let autoStems: [String] =
         AnnotationShape.allCases.map(\.title) + [
             "Group",
             "Frame",
             PhotonzDocument.componentNameBase,
             TextBuilder.defaultLayerName,
+            PathBuilder.defaultName,
             "Zoom",
             "Collage",
             newLayerName,
             PlacedImageNaming.clipboardName,
         ]
-    }
 
     /// The stem an automatic name was made from ("Rectangle" for both
     /// "Rectangle" and "Rectangle 7"), or nil when the name is not one the app
@@ -59,6 +64,30 @@ public enum LayerNaming {
         guard name.hasPrefix(stem) else { return false }
         let tail = name.dropFirst(stem.count).trimmingCharacters(in: .whitespaces)
         return tail.isEmpty || Int(tail) != nil
+    }
+
+    // MARK: - Names read off the layer itself
+
+    /// How many characters of a layer's own words a row shows before the rest
+    /// is cut away. A list is a column of names you scan, so a name long
+    /// enough to push every other row off the edge is not a name.
+    public static let wordsLimit = 32
+
+    /// A piece of text's own words, as the name for a row: one line, cut at a
+    /// word boundary and ended with an ellipsis when it runs long, and empty
+    /// when there are no words to read.
+    ///
+    /// The lines are folded into one because a row is one line. Two lines of a
+    /// button's label arriving in the layers list as a name with a return in
+    /// the middle of it is how a list stops being a column.
+    public static func name(fromWords string: String) -> String {
+        let words = string.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard words.count > wordsLimit else { return words }
+        let cut = words.prefix(wordsLimit)
+        guard let space = cut.lastIndex(of: " "), space > cut.startIndex else {
+            return cut + "\u{2026}"
+        }
+        return words[words.startIndex..<space] + "\u{2026}"
     }
 
     /// The word a copy adds to a name somebody chose.
@@ -141,7 +170,50 @@ public enum LayerNaming {
     }
 }
 
+extension Layer {
+
+    /// What the layers list calls this layer.
+    ///
+    /// Almost always the name it is stored under, because almost always that
+    /// is the whole story. The exception is a piece of text nobody has named
+    /// by hand: its row says the words it holds, so a screenshot taken apart
+    /// and read gives you a list you can read back rather than Text 1 to
+    /// Text 142, and retyping the words on the canvas moves the row with them.
+    ///
+    /// Read rather than stored, which is what makes retyping work at all and
+    /// what keeps a rename off the undo stack: there is no rename, only a name
+    /// that was always the words. The moment somebody types a name of their
+    /// own the stored name stops being one the app wrote, and from then on it
+    /// is theirs and the words have no say (`LayerNaming.isAutoName`).
+    ///
+    /// A shape is the other way round: it stops being a rectangle ONCE, at a
+    /// moment you can point at, so Turn Into Path writes the new name into the
+    /// document inside that same step (`PhotonzDocument.turnLayerIntoPath`).
+    public var displayName: String {
+        // Asked in this order because nearly every row in a list is not text,
+        // and matching the case is a great deal cheaper than reading the name
+        // against every stem the app mints names from.
+        guard let text, LayerNaming.isAutoName(name) else { return name }
+        let words = LayerNaming.name(fromWords: text.string)
+        return words.isEmpty ? name : words
+    }
+}
+
 extension PhotonzDocument {
+
+    /// Names a layer the way a person typing in its row names it.
+    ///
+    /// Two things are not a rename. An empty field is not a name, and neither
+    /// is the name the row was ALREADY showing: the field opens filled with
+    /// what the row says, so pressing Return on it untouched has to leave the
+    /// layer exactly as it was. Without that, opening the rename field on a
+    /// piece of text and thinking better of it would quietly pin its name away
+    /// from its words, and nothing on screen would say so.
+    public mutating func renameLayer(id: UUID, to typed: String) {
+        let trimmed = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != layer(id: id)?.displayName else { return }
+        updateLayer(id: id) { $0.name = trimmed }
+    }
 
     /// A name no layer in the document is using yet: "Rectangle", then
     /// "Rectangle 2", "Rectangle 3"… A name in use anywhere counts, groups and

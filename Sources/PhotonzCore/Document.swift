@@ -971,24 +971,23 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// was is worked out by setting them once and measuring
     /// (`TextReader.frame(for:placingInkAt:)`).
     ///
-    /// The NAME becomes the words, which is the whole visible reward for having
-    /// asked: a layers list reading `Save Changes` instead of `Text 9`. A
-    /// layer somebody has already renamed keeps their name — it is theirs, and
-    /// a command that quietly threw it away would be worse than one that never
-    /// offered the words at all.
+    /// The NAME is not set here and does not need to be: a piece of text
+    /// nobody has renamed by hand wears its own words in the layers list, so
+    /// the row reads `Save Changes` instead of `Text 9` the instant the words
+    /// land, and keeps up if they are retyped afterwards
+    /// (`Layer.displayName`). A layer somebody has already renamed keeps their
+    /// name, for the same reason and by the same rule.
     ///
     /// Does nothing to a layer that is not a picture. Undo puts the picture
     /// back, because undo is a whole-document snapshot and the bitmap is still
     /// in the image store under its own ref.
-    public mutating func makeTextEditable(id: UUID, text: TextContent, frame: CGRect,
-                                          name: String?) {
+    public mutating func makeTextEditable(id: UUID, text: TextContent, frame: CGRect) {
         guard layer(id: id)?.imageRef != nil else { return }
         updateLayer(id: id) { layer in
             layer.content = .text(text)
             layer.frame = frame
             layer.crop = nil
             layer.transform = .identity
-            if let name { layer.name = name }
         }
     }
 
@@ -1017,10 +1016,23 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// paint, every effect and the layer's own place in the stack
     /// (`ShapeToPath.swift`). Nothing happens on a layer that has no outline to
     /// find, so the command is safe to call twice and safe to call on anything.
+    /// A box, an oval or a line becomes a path — and stops calling itself a
+    /// box, because it is not one any more.
+    ///
+    /// The new name is worked out and written in the SAME mutation, so one
+    /// undo puts the shape and the name back together: a step that restored
+    /// the rectangle and left the row saying Path would be the app disagreeing
+    /// with itself. Only a name the app wrote is replaced; a layer somebody
+    /// called Card is called Card whatever it is made of
+    /// (`LayerNaming.isAutoName`).
     public mutating func turnLayerIntoPath(id: UUID) {
+        guard let current = layer(id: id), current.canTurnIntoPath else { return }
+        let fresh = LayerNaming.isAutoName(current.name)
+            ? freshLayerName(base: PathBuilder.defaultName) : nil
         updateLayer(id: id) { layer in
             guard let turned = layer.turnedIntoPath() else { return }
             layer = turned
+            if let fresh { layer.name = fresh }
         }
     }
 

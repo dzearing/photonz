@@ -14,7 +14,7 @@
     { "do": "type", "text": "Save all the changes" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "selectRow", "row": "Text" },
+    { "do": "selectRow", "row": "Save all the changes" },
     { "do": "action", "action": "paintSelectionColor" },
     { "do": "wait", "seconds": 0.6 },
 
@@ -38,7 +38,7 @@
 
     { "do": "press", "control": "Twist", "in": "Group" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "selectRow", "row": "Text" },
+    { "do": "selectRow", "row": "Save all the changes" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "2-label-picked", "note": "THE TEST: the label itself is picked. Its selection outline runs the whole 140 the stack gave it, well past the end of the words, and W says 140 rather than how wide the two lines came out." },
     { "do": "snapshot", "name": "wrapped-2-label" },

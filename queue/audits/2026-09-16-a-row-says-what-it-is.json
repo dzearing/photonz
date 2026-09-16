@@ -1,0 +1,28 @@
+{
+  "feature": "A layer row nobody renamed says what the layer actually is",
+  "epic": "ui-building",
+  "summary": "A piece of text you have not named by hand now wears its own words in the layers list, and follows them as you retype, so a separated screenshot stops being a column of Text 1 to Text 142. A box you turn into a path stops calling itself a box.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-a-row-says-its-words and it is on by default. Turn Into Path also needs next-turn-into-path, and Turn into Text needs next-separate-into-layers.",
+  "try": [
+    { "do": "Press T, click on the canvas, type Save Changes, then press Command Return." },
+    { "do": "Look at the layers list: the row says Save Changes, not Text." },
+    { "do": "Double click the words on the canvas, retype them as Cancel, press Command Return, and watch the row change with them." },
+    { "do": "Double click the row, press Return without typing anything, then retype the words again on the canvas. The row still follows." },
+    { "do": "Double click the row, type Primary label, press Return, then retype the words on the canvas once more. The row keeps your name now." },
+    { "do": "Press R, drag a rectangle, right click its row and choose Turn Into Path. The row says Path." },
+    { "do": "Press Command Z once. The rectangle and the row called Rectangle come back together, in one step." }
+  ],
+  "evaluate": [
+    "Reading a list of rows that each say their own words, can you find the label you want without clicking through them?",
+    "When you retype a label and the row changes under your hand, does that feel like the app keeping up or like it losing your name?",
+    "Thirty two characters is where a long run gets cut and given an ellipsis. Is that too long for the width of the list, or too short to tell two rows apart?",
+    "A row that says Path after you turned a rectangle: is Path the word you would have written, or would you rather it kept some trace of the box it was?",
+    "Two buttons both labelled Cancel now give you two rows both saying Cancel. Is that honest and fine, or do they need telling apart?"
+  ],
+  "rough": [
+    "No pictures with this one, and no walk was run: the Mac's screen has been locked for this whole task, so every walk reported status locked and refused to start, which is by design. The claims above are from the test suite (7613 tests green, thirteen of them new and written for this) and from reading the app, not from watching it.",
+    "Nine walks were edited to the row names this changes and two were given extra checks for it, none of them run for the same reason. A full sweep has been requested so they get run between tasks.",
+    "Joining two ovals into one outline still leaves a row saying Ellipse: the boolean combines are the one command that does not rename off the shape it stopped being. Reproduced and filed separately rather than fixed blind while no walk could run.",
+    "Renaming a row to exactly the words it is already showing is treated as not a rename, so the row goes on following the words. Somebody who meant to PIN the name at those words has no way to say so, and nothing on screen tells them. Deliberate: pressing Return on a field you opened and thought better of is much commoner than wanting to freeze a name at its current words."
+  ]
+}

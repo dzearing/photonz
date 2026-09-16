@@ -582,6 +582,16 @@ answer for a mark whose look is how it is painted. What somebody actually wants
 from an arrow they cannot reshape is a curved shaft, which is a change to the
 arrow rather than a conversion away from it.
 
+### And it stops calling itself a rectangle
+
+A layer nobody has named by hand says what it IS, so a row reading `Rectangle`
+reads `Path` the moment it stops being one; a second one turned after it is
+`Path 2`, so the list still tells them apart. A layer somebody called `Card` is
+called `Card` whatever it is made of (`LayerNaming.isAutoName`). The new name is
+written inside the SAME mutation as the shape change, so one undo puts the
+outline and the name back together — a step that restored the rectangle and left
+the row saying `Path` would be the app disagreeing with itself.
+
 ### What it says afterwards
 
 The question asked beforehand says what the command will do, and it carries a
@@ -790,6 +800,16 @@ that came through untouched still has four smooth points on it.
   and leaving a blank canvas is the one outcome nobody wants and the easiest to
   reach.
 * **One undo step**, whatever the shapes were.
+
+### And it stops calling itself a rectangle
+
+A layer nobody has named by hand says what it IS, so a row reading `Rectangle`
+reads `Path` the moment it stops being one; a second one turned after it is
+`Path 2`, so the list still tells them apart. A layer somebody called `Card` is
+called `Card` whatever it is made of (`LayerNaming.isAutoName`). The new name is
+written inside the SAME mutation as the shape change, so one undo puts the
+outline and the name back together — a step that restored the rectangle and left
+the row saying `Path` would be the app disagreeing with itself.
 
 ### What it says afterwards
 

@@ -164,6 +164,8 @@ public enum FeatureCatalog {
 
     public static let lineEndsFlag = "next-line-ends"
 
+    public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -554,6 +556,15 @@ public enum FeatureCatalog {
                     name: turnIntoPathFlag,
                     title: "Turn a rectangle into a path",
                     description: "A rectangle, an ellipse, a line or a highlighter wash is a fixed thing: you can resize it, but you cannot take one corner and pull it somewhere else. Turn Into Path, in the layer's right click menu and in the Layer menu, stops it being a rectangle and makes it an outline, keeping exactly the look it had. Round the corners first and the curves you get are real ones you can pull on, which is how most icons actually get made. Pick several shapes and it acts on all of them at once, and it does one more thing: shapes whose ends meet are welded into ONE path, so three lines drawn end to end become a single triangle you can fill and reshape, closed because the last end came back to the first. Ends within two points of each other count as meeting and are pulled together; ends further apart are left alone, and the question tells you which happened before you press the button. The shapes keep their fill, their edge, their shadow and everything else they were wearing, and the whole thing is one undo step, so if it was not what you wanted the separate shapes come straight back. A highlighter wash comes across still mixing with what is under it, so it goes on highlighting and is no longer stuck being a box: a run of words that wraps onto two lines, or a panel with a notch out of it, can be one mark. An ARROW is the one shape that does not convert, and the command is missing rather than dimmed on one: its head is part of how it is painted rather than part of an outline, so a path of it would be the silhouette of the whole arrow with its points on the outside, which is not the arrow you drew. You are told once, plainly, what the command will leave you with, and there is a Don't ask again on that question; after the turn, one line under the canvas says what you now have, which is what stands in for the question once it is silenced. Needs Reshape a path, and so the Pen, because a shape you turn and then cannot edit is a command with no payoff. Off means the command is not offered and the shapes stay shapes.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: rowSaysItsWordsFlag,
+                    title: "A row says the words that are in it",
+                    description: "A piece of text in the layers list says Text, then Text 2, Text 3, whatever it actually holds, and a screenshot taken apart hands back a hundred and forty rows called Text 1 to Text 142 with nothing to tell them apart. With this on, a piece of text nobody has named by hand simply wears its own words: the row under a button's label says Save Changes, the heading's row says General, and a list you had to click through one row at a time is a list you can read. Retype the words on the canvas and the row follows them as you type, because the name is not written down anywhere, it IS the words. Long words are cut at a word boundary and end in an ellipsis, so one long paragraph cannot push every other row off the edge of the list. The moment you type a name of your own it is yours: it stays put whatever the words do afterwards, and opening the rename field and pressing Return without changing anything leaves the row following the words rather than quietly pinning it. Nothing about the document changes, so it costs no undo step and a document made with this on is byte for byte an ordinary document. Off means a piece of text says Text and its number, which is what it has always said.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

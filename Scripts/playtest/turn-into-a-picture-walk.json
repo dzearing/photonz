@@ -263,7 +263,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Text",
+      "on": "Sign in",
       "shot": "turn-8-text-row-menu"
     },
     {
