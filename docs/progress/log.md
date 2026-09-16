@@ -16889,3 +16889,36 @@ Commit `10b411c3`.
 Next: nothing carried over. Open question for the user, in the audit's
 `evaluate`: a stash plus a log line is where half-finished work goes now, and
 whether that should instead be a branch they can look at.
+
+## 2026-09-16 — Separating a dark panel gives back the controls on it
+
+Ran `separating-a-crop-of-a-panel-finds-its-rows-not`. The task's own diagnosis
+was wrong and the first hour went to proving that: the rule that drops a piece
+the frame cut in half is not what was holding the inspector's rows back.
+Turning that rule off entirely leaves the crop at exactly three boxes.
+
+The real cause is a box's own edge. On a dark panel a field's edge is about
+eight levels off the panel behind it, and somewhere down its rounded corner the
+step between them is under `BoxSweep.colorTolerance`, so the two chain into one
+patch of colour and the edge counts as background. The field's island stops
+inside its own edge, the band read just outside the field is one row of that
+edge, and the patch reading is refused on a ring that is 85% flat.
+
+Fixed by letting a box grow a pixel and read again when the band right against
+it will not agree, up to `BoxSweep.maxBorderWidth`. Growing rather than only
+reading further out is what stops a hairline ghost being left behind. A box
+sitting on another box never steps: that refusal is what keeps a knob inside
+its switch, and the first version broke it.
+
+Boxes out / left behind, before → after: inspector crop 3/10 → 6/7,
+app-window-2x 10/5 → 10/5, settings-pane 10/0 → 10/0, whole-app capture
+19/28 → 19/28, dashboard-crop 30/367 → 30/363, a photograph 0/0 → 0/0.
+7599 tests pass.
+
+**Open:** the Mac's screen was locked for the whole task, so not one playtest
+walk could run. A sweep is requested. The audit
+(`queue/audits/2026-09-16-separate-dark-panel.json`) ships an offscreen render
+and says so.
+
+**Next:** the sweep, and whatever the user makes of the audit's four questions
+— chiefly whether a field coming back without its own edge is good enough.
