@@ -1,0 +1,29 @@
+{
+  "feature": "A screen's name can be read over whatever it sits on",
+  "epic": "ui-components",
+  "summary": "The name above a screen on the canvas now sits on a small grey plate with white letters, instead of grey lettering painted straight onto the picture. Measured off a real capture, it reads at 10.8:1 on plain canvas, on a saturated shape, on a deep crimson shape and on a screenshot alike, where the old grey letters read at 1.9:1 over the crimson and were effectively not there.",
+  "setup": "Photonz Dev, Experiments window, release Next, Screens on (they are on by default). Any document.",
+  "try": [
+    { "do": "Draw a rectangle and paint it a deep crimson." },
+    { "do": "Draw a second rectangle inside it, then choose Layer > Frame Selection.", "shot": "2026-09-16-screen-name-1-four-backgrounds-sc.png" },
+    { "do": "Read the new screen's name where it hangs above its top left corner." },
+    { "do": "Drop a screenshot on the canvas and put a screen on top of that too." },
+    { "do": "Rest the pointer on a screen's name: it moves onto the accent plate." },
+    { "do": "Double click that name and rename the screen where it sits." },
+    { "do": "Put six screens on one canvas and zoom to fit.", "shot": "2026-09-16-screen-name-3-six-screens-sc.png" },
+    { "do": "Switch the Mac between light and dark appearance and read the names again." }
+  ],
+  "evaluate": [
+    "Over the crimson shape, does the name read as a label sitting on top rather than as part of the picture?",
+    "Do a screen's grey chip and a component's violet chip read as two kinds of the same label, rather than two unrelated labels?",
+    "With six screens on one canvas, do the plates read as quiet furniture, or has the canvas got busier than the names are worth?",
+    "Is the grey the right grey: does it say 'a screen' without drawing the eye the way the violet does?",
+    "When a name lights up on the accent plate under the pointer, is that still a clear enough invitation to click it?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so the walk had to be forced past its own refusal to run. The pictures in this audit are still real photographs of the window (a locked screen stops a walk finding controls by name, which this walk never does; it does not stop the app drawing), but nobody has yet used this with a hand on the mouse.",
+    "The words are readable everywhere; the PLATE'S OWN EDGE against a dark picture is still weak. Measured on the same capture: the grey plate against the deep crimson is 1.52:1, against the orange shape 2.94:1, against plain white canvas 10.84:1. What separates the pill from a dark picture there is its drop shadow, not its lightness. The component chip has the same weakness (1.44:1 on that crimson) and this fix does not close it.",
+    "A screen's plate is the LIGHTEST plate the shared rule allows, so it is a shade lighter than the component violet's plate on purpose: a canvas can hold a dozen screens and only a few components. If the two should be identical in weight instead, that is a look call worth making once for both.",
+    "The four backgrounds in the walk are drawn from the app's own starter colours. A photograph of something genuinely noisy, like a dense terminal screenshot, would test the plate harder than any of them."
+  ]
+}

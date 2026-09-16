@@ -81,27 +81,17 @@ extension CanvasNSView {
         for chip in canvasNameChips() where chip.kind == .screen {
             // The frame being renamed has a field standing where its name was.
             if chip.layer.id == canvasRenameID { continue }
-            let label = CATextLayer()
-            label.string = chip.layer.name
-            label.font = Self.nameLabelFont
-            label.fontSize = Self.nameLabelFont.pointSize
-            // A neutral grey, NOT a theme label color: this text sits on the
-            // picture, which may be white, dark, or a screenshot of anything,
-            // and a label that follows the app's theme goes invisible on half
-            // of them. The accent means "this name is live": the frame is
-            // selected, or the pointer is resting on the name, which is the
-            // only hint anywhere that the name can be clicked.
-            label.foregroundColor = isNameLabelLive(chip.layer.id)
-                ? NSColor.controlAccentColor.cgColor
-                : CGColor(gray: 0.45, alpha: 1)
-            label.contentsScale = window?.backingScaleFactor ?? 2
-            label.alignmentMode = .left
-            label.truncationMode = .end
-            // The label hangs above the frame's top left corner and is never
-            // part of it: it does not move the frame, and clicking through it
-            // reaches whatever is behind.
-            label.frame = CanvasNameLabels.box(for: chip.label)
-            frameChromeLayer.addSublayer(label)
+            // On a plate, and drawn by the same code that draws a component's
+            // name, so the two read as one family of label rather than two
+            // unrelated ones. The name used to be grey ink painted straight
+            // onto the picture, which is a choice no ink can win: over a
+            // crimson shape it read at 1.9:1 and was simply not there. White
+            // on the plate reads at 10.8:1 whatever is underneath.
+            //
+            // The label still hangs above the frame's top left corner and is
+            // still never part of it: it does not move the frame, and clicking
+            // through it reaches whatever is behind.
+            drawNameChip(chip, into: frameChromeLayer)
         }
         frameEdgeLayer.path = edges
         frameEdgeLayer.isHidden = edges.isEmpty

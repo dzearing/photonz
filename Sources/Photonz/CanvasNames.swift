@@ -9,8 +9,10 @@ import PhotonzCore
 /// spot, behind the four-diamond mark. **They are the same handle**: click it to
 /// pick the box, double click it to open the name for typing where it sits, so
 /// renaming never means going hunting in a panel. The only differences are the
-/// paint (grey for a screen, violet for a component) and the few points the
-/// mark takes at the left.
+/// plate they sit on (grey for a screen, violet for a component) and the few
+/// points the mark takes at the left. Both are drawn by the same code
+/// (`drawNameChip`), because a name that has to be read over a picture nobody
+/// chose can only be read on a plate.
 ///
 /// The names are chrome: drawn by the canvas rather than the renderer, so they
 /// sit above the picture, stay the same size at every zoom, and never land in

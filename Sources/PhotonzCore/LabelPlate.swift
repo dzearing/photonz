@@ -64,3 +64,17 @@ public enum LabelPlate {
 public enum ComponentPaint {
     public static let violetHex = "#9A5CFF"
 }
+
+/// The colour the app spends on "screen": a plain grey, because a screen has
+/// no colour of its own.
+///
+/// A component's chip is violet, so the chip says which kind of thing it names
+/// before you read a word of it. A screen is just a screen, so its chip is the
+/// quietest plate the rule allows: `LabelPlate.tone` takes any grey lighter
+/// than about #6F6F6F down to exactly `LabelPlate.maximumLuminance`, which is
+/// the lightest a plate ever gets and still holds white text. That is
+/// deliberate. A canvas can hold a dozen screens, and a dozen near-black pills
+/// would be a heavier canvas than the names are worth.
+public enum ScreenPaint {
+    public static let greyHex = "#8A8A8E"
+}

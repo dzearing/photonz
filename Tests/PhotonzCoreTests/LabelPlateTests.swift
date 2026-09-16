@@ -44,4 +44,35 @@ struct LabelPlateTests {
         let arrow = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
         #expect(arrow.captionChipColor.hexString == LabelPlate.tone(from: RGBA(hex: "#FF3B30")!).hexString)
     }
+
+    @Test("A screen's plate reads white at least as well as a component's")
+    func screenPlateRatio() {
+        let ink = RGBA(hex: LabelPlate.inkHex)!
+        let screen = ContrastReading(of: ink, on: LabelPlate.tone(from: RGBA(hex: ScreenPaint.greyHex)!))
+        let component = ContrastReading(
+            of: ink, on: LabelPlate.tone(from: RGBA(hex: ComponentPaint.violetHex)!))
+        // The number the component chip's audit quotes. A screen's name sits
+        // beside a component's on the same canvas, so it may not be the
+        // shabbier of the two.
+        #expect(screen.ratio >= 9.9, "white on a screen's plate reads at \(screen.ratioText)")
+        #expect(screen.ratio >= component.ratio)
+        #expect(screen.grade == .aaa)
+    }
+
+    @Test("A screen's plate is grey, so it never reads as a component")
+    func screenPlateIsGrey() {
+        let plate = LabelPlate.tone(from: RGBA(hex: ScreenPaint.greyHex)!)
+        // A screen has no colour of its own; the one thing its plate must not
+        // do is borrow a hue somebody could mistake for the component violet.
+        #expect(plate.hsl.saturation < 0.08)
+    }
+
+    @Test("The screen plate and the component plate are the same weight of chip")
+    func bothPlatesReadAsOneFamily() {
+        let screen = LabelPlate.tone(from: RGBA(hex: ScreenPaint.greyHex)!)
+        let component = LabelPlate.tone(from: RGBA(hex: ComponentPaint.violetHex)!)
+        // Two pills on one canvas, one grey and one violet: they say different
+        // things by hue, never by one of them being visibly heavier.
+        #expect(abs(screen.wcagLuminance - component.wcagLuminance) < 0.02)
+    }
 }

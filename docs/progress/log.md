@@ -17202,3 +17202,31 @@ Next: the audit is `queue/audits/2026-09-16-canvas-context-menu.json`. Open
 question in it: whether picking-on-right-click is wanted, and whether the two
 menus should carry Cut/Copy/Paste at all. The Mac's screen was locked all
 session, so the walk ran forced and a sweep is still pending.
+
+## 2026-09-16 — A screen's name can be read over whatever it sits on
+
+The name above a screen on the canvas moved onto a plate, the same one a
+component's name got a day earlier (Next, `next-frames`).
+
+- Grey letters straight on the picture measured **1.9:1** over a deep crimson
+  shape. White on the new grey plate measures **10.8:1** on plain canvas, a
+  saturated shape, a crimson shape and a screenshot alike, and the same in light
+  mode. Every number is off real window captures, not a calculation.
+- The frame chrome no longer builds a text layer of its own: `CanvasFrames`
+  calls the SAME `drawNameChip` the component chrome uses, passing the layer to
+  draw into. One code path, so the two labels cannot drift apart. A screen's
+  branch skips the four-diamond mark and paints its plate `ScreenPaint.greyHex`
+  through `LabelPlate.tone`, which clamps it to the lightest plate the rule
+  allows (`#3D3D3F`) — deliberately a shade lighter than the component violet,
+  because a canvas holds many screens and few components.
+- New walk: `screen-name-reads-anywhere-walk.json` — four screens on four
+  backgrounds, the live name under the pointer, six screens on one canvas, and
+  light mode. It uses no control-by-name step, so it can be forced past a locked
+  screen and still photograph the window.
+- Left rough and written into the audit: the plate's own EDGE against a dark
+  picture is still weak (1.52:1 on the crimson). The words are unaffected; what
+  separates the pill from a dark picture is its shadow. The component chip has
+  the same weakness and fixing it is one look decision for both.
+
+Next: the audit is `queue/audits/2026-09-16-screen-name-plate.json`. The Mac's
+screen was locked all session, so every walk ran forced and a sweep is pending.

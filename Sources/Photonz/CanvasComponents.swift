@@ -62,8 +62,8 @@ extension CanvasNSView {
         // it is the only one that can land on a neighbour, and it has to be the
         // one on top when it does.
         let chips = canvasNameChips().filter { $0.kind != .screen }
-        for chip in chips where !chip.spelledOut { drawNameChip(chip) }
-        for chip in chips where chip.spelledOut { drawNameChip(chip) }
+        for chip in chips where !chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
+        for chip in chips where chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
     }
 
     /// The plate a name is drawn on at rest: the component violet, taken down
@@ -100,6 +100,12 @@ extension CanvasNSView {
     /// dark enough for white — which is the whole reason there is a plate.
     static let plateInkColor = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
 
+    /// The plate a SCREEN's name is drawn on: a plain grey taken down by the
+    /// same rule, because a screen has no colour of its own (`ScreenPaint`).
+    /// It is the lightest plate the rule allows, so a canvas of a dozen screens
+    /// carries a dozen quiet chips rather than a dozen near-black ones.
+    static let screenPlateColor = CanvasNSView.plateColor(hex: ScreenPaint.greyHex)
+
     /// One chip drawn into the strip: its mark and the word it is saying right
     /// now, on the plate that lets both be read.
     ///
@@ -109,7 +115,14 @@ extension CanvasNSView {
     /// painted in and were simply not there. An opaque plate takes that
     /// question away: the only contrast left is white on the plate, which is
     /// fixed and tested (`LabelPlateTests`).
-    private func drawNameChip(_ chip: CanvasNameChip) {
+    ///
+    /// A screen's name comes through here too, drawn into the frame chrome
+    /// rather than this one's, so the two kinds of name are one treatment by
+    /// construction: same pill, same padding, same shadow, same white letters,
+    /// and only the plate's colour and the mark in front of it saying which
+    /// kind of thing is being named. Before this a screen's name was grey ink
+    /// straight on the picture, which read at 1.9:1 over a crimson shape.
+    func drawNameChip(_ chip: CanvasNameChip, into target: CALayer) {
         let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
         let renaming = chip.layer.id == canvasRenameID
 
@@ -135,20 +148,33 @@ extension CanvasNSView {
         // pixels it will be shown with rather than at one-to-one and softened
         // up by the compositor.
         plate.contentsScale = window?.backingScaleFactor ?? 2
-        plate.backgroundColor = !renaming && chip.kind == .component
+        // A live name — picked, or with the pointer resting on it — moves onto
+        // the accent plate, which is the only hint anywhere that a name answers
+        // a click. A copy's bare mark is not a handle, so it never lights up.
+        plate.backgroundColor = !renaming && chip.kind != .copyMark
             && isNameLabelLive(chip.layer.id)
             ? livePlateColor
-            : Self.componentPlateColor
+            : (chip.kind == .screen ? Self.screenPlateColor : Self.componentPlateColor)
         // The same soft shadow the label pill carries, so the plate's own edge
         // still reads when it lands on something its own colour.
         plate.shadowColor = CGColor(gray: 0, alpha: 1)
         plate.shadowOpacity = 0.35
         plate.shadowRadius = 2
         plate.shadowOffset = CGSize(width: 0, height: 1)
-        componentChromeLayer.addSublayer(plate)
+        target.addSublayer(plate)
 
         // The mark stays put through a rename: it says what kind of thing
-        // this is, and that does not change while you are typing.
+        // this is, and that does not change while you are typing. A screen has
+        // no mark: its name starts at the box's left edge, and grey-instead-of
+        // -violet is how the chip says which kind of thing this is.
+        guard chip.kind != .screen else {
+            if let word = printed {
+                target.addSublayer(nameTextLayer(
+                    word, color: Self.plateInkColor,
+                    frame: CanvasNameLabels.box(for: chip.label)))
+            }
+            return
+        }
         let glyph = CAShapeLayer()
         let box = CGRect(x: strip.minX,
                          y: strip.minY + (strip.height - Self.componentGlyphSize) / 2,
@@ -161,7 +187,7 @@ extension CanvasNSView {
         glyph.fillColor = Self.plateInkColor
         glyph.contentsScale = window?.backingScaleFactor ?? 2
         glyph.frame = layer?.bounds ?? strip
-        componentChromeLayer.addSublayer(glyph)
+        target.addSublayer(glyph)
 
         // A copy of the first version wears its mark and nothing else, until
         // you look at it: a screen built out of twelve ordinary buttons would
@@ -169,13 +195,13 @@ extension CanvasNSView {
         // renamed with nothing kept in front of the field draws nothing either:
         // the field is standing exactly where the word was.
         guard let word = printed else { return }
-        componentChromeLayer.addSublayer(nameTextLayer(
+        target.addSublayer(nameTextLayer(
             word, color: Self.plateInkColor, frame: CanvasNameLabels.box(for: chip.label)))
     }
 
     /// The one word of canvas chrome above a drawing, drawn the same way for a
     /// name and for a version so both sit on one line with one baseline.
-    private func nameTextLayer(_ string: String, color: CGColor, frame: CGRect) -> CATextLayer {
+    func nameTextLayer(_ string: String, color: CGColor, frame: CGRect) -> CATextLayer {
         let label = CATextLayer()
         label.string = string
         label.font = Self.nameLabelFont

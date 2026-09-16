@@ -1067,9 +1067,9 @@ Step A2. The first thing in this ladder a person can build a screen on.
   a screen hidden sixteen points inside it. On bare canvas, and in a document
   with no frames at all, every one of these lands exactly where it always did.
 - **The name and the edge are chrome, not content.** The canvas draws a frame's
-  name above its top left corner and a hairline at its edge, in a neutral grey
-  that reads on a white surface and a dark screenshot alike. Neither is in the
-  document, so neither exports, and both stay one point wide at every zoom.
+  name above its top left corner, on a small grey plate in white letters, and a
+  hairline at its edge. Neither is in the document, so neither exports, and both
+  stay one point wide at every zoom.
 - **F draws one; a click drops one.** The frame tool joins the END of the
   drawing family in the tool bar, so no tool anybody already reaches for moves.
   A drag makes a frame the size you drew; a plain click drops one at the size
@@ -1861,8 +1861,8 @@ landed next, below.
 
 ## Landed: a component is renamed by clicking its name (Next, `next-components`, 2026-09-03)
 
-A screen promoted to a component swaps its grey name for the component's name
-in violet, behind the four-diamond mark. That name used to be a caption and
+A screen promoted to a component swaps its grey name chip for the component's
+name on a violet one, behind the four-diamond mark. That name used to be a caption and
 nothing else: clicking it did nothing, and the only way to change it was the
 Component section in the dock. **A screen's name and a component's name are now
 the same handle.**
@@ -3778,10 +3778,45 @@ components on four backgrounds, the version word, and the same labels at 200% an
 Left rough: the plate's own edge against a dark picture is only 1.4:1 (deep
 crimson), so what tells the pill from the picture there is its shadow and its
 hue, not its lightness. It reads, but a component sitting on a near-black
-screenshot is the case to look at again. And a SCREEN's name is still bare grey
-letters straight on the picture — the same disease on the same strip. Put a
-screen inside a crimson shape and its name reads at 1.9:1, photographed and
-filed separately.
+screenshot is the case to look at again. A SCREEN's name had the same disease on
+the same strip, and got the same cure a day later (below).
+
+## Landed: a screen's name can be read over whatever it sits on (Next, `next-frames`, 2026-09-16)
+
+The fix above left its twin untreated. A screen's name was grey letters
+`#737373` painted straight onto the picture: **1.9:1** over a deep crimson shape,
+4.8:1 on plain white, which is why nobody noticed. A neutral grey is still an ink
+on an unknown picture, which is the thing that cannot work.
+
+So a screen's name moved onto the same plate, drawn by the same code. The frame
+chrome no longer builds a text layer of its own; it calls `drawNameChip` — the
+one `CanvasComponents` uses — with the frame's own layer to draw into, so the two
+labels are one treatment by construction rather than by resemblance: same pill,
+same padding, same shadow, same white letters, same live-accent behaviour.
+
+- **A screen's plate is grey, because a screen has no colour of its own.**
+  `ScreenPaint.greyHex` run through `LabelPlate.tone` gives `#3D3D3F`, and white
+  on it reads **10.8:1 (AAA)**, measured off real window captures over four
+  backgrounds — plain light canvas, a saturated shape, a deep crimson shape and a
+  real screenshot — identical on all four, and identical again in light mode.
+- **It is the LIGHTEST plate the shared rule allows** (any grey above about
+  `#6F6F6F` clamps to `LabelPlate.maximumLuminance`), a shade lighter than the
+  component violet's plate on purpose: a canvas holds a dozen screens and a
+  handful of components, and a dozen near-black pills would cost more than the
+  names are worth. Six screens on one canvas is photographed in the audit.
+- **Grey against violet is how the chip says which kind of thing it names**, now
+  that neither is bare ink. The component keeps its four-diamond mark in front of
+  its letters; a screen's name still starts at the box's left edge.
+
+`Scripts/playtest/screen-name-reads-anywhere-walk.json` is the walk: four screens
+on four backgrounds, the live name under the pointer, six screens on one canvas,
+and the same names in light mode.
+
+Left rough: the plate's own edge is the weak number, exactly as it is next door.
+Measured on the same capture, the grey plate against the deep crimson is 1.52:1,
+against the orange shape 2.94:1, against plain white canvas 10.84:1. The words
+are unaffected; what separates the PILL from a dark picture is its drop shadow.
+Fixing that is one look decision for both chips, not a screen-only change.
 
 ## Landed: a component has properties, and a variant is one of them (Next, `next-components`, 2026-09-15)
 
