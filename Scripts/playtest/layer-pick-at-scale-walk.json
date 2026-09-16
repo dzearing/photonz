@@ -321,6 +321,97 @@
    "note": "the same capture with sixteen shapes on it: eighteen rows"
   },
   {
+   "do": "describe",
+   "stage": "following",
+   "note": "The two picks that need the list to move. Rectangle 9 and Rectangle 8 are below the fold of a five row window onto eighteen rows, so the list follows each of them down."
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 9"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectListStill",
+   "moved": true
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 8"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectListStill",
+   "moved": true
+  },
+  {
+   "do": "describe",
+   "stage": "already-there",
+   "note": "The same two rows again, now that both are on screen. This is the claim a picture cannot make: a row you can already see must leave the list exactly where you left it, and picking it must cost what the same pick costs in a two row document."
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 9"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "layersList",
+   "atMost": 2
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 8"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "layersList",
+   "atMost": 2
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
+  },
+  {
+   "do": "describe",
+   "stage": "off-the-bottom",
+   "note": "And a row the far end of the list, which the list DOES have to travel to. It costs the slide, and nothing else: the list is built three times over the whole flight rather than once per row it crosses, because a follow asks for the pictures where it is going before it sets off."
+  },
+  {
    "do": "selectRow",
    "row": "Rectangle"
   },
@@ -329,30 +420,23 @@
    "seconds": 0.6
   },
   {
-   "do": "selectRow",
-   "row": "Rectangle 9"
-  },
-  {
-   "do": "wait",
-   "seconds": 0.5
-  },
-  {
    "do": "expectBuilds",
    "view": "editorBody",
    "atMost": 0
   },
   {
-   "do": "selectRow",
-   "row": "Rectangle"
-  },
-  {
-   "do": "wait",
-   "seconds": 0.5
+   "do": "expectListStill",
+   "moved": true
   },
   {
    "do": "expectBuilds",
-   "view": "editorBody",
-   "atMost": 0
+   "view": "layersList",
+   "atMost": 4
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
   },
   {
    "do": "selectRow",
@@ -360,12 +444,26 @@
   },
   {
    "do": "wait",
-   "seconds": 0.5
+   "seconds": 0.6
   },
   {
    "do": "expectBuilds",
    "view": "editorBody",
    "atMost": 0
+  },
+  {
+   "do": "expectListStill",
+   "moved": true
+  },
+  {
+   "do": "expectBuilds",
+   "view": "layersList",
+   "atMost": 4
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
   },
   {
    "do": "snapshot",

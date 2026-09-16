@@ -1225,6 +1225,9 @@ private final class Run {
                  + ViewBuildMeter.shared.report,
                  state: describe())
 
+        case .expectListStill(let moved):
+            note(number, step.name, try checkListStill(moved: moved), state: describe())
+
         case .expectPicked(let layers):
             note(number, step.name, try checkPicked(layers), state: describe())
 
@@ -3225,6 +3228,32 @@ private final class Run {
     /// missing — the rows simply sit there unhighlighted — so this is the step
     /// that fails a walk when an undo hands back the drawing without the
     /// picking.
+    /// Whether the layers list moved under the last pick, and whether that is
+    /// what the walk claimed.
+    ///
+    /// The list's first rule is that a row you can ALREADY see wins: picking
+    /// something near the top must not jolt the panel. That decision is
+    /// arithmetic done once and thrown away, so a picture taken after the
+    /// scroll has settled looks the same whether the list moved or stood
+    /// still. This is the only way to ask.
+    private func checkListStill(moved wanted: Bool) throws -> String {
+        guard let happened = LayersListProbe.shared.lastRevealMoved,
+              let said = LayersListProbe.shared.lastReveal else {
+            throw Failure(description: "the layers list has not been asked to reveal anything yet, "
+                + "so there is nothing to claim about it. Pick a layer before this step, and "
+                + "check the layers follow a pick at all in this release.")
+        }
+        guard happened == wanted else {
+            throw Failure(description: wanted
+                ? "the layers list was expected to follow the pick and bring the row in, and it "
+                    + "stayed where it was: \(said)"
+                : "the layers list was expected to stay exactly where the reader left it, and it "
+                    + "moved: \(said). A row you can already see wins; a click that jolts the "
+                    + "panel is the complaint that rule exists for.")
+        }
+        return wanted ? "the list followed the pick: \(said)" : "the list did not move: \(said)"
+    }
+
     private func checkPicked(_ layers: [String]) throws -> String {
         let editor = try requireEditor()
         let picked = editor.actionableLayerIDs

@@ -1545,6 +1545,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picked layer rode into the undo stack and the whole window is drawn
     /// from that stack (`layer-pick-latency-walk`).
     case expectBuilds(view: String, atMost: Int)
+    /// Whether the layers list moved under the last pick, which is the one
+    /// promise the list makes that a picture cannot show: a row you can
+    /// already see wins, and the list stays exactly where the reader left it.
+    ///
+    /// `moved: false` (the default) is the interesting one. A click near the
+    /// top of a list that jolts the panel is the complaint this rule exists
+    /// for, and nothing could claim it before: the list's decision is
+    /// arithmetic done once and thrown away, so a screenshot taken after the
+    /// scroll settled looks the same either way.
+    ///
+    /// `moved: true` is the other half — a row off the bottom of a long list
+    /// MUST be brought in — so a list that quietly stopped following cannot
+    /// pass by standing still.
+    case expectListStill(moved: Bool)
     /// How many measurements must be on the canvas right now.
     ///
     /// `expectPicked` asks what the app is holding; this asks what it has
@@ -1824,7 +1838,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -1890,6 +1904,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectOneNumberPerName: "expectOneNumberPerName"
         case .expectPicked: "expectPicked"
         case .expectBuilds: "expectBuilds"
+        case .expectListStill: "expectListStill"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
         case .describe: "describe"
@@ -2341,6 +2356,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("atMost", "expectBuilds has to say how many builds are allowed; \"atMost\": 0 is the usual one")
             }
             self = .expectBuilds(view: try f.string("view"), atMost: Int(try f.number("atMost")))
+        case "expectListStill":
+            self = .expectListStill(moved: try f.optionalFlag("moved") ?? false)
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

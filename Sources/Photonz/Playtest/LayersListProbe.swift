@@ -31,6 +31,11 @@ import SwiftUI
     /// answer half the time and a walk reading an empty line could not tell
     /// that from a reveal that never ran.
     var lastReveal: String?
+    /// The same answer as a fact rather than as a sentence: whether the list
+    /// actually moved. `expectListStill` reads this, so the one promise the
+    /// list makes that a screenshot cannot show — a row you can already see
+    /// leaves the list exactly where it is — can be claimed by a walk.
+    var lastRevealMoved: Bool?
 
     /// A row counts as in view when all of it is inside the scrolling area —
     /// the same call the reveal itself makes, so a walk reading this is asking
@@ -80,6 +85,7 @@ import SwiftUI
     LayersListProbe.shared.lastReveal = to.map {
         "\(where_): scrolled to \(points($0))pt"
     } ?? "\(where_): already on screen, nothing moved"
+    LayersListProbe.shared.lastRevealMoved = to != nil
 }
 
 extension View {

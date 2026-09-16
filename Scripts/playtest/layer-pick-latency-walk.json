@@ -51,6 +51,14 @@
    "atMost": 0
   },
   {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
+  },
+  {
    "do": "selectRow",
    "row": "Background"
   },
@@ -62,6 +70,14 @@
    "do": "expectBuilds",
    "view": "editorBody",
    "atMost": 0
+  },
+  {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
   },
   {
    "do": "expectPicked",
@@ -83,6 +99,14 @@
    "atMost": 0
   },
   {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
+  },
+  {
    "do": "expectPicked",
    "layers": []
   },
@@ -98,6 +122,14 @@
    "do": "expectBuilds",
    "view": "editorBody",
    "atMost": 0
+  },
+  {
+   "do": "expectListStill"
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 2
   },
   {
    "do": "expectPicked",

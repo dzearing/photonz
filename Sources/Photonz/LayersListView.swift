@@ -217,6 +217,21 @@ struct LayerRowDropDelegate: DropDelegate {
     /// reason the offset is — it is written on every layout pass and nothing
     /// draws from it.
     var viewport: CGFloat = 0
+    /// While a pick's own scroll is in flight, the moment it lands.
+    ///
+    /// A follow knows where it is going before it sets off, so the list asks
+    /// for the pictures at the DESTINATION once, up front, and stops
+    /// re-deciding on the way. Without this it re-read its thumbnail window
+    /// every row the animation crossed, and each of those rebuilt the whole
+    /// stack and every row in it: at eighteen rows, picking a row eight rows
+    /// down cost four list bodies and sixteen row bodies, against ONE of each
+    /// for the very same pick when the row was already on screen
+    /// (`layer-pick-at-scale-walk`, 2026-09-15). The pictures were arriving a
+    /// row at a time behind a scroll that had already finished, too.
+    ///
+    /// A scroll the READER drives is untouched: a gesture has no destination
+    /// to ask about, so it keeps deciding row by row.
+    var followingUntil: CFTimeInterval = 0
 }
 
 
@@ -282,6 +297,15 @@ struct LayersListView: View {
     var onMetrics: ((_ listNatural: CGFloat, _ extras: CGFloat) -> Void)?
 
     /// How tall the layers area may get, remembered across launches.
+    /// How long the list takes to bring a picked row in. Named because the
+    /// window of "a pick's scroll is in flight" is measured from it, and a
+    /// deadline that disagreed with the animation would either let the list
+    /// re-decide mid-flight or stop it re-deciding after it had landed.
+    static let followDuration: TimeInterval = 0.24
+    /// A beat past the end of the animation, so its last frame cannot re-open
+    /// the question it was closed for.
+    static let followSlack: TimeInterval = 0.05
+
     static let heightKey = "inspector.layersHeight"
     static let minHeight: CGFloat = 120
     static let maxAllowedHeight: CGFloat = 600
@@ -351,6 +375,12 @@ struct LayersListView: View {
                     scrollOffset: geometry.contentOffset.y + geometry.contentInsets.top,
                     rowHeight: rowHeight)
             } action: { _, row in
+                // Not while a pick's own scroll is in flight: `follow` has
+                // already asked for the pictures where it is going, and every
+                // row the animation crosses would otherwise rebuild the list
+                // and each row in it to ask the same question again. See
+                // `followingUntil`.
+                guard CACurrentMediaTime() >= scroll.followingUntil else { return }
                 firstVisibleRow = row
             }
             // The one line the list says while a saved style is over a row:
@@ -459,7 +489,14 @@ struct LayersListView: View {
         // animation has run, and a second pick arriving mid-flight has to
         // reckon from where the list is going, not from where it was.
         scroll.offset = target
-        withAnimation(.easeInOut(duration: 0.24)) {
+        // The pictures for where the list is GOING, asked for once before it
+        // sets off, and no re-deciding while it travels. A row it passes over
+        // on the way is on screen for a fraction of the flight, and a picture
+        // ordered for one could not land inside it anyway.
+        scroll.followingUntil = CACurrentMediaTime() + Self.followDuration + Self.followSlack
+        firstVisibleRow = LayerListMetrics.firstVisibleRow(scrollOffset: target,
+                                                          rowHeight: rowHeight)
+        withAnimation(.easeInOut(duration: Self.followDuration)) {
             scrollPosition.scrollTo(y: target)
         }
     }

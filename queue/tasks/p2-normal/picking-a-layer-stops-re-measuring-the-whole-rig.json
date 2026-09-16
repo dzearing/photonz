@@ -1,0 +1,28 @@
+{
+  "id": "picking-a-layer-stops-re-measuring-the-whole-rig",
+  "title": "Picking a layer stops re-measuring the whole right hand panel",
+  "goal": "When you click a layer, the right hand panel works out its whole height again from scratch, because the click changes which sections it shows. On a small document that is the single slowest thing about the click: the app spends about twenty milliseconds in one go re-measuring the panel, which is more than a frame, and it happens on every pick that brings a section in or takes one away.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2750,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T00:30:17.736Z",
+  "updated": "2026-09-16T00:30:17.739Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of picking-a-layer-lands-within-a-frame-in-a-long-l on 2026-09-15, which finished the LIST half and measured this as what is left.\n\nMeASURED (locked screen, PHOTONZ_ALLOW_LOCKED_WALK=1, so the absolute numbers are understated but the comparison is same-run):\n  two rows, pick swaps [layers] <-> [layers, geometry]: mainBusy 20-36ms, LONGEST SINGLE PASS 14-25ms, inspectorPanel bodies 1-2\n  eighteen rows, pick keeps the same sections [layers,color,effects,motion]: mainBusy 11-12ms, longest pass 7.6-8.6ms, inspectorPanel bodies 1\nSo it is not list length and it is not the number of sections drawn, it is the ARRIVAL: a section coming in or going out makes the dock share its height out again. The mechanisms are PanelSectionArrival and DockArrivals (Sources/Photonz/InspectorPanel.swift, the arrivalPass counter), DockBudgetScratch (a struct in @State, so every height a section measures rebuilds the panel) and InspectorDockLayout. The earlier task already cut the four passes per pick down to two by refusing to record a departing section's last measurement; what is left is the two that remain and what each of them re-measures.\n\nThe walk to use is Scripts/playtest/layer-pick-latency-walk.json: its selectRow steps report mainBusy, longest pass and the per-view body counts, and InspectorPanel logs one trace line per dock pass saying which sections and what budget it drew at.",
+  "acceptance": [
+    "No single pass of main thread work in a pick runs past one frame at sixty hertz, on a two row document as well as a long one, measured by Scripts/playtest/layer-pick-latency-walk.json",
+    "A pick that changes which sections the panel shows costs no more main thread work than one that does not",
+    "The panel still builds at most twice per pick and nothing outside it builds at all",
+    "Sections still arrive and leave without anything under them jumping"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T00:30:17.738Z",
+      "note": "created (manual)"
+    }
+  ]
+}

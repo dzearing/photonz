@@ -1,0 +1,29 @@
+{
+  "feature": "Picking a layer in a long list",
+  "epic": "ui-building",
+  "summary": "Clicking a layer row now costs the same in a list of eighteen rows as in a list of two, as long as the row you clicked was already on screen. When the row is off the fold the list still slides to it, and the slide no longer re-orders every thumbnail one row at a time on the way.",
+  "setup": "Photonz Dev, release Next, no flags to change. Open any screenshot and draw a dozen rectangles on it so the layers list is longer than the five rows it shows.",
+  "try": [
+    { "do": "Open a screenshot and draw sixteen rectangles on it with the Rectangle tool." },
+    { "do": "Click a layer row that you can already see. Watch whether the list moves.", "shot": "2026-09-15-layer-pick-many-rows.png" },
+    { "do": "Click the row next to it, also already on screen. Watch again." },
+    { "do": "Now click a row at the far end of the list, the one the list has to travel to." },
+    { "do": "Click your way back up to a row near the top." },
+    { "do": "Drag the grab bar under the list to make it taller, then repeat the two clicks above." },
+    { "do": "Press Command Z a few times and check the layer you picked comes back with its selection." }
+  ],
+  "evaluate": [
+    "When you click a row you can already see, does the list hold perfectly still, or does anything twitch?",
+    "When the list does have to travel, does the slide read as the list following you, or as the app being slow?",
+    "Is the slide the right length? A quarter of a second is what it is set to.",
+    "When the list lands, are the thumbnails already there, or do they still fill in after you arrive?",
+    "Does a click in a long list feel any different from a click in a short one now?"
+  ],
+  "rough": [
+    "THE PICTURE IN THIS AUDIT NEEDS A CAVEAT. The Mac has read as locked since 2026-09-14 20:46, so every walk here ran with the locked-screen refusal overridden. The shot above is a genuine screen capture of the real window, not an offscreen render, and it came back fully drawn, but the same lock means the millisecond timings are understated: macOS suspends layout and animation, and the same two row pick measured 49-64ms on an unlocked screen the day before and 20-36ms here. The build counts the fix is judged on are structural and do not depend on it.",
+    "The biggest single cost of a pick is no longer the list, it is the right hand panel: when a click brings a section in or takes one away, the panel works out its whole height again and spends about twenty milliseconds in one go, which is more than a frame. That is now its own task and this one did not touch it.",
+    "The task asked for a pick in a long list to cost no more than a pick in a short one, full stop. Measuring showed that is only the right bar when the list does not have to move: when the row is off the fold, what costs more is the slide, and the slide is the feature. The task's checklist was rewritten to separate the two cases and the reasoning is in its log.",
+    "One suspect in the original task turned out to be innocent. The list's reveal really does do nothing when the row is already on screen, and moving its bookkeeping out of view state changed the measured build counts by zero, so that change was reverted rather than kept.",
+    "Rows still rebuild nine to thirteen times on a pick that does not move the list, while the list itself rebuilds once. That is thumbnails arriving rather than the pick, and it is left rough."
+  ]
+}

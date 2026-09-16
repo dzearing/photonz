@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-15T22:59:22.635Z",
+  "updated": "2026-09-16T00:29:59.887Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -223,6 +223,10 @@
     {
       "t": "2026-09-15T22:59:22.634Z",
       "note": "TWO MORE, and they are newer than the list above: panel-section-drag (step 6 dragSection: 'there is no section called \"Position & Size\" in the panel; there is Layers, Measure Tool') and corner-drag-rounds-walk (step 29 expect: 'no field called \"Top Left\" is in the panel to read; the ones that are: Opacity, Blending, Corner Radius'). Both reproduced on clean main at 58a7e626 with my changes stashed and rebuilt, so neither is from the drag readout work. Both are consequences of position-and-size-leave-the-panel landing today, AFTER the 08:15Z sweep this list came from: the section is now a popover reached with the positionAndSize action, and the per-corner fields live in the four sided popout off Corner Radius. In both cases the walk is the thing to update, not the app."
+    },
+    {
+      "t": "2026-09-16T00:29:59.886Z",
+      "note": "Two more, both reproduced on UNMODIFIED main (git stash, rebuild, run) on 2026-09-15 17:2x, so neither is the layers-list work that was in flight beside them:\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh motion-swings-a-layer\n  motion-swings-a-layer-walk  5s  FAILED  step 10 (expect): no field called \"Motion Empty\" is in the panel; the ones that are: Opacity, Blending, Corner Radius\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh colour-onto-a-layer-row\n  colour-onto-a-layer-row-walk  18s  FAILED\n\nThe motion one looks like fallout from the motion work that landed 2026-09-15 (the Motion section's own fields moved), so it is worth reading beside those commits. Caveat on both: the Mac has been locked since 2026-09-14 20:46, so these ran under PHOTONZ_ALLOW_LOCKED_WALK=1 and a locked-screen artefact cannot be ruled out. tutorial-layers-and-undo-walk also fails, and that one IS the lock (it waits on a tutorial anchor, which needs a drawn window) - already covered by an-audit-gets-a-real-picture-of-the-app-again."
     }
   ]
 }

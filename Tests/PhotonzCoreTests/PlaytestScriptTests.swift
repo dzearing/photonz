@@ -1600,6 +1600,39 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A pick that brings a row into view has to be told apart from a pick that
+    // leaves the list alone, and only the list knows which it did. "A row you
+    // can already see wins" is the first rule the layers list follows and the
+    // one a reader feels — a click near the top that jolts the panel is the
+    // complaint — so a walk can now claim it outright rather than inferring it
+    // from a screenshot.
+    @Test("An expectListStill step claims the layers list did not move")
+    func expectListStillClaimsTheListDidNotMove() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectListStill" } ] }
+        """)
+        guard case .expectListStill(let moved) = script.steps[0] else {
+            Issue.record("expectListStill"); return
+        }
+        #expect(moved == false)
+        #expect(script.steps[0].name == "expectListStill")
+        #expect(PlaytestStep.names.contains("expectListStill"))
+    }
+
+    /// The other half of the same claim: a row genuinely off the bottom of a
+    /// long list MUST be brought in, and a walk that only ever asserted
+    /// stillness would pass an app whose list had stopped following at all.
+    @Test("expectListStill with moved true claims the list did follow")
+    func expectListStillCanClaimTheListFollowed() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectListStill", "moved": true } ] }
+        """)
+        guard case .expectListStill(let moved) = script.steps[0] else {
+            Issue.record("expectListStill"); return
+        }
+        #expect(moved == true)
+    }
+
     /// The chip under the canvas is the app's one place for saying what the
     /// thing in your hand can do, and nothing could claim it until now.
     @Test("An expectHint step claims the words on the chip")
