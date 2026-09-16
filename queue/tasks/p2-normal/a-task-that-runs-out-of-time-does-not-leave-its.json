@@ -1,0 +1,32 @@
+{
+  "id": "a-task-that-runs-out-of-time-does-not-leave-its",
+  "title": "A task that runs out of time does not leave its half-built work for the next task to commit",
+  "goal": "When a task runs out of its turn part way through, it stops without putting its work away, and the changed files stay in the repository for whoever starts next. The next task begins on top of somebody else's unfinished code, and when it commits, that code goes in under its name. Make the loop hand the next task a clean starting point, or hand it the leftovers on purpose with a note saying whose they are, rather than by accident.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T12:24:21.933Z",
+  "updated": "2026-09-16T12:24:21.995Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED by the 2026-09-16 triage pass, from a real instance that happened today rather than a hypothetical.\n\nAt 05:18 local the runner on separate-finds-the-boxes-in-a-dark-window-too-no ran out of turn waiting for the full test suite. queue/loop.log:\n\n  [go-loop] 03:57:59 running task separate-finds-the-boxes-in-a-dark-window-too-no\n  [go-loop] 05:18:01 task separate-finds-the-boxes-in-a-dark-window-too-no runner exited 0\n  [go-loop] 05:18:02 unhealthy: 1 consecutive runner failures; waiting 30s. Last error: Waiting on the full suite...\n\nThe task went back to pending and seven files stayed changed in the working tree:\n  M Sources/Photonz/EditorState+Separate.swift\n  M Sources/PhotonzCore/BoxSweep.swift\n  M Tests/PhotonzCoreTests/BoxSweepTests.swift\n  M docs/design/separate-into-layers.md\n  ?? Scripts/playtest/separate-dark-window-walk.json\n  ?? Tests/PhotonzRenderTests/AppWindowSeparateFixtureTests.swift\n  ?? Tests/PhotonzRenderTests/Fixtures/app-window-2x.png\n\nNothing in the loop mentions them. The triage pass handled this one instance by hand, by moving that task to the very front of p2 (seq 5) so the runner who inherits the files is the one who owns them. That is a patch for today, not the fix: the next time it happens nobody will be watching.\n\nNote the exit code. The runner exited 0, which is how a runner says it finished, and the loop still classed it a failure from the shape of its last message. So 'did the task finish' and 'did the runner exit cleanly' are already known to disagree; this task is what the loop should DO about the tree when they do.",
+  "acceptance": [
+    "When a task ends without finishing, the loop notices the files it left changed and says so in the log and on the dashboard, naming the task",
+    "The next task does not silently commit them: either the leftovers are put aside, or the task that owns them is the one claimed next",
+    "A commit can no longer carry changes belonging to a different task without anybody having decided that",
+    "Shown working by ending a task part way on purpose and watching what the next one starts from"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T12:24:21.935Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:24:21.994Z",
+      "note": "seq 2750 -> 25"
+    }
+  ]
+}

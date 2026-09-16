@@ -4,12 +4,12 @@
   "goal": "With the grid on, a ring now shows where a press would put the first point of a shape. On a plain screenshot with no grid, the same tools still quietly pull that first point onto a border they found in the picture, and you only find out after you press. Give the screenshot case the same ring the grid case has.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 2710,
+  "seq": 290,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T17:48:59.108Z",
-  "updated": "2026-09-15T17:48:59.111Z",
+  "updated": "2026-09-16T12:23:34.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-grid-line-under-a-pen-point-lights-up-while on 2026-09-15. The mark there is deliberately gated on the grid pulling, and this is the half that gate leaves out.\n\nThe blocker is cost, and it is measured. Tests/PhotonzCoreTests/DrawLandingCostTests.swift, run with `swift test --filter DrawLandingCostTests`, prints:\n\n  [perf] a grid and twenty guides, nothing photographed: 5.9 us a mouse move\n  [perf] the Pen with forty anchors down: 0.5 us a mouse move\n  [perf] grid over a 2560x1600 screenshot, 104 borders in it: 2530.2 us a mouse move\n  [perf] the same screenshot with only four borders in it: 2390.3 us a mouse move\n\nSo one AnnotationSnapping.snap over a big picture costs about 2.4ms, and the last two lines are the finding: the cost is the picture WIDTH, not what is drawn on it. EdgeMap.verticalEdges/horizontalEdges allocate a [Double] the full width (or height) of the picture and sum every block row into it on every call, then refinedPeaks scans the whole profile. Nothing is cached between calls.\n\nThis is a pre-existing hot path rather than anything new: snapMeasureAnchor pays it on every measure hover move today, and snappedAnnotationPoint pays it on every mouseDragged frame while an arrow is drawn on a screenshot. No user-visible jank has been reproduced from it, which is why this is p2 and not p1 - it is a number, not a complaint. Making it cheap (a cached profile per picture, or a windowed scan instead of a full-width one) would let the hover mark cover screenshots and would take the cost off the drag path at the same time.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-15T17:48:59.110Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.595Z",
+      "note": "seq 2710 -> 290"
     }
   ]
 }

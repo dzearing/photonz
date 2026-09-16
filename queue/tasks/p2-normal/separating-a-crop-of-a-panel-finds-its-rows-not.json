@@ -1,0 +1,32 @@
+{
+  "id": "separating-a-crop-of-a-panel-finds-its-rows-not",
+  "title": "Separating a crop of a panel finds its rows, not just the few in the middle",
+  "goal": "When you crop a screenshot down to one panel and separate it, most of the rows in that panel stay stuck in the picture, because a row runs the full width of the crop and the app refuses anything the edge of the picture cut through. A person who cropped to the panel on purpose expects its rows back.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T12:17:18.212Z",
+  "updated": "2026-09-16T12:23:33.490Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED with the bench on a real capture, not read. /tmp/separate-bench/inspector-dark.png is a 602x704 2x crop of this app's inspector panel.\n\n  PHOTONZ_SEPARATE_BENCH=/tmp/separate-bench/inspector-dark.png Scripts/test.sh -c release --filter SeparateBench\n  BENCH inspector-dark.png | 602 x 704 (0.4 MP) at 2x | 10 runs, 3 boxes, 10 left (10 unclear, 0 crowded out)\n\nThree boxes out of a panel with a dozen rows in it. Diagnosed: BoxSweep.islands() drops any island touching the picture edge (the comment is \"the frame cut it in half, so its real shape is not in the picture and the app does not guess it\"), and in a crop of a panel the rows and cards run to the left and right edges. The biggest thing thrown away measured 439x307 of a 602x704 picture.\n\nThe rule is deliberate and documented (docs/design/separate-into-layers.md, The boxes, step 3) so it was left alone by the task that made dark windows work at all (separate-finds-the-boxes-in-a-dark-window-too-no, done 2026-09-16). The open question is what a cut piece should come back AS: its real corners are off the picture, so a rounded card would come back square. That is a look-at-it question before it is a code question.",
+  "acceptance": [
+    "A crop of a dark inspector panel gives back most of its rows as layers, not three",
+    "The number of boxes out of Tests/PhotonzRenderTests/Fixtures/app-window-2x.png does not fall",
+    "A piece the frame cut still comes back with an honest shape, or is still left alone if its shape cannot be known",
+    "A photograph still gives back nothing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T12:17:18.214Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:33.489Z",
+      "note": "seq 2830 -> 40"
+    }
+  ]
+}

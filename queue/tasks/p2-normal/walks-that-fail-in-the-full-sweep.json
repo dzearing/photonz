@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 380,
+  "seq": 400,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T08:16:59.157Z",
+  "updated": "2026-09-16T12:23:35.079Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -239,6 +239,10 @@
     {
       "t": "2026-09-16T08:16:59.156Z",
       "note": "one-outline-two-kinds-walk fails the same way highlight-one-outline-walk does, at panelMenu: 'no menu called \"Add Effect\" is in the window', and the listing right after names two 25.0pt menus with EMPTY names whose tooltips are the Add Effect and Add Motion ones. Seen 2026-09-16 01:0x on main plus an unrelated caption-caret change (PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build outline: 4 passed, 2 failed). Same root cause as the copy-a-look / motion-strip entries above: the menu is there, its accessibility name is not."
+    },
+    {
+      "t": "2026-09-16T12:23:35.078Z",
+      "note": "seq 380 -> 400"
     }
   ]
 }

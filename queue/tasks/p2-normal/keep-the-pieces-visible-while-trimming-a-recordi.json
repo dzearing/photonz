@@ -4,12 +4,12 @@
   "goal": "Once you have cut a recording into pieces, opening the trim handles hides them: the line under the picture goes back to one plain bar, so you are dragging the start and end of something you can no longer see the shape of. Show the pieces while trimming, so a person can tell which of them a handle is about to eat into.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 2640,
+  "seq": 340,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T13:10:09.639Z",
-  "updated": "2026-09-15T13:10:09.642Z",
+  "updated": "2026-09-16T12:23:34.814Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-09-15-video-cutting.json. Today Sources/Photonz/VideoEditorView.swift bottomRow shows TrimTimeline while state.isTrimming and CutStrip otherwise, so the two never appear together. The model side already composes correctly: VideoEditorState.applyTrim calls VideoCutList.keep(fromTimeline:toTimeline:), which narrows the pieces the window crosses and drops the rest (tested in VideoCutsTests keepTimelineRange). So this is entirely a drawing job: TrimTimeline needs to draw the piece blocks CutStrip draws, under its handles and dim mask.\n\nNOT VERIFIED ON SCREEN: the Mac was locked for the whole of the task that built cutting, so nobody has yet looked at either strip in a drawn window. Run Scripts/playtest/cut-a-recording-walk.json first.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-15T13:10:09.641Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.813Z",
+      "note": "seq 2640 -> 340"
     }
   ]
 }

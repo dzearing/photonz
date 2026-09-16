@@ -4,12 +4,12 @@
   "goal": "Every number in the Effects list and in Appearance can now be typed exactly instead of nudged, except three: a shape's Corner Radius, a measurement's Chip size, and the shape tool's own Width slider in the older panel. Those three still make you hunt for a number with the knob, which is exactly the thing that was just fixed everywhere around them. Give them the same box.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2780,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T03:48:44.378Z",
-  "updated": "2026-09-16T03:48:44.382Z",
+  "updated": "2026-09-16T12:23:33.796Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left over from type-a-number-into-any-effects-slider-not-just-d (2026-09-16), which converted LayerStyleSlider, ShapeSlider and EffectStylePanel's own slider onto SliderReadout + PanelNumberField.\n\nThe three that were left, and why:\n- CornerRadiusRow (Sources/Photonz/AnnotationInspector.swift:191). Not converted because its readout is not just a number: it can be the four corners written out (16/16/0/0), it sits beside the FourSidedButton, and it has a WALL (selection.floor) with an answer line that explains a refused pull. PanelNumberField already handles all three shapes (see the Padding row, ArrangementInspector.swift:496, which is a box + FourSidedButton + a stand-in made of numbers), so it is a job of an hour, not a redesign. The open question worth deciding: a number typed BELOW the wall should probably raise the same answer line a spent drag does, rather than silently clamping.\n- MeasurePartSettings.swift:152, the chipSize row: hand-rolled readout, scales labelScale by MeasureContent.labelFontSize. SliderReadout with a scale would cover it.\n- EditorView.swift:2322 strokeWidthSlider: the shape tool controls in the release before Appearance and Effects split. Reads Width. Walks assert it as \"2 px\", so converting it means the same walk update the Thickness rows just had (the unit word moves out of the box and becomes the suffix beside it).\n\nHow to do it: SliderReadout in Sources/Photonz/InspectorControls.swift takes a SliderNumber (PhotonzCore, tested) saying how the row's number is written, and hands the rest to PanelNumberField. Nothing else has to be decided.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-16T03:48:44.381Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:33.795Z",
+      "note": "seq 2780 -> 110"
     }
   ]
 }

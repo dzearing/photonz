@@ -4,12 +4,12 @@
   "goal": "An icon drawn on a blank canvas exports with a white rectangle the size of the canvas behind it, because the canvas it was drawn on is white. Handed to a developer, that icon cannot sit on a coloured page or a dark theme without the white box showing. Decide what export should do about the background it was drawn on, and do it.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 2770,
+  "seq": 320,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T01:11:41.298Z",
-  "updated": "2026-09-16T01:11:41.301Z",
+  "updated": "2026-09-16T12:23:34.726Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Falls out of an-icon-exported-as-svg-has-no-picture-in-it (2026-09-16): a flat background is now written as <rect x=\"0\" y=\"0\" width=\"900\" height=\"700\" fill=\"#FFFFFF\"/> rather than embedded as a PNG, so the background is now one easy element to leave out. This is a UX question rather than a technical one, so it likely wants a decision card first: always drop a flat background on export, offer a Background toggle in the Export sheet beside the format row, or leave it as it is. SVGExport.flatColor / Writer.flatPicture in Sources/PhotonzCore/SVGExport.swift is where it would be skipped.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-16T01:11:41.300Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.725Z",
+      "note": "seq 2770 -> 320"
     }
   ]
 }

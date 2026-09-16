@@ -4,12 +4,12 @@
   "goal": "Several written rules in the shared patterns document have been bent by things that shipped, each time because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 80,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-15T12:14:54.032Z",
+  "updated": "2026-09-16T12:23:35.519Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -24,7 +24,8 @@
     "Each scrub cites the audit it came from, and anything already shipped that disagrees with the new wording is filed rather than quietly rewritten",
     "D9 says what a bottom dock owes when it is pushed away that a side dock does not, since D9 accepted the side dock keeping its way back in the title bar and that reasoning does not carry to a dock across the bottom",
     "D10 says which surfaces show a catalogue of what can be animated and which show only what is, and what decides that, since a video clip and a layer in a document now answer it in opposite ways and both are shipped",
-    "There is a rule for a setting that has two homes: what has to be true before a second door is allowed, and what the two doors owe each other, because three slices on 2026-09-15 each shipped one and each had to ask the user instead of citing the document"
+    "There is a rule for a setting that has two homes: what has to be true before a second door is allowed, and what the two doors owe each other, because three slices on 2026-09-15 each shipped one and each had to ask the user instead of citing the document",
+    "The drop section says whether a surface must say a sentence while something is held over it, where that sentence sits when it cannot follow the pointer, and what it says when the surface will refuse (folded in from the-drop-rules-say-what-a-surface-says-while-som, 2026-09-16 triage)"
   ],
   "log": [
     {
@@ -54,6 +55,14 @@
     {
       "t": "2026-09-15T12:14:54.031Z",
       "note": "seq 90 -> 80"
+    },
+    {
+      "t": "2026-09-16T12:23:09.960Z",
+      "note": "Merged the-drop-rules-say-what-a-surface-says-while-som into this on the 2026-09-16 triage pass: same document, same shape of work, and a runner who has UX-PATTERNS open should scrub every bent rule in one sitting rather than come back for the drop section later. Its goal, verbatim, so nothing is lost: the written rule for a surface with something held over it covers what it DRAWS (an accent edge, a wash, an insertion line) and says nothing about the SENTENCE. The app now writes a plain line saying what letting go would do, or why it will not, and that line has grown up differently in each place it appears: it follows the pointer on the picture, it sits at one end of the layers list, and its wording for two selected things has already had to be fixed once. Write the rule so the next surface does not invent a fourth version."
+    },
+    {
+      "t": "2026-09-16T12:23:35.518Z",
+      "note": "seq 80 -> 100"
     }
   ]
 }

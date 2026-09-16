@@ -4,12 +4,12 @@
   "goal": "Somebody who knows design tools sat down with components and could not do the one thing components are for. Take the whole journey and make it work end to end: draw a button, give it a label you can change per copy, give it a resting, hovered, pressed and disabled look, place copies, and set each copy's look and label without leaving the panel or guessing what anything is called.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 2.4,
+  "seq": 210,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:03:35.089Z",
-  "updated": "2026-09-15T22:17:57.899Z",
+  "updated": "2026-09-16T12:23:34.243Z",
   "deps": [
     "every-pane-says-what-it-is-for-in-words-somebody",
     "a-copy-of-a-component-is-configured-not-authored"
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-15T22:17:57.898Z",
       "note": "Also from the same pass: the only word the panel has for the set of looks is Variant, and the only way to make it say State is to type State over the property name yourself. The rewritten tutorial now teaches exactly that, because it is the only honest way to say state in the app's own words. Worth deciding here whether the journey should offer State as a starting point rather than leaving everybody to rename it."
+    },
+    {
+      "t": "2026-09-16T12:23:34.242Z",
+      "note": "seq 2.4 -> 210"
     }
   ]
 }

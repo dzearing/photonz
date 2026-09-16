@@ -4,12 +4,12 @@
   "goal": "Separating a big screenshot tells you the most important thing it has to say in a pill that fades: how many pieces came out, how many are still in the picture, and that running the command again takes the next batch. On a dense page that is 142 out and 580 left, and a few seconds later there is nothing on screen that says so. Somebody who looked away has no way back to that number except by running the command again and reading fast. Put what was left behind somewhere that stays, so the count is a thing you can come back to rather than a thing you had to catch.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 510,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:42.726Z",
-  "updated": "2026-09-15T12:14:53.833Z",
+  "updated": "2026-09-16T12:23:33.621Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Four audits in one day each ask a version of \"is the pill enough\": 2026-09-13-separate-into-layers (\"the only thing that tells you is a pill that fades\"), 2026-09-13-separate-whole-screenshot (\"the pill ends with run it again for more rather than offering a button\"), 2026-09-13-separate-boxes, and 2026-09-13-turn-into-text (\"is the pill enough to tell you it worked\").\n\nUX-PATTERNS section 3 files a pill of this kind under \"Modal + toast\" as a transient confirmation (\"Saved\", \"42 instances updated\"). A count you are expected to act on later is not a confirmation, which is why this keeps coming up. The rule scrub is a separate task; this one is the behaviour.\n\nMeasured numbers to design against, from 2026-09-13-separate-whole-screenshot: the project dashboard capture is 142 pieces out of 724, so 580 stay in the picture; this app own window is 93 out and 26 left; a photograph is 0 and 0 with a sentence instead of a count.",
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-15T12:14:53.832Z",
       "note": "seq 470 -> 510"
+    },
+    {
+      "t": "2026-09-16T12:23:33.620Z",
+      "note": "seq 510 -> 70"
     }
   ]
 }

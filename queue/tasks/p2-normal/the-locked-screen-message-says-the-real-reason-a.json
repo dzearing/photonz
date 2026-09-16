@@ -1,0 +1,33 @@
+{
+  "id": "the-locked-screen-message-says-the-real-reason-a",
+  "title": "The locked-screen message says the real reason a walk cannot be trusted",
+  "goal": "When the Mac is locked, a scripted run of the app refuses to start and explains itself by saying the app is never drawn and that layout and animations stop. That explanation is wrong, and because it is wrong four different runners have each spent part of their turn arguing the refusal is too cautious, re-running the same walks by hand to prove the app looks fine. Replace the explanation with what actually happens, in the message the run prints, in the repo rules, and in the code that decides. The refusal itself is right and stays.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T12:22:18.070Z",
+  "updated": "2026-09-16T12:23:33.356Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED by the 2026-09-16 triage pass, and the reproduction is the evidence for every acceptance item.\n\n  ioreg / CGWindowList: loginwindow at layer 2004, 1728x1117, over everything. The Mac really is locked.\n  Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build          -> status locked, 0 steps, exit 3\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build -> 5 steps in 3.87s, exit 1, failed at step 6\n\nWhat the forced run's own log says, which is the whole point:\n  [4 drag] (320, 260) to (620, 460) document, cursor while down crosshair, ... grid lines caught 0, let go 0, changed 7 ... last 608.0/448.0\n  [5 wait] 0.5s, never went quiet (15 of 16 slices busy, 5 restless (animating CAShapeLayer transition)); mainBusy 764.4ms over 2491 passes\n  [6 panelMenu] FAILED: no menu called \"Add Effect\" is in the window; the ones that are: ... 25.0pt wide at x 1218.0 says \"Add an effect: a shadow, a glow, a border or a blur\"\n\nSo: the drag landed and moved things, layout ran, animations were actively running, and the control the step could not find was on screen at the right size with the right tooltip and an EMPTY name. Layout and animations do NOT stop. Accessibility identifiers do not arrive, and screen capture is refused (the run printed 'Window captures: none' and wrote no -sc.png, with no SCStreamErrorDomain error at all).\n\nThe wrong explanation lives in three places and they must agree: the printed message and Sources/Photonz/Playtest/PlaytestScreenState.swift, and the CLAUDE.md section 'A walk needs the screen unlocked' which says 'layout and animations stop, the control names SwiftUI hands to AppKit never arrive'. The middle clause is right; the first is not.\n\nWhy it earns a task: task logs on a-hundred-and-fifteen-walks-fail-on-code-that-pa carry four separate runner reproductions (2026-09-15 15:50, 2026-09-15 23:00, 2026-09-16 00:5x, 2026-09-16 02:24) each filed to argue the gate is too broad, each because what the runner saw did not match what it had been told. This does not change the gate. It stops the argument.",
+  "acceptance": [
+    "The message a refused run prints no longer claims the window is not drawn or that layout and animations stop",
+    "It says instead the two things that really fail: the app cannot be photographed, and the names the run looks controls up by never arrive even though the same controls are on screen with the right size and the right tooltip",
+    "The repo rules (CLAUDE.md, the section headed A walk needs the screen unlocked) carry the same corrected reason, including that a forced run really does drive the app and move things",
+    "The comment in the code that decides this says the same thing",
+    "A run forced past the refusal is used to show it: name the walk, and quote both the step that drove the app and the step that could not find a control that was plainly there"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T12:22:18.072Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:33.355Z",
+      "note": "seq 2840 -> 10"
+    }
+  ]
+}

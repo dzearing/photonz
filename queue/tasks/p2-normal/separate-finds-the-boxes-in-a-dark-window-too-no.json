@@ -4,12 +4,12 @@
   "goal": "Right now, separating a screenshot of a whole app window gives you its words and none of its panels, toolbars or buttons, because the app only recognises a box when there is one flat colour behind everything. A person separating a capture of their own app expects the button they can see to come out as a button.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 480,
+  "seq": 5,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T09:27:13.999Z",
-  "updated": "2026-09-15T12:14:53.800Z",
+  "updated": "2026-09-16T12:24:14.052Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED, not read. Bench over six real captures (Tests/PhotonzRenderTests/SeparateBenchTests.swift, off unless you name files):\n\n  PHOTONZ_SEPARATE_BENCH=\"/tmp/separate-bench/settings-pane.png,/tmp/separate-bench/inspector-dark.png,/tmp/separate-bench/dashboard-web.png,/tmp/separate-bench/wikipedia-web.png,/tmp/separate-bench/photonz-fullscreen.png\" Scripts/test.sh -c release --filter SeparateBench\n\n  BENCH settings-pane.png | 1440 x 960 (1.4 MP) at 2x | 9 runs, 2 boxes, 2 left\n  BENCH inspector-dark.png | 602 x 704 (0.4 MP) at 2x | 10 runs, 0 boxes, 7 left\n  BENCH dashboard-web.png | 2880 x 1770 (5.1 MP) at 1x | 142 runs, 0 boxes, 580 left\n  BENCH wikipedia-web.png | 2880 x 1770 (5.1 MP) at 1x | 98 runs, 9 boxes, 118 left\n  BENCH photonz-fullscreen.png | 3456 x 2234 (7.7 MP) at 2x | 93 runs, 0 boxes, 26 left\n\nThree of five, including a capture of this app, return zero boxes. The cause is in the design doc (docs/design/separate-into-layers.md, The boxes, step 2): the page is the region holding most of the picture outer border, and if no one region holds half of it nothing is claimed at all. A window with a dark canvas, a toolbar and two panels has no such region, so the whole box pass gives up. Step 5 (something that fills the picture IS the picture) already descends one level; the fix is likely to let the sweep read a REGION of the picture against its own local background rather than demanding one page for the whole frame.",
@@ -43,6 +43,49 @@
     {
       "t": "2026-09-15T12:14:53.799Z",
       "note": "seq 440 -> 480"
+    },
+    {
+      "t": "2026-09-16T10:57:59.723Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T12:17:27.045Z",
+      "note": "ADVERSARIAL REVIEW, before building. The task notes point at one line and they are right about it, but reading the code is not reproducing it, so I ran the bench first and then instrumented the sweep over all six captures. Three separate gates were each enough on their own to return zero boxes, and fixing only the named one would have shipped a fix that still found almost nothing: (1) pageRegion demanded ONE colour region holding half the picture's outer border, and a window offers 31/17/13 percent; (2) even with a background found, the window and the desktop around it are ONE connected piece running off every side of the frame, and a piece the frame cut is thrown away BEFORE the 'something that fills the picture IS the picture' step can look inside it, so the whole window went in the bin; (3) what is left of a window's chrome once the canvas and the panels are cut out of it is a comb, too sparse to be a box and too big to be nothing, and it was dropped with every button on it. The shortest version that delivers the value is the same rule said three times: a thing is what interrupts a background, and scenery is looked THROUGH rather than handed back."
+    },
+    {
+      "t": "2026-09-16T12:17:32.334Z",
+      "note": "MEASURED, before and after, on six real captures plus two photographs. Boxes out: settings pane 10 then 10, encyclopedia page 11 then 11, dark inspector crop 0 then 3, browser dashboard 0 then 27, this app's whole screen 0 then 19, mountain photograph 0 then 0, second photograph 0 then 0. The two captures that already worked did not move by a single box, which is acceptance item 3 (its wording says 'exactly its two buttons', written before nesting landed; the settings pane has given 10 since then and still does)."
+    },
+    {
+      "t": "2026-09-16T12:17:32.383Z",
+      "note": "ADVERSARIAL REVIEW, before calling it ready. Could not use the real app: the Mac's screen was locked for the whole task, so no walk runs and no picture can be taken. Judged on the rects instead, and they are real pointable things rather than noise - on the new window fixture the ten boxes are the title bar's panel button, the selected layer's row, the swatch on it, two checkboxes, two dropdowns, a control that came out as a real rounded rectangle, and the red rectangle on the artboard. What still feels wrong, all of it in the audit: the panels themselves never come out (deliberate - the chrome is what everything is sitting ON, and lifting it leaves a window-shaped hole with nothing behind it, so this went into the audit's evaluate list as a question rather than being decided quietly); the descent peels four layers of chrome and is still finding a piece covering half the picture when it hits its limit, so it stops because it is told to; and a 7.7 MP capture went from 92 ms to 502 ms to separate."
+    },
+    {
+      "t": "2026-09-16T12:17:32.433Z",
+      "note": "left rough: the box sweep now walks the whole picture up to four times on a capture it can keep peeling, and each pass is a full union-find over every pixel. That is where the 5x came from. Not filed: it is the honest cost of reading a window rather than a defect, it is off the main thread, and the worst real case measured is 502 ms."
+    },
+    {
+      "t": "2026-09-16T12:18:01.703Z",
+      "note": "runner failed (exit 0, attempt 1): Waiting on the full suite. While it runs, here's where the task stands. **What was wrong** — the task's note blamed one line (`pageRegion` demanding a single colour behind half the picture), and it was right, but reproducing it turned up **three** gates, each enough on its own to return zero boxes: 1. The background had to be **one** paint holding half the picture's border. A window offers 31% / 1"
+    },
+    {
+      "t": "2026-09-16T12:23:33.445Z",
+      "note": "seq 480 -> 30"
+    },
+    {
+      "t": "2026-09-16T12:24:14.006Z",
+      "note": "seq 30 -> 5"
+    },
+    {
+      "t": "2026-09-16T12:24:14.051Z",
+      "note": "Moved to the FRONT of p2 (seq 30 -> 5) by the 2026-09-16 triage pass, for a reason that is about the tree rather than about the work. The 05:18 local runner ran out of turn waiting on the full suite and exited without committing, so its changes are sitting uncommitted in the working tree right now: Sources/Photonz/EditorState+Separate.swift, Sources/PhotonzCore/BoxSweep.swift, Tests/PhotonzCoreTests/BoxSweepTests.swift, docs/design/separate-into-layers.md, plus new Scripts/playtest/separate-dark-window-walk.json, Tests/PhotonzRenderTests/AppWindowSeparateFixtureTests.swift and Tests/PhotonzRenderTests/Fixtures/app-window-2x.png. Whoever claims a task next inherits them. Putting this task first makes that whoever the one who owns them. Read the tree before you start, and finish or revert what is there rather than committing it under another task's name. The runner's own summary, from queue/status.json lastError: it found THREE gates each enough on its own to return zero boxes, not the one the notes blamed - (1) the background had to be one paint holding half the picture's border, and a window offers 31/17/13 percent, (2) a whole-screen capture is one connected piece running off every side of the frame and pieces the frame cut are thrown away first, (3) the third is in its working notes."
     }
-  ]
+  ],
+  "started": "2026-09-16T10:57:59.722Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-16T12:18:01.702Z",
+    "exit": 0,
+    "message": "Waiting on the full suite. While it runs, here's where the task stands. **What was wrong** — the task's note blamed one line (`pageRegion` demanding a single colour behind half the picture), and it was right, but reproducing it turned up **three** gates, each enough on its own to return zero boxes: 1. The background had to be **one** paint holding half the picture's border. A window offers 31% / 1"
+  }
 }

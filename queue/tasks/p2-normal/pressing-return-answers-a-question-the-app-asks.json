@@ -4,12 +4,12 @@
   "goal": "When the app stops to ask something (\"Turn “Rectangle” into a picture?\"), pressing Return should press the button that says yes, the way it does in every other Mac app. Right now a scripted test of the app presses Return at that question and nothing happens: the question stays up and the work never gets done. That leaves the automated checks either failing for the wrong reason or, worse, passing while the thing they claim to prove never happened.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 2800,
+  "seq": 370,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T07:02:01.641Z",
-  "updated": "2026-09-16T07:02:01.644Z",
+  "updated": "2026-09-16T12:23:34.946Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-16, on a clean tree (git stash, rebuild, re-run). Both runs were under PHOTONZ_ALLOW_LOCKED_WALK=1 because the Mac's screen reported locked; the captures came out real and legible, but re-confirm unlocked before digging.\n\nFAILS HONESTLY:\n$ Scripts/playtest.sh Scripts/playtest/turn-into-a-path-walk.json\n  step 42 (expectPath): no path in the document; the layers are: Background, Rectangle\nStep 40 is { do: key, key: return } answering the \"Turn “Rectangle” into a path?\" sheet. The rectangle is still a rectangle, so the press never reached the button.\n\nPASSED WHILE PROVING NOTHING (now fixed in that walk, same root cause):\nturn-into-a-picture-walk.json used the same { do: key, key: return } at its sheet. Every describe after it was false and the walk still went green: turn-5-turned-doc.png and turn-6-piece-out-doc.png came back byte-identical (shasum), the row menu after the \"turn\" still listed 'Turn Into Picture…', and a screen capture taken after the press shows the sheet still standing. Fixed there by pressing the button by name instead: { do: press, control: 'Turn Into Picture', in: 'Sheet' }.\n\nWHAT NOT TO DO: do not just swap turn-into-a-path-walk to the `press` form and call it done. That walk is failing HONESTLY, and the question worth answering first is whether Return ever reached these buttons. The harness's `.key` case routes a press to window.attachedSheet on purpose (PlaytestHarness.swift, the comment dated 2026-09-08 about answering “Turn this shape into a picture?” with ⏎), and turn-a-rectangle-into-a-path landed green, so this looks like something that worked and stopped. Find out what changed before changing the walk.\n\nWhere: Sources/Photonz/Playtest/PlaytestHarness.swift `case .key` and `keyTarget()`; the sheets are NSAlert.beginSheetModal in Sources/Photonz/EditorState+LayerOps.swift (rasterizeLayer, askBeforeTurningIntoPath).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-16T07:02:01.643Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.945Z",
+      "note": "seq 2800 -> 370"
     }
   ]
 }

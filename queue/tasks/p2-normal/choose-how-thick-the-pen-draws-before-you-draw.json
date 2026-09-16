@@ -4,12 +4,12 @@
   "goal": "With the Pen in hand the tool bar offers a colour and nothing else, so there is no way to say how thick the next line should be until after you have drawn it. Drawing an icon at 2 px means drawing the first stroke at 4, picking it, and thinning it, every single time you start. Every other drawing tool lets you set its weight up front.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 2670,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:28:44.771Z",
-  "updated": "2026-09-15T14:28:44.774Z",
+  "updated": "2026-09-16T12:23:34.331Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while shipping the-pen-keeps-the-thickness-you-last-chose, which made the Pen REMEMBER a weight (AnnotationStyles.penStrokeWidth, read through EditorState.armedPenStrokeWidth). What is missing is a way to SET it without a path to set it on.\n\nThe gate is EditorView.showsStrokeWidthRow, which falls back to activeTool.usesStrokeWidth; that is false for .pen because Tool.usesStrokeWidth is written as \"has an annotationShape that is not highlight\" and a path is not an AnnotationShape (VectorPath.swift). The store already answers for the Pen: AnnotationStyles.strokeWidth(for: .pen) and setStrokeWidth(_:for: .pen) both route to penStrokeWidth, exactly the way paint(for:)/setPaint(for:) route to penInk. So this is mostly showing the row and wiring its commit to setStrokeWidth(_:for: activeTool), plus deciding what EditorView.editedStrokeWidth reads when a PATH rather than an annotation is picked (selectedAnnotation is nil for a path today).\n\nWatch the icon-frame rule while doing it: IconStrokeWeight.startingWidth only thins a line whose armed width is still the stock 4, so arming the Pen at anything else correctly stops a 24px frame thinning it (IconStrokeWeightTests.anArmedPenIsNotThinned). A row that writes 4 back on open would silently re-enable the thinning.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-15T14:28:44.773Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.330Z",
+      "note": "seq 2670 -> 230"
     }
   ]
 }

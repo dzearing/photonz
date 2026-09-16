@@ -4,12 +4,12 @@
   "goal": "A drawing exported as SVG comes out as real shapes, except for arrows, highlights and measurements: those three ride out as embedded pictures, so the one thing this app is used for most, handing over a marked up screenshot, is the one thing that does not come across as editable shapes. Make an arrow, a highlight and a measurement write as shapes like everything else.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 580,
+  "seq": 330,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:40.129Z",
-  "updated": "2026-09-15T12:14:53.911Z",
+  "updated": "2026-09-16T12:23:34.771Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Where it is written: SVGExport.answer(for:) in Sources/PhotonzCore/SVGExport.swift returns .picture for arrow, highlight, measure. The geometry is all pure already: Geometry.arrowhead / arrowShaftEnd / arrowheadCircle build the head, CaptionMetrics sizes the pill, MeasureRasterizer draws the caliper from numbers Measure.swift owns. A caption pill and a measurement chip both hold TYPE, so they need the same glyph outlining text layers use (TextRasterizer.outlinePath). A highlight is composited with multiply: mix-blend-mode is CSS and browsers honour it, but the render-back check uses CoreSVG through NSImage, so check first whether CoreSVG honours it before relying on it, and if it does not, say so in docs/design/svg-export.md rather than shipping a file that looks different in the checker than in a browser.",
@@ -36,6 +36,10 @@
     {
       "t": "2026-09-15T12:14:53.910Z",
       "note": "seq 540 -> 580"
+    },
+    {
+      "t": "2026-09-16T12:23:34.770Z",
+      "note": "seq 580 -> 330"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Make a card that hides whatever hangs out past its edge, and its corners are stuck square. Give it a way to round the edge it crops with, so a photo in a card can be cut to a rounded corner rather than a hard box.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 2760,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T00:59:18.907Z",
-  "updated": "2026-09-16T00:59:18.910Z",
+  "updated": "2026-09-16T12:23:34.198Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Falls out of find-out-what-corner-radius-should-say-over-a-gr, where the user chose 'Round what is inside it' on 2026-09-13. The card's own con in that decision said so: cropping a group by its own corners stops being something this row does, so it needs another way in if anyone wants it.\n\nReproduced on this tree with a throwaway test against PhotonzCore (a group sized 100x100, clipsContents true, holding a 200x200 filled rectangle):\n\n  CLIPPING CARD: clipsToBounds true, reaching true, row speaks for what is inside it\n  CLIPPING CARD after a pull to 20: card mask CornerRadii(0,0,0,0), photo curve CornerRadii(20,20,20,20)\n\nSo the pull rounds the photo, the square crop then cuts the rounded photo back to a hard box, and the card looks exactly as it did. Files: Sources/PhotonzCore/ContainerRounding.swift (roundingReachesItsContents deliberately has no exception for a clipping group), Sources/Photonz/PartsInspector.swift. Likeliest shape of the fix is a separate way in for the crop rather than overloading the same row again: the Layout section already owns hiding what sticks out, and the curve it crops with belongs beside it.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-16T00:59:18.909Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.197Z",
+      "note": "seq 2760 -> 200"
     }
   ]
 }

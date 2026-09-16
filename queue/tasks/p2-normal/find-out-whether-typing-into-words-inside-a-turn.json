@@ -4,12 +4,12 @@
   "goal": "When a card of shapes is on a slant and you double click a line of text inside it to retype the words, the typing field may well appear upright and away from the words it belongs to, because it is placed at the spot the words would sit if the card were straight. Someone retyping a label would be typing into a box that is not over their label.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2810,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T07:21:44.491Z",
-  "updated": "2026-09-16T07:21:44.494Z",
+  "updated": "2026-09-16T12:23:34.109Z",
   "deps": [],
   "blockedBy": [],
   "notes": "NOT REPRODUCED. The Mac's screen was locked for the whole of the task that noticed this (2026-09-16, a-piece-inside-a-turned-card-moves-on-its-own), so no walk could run and no picture could be taken: Scripts/playtest.sh reported status \"locked\" and exited 3 on three attempts. This is a reading of the code, not a sighting.\n\nWhat the code says: CanvasPointerDrags.mouseDown passes hit.frame.origin (canvas-upright space) to beginTextSession(layerID:at:), and CanvasTextEditing places the inline editor as an axis-aligned NSView at that document point. Nothing on that path asks PhotonzDocument.inheritedTurn, so a card turned 20 degrees should put the field 20 degrees off the words. It predates the handles work: the piece was already reachable for wording before that (see queue/audits/2026-09-12-group-turn.json, which says a turned piece \"still takes colour and wording\").\n\nTo reproduce: Scripts/probe-app.sh, draw a rectangle and a line of text, group them, turn the group with the knob, double click into the group and then double click the words. Or run Scripts/playtest/turned-piece-walk.json with a text layer swapped in for the second rectangle.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-16T07:21:44.493Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.108Z",
+      "note": "seq 2810 -> 180"
     }
   ]
 }

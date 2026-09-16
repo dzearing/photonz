@@ -4,12 +4,12 @@
   "goal": "The question was whether the app should know what kind of thing you are making. The user's answer is that a document should not be locked into a kind: you should be able to swap between modes freely, where a mode is a preset of which panes and tool groups are showing, and you can always turn a hidden thing back on by hand and get back to what you had a second ago. Prototype that in the mocks and see whether it holds up. The thing being prototyped is one app that does four jobs, not four apps sharing a window: work made in one mode has to flow into another, so a component you drew can be put on a video timeline without leaving anything or converting anything.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 7,
+  "seq": 40,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-15T17:15:22.810Z",
+  "updated": "2026-09-16T12:23:33.314Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -123,6 +123,10 @@
     {
       "t": "2026-09-15T17:15:22.808Z",
       "note": "Prototype delivered in full; waiting on the user's answer to 'Should a window have modes you swap, and should work made in one flow into another?'. Pages at http://127.0.0.1:8791/index.html#modes and #shelves, long form docs/design/modes.md, evidence Tests/PhotonzCoreTests/ModeIsAPresetTests.swift (6 tests, suite green at 6975), audit queue/audits/2026-09-15-modes.json. Recommended option a: modes now, the video chain as its own yes. Option d declines the whole task."
+    },
+    {
+      "t": "2026-09-16T12:23:33.313Z",
+      "note": "seq 7 -> 40"
     }
   ],
   "started": "2026-09-15T17:02:48.204Z"

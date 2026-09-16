@@ -4,12 +4,12 @@
   "goal": "Photonz opens its setup window at every single launch until Screen Recording is turned on, and there is no way to say no to it. Somebody who only wants to draw icons or build UI gets that window floating over everything, every time they open the app, for ever, with a step badged Required that they do not want and will never do. Decide what the app owes that person, and make saying no stick.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2820,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T09:08:45.953Z",
-  "updated": "2026-09-16T09:08:45.956Z",
+  "updated": "2026-09-16T12:23:34.065Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is a UX and positioning question, not an engineering one: whoever picks it up should open a decision card rather than choose. The question is what Photonz is for somebody who never gives it the screen, now that it is also a place to build UI, draw icons and animate SVGs, none of which touch screen capture.\n\nReproduced: Tests/PhotonzCoreTests/FirstRunOfferTests.swift neverGrantingStillLeavesTheSetupWindowComingBack drives five launches with nothing granted and asserts the setup window presents on every one. Run with: Scripts/test.sh --filter FirstRunOfferTests. It passes, which is the bug.\n\nWhy: WelcomeController.windowWillClose only sets welcome.setupCompleted when state.screenRecordingGranted is true, and FirstRunOffer.presentsAtLaunch returns true unconditionally while setupCompleted is false. So there is no dismissal that sticks.\n\nFiled 2026-09-16 out of find-out-whether-somebody-who-never-turns-on-scr, which fixed the tour half of this (the offer no longer waits on the grant, so that person is now shown round once) and deliberately left this half alone because it is the bigger question. The contradiction that task introduced and could not resolve inside its scope: the window now offers a way past a step still badged Required. See docs/design/tutorials.md, The first launch.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-16T09:08:45.955Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.064Z",
+      "note": "seq 2820 -> 170"
     }
   ]
 }

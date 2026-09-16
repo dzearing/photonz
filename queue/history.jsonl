@@ -4254,3 +4254,84 @@
 {"t":"2026-09-16T10:57:02.831Z","ev":"task_note","id":"separate-the-rows-inside-a-card-not-just-the-car"}
 {"t":"2026-09-16T10:57:02.876Z","ev":"task_note","id":"separate-the-rows-inside-a-card-not-just-the-car"}
 {"t":"2026-09-16T10:57:11.184Z","ev":"task_done","id":"separate-the-rows-inside-a-card-not-just-the-car","from":"in_progress","note":"Separate into Layers now looks one level inside every box it takes: a row, switch or field on a card comes out as its own layer nested under the card, the card is cut whole with its own colour where the child was, and a box whose holder stays in the picture stays with it. BoxSweep gains a second pass (parent/depth/ancestors/owns/isSurround, maxBoxDepth 2); LayerSeparator is three passes and spends the box ceiling outermost first. Fixture goes 4 boxes to 10 and 13 pieces to 19 with the same 9 runs and same 2 buttons; drawn card>row>label is three deep. Full suite green (7578). Perf 864->959 ms at 12.2 MP. NOT seen in the app: the screen was locked all task so no walk could run; sweep requested. Audit queue/audits/2026-09-16-rows-inside-a-card.json"}
+{"t":"2026-09-16T10:57:59.618Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T10:57:59.725Z","ev":"task_started","id":"separate-finds-the-boxes-in-a-dark-window-too-no","title":"Separate finds the boxes in a dark window too, not just on a flat light page","priority":"p2-normal"}
+{"t":"2026-09-16T12:17:12.030Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-16T12:17:18.216Z","ev":"task_created","id":"separating-a-crop-of-a-panel-finds-its-rows-not","priority":"p2-normal","title":"Separating a crop of a panel finds its rows, not just the few in the middle"}
+{"t":"2026-09-16T12:17:27.047Z","ev":"task_note","id":"separate-finds-the-boxes-in-a-dark-window-too-no"}
+{"t":"2026-09-16T12:17:32.336Z","ev":"task_note","id":"separate-finds-the-boxes-in-a-dark-window-too-no"}
+{"t":"2026-09-16T12:17:32.385Z","ev":"task_note","id":"separate-finds-the-boxes-in-a-dark-window-too-no"}
+{"t":"2026-09-16T12:17:32.435Z","ev":"task_note","id":"separate-finds-the-boxes-in-a-dark-window-too-no"}
+{"t":"2026-09-16T12:18:01.708Z","ev":"runner_failed","id":"separate-finds-the-boxes-in-a-dark-window-too-no","kind":"task","exit":0,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"Waiting on the full suite. While it runs, here's where the task stands. **What was wrong** — the task's note blamed one line (`pageRegion` demanding a single colour behind half the picture), and it was right, but reproducing it turned up **three** gates, each enough on its own to return zero boxes: 1. The background had to be **one** paint holding half the picture's border. A window offers 31% / 1"}
+{"t":"2026-09-16T12:20:32.924Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":120,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T12:22:05.617Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-16T12:22:08.977Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-16T12:22:18.074Z","ev":"task_created","id":"the-locked-screen-message-says-the-real-reason-a","priority":"p2-normal","title":"The locked-screen message says the real reason a walk cannot be trusted"}
+{"t":"2026-09-16T12:22:20.857Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-16T12:22:49.131Z","ev":"task_created","id":"appearance-is-below-the-fold-again-because-the-p","priority":"p2-normal","title":"Appearance is below the fold again, because the panel still wants more room than the window has"}
+{"t":"2026-09-16T12:22:56.144Z","ev":"task_created","id":"a-motion-s-from-and-to-colours-are-picked-in-thi","priority":"p2-normal","title":"A motion's From and To colours are picked in this app's picker, not the system one"}
+{"t":"2026-09-16T12:22:56.209Z","ev":"task_created","id":"the-point-a-layer-turns-around-can-be-grabbed-ev","priority":"p2-normal","title":"The point a layer turns around can be grabbed even when it sits near a corner"}
+{"t":"2026-09-16T12:23:00.165Z","ev":"task_note","id":"a-screen-s-name-can-be-read-over-whatever-it-sit"}
+{"t":"2026-09-16T12:23:00.208Z","ev":"task_note","id":"the-motion-section-sits-directly-under-effects-w"}
+{"t":"2026-09-16T12:23:09.962Z","ev":"task_note","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout"}
+{"t":"2026-09-16T12:23:10.007Z","ev":"task_dropped","id":"the-drop-rules-say-what-a-surface-says-while-som","from":"pending","note":"duplicate of two-rules-in-ux-patterns-get-scrubbed-a-callout; its rule and its acceptance are folded in there"}
+{"t":"2026-09-16T12:23:33.180Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":10,"to":10}
+{"t":"2026-09-16T12:23:33.227Z","ev":"task_resequenced","id":"an-audit-gets-a-real-picture-of-the-app-again","from":20,"to":20}
+{"t":"2026-09-16T12:23:33.269Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":2.3,"to":30}
+{"t":"2026-09-16T12:23:33.315Z","ev":"task_resequenced","id":"work-out-whether-the-app-needs-project-types-at","from":7,"to":40}
+{"t":"2026-09-16T12:23:33.357Z","ev":"task_resequenced","id":"the-locked-screen-message-says-the-real-reason-a","from":2840,"to":10}
+{"t":"2026-09-16T12:23:33.402Z","ev":"task_resequenced","id":"two-timing-tests-only-fail-when-the-whole-suite","from":2720,"to":20}
+{"t":"2026-09-16T12:23:33.447Z","ev":"task_resequenced","id":"separate-finds-the-boxes-in-a-dark-window-too-no","from":480,"to":30}
+{"t":"2026-09-16T12:23:33.491Z","ev":"task_resequenced","id":"separating-a-crop-of-a-panel-finds-its-rows-not","from":2830,"to":40}
+{"t":"2026-09-16T12:23:33.533Z","ev":"task_resequenced","id":"a-text-layer-s-row-says-the-words-that-are-in-it","from":520,"to":50}
+{"t":"2026-09-16T12:23:33.578Z","ev":"task_resequenced","id":"find-out-how-a-hundred-and-forty-new-rows-should","from":530,"to":60}
+{"t":"2026-09-16T12:23:33.622Z","ev":"task_resequenced","id":"what-separate-left-behind-is-still-there-after-t","from":510,"to":70}
+{"t":"2026-09-16T12:23:33.664Z","ev":"task_resequenced","id":"find-out-whether-separating-should-hand-you-text","from":540,"to":80}
+{"t":"2026-09-16T12:23:33.708Z","ev":"task_resequenced","id":"find-out-whether-a-label-inside-a-group-can-be-d","from":490,"to":90}
+{"t":"2026-09-16T12:23:33.753Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":2850,"to":100}
+{"t":"2026-09-16T12:23:33.797Z","ev":"task_resequenced","id":"the-last-three-sliders-whose-number-you-still-ca","from":2780,"to":110}
+{"t":"2026-09-16T12:23:33.842Z","ev":"task_resequenced","id":"picking-a-layer-stops-re-measuring-the-whole-rig","from":2750,"to":120}
+{"t":"2026-09-16T12:23:33.887Z","ev":"task_resequenced","id":"right-clicking-the-picture-offers-what-you-can-d","from":620,"to":130}
+{"t":"2026-09-16T12:23:33.933Z","ev":"task_resequenced","id":"turn-into-picture-takes-every-layer-you-picked","from":630,"to":140}
+{"t":"2026-09-16T12:23:33.978Z","ev":"task_resequenced","id":"a-second-screen-lands-where-the-canvas-cannot-fo","from":610,"to":150}
+{"t":"2026-09-16T12:23:34.022Z","ev":"task_resequenced","id":"a-tutorial-card-about-the-picture-stops-covering","from":500,"to":160}
+{"t":"2026-09-16T12:23:34.066Z","ev":"task_resequenced","id":"saying-no-to-screen-recording-is-an-answer-the-a","from":2820,"to":170}
+{"t":"2026-09-16T12:23:34.110Z","ev":"task_resequenced","id":"find-out-whether-typing-into-words-inside-a-turn","from":2810,"to":180}
+{"t":"2026-09-16T12:23:34.155Z","ev":"task_resequenced","id":"a-screen-s-name-can-be-read-over-whatever-it-sit","from":2680,"to":190}
+{"t":"2026-09-16T12:23:34.199Z","ev":"task_resequenced","id":"a-card-that-crops-what-is-inside-it-can-have-rou","from":2760,"to":200}
+{"t":"2026-09-16T12:23:34.244Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":2.4,"to":210}
+{"t":"2026-09-16T12:23:34.289Z","ev":"task_resequenced","id":"the-motion-section-sits-directly-under-effects-w","from":2660,"to":220}
+{"t":"2026-09-16T12:23:34.332Z","ev":"task_resequenced","id":"choose-how-thick-the-pen-draws-before-you-draw","from":2670,"to":230}
+{"t":"2026-09-16T12:23:34.377Z","ev":"task_resequenced","id":"the-point-a-layer-turns-around-can-be-grabbed-ev","from":2870,"to":240}
+{"t":"2026-09-16T12:23:34.421Z","ev":"task_resequenced","id":"a-motion-s-from-and-to-colours-are-picked-in-thi","from":2860,"to":250}
+{"t":"2026-09-16T12:23:34.466Z","ev":"task_resequenced","id":"a-piece-that-slides-inside-an-icon-that-grows-sl","from":2650,"to":260}
+{"t":"2026-09-16T12:23:34.507Z","ev":"task_resequenced","id":"two-paths-you-drew-with-the-pen-can-be-joined-in","from":2730,"to":270}
+{"t":"2026-09-16T12:23:34.552Z","ev":"task_resequenced","id":"a-border-added-to-a-path-follows-the-path-not-a","from":550,"to":280}
+{"t":"2026-09-16T12:23:34.597Z","ev":"task_resequenced","id":"on-a-screenshot-a-drawing-tool-says-where-its-fi","from":2710,"to":290}
+{"t":"2026-09-16T12:23:34.641Z","ev":"task_resequenced","id":"an-icon-frame-shows-the-shapes-a-set-is-drawn-to","from":640,"to":300}
+{"t":"2026-09-16T12:23:34.683Z","ev":"task_resequenced","id":"a-shadow-survives-the-trip-out-to-svg","from":570,"to":310}
+{"t":"2026-09-16T12:23:34.727Z","ev":"task_resequenced","id":"an-icon-exported-as-svg-comes-out-with-nothing-b","from":2770,"to":320}
+{"t":"2026-09-16T12:23:34.772Z","ev":"task_resequenced","id":"an-exported-redline-is-shapes-not-a-picture-of-o","from":580,"to":330}
+{"t":"2026-09-16T12:23:34.815Z","ev":"task_resequenced","id":"keep-the-pieces-visible-while-trimming-a-recordi","from":2640,"to":340}
+{"t":"2026-09-16T12:23:34.859Z","ev":"task_resequenced","id":"the-line-back-from-a-turned-magnifier-points-at","from":2790,"to":350}
+{"t":"2026-09-16T12:23:34.902Z","ev":"task_resequenced","id":"photograph-the-sections-row-and-measure-what-it","from":2700,"to":360}
+{"t":"2026-09-16T12:23:34.947Z","ev":"task_resequenced","id":"pressing-return-answers-a-question-the-app-asks","from":2800,"to":370}
+{"t":"2026-09-16T12:23:34.992Z","ev":"task_resequenced","id":"every-walk-says-what-it-wants-forgotten","from":600,"to":380}
+{"t":"2026-09-16T12:23:35.035Z","ev":"task_resequenced","id":"find-out-why-the-failure-drill-failed-once-and-p","from":560,"to":390}
+{"t":"2026-09-16T12:23:35.080Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":380,"to":400}
+{"t":"2026-09-16T12:23:35.126Z","ev":"task_resequenced","id":"room-on-one-side-can-be-a-knob","from":10,"to":10}
+{"t":"2026-09-16T12:23:35.169Z","ev":"task_resequenced","id":"a-wrapped-label-says-which-width-you-are-looking","from":20,"to":20}
+{"t":"2026-09-16T12:23:35.214Z","ev":"task_resequenced","id":"a-tutorial-step-can-wait-for-a-setting-to-reach","from":90,"to":30}
+{"t":"2026-09-16T12:23:35.258Z","ev":"task_resequenced","id":"find-out-what-a-big-marquee-really-costs-to-cut","from":110,"to":40}
+{"t":"2026-09-16T12:23:35.301Z","ev":"task_resequenced","id":"a-walk-can-press-a-command-row-at-the-foot-of-a","from":40,"to":50}
+{"t":"2026-09-16T12:23:35.346Z","ev":"task_resequenced","id":"a-walk-can-click-a-row-in-the-measurements-panel","from":60,"to":60}
+{"t":"2026-09-16T12:23:35.390Z","ev":"task_resequenced","id":"find-out-why-a-screen-capture-of-an-empty-editor","from":50,"to":70}
+{"t":"2026-09-16T12:23:35.433Z","ev":"task_resequenced","id":"a-task-says-which-failing-walk-it-owns-instead-o","from":100,"to":80}
+{"t":"2026-09-16T12:23:35.475Z","ev":"task_resequenced","id":"a-question-you-turned-off-can-be-turned-back-on","from":30,"to":90}
+{"t":"2026-09-16T12:23:35.520Z","ev":"task_resequenced","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","from":80,"to":100}
+{"t":"2026-09-16T12:24:14.008Z","ev":"task_resequenced","id":"separate-finds-the-boxes-in-a-dark-window-too-no","from":30,"to":5}
+{"t":"2026-09-16T12:24:14.053Z","ev":"task_note","id":"separate-finds-the-boxes-in-a-dark-window-too-no"}
+{"t":"2026-09-16T12:24:21.937Z","ev":"task_created","id":"a-task-that-runs-out-of-time-does-not-leave-its","priority":"p2-normal","title":"A task that runs out of time does not leave its half-built work for the next task to commit"}
+{"t":"2026-09-16T12:24:21.996Z","ev":"task_resequenced","id":"a-task-that-runs-out-of-time-does-not-leave-its","from":2750,"to":25}
+{"t":"2026-09-16T12:24:25.461Z","ev":"triage","summary":"51 open -> 55. Merged 1 (the drop-rules UX-PATTERNS scrub folded into two-rules-in-ux-patterns-get-scrubbed-a-callout, now 12 acceptance items, other dropped). Filed 5 from the design review and the spot-checks: appearance-is-below-the-fold-again, a-motion-s-from-and-to-colours-are-picked-in-thi, the-point-a-layer-turns-around-can-be-grabbed-ev, the-locked-screen-message-says-the-real-reason-a, a-task-that-runs-out-of-time-does-not-leave-its. Folded 3 findings into existing tasks rather than filing near-twins (plate contrast into the screen-name task, Motion-speaks-for-one-layer into the Motion-section task, the wrong-explanation cross-link into the p1 walks task). Spot-checked both p1 bugs by running appearance-list-min locked and forced: the subject reproduces, the stated cause does not, both logged. Reset 0 (guard found nothing in_progress). Resequenced all 55 open tasks to steps of 10, focus first, and within p2 put work provable without a screen ahead of work that needs one, because the Mac has been locked since 2026-09-14. Moved separate-finds-the-boxes-in-a-dark-window-too-no to seq 5 so the runner who inherits its uncommitted files is the one who owns them. Every open task has an epic, a goal, an acceptance list and a seq; no open task serves a later-staged epic."}
+{"t":"2026-09-16T12:24:59.836Z","ev":"digest","file":"2026-09-16.md"}

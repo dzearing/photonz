@@ -1,0 +1,32 @@
+{
+  "id": "the-point-a-layer-turns-around-can-be-grabbed-ev",
+  "title": "The point a layer turns around can be grabbed even when it sits near a corner",
+  "goal": "A turning layer has a crosshair on the picture marking the point it turns around, and you are meant to be able to drag it. If that point happens to sit near a corner of the layer's box, the drag grabs the corner and resizes the layer instead: the crosshair is looked at last, after the box's own handles and its turn knob. Somebody who parked the point in a corner on purpose can then never pick it up again from the picture. Make the crosshair win where it is drawn.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T12:22:56.205Z",
+  "updated": "2026-09-16T12:23:34.376Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-motion-pivot.json: \"The crosshair is read AFTER the box's own resize handles and the turn knob, so a pivot parked within about eleven points of a corner cannot be grabbed on the canvas; it can still be set from the Around menu or the At boxes. Resizing has no other way in, which is why it was ordered this way.\"\n\nThis is the SECOND time in two days that the order canvas chrome is read in has been wrong in this direction. The other: queue/audits/2026-09-15-path-points-under-the-pen.json says \"The pointer cue over a path's points used to be read AFTER the canvas's own boundary handles, which is the opposite of the order the press itself uses. Moving it fixed that mismatch as a side effect; nothing was ever reported about it.\" Two hand-rolled answers to the same question means the canvas needs ONE written order for what a press over overlapping chrome hits, and whoever takes this should write it down rather than reorder a third list. That is the part that stops a fourth.",
+  "acceptance": [
+    "Dragging the crosshair moves the point it marks, including when it sits on or near a corner of the layer's box",
+    "Resizing and turning the layer still work everywhere the crosshair is not",
+    "The pointer says which of the two you are about to get before you press",
+    "A walk parks the point in a corner, drags it, and reads back where it went"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T12:22:56.207Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.375Z",
+      "note": "seq 2870 -> 240"
+    }
+  ]
+}

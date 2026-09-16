@@ -1,0 +1,32 @@
+{
+  "id": "a-motion-s-from-and-to-colours-are-picked-in-thi",
+  "title": "A motion's From and To colours are picked in this app's picker, not the system one",
+  "goal": "When you tell a layer to change colour over time, the two colour swatches on that row open the Mac's own colour window instead of the picker the rest of the app uses. So the colours you saved as styles, which every other colour in the panel offers you, are not on offer in the one place you are picking two colours that have to match the rest of your icon. Make those two rows use the same picker everything else uses.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T12:22:56.140Z",
+  "updated": "2026-09-16T12:23:34.420Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-layer-motion.json: \"Colour From and To open the system colour panel rather than this app's own picker, so they do not offer the saved colours the rest of the panel does.\"\n\nThis is a regression against an already finished task, which is why it is filed rather than folded: one-colour-picker-the-designed-one-everywhere-a (p1, done) settled that the designed picker is used everywhere a colour is chosen. The motion rows are new since then and did not get the memo. Worth checking the same day whether anything else added since that task also reaches for NSColorPanel.",
+  "acceptance": [
+    "The From and To swatches on a colour motion open the app's own picker",
+    "The colours you have saved are offered there, the same way they are offered everywhere else a colour is chosen",
+    "Picking a colour still lands as one undo step and the preview still updates while you choose",
+    "A walk drives both swatches and reads back the colour that landed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T12:22:56.142Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T12:23:34.419Z",
+      "note": "seq 2860 -> 250"
+    }
+  ]
+}

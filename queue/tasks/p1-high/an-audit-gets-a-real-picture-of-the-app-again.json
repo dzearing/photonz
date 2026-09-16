@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T09:29:31.479Z",
+  "updated": "2026-09-16T12:23:33.226Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -104,6 +104,18 @@
     {
       "t": "2026-09-16T09:29:31.478Z",
       "note": "Screen capture was WORKING on 2026-09-16 02:24: Scripts/playtest/tutorial-shelf-measure-off-walk.json wrote 1-no-redlining-shelf-sc.png, 1120x1184, a correct picture of the Tutorials window with its shadow and title bar, and the walk's 'Window captures' line read '1 real picture of the window'. Both pictures are in queue/audits/ (2026-09-16-walk-flags-no-redlining-shelf.png and -redlining-shelf-back.png). No SCStreamErrorDomain -3811 anywhere in the log this time. So whatever was refusing the stream on 2026-09-14/15 is not refusing it now; worth confirming before this task is worked, in case it has already fixed itself."
+    },
+    {
+      "t": "2026-09-16T12:17:12.028Z",
+      "note": "also hit on 2026-09-16 by separate-finds-the-boxes-in-a-dark-window-too-no: the screen was locked for the whole task, so the new walk separate-dark-window-walk.json could not be run even once and its audit ships with no pictures at all, not even offscreen renders. Scripts/playtest.sh exited 3 with status locked on two attempts an hour apart."
+    },
+    {
+      "t": "2026-09-16T12:22:08.975Z",
+      "note": "TRIAGE SPOT-CHECK, 2026-09-16 12:3x. Ran the reproduction in the notes. The task's SUBJECT reproduces (audits have no photographs of the app) but its stated CAUSE no longer does, so the next runner should not start on the grant. What I ran: Scripts/playtest.sh Scripts/playtest/appearance-list-min.json --no-build, plain and then forced with PHOTONZ_ALLOW_LOCKED_WALK=1. Plain: status locked, 0 steps, exit 3, refused before launch. Forced: 5 steps ran in 3.87s and the run printed 'Window captures: none. The screen was locked, so macOS refuses every one' with no -sc.png written and NO SCStreamErrorDomain -3811 anywhere in log.json. So the -3811 grant failure written in the notes is not what is stopping captures today; the lock is, and the lock is genuine (CGWindowList has loginwindow at layer 2004 over a 1728x1117 screen). Scale of the cost, counted for the digest: of 72 audits written in the 26 hours to 2026-09-16 12:30, 24 open their rough list by saying there is no photograph of the app, and most of the rest are offscreen renders. Staying p1 and keeping the dependency, because the evidence says this and the walks task are one problem needing one unlock, not two."
+    },
+    {
+      "t": "2026-09-16T12:23:33.225Z",
+      "note": "seq 20 -> 20"
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"
