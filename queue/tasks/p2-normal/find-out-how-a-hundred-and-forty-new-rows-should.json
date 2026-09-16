@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:50.902Z",
-  "updated": "2026-09-16T15:19:37.560Z",
+  "updated": "2026-09-16T15:19:50.896Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Asked as an open question by audit 2026-09-13-separate-whole-screenshot: \"A hundred and forty two rows called Text 1 to Text 142 is a long list even with thumbnails. Is that usable as it stands, or does a separation this size need the list grouped by where the pieces were on the page?\" and in its rough notes: \"The limit keeps 500 rows from happening but does not make 142 pleasant. At the window size in these pictures the layers list shows about five rows at a time.\"\n\nPairs with a-text-layer-s-row-says-the-words-that-are-in-it, which fixes what the rows are CALLED. This one is about how many of them there are. Do that one first if both are open: a hundred rows with real words on them may be a different problem from a hundred rows called Text N.\n\nSeparate already nests (audit 2026-09-13-separate-hierarchy), so some of the shape may already be there.",
@@ -80,7 +80,12 @@
     {
       "t": "2026-09-16T15:19:37.559Z",
       "note": "MY MISTAKE, recorded rather than hidden: I put a stray 'Scripts/build-app.sh --help' into a shell line while staging, and build-app.sh has no --help, so it started a real DEV build. There was no queue/playtest.lock, so the guard that normally refuses did not fire. I killed it within seconds, which was the wrong half of the fix: it left dist/Photonz Dev.app in pieces - a zero byte Info.plist, no Resources, and an ad-hoc linker signature instead of the stable Photonz Dev cert, which is the exact state that breaks the Screen Recording grant. Repaired by running queue/bin/refresh-dev-app.sh to completion; the bundle is now com.dzearing.photonz.dev with sealed resources and the stable cert, and the script quit and relaunched the app the way it is designed to. The user's dev app was restarted as a result. No walk or test touched the dev bundle; only that one stray line did."
+    },
+    {
+      "t": "2026-09-16T15:19:50.894Z",
+      "note": "Two arrangements built, measured on the real app, and a recommendation made. SHIPPED: next-find-a-layer, a find field over the layers list (Sources/PhotonzCore/LayerSearch.swift, LayersListView, EditorState+LayersPanel), on by default in Next; it turns 173 rows into 33 as you type, looks inside shut groups, says 'N of M' under the list, and is not there at all under a dozen rows. BUILT FOR COMPARISON, off by default: next-a-separation-arrives-shut, which turns 173 rows into three and then costs you the canvas - one click picks all 172 pieces, held down by two tests. RECOMMENDED the find field and against the shut group, reasoning and what was rejected in the task log and the audit. Verified: 7634 tests green; two new walks (find-a-layer-walk, a-separation-arrives-shut-walk) pass with six and four real window captures; the eight other layers walks still pass. Audit queue/audits/2026-09-16-a-hundred-and-forty-rows.json with five captures. Found and fixed along the way: a narrowing search left the list parked thousands of points down so you saw the last results, not the first. Filed a-separated-run-of-text-says-the-words-in-it-wit: no row a fresh separation makes says any words, which is the real fix neither arrangement is. Five separate walks and one tutorial walk fail, proven pre-existing by rebuilding from clean main, folded into walks-that-fail-in-the-full-sweep. Committed b938e368 and pushed."
     }
   ],
-  "started": "2026-09-16T14:44:14.439Z"
+  "started": "2026-09-16T14:44:14.439Z",
+  "completed": "2026-09-16T15:19:50.895Z"
 }

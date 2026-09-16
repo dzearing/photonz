@@ -16952,3 +16952,41 @@ rather than shipping renders as if they were the app.
 Next: the sweep result for those nine walks, and
 `two-shapes-joined-into-one-stop-calling-themselv` — joining two ovals still
 leaves a row saying Ellipse, which is the same rule from a third direction.
+
+## 2026-09-16 — a hundred and forty rows can be typed through
+
+Separating a whole screenshot leaves the layers list 173 rows long in a window
+that shows five of them. Two arrangements were built and measured against each
+other on the same dense capture, and a recommendation made.
+
+**Shipped:** `next-find-a-layer`, a find field over the layers list, on by
+default in Next. Typing narrows 173 rows to 33 as you go, looking inside groups
+that are shut; the line under the list says how many of how many; results are
+flat rows you click rather than a tree you read, and they cannot be dragged.
+The field is not there at all under a dozen rows, so an ordinary picture is
+untouched. `LayerSearch` in PhotonzCore is the whole rule.
+
+**Built only to compare, off:** `next-a-separation-arrives-shut`. It turns 173
+rows into three and then costs the canvas — one click picks all 172 pieces —
+which two tests hold down. Recommended against. Grouping by where the pieces sat
+was rejected without building: the app knows rectangles, not headers.
+
+**The finding underneath both:** not one row a fresh separation makes says any
+words, because a separated run is a picture of text and `Layer.displayName`
+reads past it. Searching the capture for a word you can plainly see returns
+nothing. Filed as `a-separated-run-of-text-says-the-words-in-it-wit`, which is
+the real fix neither arrangement is.
+
+Found by the walk rather than by reading: a narrowing search left the list
+parked thousands of points down, so the rows on screen were the last results
+instead of the first. Fixed.
+
+**Next:** the word-naming follow-up. **Open question for the user:** the audit
+asks whether reading the words at separate time is worth a recognition pass.
+
+Housekeeping: five `separate-*` walks and `tutorial-layers-and-undo-walk` fail,
+proven pre-existing by rebuilding the probe from clean main, and folded into
+`walks-that-fail-in-the-full-sweep` with the exact output. A stray
+`build-app.sh` line of mine rebuilt and broke the dev bundle mid-run; repaired
+with `queue/bin/refresh-dev-app.sh`, so it is signed with the stable cert again
+and the Screen Recording grant survives.
