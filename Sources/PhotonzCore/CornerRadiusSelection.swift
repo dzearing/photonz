@@ -51,11 +51,21 @@ public struct CornerRadiusSelection: Hashable, Sendable {
     /// How many layers are picked altogether, including the ones this row
     /// skips, so it can say what it does and does not reach.
     public let selectionCount: Int
+    /// How many picked GROUPS this row reached past, to speak for the things
+    /// inside them instead (`ContainerRounding.swift`). What lets the row say
+    /// so on its track, since a group has no corners of its own and a number
+    /// that silently means something else is the panel lying.
+    public let reachedIntoContainers: Int
 
-    public init(members: [Member], selectionCount: Int) {
+    public init(members: [Member], selectionCount: Int, reachedIntoContainers: Int = 0) {
         self.members = members
         self.selectionCount = selectionCount
+        self.reachedIntoContainers = reachedIntoContainers
     }
+
+    /// Whether this row is speaking for what is inside something picked rather
+    /// than for the thing itself.
+    public var reachesContents: Bool { reachedIntoContainers > 0 }
 
     public var count: Int { members.count }
     public var isEmpty: Bool { members.isEmpty }
@@ -201,22 +211,44 @@ extension PhotonzDocument {
                                       style: (Layer) -> LayerStyle = { $0.style })
     -> CornerRadiusSelection {
         var members: [CornerRadiusSelection.Member] = []
+        var reachedInto = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
             guard !cornersOnly || layer.hasCorners else { continue }
             guard !skippingKnobbedCopies || !roundingIsAKnob(layerID: id) else { continue }
-            let bounds = layer.localBounds
-            let shown = readingWhatShows
-                ? layer.shownCornerRadii(style: style(layer))
-                : displayedCornerRadii(of: layer, style: style(layer))
-            members.append(CornerRadiusSelection.Member(
-                id: id,
-                radii: shown,
-                limit: max(1, min(bounds.width, bounds.height) / 2),
-                roundsViaStyle: !layer.roundsItsOwnOutline,
-                floor: readingWhatShows ? layer.cornerRadiusFloor : .none))
+            // A group has no corners of its own to round, so the row speaks for
+            // the things inside it instead, exactly as if they had been picked
+            // (`ContainerRounding.swift`). A container with nothing inside it
+            // that could show a curve falls through to masking itself, the way
+            // it always did.
+            let reached = readingWhatShows ? layer.roundableContents : []
+            guard !reached.isEmpty else {
+                members.append(member(of: layer, readingWhatShows: readingWhatShows, style: style))
+                continue
+            }
+            reachedInto += 1
+            members += reached.map {
+                member(of: $0, readingWhatShows: readingWhatShows, style: style)
+            }
         }
-        return CornerRadiusSelection(members: members, selectionCount: layerIDs.count)
+        return CornerRadiusSelection(members: members, selectionCount: layerIDs.count,
+                                     reachedIntoContainers: reachedInto)
+    }
+
+    /// One layer's place in the row: how round it is, how round it can go, and
+    /// how it rounds.
+    private func member(of layer: Layer, readingWhatShows: Bool,
+                        style: (Layer) -> LayerStyle) -> CornerRadiusSelection.Member {
+        let bounds = layer.localBounds
+        let shown = readingWhatShows
+            ? layer.shownCornerRadii(style: style(layer))
+            : displayedCornerRadii(of: layer, style: style(layer))
+        return CornerRadiusSelection.Member(
+            id: layer.id,
+            radii: shown,
+            limit: max(1, min(bounds.width, bounds.height) / 2),
+            roundsViaStyle: !layer.roundsItsOwnOutline,
+            floor: readingWhatShows ? layer.cornerRadiusFloor : .none)
     }
 
     /// The number the row shows for one layer: the one that is rounding it.

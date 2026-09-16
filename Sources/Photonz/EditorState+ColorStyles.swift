@@ -578,6 +578,15 @@ extension EditorState {
                                               readingWhatShows: true)
     }
 
+    /// The Corner Radius row the PANEL is showing, whichever release is on.
+    /// What a walk pulls, so a walk drives the row a person can see rather than
+    /// one that is not on screen: over a group the two are different rows, one
+    /// reaching through to what is inside it and one masking the group itself
+    /// (`PhotonzCore/ContainerRounding.swift`).
+    var shownCornerRadiusSelection: CornerRadiusSelection {
+        Experiments.shared.shapePartsEnabled ? corneredRadiusSelection : cornerRadiusSelection
+    }
+
     /// What Appearance says in place of the Corner Radius row it handed over to
     /// a copy's knob, or nil when it handed nothing over.
     var instanceRoundingNote: String? {

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:19:55.263Z",
-  "updated": "2026-09-15T12:14:53.407Z",
+  "updated": "2026-09-16T00:59:47.055Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
@@ -92,7 +92,43 @@
     {
       "t": "2026-09-15T12:14:53.406Z",
       "note": "seq 60 -> 130"
+    },
+    {
+      "t": "2026-09-16T00:46:19.637Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T00:59:36.251Z",
+      "note": "Reproduced first, at the pixel: a group with 20pt of room round a blue button, masked at 24, renders byte for byte identical to the unmasked one (before.png and old-way.png are both 10558 bytes). That is the report, in the one place a person would look. Kept as a permanent test, theOldPullChangedNothingAtAll in Tests/PhotonzRenderTests/ContainerReachRenderTests.swift."
+    },
+    {
+      "t": "2026-09-16T00:59:40.770Z",
+      "note": "Two answers, opposite directions. 2026-09-13: Round what is inside it. 2026-09-15: The row says what it clips (number stays 0, add a label). The second card never told the user they had already decided, so it read as a fresh question. Built the first, because the task's own title and goal were rewritten to it AFTER both resolved (bd59c0f8, the 09-15 triage pass), and because a row reading 0 over a visibly round button is the complaint this started from. The conflict is the first line of the audit rough so the user can turn it round with one reaction rather than another card."
+    },
+    {
+      "t": "2026-09-16T00:59:40.814Z",
+      "note": "Adversarial pass before building. The decision's literal mitigation (all the contents round together) would also write a corner curve onto every LABEL in the group, a number that moves no pixel and surprises anyone who later gives the label a background. So the reach is narrowed to what has corners AND paints them: rectangles, pictures, collages, lenses, callouts, and any group carrying a surface or a mask. Words, measurements and paths are left alone. A container with nothing inside it that could show a curve falls back to masking itself rather than going dead, so the row never becomes a control that does nothing."
+    },
+    {
+      "t": "2026-09-16T00:59:40.857Z",
+      "note": "Shipped. PhotonzCore/ContainerRounding.swift gains paintsItsOwnCorners, roundingReachesItsContents and roundableContents; cornerRadiusSelection expands a picked group into what it reaches and reports reachedIntoContainers, so the panel writes to the contents without the row knowing it. Three containers are deliberately untouched: a screen (paints its own corners), a copy of a component (rounded by its knob, and reaching in would write an override nobody asked for), and a group somebody already masked by hand (pull it down to 0 once and it starts reaching from then on). Next only: the reach rides corneredRadiusSelection, which only PartsInspector asks for and only behind shapePartsEnabled."
+    },
+    {
+      "t": "2026-09-16T00:59:45.116Z",
+      "note": "Acceptance 2, read carefully rather than literally. The row still reads the curve on screen (18 over a group holding an 18pt button), which is the half that shipped and the thing the user saw as wrong. The TRACK no longer starts at 18: that floor existed only because a mask can never put a curve back, and the pull is not a mask any more, so starting at 0 is now correct and pulling down squares the button. A group still carrying a hand-set mask keeps the old floor, and aMaskedGroupStopsWhereItsContentsAlreadyAre holds it there."
+    },
+    {
+      "t": "2026-09-16T00:59:45.158Z",
+      "note": "Acceptance 4 could NOT be claimed by a walk. The Mac's screen was locked from the first minute of this task to the last: Scripts/probe-app.sh printed 'screen locked' on its Grants line and every run of Scripts/playtest/corner-reaches-the-group-walk.json came back status locked, steps 0, 'Window captures: none'. Nothing unlocks the Mac. So the claim is made in the one place that needs no screen: Tests/PhotonzRenderTests/ContainerReachRenderTests.swift renders the canvas itself, shows the button's corner pixel blue before and gone after, shows the old pull changing nothing at all, and shows the pull back down squaring it again. The walk is written and a sweep is requested; the pictures in the audit are canvas renders and say so."
+    },
+    {
+      "t": "2026-09-16T00:59:45.199Z",
+      "note": "left rough: the probe shortcuts roundCorners and dragShapeCornersSquare still write straight to the picked layer's own style, so over a group they mask it rather than reaching in, while dragCornerRadius now pulls the row the panel shows. No walk uses either on a group, and both are documented as styling the layer rather than pulling the row, so this is not a lie anybody can see. Worth tidying whenever those actions are next touched."
+    },
+    {
+      "t": "2026-09-16T00:59:47.054Z",
+      "note": "Filed a-card-that-crops-what-is-inside-it-can-have-rou (p2): a group set to hide what sticks out can no longer have its crop rounded, because the pull reaches the picture inside and the square crop cuts it straight back. Reproduced with real output before filing. The user's own 2026-09-13 answer named this as the thing it gives up."
     }
   ],
-  "started": "2026-09-12T10:58:58.645Z"
+  "started": "2026-09-16T00:46:19.636Z"
 }

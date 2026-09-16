@@ -1776,6 +1776,13 @@ private final class Run {
             case .ungroup: editor.ungroupSelection()
             case .stackSelection: editor.stackSelection(.stack)
             case .gridSelection: editor.stackSelection(.grid)
+            case .roomAroundContents:
+                if let id = editor.selectedLayerID, editor.document?.layer(id: id)?.isGroup == true {
+                    editor.updateArrangement(id: id) { $0.padding = GroupPadding(20) }
+                    actionDetail = "20 points of room inside the group"
+                } else {
+                    actionDetail = "nothing picked that holds anything, so no room was added"
+                }
             case .deleteLayer:
                 // Like Frame Selection above, this command can quietly do
                 // nothing, and the log has to say which nothing it was: the
@@ -5973,7 +5980,7 @@ private final class Run {
     /// The one Corner Radius row, dragged and let go: the same path the panel
     /// takes, so a walk proves the row a person pulls rather than a field.
     private func dragCornerRadius(_ editor: EditorState, through values: [CGFloat]) {
-        let ids = editor.cornerRadiusSelection.layerIDs
+        let ids = editor.shownCornerRadiusSelection.layerIDs
         guard !ids.isEmpty, let last = values.last else { return }
         for radius in values { editor.previewCornerRadius(ids: ids, radius) }
         editor.commitCornerRadius(ids: ids, last)
@@ -6864,7 +6871,12 @@ private final class Run {
                 let body = reading.isMixed
                     ? "mixed"
                     : (reading.value.map { "\(Int($0.rounded()))" } ?? "none")
-                return "\(body) from \(Int(selection.floor.rounded())) ×\(selection.count)"
+                // "reaching" when the row has gone past a picked group to speak
+                // for the things inside it, which is the whole of what a pull on
+                // a group does now.
+                let reach = selection.reachesContents ? " reaching" : ""
+                return "\(body) from \(Int(selection.floor.rounded()))"
+                    + "\(reach) ×\(selection.count)"
             }(),
             "shapeSection": editor.shapeSelection.title,
             // What the toolbar swatch is showing: the outline and the inside

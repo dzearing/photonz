@@ -313,11 +313,17 @@ struct CornerRadiusRow: View {
 
     /// What the track says when you rest on it.
     ///
-    /// Over a group it also says WHY it will not go below where it is. A group
-    /// has no outline of its own, so it rounds by masking its corners off, and
-    /// a mask can take a corner away but never put a curve back: the number
-    /// cannot go under the curve the things inside it already have. Without
-    /// this the knob simply refuses to move and leaves you guessing.
+    /// Over a group it says what it is rounding. A group draws nothing of its
+    /// own, so there are no corners on it to curve, and the row reaches through
+    /// to the things inside it instead (`PhotonzCore/ContainerRounding.swift`).
+    /// The number is theirs, and saying so is the difference between a row you
+    /// trust and a row you have to experiment with.
+    ///
+    /// A group somebody masked by hand still rounds by masking, and there the
+    /// track also says WHY it will not go below where it is: a mask can take a
+    /// corner away but never put a curve back, so the number cannot go under
+    /// the curve the things inside it already have. Without this the knob
+    /// simply refuses to move and leaves you guessing.
     private var sliderHelp: String {
         if isAlreadyAsRoundAsItGoes {
             return "What is inside this is already as round as it goes."
@@ -326,6 +332,9 @@ struct CornerRadiusRow: View {
         if floor > 0 {
             return "What is inside this is already rounded \(floor) px. "
                 + "A group can take more off its corners, never put it back."
+        }
+        if selection.reachesContents {
+            return "A group has no corners of its own, so this rounds what is inside it."
         }
         return selection.hasUnevenCorners
             ? "These corners are set apart. Pulling this gives all four the same."

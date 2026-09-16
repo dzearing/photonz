@@ -1,0 +1,29 @@
+{
+  "feature": "Corner Radius over a group",
+  "epic": "ui-components",
+  "summary": "Pick a group with room around what is inside it, pull Corner Radius, and the thing inside gets rounder. It used to change nothing on the canvas but the dashed selection outline.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag to turn on: it rides the Appearance panel that Next already shows.",
+  "try": [
+    { "do": "On a blank canvas, draw a rectangle." },
+    { "do": "In Appearance, pull Corner Radius to about 18, so it reads as a button." },
+    { "do": "With the Text tool, type a word UNDER the rectangle, outside it." },
+    { "do": "Select both and press Command G." },
+    { "do": "In Layout, type 20 into Padding, so the group has room all round what it holds." },
+    { "do": "Read the Corner Radius row. It says 18, the curve you can see, not 0.", "shot": "2026-09-16-corner-over-a-group-before.png" },
+    { "do": "Pull Corner Radius to 40. The button rounds.", "shot": "2026-09-16-corner-over-a-group-after.png" },
+    { "do": "Pull it back down to 0. The button goes square again." }
+  ],
+  "evaluate": [
+    "Does the number on the row agree with the roundness you can see on the button, at every point of the pull?",
+    "Pulling the row DOWN now squares the button. Is that what you expect a pull on a group to do, or does it feel like it reached too far?",
+    "The row no longer rounds the group's own invisible box. Did you ever want that, and did you notice it going?",
+    "Rest on the track: it says a group has no corners of its own, so this rounds what is inside it. Does that sentence help, or is it a word in the way?",
+    "Group two buttons and pull the row. Rounding both together: right, or too much?"
+  ],
+  "rough": [
+    "You answered this twice, in opposite directions, and I built the first. On 2026-09-13 you chose \"Round what is inside it\". On 2026-09-15 a second card asked nearly the same question and you chose \"The row says what it clips\", which means the number stays 0 and the row picks up a label saying it rounds the group rather than the contents. The second card never mentioned that you had already decided, so it read as a fresh question. I built the 2026-09-13 answer because the task's own title and goal were rewritten to it AFTER both, and because a row that reads 0 over a button you can see being round is the complaint this started from. Say the word and it goes the other way.",
+    "The Mac's screen was locked for this whole task, so not one walk could run: every launch reported status locked and macOS refuses every capture in that state. The two pictures here are not photographs of the window. They are the canvas itself, drawn by the renderer, which needs no screen. A walk that photographs the window is written and waiting (Scripts/playtest/corner-reaches-the-group-walk.json) and a sweep is requested.",
+    "A card that crops what hangs out past its edge can no longer have that crop rounded from this row, because the pull now reaches the picture inside instead and the square crop cuts it straight back. Your own answer on 2026-09-13 flagged this as needing another way in. Filed as its own task.",
+    "Pulling the row on a group that somebody had already masked by hand still moves the mask rather than what is inside it. Nothing in the app puts a mask on a group any more, so this only shows up on an older document, and it is how you get back: pull that group down to 0 once and every pull after it reaches through."
+  ]
+}

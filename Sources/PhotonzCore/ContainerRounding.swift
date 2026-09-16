@@ -117,3 +117,74 @@ extension CGRect {
             && maxX >= other.maxX - slack && maxY >= other.maxY - slack
     }
 }
+
+// MARK: - Reaching through a group to what is inside it
+
+/// Where a mask stops, the pull reaches.
+///
+/// Masking works only where the group's contents are pressed against its
+/// edges. Give the same button a caption under it, or put it in a stack with
+/// padding, and the group's own corners are empty air: the row read 0, and
+/// pulling it changed nothing on the canvas but the dashed selection marquee,
+/// which goes away the moment you click elsewhere. Proven on a probe build on
+/// 2026-09-12, pixel for pixel.
+///
+/// The user settled it on 2026-09-13: **the row rounds what is inside the
+/// group**. So over a group the Corner Radius row is not about the group at
+/// all. It speaks for the things inside it that have corners and paint them,
+/// exactly as if those things had been picked instead — which is a rule
+/// already in the app, since picking two boxes and pulling this row rounds
+/// both.
+///
+/// Three containers are left exactly as they were:
+///
+/// - **A screen**, which has a box and a surface of its own, so its corners are
+///   painted and rounding them is plainly visible.
+/// - **A copy of a component**, which is rounded through its knob or not at
+///   all; reaching inside one would write an override nobody asked for.
+/// - **A group somebody already masked**, because a mask can only have got
+///   there by being asked for and is not taken away underneath anybody. Pull it
+///   back down off the group and the row starts reaching through from then on.
+extension Layer {
+
+    /// Whether anything is painted at this layer's OWN corners, so rounding it
+    /// changes the picture. Words, a measurement and a path paint nothing
+    /// there: a label's glyphs never reach the corners of its box, so a curve
+    /// written onto one is a number that moves no pixel.
+    var paintsItsOwnCorners: Bool {
+        guard isVisible else { return false }
+        switch content {
+        case .annotation, .image, .collage, .lens, .zoomCallout: return true
+        case .text, .measure, .path: return false
+        // A container paints its corners when it has a surface behind its
+        // contents, or a mask somebody asked for.
+        case .group(let group): return group.background != nil || style.cornerRadii.isRound
+        }
+    }
+
+    /// Whether the Corner Radius row reaches PAST this container to what is
+    /// inside it, rather than masking the container itself.
+    var roundingReachesItsContents: Bool {
+        guard let group, !group.isFrame, !isComponentInstance else { return false }
+        return !style.cornerRadii.isRound && !group.children.isEmpty
+    }
+
+    /// The layers a pull on this container's Corner Radius row rounds: the
+    /// things inside it that have corners and paint them, all the way down
+    /// through any groups among them. Empty for everything that rounds itself,
+    /// and for a container with nothing inside it that could show a curve, so
+    /// the row falls back to masking the way it always did rather than going
+    /// dead.
+    public var roundableContents: [Layer] {
+        guard roundingReachesItsContents, let group else { return [] }
+        var reached: [Layer] = []
+        for child in group.children where child.isVisible && !child.isLocked {
+            if child.roundingReachesItsContents {
+                reached += child.roundableContents
+            } else if child.hasCorners && child.paintsItsOwnCorners {
+                reached.append(child)
+            }
+        }
+        return reached
+    }
+}

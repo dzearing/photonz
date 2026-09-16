@@ -568,6 +568,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the picked layers become one group that arranges them, or the picked
     /// group starts arranging itself.
     case stackSelection, gridSelection
+    /// Put 20 points of room round the inside of the picked group, which is the
+    /// Padding field in the Layout section. A group with room round its
+    /// contents has empty air at its own corners, and that is the shape of
+    /// everything Corner Radius over a group is about
+    /// (`PhotonzCore/ContainerRounding.swift`). The field is a typed number in
+    /// the dock, which a walk cannot reach with the pointer, so this is the way
+    /// in.
+    case roomAroundContents
     /// Layer ▸ Select Original: jumps from a copy of a component to the
     /// original it follows, so a walk can edit the original after dropping a
     /// copy without hunting for its row.

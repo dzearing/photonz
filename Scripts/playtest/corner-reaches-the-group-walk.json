@@ -1,5 +1,5 @@
 {
- "out": "/tmp/photonz-playtest/corner-over-a-group",
+ "out": "/tmp/photonz-playtest/corner-reaches-the-group",
  "steps": [
   {
    "do": "blank",
@@ -46,11 +46,7 @@
   },
   {
    "do": "describe",
-   "stage": "plain-rounded-box"
-  },
-  {
-   "do": "snapshot",
-   "name": "corner-group-1-plain-box"
+   "stage": "the-button-on-its-own"
   },
   {
    "do": "tool",
@@ -59,8 +55,8 @@
   {
    "do": "click",
    "at": [
-    300,
-    220
+    250,
+    350
    ]
   },
   {
@@ -85,12 +81,12 @@
   {
    "do": "drag",
    "from": [
-    190,
-    140
+    180,
+    130
    ],
    "to": [
-    660,
-    360
+    700,
+    430
    ],
    "steps": 8
   },
@@ -104,6 +100,14 @@
   },
   {
    "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "roomAroundContents"
+  },
+  {
+   "do": "wait",
    "seconds": 0.8
   },
   {
@@ -112,11 +116,11 @@
   },
   {
    "do": "describe",
-   "stage": "group-picked"
+   "stage": "a-group-with-room-around-its-button"
   },
   {
    "do": "snapshot",
-   "name": "corner-group-2-group-picked"
+   "name": "reach-1-before"
   },
   {
    "do": "action",
@@ -132,7 +136,7 @@
   },
   {
    "do": "snapshot",
-   "name": "corner-group-3-pulled-to-22"
+   "name": "reach-2-pulled-to-22"
   }
  ]
 }
