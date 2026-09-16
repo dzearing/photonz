@@ -1340,6 +1340,11 @@ private final class Run {
                               within: within),
                  state: describe())
 
+        case .expectField(let onScreen, let degrees, let within):
+            note(number, step.name,
+                 try checkField(onScreen: onScreen, degrees: degrees, within: within),
+                 state: describe())
+
         case .expectRegion(let reads, let present):
             note(number, step.name, try checkRegion(reads: reads, present: present),
                  state: describe())
@@ -3964,6 +3969,39 @@ private final class Run {
     /// caret dropped to the bubble's left edge on Return and the outline kept
     /// the shape it had when the field opened, and the two-line caption walk
     /// had been photographing both for a week.
+    /// Where the inline typing field sits and how far it leans, against what the
+    /// walk claims. Both in document points and degrees clockwise, the units a
+    /// walk's clicks are already written in.
+    private func checkField(onScreen: PlaytestPoint?, degrees: CGFloat?,
+                            within: CGFloat) throws -> String {
+        guard let canvas, let field = canvas.playtestTypingFieldGeometry else {
+            throw Failure(description: "no typing field is open, so there is nothing to claim "
+                + "about one")
+        }
+        var held: [String] = []
+        if let onScreen {
+            let want = onScreen.point
+            let off = hypot(field.corner.x - want.x, field.corner.y - want.y)
+            guard off <= within else {
+                throw Failure(description: "the typing field's top left corner is at "
+                    + "(\(Self.round1(field.corner.x)), \(Self.round1(field.corner.y))) and the step "
+                    + "claimed (\(Self.round1(want.x)), \(Self.round1(want.y))): "
+                    + "\(Self.round1(off)) points out, and the walk allowed \(Self.round1(within))")
+            }
+            held.append("corner (\(Self.round1(field.corner.x)), \(Self.round1(field.corner.y)))")
+        }
+        if let degrees {
+            guard abs(field.degrees - degrees) <= within else {
+                throw Failure(description: "the typing field leans \(Self.round1(field.degrees)) "
+                    + "degrees and the step claimed \(Self.round1(degrees)): "
+                    + "\(Self.round1(abs(field.degrees - degrees))) out, and the walk allowed "
+                    + "\(Self.round1(within))")
+            }
+            held.append("leaning \(Self.round1(field.degrees)) degrees")
+        }
+        return held.joined(separator: ", ") + "; " + canvas.playtestTypingFieldReport
+    }
+
     private func checkCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
                               caretHeight: CaptionCaretHeight?,
                               outline: CaptionOutlineClaim?) throws -> String {

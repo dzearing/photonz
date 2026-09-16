@@ -459,4 +459,58 @@ extension PhotonzDocument {
         }
         return nil
     }
+
+    /// Where a flat rectangle has to go, and how far it has to swing, to land
+    /// ON a layer that has been turned rather than beside it.
+    ///
+    /// The inline typing field is the one this was written for. It is a plain
+    /// rectangle of the platform's floating over the picture, so the only two
+    /// things it can be told are a corner and an angle; `upright` is the corner
+    /// it would take if nothing were turned, and what comes back is the corner
+    /// it really wants and the swing that puts it over the words.
+    ///
+    /// Both turns are counted: the layer's own knob first, about its own middle,
+    /// then every card above it, because that is the order the canvas draws them
+    /// in.
+    public func turnedOverlay(for id: UUID?, upright: CGPoint) -> TurnedOverlay {
+        guard let id, let layer = canvasLayer(id: id) else {
+            return TurnedOverlay(origin: upright, radians: 0, beyondATurn: false)
+        }
+        let own = layer.transform.isIdentity
+            ? CGAffineTransform.identity
+            : layer.transform.affineTransform(around: layer.turnPivot)
+        let turn = own.concatenating(inheritedTurn(of: id))
+        guard !turn.isIdentity else {
+            return TurnedOverlay(origin: upright, radians: 0, beyondATurn: false)
+        }
+        return TurnedOverlay(origin: upright.applying(turn),
+                             radians: atan2(turn.b, turn.a),
+                             beyondATurn: layer.transform.skewX != 0
+                                 || layer.transform.skewY != 0
+                                 || layer.transform.flipHorizontal
+                                 || layer.transform.flipVertical)
+    }
+}
+
+/// Where an upright rectangle goes to sit on a layer that has been turned.
+/// See `PhotonzDocument.turnedOverlay(for:upright:)`.
+public struct TurnedOverlay: Equatable, Sendable {
+    /// The canvas point the rectangle's top left corner goes to.
+    public var origin: CGPoint
+    /// How far to swing it about that corner, in radians, clockwise as a
+    /// person sees it. Zero when nothing has turned the layer.
+    public var radians: CGFloat
+    /// The layer is also leaning or mirrored, which a plain rectangle cannot
+    /// match: it can only be moved and swung. Whoever asked gets its corner and
+    /// its swing and is told the rest is beyond them.
+    public var beyondATurn: Bool
+
+    public init(origin: CGPoint, radians: CGFloat, beyondATurn: Bool) {
+        self.origin = origin
+        self.radians = radians
+        self.beyondATurn = beyondATurn
+    }
+
+    /// Nothing to do: the rectangle sits where it was asked to.
+    public var isUpright: Bool { radians == 0 }
 }

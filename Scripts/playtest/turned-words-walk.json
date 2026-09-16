@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/turned-words",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [340, 340] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-new-words", "note": "a field opened where the text tool was clicked, upright, because nothing here is turned" },
+    { "do": "expectField", "onScreen": [340, 340], "degrees": 0, "within": 1 },
+    { "do": "type", "text": "Save" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectBox", "layer": "Text", "at": [340, 340], "size": [54, 32], "within": 1 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [250, 250], "to": [760, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-card-upright", "note": "a card holding a bar (300, 300, 400 by 200) and the word Save (340, 340, 54 by 32), both upright" },
+
+    { "do": "action", "action": "turnKnob" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-card-turned", "note": "the card is on a slant, twenty degrees clockwise about the middle of the box its contents make, (500, 400)" },
+    { "do": "expectBox", "layer": "Text", "corner": "topLeft", "onScreen": [370.17, 288.90], "within": 1 },
+    { "do": "snapshot", "name": "turned-words-1-card-turned" },
+
+    { "do": "click", "at": [390, 313], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Text"] },
+    { "do": "describe", "stage": "4-words-picked", "note": "the words inside the turned card are picked, wearing their own handles on the slant" },
+    { "do": "snapshot", "name": "turned-words-2-words-picked" },
+
+    { "do": "click", "at": [390, 313], "count": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-field-open", "note": "the typing field is open ON the words: same corner, same slant, not upright at the spot the words would take if the card were straight" },
+    { "do": "expectField", "onScreen": [370.17, 288.90], "degrees": 20, "within": 1.5 },
+    { "do": "snapshot", "name": "turned-words-3-field-open" },
+
+    { "do": "type", "text": "Retitled" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-field-grown", "note": "the field grew for the longer word and stayed on the words' corner and slant" },
+    { "do": "expectField", "onScreen": [370.17, 288.90], "degrees": 20, "within": 1.5 },
+
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-committed", "note": "the new wording landed on the same layer, at the same corner, on the same slant" },
+    { "do": "expectBox", "layer": "Text", "at": [340, 340], "within": 1 },
+    { "do": "expectBox", "layer": "Text", "corner": "topLeft", "onScreen": [370.17, 288.90], "within": 1 },
+    { "do": "snapshot", "name": "turned-words-4-committed" }
+  ]
+}

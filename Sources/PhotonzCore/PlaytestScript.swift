@@ -1953,6 +1953,17 @@ public enum PlaytestStep: Sendable, Equatable {
     case expectBox(layer: String, at: PlaytestPoint?, size: PlaytestPoint?,
                    corner: LayerBoxCorner?, onScreen: PlaytestPoint?,
                    reachable: Bool, within: CGFloat)
+    /// Claims about the inline typing field that is open right now: where its
+    /// top left corner sits on screen, in document points, and how far it
+    /// leans, in degrees clockwise.
+    ///
+    /// A picture cannot settle this on its own. The field is a thin blue
+    /// outline over the words it is standing in for, and on a card turned a
+    /// few degrees a field in the right place and a field a little off both
+    /// read as "a box near the label". It opened at the spot the words would
+    /// take if the card were straight, which on a twenty degree card put it
+    /// about sixty points from the label and upright over a slanted one.
+    case expectField(onScreen: PlaytestPoint?, degrees: CGFloat?, within: CGFloat)
     /// Claims about the arrow caption field that is open right now: how the
     /// draft is laid out across its bubble, where the caret is waiting, and
     /// whether the blue outline is drawn round the bubble on screen.
@@ -2126,7 +2137,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2190,6 +2201,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectNotice: "expectNotice"
         case .expectLayers: "expectLayers"
         case .expectBox: "expectBox"
+        case .expectField: "expectField"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
         case .expectInView: "expectInView"
@@ -2678,6 +2690,20 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectBox(layer: layer, at: at, size: size, corner: corner,
                               onScreen: onScreen, reachable: reachable, within: CGFloat(boxWithin))
+        case "expectField":
+            let onScreen = fields["onScreen"] == nil ? nil : try f.point("onScreen")
+            let degrees = try f.optionalNumber("degrees")
+            guard onScreen != nil || degrees != nil else {
+                throw f.invalid("onScreen", "expectField has to claim something: \"onScreen\" "
+                    + "with the [x, y] the field's top left corner must sit at, \"degrees\" with "
+                    + "how far it must lean, or both")
+            }
+            let fieldWithin = try f.optionalNumber("within") ?? 2
+            guard fieldWithin >= 0 else {
+                throw f.invalid("within", "a distance is zero or more, not \(fieldWithin)")
+            }
+            self = .expectField(onScreen: onScreen, degrees: degrees.map { CGFloat($0) },
+                                within: CGFloat(fieldWithin))
         case "expectHint":
             let contains = try f.string("contains")
             guard !contains.trimmingCharacters(in: .whitespaces).isEmpty else {

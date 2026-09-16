@@ -274,9 +274,26 @@ extension CanvasNSView {
                                            height: TextBlockMetrics.topInset(for: draft, in: box) * zoom)
         editor.textContainer?.containerSize = NSSize(width: box.width * zoom,
                                                      height: .greatestFiniteMagnitude)
-        let topLeft = viewport.viewPoint(fromDocument: session.origin)
+        // Words on a card that has been TURNED are typed ON the words. The
+        // session's origin is the corner the words would take if the card were
+        // straight — that is the space every layer's numbers are stated in —
+        // so opening the field there put it upright and a good way off the
+        // label, and a person re-wording a button typed into a box that was
+        // not over their button. `turnedOverlay` answers with the corner the
+        // words are really drawn at and the swing that gets there; a text view
+        // is a plain rectangle, so a corner and a swing is the whole of what it
+        // can be told, which is why a leaning or mirrored layer only gets the
+        // turn part of what it wears.
+        let overlay = document?.turnedOverlay(for: session.layerID, upright: session.origin)
+            ?? TurnedOverlay(origin: session.origin, radians: 0, beyondATurn: false)
+        let topLeft = viewport.viewPoint(fromDocument: overlay.origin)
         editor.frame = CGRect(x: topLeft.x, y: topLeft.y,
                               width: box.width * zoom, height: box.height * zoom)
+        // Degrees, and positive is clockwise on screen because the canvas view
+        // is flipped. Set after the frame: the swing is about the corner the
+        // frame was just put at.
+        let degrees = overlay.radians * 180 / .pi
+        if editor.frameRotation != degrees { editor.frameRotation = degrees }
     }
 
     /// The room the box being re-edited has beyond its words; both nil for a
@@ -724,5 +741,57 @@ extension CanvasNSView {
 
     private func rounded(_ value: CGFloat) -> String {
         String(format: "%.1f", value)
+    }
+}
+
+// MARK: - What an open typing field is doing, for a walk to read
+
+/// The numbers the inline typing field is laid out with, in DOCUMENT points —
+/// the units a walk's clicks are written in.
+///
+/// The one a picture cannot settle is `degrees`. The field is a thin blue
+/// outline standing in for the words underneath it, so on a card turned a few
+/// degrees a field sitting on the label and a field sitting beside it look much
+/// the same, and an upright field over slanted words looks like a field.
+struct TypingFieldGeometry {
+    /// The layer being re-worded, or nil for a block being typed from nothing.
+    let layerID: UUID?
+    /// What is in the field.
+    let draft: String
+    /// The field's top left corner where a person sees it.
+    let corner: CGPoint
+    /// How far the field leans, in degrees clockwise on screen. Zero for
+    /// everything that is not inside a card on a slant.
+    let degrees: CGFloat
+    /// The layer is also leaning or mirrored, which a rectangle cannot match:
+    /// the field lands on the words and at the right angle, and that is all.
+    let beyondATurn: Bool
+    /// How big the field is, before it leans.
+    let size: CGSize
+}
+
+extension CanvasNSView {
+    var playtestTypingFieldGeometry: TypingFieldGeometry? {
+        guard let editor = textEditor, let session = textSession,
+              session.captionStyle == nil, let viewport else { return nil }
+        let zoom = max(viewport.zoom, 0.0001)
+        let corner = viewport.documentPoint(
+            fromView: CGPoint(x: editor.frame.minX, y: editor.frame.minY))
+        let overlay = document?.turnedOverlay(for: session.layerID, upright: session.origin)
+        return TypingFieldGeometry(layerID: session.layerID, draft: editor.string,
+                                   corner: corner, degrees: editor.frameRotation,
+                                   beyondATurn: overlay?.beyondATurn ?? false,
+                                   size: CGSize(width: editor.frame.width / zoom,
+                                                height: editor.frame.height / zoom))
+    }
+
+    /// The same, in the words a walk's log prints.
+    var playtestTypingFieldReport: String {
+        guard let field = playtestTypingFieldGeometry else { return "no typing field" }
+        return "draft \"\(field.draft)\" at (\(rounded(field.corner.x)), \(rounded(field.corner.y)))"
+            + ", \(rounded(field.size.width)) by \(rounded(field.size.height))"
+            + ", leaning \(rounded(field.degrees)) degrees"
+            + (field.beyondATurn ? ", and the words also lean or are mirrored, which a field cannot"
+               : "")
     }
 }

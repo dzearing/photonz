@@ -1,0 +1,27 @@
+{
+  "feature": "Typing into words on a card that has been turned",
+  "epic": "ui-building",
+  "summary": "Double clicking a label inside a card on a slant now opens the typing field ON the label, leaning the same way. It used to open upright at the spot the label would take if the card were straight, which on a twenty degree card was about sixty points away from the words being retyped.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle on a blank canvas." },
+    { "do": "Pick the Text tool, click inside the rectangle, type a word, press Return." },
+    { "do": "Pick Select, drag a marquee round both, press Command G." },
+    { "do": "Turn the group with the round knob above it, about twenty degrees." },
+    { "do": "Double click the word inside the card to pick it, then double click it again to type.", "shot": "2026-09-16-turned-words-field.png" },
+    { "do": "Type a longer word and watch the field grow." },
+    { "do": "Press Command Return.", "shot": "2026-09-16-turned-words-committed.png" }
+  ],
+  "evaluate": [
+    "When the field opens, is it plainly over the words you double clicked rather than beside them?",
+    "Does the field lean the same way the card does, so the box and the words read as one thing?",
+    "As a longer word grows the field, does it grow along the card rather than across the screen?",
+    "Does the new wording land exactly where the old wording was when you press Return?",
+    "On a card turned a long way round, is typing sideways readable or does it just feel wrong?"
+  ],
+  "rough": [
+    "The screen on this Mac was locked for every run, so the draft text does not show inside the field in either picture: the field's outline draws and its words do not. The same thing happens on a card that is not turned at all, so it is the lock and not this change. The numbers behind it come from the walk instead, which reads the field's own corner and lean: it opens at (370.2, 288.9) leaning 20 degrees, and the words' turned corner is (370, 289).",
+    "A label that is also leaning or mirrored, not just turned, gets a field that is in the right place at the right angle and nothing more: a text view is a plain rectangle, so it cannot lean or mirror with the words. Nothing in the app makes that easy to reach today, so it is written down rather than fixed.",
+    "Typing into a card turned most of the way round was never tried by hand, only by script. The letters go in sideways because the words are sideways, which is right, but whether it is pleasant to do is a question a person has to answer."
+  ]
+}
