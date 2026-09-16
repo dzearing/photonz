@@ -133,4 +133,53 @@ struct ClampedCornerRadiusTests {
         let said = row(card(radius: 17.6)).wallSentence
         #expect(said?.hasPrefix("What is inside this is already rounded 18 px.") == true)
     }
+
+    // MARK: - A number TYPED into the row
+
+    /// The box's own ends are the ends of the slider, so a number asked for
+    /// past fully round comes back as fully round rather than as a number over
+    /// a knob resting at the top.
+    @Test func aNumberPastFullyRoundLandsOnFullyRound() {
+        let typed = row(card(radius: 0)).typed(200)
+        #expect(typed.radius == 60)
+        #expect(!typed.refused)
+    }
+
+    /// Under the wall is the case the four opened corners already answer: the
+    /// number lands ON the wall AND the row owes an answer, because settling
+    /// in silence is the one thing it must not do.
+    @Test func aNumberUnderTheWallLandsOnTheWallAndIsRefused() {
+        let typed = row(card(radius: 18)).typed(4)
+        #expect(typed.radius == 18)
+        #expect(typed.refused)
+    }
+
+    @Test func aNumberAboveTheWallIsTakenWhole() {
+        let typed = row(card(radius: 18)).typed(30)
+        #expect(typed.radius == 30)
+        #expect(!typed.refused)
+    }
+
+    /// Nothing is walled off here, so nought is nought and there is nothing to
+    /// explain.
+    @Test func noughtOnAnUnwalledRowIsTakenWhole() {
+        let typed = row(card(radius: 0)).typed(0)
+        #expect(typed.radius == 0)
+        #expect(!typed.refused)
+    }
+
+    /// A track spent end to end still takes a typed number: it lands on the
+    /// one value left, and it says why.
+    @Test func aSpentRowHoldsEveryNumberAtTheWall() {
+        let typed = row(card(radius: 60)).typed(10)
+        #expect(typed.radius == 60)
+        #expect(typed.refused)
+    }
+
+    /// A negative number is not a smaller corner, it is not a corner at all.
+    @Test func aNegativeNumberCannotGoBelowSquare() {
+        let typed = row(card(radius: 0)).typed(-10)
+        #expect(typed.radius == 0)
+        #expect(!typed.refused)
+    }
 }

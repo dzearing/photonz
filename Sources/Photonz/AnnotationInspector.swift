@@ -314,16 +314,16 @@ struct CornerRadiusRow: View {
     /// the four numbers rather than a single one that is not true.
     private var canOpenCorners: Bool { Experiments.shared.shapePartsEnabled }
 
-    /// What the readout says when there is no single number to say.
+    /// What the box holds when nobody is typing in it.
     ///
     /// With the corners CLOSED, the four numbers themselves — `16/16/0/0` —
-    /// because the readout is then the only place on screen a corner set on its
+    /// because the box is then the only place on screen a corner set on its
     /// own can be read. Two layers rounded differently have no four numbers in
     /// common either, so that case is the house word. This is exactly what
     /// Padding's single field does, on purpose (`ArrangementInspector.swift`).
-    private var readout: String {
-        if showsMixed { return LayerStyleSelection.mixedText }
-        guard selection.hasUnevenCorners else { return points(knob) }
+    private var showing: NumberBox.Showing {
+        if showsMixed { return .standIn(LayerStyleSelection.mixedText) }
+        guard selection.hasUnevenCorners else { return .number(String(Int(knob.rounded()))) }
         // Next opens the four in a popout, so the row says the house word every
         // other control in the dock says and the numbers themselves are one
         // press away, and in the tooltip in words (`FourSidedNumber`). The
@@ -331,14 +331,21 @@ struct CornerRadiusRow: View {
         // the only place a corner set on its own can be read and it holds the
         // four.
         guard !canOpenCorners, let shorthand = selection.shorthand else {
-            return LayerStyleSelection.mixedText
+            return .standIn(LayerStyleSelection.mixedText)
         }
-        return shorthand
+        return .standIn(shorthand)
     }
 
-    /// True while the readout is standing in for something rather than saying a
-    /// number, so it is drawn the one strength every other Mixed is drawn at.
-    private var readoutIsMixed: Bool { readout == LayerStyleSelection.mixedText }
+    /// What a PERSON reads on this row, which is the number AND the unit beside
+    /// it — "18 px", not the "18" in the box. The one-unit check and every walk
+    /// that quotes the row read this.
+    private var readout: String {
+        switch showing {
+        case .number(let digits): DocumentUnit.text(digits: digits)
+        case .standIn(let text): text
+        case .nothing: ""
+        }
+    }
 
     var body: some View {
         let ids = selection.layerIDs
@@ -349,10 +356,37 @@ struct CornerRadiusRow: View {
                     InstanceStyleRevert(layerID: only, field: .cornerRadius)
                 }
                 Spacer(minLength: 8)
-                Text(readout)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(MixedLook.style(readoutIsMixed, otherwise: .secondary))
-                    .panelReadout(readout)
+                PanelNumberField(
+                    showing: showing,
+                    label: "Corner Radius",
+                    identity: selection.layerIDs,
+                    suffix: DocumentUnit.word,
+                    // Grown only for the four numbers written out, which is
+                    // the one thing here that is longer than a word.
+                    width: .fitting(least: 48, most: 110),
+                    // The wall is NOT given to the box as its floor. A number
+                    // typed under it has to land on it and say why, and a box
+                    // that clamps on its own would swallow that silently
+                    // (`CornerRadiusSelection.typed`). Nought is the box's own
+                    // bottom, because there is no such thing as a corner
+                    // rounded less than square.
+                    floor: 0,
+                    ceiling: CGFloat(selection.limit),
+                    wholeNumbers: true,
+                    help: sliderHelp
+                ) { number in
+                    let took = selection.typed(number)
+                    if took.refused { answer = selection.wallSentence }
+                    // Landing the number it already wears would be an undo
+                    // step that changes nothing you can see, which is what a
+                    // down arrow held against the wall would otherwise spend.
+                    if took.radius != CGFloat(knob.rounded()) {
+                        editorState.commitCornerRadius(ids: ids, took.radius.rounded())
+                    }
+                    return .number(String(Int(took.radius.rounded())))
+                }
+                .disabled(ids.isEmpty)
+                .panelReadout(readout)
                 if canOpenCorners {
                     FourSidedButton(
                         isOpen: $cornersOpen,
@@ -401,11 +435,22 @@ struct CornerRadiusRow: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    // Named, so a walk can claim the sentence a refused number
+                    // raises rather than only photograph it. The Room answer
+                    // under Padding carries the same handle. It goes BEFORE
+                    // the transition: a name put on the far side of one is
+                    // never registered, so the sentence was on screen in a
+                    // photograph and missing from every walk that looked.
+                    .playtestControl("Wall answer", detail: said)
                     .transition(.opacity)
             }
         }
         .contentShape(.rect)
-        .onTapGesture { answer = selection.wallSentence }
+        // Simultaneous, not `onTapGesture`: the row's own click has to answer
+        // WITHOUT taking the click away from the number box sitting in it. A
+        // gesture on the whole row that swallows the press is a box you cannot
+        // put the keyboard in, which is the whole point of putting one here.
+        .simultaneousGesture(TapGesture().onEnded { answer = selection.wallSentence })
         .animation(.easeOut(duration: 0.12), value: answer)
         .playtestField("Corner Radius")
         .task(id: answer) { await fadeAnswer() }

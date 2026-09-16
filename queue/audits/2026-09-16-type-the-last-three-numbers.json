@@ -1,0 +1,28 @@
+{
+  "feature": "The last numbers you could only nudge now take typing",
+  "epic": "ui-building",
+  "summary": "A shape's Corner Radius, a measurement's Chip size and the Width and Arrowhead in the shape tool's own controls are number boxes now: click the number, type an exact one, press Return. A corner radius typed under the floor the shape already has lands on that floor and says why, instead of settling in silence.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw a rectangle, then press V for the select tool.", "shot": "2026-09-16-type-the-last-three-numbers-1.png" },
+    { "do": "Click the number beside Corner Radius, type 18, press Return." },
+    { "do": "Press Command Z once. The corners go square in one step." },
+    { "do": "Type 18 back in, then use Layer, Frame Selection to put a frame round it." },
+    { "do": "Click the Corner Radius number, type 4, press Return.", "shot": "2026-09-16-type-the-last-three-numbers-2.png" },
+    { "do": "Press A for the arrow tool, click the colour circle in the tool bar, click the Width number and type 7.", "shot": "2026-09-16-type-the-last-three-numbers-3.png" },
+    { "do": "Measure something with the I tool, then type 28 into Chip size under the Chip block." }
+  ],
+  "evaluate": [
+    "When you type a corner radius under the floor and the row answers, does the sentence tell you enough to fix it, or do you still have to go hunting for what set the floor?",
+    "Does that answer arriving under the row shove the panel around more than it is worth?",
+    "The Corner Radius row is now a box, a slider and sometimes a sentence. Is it still a row you read at a glance?",
+    "In the tool bar's popover, do the Width and Arrowhead boxes read as part of the colour picker's row of boxes above them, or as two more things bolted on?",
+    "Over several shapes the box says Mixed with a quiet px beside it. Does that read right, or should the unit go away while there is no number?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this task, so no walk could be run for a verdict. Every walk here was forced past that refusal with PHOTONZ_ALLOW_LOCKED_WALK=1 and every step passed, and the two pictures of the Corner Radius row are real photographs of the window, but the harness marks a locked run as no answer at all. A full sweep has been asked for and the loop runs it unlocked.",
+    "The box says Mixed with px still drawn beside it, which reads as Mixed px. Every other typed row in the dock already does this, so it was left alone rather than made different here.",
+    "Arrowhead in the tool bar's popover was not one of the three this task named. Giving Width a box made it the one number left in a popover of boxes, so it got one too.",
+    "Two walks fail right now for reasons that have nothing to do with this: corner-drag-rounds-walk reads a dragged corner as 52 where it wants 50, and four-sided-popout-walk cannot find the Padding field. Both fail exactly the same way on unmodified source."
+  ]
+}

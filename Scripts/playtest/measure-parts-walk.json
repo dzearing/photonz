@@ -112,6 +112,71 @@
       "present": true
     },
     {
+      "do": "describe",
+      "stage": "1b-typed-chip-size",
+      "note": "Chip size takes a typed number now, not only a knob to hunt one with: the readout beside it is the app's one number box"
+    },
+    {
+      "do": "focus",
+      "field": "Chip size"
+    },
+    {
+      "do": "type",
+      "text": "28"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Chip size",
+      "reads": "28"
+    },
+    {
+      "do": "describe",
+      "stage": "1c-one-undo",
+      "note": "ONE undo step for one typed size, the same as letting go of the knob is"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Chip size"
+    },
+    {
+      "do": "type",
+      "text": "300"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1d-held-to-the-end",
+      "note": "the ends of the slider are the ends of the box: 300 on a row that stops at 64 shows 64"
+    },
+    {
+      "do": "expect",
+      "field": "Chip size",
+      "reads": "64"
+    },
+    {
       "do": "expect",
       "control": "Slider",
       "in": "Corner Radius",

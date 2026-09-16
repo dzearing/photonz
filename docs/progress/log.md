@@ -17106,3 +17106,43 @@ by name, and both photographed the window for real). A sweep is requested. Five
 of the eight `separate-*` walks fail on clean main today for reasons that are
 not this change — baselined by stashing — and that is folded into
 `walks-that-fail-in-the-full-sweep`.
+
+## 2026-09-16 — the last numbers you could only nudge
+
+`the-last-three-sliders-whose-number-you-still-ca` closed the gap the previous
+typing task left: Corner Radius, a measurement's Chip size, and the shape tool's
+own Width, plus one more the change created.
+
+Corner Radius was the only one that was not a straight swap. Its readout can be
+four numbers (`16/16/0/0`), it sits beside the four-corner twist, and it has a
+WALL — a stretch of its track that belongs to whatever is inside the layer. The
+box takes the first two from `PanelNumberField` exactly the way Padding does.
+The wall is the part worth writing down: it is deliberately NOT given to the box
+as its floor, because a box that clamps on its own would swallow a number typed
+under the wall in silence. `CornerRadiusSelection.typed(_:)` (PhotonzCore, six
+tests) holds the number and says whether the wall refused it, and a refusal
+raises the same sentence a click on the row raises. Typing the number it already
+wears spends no undo step, so a down arrow held against the wall does not grow
+the stack.
+
+Two things the build turned up that reading would not have:
+
+- The row's `onTapGesture` had to become a `simultaneousGesture`, or the gesture
+  on the whole row swallows the click that should put the keyboard in the box.
+- `.playtestControl` put AFTER `.transition(.opacity)` never registers. The wall
+  sentence was on screen in a photograph and missing from every walk that looked
+  for it by name. Moving the modifier before the transition fixed it. Worth
+  remembering: a name on the far side of a transition is not a name.
+
+Giving the tool bar popover's Width a box left Arrowhead as the one number in a
+popover of boxes that could still only be nudged, so it got one too.
+
+Next: the queue's next item by sequence.
+
+Open question: the screen was locked for this whole task, so every walk ran
+under the documented `PHOTONZ_ALLOW_LOCKED_WALK` override and none of them
+carries a verdict. All of them passed and the Corner Radius pictures are real
+photographs of the window, but a sweep is requested and the loop should run it
+unlocked. Two walks unrelated to this change fail on clean main today
+(`corner-drag-rounds-walk`, `four-sided-popout-walk`), baselined by stashing and
+folded into `walks-that-fail-in-the-full-sweep`.

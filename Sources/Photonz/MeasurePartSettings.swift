@@ -138,7 +138,7 @@ struct MeasureChipSettings: View {
                     Spacer(minLength: 0)
                 }
                 OwnedSettings(owner: "Chip") {
-                    chipSize(c)
+                    chipSize(c, id: layer.id)
                     unit(c)
                 }
             }
@@ -149,7 +149,7 @@ struct MeasureChipSettings: View {
 
     /// The readout's size, in the pixels the slider shows rather than the scale
     /// the model keeps, so the number means what it says.
-    private func chipSize(_ c: MeasureContent) -> some View {
+    private func chipSize(_ c: MeasureContent, id: UUID) -> some View {
         // During a drag the committed document has not changed, so read the
         // live preview value or the thumb snaps back.
         let liveScale = editorState.measureLabelPreview?.scale ?? c.labelScale
@@ -160,10 +160,18 @@ struct MeasureChipSettings: View {
             HStack {
                 Text("Chip size").font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Text(DocumentUnit.text(px))
-                    .font(.caption.monospacedDigit())
-                    .panelReadout(DocumentUnit.text(px))
-                    .foregroundStyle(.secondary)
+                SliderReadout(
+                    typing: .points, label: "Chip size", value: px,
+                    isMixed: false,
+                    range: MeasureContent.labelSizeRangePx,
+                    // One measurement only, so the number always speaks for
+                    // the one chip on screen.
+                    identity: id,
+                    // A typed size is ONE undo step, the same as letting go of
+                    // the knob is: a commit with no preview behind it.
+                    land: {
+                        editorState.commitMeasureLabelScale($0 / MeasureContent.labelFontSize)
+                    })
             }
             Slider(value: Binding(
                 get: { Double(px) },

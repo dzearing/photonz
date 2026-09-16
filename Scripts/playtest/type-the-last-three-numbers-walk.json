@@ -1,0 +1,345 @@
+{
+  "out": "/tmp/photonz-playtest/type-the-last-three-numbers",
+  "seed": "Every number beside a slider in Effects and Appearance became a box you can type in, except three. This walk types into two of them: a shape's Corner Radius, including the case where the row has a wall and a number typed under it has to land ON the wall and say why, and the Width in the shape tool's own controls, which is the popover the toolbar swatch opens. It types into the Arrowhead under that Width too, which was not one of the three and became the one number in a popover of boxes that could still only be nudged. The third of the three, a measurement's Chip size, is typed in the measure-parts walk, where a measurement already exists.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1360,
+      "height": 1080
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        180
+      ],
+      "to": [
+        600,
+        300
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-square",
+      "note": "a box with square corners. Corner Radius is a box you can type in now, not only a knob to hunt a number with"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "0"
+    },
+    {
+      "do": "focus",
+      "field": "Corner Radius"
+    },
+    {
+      "do": "type",
+      "text": "18"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "18"
+    },
+    {
+      "do": "panel",
+      "stage": "1-typed-corner"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-typed-corner"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas-typed-corner"
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-undo",
+      "note": "ONE undo step for one typed number, the same as one pull on the knob is: the corners are square again in a single press"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "0"
+    },
+    {
+      "do": "focus",
+      "field": "Corner Radius"
+    },
+    {
+      "do": "type",
+      "text": "18"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "18"
+    },
+    {
+      "do": "describe",
+      "stage": "3-past-fully-round",
+      "note": "the ends of the slider are the ends of the box: 500 on a box whose fully round is 48 shows 48, rather than a number over a knob sitting at the top"
+    },
+    {
+      "do": "focus",
+      "field": "Corner Radius"
+    },
+    {
+      "do": "type",
+      "text": "500"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "48"
+    },
+    {
+      "do": "focus",
+      "field": "Corner Radius"
+    },
+    {
+      "do": "type",
+      "text": "18"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "frameSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-wall",
+      "note": "the box is inside a frame now, and a frame rounds by masking: it can take a corner away but never put a curve back, so it cannot go below the 18 the box inside already has"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "18"
+    },
+    {
+      "do": "focus",
+      "field": "Corner Radius"
+    },
+    {
+      "do": "type",
+      "text": "4"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-under-the-wall",
+      "note": "a number typed UNDER the wall lands on the wall AND says why, the way the four opened corners already do. Settling in silence is the one thing a box you can type into must not do"
+    },
+    {
+      "do": "expect",
+      "field": "Corner Radius",
+      "reads": "18"
+    },
+    {
+      "do": "panel",
+      "stage": "5-under-the-wall"
+    },
+    {
+      "do": "expect",
+      "control": "Wall answer",
+      "in": "Corner Radius",
+      "reads": "What is inside this is already rounded 18 px. Round the contents less to take it lower."
+    },
+    {
+      "do": "snapshot",
+      "name": "5-under-the-wall"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Toolbar"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-tool-width",
+      "note": "the shape tool's own controls, behind the toolbar swatch. Width was the last slider here whose number could only be nudged"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-tool-controls"
+    },
+    {
+      "do": "focus",
+      "field": "Width"
+    },
+    {
+      "do": "type",
+      "text": "7"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Width",
+      "reads": "7"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-typed-tool-width"
+    },
+    {
+      "do": "focus",
+      "field": "Width"
+    },
+    {
+      "do": "type",
+      "text": "99"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-held-to-the-end",
+      "note": "99 on a row that stops at 40 shows 40"
+    },
+    {
+      "do": "expect",
+      "field": "Width",
+      "reads": "40"
+    },
+    {
+      "do": "focus",
+      "field": "Arrowhead"
+    },
+    {
+      "do": "type",
+      "text": "2.5"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-arrowhead",
+      "note": "the number under Width in the same popover, typed too: a multiple rather than a measurement, so it keeps its decimal place and wears its sign in front"
+    },
+    {
+      "do": "expect",
+      "field": "Arrowhead",
+      "reads": "2.5"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-typed-arrowhead"
+    }
+  ]
+}

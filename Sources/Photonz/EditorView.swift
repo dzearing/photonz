@@ -2360,8 +2360,16 @@ struct EditorView: View {
             HStack {
                 Label("Width", systemImage: "lineweight").labelStyle(.titleOnly)
                 Spacer()
-                Text(DocumentUnit.text(value)).monospacedDigit().foregroundStyle(.secondary)
-                    .panelReadout(DocumentUnit.text(value))
+                SliderReadout(
+                    typing: .points, label: "Width", value: value,
+                    isMixed: false,
+                    range: AnnotationStyles.strokeWidthRange,
+                    // The tool's own Width, not a layer's, so there is one
+                    // thing for it to speak for however the selection moves.
+                    identity: "tool-stroke-width",
+                    // A typed width is ONE undo step, the same as letting go
+                    // of the knob is.
+                    land: { editorState.setAnnotationStrokeWidth($0.rounded()) })
             }
             .font(.callout)
             Slider(value: Binding(
@@ -2406,7 +2414,16 @@ struct EditorView: View {
             HStack {
                 Label("Arrowhead", systemImage: "arrowshape.right.fill").labelStyle(.titleOnly)
                 Spacer()
-                Text("×\(String(format: "%.1f", value))").monospacedDigit().foregroundStyle(.secondary)
+                // Typed, like the Width above it. Adding a box to Width alone
+                // left this the one number in a popover of boxes that could
+                // still only be nudged, which is the very thing the boxes were
+                // added to stop.
+                SliderReadout(
+                    typing: .times, label: "Arrowhead", value: value,
+                    isMixed: false,
+                    range: AnnotationStyles.arrowheadScaleRange,
+                    identity: "tool-arrowhead-scale",
+                    land: { editorState.setAnnotationArrowheadScale($0) })
             }
             .font(.callout)
             HStack(spacing: 8) {

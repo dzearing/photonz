@@ -169,6 +169,37 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         return "What is inside this is already rounded \(Int(floor.rounded())) px. " + takeItLower
     }
 
+    /// A number TYPED into the row's box, held where the knob would have been
+    /// held.
+    ///
+    /// The box holds a number inside its own ends on its own, and for nearly
+    /// every row that is the whole story. This row has a third end: the wall,
+    /// which is not the bottom of the track but a stretch of it that belongs
+    /// to what is inside the layer. A number typed under the wall has to land
+    /// ON it and SAY SO, the way the four opened corners already do, because a
+    /// number that quietly becomes a different number is the one thing a box
+    /// you can type into must never do.
+    public func typed(_ number: CGFloat) -> Typed {
+        let top = CGFloat(limit)
+        let bottom = CGFloat(min(max(floor, 0), limit))
+        let held = min(max(number, bottom), top)
+        return Typed(radius: held, refused: hasWall && number < bottom)
+    }
+
+    /// What the row did with a typed number.
+    public struct Typed: Equatable, Sendable {
+        /// The rounding the layers really take.
+        public let radius: CGFloat
+        /// Whether the wall took the number back up, so the row owes its
+        /// answer (`wallSentence`).
+        public let refused: Bool
+
+        public init(radius: CGFloat, refused: Bool) {
+            self.radius = radius
+            self.refused = refused
+        }
+    }
+
     /// The one picked layer whose rounding is a part of its look that a copy
     /// of a component can own, when exactly one is picked and it rounds that
     /// way. It is what puts the "follow the original again" arrow on this row,
