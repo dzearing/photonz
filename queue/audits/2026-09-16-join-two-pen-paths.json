@@ -1,0 +1,30 @@
+{
+  "feature": "Join two paths you drew with the Pen",
+  "epic": "icon-vector",
+  "summary": "Two open outlines drawn with the Pen, picked together, can now be welded into one. The command that did this for shapes refused anyone working with the Pen, and over paths it now calls itself Join Paths instead of Turn Into Path.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen and Turn Into Path flags are on by default.",
+  "try": [
+    { "do": "Press P, click at the bottom left of the canvas, click near the top middle, press Return." },
+    { "do": "Press P again, click at the bottom right, click on that same top middle point, press Return." },
+    { "do": "Press Escape, then click the row called Path in the layers list and Shift click Path 2." },
+    { "do": "Right click Path 2 and read the row: it should say Join Paths, not Turn Into Path." },
+    { "do": "Choose Join Paths and read the question before you answer it." },
+    { "do": "Press Return, then drag the top corner upwards: both runs should come with it." },
+    { "do": "Press Command Z twice: the corner goes back, then the two separate runs come back." },
+    { "do": "Draw a third run off on its own, pick it with the joined one, and choose Join Paths." }
+  ],
+  "evaluate": [
+    "With two paths picked, does the row reading Join Paths tell you what you are about to get, or do you have to try it to find out?",
+    "Join Paths sits a menu away from Combine Shapes and its own Join, which adds areas. Are those two ever confusable in practice?",
+    "The question over two paths drops every sentence about shapes and is down to two lines. Is that too little, or exactly enough?",
+    "On the last step nothing joins and a line under the canvas says the ends are more than 2 pt apart. Is that the right place to be told, or should the menu row have been dimmed instead?",
+    "After joining, does the one line under the canvas make it obvious that Command Z brings back two separate paths rather than a shape?"
+  ],
+  "rough": [
+    "THERE ARE NO SCREENSHOTS IN THIS AUDIT. The Mac's screen was locked for this whole task, so the walk refused to run and photographed nothing; the offscreen renders do not exist either, because a locked walk stops before its first step. Scripts/playtest/join-two-pen-paths-walk.json is written, parses (85 steps), and is waiting for an unlocked screen.",
+    "So the app half of this is verified by build and by reading, not by use. The geometry, the gate and every sentence of the question are covered by 12 new tests in PhotonzCoreTests and the whole suite is green; what is unproven on a running app is the three lines of menu glue that put the retitled row on screen.",
+    "The command is offered on any two open sibling paths without first working out whether their ends meet, so it can be asked for and do nothing. That is deliberate: a dimmed row teaches nobody what meeting means, and the line under the canvas names the 2 pt gap. It is still a command that sometimes does nothing, and it is the part of this most worth disagreeing with.",
+    "There is no keyboard shortcut. Photoshop and Illustrator both put Join on Command J, which here is New Layer via Copy, so nothing was taken.",
+    "One outline whose own two ends come within the tolerance closes by itself and asks Close this path? That fell out of the geometry rather than being designed, and it is only reachable when a second path is picked alongside it. Closing one path on its own is still not offered."
+  ]
+}

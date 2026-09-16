@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T20:28:22.293Z",
+  "updated": "2026-09-16T21:09:56.685Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -132,6 +132,10 @@
     {
       "t": "2026-09-16T20:28:22.292Z",
       "note": "2026-09-16, third day running: the screen was locked for the whole of the-point-a-layer-turns-around-can-be-grabbed-ev, so its new walk (Scripts/playtest/motion-pivot-in-a-corner-walk.json) has never run once and its audit ships with no picture of the app. The walk decodes and Scripts/playtest.sh exits 3 with status locked. The specific thing the lock cost here: the walk is the ONLY check of the app-level fix (the core rule is unit tested, the wiring is not), so the task lands verified in PhotonzCore and unverified in the app."
+    },
+    {
+      "t": "2026-09-16T21:09:56.684Z",
+      "note": "also hit on 2026-09-16 by 'two-paths-you-drew-with-the-pen-can-be-joined-in': the screen was locked for the whole task, so Scripts/playtest.sh reported status locked / 0 steps twice (13:5x and 14:1x) and the audit queue/audits/2026-09-16-join-two-pen-paths.json shipped with no pictures at all, not even offscreen renders, because a locked walk stops before its first step. The new walk Scripts/playtest/join-two-pen-paths-walk.json parses (85 steps) and has never been run."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

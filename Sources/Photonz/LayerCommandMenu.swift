@@ -56,8 +56,13 @@ enum LayerCommandList {
         // with three picked the command acts on all of them, so a picture right
         // clicked alongside two lines still offers it and leaves the picture
         // alone.
+        // The row says what it will do to THIS selection: Turn Into Path while
+        // something still has to be turned, Join Paths over outlines already
+        // drawn with the Pen (`EditorState+LayerOps.turnIntoPathMenuItem`).
         if editorState.canTurnLayerIntoPath(id: id) {
-            rows.append(.command(TurnIntoPathPrompt.menuItem) { editorState.turnLayerIntoPath(id: id) })
+            rows.append(.command(editorState.turnIntoPathMenuItem(id: id)) {
+                editorState.turnLayerIntoPath(id: id)
+            })
         }
         // The four ways two shapes become one, on the menu where every other
         // command about a layer already lives (`PathCombining.swift`). Absent

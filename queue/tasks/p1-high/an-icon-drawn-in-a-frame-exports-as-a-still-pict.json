@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 300,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T20:48:12.325Z",
-  "updated": "2026-09-16T20:48:12.328Z",
+  "updated": "2026-09-16T20:59:31.188Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-16 while fixing a-piece-that-slides-inside-an-icon-that-grows-sl.\n\nCause: a frame clips by default (Layer.clipsContents returns isFrame when nothing was set), and SVGExport.answer returns .picture(\"a group that cuts off what sticks out of it\") for any group that clips. EditorState.exportSVG exports a frame through PhotonzDocument.frameDocument(id:), which keeps the frame itself as the root LAYER, so the whole icon goes out through the picture path as one base64 PNG. MotionSVG.wrap still runs on that picture layer, so a motion on the FRAME would still animate the bitmap, but every motion inside the frame is baked into the pixels and lost. The unmoved list is empty, so ExportDialog's \"what the file could not carry\" line says nothing.\n\nPossible answers: export a frame's CHILDREN as the document (the frame becomes the viewBox and the background rect, which it already knows how to write in SVGExport.surface) rather than keeping the frame as a clipping layer; or write a clipping group as <clipPath> so it stays shapes. The first is smaller and is what a frame means on export anyway.\n\nRun as Tests/PhotonzRenderTests/ZZProbeTests.swift (deleted after; paste back to re-run):\n\nimport CoreGraphics\\nimport Foundation\\nimport PhotonzCore\\nimport Testing\\n@testable import PhotonzRender\\n\\n@Suite(\"probe\")\\nstruct ZZProbeTests {\\n    @Test func whatAnAnimatedIconInAFrameExportsAs() throws {\\n        var dot = Layer(name: \"Dot\", content: .annotation(AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: \"#000000\", start: .zero, end: CGPoint(x: 10, y: 10), fillColorHex: \"#000000\")), frame: CGRect(x: 4, y: 4, width: 10, height: 10))\\n        dot.motions = [LayerMotion(property: .position, from: .point(CGPoint(x: 4, y: 4)), to: .point(CGPoint(x: 14, y: 4)), timing: MotionTiming(startMS: 0, durationMS: 500), curve: .linear, repeats: .forever)]\\n        let icon = Layer(name: \"Icon\", content: .group(GroupContent(children: [dot], isFrame: true, backgroundHex: \"#FFFFFF\")), frame: CGRect(x: 0, y: 0, width: 32, height: 32))\\n        var document = PhotonzDocument(canvasSize: CGSize(width: 64, height: 64), layers: [icon])\\n        document.motionCycleMS = 1000\\n        let target = try #require(document.frameDocument(id: icon.id))\\n        let result = SVGExporter.export(target, store: ImageStore(), animation: .moving(cycleMS: 1000))\\n        print(\"=== FALLBACKS:\", result.fallbacks.map { \"\\\\($0.layerName): \\\\($0.reason)\" })\\n        print(\"=== UNMOVED:\", result.unmoved.map { \"\\\\($0.layerName): \\\\($0.reason)\" })\\n        print(\"=== has animate:\", result.text.contains(\"<animate\"))\\n        print(\"=== has base64:\", result.text.contains(\"base64\"))\\n    }\\n}\n\nRan with: Scripts/test.sh --filter ZZProbe\nPrinted:\n  === FALLBACKS: [\"Icon: a group that cuts off what sticks out of it\"]\n  === UNMOVED: []\n  === has animate: false\n  === has base64: true\nand the whole file was one <image ... base64> element.\n\nNot reproduced in the window itself: the Mac's screen was locked for the whole task, so no walk could run.",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-16T20:48:12.327Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-16T20:50:46.493Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:59:13.022Z",
+      "note": "Before building: weighed the two answers in the notes. Exporting the frame's CHILDREN as the document would lose the cut (a piece hanging off the edge would appear in the file, which is not what the canvas shows) and would lose the frame's own rounding. Writing the cut as a <clipPath> keeps both and fixes the whole-canvas export too, not just the frame-scoped one. Built that."
+    },
+    {
+      "t": "2026-09-16T20:59:13.068Z",
+      "note": "Shipped: SVGExport.answer no longer sends a clipping group to the picture path; Writer.cutBox/defineCut write a <clipPath> of the group's box (rounded where the corners are) and hold surface + children in one <g clip-path>, with the border ring outside it so a ring is painted over the edge rather than cut by it. A group with rounded corners cuts too, since DocumentRenderer.groupImage already does. Layers moving INSIDE something that still goes out as a picture are now named in result.unmoved, so the Export sheet says which piece stopped moving. PhotonzDocument.frameDocument carries motionCycleMS, so one frame exported on its own loops at the length the canvas plays it at."
+    },
+    {
+      "t": "2026-09-16T20:59:17.427Z",
+      "note": "Verified in a real browser, which is what acceptance 1 asks for. Wrote a throwaway test that exports a 32pt icon frame (rounded 6, white surface, a red bar hanging off the edge, a blue dot sliding 4 to 20 over 700ms in a 1400ms lap) to /tmp/photonz-icon.svg, then opened it in Chrome. The file: no base64, no fallbacks, no unmoved, one <clipPath id=clip-1><rect 0 0 32 32 rx=6> and one <animateTransform>. In Chrome, with the SVG inlined and scaled 10x by CSS: the dot's centre reads 8, 16, 24, 16, 8 icon units at t=0/0.175/0.35/0.525/0.7 and loops, all four corners are cut round (elementFromPoint 8px in from each corner hits the page, 70px in hits the white surface), and the red bar paints only as far as the frame's edge. Screenshot saved as queue/audits/2026-09-16-icon-export-1.png. First attempt at this check was wrong and worth recording: scaling the markup with sed also rewrote the clipPath rect's own width and height, which made three corners look square. Scale with CSS, never by editing the file."
+    },
+    {
+      "t": "2026-09-16T20:59:17.475Z",
+      "note": "Could not run any walk: the Mac's screen was locked for the whole task (probe-app.sh said so on its Grants line), so a walk finds no control by name and refuses. Asked for a sweep instead. left rough: a frame at the canvas origin writes an empty <g> round itself, since a group at the origin gets no transform and the clip now sits on a group of its own inside it. Noise in a file meant to be readable, invisible to anyone who is not reading the markup, and true of every group at the origin rather than anything this change introduced, so no task."
+    },
+    {
+      "t": "2026-09-16T20:59:31.186Z",
+      "note": "A clipping group (which every icon frame is) now writes a <clipPath> instead of falling back to one embedded PNG, so an icon drawn in a frame exports as shapes that move. Motions baked inside anything that still goes out as a picture are named in the Export sheet's warning line, and one frame exported on its own keeps the document's lap. Verified: 7781 tests pass (Scripts/test.sh), including new render-back comparisons that draw the exported file through the system's SVG reader and check it matches the canvas, and a real browser check in Chrome where the dot animates, the corners cut round and the overhang is clipped (queue/audits/2026-09-16-icon-export-1.png). Shipped in 164c1014; audit at queue/audits/2026-09-16-icon-export.json. No walks could run, the screen was locked all task, so a sweep is requested."
     }
-  ]
+  ],
+  "started": "2026-09-16T20:50:46.492Z",
+  "completed": "2026-09-16T20:59:31.187Z"
 }

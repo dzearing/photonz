@@ -4574,3 +4574,19 @@
 {"t":"2026-09-16T20:48:20.482Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
 {"t":"2026-09-16T20:48:20.527Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
 {"t":"2026-09-16T20:48:20.572Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:29.473Z","ev":"task_done","id":"a-piece-that-slides-inside-an-icon-that-grows-sl","from":"in_progress","note":"A piece told to slide inside an icon that grows now travels the grown distance: 20pt of slide inside a group at 200% moves it 40pt, matching what the exported file does in a browser. The magnification is threaded down Layer.movedTree and multiplies the two lengths a motion states in points, a position delta and a stroke width. Verified by seven tests written first and failing on the old code, including a pixel-level one that measures where the ink lands through the real composite path, plus Scripts/test.sh green at 7766 tests. Audit: queue/audits/2026-09-16-nested-motion-distance.json. No walk could run: the screen was locked all task."}
+{"t":"2026-09-16T20:50:46.388Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T20:50:46.495Z","ev":"task_started","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict","title":"An icon drawn in a frame exports as a still picture instead of an animated SVG","priority":"p1-high"}
+{"t":"2026-09-16T20:59:13.024Z","ev":"task_note","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict"}
+{"t":"2026-09-16T20:59:13.070Z","ev":"task_note","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict"}
+{"t":"2026-09-16T20:59:17.429Z","ev":"task_note","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict"}
+{"t":"2026-09-16T20:59:17.477Z","ev":"task_note","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict"}
+{"t":"2026-09-16T20:59:31.189Z","ev":"task_done","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict","from":"in_progress","note":"A clipping group (which every icon frame is) now writes a <clipPath> instead of falling back to one embedded PNG, so an icon drawn in a frame exports as shapes that move. Motions baked inside anything that still goes out as a picture are named in the Export sheet's warning line, and one frame exported on its own keeps the document's lap. Verified: 7781 tests pass (Scripts/test.sh), including new render-back comparisons that draw the exported file through the system's SVG reader and check it matches the canvas, and a real browser check in Chrome where the dot animates, the corners cut round and the overhang is clipped (queue/audits/2026-09-16-icon-export-1.png). Shipped in 164c1014; audit at queue/audits/2026-09-16-icon-export.json. No walks could run, the screen was locked all task, so a sweep is requested."}
+{"t":"2026-09-16T21:00:08.517Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T21:00:08.623Z","ev":"task_started","id":"two-paths-you-drew-with-the-pen-can-be-joined-in","title":"Two paths you drew with the Pen can be joined into one","priority":"p2-normal"}
+{"t":"2026-09-16T21:09:56.686Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-16T21:10:01.170Z","ev":"task_created","id":"an-outline-you-already-finished-can-be-closed","priority":"p2-normal","title":"An outline you already finished can be closed"}
+{"t":"2026-09-16T21:10:06.405Z","ev":"task_note","id":"two-paths-you-drew-with-the-pen-can-be-joined-in"}
+{"t":"2026-09-16T21:10:06.451Z","ev":"task_note","id":"two-paths-you-drew-with-the-pen-can-be-joined-in"}
+{"t":"2026-09-16T21:10:06.497Z","ev":"task_note","id":"two-paths-you-drew-with-the-pen-can-be-joined-in"}
+{"t":"2026-09-16T21:10:06.544Z","ev":"task_note","id":"two-paths-you-drew-with-the-pen-can-be-joined-in"}

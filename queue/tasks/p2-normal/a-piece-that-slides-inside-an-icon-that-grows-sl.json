@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T13:28:55.170Z",
-  "updated": "2026-09-16T20:48:20.571Z",
+  "updated": "2026-09-16T20:48:29.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 right after fixing a-shape-told-to-grow-does-not-grow, which is what exposed it: before that fix a scaling group did not magnify its children at all, so nothing composed. Now the child grows correctly and only the slide distance is left short.\n\nCause: Layer.movedTree applies a group's own motions, then recurses and applies each child's motions to the already-magnified child. MotionProperty.applied for .position writes `moved.frame.origin + (point - authored.frame.origin)`, and `point` is stated in the child's ORIGINAL coordinates, so the delta is never multiplied by the magnification an ancestor has already applied. SVGMotionExport nests translate inside scale (MotionProperty.nestingOrder), where the outer scale does multiply it. Likely fix: thread the accumulated magnification down through movedTree and multiply a position delta by it.\n\nThe probe, run as Tests/PhotonzCoreTests/ZZNestTests.swift (deleted after; paste it back to re-run): a 10pt rectangle child at (0,0) with a .position motion from (0,0) to (20,0), inside a group at (0,0,100,100) with a .scale motion pinned at 200%, then `group.movedTree(toMotionTimeMS: 999, cycleMS: 1000)`.\n\nRan with: Scripts/test.sh --filter ZZNest\nPrinted:\n  ZZNEST dot frame in a group doubled: (19.98, 0.0, 20.0, 20.0)\n\nThe size is right (10 -> 20). The x is 19.98 where it should be about 40.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-16T20:48:20.570Z",
       "note": "left rough: the Motion rows say nothing about being inside something that grows, so you type 20 and the piece moves 40 with no hint why. It is in the audit for the user to react to rather than filed, because whether a row should show the magnified distance is a question about what the panel should SAY, not a defect."
+    },
+    {
+      "t": "2026-09-16T20:48:29.470Z",
+      "note": "A piece told to slide inside an icon that grows now travels the grown distance: 20pt of slide inside a group at 200% moves it 40pt, matching what the exported file does in a browser. The magnification is threaded down Layer.movedTree and multiplies the two lengths a motion states in points, a position delta and a stroke width. Verified by seven tests written first and failing on the old code, including a pixel-level one that measures where the ink lands through the real composite path, plus Scripts/test.sh green at 7766 tests. Audit: queue/audits/2026-09-16-nested-motion-distance.json. No walk could run: the screen was locked all task."
     }
   ],
-  "started": "2026-09-16T20:38:56.099Z"
+  "started": "2026-09-16T20:38:56.099Z",
+  "completed": "2026-09-16T20:48:29.471Z"
 }

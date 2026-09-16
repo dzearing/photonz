@@ -415,9 +415,50 @@ extension EditorState {
         canTurnLayersIntoPath(ids: actionableLayerIDs)
     }
 
+    /// Whether the command applies, from EITHER half of it: a shape with an
+    /// outline to find, or two outlines already drawn that could weld.
+    ///
+    /// The second half is what somebody working with the PEN gets. Two runs
+    /// drawn end to end are the ordinary way an icon outline gets built, and
+    /// until this the menu offered them nothing at all, because the gate asked
+    /// only whether something still had to be turned.
+    ///
+    /// It does NOT ask whether their ends actually meet. Working that out means
+    /// planning the whole join on every menu open, and a row dimmed because two
+    /// points are three apart teaches nobody what to do about it. Offered and
+    /// honest beats dimmed and silent: when nothing welds, the line under the
+    /// canvas names the gap (`PathEditHint.nothingJoined`).
     private func canTurnLayersIntoPath(ids: Set<UUID>) -> Bool {
         guard Experiments.shared.turnIntoPathEnabled, let document else { return false }
-        return ids.contains { document.layer(id: $0)?.canTurnIntoPath == true }
+        if ids.contains(where: { document.layer(id: $0)?.canTurnIntoPath == true }) { return true }
+        return document.openPathsThatCouldJoin(ids: ids).count >= 2
+    }
+
+    /// What the row says from a layer ROW's menu.
+    func turnIntoPathMenuItem(id: UUID) -> String {
+        turnIntoPathMenuItem(ids: rowMenuTargets(id))
+    }
+
+    /// What the Layer menu's row says for what is picked right now.
+    var turnSelectionIntoPathMenuItem: String {
+        turnIntoPathMenuItem(ids: actionableLayerIDs)
+    }
+
+    /// One command, retitled for what is picked: "Turn Into Path" while
+    /// something still has to be turned, "Join Paths" when everything that can
+    /// take part is already an outline.
+    ///
+    /// A second menu row running the same code would put a bare Join two rows
+    /// away from Combine Shapes's own Join, which adds AREAS and refuses an
+    /// open path outright. One row that says what it will do to THIS selection
+    /// is both shorter and truer, and with nothing picked it still reads Turn
+    /// Into Path, so the row stays somewhere you can learn it exists.
+    private func turnIntoPathMenuItem(ids: Set<UUID>) -> String {
+        guard let document,
+              !ids.contains(where: { document.layer(id: $0)?.canTurnIntoPath == true }),
+              document.openPathsThatCouldJoin(ids: ids).count >= 2
+        else { return TurnIntoPathPrompt.menuItem }
+        return PathJoin.menuItem
     }
 
     /// The layer row menu's Turn Into Path, on the whole selection when the row
@@ -447,27 +488,39 @@ extension EditorState {
     func turnLayersIntoPath(ids: Set<UUID>) {
         guard Experiments.shared.turnIntoPathEnabled, let document, !ids.isEmpty else { return }
         let plan = document.turningLayersIntoPath(ids: ids).plan
-        guard !plan.isEmpty else { return }
+        guard !plan.isEmpty else {
+            // The join was offered on two outlines and found no two ends near
+            // enough. Nothing changes, and rather than going quiet the line
+            // under the canvas names the gap and what to do about it: that is
+            // the price of offering the command without planning it first.
+            if document.openPathsThatCouldJoin(ids: ids).count >= 2 {
+                turnedIntoPathNotice = PathEditHint.nothingJoined()
+            }
+            return
+        }
 
-        // One shape asks the question it has always asked, word for word.
-        if plan.takes == 1 {
+        // One shape asks the question it has always asked, word for word. Only
+        // a SHAPE: an outline that closed on its own also takes one layer, and
+        // it has no rectangle or oval to name.
+        if plan.takes == 1, plan.converted == 1 {
             guard let only = ids.first(where: { document.layer(id: $0)?.canTurnIntoPath == true }),
                   let layer = document.layer(id: only),
                   let prompt = TurnIntoPathPrompt(layer: layer) else { return }
             askBeforeTurningIntoPath(title: prompt.title, message: prompt.message,
                                      confirm: prompt.confirm, cancel: prompt.cancel,
-                                     ids: [only])
+                                     ids: [only], joinOnly: false)
             return
         }
         let question = TurnIntoPathQuestion(plan: plan)
         askBeforeTurningIntoPath(title: question.title, message: question.message,
-                                 confirm: question.confirm, cancel: question.cancel, ids: ids)
+                                 confirm: question.confirm, cancel: question.cancel,
+                                 ids: ids, joinOnly: plan.isJoinOnly)
     }
 
     private func askBeforeTurningIntoPath(title: String, message: String, confirm: String,
-                                          cancel: String, ids: Set<UUID>) {
+                                          cancel: String, ids: Set<UUID>, joinOnly: Bool) {
         guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
-            applyTurnIntoPath(ids: ids)
+            applyTurnIntoPath(ids: ids, joinOnly: joinOnly)
             return
         }
         let alert = NSAlert()
@@ -482,7 +535,7 @@ extension EditorState {
                 Self.silencedQuestions.silence(.turnIntoPath)
             }
             guard response == .alertFirstButtonReturn else { return }
-            self?.applyTurnIntoPath(ids: ids)
+            self?.applyTurnIntoPath(ids: ids, joinOnly: joinOnly)
         }
         if let window = hostWindow {
             alert.beginSheetModal(for: window) { response in
@@ -499,7 +552,7 @@ extension EditorState {
     /// Everything that was welded into another layer is gone by now, so the
     /// selection is rebuilt from the rows that are still there rather than from
     /// the ids that went in.
-    private func applyTurnIntoPath(ids: Set<UUID>) {
+    private func applyTurnIntoPath(ids: Set<UUID>, joinOnly: Bool) {
         discardDragPreview()
         perform { $0.turnLayersIntoPath(ids: ids) }
         guard let document else { return }
@@ -510,7 +563,9 @@ extension EditorState {
         // ...and the chip under the canvas says what just happened, in one
         // line, so the second time somebody uses this (with the question
         // silenced) the row does not quietly change kind with nothing said.
-        turnedIntoPathNotice = PathEditHint.justTurned(paths: alive.count)
+        turnedIntoPathNotice = joinOnly
+            ? PathEditHint.justJoined(paths: alive.count)
+            : PathEditHint.justTurned(paths: alive.count)
     }
 
     // MARK: - Two shapes become one (join, cut out, keep or drop the overlap)

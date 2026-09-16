@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T19:43:21.132Z",
-  "updated": "2026-09-16T12:23:34.506Z",
+  "updated": "2026-09-16T21:10:06.543Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-15 while building 'several-shapes-turn-into-one-path-joined-where-t'. The geometry is already done and tested: PathJoin.join in Sources/PhotonzCore/PathJoining.swift welds any list of PathContent, and PhotonzDocument.turningLayersIntoPath(ids:) already ADMITS open path layers as participants. What blocks it is only the gate: EditorState.canTurnLayersIntoPath(ids:) in Sources/Photonz/EditorState+LayerOps.swift requires at least one picked layer to still be a shape (layer.canTurnIntoPath), so two paths picked together offer no command at all. Reproduced by reading that gate and by the passing test 'An open path already on the canvas joins onto a line picked with it' in Tests/PhotonzCoreTests/PathJoiningTests.swift, which only passes because a LINE is in the selection. The open question is the NAME: Turn Into Path reads wrong over things that are already paths, and Illustrator calls this Join. Whoever takes it should settle the name first, and note that Photoshop and Illustrator both put Join on Command J, which is already New Layer via Copy here.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-09-16T12:23:34.505Z",
       "note": "seq 2730 -> 270"
+    },
+    {
+      "t": "2026-09-16T21:00:08.621Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T21:01:20.064624Z",
+      "note": "Adversarial review before building. The mock-free question here is the NAME, and the note says settle it first. Three candidates: (a) a new top-level command called Join, (b) folding it into Combine Shapes, (c) letting the ONE command retitle itself for what is picked. (b) is out on its own terms: Combine Shapes is area work, PathCombining.swift refuses open paths outright, and PathJoining.swift's own header says joining ends and combining areas only share the word. (a) adds a second row that runs the same code and puts a bare Join two rows under Combine Shapes > Join, which is the collision the note worried about. Taking (c): Layer > Turn Into Path... reads Join Paths... when nothing picked needs converting. One row, one sheet, one undo step, and the row still says Turn Into Path with nothing picked so it stays learnable."
+    },
+    {
+      "t": "2026-09-16T21:01:20.064624Z",
+      "note": "Second finding of the review: with two paths picked whose ends are nowhere near each other, a dimmed row teaches nothing. House style elsewhere is to dim (Combine Shapes does), but here the cheap fix is better: offer the command whenever two or more open sibling paths are picked, and when nothing welds, change nothing and say why under the canvas, naming the 2 pt gap. A command that quietly does nothing is the clumsy version."
+    },
+    {
+      "t": "2026-09-16T21:01:20.064624Z",
+      "note": "Third: TurnIntoPathQuestion's copy is written for shapes throughout - 'Turn both shapes into one path?' and 'They stop being shapes, so the controls only a shape has go.' Both are false over two paths, so the plan needs to carry how many actually converted and the copy has to branch on it. Also found while reading PathJoin.Run.changedAnything: a single open path whose own two ends are within tolerance CLOSES by itself, so takes can be 1 with nothing converted, and the singular-shape prompt must not be reached in that case."
+    },
+    {
+      "t": "2026-09-16T21:10:06.403Z",
+      "note": "Built. Core: PhotonzDocument.openPathsThatCouldJoin(ids:) is the second half of the gate, TurnIntoPathPlan.converted / isJoinOnly tell a join from a turn, TurnIntoPathQuestion grew join wording and a Join Paths button, PathJoin.menuItem is 'Join Paths…', PathEditHint.justJoined and .nothingJoined are the lines under the canvas. App: EditorState+LayerOps gate now accepts two open sibling paths, turnIntoPathMenuItem retitles the ONE row, and a join that welds nothing shows the gap instead of going quiet; LayerCommandMenu and EditorCommands read the retitled row. 12 new tests in Tests/PhotonzCoreTests/PathJoiningTests.swift, whole suite green at 7793."
+    },
+    {
+      "t": "2026-09-16T21:10:06.449Z",
+      "note": "Could not run the walk: the Mac's screen was locked for this whole task. Scripts/playtest.sh Scripts/playtest/join-two-pen-paths-walk.json reported status 'locked', 0 steps, twice, so there are no pictures at all and the app half is verified by build and by reading rather than by use. The walk is written and parses (85 steps). Folded into the open p1 'an-audit-gets-a-real-picture-of-the-app-again'."
+    },
+    {
+      "t": "2026-09-16T21:10:06.495Z",
+      "note": "left rough: no keyboard shortcut for the join. Photoshop and Illustrator both put Join on Command J, which here is New Layer via Copy, so nothing was displaced and nothing was taken; not worth a task until somebody asks for it."
+    },
+    {
+      "t": "2026-09-16T21:10:06.542Z",
+      "note": "filed: 'an-outline-you-already-finished-can-be-closed' (p2, icon-vector). Closing a finished outline is half built by accident here and deliberately unreachable, and somebody building an icon hits it."
     }
-  ]
+  ],
+  "started": "2026-09-16T21:00:08.620Z"
 }

@@ -34,6 +34,29 @@ public enum PathJoin {
     /// meet EXACTLY, and those weld without anything moving at all.
     public static let tolerance: CGFloat = 2
 
+    /// The tolerance written the way a sentence says it, so the question, the
+    /// line under the canvas and the arithmetic cannot drift apart.
+    public static func toleranceText(_ value: CGFloat = PathJoin.tolerance) -> String {
+        let rounded = (value * 100).rounded() / 100
+        let text = rounded == rounded.rounded()
+            ? String(Int(rounded)) : String(format: "%g", Double(rounded))
+        return "\(text) pt"
+    }
+
+    /// What the menu row says when everything picked is ALREADY an outline, so
+    /// there is nothing to turn and the whole of the command is the weld.
+    ///
+    /// It is the same row as "Turn Into Path", retitled for what is picked,
+    /// rather than a second command running the same code: `Turn Into Path` on
+    /// two lines and `Join Paths` on two paths are one operation and one undo
+    /// step. The word is Illustrator's, and the ellipsis is the macOS promise
+    /// that a question comes next.
+    ///
+    /// It is deliberately NOT the bare "Join" that lives under Combine Shapes:
+    /// that one adds AREAS and refuses an open path outright, and two commands
+    /// a menu apart both called Join would be the worst of both.
+    public static let menuItem = "Join Paths\u{2026}"
+
     /// One outline that came out of a join.
     public struct Run: Hashable, Sendable {
         /// The outline itself, in whatever space the paths were handed over in.
@@ -305,13 +328,19 @@ public struct TurnIntoPathPlan: Hashable, Sendable {
     /// with free ends that could meet. Two rectangles have none, so a sentence
     /// about their ends not meeting would be nonsense.
     public var openRuns: Int = 0
+    /// How many of the picked layers were SHAPES that had to become outlines
+    /// first. Zero when everything picked was already a path, which is the
+    /// whole difference between the two halves of this command: nothing stops
+    /// being a rectangle, so nothing invisible is taken away and every sentence
+    /// about shapes is false.
+    public var converted: Int = 0
     /// How many picked layers were swallowed by another. Working detail; the
     /// question reads `takes` and `leaves`.
     var absorbed: Int = 0
 
     public init(takes: Int = 0, leaves: Int = 0, closed: Int = 0,
                 pulledTogether: Int = 0, mixedLooks: Bool = false, keeper: String = "",
-                openRuns: Int = 0) {
+                openRuns: Int = 0, converted: Int = -1) {
         self.takes = takes
         self.leaves = leaves
         self.closed = closed
@@ -319,6 +348,9 @@ public struct TurnIntoPathPlan: Hashable, Sendable {
         self.mixedLooks = mixedLooks
         self.keeper = keeper
         self.openRuns = openRuns
+        // Unsaid means "the shapes this used to be about", so every plan built
+        // by hand in a test keeps the wording it had.
+        self.converted = converted < 0 ? takes : converted
     }
 
     /// Whether the command would do anything at all.
@@ -326,9 +358,43 @@ public struct TurnIntoPathPlan: Hashable, Sendable {
 
     /// Whether any two of the picked shapes would become one.
     public var joinsAnything: Bool { leaves < takes }
+
+    /// Whether nothing had to be turned: everything that took part was already
+    /// an outline, so this is a JOIN and says so in its own words.
+    public var isJoinOnly: Bool { takes > 0 && converted == 0 }
 }
 
 extension PhotonzDocument {
+
+    /// The picked layers that are ALREADY open outlines and have at least one
+    /// other picked alongside them in the same list, so a weld has something to
+    /// try.
+    ///
+    /// This is what lets somebody who drew with the PEN use the command at all.
+    /// The turn half needs a shape to turn, and two paths have none, so without
+    /// this the menu offered nothing to exactly the people the Pen is for.
+    ///
+    /// Cheap on purpose: a menu asks it every time it opens, so it counts
+    /// candidates and never walks their geometry. Whether any two ends actually
+    /// meet is the plan's business (`turningLayersIntoPath(ids:)`), and the
+    /// command is offered either way: a weld that finds nothing says so under
+    /// the canvas, which teaches the tolerance, where a dimmed row teaches
+    /// nothing.
+    ///
+    /// The filter is the join's own: closed outlines have no free ends, a
+    /// locked layer is never swallowed, and a rotated or flipped one is not
+    /// where its anchors say it is.
+    public func openPathsThatCouldJoin(ids: Set<UUID>) -> Set<UUID> {
+        var byParent: [[Int]: [UUID]] = [:]
+        for id in ids {
+            guard let candidate = layer(id: id), let outline = candidate.path,
+                  !outline.isClosed, outline.anchors.count >= 2,
+                  !candidate.isLocked, candidate.transform.isIdentity,
+                  let slot = path(of: id) else { continue }
+            byParent[Array(slot.dropLast()), default: []].append(id)
+        }
+        return Set(byParent.values.lazy.filter { $0.count >= 2 }.joined())
+    }
 
     /// The document as "Turn Into Path" would leave it, with the plan that says
     /// what happened.
@@ -380,6 +446,7 @@ extension PhotonzDocument {
         for id in inOrder where layer(id: id)?.canTurnIntoPath == true {
             next.turnLayerIntoPath(id: id)
             plan.takes += 1
+            plan.converted += 1
         }
 
         // Everything picked that is now an OPEN outline can take part in a
@@ -515,28 +582,40 @@ public struct TurnIntoPathQuestion: Hashable, Sendable {
     }
 
     /// "both shapes", "these 3 shapes" — the same rule `CrowdWords` follows,
-    /// because nobody says "these 2 shapes".
+    /// because nobody says "these 2 shapes". It says PATHS when nothing picked
+    /// had to be turned, because calling an outline a shape is how somebody
+    /// working with the Pen learns not to trust the sentence.
     private var subject: String {
-        plan.takes == 2 ? "both shapes" : "these \(plan.takes) shapes"
+        let noun = plan.isJoinOnly ? "paths" : "shapes"
+        return plan.takes == 2 ? "both \(noun)" : "these \(plan.takes) \(noun)"
     }
 
-    private var gap: String {
-        let rounded = (tolerance * 100).rounded() / 100
-        let text = rounded == rounded.rounded()
-            ? String(Int(rounded)) : String(format: "%g", Double(rounded))
-        return "\(text) pt"
-    }
+    private var gap: String { PathJoin.toleranceText(tolerance) }
 
     public var title: String {
-        plan.leaves == 1
-            ? "Turn \(subject) into one path?"
-            : "Turn \(subject) into \(plan.leaves) paths?"
+        guard plan.isJoinOnly else {
+            return plan.leaves == 1
+                ? "Turn \(subject) into one path?"
+                : "Turn \(subject) into \(plan.leaves) paths?"
+        }
+        // One outline whose own two ends came near enough to meet: nothing is
+        // joining onto anything, it is closing on itself, and saying "join both
+        // paths" over one path would be a lie you could see on the canvas.
+        if plan.takes == 1 { return "Close this path?" }
+        return plan.leaves == 1
+            ? "Join \(subject) into one?"
+            : "Join \(subject) into \(plan.leaves) paths?"
     }
 
     /// What you gain, then what happens to the ends, then what it costs, then
     /// the way back. The gain is what you came for and the rest is what you
     /// could not have known.
     public var message: String {
+        // Everything picked was already an outline, so the gain is not that its
+        // points become yours — they always were — and nothing stops being a
+        // shape. What is left is only what the canvas cannot show: what welds,
+        // what closes, and whose look survives.
+        guard !plan.isJoinOnly else { return joinMessage }
         var parts = ["Every point on them becomes yours to move, curve or delete."]
         if plan.leaves == 1 {
             parts.append("Their ends meet, so they join into one outline.")
@@ -551,6 +630,43 @@ public struct TurnIntoPathQuestion: Hashable, Sendable {
             // so there is nothing to say about ends meeting.
             parts.append("Each becomes its own path.")
         }
+        parts.append(contentsOf: endsAndInsides)
+        if plan.mixedLooks, !plan.keeper.isEmpty {
+            parts.append("They are not all painted alike, so the joined outline takes "
+                + "\u{201C}\(plan.keeper)\u{201D}\u{2019}s colour and line.")
+        }
+        parts.append("They stop being shapes, so the controls only a shape has go.")
+        parts.append("Undo puts it back.")
+        return parts.joined(separator: " ")
+    }
+
+    /// The same question over outlines that are already outlines.
+    private var joinMessage: String {
+        var parts: [String] = []
+        if plan.takes > 1 {
+            if plan.leaves == 1 {
+                parts.append("Their ends meet, so they become one outline.")
+            } else if plan.joinsAnything {
+                parts.append("The ones whose ends meet become one outline, "
+                    + "and the rest stay as they are.")
+            } else {
+                parts.append("No two of their ends are within \(gap) of each other, "
+                    + "so they stay separate outlines.")
+            }
+        }
+        parts.append(contentsOf: endsAndInsides)
+        if plan.mixedLooks, !plan.keeper.isEmpty {
+            parts.append("They are not all painted alike, so the joined outline takes "
+                + "\u{201C}\(plan.keeper)\u{201D}\u{2019}s colour and line.")
+        }
+        parts.append("Undo puts it back.")
+        return parts.joined(separator: " ")
+    }
+
+    /// The sentences about ends pulled together and outlines that closed, which
+    /// read the same whether anything had to be turned first.
+    private var endsAndInsides: [String] {
+        var parts: [String] = []
         if plan.pulledTogether == 1 {
             parts.append("One pair of ends was near rather than touching, "
                 + "within \(gap), and has been pulled together.")
@@ -567,15 +683,14 @@ public struct TurnIntoPathQuestion: Hashable, Sendable {
             parts.append("\(plan.closed) of them come back to where they started, "
                 + "so they close and you can paint inside them.")
         }
-        if plan.mixedLooks, !plan.keeper.isEmpty {
-            parts.append("They are not all painted alike, so the joined outline takes "
-                + "\u{201C}\(plan.keeper)\u{201D}\u{2019}s colour and line.")
-        }
-        parts.append("They stop being shapes, so the controls only a shape has go.")
-        parts.append("Undo puts it back.")
-        return parts.joined(separator: " ")
+        return parts
     }
 
-    public var confirm: String { TurnIntoPathPrompt(name: "", subject: .rectangle).confirm }
+    /// The button carries the verb, so somebody reading only the buttons still
+    /// knows which one does the thing — and which thing.
+    public var confirm: String {
+        guard plan.isJoinOnly else { return TurnIntoPathPrompt(name: "", subject: .rectangle).confirm }
+        return plan.takes == 1 ? "Close Path" : "Join Paths"
+    }
     public var cancel: String { "Cancel" }
 }

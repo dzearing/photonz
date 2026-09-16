@@ -1,0 +1,28 @@
+{
+  "id": "an-outline-you-already-finished-can-be-closed",
+  "title": "An outline you already finished can be closed",
+  "goal": "Draw an outline with the Pen, stop before the last point, and there is no way to close it afterwards. The Pen closes a path only while you are still drawing it, by clicking back on the first point; the moment you press Return you have an open run forever, so it can never be filled. Someone building an icon is exactly the person who finishes an outline, looks at it, and then wants it shut.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2820,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T21:10:01.166Z",
+  "updated": "2026-09-16T21:10:01.169Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-16 finishing two-paths-you-drew-with-the-pen-can-be-joined-in. Half of this already exists by accident: PathJoin.Run.changedAnything is true for a single run that closed on itself, so PhotonzDocument.turningLayersIntoPath can hand back a plan with takes 1 and converted 0, and TurnIntoPathQuestion now words that case as \"Close this path?\" with a \"Close Path\" button (Sources/PhotonzCore/PathJoining.swift). It is unreachable on purpose: EditorState.canTurnLayersIntoPath requires TWO open sibling paths via PhotonzDocument.openPathsThatCouldJoin, so a single path picked on its own offers nothing, and even picked with another it only closes when its own two ends are already within PathJoin.tolerance (2 pt). What is missing is a real Close Path over one selected open outline that joins the ends however far apart they are. Note the Pen already refuses to close a run that encloses no area; the same refusal applies here.",
+  "acceptance": [
+    "Picking one open path and asking to close it gives a closed outline that can be filled, in one undo step",
+    "The command is on the same menus as the other path commands and says what it will do before it does it",
+    "An outline that would enclose nothing is refused with a line saying why, the same refusal the Pen already gives while drawing",
+    "Closing an outline whose two ends are apart joins them with a straight run rather than moving either end"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T21:10:01.168Z",
+      "note": "created (manual)"
+    }
+  ]
+}

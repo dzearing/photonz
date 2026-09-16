@@ -477,3 +477,184 @@ struct TurnIntoPathClosedShapesTests {
         #expect(TurnIntoPathQuestion(plan: plan).message.contains("within 2 pt"))
     }
 }
+
+/// Two outlines drawn with the PEN, picked together, become one
+/// (`PathJoining.swift`, the join half of the command). The geometry is the
+/// same weld three lines get; what is new is that nothing has to be converted
+/// first, so the command calls itself Join Paths and says so in its own words.
+@Suite("Joining paths already on the canvas")
+struct PathJoinOfferTests {
+
+    private let a = CGPoint(x: 100, y: 40)
+    private let b = CGPoint(x: 180, y: 180)
+    private let c = CGPoint(x: 20, y: 180)
+
+    private func run(_ from: CGPoint, _ to: CGPoint,
+                     colorHex: String = "#FF3B30", width: CGFloat = 4) -> PathContent {
+        var path = PathContent.line(from: from, to: to)
+        path.paint = Paint(hex: colorHex)
+        path.strokeWidth = width
+        path.fill = nil
+        return path
+    }
+
+    /// A path layer the way the Pen leaves one: an open run of two anchors,
+    /// framed where it sits.
+    private func drawn(_ from: CGPoint, _ to: CGPoint) -> Layer {
+        PathBuilder.layer(run(from, to), at: CGPoint(x: min(from.x, to.x), y: min(from.y, to.y)))
+    }
+
+    private func documentOfTwoPenPaths() -> (PhotonzDocument, [Layer]) {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        let paths = [drawn(a, b), drawn(b, c)]
+        for path in paths { document.addLayer(path) }
+        return (document, paths)
+    }
+
+    // MARK: What the command is offered on
+
+    @Test("Two paths drawn with the Pen are enough to offer the join")
+    func twoPenPathsAreOffered() {
+        let (document, paths) = documentOfTwoPenPaths()
+        #expect(document.openPathsThatCouldJoin(ids: Set(paths.map(\.id))).count == 2)
+    }
+
+    @Test("One path picked on its own is not offered the join")
+    func onePathIsNotOffered() {
+        let (document, paths) = documentOfTwoPenPaths()
+        #expect(document.openPathsThatCouldJoin(ids: [paths[0].id]).isEmpty)
+    }
+
+    @Test("A locked path and a closed path are left out of the offer")
+    func lockedAndClosedAreLeftOut() {
+        var (document, paths) = documentOfTwoPenPaths()
+        document.updateLayer(id: paths[0].id) { $0.isLocked = true }
+        #expect(document.openPathsThatCouldJoin(ids: Set(paths.map(\.id))).isEmpty)
+
+        var closed = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        var ringContent = PathContent.line(from: a, to: b)
+        ringContent.isClosed = true
+        let ring = PathBuilder.layer(ringContent, at: .zero)
+        closed.addLayer(ring)
+        let other = drawn(b, c)
+        closed.addLayer(other)
+        #expect(closed.openPathsThatCouldJoin(ids: [ring.id, other.id]).isEmpty)
+    }
+
+    // MARK: What it does
+
+    @Test("Two paths whose ends meet weld into one, with nothing converted")
+    func twoPenPathsWeld() throws {
+        var (document, paths) = documentOfTwoPenPaths()
+        let plan = document.turnLayersIntoPath(ids: Set(paths.map(\.id)))
+        #expect(document.layers.count == 1)
+        let outline = try #require(document.layers.first?.path)
+        #expect(outline.anchors.count == 3)
+        #expect(!outline.isClosed)
+        #expect(plan.takes == 2)
+        #expect(plan.leaves == 1)
+        #expect(plan.converted == 0)
+        #expect(plan.isJoinOnly)
+    }
+
+    @Test("Three pen paths that come back to the start close into one filled outline")
+    func threePenPathsClose() throws {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        let paths = [drawn(a, b), drawn(b, c), drawn(c, a)]
+        for path in paths { document.addLayer(path) }
+        let plan = document.turnLayersIntoPath(ids: Set(paths.map(\.id)))
+        #expect(document.layers.count == 1)
+        let outline = try #require(document.layers.first?.path)
+        #expect(outline.isClosed)
+        #expect(outline.enclosesAnArea)
+        #expect(plan.takes == 3)
+        #expect(plan.leaves == 1)
+        #expect(plan.closed == 1)
+        #expect(plan.converted == 0)
+    }
+
+    @Test("Ends within the tolerance are pulled together, further apart are left alone")
+    func theToleranceIsTheSameOne() {
+        var near = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        let first = drawn(a, b)
+        let second = drawn(CGPoint(x: b.x + 1.5, y: b.y), c)
+        near.addLayer(first)
+        near.addLayer(second)
+        let joined = near.turnLayersIntoPath(ids: [first.id, second.id])
+        #expect(joined.leaves == 1)
+        #expect(joined.pulledTogether == 1)
+
+        var far = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        let one = drawn(a, b)
+        let two = drawn(CGPoint(x: b.x + 40, y: b.y), c)
+        far.addLayer(one)
+        far.addLayer(two)
+        let nothing = far.turnLayersIntoPath(ids: [one.id, two.id])
+        #expect(nothing.isEmpty)
+        #expect(far.layers.count == 2)
+    }
+
+    @Test("Joining two pen paths is ONE undo step that puts both back as they were")
+    func undoPutsBothPathsBack() throws {
+        let (document, paths) = documentOfTwoPenPaths()
+        var history = History(document: document)
+        _ = history.perform { $0.turnLayersIntoPath(ids: Set(paths.map(\.id))) }
+        #expect(history.current.layers.count == 1)
+        history.undo()
+        #expect(history.current.layers.count == 2)
+        for path in paths {
+            let back = try #require(history.current.layer(id: path.id))
+            #expect(back.path == path.path)
+            #expect(back.frame == path.frame)
+        }
+    }
+
+    // MARK: What it says
+
+    @Test("The question over paths says join, not turn, and never says they stop being shapes")
+    func theQuestionSpeaksOfPaths() {
+        let both = TurnIntoPathQuestion(plan: TurnIntoPathPlan(takes: 2, leaves: 1, converted: 0))
+        #expect(both.title == "Join both paths into one?")
+        #expect(both.confirm == "Join Paths")
+        #expect(!both.message.contains("stop being shapes"))
+        #expect(both.message.contains("Their ends meet"))
+        #expect(both.message.contains("Undo puts it back."))
+
+        let three = TurnIntoPathQuestion(plan: TurnIntoPathPlan(takes: 3, leaves: 1, closed: 1,
+                                                                converted: 0))
+        #expect(three.title == "Join these 3 paths into one?")
+        #expect(three.message.contains("you can paint inside it"))
+
+        let some = TurnIntoPathQuestion(plan: TurnIntoPathPlan(takes: 4, leaves: 2, converted: 0))
+        #expect(some.title == "Join these 4 paths into 2 paths?")
+    }
+
+    @Test("A selection with a shape in it still asks the turn question, word for word")
+    func aShapeInTheSelectionKeepsTheOldQuestion() {
+        let mixed = TurnIntoPathQuestion(plan: TurnIntoPathPlan(takes: 2, leaves: 1, converted: 1))
+        #expect(mixed.title == "Turn both shapes into one path?")
+        #expect(mixed.confirm == "Turn Into Path")
+        #expect(mixed.message.contains("stop being shapes"))
+    }
+
+    @Test("A path that comes back to its own start is offered as a close, not a join")
+    func aSelfClosingPathAsksToClose() {
+        let alone = TurnIntoPathQuestion(plan: TurnIntoPathPlan(takes: 1, leaves: 1, closed: 1,
+                                                               converted: 0))
+        #expect(alone.title == "Close this path?")
+        #expect(alone.confirm == "Close Path")
+    }
+
+    @Test("The line under the canvas says joined, and says why when nothing did")
+    func theNoticeSaysWhatHappened() {
+        #expect(PathEditHint.justJoined(paths: 1).hasPrefix("Joined into one path."))
+        #expect(PathEditHint.justJoined(paths: 1).contains("separate paths back"))
+        #expect(PathEditHint.nothingJoined().contains("2 pt"))
+        #expect(PathEditHint.nothingJoined().hasPrefix("Nothing joined"))
+    }
+
+    @Test("The join names itself on the menu without the word shapes in it")
+    func theMenuRowIsNamed() {
+        #expect(PathJoin.menuItem == "Join Paths\u{2026}")
+    }
+}

@@ -468,8 +468,13 @@ struct EditorCommands: Commands {
                 // On the whole selection, like Duplicate and Delete: picking
                 // three lines that meet and asking for a path gives you ONE
                 // path, welded where their ends meet (`PathJoining.swift`).
-                Button(TurnIntoPathPrompt.menuItem) { editor?.turnSelectionIntoPath() }
-                    .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
+                // ...and picking two outlines already drawn with the PEN
+                // welds those, which is the same command: the row retitles
+                // itself Join Paths when nothing picked has to be turned first.
+                Button(editor?.turnSelectionIntoPathMenuItem ?? TurnIntoPathPrompt.menuItem) {
+                    editor?.turnSelectionIntoPath()
+                }
+                .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
             }
             // Two shapes become one (`PathCombining.swift`). A submenu rather
             // than four rows in the Layer menu, because they are one idea with

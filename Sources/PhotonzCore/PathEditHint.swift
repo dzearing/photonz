@@ -87,6 +87,31 @@ public enum PathEditHint {
             + "or Command Z to put the shape back."
     }
 
+    /// The same line when nothing had to be turned, because everything picked
+    /// was already an outline: two runs drawn with the Pen welded into one.
+    ///
+    /// Its own wording rather than `justTurned`'s, because "Turned into a path"
+    /// over two things that were already paths says nothing happened, and the
+    /// way back is to the SEPARATE paths rather than to a shape.
+    public static func justJoined(paths: Int) -> String {
+        let what = paths <= 1 ? "one path" : "\(paths) paths"
+        return "Joined into \(what). Drag any point to reshape it, "
+            + "or Command Z to put the separate paths back."
+    }
+
+    /// The line when the join was offered, was asked for, and found nothing to
+    /// weld.
+    ///
+    /// The command is offered on any two open outlines picked together rather
+    /// than only on ones that would actually meet, because a dimmed row teaches
+    /// nobody what "meet" means. This is the other half of that bargain: it
+    /// changes nothing, and it names the gap and the way to close it, so the
+    /// second try works.
+    public static func nothingJoined(gap: CGFloat = PathJoin.tolerance) -> String {
+        "Nothing joined: no two ends are within \(PathJoin.toleranceText(gap)) of each other. "
+            + "Drag an end onto another to bring them together."
+    }
+
     /// The line for a path with `picked` of its points selected, and `anchor`
     /// the one point picked where there is exactly one.
     ///

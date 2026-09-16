@@ -726,6 +726,51 @@ It is the same "Don't ask again" the one-shape question carries, because it is
 the same command. Silenced, nothing is announced — which the app's own bar for
 asking allows, since a join is VISIBLE the instant after: three rows became one.
 
+### Two paths drawn with the Pen join the same way
+
+The Pen is the tool for somebody building an outline out of pieces, and until
+this it was the one tool this command refused. The gate asked whether anything
+picked still had to be TURNED, and two paths have nothing to turn, so two runs
+drawn end to end offered no command at all while two LINES drawn on top of them
+offered the weld. `PhotonzDocument.openPathsThatCouldJoin(ids:)` is the second
+half of the gate: two or more picked outlines that are open, unlocked,
+untransformed and siblings.
+
+**It is one command, retitled for what is picked**, not a second one running the
+same code. The row reads `Turn Into Path…` while something still has to be
+turned and `Join Paths…` when nothing does, in the Layer menu and in a layer
+row's own menu, and with nothing picked it reads `Turn Into Path…` so the row
+stays somewhere you can learn it exists. A separate `Join` would sit two rows
+from Combine Shapes' own `Join`, which adds AREAS and refuses an open path
+outright, and two commands a menu apart wearing one word is exactly the
+conflation the section above warns about.
+
+The question loses every sentence that was about shapes, because none of them
+are true any more: nothing stops being a rectangle, and the points were already
+yours to move.
+
+> **Join both paths into one?**
+> Their ends meet, so they become one outline. Undo puts it back.
+
+`TurnIntoPathPlan.converted` is what tells the two apart — how many picked
+layers were shapes that had to become outlines first — and `isJoinOnly` is that
+count being zero. The button says `Join Paths`, and the line under the canvas
+afterwards is `PathEditHint.justJoined`: "Joined into one path", with the way
+back naming the SEPARATE paths rather than a shape.
+
+**Offered without being planned first.** The gate counts candidates; it does not
+work out whether any two ends are actually within the tolerance, because that
+means planning the whole join on every menu open. So the command can be asked
+for and find nothing, and when it does it changes nothing and says why:
+`PathEditHint.nothingJoined` names the 2 pt gap and tells you to drag one end
+onto another. A row dimmed because two points are three apart teaches nobody
+what "meet" means; this teaches it at the moment somebody wants to know.
+
+One outline whose OWN two ends came within the tolerance closes by itself
+(`PathJoin.Run.changedAnything`), so the command can take a single layer with
+nothing converted. That case asks **Close this path?** rather than pretending
+two paths are joining, and confirms with `Close Path`.
+
 ## Two shapes become one
 
 Most icons are not drawn point by point, they are built. A circle with a smaller
