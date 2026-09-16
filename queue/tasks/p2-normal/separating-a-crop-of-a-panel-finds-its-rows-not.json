@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:17:18.212Z",
-  "updated": "2026-09-16T12:23:33.490Z",
+  "updated": "2026-09-16T12:28:48.128Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED with the bench on a real capture, not read. /tmp/separate-bench/inspector-dark.png is a 602x704 2x crop of this app's inspector panel.\n\n  PHOTONZ_SEPARATE_BENCH=/tmp/separate-bench/inspector-dark.png Scripts/test.sh -c release --filter SeparateBench\n  BENCH inspector-dark.png | 602 x 704 (0.4 MP) at 2x | 10 runs, 3 boxes, 10 left (10 unclear, 0 crowded out)\n\nThree boxes out of a panel with a dozen rows in it. Diagnosed: BoxSweep.islands() drops any island touching the picture edge (the comment is \"the frame cut it in half, so its real shape is not in the picture and the app does not guess it\"), and in a crop of a panel the rows and cards run to the left and right edges. The biggest thing thrown away measured 439x307 of a 602x704 picture.\n\nThe rule is deliberate and documented (docs/design/separate-into-layers.md, The boxes, step 3) so it was left alone by the task that made dark windows work at all (separate-finds-the-boxes-in-a-dark-window-too-no, done 2026-09-16). The open question is what a cut piece should come back AS: its real corners are off the picture, so a rounded card would come back square. That is a look-at-it question before it is a code question.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-16T12:23:33.489Z",
       "note": "seq 2830 -> 40"
+    },
+    {
+      "t": "2026-09-16T12:28:48.127Z",
+      "note": "Partly moved already, by separate-finds-the-boxes-in-a-dark-window-too-no. A piece the frame cut is still never OFFERED, but if it is big and full of holes it is now read as scenery, so things sitting on it do come out. Measured: a card running off the right edge with a row on it used to give zero boxes and now gives the row, and the space the row leaves repairs to the card's own colour at 0/255 off (Tests/PhotonzRenderTests/SeparateIntoLayersFixtureTests.swift, aCardTheFrameCutStaysInThePictureButTheRowOnItComesOut). The dark inspector crop moved 0 -> 3 boxes on the same change, so the three you are looking at are the new floor, not the old one. What is still open is exactly your acceptance item 3: a cut piece whose own shape is unknowable."
     }
   ]
 }
