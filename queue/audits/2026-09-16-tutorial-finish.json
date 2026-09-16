@@ -1,0 +1,30 @@
+{
+  "feature": "A finished guide leaves you ready to work",
+  "epic": "ui-building",
+  "summary": "A guided tutorial no longer ends by vanishing. The last Done swaps the step card for a card in the middle of the guide's own window that names what just finished, says the picture in this window is practice rather than your work, and offers the ways on: the next guide on the track, or an empty window to start your own picture in. Working a whole track back to back now leaves one practice window rather than one per guide.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on. Help menu, Tutorials, or the first run offer: all three end the same way.",
+  "try": [
+    { "do": "Open Help, Tutorials, Take the Tour." },
+    { "do": "Press Next through every step until the button reads Done, then press Done." },
+    { "do": "Read the card that comes up instead of the callout vanishing.", "shot": "2026-09-16-tutorial-finish-card-offscreen.png" },
+    { "do": "Press Next: Your first capture, and watch where it opens." },
+    { "do": "Come back and start Help, Tutorials, Measure a gap. Run it to the end, this time placing the measurement it asks for." },
+    { "do": "On its card, press Start your own picture, and look at how many windows called Tutorial Sample are left." },
+    { "do": "Run Measure a gap again, press Done straight away without touching the picture, and press Start your own picture again. Count the windows this time." },
+    { "do": "Run it once more and press Close on the card instead." }
+  ],
+  "evaluate": [
+    "Does the card tell you what happened without you having to work it out, or does it read as one more step of the guide?",
+    "Is Next: <the next guide> the row you would want first, or would you rather be sent to your own work every time?",
+    "Does calling the window a practice picture land, or does it sound like the app hedging?",
+    "The sample window is taken away when you changed nothing in it and kept when you drew on it. Is that the split you expected, or should it always ask?",
+    "Ending a guide puts a card over the middle of the picture you were just being taught on. Is that in the way?"
+  ],
+  "rough": [
+    "Not one walk could be run for this task: the Mac's screen was locked from the first minute to the last, so every walk reported locked and none of them ran, including the two new ones. There are no screenshots of the app here at all. The picture attached is an offscreen render of the card on its own, drawn by a standalone script, NOT a photograph of the running app, and a sweep has been asked for so the walks run as soon as the screen is unlocked.",
+    "The first row is the default one, so Return presses it, but the card is a floating panel that never takes key, exactly like the step card it replaces. Whether Return really reaches it in a real window is one of the things the sweep will settle.",
+    "The card sits dead centre over the picture and cannot be dragged. Close or Esc takes it down, but until then it covers the middle of the sample somebody may want to keep poking at.",
+    "The mock said nothing about the end of a guide. Two of the three options in the task were dropped: closing the sample window on Done swaps being parked in a sample for being parked in nothing on the first run path, and a per-guide last step about opening your own picture means new copy in all 37 guides and still leaves the window up.",
+    "A second guide on a track now teaches in the window the last one left, drawings and all. That reads as one lesson carrying on, but it does mean the Redlining track's second guide opens on a screen that already has a measurement on it."
+  ]
+}

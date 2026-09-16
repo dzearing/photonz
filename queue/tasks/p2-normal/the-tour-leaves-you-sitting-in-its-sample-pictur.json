@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 420,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T00:04:44.042Z",
-  "updated": "2026-09-15T12:14:53.733Z",
+  "updated": "2026-09-16T08:57:31.364Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12 with Scripts/playtest/tutorial-tour-walk.json (last step, stage 7-finished): pressing Done on the last step closes the callout and leaves the Tutorial Sample window up, untouched. Confirmed again from the first run path in Scripts/playtest/first-run-walk.json, where the sample window is the FIRST window a new person ever sees, so there is nothing behind it to fall back to.\n\nThis is the end of the guide rather than the start of it, so it belongs to the framework (Sources/Photonz/Tutorials/TutorialController.swift, the finish path) rather than to the first run offer. Options worth weighing: closing the sample window on finish, offering the empty editor onboarding card inside it, or ending on a last step that points at how to open your own picture. Whichever it is, it must behave the same whether the guide was started from Help, from the Tutorials window, or from the first run offer.",
@@ -49,6 +49,31 @@
     {
       "t": "2026-09-15T12:14:53.732Z",
       "note": "seq 380 -> 420"
+    },
+    {
+      "t": "2026-09-16T08:43:29.075Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T08:46:05.229Z",
+      "note": "Adversarial review before building. Walked the finish as a first-time person: press Done on the last step, the callout vanishes with no animation and no words, and you are alone in a window called Tutorial Sample holding a made-up settings screen. Nothing says whether it is yours, whether there is more, or where your own picture goes. Weighed the three options in the notes. Closing the sample window on Done is wrong twice over: on the first-run path there is nothing behind it, so it swaps being parked in a sample for being parked in nothing, and it would throw away anything you poked at, which acceptance 2 forbids. Ending on a per-guide last step that points at how to open your own picture means writing new copy into all 37 guides and STILL leaves the sample window up, so it does not answer the complaint. Building the shortest thing that answers it: the guide does not vanish on Done, it swaps the step card for a finish card in the same plate, centred in the guide's own window, saying what just finished, that this window holds a practice picture rather than your work, and offering the two things worth doing. Cut as decorative: any celebration, any summary of what you learned, any rating. Cut as unearned: a third choice when two will do."
+    },
+    {
+      "t": "2026-09-16T08:57:31.229Z",
+      "note": "Built and committed (d8241d04). What landed: TutorialFinish in PhotonzCore (which guide comes next, when a window is practice, every word on the card) with 13 tests; TutorialFinishCardView and a rewritten finish path in TutorialController, so Done swaps the step card for a finish card in the middle of the guide's own window instead of tearing everything down; TutorialLauncher's window map keyed by TutorialSample rather than by guide id, which is the whole of acceptance 5; TutorialHost.isTutorialSampleWindow so the card only offers to move somebody on from a window a guide opened for itself. Walk plumbing: tutorialFinished condition, three tutorialFinish* actions, and a new expectWindows step that counts the windows wearing a title, plus two new walks and updated tour and measure-a-gap walks. Scripts/test.sh green, 7538 tests."
+    },
+    {
+      "t": "2026-09-16T08:57:31.271Z",
+      "note": "NOT VERIFIED BY WALK. The Mac's screen was locked from the first minute of this task to the last: every run of Scripts/playtest.sh reported status locked and exited without running a step, so acceptance items 1, 3, 4 and 5 are argued from code and unit tests rather than shown. A sweep has been requested with that reason on it. What WAS verified without a screen: the two new walks parse (the probe read tutorial-finish-walk.json as 28 steps before it refused to run), the probe builds with the harness changes, and the card's layout was rendered offscreen with an ImageRenderer script in both themes."
+    },
+    {
+      "t": "2026-09-16T08:57:31.315Z",
+      "note": "Second adversarial review, on the built thing. Found and fixed three things. One: the card's rows were drawn with the empty editor's .buttonStyle(.borderless) and SwiftUI refuses to draw that into an offscreen render, so every row came back as a yellow bar with a no-entry sign through it, which is exactly what the loop gets handed on a machine that cannot photograph the screen; .plain draws the same and renders, and the rows now carry their own hover highlight so nothing is lost. Two: expectWindows matched titles exactly, and Next writes its own name into every window title, so every claim about Tutorial Sample would have failed against Tutorial Sample (Next); it now ignores a trailing badge. Three: starting your own picture closed the sample before the new window existed, which takes the app to no windows for a beat and hands focus to whatever was behind it; the close is now one turn later."
+    },
+    {
+      "t": "2026-09-16T08:57:31.363Z",
+      "note": "Left rough, none of it earning a task: whether Return really reaches the card's default row in a real window is unverified and the sweep will settle it, so there is nothing reproduced to file; the card sits dead centre over the sample and cannot be dragged, which is a judgment the user can make from the audit line rather than a defect; a second guide on a track now opens on the window the last one left, drawings and all, which is the deliberate reading of acceptance 5 over a stricter reading of acceptance 6 (a Tutorial Sample window is the practice window, never a window somebody was working in)."
     }
-  ]
+  ],
+  "started": "2026-09-16T08:43:29.074Z"
 }
