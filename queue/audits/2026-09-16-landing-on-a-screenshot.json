@@ -1,0 +1,46 @@
+{
+  "feature": "See where a point will land on a screenshot too",
+  "epic": "icon-grid",
+  "summary": "On a plain screenshot with no grid on, the drawing tools have always pulled the first point of a shape onto a border they found in the picture, and you only found out after you pressed. Now a small ring sits on that border while you are still hovering, and it stays away when nothing is near enough to catch.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"See where a point will land before you press\" and it is on by default in Next. Open any screenshot and leave the grid off.",
+  "try": [
+    {
+      "do": "Press R for the rectangle and move slowly over a flat, empty part of the picture. No ring: the press would land under your pointer.",
+      "shot": "2026-09-16-landing-on-a-screenshot-1-nothing-to-say-sc.png"
+    },
+    {
+      "do": "Move close to a border or a line of text. A ring appears ON that line, off to one side of your pointer.",
+      "shot": "2026-09-16-landing-on-a-screenshot-2-on-a-border-sc.png"
+    },
+    {
+      "do": "Move away from it again and watch the ring go, rather than follow you."
+    },
+    {
+      "do": "Hold Command and move back: still no ring, because Command means exactly where the pointer is."
+    },
+    {
+      "do": "Press A for the arrow and hover the same spot: the same ring on the same line."
+    },
+    {
+      "do": "Drag a box out starting from where the ring was showing, and check its corner landed inside the ring.",
+      "shot": "2026-09-16-landing-on-a-screenshot-3-the-box-landed-there-sc.png"
+    },
+    {
+      "do": "Zoom to 100% and hover near the same line: the magnet reaches half as far, so the ring only appears closer in."
+    }
+  ],
+  "evaluate": [
+    "The ring can sit a dozen points from your pointer at half zoom, because that is how far the magnet reaches there. Does seeing that read as help, or as the tool taking over?",
+    "Near text the ring catches cap tops and baselines as well as container edges. When you are drawing a box, is a text line something you want to land on?",
+    "On a busy capture, does the ring appear often enough to be useful and rarely enough not to become noise?",
+    "Is the ring easy enough to see over a light card? It is the system accent colour with a white hairline outside it.",
+    "Command is the way to refuse it. Would you ever want a switch that turns border snapping off for drawing altogether, the way Snap to grid does for the grid?"
+  ],
+  "rough": [
+    "The reason this was not built with the grid case, written down in the last audit, was wrong. It said asking the picture's borders costs about 2.4ms a mouse move on a 2560 by 1600 screenshot. That number came from `swift test`, which builds UNOPTIMIZED; every app bundle is built by Scripts/build-app.sh, which is `swift build -c release`. The same measurement in release is 17.5 microseconds, about a tenth of a percent of a frame. So there was no cost and nothing to optimise: the gate simply came off. The cost test now carries a per-configuration ceiling so the two builds can never be confused again.",
+    "THE PICTURES WERE TAKEN WITH THE MAC'S SCREEN LOCKED. Walks refuse to run in that state, so this one was forced with the harness's own override (PHOTONZ_ALLOW_LOCKED_WALK=1). The window really was drawn and photographed, so these are real captures, and this walk uses no control names at all, which is the one thing a locked screen takes away. Even so, by the repo's rule a locked run is not a pass. A full sweep has been asked for and will run it properly once the screen is unlocked.",
+    "The Pen is deliberately left out. It has no border magnets at all: its landing knows the grid, the 45 degree constraint and its own anchors, and nothing about the picture underneath. So with the grid off the Pen still puts its point exactly under the pointer, and a ring would have nothing to say.",
+    "Nothing about the magnet itself changed. The same borders caught the same way before this; the only difference is that you can see it coming. If a pull feels wrong in the ring, it was already wrong in the press.",
+    "The ring does not say WHICH line it caught. While a shape is being drawn a caught border lights up in yellow; hovering draws only the ring, sitting on the line it means. Lighting the line on hover as well may be better and may be too much."
+  ]
+}

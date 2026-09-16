@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/landing-on-a-screenshot-walk",
+  "seed": "With the grid on, a ring says where a press would put the first point. On a plain screenshot with no grid the same tools still pull that first point onto a border they found in the picture, and until now you only found out after you pressed. This walks a real capture with no grid on at all.",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 30 },
+    { "do": "describe", "stage": "a-capture-with-no-grid", "note": "a real 1440x960 screenshot opened at half zoom, grid off, Snap to grid never touched: the only lines here are the ones the app found in the picture" },
+
+    { "do": "move", "at": [700, 560] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "empty-ground-is-not-marked", "note": "out in the flat middle of the pane with no border within reach: a press lands under the pointer, so nothing is drawn. This is the half that keeps the ring from riding the cursor saying nothing" },
+    { "do": "snapshot", "name": "screenshot-landing-1-nothing-to-say" },
+
+    { "do": "move", "at": [104, 560] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [105, 572], "within": 1 },
+    { "do": "describe", "stage": "a-border-in-the-picture-is-marked", "note": "the pointer is at 104,560 and the ring is at 105,572: a border found in the picture has the first point, twelve points from the hand, and you can see that before you press instead of after" },
+    { "do": "snapshot", "name": "screenshot-landing-2-on-a-border" },
+
+    { "do": "move", "at": [104, 560], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "absent": true },
+    { "do": "describe", "stage": "command-takes-the-mark-away", "note": "Command means exactly where the pointer is, here as everywhere else on this canvas, so there is no ring claiming otherwise" },
+
+    { "do": "move", "at": [104, 500] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [110, 504], "within": 1 },
+    { "do": "describe", "stage": "both-axes-catch", "note": "near a corner of the picture's own structure both axes catch, and the ring sits on the crossing at 110,504 rather than on either line alone" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "move", "at": [104, 560] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [105, 572], "within": 1 },
+    { "do": "describe", "stage": "the-arrow-aims-the-same-way", "note": "the same ring on the same border under the arrow tool: aiming is one rule across the drawing tools rather than one tool's feature" },
+
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "drag", "from": [104, 560], "to": [420, 700] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectBox", "layer": "Rectangle", "at": [105, 572], "within": 1 },
+    { "do": "describe", "stage": "the-mark-was-not-lying", "note": "a box dragged out from the very point the ring was last read at: its corner landed on 105,572, exactly where the ring said it would. The ring and the press ask the same question of the same code" },
+    { "do": "snapshot", "name": "screenshot-landing-3-the-box-landed-there" },
+    { "do": "render", "name": "screenshot-landing-4-final-render" }
+  ]
+}

@@ -43,6 +43,21 @@ public enum EdgeSnapping {
             self.gridX = gridX
             self.gridY = gridY
         }
+
+        /// Whether a LINE decided where this point sits, rather than the hand.
+        ///
+        /// True when any of the four lines caught: a border found in the
+        /// picture, a guide somebody pinned, or a line of the canvas grid on
+        /// either axis. False when the point is simply where the pointer was,
+        /// rounded to whole pixels.
+        ///
+        /// This is the question the aiming ring asks (`CanvasDrawLanding`): a
+        /// mark is worth drawing exactly when a press would move the point
+        /// somewhere the pointer is not, and a ring that followed the cursor
+        /// around saying "here" would be chrome that never carries news.
+        public var isPlaced: Bool {
+            guideX != nil || guideY != nil || gridX != nil || gridY != nil
+        }
     }
 
     /// Extra snap lines the caller supplies alongside the detected edges:

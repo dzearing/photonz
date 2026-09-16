@@ -10,12 +10,16 @@ import Testing
 // fraction of a frame". A frame is 16ms and a mouse move arrives at most every
 // 8ms, so anything into the hundreds of microseconds is already too much.
 //
-// The mark is only ever asked with the grid pulling, and that gate is not
-// arithmetic tidiness, it is this file: asking the picture's own borders costs
-// milliseconds on a big screenshot however few borders are in it, because
-// `EdgeMap.verticalEdges` builds and scans a profile the full width of the
-// picture on every call. The two ceilings below are the cases the gate leaves
-// on the hover path, and the third measurement is the one it keeps off it.
+// WHICH BUILD THE NUMBER CAME FROM IS THE WHOLE STORY HERE. This file used to
+// say the mark had to be gated on the grid, because asking the picture's own
+// borders cost about 2.4ms a mouse move on a 2560 by 1600 screenshot. That
+// reading was taken by `swift test`, which builds unoptimized, and every app
+// bundle is built by `Scripts/build-app.sh`, which is `swift build -c release`.
+// The same measurement in release is about 17 microseconds. So there was never
+// a cost to gate on, the gate came off (`CanvasDrawLanding`), and the ceilings
+// below are written per configuration so the difference can never be mistaken
+// for a finding again: `release` carries the real ceiling, `debug` a loose one
+// that only catches a tenfold regression.
 //
 // Read on the thread's own CPU clock, fastest of a run, so a test machine
 // sharing cores with a build cannot turn a healthy number into a failure. The
@@ -23,6 +27,16 @@ import Testing
 // inside every round as well: see `relativeGap` for why a ceiling on one number
 // survives a busy machine when a gap between two separately measured ones does
 // not.
+
+/// What one hover frame may cost, in microseconds. The release number is the
+/// claim: a mouse move arrives at most every 8ms and this is a fraction of a
+/// percent of it. The debug number is not a claim about the product, only a
+/// tripwire on the unoptimized build the test suite runs in.
+#if DEBUG
+private let hoverFrameCeiling: Double = 25_000
+#else
+private let hoverFrameCeiling: Double = 200
+#endif
 
 private func threadCPUNow() -> Duration {
     var ts = timespec()
@@ -131,10 +145,10 @@ struct DrawLandingCostTests {
         }
     }
 
-    private func landing(_ p: CGPoint, edges: EdgeMap) -> CGPoint {
+    private func landing(_ p: CGPoint, edges: EdgeMap, gridSpacing: CGFloat? = 8) -> CGPoint {
         AnnotationSnapping.snap(p, shape: .rectangle, opposite: nil, edges: edges,
                                 zoom: 2, free: false, holding: .none, gridHolding: .none,
-                                gridSpacing: 8, gridOrigin: .zero,
+                                gridSpacing: gridSpacing, gridOrigin: .zero,
                                 gridAxes: .columnsAndRows, guides: Self.guides).point
     }
 
@@ -149,6 +163,21 @@ struct DrawLandingCostTests {
         }
         #expect(sink != CGPoint(x: -1, y: -1))
         #expect(each < 100)
+    }
+
+    @Test func aimingOverAScreenshotWithNoGridCostsAFractionOfAFrame() {
+        // The case this task added: a plain 2560 by 1600 capture, no grid
+        // pulling, the rectangle tool hovering. Every move asks the picture's
+        // borders, which is the query that was once thought too expensive to
+        // put on the hover path.
+        let points = probes(64)
+        var sink = CGPoint.zero
+        let each = fastest("no grid, hovering over a 2560x1600 screenshot",
+                           calls: 40, each: points.count) {
+            for p in points { sink = self.landing(p, edges: Self.busyEdges, gridSpacing: nil) }
+        }
+        #expect(sink != CGPoint(x: -1, y: -1))
+        #expect(each < hoverFrameCeiling)
     }
 
     @Test func thePenCostsAlmostNothing() {
@@ -171,14 +200,14 @@ struct DrawLandingCostTests {
         #expect(each < 100)
     }
 
-    @Test func aGridOverALargeScreenshotPaysForTheBorderQuery() {
-        // The expensive case, and the reason the mark is gated on the grid:
-        // with the grid on OVER a 2560 by 1600 screenshot, every hover move
-        // asks the picture's borders too. The ceiling here is deliberately
-        // loose, because the number is not this feature's to fix — it belongs
-        // to `EdgeMap`, which every annotation drag and every measure hover
-        // already pays. It is here so the number is written down, and so a
-        // tenfold regression in that shared query is caught by something.
+    @Test func whatABorderQueryCostsIsThePictureSizeNotItsContents() {
+        // A grid ON TOP of a 2560 by 1600 screenshot: the heaviest hover there
+        // is, since every move asks the grid and the picture's borders both.
+        // The fact recorded here is that the two pictures cost the same, which
+        // is what says the price is `EdgeMap` scanning a profile the full width
+        // of the picture rather than anything to do with how much was found in
+        // it. Worth keeping because a change that made the cost track the
+        // number of borders would be a real regression on a busy capture.
         let points = probes(64)
         var sink = CGPoint.zero
         let (gap, dense) = relativeGap(
@@ -190,6 +219,6 @@ struct DrawLandingCostTests {
         // Within a whisker of each other: the cost is the picture's WIDTH, not
         // what is drawn on it. That is the fact worth recording.
         #expect(gap < 0.5)
-        #expect(dense < 25_000)
+        #expect(dense < hoverFrameCeiling)
     }
 }

@@ -16,6 +16,13 @@ import SwiftUI
 // — rather than working the landing out a second way. A mark computed
 // separately would eventually disagree with the press, and a mark that lies is
 // worse than no mark.
+//
+// It is drawn whenever a LINE places the point rather than the hand, which is a
+// grid crossing, a guide somebody pinned, or a border found in the picture
+// (`EdgeSnapping.Snap.isPlaced`). The picture's own borders were left out at
+// first on a cost worry, and the worry turned out to be a measurement of an
+// unoptimized build: in the build that ships, one hover frame over a 2560 by
+// 1600 screenshot costs about 17 microseconds. See `DrawLandingCostTests`.
 
 extension CanvasNSView {
 
@@ -73,10 +80,12 @@ extension CanvasNSView {
     /// - ⌘ is held. The point lands exactly under the pointer, which is what ⌘
     ///   means everywhere on this canvas, and the cursor is already sitting
     ///   there saying so.
-    /// - The grid is not pulling: switched off, Snap to grid off, or zoomed out
-    ///   past the point where any line is far enough apart to aim at. A press
-    ///   then lands under the pointer, and a ring that followed the cursor
-    ///   around saying "here" would be chrome that never carries news.
+    /// - No line would place the point: no grid pulling, no guide pinned near,
+    ///   and no border found in the picture within reach. A press then lands
+    ///   under the pointer, and a ring that followed the cursor around saying
+    ///   "here" would be chrome that never carries news. That test is
+    ///   `EdgeSnapping.Snap.isPlaced`, asked of the very snap the press will
+    ///   ask.
     /// - The Pen is aimed at an anchor it already drew, to close or finish the
     ///   path. `penTargetLayer` rings that anchor already, and two rings on one
     ///   point is not clearer than one.
@@ -88,44 +97,42 @@ extension CanvasNSView {
         else { return nil }
         let free = pointerModifiers.contains(.command)
         guard !free else { return nil }
-        // Asked BEFORE the snap rather than after it, and this is the whole
-        // reason the mark is a grid feature rather than a general one. Asking
-        // the snap means asking `EdgeSnapping`, and that query walks a profile
-        // the full width of the picture: on a 2560 by 1600 screenshot it costs
-        // about 2.4ms whatever is in it (`DrawLandingCostTests`). Paying that
-        // on every hover frame, for a mark that on a plain screenshot would sit
-        // under the pointer doing nothing most of the time, is not a trade
-        // worth making. With the grid pulling the mark always has something to
-        // say, and the query is asked in full so a border that beats the grid
-        // is still what gets marked.
-        guard canvasSnapSpacing != nil else { return nil }
         let pointer = viewport.documentPoint(fromView: hoverPoint)
-        let landed: CGPoint
         if tool == .pen {
+            // The Pen is the one drawing tool with no border magnets at all:
+            // `PenSession.landing` knows the grid, the 45 degree constraint and
+            // its own anchors, and nothing about the picture underneath. So it
+            // has something to aim at exactly when the grid is pulling.
+            guard canvasSnapSpacing != nil else { return nil }
             let aim = penSession.landing(at: pointer,
                                          constrained: pointerModifiers.contains(.shift),
                                          breaking: pointerModifiers.contains(.option),
                                          zoom: viewport.zoom)
             guard !aim.isOnAnExistingAnchor else { return nil }
-            landed = aim.point
-        } else {
-            // The same question the press asks, with the same memory the press
-            // starts with: `mouseDown` calls `resetDrawSnapMemory()` before it
-            // snaps, so a draw opens standing on nothing and the hover has to
-            // ask standing on nothing too.
-            landed = AnnotationSnapping.snap(pointer, shape: tool.annotationShape,
-                                             opposite: nil, edges: edgeMap,
-                                             zoom: viewport.zoom, free: false,
-                                             holding: .none, gridHolding: .none,
-                                             gridSpacing: canvasSnapSpacing,
-                                             gridOrigin: canvasSnapOrigin,
-                                             gridAxes: canvasSnapAxes,
-                                             guides: canvasSnapGuides).point
+            return aim.point
         }
+        // The same question the press asks, with the same memory the press
+        // starts with: `mouseDown` calls `resetDrawSnapMemory()` before it
+        // snaps, so a draw opens standing on nothing and the hover has to ask
+        // standing on nothing too.
+        let snap = AnnotationSnapping.snap(pointer, shape: tool.annotationShape,
+                                           opposite: nil, edges: edgeMap,
+                                           zoom: viewport.zoom, free: false,
+                                           holding: .none, gridHolding: .none,
+                                           gridSpacing: canvasSnapSpacing,
+                                           gridOrigin: canvasSnapOrigin,
+                                           gridAxes: canvasSnapAxes,
+                                           guides: canvasSnapGuides)
+        // A line has to have placed the point for there to be news: a grid
+        // crossing, a pinned guide, or a border found in the picture. On a
+        // plain screenshot with nothing in reach the press lands under the
+        // pointer, and the ring stays away rather than sitting there saying
+        // nothing.
+        guard snap.isPlaced else { return nil }
         // The mark stays even when the pointer is already dead on a crossing:
         // "you are on the line" is the answer, and a mark that blinked out
         // exactly when you got it right would be maddening.
-        return landed
+        return snap.point
     }
 
     /// The point marked on screen RIGHT NOW, for a scripted walk to read: the
