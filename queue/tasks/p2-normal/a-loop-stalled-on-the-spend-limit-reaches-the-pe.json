@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 190,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:20.316Z",
-  "updated": "2026-09-15T12:14:53.475Z",
+  "updated": "2026-09-16T02:40:43.593Z",
   "deps": [
     "a-runner-that-talks-about-the-spend-limit-is-not"
   ],
@@ -54,6 +54,36 @@
     {
       "t": "2026-09-15T12:14:53.474Z",
       "note": "seq 150 -> 190"
+    },
+    {
+      "t": "2026-09-16T02:26:11.945Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T02:40:27.534Z",
+      "note": "Built it. queue-lib.mjs advanceStall() decides WHEN somebody is disturbed (status.json gains a stall record: reason, since, notifiedAt, notices, attempts); recordRunnerExit returns notify + stallHours; queue.mjs runner-exit prints NOTIFY/STALLHOURS; go-loop.sh notify_person() decides WHAT IT SAYS and raises it with osascript, called from backoff_wait. Adversarial review before building: a notification per retry would have been 128 of them and worse than none, so the rule is once at the start plus once per day; a modal dialog would steal focus, and email needs config nobody has; a recovery ping teaches people to ignore the next one, so recovery is silent."
+    },
+    {
+      "t": "2026-09-16T02:40:27.577Z",
+      "note": "Proven two ways. failure-drill.sh scenario 6 runs the REAL loop three times over one sandbox queue: four refusals in a row raise exactly one notification naming the limit and the URL, the same stall aged 25h on status.json raises a second saying 'Still stopped 25h later', raising the limit sends nothing and clears the stall record, and the held-up task and digest then land. Plus advanceStall replayed against the actual 2026-09-09 stall (half-hourly for 62 hours) = 3 notices, 125 attempts. Every drill scenario now runs with a stand-in osascript on PATH so a drill can never reach the real Notification Center. All six scenarios pass; the other six queue drills and Scripts/test.sh (7303 tests) pass too."
+    },
+    {
+      "t": "2026-09-16T02:40:27.621Z",
+      "note": "Verified the notification really lands, not just that osascript exits 0: /usr/bin/log show over usernoted records 'Presenting <NotificationRecord app:com.apple.ScriptEditor2> as banner ([badge, sound, alert])' and 'Delivering ... to [.alert .lockScreen .notificationCenter]'. Lock-screen delivery matters here: a stall while the Mac is locked still reaches them. Screen capture is denied to this terminal so there is no picture of it; said so in the audit rough."
+    },
+    {
+      "t": "2026-09-16T02:40:27.665Z",
+      "note": "Fixed on the way, in scope because I needed the drill green: failure-drill.sh computed today's date with toISOString (UTC) while the loop names digests after date +%F (local), so scenarios 2, 3 and 5 failed every evening between 5pm Pacific and midnight on source that was fine. Reproduced on unmodified main with git stash before touching it. The loop's own regression check was broken seven hours a day."
+    },
+    {
+      "t": "2026-09-16T02:40:27.707Z",
+      "note": "left rough, not filed because I could not reproduce it and the bar says an unreproduced problem does not jump the queue: if the spend limit lands mid-task with exactly ONE ready task, that task is parked after three tries and the loop then idles quietly, so the first notification fires but the day-later one never does (nothing is retrying to notice). With two or more tasks the streak blames the environment, nothing is parked, and the daily notice works. Also in the audit rough."
+    },
+    {
+      "t": "2026-09-16T02:40:43.591Z",
+      "note": "The loop now raises a macOS notification when it stalls on a refusal only a person can clear: once at the start, once more per day it lasts, nothing on recovery. advanceStall in queue-lib.mjs decides when (stall record on status.json), notify_person in go-loop.sh decides what it says, called from backoff_wait. Proven by failure-drill.sh scenario 6 (three real loop runs: four refusals = one notification, the same stall a day later = a second saying how long, limit raised = silence and a cleared record) plus advanceStall replayed against the real 62-hour stall = 3 notices not 128. Delivery confirmed in the system log as a banner with sound to the alert, lock screen and Notification Center. Documented in queue/README.md. Also fixed the drill's UTC-vs-local date bug that failed three scenarios every evening. All 6 drill scenarios, the other 6 queue drills and Scripts/test.sh (7303 tests) pass. Audit: queue/audits/2026-09-15-loop-stall-notification.json. Commit 31903b4c, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-16T02:26:11.944Z",
+  "completed": "2026-09-16T02:40:43.592Z"
 }
