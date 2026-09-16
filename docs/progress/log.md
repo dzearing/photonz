@@ -16699,3 +16699,43 @@ unlocked.
 
 Next: the sweep, and whether a person wants to be TAKEN to those pieces rather
 than told about them (left rough, not filed).
+
+## 2026-09-16 — A text style dragged onto the picture now reaches it
+
+`CanvasNSView` registered `[.fileURL, ComponentDrag.pasteboardType]` and nothing
+else, while `CanvasDrop.takes` answered `[.textStyle, .component, .file]`. AppKit
+only sends a view dragging messages for the types it registered, and the only
+other drop over the canvas is `EditorView.swift:287`, an `onDrop` of
+`FileDrop.types`. So a saved style carried off the Library shelf onto the picture
+was offered to nobody: every answer the picture had ready, the outline, the
+sentence, the undo, was unreachable from a real pointer. The type was already
+declared in the app's Info.plist; the registration list was the only gap.
+
+**The reason nobody caught it is the more interesting half.** A walk cannot start
+a real drag session, so `dragTile` calls `draggingEntered` on the canvas by hand,
+which walks straight past the type gate AppKit puts in front of it.
+`text-style-drag-walk` and `style-on-a-copy-walk` were green against a canvas that
+could not hear them. So the gate is now put back: `PlaytestPanelDrag.canReceive`
+asks whether the destination is registered for what the tile carries, and
+`dragTile` checks it before driving the drop. It models AppKit rather than just
+shouting — an unregistered type IS a refusal, so a walk expecting the no-entry
+sign still passes, and it only fails when the walk expected the picture to take
+the drag or to say something about it. Adding a kind to `takes` without adding
+its type to the registration now fails a walk.
+
+Backing the one type out makes `text-style-drag-walk` fail at step 35 and
+`tutorial-text-styles-walk` at step 38, naming the missing type; putting it back
+runs all 62 steps green with nine real window captures. The other eight dragTile
+walks were run too and are unaffected.
+
+**The screen was locked the whole session again.** Everything above ran under
+`PHOTONZ_ALLOW_LOCKED_WALK=1`, which per `PlaytestScreenState` buys the run and
+not the verdict — four unrelated walks failed once on a control not being on
+screen and each passed on a rerun. The registration check is not a reading of
+layout, so it is the one claim a locked run can still make honestly. A sweep is
+requested.
+
+Next: a person still has to drag a style with a real pointer, which is what the
+audit asks for; and whether adding `.file` to the canvas registration wholesale
+would steal picture drags from the window-level drop is still an open question
+nobody needs answered yet.

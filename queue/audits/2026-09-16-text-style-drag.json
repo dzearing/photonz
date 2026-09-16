@@ -1,0 +1,29 @@
+{
+  "feature": "Dressing text by dragging a saved style onto it",
+  "epic": "ui-components",
+  "summary": "A saved text style carried off the Library shelf now actually reaches the picture. The picture had every answer ready for that drag and had never been told to listen for it, so under a real pointer the style landed on nothing.",
+  "setup": "Photonz Dev, Experiments window, release Next, with Colour styles and Colour drag both on. Needs a fresh dev build: the change is in the app binary.",
+  "try": [
+    { "do": "Make a text layer, type Sign in, and press Command Return." },
+    { "do": "Make a second text layer below it, type Create account, and press Command Return." },
+    { "do": "Pick the first heading, set its Font, Size and Weight, then choose Style then Save as Style and name it Heading." },
+    { "do": "Click empty canvas so nothing is picked, and open the Library on the Styles shelf." },
+    { "do": "Drag the Heading tile off the shelf and hold it over bare canvas: the picture should say Drop this on a piece of text and show the no-entry pointer." },
+    { "do": "Without letting go, move over the words Create account: the sentence should change to Sets this text in Heading and the words should be outlined.", "shot": "2026-09-16-text-style-drag-1.png" },
+    { "do": "Let go. The second heading should take the style.", "shot": "2026-09-16-text-style-drag-2.png" },
+    { "do": "Press Command Z once. The heading should go back to how it looked." }
+  ],
+  "evaluate": [
+    "Does the picture answer the moment the tile crosses into it, or is there a beat of nothing?",
+    "Is the sentence readable where it sits, or does the picture riding under the pointer cover it?",
+    "When the drop is refused, does the reason tell you what to do next rather than just saying no?",
+    "Dropping on text that already wears the style: does what it says feel right, or would you rather it just re-applied?",
+    "Is the outline around the words it would reach clear enough to aim by at a glance?"
+  ],
+  "rough": [
+    "The two pictures here are real captures of the window, but the run behind them was forced through with the screen locked, which buys the run and not the verdict. Four control-not-on-screen failures showed up in walks nothing here touched, and each one passed on the next run, which is what a locked screen does to layout.",
+    "The picture that rides under the pointer during a drag lives in the window server, so it is missing from these captures. The sentence and the outline are the parts a walk can photograph.",
+    "The drop was never reachable before today, which means nothing about how it FEELS has been judged by a person yet, only that it arrives.",
+    "Dragging a style onto text inside a copy of a component that is itself inside another copy is still refused. The refusal says what to do instead, but it is the one corner of this gesture that does not work."
+  ]
+}

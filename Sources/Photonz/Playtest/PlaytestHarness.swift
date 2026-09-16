@@ -5034,6 +5034,35 @@ private final class Run {
         let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "tile")
         let viewPoint = try self.viewPoint(at)
         let windowPoint = canvas.convert(viewPoint, to: nil)
+        // The gate AppKit puts in front of every drag, put back: a view is only
+        // told about the types it registered for, and calling the destination
+        // by hand walks straight past it. Without this a drop the picture
+        // answers beautifully, behind a registration list that never names its
+        // type, passes every walk and does nothing at all under a real pointer.
+        // That is exactly what a saved text style did until 2026-09-16.
+        //
+        // A type the picture never registered for is a REFUSAL, not an error:
+        // the pointer shows the no-entry sign, which is what a walk expecting
+        // one should see. It is only a failure when the walk expected the
+        // picture to take it, or to say something about it, because a picture
+        // that was never told has nothing to say.
+        if !PlaytestPanelDrag.canReceive(canvas, carrying: board) {
+            let carried = (board.types ?? []).map(\.rawValue).joined(separator: ", ")
+            let asked = canvas.registeredDraggedTypes.map(\.rawValue).joined(separator: ", ")
+            let why = "the picture never hears about the tile \"\(name)\": it carries \(carried), "
+                + "and the canvas only registered for \(asked), so under a real pointer AppKit "
+                + "would not deliver this drag to the canvas at all"
+            if expect == .takes {
+                throw Failure(description: why)
+            }
+            if let says {
+                throw Failure(description: "\(why), and the walk expected it to say \"\(says)\"")
+            }
+            note(number, "dragTile",
+                 "\"\(name)\" held over \(short(at.point)) \(at.space.rawValue): \(why)",
+                 state: describe())
+            return
+        }
         let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
         let entered = canvas.draggingEntered(info)
         var updated = entered

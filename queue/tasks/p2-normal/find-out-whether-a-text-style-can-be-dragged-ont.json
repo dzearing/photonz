@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 370,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T14:27:57.579Z",
-  "updated": "2026-09-15T12:14:53.677Z",
+  "updated": "2026-09-16T07:54:43.960Z",
   "deps": [],
   "blockedBy": [],
   "notes": "NOT REPRODUCED - filed as a question, not a bug, because the playtest harness cannot synthesise a real AppKit drag session (TextStyleDrag.playtestPasteboard exists precisely because of that), so there is no way for a runner to see the failure happen.\n\nThe code reason for the suspicion: Sources/Photonz/CanvasView.swift:1773 is the only registerForDraggedTypes call in the app and it registers [.fileURL, ComponentDrag.pasteboardType]. It does not register com.photonz.text-style. AppKit only delivers dragging messages to a view for types it registered, so CanvasNSView.draggingEntered may never fire for a style drag, and DragCargo would never get the chance to read it. The nearest enclosing SwiftUI drop is EditorView.swift:244, registered for FileDrop.types, which does not take that type either.\n\nEvery green walk here (text-style-drag-walk, style-on-a-copy-walk) calls trackTextStyleDrag / dropTextStyle on the view directly, so all of them would still pass with the registration missing.\n\nIf this is real, the fix is one type in the registration list, and the reason it was left out of one-place-decides-what-a-layer-row-and-the-canva is that widening that list also changes which OTHER drags reach the canvas: adding FileDrop.types wholesale would pull .image drags (a picture dragged out of a browser) away from the window-level drop that handles them today. So add the one type, not the whole list.",
@@ -42,6 +42,48 @@
     {
       "t": "2026-09-15T12:14:53.676Z",
       "note": "seq 330 -> 370"
+    },
+    {
+      "t": "2026-09-16T07:32:09.145Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T07:39:42.680Z",
+      "note": "CONFIRMED by reading the whole delivery path, not just the one line: CanvasView.swift registered [.fileURL, ComponentDrag.pasteboardType] and nothing else, while CanvasDrop.takes answers [.textStyle, .component, .file]. AppKit only sends a view dragging messages for types it registered, and the only other drop covering the canvas is EditorView.swift:287, an onDrop of FileDrop.types, which does not take com.photonz.text-style either. So a style dragged onto the picture by a real pointer was offered to nobody. The type IS declared in the app's Info.plist (build-app.sh even fails the build without it), so the registration list was the only missing link."
+    },
+    {
+      "t": "2026-09-16T07:39:42.722Z",
+      "note": "Fix: TextStyleDrag.pasteboardType added to the canvas registration, one type and not the whole family, for the reason in the task notes. Second and more important fix: Scripts' dragTile step now calls PlaytestPanelDrag.canReceive before it drives the canvas, so a walk fails when AppKit would never have delivered the drag. That is what makes this class of bug findable at all: before it, text-style-drag-walk and style-on-a-copy-walk passed green against a canvas that could not hear them."
+    },
+    {
+      "t": "2026-09-16T07:39:42.767Z",
+      "note": "NOT SEEN RUNNING. The Mac's screen was locked the whole session (CGSSessionScreenIsLocked = 1, checked three times over the run), so every walk reports status locked and exits 3 before a step runs. Scripts/test.sh is green (7496 tests, 600 suites) and swift build is clean, but neither touches this. A sweep is requested with the reason; it is the 38th pending, which is the lock backing up rather than anything wrong with the loop."
+    },
+    {
+      "t": "2026-09-16T07:39:42.810Z",
+      "note": "Adversarial review before building: the gesture earns its place because it aims at ONE piece of text without selecting it first, which the Style menu cannot do. The part that could have been decorative, the sentence drawn under the pointer, is the opposite: it is the only way a refusal explains itself, since a tooltip cannot show while a drag is in the air. Nothing was cut. Review after building could not be done on the real app for the lock reason above, so the audit says so in rough rather than claiming it."
+    },
+    {
+      "t": "2026-09-16T07:39:42.852Z",
+      "note": "left rough: one of three Scripts/test.sh runs this session reported 2 issues and the two either side of it were fully green, so something in the suite is timing-flaky. I did not capture which tests, so there is nothing reproducible to file; recording it here for whoever sees it twice."
+    },
+    {
+      "t": "2026-09-16T07:54:34.308Z",
+      "note": "REPRODUCED AND FIXED, with the walk as witness. docs/progress/log.md pointed at PHOTONZ_ALLOW_LOCKED_WALK=1, which runs a walk on a locked screen. With the registration backed out, text-style-drag-walk fails at step 35: 'the picture never hears about the tile \"Heading\": it carries com.photonz.text-style, and the canvas only registered for public.file-url, com.photonz.component-id'. With the one type added it runs all 62 steps green and takes 9 real window captures, one of which shows Create account outlined with the pill saying 'Sets this text in Heading.' tutorial-text-styles-walk fails and passes the same way."
+    },
+    {
+      "t": "2026-09-16T07:54:34.352Z",
+      "note": "The gate models AppKit rather than just shouting: a type the canvas never registered for is a REFUSAL, so a walk expecting the no-entry sign still passes, and it is only a failure when the walk expected the picture to take the drag or to say something about it. Checked it does not break the other 39 dragTile walks: dock-component-first, drop-into-open-group, row-drop-slot, starter-sizing, place-a-version, apply-to-versions, style-on-a-copy and colour-onto-a-layer-row all run their dragTile steps green (component tiles carry com.photonz.component-id, which was already registered, and a tile dragged onto a layer ROW goes down a different path that never touches the canvas)."
+    },
+    {
+      "t": "2026-09-16T07:54:34.396Z",
+      "note": "left rough: four walks failed once each with a control not on screen (text-style-walk and text-style-arming-walk on the Size menu, colour-out-of-any-style-walk and effect-style-walk on Add Effect, copies-share-knobs-walk on the Title field) and every one of them passed on another run of the same binary. That is the locked screen, which PlaytestScreenState already says buys the run and not the verdict, so there is nothing reproducible here to file. The sweep re-runs them once the Mac is unlocked."
+    },
+    {
+      "t": "2026-09-16T07:54:43.958Z",
+      "note": "It did not work, and now it does. The canvas never registered com.photonz.text-style, so AppKit delivered a style dragged onto the picture to nobody; one type added to registerForDraggedTypes in CanvasView.swift fixes it. The walk harness now enforces AppKit's type gate (PlaytestPanelDrag.canReceive + dragTile), which is what makes the bug visible: backing the fix out fails text-style-drag-walk at step 35 and tutorial-text-styles-walk at step 38, putting it back runs 62 steps green with nine real window captures. Eight other dragTile walks checked unaffected, Scripts/test.sh green. Audit: queue/audits/2026-09-16-text-style-drag.json. Not confirmed with a real pointer: no script can start an AppKit drag session, so the audit asks the user to do that one step."
     }
-  ]
+  ],
+  "started": "2026-09-16T07:32:09.144Z",
+  "completed": "2026-09-16T07:54:43.959Z"
 }

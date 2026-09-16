@@ -93,6 +93,18 @@ enum PlaytestPanelDrag {
         return board
     }
 
+    /// Whether AppKit would deliver this drag to this view at all.
+    ///
+    /// A view is only sent `draggingEntered` for the types it asked for with
+    /// `registerForDraggedTypes`. A walk that calls the destination's methods
+    /// by hand skips that gate, so a drop handler wired up perfectly behind a
+    /// registration list that never names its type passes every walk and does
+    /// nothing at all under a real pointer. Checking here puts the gate back.
+    static func canReceive(_ view: NSView, carrying board: NSPasteboard) -> Bool {
+        let carried = Set(board.types ?? [])
+        return !carried.isDisjoint(with: Set(view.registeredDraggedTypes))
+    }
+
     /// Every view a drag at this point is offered to, in the order AppKit
     /// offers them: the innermost destination first, then each of its
     /// ancestors that takes drops. A destination that answers "none" does not

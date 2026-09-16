@@ -1993,7 +1993,18 @@ final class CanvasNSView: NSView {
         cornerRadiusHandlesLayer.zPosition = 100
         snapDotLayer.zPosition = 100
 
-        registerForDraggedTypes([.fileURL, ComponentDrag.pasteboardType])
+        // Everything the picture can be handed, and nothing else. AppKit only
+        // sends a view dragging messages for the types named here, so a kind
+        // `CanvasDrop.takes` knows how to answer but this list leaves out is a
+        // drop the picture never even hears about: it was missing a saved text
+        // style until 2026-09-16, and every walk still passed because a walk
+        // calls the destination directly. Adding a kind to `takes` means adding
+        // its type here too. One type at a time, never a whole family: taking
+        // all of `FileDrop.types` would pull picture drags away from the
+        // window-level drop that handles them today.
+        registerForDraggedTypes([.fileURL,
+                                 ComponentDrag.pasteboardType,
+                                 TextStyleDrag.pasteboardType])
     }
 
     @available(*, unavailable)

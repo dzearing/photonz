@@ -4162,3 +4162,15 @@
 {"t":"2026-09-16T07:31:17.846Z","ev":"task_note","id":"find-out-whether-the-layers-list-should-show-the"}
 {"t":"2026-09-16T07:31:17.889Z","ev":"task_note","id":"find-out-whether-the-layers-list-should-show-the"}
 {"t":"2026-09-16T07:31:17.933Z","ev":"task_note","id":"find-out-whether-the-layers-list-should-show-the"}
+{"t":"2026-09-16T07:31:33.973Z","ev":"task_done","id":"find-out-whether-the-layers-list-should-show-the","from":"in_progress","note":"The line under the Layers list now reads \"4 layers selected, 2 inside a copy\" whenever the selection reaches pieces inside copies, and exactly what it always read otherwise. LayersSelectionSummary in PhotonzCore owns the words (10 tests, written first); LayersListView reads them and says them to a walk. Scripts/test.sh green (7496 tests). style-users-walk.json claims the sentence; the screen was locked all task so the run is a photograph rather than a verdict, and the pending sweep re-runs it. Audit: queue/audits/2026-09-16-layers-selection-copies.json"}
+{"t":"2026-09-16T07:32:09.041Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T07:32:09.147Z","ev":"task_started","id":"find-out-whether-a-text-style-can-be-dragged-ont","title":"Find out whether a text style can be dragged onto the picture at all","priority":"p2-normal"}
+{"t":"2026-09-16T07:39:42.682Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:39:42.724Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:39:42.769Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:39:42.812Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:39:42.854Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:54:34.310Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:54:34.354Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:54:34.398Z","ev":"task_note","id":"find-out-whether-a-text-style-can-be-dragged-ont"}
+{"t":"2026-09-16T07:54:43.961Z","ev":"task_done","id":"find-out-whether-a-text-style-can-be-dragged-ont","from":"in_progress","note":"It did not work, and now it does. The canvas never registered com.photonz.text-style, so AppKit delivered a style dragged onto the picture to nobody; one type added to registerForDraggedTypes in CanvasView.swift fixes it. The walk harness now enforces AppKit's type gate (PlaytestPanelDrag.canReceive + dragTile), which is what makes the bug visible: backing the fix out fails text-style-drag-walk at step 35 and tutorial-text-styles-walk at step 38, putting it back runs 62 steps green with nine real window captures. Eight other dragTile walks checked unaffected, Scripts/test.sh green. Audit: queue/audits/2026-09-16-text-style-drag.json. Not confirmed with a real pointer: no script can start an AppKit drag session, so the audit asks the user to do that one step."}
