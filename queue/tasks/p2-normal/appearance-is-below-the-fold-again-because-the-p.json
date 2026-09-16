@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-16T12:23:33.752Z",
+  "updated": "2026-09-16T16:48:40.944Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-16T12:23:33.751Z",
       "note": "seq 2850 -> 100"
+    },
+    {
+      "t": "2026-09-16T16:42:58.098Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T16:48:31.581Z",
+      "note": "MEASURED, before any change. The Mac's screen was locked for this whole turn, so no walk could run (every one exits 3 with status locked) and no picture was possible. Instead I read back the 3,334 recorded panel states that 185 walks left in /tmp/photonz-playtest earlier today. At a 1200x720 window the dock is 621pt, 609 shareable; Appearance or Effects was below the fold in 44% of states there, 50% at 781pt, and 12% even at the 969pt dock of the largest window this display opens. Worked cases at 1200x720: text 163+198+231+68=747 (over 126); arrow 163+447+68=765 (over 144); component copy 163+311+195+68=1102 (over 481); measurement 163+109+489+68=702 (over 81)."
+    },
+    {
+      "t": "2026-09-16T16:48:31.630Z",
+      "note": "ADVERSARIAL REVIEW, before building: the mock-equivalent here is the seven previous fixes, and they are wrong. All seven were ORDERING changes, and ordering only decides WHICH section is left below the fold, never how many points there are. The thing none of them knew is in the numbers above: Appearance is not a small form, it is the BIGGEST section in the dock. It is a list of the parts a thing is made of and every switched-on part unfolds all of its settings at once (PartsInspector -> ShapePartSettings), so an arrow is 447pt of it and a measurement 489pt. The tallest Appearance recorded all day is 669pt, which is MORE THAN THE WHOLE 621pt DOCK. DockMetrics.scrollingSections still classifies Appearance as a form, so it is the only one of the promised sections the height budget may never shorten. An eighth ordering fix would have walked something else back; I did not write one."
+    },
+    {
+      "t": "2026-09-16T16:48:31.675Z",
+      "note": "SHIPPED, mechanism-independent: acceptance item 3 (the rule written down where the next section is read against it). Sources/Photonz/InspectorDockLayout.swift now carries a third rule beside the two it already had about order and cast: a rule about HEIGHT, with the budget arithmetic, the four worked cases, the percentages and the two findings. It says a section may not be added, and an existing one may not grow, without naming which line of that table it spends from. That file is what every panel change reads first. swift build clean; Scripts/test.sh green, 7662 tests in 615 suites."
+    },
+    {
+      "t": "2026-09-16T16:48:31.723Z",
+      "note": "BLOCKED on a decision rather than guessing an eighth time. The three ways out are visibly different products and the arithmetic says no single one covers every case: (a) let the budget shorten Appearance, so the fold is guaranteed by construction and Appearance scrolls inside itself when it must - the only answer that cannot fail; (b) Appearance folds one part at a time like the Effects list, which fixes arrow and measurement but leaves text over by 15pt and a component copy by 93pt; (c) the layers list moves to a left dock, which hands back 163pt and fixes three of four but not a measurement. Recommended (a). Card and brief filed. Acceptance items 1, 2, 4-after and 5 are unverifiable this turn anyway: they all need a walk, and a walk needs an unlocked screen."
+    },
+    {
+      "t": "2026-09-16T16:48:31.770Z",
+      "note": "left rough, not filed: Appearance is declared a form in DockMetrics.scrollingSections while being a variable-length list of parts. That misclassification is the mechanical cause of everything above, but fixing it IS option (a), so it belongs to this task's decision and not to a task of its own. No audit written: nothing shipped that a person can try, so an audit would have had nothing to put in its try list and no picture to put beside it."
+    },
+    {
+      "t": "2026-09-16T16:48:40.942Z",
+      "note": "Measured and written down; the fix needs an answer. At 1200x720 the dock has 609pt and is asked for 660-1102, so Appearance or Effects is below the fold 44% of the time, and Appearance alone reaches 669pt - taller than the whole panel. Seven previous fixes were all re-orderings, which only move which section loses. The three real ways out are visibly different products and none covers every case alone, so a decision card is open (recommended: let the height budget shorten Appearance, the only answer that cannot fail). The measurement and the budget rule shipped in InspectorDockLayout.swift regardless of the answer; b90b6e7b."
     }
-  ]
+  ],
+  "started": "2026-09-16T16:42:58.097Z"
 }

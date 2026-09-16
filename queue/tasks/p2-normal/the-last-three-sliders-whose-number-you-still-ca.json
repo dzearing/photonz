@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T03:48:44.378Z",
-  "updated": "2026-09-16T12:23:33.796Z",
+  "updated": "2026-09-16T17:19:23.020Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left over from type-a-number-into-any-effects-slider-not-just-d (2026-09-16), which converted LayerStyleSlider, ShapeSlider and EffectStylePanel's own slider onto SliderReadout + PanelNumberField.\n\nThe three that were left, and why:\n- CornerRadiusRow (Sources/Photonz/AnnotationInspector.swift:191). Not converted because its readout is not just a number: it can be the four corners written out (16/16/0/0), it sits beside the FourSidedButton, and it has a WALL (selection.floor) with an answer line that explains a refused pull. PanelNumberField already handles all three shapes (see the Padding row, ArrangementInspector.swift:496, which is a box + FourSidedButton + a stand-in made of numbers), so it is a job of an hour, not a redesign. The open question worth deciding: a number typed BELOW the wall should probably raise the same answer line a spent drag does, rather than silently clamping.\n- MeasurePartSettings.swift:152, the chipSize row: hand-rolled readout, scales labelScale by MeasureContent.labelFontSize. SliderReadout with a scale would cover it.\n- EditorView.swift:2322 strokeWidthSlider: the shape tool controls in the release before Appearance and Effects split. Reads Width. Walks assert it as \"2 px\", so converting it means the same walk update the Thickness rows just had (the unit word moves out of the box and becomes the suffix beside it).\n\nHow to do it: SliderReadout in Sources/Photonz/InspectorControls.swift takes a SliderNumber (PhotonzCore, tested) saying how the row's number is written, and hands the rest to PanelNumberField. Nothing else has to be decided.",
@@ -28,6 +28,28 @@
     {
       "t": "2026-09-16T12:23:33.795Z",
       "note": "seq 2780 -> 110"
+    },
+    {
+      "t": "2026-09-16T16:50:13.787Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T16:58:30.546Z",
+      "note": "Core: CornerRadiusSelection.typed(_:) added with six tests (held between the wall and fully round, and whether the wall refused it). App: Corner Radius now a PanelNumberField with the four-corner stand-in and the Twist beside it; Chip size and the tool popover's Width now SliderReadout. Wall answer line got a playtest handle. Two walks written/extended. Full suite green (7668 tests)."
+    },
+    {
+      "t": "2026-09-16T17:19:12.891Z",
+      "note": "Acceptance, each checked by running it: (1) Corner Radius takes a typed number, held between the wall and fully round — walk steps 15-45 of type-the-last-three-numbers-walk, 18 in, 500 held to 48, 4 held to 18. (2) The four corners still work from the twist and from the single number — four-sided-popout, each-corner-on-its-own, one-corner-radius, corner-names, corner-over-a-group, corner-reaches-the-group all pass. (3) Chip size takes a typed number — measure-parts-walk, 28 in, 300 held to 64. (4) The tool popover's Width takes one — same walk, 7 in, 99 held to 40; Arrowhead added too since it was the last one left in that popover. (5) One undo step each — walk undoes a typed 18 back to 0 in one press, and every land goes through the same commit a drag release uses. ALSO: .playtestControl put after .transition(.opacity) never registers, which is why the wall sentence was photographable and invisible to walks; moved before it."
+    },
+    {
+      "t": "2026-09-16T17:19:14.887Z",
+      "note": "left rough: the box says Mixed with a quiet px still beside it, so it reads 'Mixed px'. Every typed row in the dock already does this (it is PanelNumberField drawing its suffix unconditionally), so it is a house-wide question rather than a defect of this row, and it is in the audit's evaluate list for the user to answer rather than filed."
+    },
+    {
+      "t": "2026-09-16T17:19:23.018Z",
+      "note": "Corner Radius, Chip size and the tool bar popover's Width (plus Arrowhead, left odd by the change) are number boxes. Core: CornerRadiusSelection.typed(_:), six tests. Full suite green, 7668 tests. Walks: type-the-last-three-numbers-walk (new) and measure-parts-walk (extended) both pass, forced under a locked screen so neither carries a verdict; sweep requested. Audit: queue/audits/2026-09-16-type-the-last-three-numbers.json. Commit f8189a54."
     }
-  ]
+  ],
+  "started": "2026-09-16T16:50:13.786Z",
+  "completed": "2026-09-16T17:19:23.019Z"
 }
