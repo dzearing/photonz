@@ -1517,9 +1517,14 @@ final class CanvasNSView: NSView {
     /// Maps a document point into the selected layer's untransformed frame
     /// space, so frame-handle hit-testing and resizing agree with where the
     /// (transformed) chrome draws.
+    ///
+    /// Two swings come off, in the order they were put on: first whatever the
+    /// cards above it have been turned by (`uprightPoint`), then the layer's
+    /// own turn. A label inside a card on a slant is then exactly as easy to
+    /// grab by a corner as one lying flat on the canvas.
     func handleSpacePoint(_ p: CGPoint, layer: Layer?) -> CGPoint {
         guard let layer else { return p }
-        return CanvasPointer.handleSpacePoint(p, layer: layer)
+        return CanvasPointer.handleSpacePoint(uprightPoint(p, of: layer.id), layer: layer)
     }
 
     /// The resized frame for a handle drag: the standard opposite-anchor resize,
@@ -1545,8 +1550,11 @@ final class CanvasNSView: NSView {
         // The magnets act on the edge the pointer is holding, before anything
         // downstream re-derives a height from it, so a re-wrapped text block is
         // measured at the width the drag actually settled on.
+        // A piece inside a card on a slant is measured in the card's own space,
+        // so the picture's own edges are not lines it can line up with.
+        let upright = !isOnASlant(layer?.id)
         var result = Snapping.snapResizedFrame(frame, handle: handle,
-                                               canvas: viewport?.documentSize ?? .zero,
+                                               canvas: upright ? (viewport?.documentSize ?? .zero) : .zero,
                                                peers: peers, columnBands: columns,
                                                gridSpacing: gridSpacing,
                                                gridOrigin: gridOrigin,

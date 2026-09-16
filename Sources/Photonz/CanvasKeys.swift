@@ -138,7 +138,15 @@ extension CanvasNSView {
         // grid cells, so the keys put a layer exactly where a drag would, and
         // ⌘ frees a nudge from the grid the same way it frees a drag.
         let coarseNudge = event.modifierFlags.contains(.shift)
-        let nudgeGrid = event.modifierFlags.contains(.command) ? nil : canvasNudgeGrid
+        // A piece inside a card that has been TURNED steps along the CARD, and
+        // the grid is drawn on the upright canvas, so its lines are nothing
+        // this piece can land on. The keys go back to their plain one and ten
+        // points there, which is the same bargain a drag on a slant strikes
+        // (`CanvasPointerDrags`).
+        let onASlant = isOnASlant(selectedLayerID)
+            || pickedLayerIDs.contains(where: { isOnASlant($0) })
+        let nudgeGrid = event.modifierFlags.contains(.command) || onASlant
+            ? nil : canvasNudgeGrid
         // Arrow keys move the SELECTION OUTLINE: the marquee walks a point at
         // a time (ten with ⇧) so a region can be lined up exactly without
         // being redrawn by hand, and the pixels and layers underneath it never

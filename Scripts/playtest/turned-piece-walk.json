@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/turned-piece",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [340, 340], "to": [460, 400], "steps": 8 },
+    { "do": "wait", "seconds": 0.3 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [250, 250], "to": [760, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-card-upright", "note": "a card holding a bar (300, 300, 400 by 200) and a small label (340, 340, 120 by 60), both upright" },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [340, 340], "size": [120, 60], "within": 1 },
+
+    { "do": "action", "action": "turnKnob" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-card-turned", "note": "the card is now on a slant, 20 degrees clockwise about the middle of the box its contents make, (500, 400)" },
+    { "do": "snapshot", "name": "turned-piece-1-card-turned" },
+
+    { "do": "click", "at": [416, 338], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Rectangle 2"] },
+    { "do": "describe", "stage": "3-label-picked", "note": "the label inside the turned card is picked; it should wear its own eight handles, sitting on the turned label rather than on an upright box beside it" },
+    { "do": "snapshot", "name": "turned-piece-2-label-picked" },
+
+    { "do": "drag", "from": [416, 338], "to": [616, 338], "steps": 10, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-label-dragged", "note": "dragged 200 points to the right on screen, held free of the magnets" },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [527.94, 271.6], "size": [120, 60], "within": 1.5 },
+    { "do": "snapshot", "name": "turned-piece-3-label-dragged" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [340, 340], "size": [120, 60], "within": 1 },
+
+    { "do": "drag", "from": [370, 289], "to": [320, 250], "steps": 10, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-label-resized", "note": "the top left handle pulled out and up the screen; the bottom right corner should not have moved at all" },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [279.55, 320.61], "size": [180.45, 79.39], "within": 1.5 },
+    { "do": "expectBox", "layer": "Rectangle 2", "corner": "bottomRight", "onScreen": [462.41, 386.32], "within": 1.5 },
+    { "do": "snapshot", "name": "turned-piece-4-label-resized" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [340, 340], "size": [120, 60], "within": 1 },
+
+    { "do": "drag", "from": [416, 338], "to": [381, 325], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-label-snapped", "note": "nudged towards the card's own left edge and left under three points short; the magnets should have caught it on that edge, measured along the card rather than across the upright canvas" },
+    { "do": "expectBox", "layer": "Rectangle 2", "at": [300, 339.75], "size": [120, 60], "within": 1 },
+    { "do": "snapshot", "name": "turned-piece-5-label-snapped" }
+  ]
+}

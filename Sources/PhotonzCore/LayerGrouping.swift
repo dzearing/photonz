@@ -425,13 +425,30 @@ extension PhotonzDocument {
         return turns.reversed().reduce(CGAffineTransform.identity) { $0.concatenating($1) }
     }
 
+    /// A point on the canvas, put back into the upright space the layer's own
+    /// numbers are stated in.
+    ///
+    /// The one door the canvas takes a pointer through before it does anything
+    /// with a piece inside a card that has been TURNED. A piece's place, its
+    /// size and its handles are all stated in the card's upright space; the
+    /// pointer arrives in the space a person is looking at. Undo the card's
+    /// swing on the pointer and every sum the canvas already does — where a
+    /// handle is, how far a drag has travelled, which way a corner pulls —
+    /// comes out right without knowing anything about turns at all.
+    ///
+    /// Unchanged for a layer sitting loose on the canvas, and for every layer
+    /// in a document where no group has been turned.
+    public func uprightPoint(_ p: CGPoint, in id: UUID) -> CGPoint {
+        let turn = inheritedTurn(of: id)
+        guard !turn.isIdentity else { return p }
+        return p.applying(turn.inverted())
+    }
+
     /// The OUTERMOST container above this layer that has been turned, or nil
-    /// when nothing above it has. A drag on a piece inside a turned card takes
-    /// hold of this instead of the piece: the piece's own place is stated in
-    /// the card's upright space, so dragging it would send it off at an angle
-    /// to the pointer, and taking the card is what the person grabbing it
-    /// meant anyway. Same rule, and the same reason, as a piece inside a copy
-    /// of a component.
+    /// when nothing above it has. What says that this layer's numbers are
+    /// stated on a slant: its own place and size are written in that card's
+    /// upright space, so everything the canvas measures against it has to be
+    /// written in the same space or the two are talking past each other.
     public func turnedContainer(of id: UUID) -> UUID? {
         guard let path = path(of: id), path.count > 1 else { return nil }
         var list = layers

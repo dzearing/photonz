@@ -72,15 +72,12 @@ extension CanvasNSView {
     /// puts straight back, so there is nothing to grab. Dragging the piece
     /// itself moves the whole copy instead, which is what the person meant.
     ///
-    /// Neither does a piece inside a card that has been TURNED. Its place and
-    /// its size are stated in the card's upright space, so a handle pulled
-    /// sideways would send it off at an angle to the pointer. Its outline
-    /// still draws on it, so you can see what you have picked and restyle it;
-    /// to move or resize it, straighten the card, which the A field puts back
-    /// to the degree.
+    /// A piece inside a card that has been TURNED does offer them, and they
+    /// sit on the turned piece: every pointer the canvas reads for it goes
+    /// through `uprightPoint` first, which undoes the card's swing and hands
+    /// the sums below the same upright space they have always worked in.
     func offersOwnHandles(_ layer: Layer) -> Bool {
         layer.offersHandles && componentPiece(of: layer.id) == nil
-            && inheritedTurn(of: layer.id).isIdentity
     }
 
     /// How the containers above a layer have turned it, in canvas space.
@@ -88,6 +85,56 @@ extension CanvasNSView {
     /// document where no group has been turned.
     func inheritedTurn(of id: UUID) -> CGAffineTransform {
         document?.inheritedTurn(of: id) ?? .identity
+    }
+
+    /// A pointer put back into the upright space a layer's own numbers are
+    /// stated in: the canvas for almost everything, and the card's own space
+    /// for a piece inside a card on a slant.
+    ///
+    /// The one door every gesture aimed at the SELECTED layer goes through —
+    /// a handle grab, a corner dot, the rotate knob, the travel of a move.
+    /// Past it, nothing downstream has to know a turn happened at all.
+    func uprightPoint(_ p: CGPoint, of id: UUID?) -> CGPoint {
+        guard let id, let document else { return p }
+        return document.uprightPoint(p, in: id)
+    }
+
+    /// The angle the cards above a layer have swung it by, in radians, and 0
+    /// when nothing above it turns. A group is turned by its knob and by the A
+    /// field, both of which are plain rotations, so one angle says the whole of
+    /// it.
+    ///
+    /// What the POINTER adds to the layer's own turn. The platform draws one
+    /// resize arrow per direction, and the direction a handle sits in is the
+    /// one your eye reads off the screen: on a card turned a quarter of the
+    /// way round, the handle the app calls "top" is over on the right, and an
+    /// up-and-down arrow there just looks broken (`Handles.screenHandle`).
+    func inheritedAngle(of id: UUID) -> CGFloat {
+        let turn = inheritedTurn(of: id)
+        guard !turn.isIdentity else { return 0 }
+        return atan2(turn.b, turn.a)
+    }
+
+    /// A layer's own turn plus the swing of the cards above it: the turn a
+    /// person actually sees it wearing, which is the one the pointer reads.
+    func apparentTransform(of layer: Layer?) -> LayerTransform {
+        guard let layer else { return .identity }
+        var transform = layer.transform
+        let extra = inheritedAngle(of: layer.id)
+        guard extra != 0 else { return transform }
+        transform.rotation += extra
+        return transform
+    }
+
+    /// Whether a layer's numbers are written on a slant, because a card above
+    /// it has been turned. What the magnets ask before they offer the canvas
+    /// grid, the picture's edges or a ruler: all three are drawn upright, and a
+    /// piece on a slant lining up with one of them would land somewhere neither
+    /// agrees on. It lines up with the other pieces in its card instead
+    /// (`PhotonzDocument.snapPeers`).
+    func isOnASlant(_ id: UUID?) -> Bool {
+        guard let id else { return false }
+        return !inheritedTurn(of: id).isIdentity
     }
 
     /// Whether the selected layer offers the rotate knob. A group does: the

@@ -443,6 +443,13 @@ public extension PhotonzDocument {
     ///
     /// Groups themselves stay in: a card's outer box is a real edge on screen
     /// and lining a caption up with it is exactly what someone is trying to do.
+    ///
+    /// The boxes come back in the space the DRAGGED layer's own numbers are
+    /// stated in. For almost every drag that is the canvas. For a piece inside
+    /// a card that has been turned it is the card's upright space, and then the
+    /// list is the other pieces in that card and nothing else: a box out on the
+    /// canvas is measured on a different slant, so lining up with it would put
+    /// the piece somewhere neither box agrees on.
     func snapPeers(excluding id: UUID) -> [CGRect] {
         snapPeers(excluding: [id])
     }
@@ -462,6 +469,23 @@ public extension PhotonzDocument {
             }
         }
 
+        // Where the walk starts. A drag inside a turned card never leaves that
+        // card: only what is in it shares the slant its numbers are written
+        // on. A selection spread across two different turned cards shares no
+        // space at all, so it lines up with nothing.
+        var roots = layers
+        var rootOrigin = CGPoint.zero
+        var onASlant = false
+        let cards = Set(ids.compactMap { turnedContainer(of: $0) })
+        if let card = cards.first {
+            guard cards.count == 1, let container = layer(id: card),
+                  let origin = parentOrigin(of: card) else { return [] }
+            roots = container.children
+            rootOrigin = CGPoint(x: origin.x + container.frame.minX,
+                                 y: origin.y + container.frame.minY)
+            onASlant = true
+        }
+
         var boxes: [CGRect] = []
         func collect(_ list: [Layer], origin: CGPoint) {
             for layer in list {
@@ -475,14 +499,18 @@ public extension PhotonzDocument {
                     // letter, not by the empty room past it.
                     boxes.append(layer.contentBounds.offsetBy(dx: origin.x, dy: origin.y))
                 }
-                if layer.isGroup {
+                // A card turned inside the card we are in is a second slant,
+                // and the pieces on it are written in numbers this drag cannot
+                // read. Its own box is a real edge here, so it stays; what is
+                // inside it does not.
+                if layer.isGroup, !(onASlant && !layer.transform.isIdentity) {
                     collect(layer.children,
                             origin: CGPoint(x: origin.x + layer.frame.minX,
                                             y: origin.y + layer.frame.minY))
                 }
             }
         }
-        collect(layers, origin: .zero)
+        collect(roots, origin: rootOrigin)
         return boxes
     }
 }

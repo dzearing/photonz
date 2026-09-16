@@ -16626,3 +16626,41 @@ walk ran under `PHOTONZ_ALLOW_LOCKED_WALK=1` and one clean pass is still owed.
 Worth noting that the captures under that "locked" reading came out real and
 correct at 2560x1800, which may mean the lock check is over-firing and holding
 the sweep back for nothing. One sample, not enough to file.
+
+## 2026-09-16 — A piece inside a turned card edits on the slant
+
+A label inside a card you have turned now wears its own handles, sitting on the
+turned label, and moves and resizes under the pointer. Before this you had to
+straighten the card, edit, and type the angle back.
+
+The route is shorter than the plan in the task notes. Rather than composing the
+inherited turn into the canvas-space frame doors, the turn comes off the
+POINTER: `PhotonzDocument.uprightPoint(p, in:)` un-turns a canvas point into the
+space a layer's own numbers are written in, and every sum below it is the one
+the canvas already did. The chrome needed almost nothing, because
+`CanvasDisplay` was already composing `inheritedTurn` for the outline when the
+group-turn slice shipped; only the rotate knob and the endpoint dots were still
+being drawn upright.
+
+Magnets: a piece on a slant lines up with the other pieces in its card and with
+nothing else. The grid, the picture's edges and the rulers are all drawn on the
+upright canvas, so a piece measured in the card's space cannot land on one. The
+yellow guide is built in the card's space and swung with it, so it lies along
+the card's own edge. Arrow keys drop back to one and ten points there for the
+same reason, and a piece being tidied inside its card is not offered to a screen
+or a collage cell.
+
+New walk step `expectBox`: where a named layer's box is, in both spaces that
+matter — the numbers its own panel shows, and one corner where a person sees it
+after every turn. A picture cannot settle either on a slant.
+
+**The Mac's screen was locked for the whole session, so not one walk could run.**
+`Scripts/playtest/turned-piece-walk.json` is written and a sweep has been asked
+for. What is proved is the arithmetic, held to exact numbers in
+`Tests/PhotonzCoreTests/TurnedPieceEditTests.swift`: the drag travels as far on
+screen as the hand does, the resize holds the far corner, and the magnets catch
+the card's own edge. The walk claims the same numbers, so it is checking the
+wiring rather than the maths.
+
+Next: the sweep, and whether typing into words inside a turned card opens the
+field upright (filed, not reproduced).

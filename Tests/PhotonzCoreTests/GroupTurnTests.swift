@@ -147,7 +147,8 @@ struct GroupTurnTests {
         let document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400),
                                        layers: [outer])
         let dot = inner.children[0].id
-        // The outermost turned container is the one a drag takes hold of.
+        // The outermost turned container is the one whose upright space the
+        // dot's own numbers are written in.
         #expect(document.turnedContainer(of: dot) == outer.id)
         // Both boxes are the same 20x20 square about (110, 110), so two
         // quarter turns about that same middle are half a turn: the dot's own

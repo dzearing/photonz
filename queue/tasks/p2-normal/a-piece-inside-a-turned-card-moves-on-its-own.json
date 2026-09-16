@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 350,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:47:53.211Z",
-  "updated": "2026-09-15T12:14:53.654Z",
+  "updated": "2026-09-16T07:21:53.101Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Shipped 2026-09-12 with the group turning work, deliberately out of that slice. The handles are withheld by CanvasGroups.offersOwnHandles via PhotonzDocument.inheritedTurn, and the drag is redirected to PhotonzDocument.turnedContainer in CanvasPointerDrags, exactly the way a piece inside a component copy already behaves.\n\nThe real fix is to compose the inherited turn into the canvas-space doors: EditorState.canvasFrame / storedCanvasFrame and PhotonzDocument.canvasLayer / parentSpaceFrame. A child frame stays a CGRect whose centre is the turned centre and whose own transform.rotation gains the ancestor angle, so the chrome and the pointer maths already work; the write path has to un-turn the centre about the ancestor pivot before subtracting parentOrigin. The drag sprite also has to carry the ancestor angle or it floats upright over a turned card (that was the visible smear before the handles were withheld).\n\nThe audit queue/audits/2026-09-12-group-turn.json asks the user whether they want this at all, so check their answer before building.",
@@ -47,6 +47,23 @@
     {
       "t": "2026-09-15T12:14:53.653Z",
       "note": "seq 310 -> 350"
+    },
+    {
+      "t": "2026-09-16T07:03:04.253Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T07:21:52.998Z",
+      "note": "adversarial review before building. The audit's question (queue/audits/2026-09-12-group-turn.json, \"should the piece move on its own?\") was never answered, and no decision card was ever opened on it. Built anyway rather than opening one: the task itself is the standing instruction, the manager pass has promoted its seq five times since 2026-09-12, and every peer tool edits a child inside a rotated frame directly, so a card asking \"should a piece inside a turned card be movable\" would be a card with one real answer. The UX question that IS live is which space the piece's numbers are stated in, and the task's own acceptance settles it: handles sit on the turned piece, so the numbers are the card's."
+    },
+    {
+      "t": "2026-09-16T07:21:53.049Z",
+      "note": "took the SHORTER route than the notes proposed. The notes wanted the inherited turn composed into EditorState.canvasFrame / PhotonzDocument.canvasLayer, which would change the frame every consumer reads (snapping, the layers panel, the measure panel, text commit, the arrange commands). Instead the turn comes off the POINTER at the door: PhotonzDocument.uprightPoint(p, in:) un-turns a canvas point into the space the layer's own numbers are written in, and every sum below it is the one the canvas already did. The chrome needed almost nothing because CanvasDisplay.inkTransform and docToHandle were already composing inheritedTurn for the outline when the group-turn slice shipped."
+    },
+    {
+      "t": "2026-09-16T07:21:53.099Z",
+      "note": "left rough, not filed: (1) the motion pivot crosshair is hit-tested in canvas space, so a pivot on a piece inside a turned card would be grabbed beside where it draws; it needs a turn on this layer and a card above it at once, which nothing in the app makes easy to reach. (2) snapPeers starting at the OUTERMOST turned container is exact for one card and approximate for a card turned inside a turned card: pieces of an inner turned group are correctly left out, but the walk starts one level higher than strictly needed. (3) the drag readout pill was not re-checked on a slant."
     }
-  ]
+  ],
+  "started": "2026-09-16T07:03:04.252Z"
 }

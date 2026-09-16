@@ -1030,8 +1030,12 @@ extension CanvasNSView {
                 let points: [CGPoint] = selectedLayer.measure != nil
                     ? drawnMeasureHandles(selectedLayer)
                     : AnnotationEndpoint.allCases.compactMap { selectedLayer.editEndpoint($0) }
+                // ...and then whatever the cards above it have been turned
+                // by, so an arrow or a caliper inside a card on a slant wears
+                // its ends on the arrow rather than beside it.
+                let turn = inheritedTurn(of: selectedLayer.id)
                 for dp in points {
-                    let p = viewport.viewPoint(fromDocument: dp)
+                    let p = viewport.viewPoint(fromDocument: dp.applying(turn))
                     handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
                 }
                 handlesLayer.path = handles
@@ -1097,7 +1101,12 @@ extension CanvasNSView {
             // Rotate knob with its stem, off the (transformed) top edge.
             if !dragInFlight, offersRotation(selectedLayer),
                let knob = selectedLayer.rotateKnobPoint(zoom: viewport.zoom) {
-                let knobInView = viewport.viewPoint(fromDocument: knob)
+                // The knob is floated off the layer's own turned top edge, and
+                // then rides whatever the cards above it have been turned by,
+                // so on a piece inside a card on a slant it stays out from the
+                // edge it is attached to.
+                let knobInView = viewport
+                    .viewPoint(fromDocument: knob.applying(inheritedTurn(of: selectedLayer.id)))
                 let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
                 let path = CGMutablePath()
                 path.move(to: topMid)
@@ -1146,19 +1155,38 @@ extension CanvasNSView {
         // reaches only across the boxes it joins, with a little overhang, so a
         // canvas full of boxes does not fill with full-height rules every time
         // something is dragged.
+        // A piece inside a card that has been TURNED lines up with the other
+        // pieces in that card, and the numbers it lines up ON are written in
+        // the card's upright space. So the line is built there and then swung
+        // with the card: it lies ALONG the card's own edge, which is the only
+        // place it would mean anything (`PhotonzDocument.snapPeers`).
+        let guided = moveDrag?.layerID ?? multiMove?.pick.id ?? resizeDrag?.layerID
+        let turn = guided.map { inheritedTurn(of: $0) } ?? .identity
+        func line(_ a: CGPoint, _ b: CGPoint) {
+            guides.move(to: viewport.viewPoint(fromDocument: a.applying(turn)))
+            guides.addLine(to: viewport.viewPoint(fromDocument: b.applying(turn)))
+        }
         if let x = guideX {
-            let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x
-            let ends = viewSpan(spanX, vertical: true, in: viewport)
-                ?? (docFrame.minY, docFrame.maxY)
-            guides.move(to: CGPoint(x: vx, y: ends.0))
-            guides.addLine(to: CGPoint(x: vx, y: ends.1))
+            if turn.isIdentity {
+                let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x
+                let ends = viewSpan(spanX, vertical: true, in: viewport)
+                    ?? (docFrame.minY, docFrame.maxY)
+                guides.move(to: CGPoint(x: vx, y: ends.0))
+                guides.addLine(to: CGPoint(x: vx, y: ends.1))
+            } else if let span = spanX {
+                line(CGPoint(x: x, y: span.start - 6), CGPoint(x: x, y: span.end + 6))
+            }
         }
         if let y = guideY {
-            let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y
-            let ends = viewSpan(spanY, vertical: false, in: viewport)
-                ?? (docFrame.minX, docFrame.maxX)
-            guides.move(to: CGPoint(x: ends.0, y: vy))
-            guides.addLine(to: CGPoint(x: ends.1, y: vy))
+            if turn.isIdentity {
+                let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y
+                let ends = viewSpan(spanY, vertical: false, in: viewport)
+                    ?? (docFrame.minX, docFrame.maxX)
+                guides.move(to: CGPoint(x: ends.0, y: vy))
+                guides.addLine(to: CGPoint(x: ends.1, y: vy))
+            } else if let span = spanY {
+                line(CGPoint(x: span.start - 6, y: y), CGPoint(x: span.end + 6, y: y))
+            }
         }
         snapGuideLayer.path = guides
         snapGuideLayer.isHidden = guides.isEmpty

@@ -67,7 +67,8 @@ extension CanvasNSView {
         guard Experiments.shared.grabCueEnabled, tool == .select, let viewport,
               let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
-        return CanvasGrab.hit(at: p, layer: layer, zoom: viewport.zoom,
+        return CanvasGrab.hit(at: uprightPoint(p, of: layer.id), layer: layer,
+                              zoom: viewport.zoom,
                               captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
                               captionPillSize: layer.measuredCaptionPillSize)
     }
@@ -111,7 +112,7 @@ extension CanvasNSView {
         else { return nil }
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
-        let cue = CanvasPointer.cue(at: p, layer: layer,
+        let cue = CanvasPointer.cue(at: uprightPoint(p, of: layer.id), layer: layer,
                                     frame: editablePath == nil ? selectedLayerFrame : nil,
                                     zoom: viewport.zoom,
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
@@ -124,7 +125,10 @@ extension CanvasNSView {
         // before the press that would pick the layer up, exactly as
         // `mouseDown` reads it.
         if cue == nil, motionPivotHit(at: p) != nil { return (.grab, .identity) }
-        return cue.map { ($0, layer.transform) }
+        // The turn the pointer reads is the one a person SEES: the layer's own
+        // plus the swing of the cards above it, so the arrows over a piece
+        // inside a card on a slant point along its edges.
+        return cue.map { ($0, apparentTransform(of: layer)) }
     }
 
     /// The open hand over a picked path's own points and levers, or nil

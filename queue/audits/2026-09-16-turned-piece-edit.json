@@ -1,0 +1,31 @@
+{
+  "feature": "A piece inside a turned card edits on the slant",
+  "epic": "ui-building",
+  "summary": "A label inside a card you have turned now wears its own handles, sitting on the turned label, and moves and resizes under the pointer. You no longer have to straighten the card, edit, and type the angle back.",
+  "setup": "Photonz Dev, release Next. Groups and group turning are on by default; no flag to find.",
+  "try": [
+    { "do": "Draw a rectangle, then a smaller rectangle on top of it." },
+    { "do": "Sweep both and press Command G." },
+    { "do": "Drag the round knob above the card to put it on a slant." },
+    { "do": "Double click the small rectangle inside the turned card." },
+    { "do": "Drag it: it should travel exactly the way your hand travels." },
+    { "do": "Pull one of its corner handles: the opposite corner should not move at all." },
+    { "do": "Nudge it towards the card's own left edge and watch for the yellow line." },
+    { "do": "Press Command Z twice and check the card comes back whole." }
+  ],
+  "evaluate": [
+    "Do the handles read as sitting ON the turned piece, or as a box floating near it?",
+    "When you drag the piece, does it feel like it is following your hand, or like it is being steered?",
+    "The X and Y numbers are stated in the card's own space, so dragging right on screen changes both. Is that the honest number or a confusing one?",
+    "The yellow line lies along the card rather than across the picture. Does it read as a guide or as a stray mark?",
+    "Inside a turned card the piece lines up with the other pieces in that card only, not with the grid, the picture's edges or a ruler. Is that the right amount of help?"
+  ],
+  "rough": [
+    "There are no pictures with this audit at all. The Mac's screen was locked for the whole task, so macOS never drew the window and not one scripted walk could run: a walk on a locked screen is neither a pass nor a failure, and there is nothing honest to show. The walk is written and waiting (Scripts/playtest/turned-piece-walk.json), and a sweep has been asked for.",
+    "What IS proved is the arithmetic every one of these gestures is made of, held to exact numbers in PhotonzCore: the drag travels as far on screen as the hand does, the resize holds the far corner to within a thousandth of a point, and the magnets catch the card's own edge. Those are the same numbers the walk claims, so the walk is checking the wiring rather than the maths.",
+    "Typing into a text piece inside a turned card still opens the field upright, over where the words would be if the card were straight. That was already true before this change, and it is now easier to reach because the piece is easier to pick.",
+    "A piece nudged inside a turned card no longer steps in whole grid cells. The grid is drawn on the upright canvas, so its lines are not places a piece on a slant can land; the arrow keys go back to one and ten points there.",
+    "A piece on a slant is not offered to a screen or a collage cell while it is being dragged. Changing hands is decided by where something lands on the upright canvas, and a piece being tidied inside its card never left it.",
+    "The drag sprite is switched off for a piece on a slant: it is a flat picture floated at the upright origin, so on a slant it would sit beside the piece. It falls back to a full re-render per move, the same as text already does."
+  ]
+}

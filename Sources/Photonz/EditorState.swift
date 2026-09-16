@@ -2568,6 +2568,12 @@ final class EditorState {
         // the wrong picture the moment it moves.
         guard layer.zoomCallout == nil, !layer.readsBackdrop else { return }
         if case .text = layer.content { return }
+        // Nor can a piece inside a card that has been TURNED: the sprite is a
+        // flat picture floated at the frame's own upright origin, so on a slant
+        // it would sit beside the piece and upright over it, which is exactly
+        // the smear a person sees. It falls back to a full re-render per move,
+        // the same as text does, and that keeps it right.
+        if !doc.inheritedTurn(of: id).isIdentity { return }
         // A group's own style is usually plain, but the shadows and blur of the
         // pieces INSIDE it still reach past the box they make, so the sprite is
         // padded by the furthest any of them reaches or they would be clipped

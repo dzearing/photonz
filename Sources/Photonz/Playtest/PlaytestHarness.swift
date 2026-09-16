@@ -1327,6 +1327,12 @@ private final class Run {
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
 
+        case .expectBox(let layer, let at, let size, let corner, let onScreen, let within):
+            note(number, step.name,
+                 try checkBox(layer, at: at, size: size, corner: corner, onScreen: onScreen,
+                              within: within),
+                 state: describe())
+
         case .expectRegion(let reads, let present):
             note(number, step.name, try checkRegion(reads: reads, present: present),
                  state: describe())
@@ -3363,6 +3369,74 @@ private final class Run {
     /// same screenshot to anything but a pixel count. The failure says where
     /// the feet actually are and what the thing reads, because "the foot went
     /// the wrong way" and "the foot never moved" are different bugs.
+    /// Where a named layer's box actually is, held against what a walk claimed.
+    ///
+    /// Two spaces, because a piece inside a card that has been TURNED needs
+    /// both to be pinned down. `at`/`size` are the box the layer's own panel
+    /// shows, in CANVAS coordinates — the same units the tree prints and the
+    /// same units a walk's clicks are written in — which is what says the piece
+    /// moved by exactly what the hand moved. `corner`/`onScreen` are one corner
+    /// where a person SEES it, after the layer's own turn and every card's
+    /// above it, which is what says a resize held the far corner still.
+    private func checkBox(_ layerName: String, at: PlaytestPoint?, size: PlaytestPoint?,
+                          corner: LayerBoxCorner?, onScreen: PlaytestPoint?,
+                          within: CGFloat) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "no document is open, so there is no box to claim")
+        }
+        let all = document.allLayers
+        guard let found = all.first(where: { $0.name.lowercased() == layerName.lowercased() }) else {
+            throw Failure(description: "no layer called \"\(layerName)\" in the document"
+                + (all.isEmpty ? "; it is empty"
+                   : "; there is " + all.map(\.name).joined(separator: ", ")))
+        }
+        guard let box = document.canvasBounds(of: found.id) else {
+            throw Failure(description: "\"\(layerName)\" is in the document but not on the canvas")
+        }
+        var held: [String] = []
+        if let at {
+            let off = max(abs(box.minX - at.point.x), abs(box.minY - at.point.y))
+            guard off <= within else {
+                throw Failure(description: "\"\(layerName)\" sits at \(short(box.origin)) and the "
+                    + "step claimed \(short(at.point)): \(Self.round1(off)) points out, and the walk "
+                    + "allowed \(Self.round1(within))")
+            }
+            held.append("at \(short(box.origin))")
+        }
+        if let size {
+            let off = max(abs(box.width - size.point.x), abs(box.height - size.point.y))
+            guard off <= within else {
+                throw Failure(description: "\"\(layerName)\" is \(Self.round1(box.width)) by "
+                    + "\(Self.round1(box.height)) and the step claimed \(Self.round1(size.point.x)) by "
+                    + "\(Self.round1(size.point.y)): \(Self.round1(off)) points out, and the walk "
+                    + "allowed \(Self.round1(within))")
+            }
+            held.append("size \(Self.round1(box.width))x\(Self.round1(box.height))")
+        }
+        if let corner, let onScreen {
+            // The corners of the box as DRAWN: the layer placed on the canvas,
+            // turned by its own transform, then swung by every card above it.
+            var placed = found
+            placed.frame = found.localBounds.offsetBy(dx: box.minX - found.localBounds.minX,
+                                                      dy: box.minY - found.localBounds.minY)
+            let turn = document.inheritedTurn(of: found.id)
+            let corners = placed.transformedCorners.map { $0.applying(turn) }
+            guard corners.indices.contains(corner.index) else {
+                throw Failure(description: "\"\(layerName)\" has no corners to claim")
+            }
+            let point = corners[corner.index]
+            let off = hypot(point.x - onScreen.point.x, point.y - onScreen.point.y)
+            guard off <= within else {
+                throw Failure(description: "\"\(layerName)\"'s \(corner.rawValue) corner is at "
+                    + "\(short(point)) on screen and the step claimed \(short(onScreen.point)): "
+                    + "\(Self.round1(off)) points out, and the walk allowed \(Self.round1(within))")
+            }
+            held.append("\(corner.rawValue) on screen \(short(point))")
+        }
+        return "\"\(layerName)\" " + held.joined(separator: ", ")
+    }
+
     private func checkFeet(_ layerName: String?, start: PlaytestPoint?, end: PlaytestPoint?,
                            reads: String?, within: CGFloat) throws -> String {
         let editor = try requireEditor()

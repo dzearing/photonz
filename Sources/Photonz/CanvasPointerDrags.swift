@@ -294,9 +294,15 @@ extension CanvasNSView {
         // Lines/arrows expose their endpoints; everything else (that resizes)
         // gets the eight frame handles.
         let selectedLayer = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
+        // Every grab aimed at the SELECTED layer reads this pointer rather than
+        // the raw one. On almost everything the two are the same point; on a
+        // piece inside a card that has been TURNED it is that point written in
+        // the card's own upright space, which is the space the piece's frame,
+        // its handles and its knob are all stated in (`uprightPoint`).
+        let q = uprightPoint(p, of: selectedLayerID)
         if let id = selectedLayerID, let layer = selectedLayer, offersOwnHandles(layer),
            let content = layer.annotation,
-           let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
+           let endpoint = AnnotationEndpoints.hit(at: q, layer: layer, zoom: viewport.zoom),
            let drag = AnnotationEndpointDrag(layer: layer, endpoint: endpoint),
            let start = layer.annotationEndpoint(.start), let end = layer.annotationEndpoint(.end) {
             endpointDrag = EndpointDragSession(layerID: id, content: content,
@@ -316,11 +322,11 @@ extension CanvasNSView {
            Experiments.shared.arrowCaptionsEnabled,
            let pill = captionPillRect(layer) {
             let tolerance = viewport.zoom > 0 ? 6 / viewport.zoom : 6
-            if pill.insetBy(dx: -tolerance, dy: -tolerance).contains(p) {
+            if pill.insetBy(dx: -tolerance, dy: -tolerance).contains(q) {
                 let center = CGPoint(x: pill.midX, y: pill.midY)
                 captionDrag = CaptionDrag(layerID: id,
-                                          grip: CGSize(width: p.x - center.x, height: p.y - center.y),
-                                          startCenter: center, current: p)
+                                          grip: CGSize(width: q.x - center.x, height: q.y - center.y),
+                                          startCenter: center, current: q)
                 applyGrabCursor(.closedHand)
                 refreshOverlays()
                 return
@@ -337,30 +343,30 @@ extension CanvasNSView {
             let tolerance = viewport.zoom > 0 ? slack / viewport.zoom : slack
             var best: (handle: MeasureHandle, point: CGPoint, distance: CGFloat)?
             for h in measureHandles(layer) {
-                let d = hypot(p.x - h.point.x, p.y - h.point.y)
+                let d = hypot(q.x - h.point.x, q.y - h.point.y)
                 if d <= tolerance, d < (best?.distance ?? .infinity) {
                     best = (h.handle, h.point, d)
                 }
             }
             if best == nil, let pill = measureReadoutRect(layer),
-               pill.insetBy(dx: -tolerance, dy: -tolerance).contains(p) {
-                best = (.head, p, 0)
+               pill.insetBy(dx: -tolerance, dy: -tolerance).contains(q) {
+                best = (.head, q, 0)
             }
             if let best {
-                resetDragMotion(p)
+                resetDragMotion(q)
                 var drag = MeasureHandleDrag(
                     layerID: id, handle: best.handle, mode: m.mode,
                     originalStart: s, originalEnd: e, originalHeadOffset: m.headOffset,
                     originalReadout: MeasureReadoutPlacement(nudge: m.labelNudge,
                                                              pinned: m.labelPinned),
-                    pressPoint: p, current: p)
+                    pressPoint: q, current: q)
                 if best.handle == .head {
                     let head = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e,
                                                               headOffset: m.headOffset).labelAnchor
-                    drag.grabCross = m.mode == .horizontal ? p.y - head.y : p.x - head.x
+                    drag.grabCross = m.mode == .horizontal ? q.y - head.y : q.x - head.x
                     if let dm = documentMeasure(layer) {
                         let pill = dm.labelPosition(chipSize: dm.estimatedLabelSize)
-                        drag.grabAlong = m.mode == .horizontal ? p.x - pill.x : p.y - pill.y
+                        drag.grabAlong = m.mode == .horizontal ? q.x - pill.x : q.y - pill.y
                     }
                     drag.guides = measureChipGuideLines(excluding: id)
                 } else {
@@ -369,7 +375,7 @@ extension CanvasNSView {
                     // travelled, the way the hand travelled, instead of jumping
                     // under the pointer the moment the drag starts. The head
                     // has had this all along, through grabCross/grabAlong.
-                    drag.grip = MeasureHandleGrip.taken(pressing: p, handle: best.point,
+                    drag.grip = MeasureHandleGrip.taken(pressing: q, handle: best.point,
                                                         zoom: viewport.zoom, tolerance: slack)
                     drag.guides = measureGuideLines(excluding: id)
                     drag.layerLines = measureLayerLines(excluding: id)
@@ -385,17 +391,17 @@ extension CanvasNSView {
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
-           hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
+           hypot(q.x - knob.x, q.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
             // About whatever this layer turns about, which is its middle
             // unless a turn on it hangs it somewhere else (`Layer.turnPivot`).
             // The knob has to measure the same turn the picture takes or it
             // would run away from the hand on a bell.
             let center = layer.turnPivot
             transformDrag = TransformDragSession(
-                layerID: id, kind: .rotate(grabAngle: TransformDrag.pointerAngle(p, around: center)),
+                layerID: id, kind: .rotate(grabAngle: TransformDrag.pointerAngle(q, around: center)),
                 startTransform: layer.transform, center: center,
                 frameSize: layer.frame.size, transform: layer.transform)
-            applyGrabCursor(CanvasCursor.cursor(for: .rotate, transform: layer.transform))
+            applyGrabCursor(CanvasCursor.cursor(for: .rotate, transform: apparentTransform(of: layer)))
             onDragBegin(id)
             refreshOverlays()
             return
@@ -432,7 +438,7 @@ extension CanvasNSView {
                                     edgeGrab: Experiments.shared.edgeGrabEnabled) {
             if event.modifierFlags.contains(.option), handle.isCorner, let layer = selectedLayer {
                 transformDrag = TransformDragSession(
-                    layerID: id, kind: .skew(corner: handle, grabPoint: p),
+                    layerID: id, kind: .skew(corner: handle, grabPoint: q),
                     startTransform: layer.transform,
                     center: CGPoint(x: layer.frame.midX, y: layer.frame.midY),
                     frameSize: layer.frame.size, transform: layer.transform)
@@ -442,10 +448,10 @@ extension CanvasNSView {
                     layerID: id, handle: handle, startFrame: frame, frame: frame,
                     peers: Experiments.shared.alignLayersEnabled && untransformed
                         ? (document?.snapPeers(excluding: id) ?? []) : [],
-                    columns: untransformed ? columnBands(excluding: [id]) : [],
+                    columns: untransformed && !isOnASlant(id) ? columnBands(excluding: [id]) : [],
                     snapped: Snapping.FrameResult(frame: frame))
                 applyGrabCursor(CanvasCursor.cursor(for: .resize(handle),
-                                                    transform: selectedLayer?.transform ?? .identity))
+                                                    transform: apparentTransform(of: selectedLayer)))
             }
             onDragBegin(id)
             refreshOverlays()
@@ -525,14 +531,16 @@ extension CanvasNSView {
                multiSelectedLayerIDs.contains(pick.id),
                let plan = document?.multiLayerDrag(moving: multiSelectedLayerIDs),
                plan.members.count > 1, plan.members.contains(where: { $0.id == pick.id }) {
+                let grab = uprightPoint(p, of: pick.id)
                 multiMove = MultiMoveDrag(
                     plan: plan,
                     pick: pick,
-                    grabOffset: CGPoint(x: p.x - plan.bounds.origin.x,
-                                        y: p.y - plan.bounds.origin.y),
+                    grabOffset: CGPoint(x: grab.x - plan.bounds.origin.x,
+                                        y: grab.y - plan.bounds.origin.y),
                     peers: Experiments.shared.alignLayersEnabled
                         ? (document?.snapPeers(excluding: multiSelectedLayerIDs) ?? []) : [],
-                    columns: columnBands(excluding: multiSelectedLayerIDs),
+                    columns: isOnASlant(pick.id) ? []
+                        : columnBands(excluding: multiSelectedLayerIDs),
                     snapped: Snapping.Result(origin: plan.bounds.origin),
                     copying: copyDragModifier(event))
                 refreshOverlays()
@@ -550,15 +558,11 @@ extension CanvasNSView {
                let copy = document?.canvasLayer(id: piece.instance) {
                 hit = copy
             }
-            // And dragging a piece inside a card that has been TURNED drags
-            // the card, for the same reason: the piece's place is stated in
-            // the card's upright space, so a drag on the piece would send it
-            // off at an angle to the pointer. The card is what the hand on it
-            // meant (`CanvasGroups.offersOwnHandles`).
-            if let turned = document?.turnedContainer(of: pick.id),
-               let card = document?.canvasLayer(id: turned) {
-                hit = card
-            }
+            // A piece inside a card that has been TURNED is dragged on its
+            // own, and it follows the pointer: the travel below is measured in
+            // the card's upright space, which is the space the piece's place
+            // is written in, so ten points to the right on screen is ten
+            // points along the card (`uprightPoint`).
             // The drag preview (two full renders, then a pass to hand the
             // canvas its sprite) starts once the pointer really travels, in
             // mouseDragged, not here: most presses on a layer are clicks that
@@ -569,15 +573,19 @@ extension CanvasNSView {
             // The box you see: a label lines up by its last letter, and what
             // this drag commits is read back as a visible box.
             let seen = hit.withoutSlack(hit.frame)
+            let grab = uprightPoint(p, of: hit.id)
             selectedLayerFrame = seen
             moveDrag = MoveDrag(layerID: hit.id,
-                                grabOffset: CGPoint(x: p.x - seen.origin.x,
-                                                    y: p.y - seen.origin.y),
+                                grabOffset: CGPoint(x: grab.x - seen.origin.x,
+                                                    y: grab.y - seen.origin.y),
                                 size: seen.size,
                                 startOrigin: seen.origin,
                                 peers: Experiments.shared.alignLayersEnabled
                                     ? (document?.snapPeers(excluding: hit.id) ?? []) : [],
-                                columns: columnBands(excluding: [hit.id]),
+                                // The columns screens stand in are drawn on the
+                                // upright canvas, so a piece on a slant has no
+                                // business catching one.
+                                columns: isOnASlant(hit.id) ? [] : columnBands(excluding: [hit.id]),
                                 snapped: Snapping.Result(origin: hit.frame.origin),
                                 copying: copying)
         } else {
@@ -703,6 +711,14 @@ extension CanvasNSView {
             motionPivotMouseDragged(to: p, event: event)
             return
         }
+        // The pointer as the layer under the hand reads it. On a piece inside a
+        // card that has been TURNED it is the same point written in the card's
+        // upright space, which is where that piece's frame and handles live;
+        // everywhere else it is the pointer unchanged (`uprightPoint`).
+        let dragging = measureHandleDrag?.layerID ?? captionDrag?.layerID
+            ?? endpointDrag?.layerID ?? transformDrag?.layerID ?? cornerRadiusDrag?.layerID
+            ?? resizeDrag?.layerID ?? moveDrag?.layerID ?? multiMove?.pick.id
+        let u = uprightPoint(p, of: dragging)
         if var drag = cropDrag {
             let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
             switch drag.kind {
@@ -760,21 +776,21 @@ extension CanvasNSView {
             // about this point rather than the raw pointer, so the magnets
             // judge the edges near the FOOT rather than the edges near the
             // hand, and the ⇧ line is the line the foot has to stay on.
-            let q = drag.grip.handlePoint(for: p)
+            let q = drag.grip.handlePoint(for: u)
             if drag.handle != .head {
                 drag.heldLine = MeasureLineHold.holding(
                     drag.heldLine, shiftDown: event.modifierFlags.contains(.shift),
                     mode: drag.mode, fixedFoot: drag.fixedFoot())
             }
             if drag.handle == .head {
-                snapGuide = snapMeasureHead(&drag, pointer: p, zoom: viewport.zoom,
+                snapGuide = snapMeasureHead(&drag, pointer: u, zoom: viewport.zoom,
                                             snapping: !held.isFree, holding: held)
                 snapHold.caught(x: snapGuide?.x, y: snapGuide?.y)
             } else if held.isFree {
                 drag.current = drag.heldLine?.project(q) ?? q
                 snapGuide = nil
             } else {
-                trackDragMotion(p)
+                trackDragMotion(u)
                 // Window the edge candidates by the span from the opposite foot to
                 // the foot being dragged, exactly like the create drag.
                 let fixed = drag.handle == .footA ? drag.originalEnd : drag.originalStart
@@ -802,7 +818,7 @@ extension CanvasNSView {
             // has not moved is someone taking hold of the end, not moving it.
             // Once true it stays true — a drag that comes back to where it
             // started is still a drag.
-            drag.moved = drag.moved || MeasureHandlePress.travelled(from: drag.pressPoint, to: p,
+            drag.moved = drag.moved || MeasureHandlePress.travelled(from: drag.pressPoint, to: u,
                                                                     zoom: viewport.zoom)
             measureHandleDrag = drag
             // Live re-render so the measured value updates as the handle moves,
@@ -814,13 +830,13 @@ extension CanvasNSView {
             }
             refreshOverlays()
         } else if var drag = captionDrag {
-            drag.current = p
+            drag.current = u
             captionDrag = drag
             // Live re-render so the pill follows the pointer.
             onCaptionPlacePreview(drag.layerID, drag.center)
             refreshOverlays()
         } else if var session = endpointDrag {
-            session.drag.update(to: snappedAnnotationPoint(p, shape: session.content.shape,
+            session.drag.update(to: snappedAnnotationPoint(u, shape: session.content.shape,
                                                            opposite: session.drag.fixed,
                                                            event: event))
             endpointDrag = session
@@ -831,12 +847,12 @@ extension CanvasNSView {
             case .rotate(let grabAngle):
                 session.transform.rotation = TransformDrag.rotation(
                     from: session.startTransform.rotation, grabAngle: grabAngle,
-                    currentAngle: TransformDrag.pointerAngle(p, around: session.center),
+                    currentAngle: TransformDrag.pointerAngle(u, around: session.center),
                     snapped: event.modifierFlags.contains(.shift))
             case .skew(let corner, let grabPoint):
                 session.transform = TransformDrag.skewed(
                     session.startTransform, corner: corner,
-                    by: CGPoint(x: p.x - grabPoint.x, y: p.y - grabPoint.y),
+                    by: CGPoint(x: u.x - grabPoint.x, y: u.y - grabPoint.y),
                     frameSize: session.frameSize)
             }
             transformDrag = session
@@ -866,14 +882,17 @@ extension CanvasNSView {
             let aspect = event.modifierFlags.contains(.shift)
             let held = snapHold(freeing: event.modifierFlags.contains(.command))
             let snapping = !aspect && !held.isFree
+            // Same rule as a move: a piece on a slant has nothing to say to the
+            // grid or the rulers, which are drawn upright.
+            let slant = isOnASlant(drag.layerID)
             drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
                                         columns: snapping ? drag.columns : [],
-                                        gridSpacing: snapping ? canvasSnapSpacing : nil,
+                                        gridSpacing: snapping && !slant ? canvasSnapSpacing : nil,
                                         gridOrigin: canvasSnapOrigin,
                                         gridAxes: canvasSnapAxes,
-                                        guides: canvasSnapGuides,
+                                        guides: slant ? [] : canvasSnapGuides,
                                         holding: snapping ? held : .none)
             // The lit grid line counts as a line the drag is standing on, so it
             // holds through a wobble exactly as a guide does.
@@ -884,7 +903,7 @@ extension CanvasNSView {
             onFramePreview(drag.layerID, drag.frame)
             refreshOverlays()
         } else if var drag = moveDrag {
-            let proposed = CGPoint(x: p.x - drag.grabOffset.x, y: p.y - drag.grabOffset.y)
+            let proposed = CGPoint(x: u.x - drag.grabOffset.x, y: u.y - drag.grabOffset.y)
             // Read the copy modifier BEFORE deciding to float a sprite: a copy
             // drag never gets one, because the sprite's underlay hides the layer
             // it lifts and the original has to stay visible where it is.
@@ -903,14 +922,21 @@ extension CanvasNSView {
                 if held.isFree {
                     drag.snapped = Snapping.Result(origin: proposed)
                 } else {
+                    // The picture's edges, the grid and the rulers are all
+                    // drawn on the upright canvas. A piece inside a card on a
+                    // slant is measured in the card's own space, so it lines
+                    // up with the other pieces in the card and leaves the
+                    // upright three alone: catching one of them would land it
+                    // somewhere neither the piece nor the line agrees on.
+                    let slant = isOnASlant(drag.layerID)
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
-                                                            canvas: viewport.documentSize,
+                                                            canvas: slant ? .zero : viewport.documentSize,
                                                             peers: drag.peers,
                                                             columnBands: drag.columns,
-                                                            gridSpacing: canvasSnapSpacing,
+                                                            gridSpacing: slant ? nil : canvasSnapSpacing,
                                                             gridOrigin: canvasSnapOrigin,
                                                             gridAxes: canvasSnapAxes,
-                                                            guides: canvasSnapGuides,
+                                                            guides: slant ? [] : canvasSnapGuides,
                                                             zoom: viewport.zoom,
                                                             holding: held)
                 }
@@ -926,20 +952,26 @@ extension CanvasNSView {
             // pointer — releasing over the highlighted cell absorbs it. A copy
             // drag never does: being swallowed by a cell is not what "leave the
             // original and take a copy" asked for.
-            if drag.moved, !drag.copying, document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
+            // A piece being nudged INSIDE a card on a slant is not looking for
+            // a new home: both of these would take it out of the card it is
+            // being tidied within, and both read boxes on the upright canvas
+            // that its own numbers cannot be compared with.
+            let slanted = isOnASlant(drag.layerID)
+            if drag.moved, !drag.copying, !slanted,
+               document?.canvasLayer(id: drag.layerID)?.imageRef != nil {
                 hoverSlot = collageSlotTarget(at: p, excluding: drag.layerID)
             } else {
                 hoverSlot = nil
             }
             applyGrabCursor(drag.copying ? .dragCopy : nil)
-            adoptionHost = drag.moved
+            adoptionHost = drag.moved && !slanted
                 ? adoptionHost(moving: [drag.layerID: CGRect(origin: drag.snapped.origin,
                                                              size: drag.size)])
                 : nil
             moveDrag = drag
             refreshOverlays()
         } else if var drag = multiMove {
-            let proposed = CGPoint(x: p.x - drag.grabOffset.x, y: p.y - drag.grabOffset.y)
+            let proposed = CGPoint(x: u.x - drag.grabOffset.x, y: u.y - drag.grabOffset.y)
             if !drag.moved {
                 let travel = hypot(proposed.x - drag.plan.bounds.origin.x,
                                    proposed.y - drag.plan.bounds.origin.y)
@@ -976,10 +1008,11 @@ extension CanvasNSView {
             // multi-drag never offers itself to one.
             hoverSlot = nil
             applyGrabCursor(drag.copying ? .dragCopy : nil)
-            adoptionHost = adoptionHost(moving: drag.plan.members.reduce(into: [:]) { boxes, member in
-                guard let origins = drag.liveOrigins, let origin = origins[member.id] else { return }
-                boxes[member.id] = CGRect(origin: origin, size: member.bounds.size)
-            })
+            adoptionHost = isOnASlant(drag.pick.id) ? nil
+                : adoptionHost(moving: drag.plan.members.reduce(into: [:]) { boxes, member in
+                    guard let origins = drag.liveOrigins, let origin = origins[member.id] else { return }
+                    boxes[member.id] = CGRect(origin: origin, size: member.bounds.size)
+                })
             multiMove = drag
             refreshOverlays()
         } else if let drag = slotDrag {
@@ -1254,7 +1287,14 @@ extension CanvasNSView {
                 let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
                 selectedLayerFrame = frame
                 holdSpriteUntilRender = true
-                onDropCommit(drag.layerID, frame)
+                // A piece tidied INSIDE a card on a slant stays in that card.
+                // Changing hands is a decision made by where a thing lands on
+                // the upright canvas, and this one never left its card.
+                if isOnASlant(drag.layerID) {
+                    onFrameCommit(drag.layerID, frame)
+                } else {
+                    onDropCommit(drag.layerID, frame)
+                }
             }
             hoverSlot = nil
             adoptionHost = nil
@@ -1266,7 +1306,7 @@ extension CanvasNSView {
                 if let origins = drag.liveOrigins { onCopyDragCommit(origins) }
                 else { onCopyDragCancel() }
             } else if let origins = drag.liveOrigins {
-                onMoveSelectionCommit(origins, true)
+                onMoveSelectionCommit(origins, !isOnASlant(drag.pick.id))
             }
             // The press kept the whole selection so the group could travel.
             // If it never travelled it was a click on one layer, so now it

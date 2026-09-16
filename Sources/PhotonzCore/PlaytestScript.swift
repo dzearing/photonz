@@ -1182,6 +1182,29 @@ public enum CaptionCaretSpot: String, CaptionClaimWord {
 }
 
 /// What the blue selection outline must be doing while the field is open.
+/// A corner of a layer's box, named the way a person points at one.
+public enum LayerBoxCorner: String, Sendable {
+    case topLeft
+    case topRight
+    case bottomRight
+    case bottomLeft
+
+    /// Which of the four `Layer.transformedCorners` this is: they come back
+    /// clockwise from the top left.
+    public var index: Int {
+        switch self {
+        case .topLeft: 0
+        case .topRight: 1
+        case .bottomRight: 2
+        case .bottomLeft: 3
+        }
+    }
+
+    public static var words: [String] {
+        ["topLeft", "topRight", "bottomRight", "bottomLeft"]
+    }
+}
+
 public enum CaptionOutlineClaim: CaptionClaimWord {
     /// Drawn round the bubble on screen, not round the caption on disk.
     case hugsTheBubble
@@ -1772,6 +1795,23 @@ public enum PlaytestStep: Sendable, Equatable {
     /// promises (`SeparateBudget`). `count` sets both to the same number when a
     /// walk really does know the answer exactly.
     case expectLayers(atLeast: Int?, atMost: Int?)
+    /// Where a named layer's box must have landed, in the two spaces that
+    /// matter.
+    ///
+    /// `at` and `size` are the box the layer's own Position and Size panel
+    /// shows: its place inside whatever holds it, measured upright. `corner`
+    /// and `onScreen` are one corner as a PERSON sees it, after every turn
+    /// above the layer and its own.
+    ///
+    /// Both exist because of pieces inside a card that has been turned. A
+    /// picture of one settles nothing: the box is drawn on the slant, so a
+    /// drag that followed the hand and a drag that went off at an angle to it
+    /// look much the same in a snapshot, and a resize that swung the far
+    /// corner looks exactly like one that held it. The first pair says the
+    /// piece moved by what the hand moved, the second says the corner nobody
+    /// touched stayed where it was.
+    case expectBox(layer: String, at: PlaytestPoint?, size: PlaytestPoint?,
+                   corner: LayerBoxCorner?, onScreen: PlaytestPoint?, within: CGFloat)
     /// Claims about the arrow caption field that is open right now: how the
     /// draft is laid out across its bubble, where the caret is waiting, and
     /// whether the blue outline is drawn round the bubble on screen.
@@ -1938,7 +1978,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -1999,6 +2039,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectHint: "expectHint"
         case .expectNotice: "expectNotice"
         case .expectLayers: "expectLayers"
+        case .expectBox: "expectBox"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
         case .expectInView: "expectInView"
@@ -2414,6 +2455,38 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectFeet(layer: try f.optionalString("layer"), start: start, end: end,
                                reads: reads, within: CGFloat(within))
+        case "expectBox":
+            let layer = try f.string("layer")
+            let at = fields["at"] == nil ? nil : try f.point("at")
+            let size = fields["size"] == nil ? nil : try f.point("size")
+            let onScreen = fields["onScreen"] == nil ? nil : try f.point("onScreen")
+            var corner: LayerBoxCorner?
+            if let raw = fields["corner"] {
+                guard let text = raw as? String, let parsed = LayerBoxCorner(rawValue: text) else {
+                    throw f.invalid("corner", "must be one of "
+                        + LayerBoxCorner.words.joined(separator: ", "))
+                }
+                corner = parsed
+            }
+            guard at != nil || size != nil || onScreen != nil else {
+                throw f.invalid("at", "expectBox has to claim something: \"at\" with the [x, y] "
+                    + "the layer's own panel should read, \"size\" with the [w, h] it should be, "
+                    + "or \"corner\" and \"onScreen\" with where a corner must sit on screen")
+            }
+            if corner != nil, onScreen == nil {
+                throw f.invalid("onScreen", "naming a corner without saying where it should be "
+                    + "claims nothing; add \"onScreen\": [x, y]")
+            }
+            if onScreen != nil, corner == nil {
+                throw f.invalid("corner", "say WHICH corner has to be at that spot: one of "
+                    + LayerBoxCorner.words.joined(separator: ", "))
+            }
+            let boxWithin = try f.optionalNumber("within") ?? 2
+            guard boxWithin >= 0 else {
+                throw f.invalid("within", "a distance is zero or more, not \(boxWithin)")
+            }
+            self = .expectBox(layer: layer, at: at, size: size, corner: corner,
+                              onScreen: onScreen, within: CGFloat(boxWithin))
         case "expectHint":
             let contains = try f.string("contains")
             guard !contains.trimmingCharacters(in: .whitespaces).isEmpty else {

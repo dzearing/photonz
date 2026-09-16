@@ -2075,6 +2075,64 @@ struct PlaytestScriptTests {
         #expect(within == 0.5)
     }
 
+    // A walk can photograph a piece being dragged inside a card on a slant and
+    // still say nothing about where it landed: the box is drawn turned, so no
+    // picture settles whether the piece followed the hand or went off at an
+    // angle to it. `expectBox` asks the DOCUMENT, in both spaces that matter —
+    // the numbers the piece's own panel shows, and the corner a person watches
+    // on screen.
+    @Test("An expectBox step says where a layer's box must have landed")
+    func expectBoxNamesTheBox() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBox", "layer": "Save", "at": [105, 105],
+                       "size": [40, 20], "within": 1 } ] }
+        """)
+        guard case .expectBox(let layer, let at, let size, let corner, let onScreen, let within) =
+                script.steps[0] else {
+            Issue.record("expectBox"); return
+        }
+        #expect(layer == "Save")
+        #expect(at?.point == CGPoint(x: 105, y: 105))
+        #expect(size?.point == CGPoint(x: 40, y: 20))
+        #expect(corner == nil)
+        #expect(onScreen == nil)
+        #expect(within == 1)
+        #expect(script.steps[0].name == "expectBox")
+        #expect(PlaytestStep.names.contains("expectBox"))
+    }
+
+    @Test("An expectBox step can claim one corner as a person sees it")
+    func expectBoxNamesACornerOnScreen() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBox", "layer": "Save", "corner": "bottomRight",
+                       "onScreen": [300, 220] } ] }
+        """)
+        guard case .expectBox(_, let at, _, let corner, let onScreen, let within) =
+                script.steps[0] else {
+            Issue.record("expectBox"); return
+        }
+        #expect(at == nil)
+        #expect(corner == .bottomRight)
+        #expect(onScreen?.point == CGPoint(x: 300, y: 220))
+        #expect(within == 2)
+    }
+
+    @Test func expectBoxHasToClaimSomething() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectBox", "layer": "Save" } ] }
+            """)
+        }
+    }
+
+    @Test func expectBoxWantsACornerWithItsPlace() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectBox", "layer": "Save", "corner": "topLeft" } ] }
+            """)
+        }
+    }
+
     @Test func expectFeetHasToClaimSomething() {
         #expect(throws: PlaytestScriptError.self) {
             try decode("""
