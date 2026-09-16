@@ -1,0 +1,27 @@
+{
+  "feature": "A turned lens shows the picture the right way up",
+  "epic": "measure-redline",
+  "summary": "Turning a lens or a magnifier now turns the box alone. The blurred or pixelated region stays lined up with the picture around it instead of tipping over with the frame, and a magnified label at an angle is still readable.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open any screenshot. No flags to set.",
+  "try": [
+    { "do": "Press K for the Lens and drag a box over a block of text." },
+    { "do": "In the Lens section, set it to Pixelate." },
+    { "do": "In Geometry, type 20 into the A field." },
+    { "do": "Look at the blocks inside the box: they stay square to the picture while the box sits at an angle.", "shot": "2026-09-16-lens-turn-1.png" },
+    { "do": "Drag the box around at that angle and watch the blocks stay put under it." },
+    { "do": "Press Z for the Lens set to Magnify and drag over a small label." },
+    { "do": "Type 20 into A for that one too.", "shot": "2026-09-16-lens-turn-2.png" },
+    { "do": "Read the magnified label: it is upright inside the tilted frame." }
+  ],
+  "evaluate": [
+    "With a lens at an angle, does the blurred region read as part of the same picture, or does it still look pasted on?",
+    "Is an upright picture inside a tilted magnifier what you wanted, or would you rather the magnified copy tilted with its frame like a photo in a frame?",
+    "At an angle the corners of the box show a little more of the picture than the straight box did. Does that read as a window, or as a mistake?",
+    "Does dragging a turned lens still feel as smooth as a straight one?"
+  ],
+  "rough": [
+    "No walk could run during this task: the Mac's screen was locked the whole time, so every walk reported locked and macOS refused every window capture. The two pictures here are renders straight from the renderer on a fixture screenshot, not photographs of the app.",
+    "A turned magnifier's leader lines and source outline still aim at the box as it was stored, not at the turned box, so the line can stop short of the frame's edge. That is drawn by a separate piece and was already true before this change.",
+    "Turning a GROUP still turns everything on it, a lens inside it included. That is deliberate — a turn is a thing done to the whole card — but it means the same lens behaves differently depending on whether it is turned itself or carried by a turned group."
+  ]
+}

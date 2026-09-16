@@ -16471,3 +16471,38 @@ Next: the sweep, then whatever the queue holds. Open question for the user, on
 the audit card: switching a blur to Magnify moves the box to the side of what it
 was covering, which is what a magnifier is but is the one place in this feature
 where something jumps.
+
+## 2026-09-16 — a turned lens shows the picture the right way up
+
+Turning a lens used to turn the picture inside it, so a blurred region sat at an
+angle to everything around it. It turns the **box** now. The renderer reads the
+canvas over the area the turned box covers, adjusts or magnifies it there, and
+takes the turn back out before the shared styling path puts it back
+(`DocumentRenderer.canvasTurn` / `upright`). The corner, the ring, the blur and
+the shadow all still turn with the frame, because none of the extent-based box
+maths changed — which is what the task notes had feared would block this.
+
+A magnifier follows the same rule, so an enlarged label at a jaunty angle is
+still readable. That is a judgment call rather than an obvious one, since a
+magnifier shows a region from somewhere else and could reasonably read as a
+photo in a frame; it is the first question on the audit card.
+
+`Layer.backdropSource` applies the turn too, so a change in a corner the turn
+swung into view redraws the lens.
+
+**A lens at no turn at all is byte for byte what it was.** Proved rather than
+assumed: all five adjustments plus a magnifier, with corner radius, ring and
+opacity, rendered at 1x and 2x and SHA256'd, then the two source files stashed
+and rendered again — same two hashes. Perf gate green (interactive edit 6.2ms
+against 26ms; export at 2x 120ms against 290ms).
+
+**Not verified on screen, again.** The Mac's screen has been locked since
+2026-09-14, so not one walk could run and macOS refused every window capture.
+The audit's two pictures are renders straight from `DocumentRenderer` on a
+fixture screenshot and say so. A sweep is requested; it was the 33rd pending.
+
+Filed on the way past: a magnifier turned on its side has its leader line aimed
+at the box as stored, so at 40 degrees it stops about 60 points short of the
+frame you can see (`the-line-back-from-a-turned-magnifier-points-at`).
+
+Next: whatever the queue holds, and the sweep the moment the screen is unlocked.

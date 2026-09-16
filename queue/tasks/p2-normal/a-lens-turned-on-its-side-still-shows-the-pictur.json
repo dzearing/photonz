@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 280,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:01:09.419Z",
-  "updated": "2026-09-15T12:14:53.575Z",
+  "updated": "2026-09-16T05:28:16.357Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the lens on 2026-09-12 and recorded in its audit rather than fixed, because it is a visible-but-rare case and the fix is not small. DocumentRenderer.ciImage samples the backdrop axis-aligned from the layer frame, then the shared path applies layer.transform, so the sampled pixels rotate too. Fixing it means sampling the backdrop over the ROTATED bounding box and counter-rotating before the shared transform, which collides with the extent-based box maths that rounded()/borderEffects() use (they read image.extent, which a counter-rotated image grows). The zoom callout behaves the same way and would be fixed by the same change.",
@@ -42,6 +42,51 @@
     {
       "t": "2026-09-15T12:14:53.574Z",
       "note": "seq 240 -> 280"
+    },
+    {
+      "t": "2026-09-16T05:28:16.356Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Before building: walked the idea. The lens is unambiguous - it is a window on what is below, so the pixels under it must not move when the box turns. The magnifier is arguable: it shows a region from somewhere ELSE, so it could reasonably read as a picture in a frame that tilts with the frame. Built it upright anyway, because a magnifier exists to make something READABLE and tilting the enlarged label 40 degrees is the one thing that undoes that. Put the question in the audit's evaluate list so the user can say otherwise in one click."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Shortest version that delivers the value: read the canvas over the area the TURNED box covers, adjust or magnify it there, take the turn back out before the shared styling path. Two small helpers (DocumentRenderer.canvasTurn, upright) and no change at all to the extent-based corner/ring/shadow maths, which is what the task notes feared. Both helpers short-circuit on an identity transform, so the untouched path really is untouched."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Acceptance 3 verified properly, not assumed: rendered a document with all five adjustments plus a magnifier, with corner radius, ring and opacity, at 1x and 2x, and SHA256'd the pixels. git stash of the two source files, rerun, same two hashes. Byte for byte identical."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Acceptance 1 and 2 verified by new tests: aQuarterTurnedLensShowsThePictureTheRightWayUp, aLensTurnedOffTheAxesStillShowsAnUprightPicture (30 degrees, two points that a turned seam would swing across), aTurnedLensLeavesTheCornersOfItsOldBoxAlone, theRingRoundATurnedLensFollowsTheTurnedEdge, aTurnedMagnifyLensShowsTheMagnifiedPictureTheRightWayUp, plus aTurnedLensWatchesTheRegionItsTurnedBoxCovers in PhotonzCore. All three failed first."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Layer.backdropSource now applies the turn: a turned lens reads a bigger region, so a change in a corner the turn swung into view has to redraw it. Without that the dirty-region logic would leave stale pixels in the corners."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Perf note (composite path): no added Core Image nodes at zero degrees, proved by the byte-identity above. A turned lens samples the turned box's bounding box (2x the area at 45 degrees) and pays one extra affine. Perf gate green: 12MP/10-layer interactive edit 6.2ms against 26ms, export at 2x 120ms against 290ms."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Could not run a single walk: the Mac's screen was locked for the whole task, so every walk reported status locked and macOS refused every window capture. Asked for a sweep with that as the reason (33 pending, so nothing has swept since the lock). The audit's two pictures are renders straight from DocumentRenderer on a fixture screenshot and say so."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Filed: the-line-back-from-a-turned-magnifier-points-at - reproduced at 40 degrees, the leader line ends about 60 points short of the turned box because ZoomCalloutOverlayRasterizer is handed the stored frame."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Left rough: turning a GROUP still turns everything on it, a lens inside included. That is the existing and deliberate rule (a turn is a thing done to the whole card) but it does mean the same lens behaves differently turned itself versus carried by a turned group. Noted in the audit; did not file, since nobody has hit it and the group rule is settled."
+    },
+    {
+      "t": "2026-09-16T05:40:20.740566Z",
+      "note": "Left rough: one full-suite run recorded a single issue that two immediately following full runs did not, and the failing test name did not survive the grep. Not filed: cannot say what it was, let alone reproduce it. Recording it here in case a later pass sees the same shape."
     }
-  ]
+  ],
+  "started": "2026-09-16T05:28:16.355Z"
 }

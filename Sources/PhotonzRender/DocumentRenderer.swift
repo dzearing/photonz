@@ -864,10 +864,17 @@ public final class DocumentRenderer: @unchecked Sendable {
             let box = CGRect(x: frame.minX,
                              y: document.canvasSize.height - frame.maxY,
                              width: frame.width, height: frame.height)
-            guard let lensed = LensFilter.image(of: lens, over: backdrop, box: box) else { return nil }
+            // A turn is a thing done to the BOX. The picture underneath does
+            // not tip over because the box did, so the canvas is read over the
+            // area the TURNED box covers, adjusted there, and the turn is then
+            // taken back out — the shared transform below puts it back exactly
+            // where it was read from, this time with the box turned round it.
+            let turn = canvasTurn(of: layer, box: box)
+            let read = turn.map { box.applying($0) } ?? box
+            guard let lensed = LensFilter.image(of: lens, over: backdrop, box: read) else { return nil }
             // Back to the origin every other content kind hands back from, so
             // the shared styling and placement below apply unchanged.
-            image = lensed.transformed(by: CGAffineTransform(translationX: -box.minX, y: -box.minY))
+            image = upright(lensed, box: box, turn: turn)
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)
@@ -875,8 +882,32 @@ public final class DocumentRenderer: @unchecked Sendable {
             let flipped = CGRect(x: source.origin.x,
                                  y: document.canvasSize.height - source.maxY,
                                  width: source.width, height: source.height)
-            image = backdrop.cropped(to: flipped)
-                .transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
+            let box = CGRect(x: frame.minX,
+                             y: document.canvasSize.height - frame.maxY,
+                             width: frame.width, height: frame.height)
+            // Magnify reads from somewhere else on the canvas, but the rule is
+            // the lens's: the box turns and the magnified picture inside it
+            // stays the right way up, so a person can still read what it
+            // enlarged. Blown up onto the box in canvas space first, so the
+            // turn can be taken out of it the same way (below); untouched when
+            // there is no turn, which keeps an upright callout the pixels it
+            // has always been.
+            if let turn = canvasTurn(of: layer, box: box), box.width >= 1, box.height >= 1 {
+                let onto = CGAffineTransform(translationX: -flipped.minX, y: -flipped.minY)
+                    .concatenating(CGAffineTransform(scaleX: box.width / flipped.width,
+                                                     y: box.height / flipped.height))
+                    .concatenating(CGAffineTransform(translationX: box.minX, y: box.minY))
+                // Only the sliver of canvas the turned box actually shows: at
+                // a turn its corners reach past the source region, and cutting
+                // to the source first would leave them empty.
+                let needed = box.applying(turn).applying(onto.inverted())
+                image = upright(backdrop.cropped(to: needed).transformed(by: onto),
+                                box: box, turn: turn)
+            } else {
+                image = backdrop.cropped(to: flipped)
+                    .transformed(by: CGAffineTransform(translationX: -flipped.origin.x,
+                                                       y: -flipped.origin.y))
+            }
         // Handled above, before the switch: a group has no pixels of its own,
         // it draws what it holds.
         case .group:
@@ -2081,6 +2112,45 @@ public final class DocumentRenderer: @unchecked Sendable {
         let inPicture = CGPoint(x: offset.x, y: -offset.y)
         let turned = inPicture.applying(transform.affineTransform(around: .zero))
         return CGPoint(x: inPicture.x - turned.x, y: inPicture.y - turned.y)
+    }
+
+    /// The turn a layer takes, written in CANVAS space: it maps the layer's
+    /// stored box to where the composite finally puts it. Nil when the layer
+    /// is not turned, and nil when the turn squashes the box to a line (a pair
+    /// of skews can), because there is then nothing to take back out of it.
+    ///
+    /// It is the same turn the leaf path applies around the picture's middle
+    /// and then slides by `swingOffPivot`, only written once, about the mount
+    /// itself. Layers that read the canvas need it in this form: what they
+    /// draw is sampled in canvas space, so the turn has to be undone there.
+    private func canvasTurn(of layer: Layer, box: CGRect) -> CGAffineTransform? {
+        guard !layer.transform.isIdentity else { return nil }
+        var mirrored = layer.transform
+        mirrored.rotation = -mirrored.rotation
+        mirrored.skewX = -mirrored.skewX
+        mirrored.skewY = -mirrored.skewY
+        // `box` is the y-up copy of the layer's frame, so the mount's offset
+        // from the middle is the model's offset with its y sign flipped.
+        let offset = pivotOffset(of: layer)
+        let turn = mirrored.affineTransform(
+            around: CGPoint(x: box.midX + offset.x, y: box.midY - offset.y))
+        guard abs(turn.a * turn.d - turn.b * turn.c) > 1e-9 else { return nil }
+        return turn
+    }
+
+    /// A canvas-space picture brought into the frame-sized space every other
+    /// content kind hands back, with the layer's turn taken back out of it.
+    ///
+    /// Undoing the turn here is what makes the turn below a turn of the BOX
+    /// alone: the two cancel over the picture and leave only the styling —
+    /// corner, ring, shadow — turning with the frame.
+    private func upright(_ image: CIImage, box: CGRect, turn: CGAffineTransform?) -> CIImage {
+        let toBox = CGAffineTransform(translationX: -box.minX, y: -box.minY)
+        guard let turn else { return image.transformed(by: toBox) }
+        // Cut back to the box: untwisting grows the extent to the turned box's
+        // bounds, and every step after this one measures from the extent.
+        return image.transformed(by: turn.inverted().concatenating(toBox))
+            .cropped(to: CGRect(origin: .zero, size: box.size))
     }
 
     /// A rect in the document's top-left space, in Core Image's bottom-left one.

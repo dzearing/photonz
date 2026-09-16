@@ -287,7 +287,14 @@ extension Layer {
             return callout.sourceRect.standardized
         case .lens(let lens):
             let reach = lens.sampleReach
-            return frame.standardized.insetBy(dx: -reach, dy: -reach)
+            // A TURNED lens shows the picture underneath the right way up, so
+            // what it reads is the canvas its TURNED box covers, not the box
+            // it was stored as. With the stored box, a change in a corner the
+            // turn swung into view would never redraw it.
+            let box = transform.isIdentity
+                ? frame.standardized
+                : frame.standardized.applying(transform.affineTransform(around: turnPivot))
+            return box.insetBy(dx: -reach, dy: -reach)
         default:
             return nil
         }

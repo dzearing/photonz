@@ -20,16 +20,18 @@ struct LensRenderingTests {
         return context.makeImage()!
     }
 
-    /// Left half red, right half blue, in top-left document coordinates.
-    private func halvesImage(size: Int) -> CGImage {
+    /// Red left of the seam, blue right of it, in top-left document
+    /// coordinates. The seam defaults to the middle.
+    private func halvesImage(size: Int, seamAt seam: Int? = nil) -> CGImage {
+        let seam = seam ?? size / 2
         let context = CGContext(data: nil, width: size, height: size,
                                 bitsPerComponent: 8, bytesPerRow: size * 4,
                                 space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         context.setFillColor(CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: size / 2, height: size))
+        context.fill(CGRect(x: 0, y: 0, width: seam, height: size))
         context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
-        context.fill(CGRect(x: size / 2, y: 0, width: size / 2, height: size))
+        context.fill(CGRect(x: seam, y: 0, width: size - seam, height: size))
         return context.makeImage()!
     }
 
@@ -368,6 +370,118 @@ struct LensRenderingTests {
         #expect(abs(Int(a.b) - Int(b.b)) < 24,
                 "the same document point is blurred the same at 1x and 2x — got \(a) and \(b)")
         #expect(a.b > 8, "and it really is blurred — got \(a)")
+    }
+
+    // MARK: - A turned lens
+
+    /// Turning a lens turns the BOX. What shows through it is the picture
+    /// underneath, and that does not tip over just because the box did: a
+    /// square lens at a quarter turn covers exactly the same pixels, so it
+    /// must show exactly the same picture as one at no turn at all.
+    @Test func aQuarterTurnedLensShowsThePictureTheRightWayUp() {
+        let store = ImageStore()
+        var doc = halvesDocument(store)
+        var lens = lensLayer(.invert, frame: CGRect(x: 50, y: 50, width: 100, height: 100))
+        lens.transform.rotation = .pi / 2
+        doc.addLayer(lens)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // The seam between red and blue runs down x = 100 and stays there.
+        let left = pixel(output, x: 75, y: 100)
+        let right = pixel(output, x: 125, y: 100)
+        #expect(left.r < 40 && left.g > 200 && left.b > 200,
+                "the red half is inverted to cyan and stays on the left — got \(left)")
+        #expect(right.r > 200 && right.g > 200 && right.b < 40,
+                "the blue half is inverted to yellow and stays on the right — got \(right)")
+    }
+
+    /// The same at an angle nothing lines up with: the seam under the lens is
+    /// vertical, so both points just right of it read as inverted blue. Turned
+    /// with the box, the seam would swing across one of them.
+    @Test func aLensTurnedOffTheAxesStillShowsAnUprightPicture() {
+        let store = ImageStore()
+        let base = store.register(halvesImage(size: 200, seamAt: 130))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 200, height: 200)
+        var lens = lensLayer(.invert, frame: CGRect(x: 40, y: 40, width: 120, height: 120))
+        lens.transform.rotation = .pi / 6
+        doc.addLayer(lens)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        for y in [75, 125] {
+            let p = pixel(output, x: 140, y: y)
+            #expect(p.r > 200 && p.g > 200 && p.b < 40,
+                    "right of the seam is inverted blue at y \(y) — got \(p)")
+        }
+    }
+
+    /// ...and the box itself really did turn: a corner of the stored box is
+    /// outside the turned one, so the picture there is untouched.
+    @Test func aTurnedLensLeavesTheCornersOfItsOldBoxAlone() {
+        let store = ImageStore()
+        var doc = halvesDocument(store)
+        var lens = lensLayer(.invert, frame: CGRect(x: 50, y: 50, width: 100, height: 100))
+        lens.transform.rotation = .pi / 4
+        doc.addLayer(lens)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // (56, 56) is inside the stored square and well outside the diamond.
+        let corner = pixel(output, x: 56, y: 56)
+        #expect(corner.r > 200 && corner.g < 40 && corner.b < 40,
+                "the corner the turn swung away from is plain red — got \(corner)")
+        // ...while the middle of the diamond is inverted.
+        let middle = pixel(output, x: 75, y: 100)
+        #expect(middle.r < 40 && middle.g > 200,
+                "the middle of the turned box is inverted — got \(middle)")
+    }
+
+    /// ...and the ring round it turned with it. A band drawn inside a turned
+    /// box runs along the turned edge, never along the edge the box was stored
+    /// with, or a lens on its side would wear a square frame.
+    @Test func theRingRoundATurnedLensFollowsTheTurnedEdge() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 200, height: 200, r: 255, g: 0, b: 0))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 200, height: 200)
+        var style = LayerStyle()
+        style.effects = [.border(BorderEffect(width: 6, colorHex: "#00FF00", position: .inside))]
+        var lens = lensLayer(.invert, frame: CGRect(x: 50, y: 50, width: 100, height: 100),
+                             style: style)
+        lens.transform.rotation = .pi / 4
+        doc.addLayer(lens)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // The top point of the diamond sits at y = 100 - 50 * sqrt(2).
+        let onEdge = pixel(output, x: 100, y: 33)
+        #expect(onEdge.g > 200 && onEdge.r < 80,
+                "the band runs along the turned edge — got \(onEdge)")
+        // Where the stored box's left edge used to be there is nothing but the
+        // inverted picture now.
+        let oldEdge = pixel(output, x: 54, y: 100)
+        #expect(oldEdge.r < 40 && oldEdge.b > 200,
+                "no band left along the edge the box was stored with — got \(oldEdge)")
+    }
+
+    /// A magnify lens is a picture of somewhere ELSE, but the same rule holds:
+    /// the box turns, the magnified picture inside it stays the right way up.
+    @Test func aTurnedMagnifyLensShowsTheMagnifiedPictureTheRightWayUp() {
+        let store = ImageStore()
+        var doc = halvesDocument(store)
+        let callout = ZoomCalloutContent(sourceRect: CGRect(x: 90, y: 20, width: 20, height: 20),
+                                         magnification: 3)
+        var layer = Layer(name: "Magnify", content: .zoomCallout(callout),
+                          frame: CGRect(x: 70, y: 120, width: 60, height: 60))
+        layer.transform.rotation = .pi / 2
+        doc.addLayer(layer)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // The source straddles the seam, so the magnified copy is red on its
+        // left and blue on its right, and a quarter turn must not make it red
+        // on top and blue underneath.
+        let left = pixel(output, x: 80, y: 150)
+        let right = pixel(output, x: 120, y: 150)
+        #expect(left.r > 200 && left.b < 40, "magnified red stays on the left — got \(left)")
+        #expect(right.b > 200 && right.r < 40, "magnified blue stays on the right — got \(right)")
     }
 
     // MARK: - The layers panel

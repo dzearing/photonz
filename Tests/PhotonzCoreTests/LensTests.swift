@@ -205,6 +205,22 @@ struct LensTests {
         #expect(flat.backdropSource == CGRect(x: 50, y: 50, width: 100, height: 40))
     }
 
+    /// A TURNED lens still shows the picture underneath the right way up, so
+    /// what it reads is the canvas its turned box covers, not the box it was
+    /// stored as. A change in a corner the turn swept into view has to redraw
+    /// it, and with the stored box it would not.
+    @Test func aTurnedLensWatchesTheRegionItsTurnedBoxCovers() {
+        var layer = Layer(name: "Grey", content: .lens(LensContent(adjustment: .greyscale)),
+                          frame: CGRect(x: 50, y: 50, width: 100, height: 100))
+        layer.transform.rotation = .pi / 4
+        let watched = layer.backdropSource!
+        // A square turned an eighth of a turn about its middle reaches out to
+        // half a diagonal either way: 50 * sqrt(2) is about 70.7.
+        #expect(abs(watched.midX - 100) < 0.01 && abs(watched.midY - 100) < 0.01)
+        #expect(abs(watched.width - 100 * 2.0.squareRoot()) < 0.01)
+        #expect(abs(watched.height - 100 * 2.0.squareRoot()) < 0.01)
+    }
+
     /// Resizing a lens shows MORE of the picture underneath, it does not
     /// stretch what was already there, so a start-frame sprite is never right.
     @Test func aLensNeverScalesASprite() {

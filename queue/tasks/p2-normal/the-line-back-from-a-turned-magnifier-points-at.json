@@ -1,0 +1,27 @@
+{
+  "id": "the-line-back-from-a-turned-magnifier-points-at",
+  "title": "The line back from a turned magnifier points at its frame",
+  "goal": "When you turn a magnifier box on its side, the line that runs from the magnified box back to the bit of the picture it enlarged stops in mid air instead of reaching the box. It is aiming at where the box would be if you had not turned it.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2790,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T05:40:09.265Z",
+  "updated": "2026-09-16T05:40:09.268Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing a-lens-turned-on-its-side-still-shows-the-pictur on 2026-09-16.\n\nReproduction: rendered a 1440x960 document with one zoomCallout layer, sourceRect (172,76,288,76), magnification 2.4, frame (432,528,600,184), transform.rotation 40 degrees, via DocumentRenderer().render. In the output the single leader line ends at about (430,528) - the UNTURNED frame corner - with roughly 60 points of empty canvas between it and the turned box edge. At 18 degrees it is subtler but still short.\n\nCause: DocumentRenderer.compositeLayers passes ZoomCalloutOverlayRasterizer.rasterize(callout: frame.magnified(by: shrink)) - the stored frame, with no transform applied - and the overlay is composited in canvas space, so Geometry.leaderLines picks corner pairs off a box that is not where the box is drawn. The fix wants the turned corners (Layer.turnedCorners / transform.affineTransform(around: turnPivot)) rather than the axis-aligned rect, and leaderLines currently takes two rects.\n\nThe source outline itself is right - it follows sourceRect, which does not turn.",
+  "acceptance": [
+    "A magnifier turned to any angle has its leader line meeting the edge of the box you can see",
+    "The outline round the source region is unchanged",
+    "A magnifier at no turn at all looks exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T05:40:09.267Z",
+      "note": "created (manual)"
+    }
+  ]
+}
