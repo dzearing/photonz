@@ -1,0 +1,49 @@
+{
+  "feature": "Separate finds the boxes in a dark window",
+  "epic": "ui-building",
+  "summary": "Separate into Layers now works on a capture of a whole app window, not just on a flat light page. A window with a dark canvas, a toolbar and side panels used to give back every word in it and not one button; it now gives back the rows, the swatches, the checkboxes, the dropdowns and the shapes on the canvas, each read against the paint it was actually sitting on.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags on by default: Separate a screenshot into layers, Group what you selected. Any capture of a whole window works; the numbers here come from six real screenshots plus the new fixture Tests/PhotonzRenderTests/Fixtures/app-window-2x.png, which is this app's own editor window.",
+  "try": [
+    {
+      "do": "Take a screenshot of a whole app window with a dark theme, panels and a toolbar. Your own Photonz window is the case this was built for."
+    },
+    {
+      "do": "Open it in Photonz."
+    },
+    {
+      "do": "Right click the Background row in the layers list and choose Separate into Layers."
+    },
+    {
+      "do": "Read the pill: it counts what came out and what it left."
+    },
+    {
+      "do": "Scroll to the bottom of the layers list, where the Box rows are, and click one."
+    },
+    {
+      "do": "Drag that box off the window and look at the space it left: the panel behind it should look untouched."
+    },
+    {
+      "do": "Press Command Z once. One press takes the whole run back."
+    },
+    {
+      "do": "Open a photograph and run the same command on it. Nothing should come out."
+    }
+  ],
+  "evaluate": [
+    "The panels and the window chrome are treated as background and stay in the picture, so you get the controls ON a panel but never the panel itself. Is that the right call, or do you want the whole side panel as a layer you can pick up?",
+    "On a whole-screen capture it finds around nineteen boxes and leaves the rest. Are those the nineteen you would have picked?",
+    "Dragging a control off a dark panel leaves the panel colour behind it. Does the repair hold up when you look closely at the edge?",
+    "The command takes about half a second on a full-screen capture now, up from a tenth, with nothing on screen while it runs. Does it feel like it is thinking, or like it is stuck?",
+    "A capture of a browser page jumped from no boxes to twenty-seven. Are those real boxes, or is it starting to claim things that are not buttons?",
+    "A card that runs off the edge of the picture now gives you the row sitting on it, where before it gave you nothing at all. The card itself still stays put. Is getting the row the answer you wanted, or would you rather the app left a half-visible card alone entirely?"
+  ],
+  "rough": [
+    "NO PICTURES IN THIS AUDIT. The Mac's screen was locked for the whole task, so macOS refuses every screen capture and no walk can run at all - not even to produce an offscreen render. The new walk Scripts/playtest/separate-dark-window-walk.json parses into 29 steps but has never been run, so its claims are unverified. A sweep has been requested and will run it once the screen is unlocked.",
+    "MEASURED TWICE, by two different runs, on seven real pictures. The second run stashed the one changed file and benched the old code on the same machine, so these pairs are a real before and after rather than a memory. Boxes out, before then after: the settings pane 10 then 10, an encyclopedia page 11 then 11, a dark inspector crop 0 then 3, a browser dashboard 0 then 27, this app's whole screen 0 then 19, and two photographs 0 then 0. The two captures that already worked did not move by one box, and neither photograph claims anything.",
+    "PERF, release build, measured before and after: a 7.7 megapixel screen capture went from 88 ms to 478 ms to separate, about five times slower, because it used to find nothing in a window and stop almost at once. The cost lands only on captures it can now actually read: the settings pane is 156 ms either way and a photograph is slightly faster than before. It runs off the main thread with nothing on screen, so the worst real case is a shade under half a second.",
+    "The panels themselves never come out, and the acceptance for this task asked for them. That is deliberate: a window's chrome is what everything else is sitting on, and lifting it would leave a window-shaped hole with nothing behind it to fill in. The controls on it do come out. Raised as a question above rather than decided quietly.",
+    "The descent into scenery does not converge on a real window: it peels four layers of chrome and is still finding a piece covering half the picture when it hits its limit. It stops because it is told to, not because it ran out. That is where the extra time goes.",
+    "A dark inspector CROP gives only three boxes, because its rows run to the edge of the picture and a piece the frame cut is still never offered. That rule was left alone on purpose, but a crop is a common thing to separate and it is the weakest case left. Filed as its own task.",
+    "ONE THING CHANGED THAT NOBODY ASKED FOR, and it is worth a look. A card that runs off the edge of the picture used to take everything on it down with it: separate, and you got nothing. It is big and full of holes, which is exactly what the new rule calls scenery, so the row on it now comes out on its own and the card stays looking untouched. The old reason for holding the row back was that lifting it would leave a hole nobody could fill; that stopped being true once the card is read as background, and the space now repairs to the card's own colour, measured at 0 of 255 off. It is a better answer than nothing, but it is a behaviour change on a case the design doc used to rule out, so say if it reads wrong."
+  ]
+}

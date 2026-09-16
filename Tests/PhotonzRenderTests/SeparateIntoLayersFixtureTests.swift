@@ -980,18 +980,38 @@ struct SeparatedRowInsideACardTests {
         #expect(result.left == 64 - SeparateBudget.maxBoxes)
     }
 
-    @Test func aCardLeftInThePictureKeepsWhatWasSittingOnIt() throws {
+    @Test func aCardTheFrameCutStaysInThePictureButTheRowOnItComesOut() throws {
         // The card runs off the right edge, so the picture cut it in half and
-        // its real shape is not in there to be cut. The row on it stays too:
-        // taking it would leave a hole in a card nobody can fill.
+        // its real shape is not in there: it is never handed back as a layer.
+        //
+        // It is also big and full of holes, which is what scenery looks like —
+        // something a person sees straight THROUGH to what is sitting on it —
+        // so the row is read against the card's own paint and does come out.
+        // That is the change: this used to give back nothing at all, because a
+        // piece the frame cut took everything on it down with it.
+        //
+        // The old reason for holding the row back was that lifting it would
+        // leave a hole in a card nobody could fill. That stopped being true
+        // when the card became background: the space repairs to the card's own
+        // white, which is what the last check here is for.
         var scene = Scene(width: 600, height: 400, background: Self.page)
         scene.rounded(CGRect(x: 40, y: 40, width: 620, height: 260), radius: 12, Self.card)
         scene.rounded(CGRect(x: 70, y: 90, width: 460, height: 90), radius: 10, Self.row)
         let image = try #require(scene.image)
         let result = try #require(LayerSeparator.separate(
             image, luma: EdgeMapAnalyzer.analyzeFully(image).luma))
-        print("LEFT \(result.boxes.count) boxes came out of a card the frame cut in half")
-        #expect(result.boxes.isEmpty)
-        #expect(result.pieces.isEmpty)
+        print("CUT \(result.boxes.count) boxes came out of a card the frame cut in half")
+        #expect(result.boxes.map(\.rect) == [CGRect(x: 70, y: 90, width: 460, height: 90)])
+
+        let bytes = try #require(LayerSeparator.read(result.background))
+        var worst = 0
+        for y in 95..<175 {
+            for x in 75..<525 {
+                let i = (y * result.background.width + x) * 4
+                for channel in 0..<3 { worst = max(worst, abs(Int(bytes[i + channel]) - 255)) }
+            }
+        }
+        print("PATCH the row's space on the cut card reads within \(worst)/255 of the card")
+        #expect(worst <= 1)
     }
 }

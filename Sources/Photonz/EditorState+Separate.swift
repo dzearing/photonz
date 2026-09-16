@@ -56,8 +56,17 @@ extension EditorState {
     /// The sweep reads every pixel of the capture, which is not a frame's worth
     /// of work on a 12 megapixel one, so it runs off the main thread and the
     /// document is only touched when it comes back. Nothing is shown in the
-    /// meantime on purpose: it lands in well under a second, and a spinner that
-    /// flashes is worse than no spinner at all.
+    /// meantime on purpose: a spinner that flashes is worse than no spinner at
+    /// all.
+    ///
+    /// Measured on a release build: a 4.6 megapixel window capture reads in 83
+    /// ms and separates in 267; the biggest screen on this machine, 7.7
+    /// megapixels, is 120 and 502. So the worst real case is a shade over half
+    /// a second and the common one is a quarter. It got about five times slower
+    /// on a whole-window capture when the box sweep learnt to read one (it used
+    /// to find nothing there and stop almost immediately), which is the trade
+    /// and it is worth it — but the next thing that pushes this past a second
+    /// owes the command a progress indicator.
     func separateIntoLayers(id: UUID) {
         guard canSeparateIntoLayers(id: id), let document,
               let ref = document.layer(id: id)?.imageRef,

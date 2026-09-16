@@ -203,15 +203,44 @@ public enum BoxSweep {
     /// inside it instead.
     public static let maxAreaFraction = 0.6
 
-    /// How much of the picture's own border one colour must hold before it can
-    /// be called the background. Under this there is no page to read anything
-    /// against — a photograph, a collage — and nothing is claimed at all.
-    public static let minBorderShare = 0.5
+    /// How much of the picture's own border one colour must hold before it
+    /// counts as a background in its own right. Under this it is a fleck rather
+    /// than a paint, and a picture whose border is nothing but flecks — a
+    /// photograph, a collage — has no background at all, so nothing is claimed.
+    ///
+    /// It is a TENTH rather than a half because a window is not a page. A
+    /// capture of a real app has a dark canvas, a toolbar and a panel down each
+    /// side, and not one of those holds half the border; demanding that gave up
+    /// on the whole picture and returned no boxes at all. Each of them is a
+    /// background, and what interrupts ANY of them is a thing.
+    public static let minBorderShare = 0.1
 
     /// How many times the sweep will step inside something that filled the
     /// picture. A screenshot of a window inside a window inside a window is not
     /// a thing that happens, and each step costs another pass.
     public static let maxDescents = 3
+
+    /// How much of the picture something has to cover before being full of
+    /// holes makes it scenery rather than a thing.
+    ///
+    /// A window's chrome is exactly this shape: take the canvas and the panels
+    /// out of it and what is left is a comb, far too sparse to be a box and far
+    /// too big to be nothing. It used to be dropped, and every button on it
+    /// went with it.
+    public static let minSceneryFraction = 0.1
+
+    /// How much of something its main paint has to cover before it counts as
+    /// paint at all.
+    ///
+    /// Deliberately a low bar: a window's chrome once the canvas and the panels
+    /// are cut out of it is a comb, and its own colour is a twentieth of what
+    /// is left, but stepping onto it is still what finds the buttons. It is
+    /// here to refuse the case where there is no paint whatsoever — a
+    /// photograph, whose biggest region is a speckle a thousandth of it wide.
+    /// Without it the sweep walked into a photograph pass after pass, four full
+    /// reads of the picture that found nothing, and a 1.7 megapixel photo took
+    /// five times as long to separate as it had before.
+    public static let minPaintShare = 0.05
 
     /// How many boxes one sweep will return.
     public static let defaultLimit = 200
@@ -296,33 +325,74 @@ public enum BoxSweep {
         guard !field.isEmpty, limit > 0 else { return .empty }
         let w = field.width, h = field.height
         let regions = labelRegions(field.samples, w, h)
-        guard let page = pageRegion(regions, w, h) else { return .empty }
+        let paints = backgroundRegions(regions, w, h)
+        guard !paints.isEmpty else { return .empty }
 
+        // A region's id is one of its own pixel indices, so which paints are
+        // background is an array lookup rather than a set lookup: a 12
+        // megapixel capture goes through this once per pixel.
+        var isPaint = [UInt8](repeating: 0, count: w * h)
+        for paint in paints { isPaint[Int(paint)] = 1 }
         var backdrop = [UInt8](repeating: 0, count: w * h)
-        for i in 0..<(w * h) where regions[i] == page { backdrop[i] = 1 }
+        for i in 0..<(w * h) where isPaint[Int(regions[i])] == 1 { backdrop[i] = 1 }
 
+        // Scenery becomes background too, and the next pass reads what sits on
+        // that: whatever it is mostly painted joins the paints above.
+        //
+        // This looks at the pieces the frame CUT as well as the ones it did
+        // not, which the offering pass below never does. A capture of a whole
+        // screen is one window on a desktop picture, and the window and the
+        // desktop around it are one connected piece running off every side of
+        // the frame: thrown away for being cut, it took the entire window with
+        // it and the picture came back with no boxes in it at all. Looking
+        // inside a cut piece is not the same as claiming it — its real shape is
+        // still not in the picture, so it is still never offered as a box.
         var islands: [Int32] = []
         var found: [Island] = []
+        /// Whether `islands` was read off the backdrop as it stands now. It
+        /// stops being so the moment the backdrop grows, and a reading of a
+        /// backdrop that has since moved on would disagree with the picture.
+        var current = false
         for _ in 0...maxDescents {
-            (islands, found) = self.islands(notIn: backdrop, width: w, height: h)
-            let oversized = found.filter {
-                Double($0.area) >= maxAreaFraction * Double(w * h)
+            (islands, found) = self.islands(notIn: backdrop, width: w, height: h,
+                                            droppingCut: false)
+            current = true
+            // Scenery: something the size of the picture, and something big
+            // and full of holes. Neither can be offered as a box — one IS the
+            // picture, the other has no shape of its own — but a person looking
+            // at the screenshot sees straight through both to what is sitting
+            // on them, so the sweep does too.
+            let scenery = found.filter {
+                let bw = $0.x1 - $0.x0 + 1, bh = $0.y1 - $0.y0 + 1
+                let area = Double($0.area)
+                return area >= maxAreaFraction * Double(w * h)
+                    || (area >= minSceneryFraction * Double(w * h)
+                        && area < minFill * Double(bw * bh))
             }
-            guard !oversized.isEmpty else { break }
-            // Something the size of the picture IS the picture. Whatever it is
-            // mostly painted becomes background too, and the next pass reads
-            // what sits on that.
+            guard !scenery.isEmpty else { break }
             var grew = false
-            for island in oversized {
+            for island in scenery {
                 guard let inner = dominantRegion(of: island, in: regions, islands: islands,
                                                  width: w) else { continue }
                 for i in 0..<(w * h) where regions[i] == inner && backdrop[i] == 0 {
                     backdrop[i] = 1
                     grew = true
+                    current = false
                 }
             }
             guard grew else { break }
         }
+        if !current {
+            (islands, found) = self.islands(notIn: backdrop, width: w, height: h,
+                                            droppingCut: false)
+        }
+        // And only NOW is anything the frame cut dropped. The descent above had
+        // to see those pieces to read inside them; nothing is offered until it
+        // has finished.
+        for i in 0..<(w * h) where islands[i] != 0 && found[Int(islands[i]) - 1].cut {
+            islands[i] = 0
+        }
+        found = found.filter { !$0.cut }
 
         let minSide = Int(minElement.rounded())
         var boxes: [Box] = []
@@ -546,10 +616,19 @@ public enum BoxSweep {
         return parent
     }
 
-    /// The picture's own background: the colour region holding most of the
-    /// picture's outer border. Nil when no one region holds enough of it, which
-    /// is what a photograph looks like from here.
-    static func pageRegion(_ regions: [Int32], _ w: Int, _ h: Int) -> Int32? {
+    /// The picture's own background: every paint that holds a real share of the
+    /// picture's outer border, biggest first.
+    ///
+    /// A flat page holds the whole border by itself and comes back alone, which
+    /// is the case this started as. A window is not like that — a dark canvas,
+    /// a toolbar and a panel down each side each hold a corner of the border
+    /// and none of them holds half — so the background is a SET. Whatever
+    /// interrupts any of these paints is a thing sitting on it.
+    ///
+    /// Empty when no paint holds even `minBorderShare` of the border. That is
+    /// what a photograph or a collage looks like from here: there is nothing
+    /// for anything to be sitting on, so nothing is claimed.
+    static func backgroundRegions(_ regions: [Int32], _ w: Int, _ h: Int) -> [Int32] {
         var votes: [Int32: Int] = [:]
         var total = 0
         func vote(_ x: Int, _ y: Int) {
@@ -558,8 +637,11 @@ public enum BoxSweep {
         }
         for x in 0..<w { vote(x, 0); vote(x, h - 1) }
         for y in 1..<max(1, h - 1) { vote(0, y); vote(w - 1, y) }
-        guard total > 0, let best = votes.max(by: { $0.value < $1.value }) else { return nil }
-        return Double(best.value) >= minBorderShare * Double(total) ? best.key : nil
+        guard total > 0 else { return [] }
+        let floor = minBorderShare * Double(total)
+        return votes.filter { Double($0.value) >= floor }
+            .sorted { $0.value > $1.value }
+            .map(\.key)
     }
 
     // MARK: - The things sitting on it
@@ -568,6 +650,9 @@ public enum BoxSweep {
         var id: Int32
         var x0 = Int.max, y0 = Int.max, x1 = -1, y1 = -1
         var area = 0
+        /// Whether the frame cut it. Only filled in for the caller that asked
+        /// to keep the cut ones; otherwise they are gone by the time it looks.
+        var cut = false
     }
 
     /// Labels are the island's number plus nothing: 0 means no island, so a
@@ -576,8 +661,12 @@ public enum BoxSweep {
     /// Everything that interrupts the background, as connected pieces. A piece
     /// touching the edge of the picture is dropped: the frame cut it off, so
     /// its real shape is not in the picture and the app does not guess it.
-    static func islands(notIn backdrop: [UInt8], width w: Int,
-                        height h: Int) -> ([Int32], [Island]) {
+    ///
+    /// `droppingCut` is false for the one caller that is not offering anything:
+    /// the pass that asks whether something FILLS the picture, which has to see
+    /// a window that runs off the frame in order to read inside it.
+    static func islands(notIn backdrop: [UInt8], width w: Int, height h: Int,
+                        droppingCut: Bool = true) -> ([Int32], [Island]) {
         let count = w * h
         var parent = [Int32](repeating: 0, count: count)
         backdrop.withUnsafeBufferPointer { back in
@@ -635,6 +724,10 @@ public enum BoxSweep {
                 if x == 0 || y == 0 || x == w - 1 || y == h - 1 { clipped[slot] = true }
             }
         }
+        guard droppingCut else {
+            for slot in found.indices { found[slot].cut = clipped[slot] }
+            return (labels, found)
+        }
         // Anything the frame cut in half is dropped: its real shape is not in
         // the picture, so the app does not guess it.
         for i in 0..<count where labels[i] != 0 && clipped[Int(labels[i]) - 1] {
@@ -644,7 +737,12 @@ public enum BoxSweep {
     }
 
     /// The colour region most of an island is painted, which is what becomes
-    /// background when the island turned out to BE the picture.
+    /// background when the island turned out to be scenery rather than a thing.
+    ///
+    /// Nil when nothing holds `minPaintShare` of it, because then there is no
+    /// paint to speak of and stepping inside would buy nothing. That is what a
+    /// photograph looks like from here, and what stops the sweep walking into
+    /// one pass after pass.
     static func dominantRegion(of island: Island, in regions: [Int32],
                                islands: [Int32], width w: Int) -> Int32? {
         var votes: [Int32: Int] = [:]
@@ -653,7 +751,9 @@ public enum BoxSweep {
                 votes[regions[y * w + x], default: 0] += 1
             }
         }
-        return votes.max(by: { $0.value < $1.value })?.key
+        guard let best = votes.max(by: { $0.value < $1.value }),
+              Double(best.value) >= minPaintShare * Double(island.area) else { return nil }
+        return best.key
     }
 
     // MARK: - Is it really a shape?

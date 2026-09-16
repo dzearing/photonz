@@ -1,0 +1,163 @@
+{
+  "out": "/tmp/photonz-playtest/separate-dark-window",
+  "seed": "SEPARATING A WHOLE APP WINDOW, NOT A FLAT PAGE. The walk opens a capture of this app's own editor window - a dark canvas carrying a white artboard and a red rectangle, a floating toolbar across the bottom, and a panel down the right side full of rows, checkboxes, swatches and dropdowns - and runs Separate into Layers once on the Background picture. Until this landed the command gave back every word in that window and NOT ONE of its buttons, because it only recognised a box when a single flat colour sat behind the whole picture, and a window has four or five different darks behind different parts of it. So the walk checks the boxes by name: that they arrive at all, that the layer row in the panel and the rectangle on the canvas are among them, and that the window itself is NOT one of them - the chrome is what everything else is sitting on, and lifting it would leave a window-shaped hole.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "a capture of a whole app window as it opens: one locked Background picture and nothing else. Every part of it is painted a different dark - the canvas, the toolbar, the panel, the rows on the panel - and none of them is behind the whole picture"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "dark-1-before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-boxes-arrive",
+      "note": "THE FIRST TEST, and the whole point of the walk: boxes came out of a dark window. This used to be zero however long you looked at it. The wait step above prints what the main thread was doing while it ran, which is the number that says whether the app looked frozen"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 40,
+      "atMost": 70
+    },
+    {
+      "do": "snapshot",
+      "name": "dark-2-separated"
+    },
+    {
+      "do": "describe",
+      "stage": "2-and-they-are-the-right-boxes",
+      "note": "THE SECOND TEST: the pieces are checked BY NAME, not counted, and each claim names where it must have landed. Box 1 is the panel button in the window's title bar, Box 5 is the red rectangle sitting on the white artboard, Box 9 is a dropdown near the bottom of the side panel. Three different darks, three different backgrounds, each read against the paint it was actually sitting on. The claims are asked of the document rather than the panel, because the panel only renders the rows you can see"
+    },
+    {
+      "do": "expectBox",
+      "layer": "Box 1",
+      "at": [
+        2471,
+        20
+      ],
+      "size": [
+        33,
+        26
+      ],
+      "within": 3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Box 5",
+      "at": [
+        767,
+        886
+      ],
+      "size": [
+        478,
+        366
+      ],
+      "within": 3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Box 9",
+      "at": [
+        2231,
+        1351
+      ],
+      "size": [
+        161,
+        40
+      ],
+      "within": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "dark-3-a-box-by-name"
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-window-stays-in-the-picture",
+      "note": "THE THIRD TEST: the chrome, the canvas and the panel are what everything else is SITTING ON, so they are read as backgrounds and never handed back as pieces. Picking the rectangle up leaves the window looking untouched behind it rather than punching a hole in it"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-press-takes-it-all-back",
+      "note": "THE FOURTH TEST: however many pieces came out, the run is ONE undo step, and one press leaves the untouched capture on its own"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "dark-4-undone"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
+}

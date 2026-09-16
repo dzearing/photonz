@@ -213,6 +213,89 @@ struct BoxSweepTests {
         #expect(boxes.first?.rect == CGRect(x: 80, y: 80, width: 120, height: 44))
     }
 
+    // MARK: - A window, not a page
+
+    /// A capture of a whole app window: a dark canvas with a toolbar across it
+    /// and a panel down each side. Not one of those paints holds half the
+    /// picture's border, so demanding a single page gave up on the whole
+    /// picture and returned nothing at all.
+    private static func windowScene() -> Scene {
+        let canvas = RGBA(r: 0.11, g: 0.11, b: 0.12)
+        let panel = RGBA(r: 0.17, g: 0.17, b: 0.18)
+        let bar = RGBA(r: 0.22, g: 0.22, b: 0.24)
+        let control = RGBA(r: 0.36, g: 0.36, b: 0.38)
+        var scene = Scene(width: 600, height: 400, background: canvas)
+        scene.fill(CGRect(x: 0, y: 0, width: 120, height: 400), panel)
+        scene.fill(CGRect(x: 480, y: 0, width: 120, height: 400), panel)
+        scene.fill(CGRect(x: 120, y: 0, width: 360, height: 40), bar)
+        // A button on the toolbar, a row in the left panel, a card on the
+        // canvas: three things a person can see and would expect to pick up.
+        scene.rounded(CGRect(x: 140, y: 6, width: 64, height: 28), radius: 6,
+                      control, over: bar)
+        scene.rounded(CGRect(x: 12, y: 60, width: 96, height: 28), radius: 6,
+                      control, over: panel)
+        scene.rounded(CGRect(x: 220, y: 140, width: 180, height: 120), radius: 10,
+                      Self.card, over: canvas)
+        return scene
+    }
+
+    @Test func aWindowWithNoOnePageStillGivesUpItsBoxes() {
+        let boxes = BoxSweep.sweep(in: Self.windowScene().field).boxes
+        let rects = boxes.map(\.rect)
+        #expect(rects.contains(CGRect(x: 140, y: 6, width: 64, height: 28)))
+        #expect(rects.contains(CGRect(x: 12, y: 60, width: 96, height: 28)))
+        #expect(rects.contains(CGRect(x: 220, y: 140, width: 180, height: 120)))
+    }
+
+    @Test func eachPaintAlongTheBorderIsABackgroundOfItsOwn() {
+        // The point of the last test, said directly: the canvas, the toolbar
+        // and both panels are all background, so a thing is read against the
+        // paint it is actually sitting on rather than against one page the
+        // picture does not have.
+        let sweep = BoxSweep.sweep(in: Self.windowScene().field)
+        #expect(sweep.isBackdrop(60, 300))   // left panel
+        #expect(sweep.isBackdrop(540, 300))  // right panel
+        #expect(sweep.isBackdrop(300, 20))   // toolbar
+        #expect(sweep.isBackdrop(300, 380))  // canvas
+    }
+
+    /// A capture of a whole screen: one window sitting on a desktop picture.
+    /// The window does not touch the frame, but the desktop around it does, and
+    /// the two are one connected piece — so the frame cut that piece, and it
+    /// was thrown away before anything could look inside the window.
+    private static func desktopScene() -> Scene {
+        let bar = RGBA(r: 0.2, g: 0.2, b: 0.22)
+        let chrome = RGBA(r: 0.14, g: 0.14, b: 0.15)
+        var scene = Scene(width: 600, height: 400, background: bar)
+        // A desktop picture: no two neighbouring columns agree, so it is not a
+        // paint and it never becomes a background of its own.
+        for y in 0..<400 {
+            for x in 0..<600 {
+                let shade = 0.3 + 0.35 * Double((x * 7) % 41) / 41
+                scene.set(x, y, RGBA(r: shade * 0.6, g: shade * 0.8, b: shade))
+            }
+        }
+        scene.fill(CGRect(x: 0, y: 0, width: 600, height: 12), bar)
+        scene.fill(CGRect(x: 60, y: 40, width: 480, height: 340), chrome)
+        scene.fill(CGRect(x: 100, y: 80, width: 300, height: 200), Self.card)
+        scene.rounded(CGRect(x: 120, y: 310, width: 90, height: 40), radius: 8,
+                      Self.blue, over: chrome)
+        return scene
+    }
+
+    @Test func aWindowOnADesktopIsLookedInsideRatherThanThrownAwayWithIt() {
+        let rects = BoxSweep.sweep(in: Self.desktopScene().field).boxes.map(\.rect)
+        #expect(rects.contains(CGRect(x: 100, y: 80, width: 300, height: 200)))
+        #expect(rects.contains(CGRect(x: 120, y: 310, width: 90, height: 40)))
+    }
+
+    @Test func theWindowTheFrameCutIsNeverOfferedAsABoxItself() {
+        // Looking inside it is not the same as claiming it: its real shape is
+        // still not in the picture, so it stays where it is.
+        let rects = BoxSweep.sweep(in: Self.desktopScene().field).boxes.map(\.rect)
+        #expect(!rects.contains(CGRect(x: 60, y: 40, width: 480, height: 340)))
+    }
+
     @Test func aRunOfTextAlreadySpokenForIsNotTakenTwice() {
         var scene = Scene(width: 400, height: 300, background: Self.page)
         scene.rounded(CGRect(x: 100, y: 100, width: 160, height: 48), radius: 8,

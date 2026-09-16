@@ -99,19 +99,32 @@ in the commit note.
 button and a blue one of the same weight are not the same box).
 
 The rule, in one sentence: **a box is something sitting on the picture's own
-background.** A screenshot is painted the way UI is painted — one flat colour
-behind everything — and whatever interrupts that colour is a thing.
+background.** A screenshot is painted the way UI is painted — flat colour behind
+everything — and whatever interrupts one of those colours is a thing. A page has
+one such colour and a window has several, which is the same rule and not a
+special case.
 
 1. **Patches of one colour.** Neighbouring pixels within 3 levels of each other
    are the same region, union-found in one pass. Chaining down a slow ramp is
    deliberate: a page with a gentle gradient is still one page. The step across
    an antialiased edge is tens of levels, so a box never leaks into its page.
-2. **The page** is the region holding most of the picture's outer border. If no
-   one region holds half of it there is no page to read anything against — a
-   photograph, a collage — and nothing is claimed at all.
-3. **The islands** are the connected pieces of everything that is not the page.
-   One touching the edge of the picture is dropped: the frame cut it in half, so
-   its real shape is not in the picture and the app does not guess it.
+2. **The background** is every patch holding at least a tenth of the picture's
+   outer border. A flat page holds the whole border by itself and is the only
+   one, which is the case this started as. A window is not like that: a dark
+   canvas, a toolbar and a panel down each side each hold a corner of the border
+   and not one of them holds half. Demanding a single page gave up on captures
+   like that entirely — three of six real screenshots, including one of this
+   app's own window, came back with their words and NOT ONE of their buttons.
+   Each of those paints is a background in its own right, and whatever
+   interrupts any of them is a thing.
+
+   If no patch holds even a tenth of the border there is nothing for anything to
+   be sitting on — a photograph, a collage — and nothing is claimed at all.
+3. **The islands** are the connected pieces of everything that is not
+   background. One touching the edge of the picture is dropped: the frame cut it
+   in half, so its real shape is not in the picture and the app does not guess
+   it. Dropping it is about not OFFERING it, and it happens last, after step 5
+   has had its look inside.
 4. **Two levels.** The boxes on the page, and then the boxes on THOSE. This is
    the question the feature lives or dies on — WHICH of the nested rungs are
    worth becoming layers — and it was answered with "one" until the layers list
@@ -153,11 +166,34 @@ behind everything — and whatever interrupts that colour is a thing.
    space it leaves is filled with the card's own colour, and only what was
    sitting on the PAGE leaves a space in the page. So a card comes out whole
    rather than with a switch-shaped hole in it, and the switch is not in the
-   picture twice. If a card is left behind, everything on it is left behind too.
-5. **Something that fills the picture IS the picture.** A screenshot of one
-   window offers one island the size of the frame. Rather than hand back the
-   whole window, whatever that island is mostly painted becomes background too
-   and the sweep looks at what sits on THAT. Three steps at most.
+   picture twice. If a card is left behind, everything on it is left behind too
+   — unless the card turned out to be SCENERY rather than a piece, which is step
+   5. A card the frame cut in half used to take the row on it down with it, on
+   the grounds that lifting the row would leave a hole nobody could fill. Once
+   the card is read as background that stops being true: the row's space repairs
+   to the card's own colour, so the row comes out and the cut card stays exactly
+   as it looked.
+5. **Scenery is looked through, not handed back.** Two things are scenery:
+   something the size of the picture, and something big and full of holes.
+   Rather than hand either back, whatever it is mostly painted becomes
+   background too and the sweep looks at what sits on THAT. Three steps at most,
+   and it stops early when nothing covers a twentieth of the piece, which is
+   what a photograph looks like from here.
+
+   - **The size of the picture.** A screenshot of one window offers one island
+     the size of the frame.
+   - **Big and full of holes.** A window's chrome with the canvas and the panels
+     cut out of it is a comb: far too sparse to be a box and far too big to be
+     nothing. It used to be dropped for having no shape, and every button on it
+     went with it.
+
+   This pass sees the pieces the frame CUT as well as the ones it did not, which
+   nothing else does. A capture of a whole screen is one window on a desktop
+   picture, and the window and the desktop around it are a single connected
+   piece running off every side of the frame. Thrown away for being cut, it took
+   the entire window with it. Looking inside a cut piece is not the same as
+   claiming it: its real shape is still not in the picture, so it is still never
+   offered as a box.
 6. An island is offered when it is at least `minElement` on both sides, covers
    no more than 60% of the picture, and fills at least 75% of its own bounding
    box. That last one is what keeps a letter the text sweep could not read from
