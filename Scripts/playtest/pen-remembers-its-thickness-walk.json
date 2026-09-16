@@ -26,7 +26,7 @@
     { "do": "action", "action": "dragThickness" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectPath", "anchors": 3, "width": 9 },
-    { "do": "expect", "field": "Thickness", "reads": "9 px" },
+    { "do": "expect", "field": "Thickness", "reads": "9" },
     { "do": "describe", "stage": "2-chosen", "note": "the path is pulled to 9 on the Thickness row, which is the only place a path's weight can be chosen" },
     { "do": "snapshot", "name": "2-chosen" },
 
@@ -46,10 +46,10 @@
 
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Thickness", "reads": "9 px" },
+    { "do": "expect", "field": "Thickness", "reads": "9" },
     { "do": "action", "action": "dragThicknessThin" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Thickness", "reads": "3 px" },
+    { "do": "expect", "field": "Thickness", "reads": "3" },
     { "do": "describe", "stage": "4-thinner", "note": "changing your mind works the same way round: this one goes to 3" },
 
     { "do": "key", "key": "p" },

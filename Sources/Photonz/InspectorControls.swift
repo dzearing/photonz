@@ -42,9 +42,110 @@ struct SelectionStyleNotes: View {
     }
 }
 
+/// The number beside a slider.
+///
+/// A row that says how its number is typed (`SliderNumber`) gets **the one
+/// number box**: click the number, type an exact one, press Return. An exact
+/// 12 stops being a matter of nudging the knob until the readout agrees, which
+/// on a 1-to-40 Thickness over a 24 point icon is the whole useful range
+/// packed into the first two points of travel.
+///
+/// A row whose answer is a WORD rather than a number — Label corners reads
+/// Square and Pill at its ends — keeps the readout it has always had. There is
+/// nothing to type there.
+///
+/// Everything about typing is decided once, in `PanelNumberField` and
+/// `NumberBox`: Return and Tab land it, Escape puts it back, clicking in
+/// selects the whole number, up and down step it, the word Mixed is drawn at
+/// the one strength every other Mixed in the dock uses, and landing a number
+/// something already has spends no undo step.
+struct SliderReadout: View {
+    /// How this row's number is typed, or nil where its readout is a word.
+    let typing: SliderNumber?
+    /// The row's own name. It becomes the box's placeholder and its
+    /// accessibility label, so a walk finds the box by the word above it.
+    let label: String
+    /// Where the slider is, in the slider's own units.
+    let value: CGFloat
+    let isMixed: Bool
+    let range: ClosedRange<CGFloat>
+    /// How the row writes the number when there is no box to type in. Only
+    /// the rows whose answer is a word ever need one.
+    var format: (CGFloat) -> String = { String(Int($0.rounded())) }
+    /// WHICH thing the number speaks for: the layers a style row reaches, the
+    /// style a saved effect row edits. A different thing is a different
+    /// number, so a half-typed draft does not carry across a change of
+    /// selection.
+    let identity: AnyHashable?
+    /// Whether there is anything to type into. A row speaking for no layers
+    /// draws its number and takes no keyboard, exactly as its slider does.
+    var isEnabled = true
+    /// The typed number, in the SLIDER's units, reaching whatever the row
+    /// speaks for.
+    ///
+    /// Nothing is handed back, because nothing here refuses: every one of
+    /// these rows stores the number it is given, and the only limit is the
+    /// ends of the slider, which the box has already held it inside. That was
+    /// checked row by row on 2026-09-16 — a shadow's Distance and Direction
+    /// are the two that go in as one number and come out of another
+    /// (an offset), and both read back the number that was typed. A row that
+    /// one day DOES refuse owes the box what it really took
+    /// (`PanelNumberField.land`), or the next arrow key steps from a number
+    /// nothing on the canvas is wearing.
+    let land: (CGFloat) -> Void
+
+    var body: some View {
+        if let typing {
+            box(typing)
+        } else {
+            let showing = isMixed ? LayerStyleSelection.mixedText : format(value)
+            Text(showing)
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(MixedLook.style(isMixed, otherwise: .secondary))
+                .panelReadout(showing)
+        }
+    }
+
+    private func box(_ typing: SliderNumber) -> some View {
+        PanelNumberField(
+            showing: isMixed ? .standIn(LayerStyleSelection.mixedText)
+                             : .number(typing.spell(typing.shown(value))),
+            label: label,
+            identity: identity,
+            leading: typing.leading,
+            suffix: typing.suffix,
+            // Narrower than the geometry boxes: these sit at the end of a row
+            // that already spent its width on the row's name, and the numbers
+            // are short — a strength stops at 100 and a length at 40.
+            width: .fixed(48),
+            // The ends of the slider are the ends of the box, so a typed 140
+            // on a 0-to-100 strength shows 100 rather than 140 over a knob
+            // sitting at the top.
+            floor: typing.shown(range.lowerBound),
+            ceiling: typing.shown(range.upperBound),
+            wholeNumbers: typing.wholeNumbers,
+            spell: typing.spell,
+            land: { typed in
+                land(typing.slid(typed))
+                return nil
+            })
+        .disabled(!isEnabled)
+        // What a PERSON reads here, which is the number and the unit beside
+        // it — "12 px", not the "12" in the box. The one-unit check and every
+        // walk that quotes a row read this, and they must see the row the way
+        // it is written rather than the way it is stored.
+        .panelReadout(isMixed ? LayerStyleSelection.mixedText
+                              : typing.readout(typing.shown(value)))
+    }
+}
+
 /// A labeled style slider wired to EditorState's preview/commit gesture
 /// pattern, over every layer the row speaks for: dragging previews without
 /// recording undo; release commits ONE step, however many layers it reached.
+///
+/// The number beside it is typed into wherever the row says how its number is
+/// written (`typing`), and a typed number is ONE undo step, the same as a pull
+/// on the knob.
 struct LayerStyleSlider: View {
     @Environment(EditorState.self) private var editorState
     /// The layers one pull on this slider changes.
@@ -53,8 +154,9 @@ struct LayerStyleSlider: View {
     /// What the layers say: one number when they agree, Mixed when they do not.
     let reading: StyleReading<Double>
     let range: ClosedRange<Double>
-    /// How the number is written when they agree.
-    let format: (Double) -> String
+    /// How this row's number is written and typed: a length, a strength, a
+    /// turn. Lengths are so much the commonest that they are the default.
+    var typing: SliderNumber = .points
     /// The part of the look this slider sets, when it is one a copy of a
     /// component can own. It puts the way back on the row itself, which is
     /// where the person who just dragged it is looking.
@@ -76,11 +178,17 @@ struct LayerStyleSlider: View {
                     InstanceStyleRevert(layerID: only, field: field)
                 }
                 Spacer()
-                let showing = reading.isMixed ? LayerStyleSelection.mixedText : format(knob)
-                Text(showing)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .secondary))
-                    .panelReadout(showing)
+                SliderReadout(
+                    typing: typing, label: label, value: CGFloat(knob),
+                    isMixed: reading.isMixed,
+                    range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
+                    identity: layerIDs, isEnabled: !layerIDs.isEmpty,
+                    // ONE undo step, the same as a pull on the knob is: a
+                    // typed number is a one-shot edit with no preview behind
+                    // it, so it goes the way the steppers and the switches go.
+                    land: { value in
+                        editorState.setLayerStyle(ids: layerIDs) { apply(&$0, Double(value)) }
+                    })
             }
             Slider(value: Binding(
                 get: { knob },
@@ -113,6 +221,10 @@ struct ShapeSlider: View {
     let reading: StyleReading<CGFloat>
     let range: ClosedRange<CGFloat>
     let format: (CGFloat) -> String
+    /// How this row's number is written and typed. Nil on the one row whose
+    /// answer is a WORD — Label corners reads Square and Pill at its ends —
+    /// which keeps the plain readout it has always had.
+    var typing: SliderNumber? = nil
     /// How this row rounds the number it sends. Thicknesses and radii are
     /// whole points; an arrowhead multiplier is not.
     var round: (CGFloat) -> CGFloat = { $0.rounded() }
@@ -136,11 +248,16 @@ struct ShapeSlider: View {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                let showing = showsMixed ? LayerStyleSelection.mixedText : format(knob)
-                Text(showing)
-                    .font(.caption.monospacedDigit())
-                    .panelReadout(showing)
-                    .foregroundStyle(MixedLook.style(showsMixed, otherwise: .secondary))
+                SliderReadout(
+                    typing: typing, label: label, value: knob, isMixed: showsMixed,
+                    range: range, format: format,
+                    identity: layerIDs, isEnabled: !layerIDs.isEmpty,
+                    // The commit is ONE undo step on its own — it is what the
+                    // end of a drag calls — so a typed number costs exactly
+                    // what a pull costs. The shapes clamp it to the same ends
+                    // the box already held it inside, so there is nothing for
+                    // them to refuse.
+                    land: { value in commit(layerIDs, round(value)) })
             }
             Slider(value: Binding(
                 get: { knob },

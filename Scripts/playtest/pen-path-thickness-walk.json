@@ -37,14 +37,14 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "field": "Thickness", "present": true },
-    { "do": "expect", "field": "Thickness", "reads": "4 px" },
+    { "do": "expect", "field": "Thickness", "reads": "4" },
     { "do": "describe", "stage": "2-row", "note": "THE TEST: picking the drawn path offers a Thickness under its colour row in Appearance, reading the weight the line actually has. Before this the panel offered Opacity, Blending and a colour, and nothing that could change the line." },
     { "do": "snapshot", "name": "2-thickness-row" },
 
     { "do": "action", "action": "dragThickness" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectPath", "anchors": 3, "width": 9 },
-    { "do": "expect", "field": "Thickness", "reads": "9 px" },
+    { "do": "expect", "field": "Thickness", "reads": "9" },
     { "do": "describe", "stage": "3-thicker", "note": "pulling it took the line from 4 to 9 and the canvas followed it up" },
     { "do": "snapshot", "name": "3-thicker" },
 
@@ -67,7 +67,7 @@
 
     { "do": "action", "action": "dragThicknessThin" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Thickness", "reads": "3 px" },
+    { "do": "expect", "field": "Thickness", "reads": "3" },
     { "do": "expectPath", "width": 3 },
     { "do": "describe", "stage": "6-both", "note": "one pull reached both: the row stops saying Mixed and both lines land on 3" },
     { "do": "snapshot", "name": "6-both-thinner" },
@@ -95,7 +95,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "width": 3 },
-    { "do": "expect", "field": "Thickness", "reads": "3 px" },
+    { "do": "expect", "field": "Thickness", "reads": "3" },
     { "do": "describe", "stage": "8-icon-frame", "note": "THE TEST: a path drawn on a 24 pixel icon frame comes out at the 3 that was CHOSEN a moment ago, not the 2 the frame hands a Pen still holding the stock weight. The frame's thinning is a starting value, and it stops the moment you pick a weight of your own. A Pen that had never been rethickened still arrives at 2 here, which is what icon-stroke-weight-walk checks." },
     { "do": "snapshot", "name": "8-icon-frame" },
     { "do": "render", "name": "9-final-render" }

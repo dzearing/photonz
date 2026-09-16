@@ -18,13 +18,13 @@ struct EffectsInspector: View {
         VStack(alignment: .leading, spacing: 8) {
             LayerStyleSlider(layerIDs: ids, label: "Opacity",
                              reading: selection.reading { $0.opacity }, range: 0...1,
-                             format: { "\(Int(($0 * 100).rounded()))%" },
+                             typing: .percent,
                              field: .opacity) { style, v in
                 style.opacity = v
             }
             LayerStyleSlider(layerIDs: ids, label: "Blur",
                              reading: selection.number { $0.blurRadius }, range: 0...50,
-                             format: points, field: .blur) { style, v in
+                             field: .blur) { style, v in
                 style.blurRadius = CGFloat(v)
             }
             // ONE Corner Radius, for every way of rounding. A rectangle curves
@@ -50,7 +50,7 @@ struct EffectsInspector: View {
             if !borders.isEmpty {
                 LayerStyleSlider(layerIDs: borders.layerIDs, label: "Border",
                                  reading: borders.number { $0.borderWidth }, range: 0...20,
-                                 format: points, field: .border) { style, v in
+                                 field: .border) { style, v in
                     style.borderWidth = CGFloat(v)
                 }
                 .panelHelp("The color of the border is in the Color section above")
@@ -198,33 +198,31 @@ struct ShadowInspector: View {
                                      label: Experiments.shared.shapePartsEnabled
                                          ? "Softness" : "Blur",
                                      reading: shadows.number { $0.shadow(at: at)?.radius ?? 0 },
-                                     range: 0...40, format: points) { style, v in
+                                     range: 0...40) { style, v in
                         style.updateShadow(at: at) { $0.radius = CGFloat(v) }
                     }
                     if showsColor { ShadowColorWell(index: at) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Size",
                                  reading: shadows.number { $0.shadow(at: at)?.spread ?? 0 },
-                                 range: 0...80, format: points) { style, v in
+                                 range: 0...80) { style, v in
                     style.updateShadow(at: at) { $0.spread = CGFloat(v) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Distance",
                                  reading: shadows.number { $0.shadow(at: at)?.distance ?? 0 },
-                                 range: 0...40, format: points) { style, v in
+                                 range: 0...40) { style, v in
                     // Each layer keeps the way its own shadow points; only how
                     // far it is thrown is set from here.
                     style.updateShadow(at: at) { $0.setDistance(CGFloat(v)) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Direction",
                                  reading: shadows.number { $0.shadow(at: at)?.directionDegrees ?? 90 },
-                                 range: 0...360,
-                                 format: { "\(Int($0.rounded()))°" }) { style, v in
+                                 range: 0...360, typing: .degrees) { style, v in
                     style.updateShadow(at: at) { $0.setDirectionDegrees(CGFloat(v)) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Opacity",
                                  reading: shadows.reading { $0.shadow(at: at)?.opacity ?? 0 },
-                                 range: 0...1,
-                                 format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
+                                 range: 0...1, typing: .percent) { style, v in
                     style.updateShadow(at: at) { $0.opacity = v }
                 }
                 SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil])

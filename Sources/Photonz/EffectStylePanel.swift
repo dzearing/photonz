@@ -481,21 +481,20 @@ struct LibraryEffectStyleInspector: View {
             // controls. Distance and Direction rather than an x and a y,
             // because that is how a shadow is described everywhere else in the
             // app.
-            slider(style, "Softness", shadow.radius, 0...40, points) { $0.shadow?.radius = $1 }
-            slider(style, "Size", shadow.spread, 0...80, points) { $0.shadow?.spread = $1 }
-            slider(style, "Distance", shadow.distance, 0...40, points) {
+            slider(style, "Softness", shadow.radius, 0...40, .points) { $0.shadow?.radius = $1 }
+            slider(style, "Size", shadow.spread, 0...80, .points) { $0.shadow?.spread = $1 }
+            slider(style, "Distance", shadow.distance, 0...40, .points) {
                 $0.shadow?.setDistance($1)
             }
-            slider(style, "Direction", shadow.directionDegrees, 0...360,
-                   { "\(Int($0.rounded()))°" }) { $0.shadow?.setDirectionDegrees($1) }
+            slider(style, "Direction", shadow.directionDegrees, 0...360, .degrees) { $0.shadow?.setDirectionDegrees($1) }
             opacityRow(style, shadow.opacity) { $0.shadow?.opacity = $1 }
         case .glow(let glow):
             colorRow(style, hex: glow.colorHex) { $0.glow?.colorHex = $1 }
             picker(style, "Kind", GlowKind.allCases, current: glow.kind, title: \.title) {
                 $0.glow?.kind = $1
             }
-            slider(style, "Size", glow.size, GlowEffect.sizeRange, points) { $0.glow?.size = $1 }
-            slider(style, "Softness", glow.radius, GlowEffect.softnessRange, points) {
+            slider(style, "Size", glow.size, GlowEffect.sizeRange, .points) { $0.glow?.size = $1 }
+            slider(style, "Softness", glow.radius, GlowEffect.softnessRange, .points) {
                 $0.glow?.radius = $1
             }
             opacityRow(style, glow.opacity) { $0.glow?.opacity = $1 }
@@ -503,29 +502,34 @@ struct LibraryEffectStyleInspector: View {
             colorRow(style, hex: border.colorHex) { $0.border?.colorHex = $1 }
             picker(style, "Position", BorderPosition.allCases, current: border.position,
                    title: \.title) { $0.border?.position = $1 }
-            slider(style, "Width", border.width, BorderEffect.widthRange, points) {
+            slider(style, "Width", border.width, BorderEffect.widthRange, .points) {
                 $0.border?.width = $1
             }
         case .blur(let blur):
-            slider(style, "Amount", blur.radius, 0...50, points) { $0.blur?.radius = $1 }
+            slider(style, "Amount", blur.radius, 0...50, .points) { $0.blur?.radius = $1 }
         }
     }
 
     // MARK: The controls
 
-    private func points(_ value: CGFloat) -> String { "\(Int(value.rounded())) pt" }
-
     private func slider(_ style: EffectStyle, _ label: String, _ value: CGFloat,
-                        _ range: ClosedRange<CGFloat>, _ format: @escaping (CGFloat) -> String,
+                        _ range: ClosedRange<CGFloat>, _ typing: SliderNumber,
                         _ apply: @escaping (inout LayerEffect, CGFloat) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Text(format(value))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .panelReadout(format(value))
+                // The same box the Effects list gives the same setting, so a
+                // style's Softness is typed exactly the way a layer's is. It
+                // is also what put this panel back on the app's one unit word:
+                // it used to write its lengths in "pt" on its own.
+                SliderReadout(typing: typing, label: label, value: value,
+                              isMixed: false, range: range, identity: style.id,
+                              land: { typed in
+                                  var effect = style.effect
+                                  apply(&effect, typed)
+                                  editorState.setEffectStyle(styleID: style.id, effect: effect)
+                              })
             }
             Slider(value: Binding(
                 get: { Double(value) },
@@ -544,8 +548,7 @@ struct LibraryEffectStyleInspector: View {
 
     private func opacityRow(_ style: EffectStyle, _ value: Double,
                             _ apply: @escaping (inout LayerEffect, Double) -> Void) -> some View {
-        slider(style, "Opacity", CGFloat(value), 0...1,
-               { "\(Int(($0 * 100).rounded()))%" }) { effect, new in apply(&effect, Double(new)) }
+        slider(style, "Opacity", CGFloat(value), 0...1, .percent) { effect, new in apply(&effect, Double(new)) }
     }
 
     private func picker<Option: Hashable>(

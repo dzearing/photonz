@@ -229,7 +229,7 @@
     {
       "do": "expect",
       "field": "Thickness",
-      "reads": "2 px"
+      "reads": "2"
     },
     {
       "do": "snapshot",
@@ -251,7 +251,7 @@
     {
       "do": "expect",
       "field": "Thickness",
-      "reads": "3 px"
+      "reads": "3"
     },
     {
       "do": "snapshot",
@@ -288,7 +288,7 @@
     {
       "do": "expect",
       "field": "Thickness",
-      "reads": "3 px"
+      "reads": "3"
     },
     {
       "do": "action",

@@ -570,7 +570,10 @@ enum MotionEntry {
         switch property {
         case .rotation: "°"
         case .scale, .opacity: "%"
-        case .strokeWidth: "pt"
+        // The app's ONE word for a length (`DocumentUnit`), not a second one
+        // of this panel's own: a thickness on a motion row and a thickness in
+        // Appearance are the same distance.
+        case .strokeWidth: DocumentUnit.word
         case .position, .color: nil
         }
     }

@@ -149,7 +149,7 @@ struct PartsInspector: View {
         let selection = editorState.layerStyleSelection
         return LayerStyleSlider(layerIDs: selection.layerIDs, label: "Opacity",
                                 reading: selection.reading { $0.opacity }, range: 0...1,
-                                format: { "\(Int(($0 * 100).rounded()))%" },
+                                typing: .percent,
                                 field: .opacity) { style, v in
             style.opacity = v
         }

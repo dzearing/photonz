@@ -606,8 +606,7 @@ private struct BorderWidthRow: View {
         let range = Double(BorderEffect.widthRange.lowerBound)...Double(BorderEffect.widthRange.upperBound)
         LayerStyleSlider(layerIDs: borders.layerIDs, label: "Width",
                          reading: borders.number { $0.borderEffect(at: index)?.width ?? 0 },
-                         range: range,
-                         format: points) { style, v in
+                         range: range) { style, v in
             style.updateBorderEffect(at: index) { $0.width = CGFloat(v) }
         }
     }
@@ -662,8 +661,7 @@ private struct BorderOffsetRow: View {
         let range = low...high
         LayerStyleSlider(layerIDs: borders.layerIDs, label: "Offset",
                          reading: borders.number { $0.borderEffect(at: index)?.offset ?? 0 },
-                         range: range,
-                         format: points) { style, v in
+                         range: range) { style, v in
             style.updateBorderEffect(at: index) { $0.offset = CGFloat(v) }
         }
     }
@@ -764,20 +762,17 @@ private struct GlowSlidersRow: View {
             ... Double(GlowEffect.softnessRange.upperBound)
         LayerStyleSlider(layerIDs: ids, label: "Size",
                          reading: glows.number { $0.glowEffect(at: index)?.size ?? 0 },
-                         range: sizes,
-                         format: points) { style, v in
+                         range: sizes) { style, v in
             style.updateGlowEffect(at: index) { $0.size = CGFloat(v) }
         }
         LayerStyleSlider(layerIDs: ids, label: "Softness",
                          reading: glows.number { $0.glowEffect(at: index)?.radius ?? 0 },
-                         range: softness,
-                         format: points) { style, v in
+                         range: softness) { style, v in
             style.updateGlowEffect(at: index) { $0.radius = CGFloat(v) }
         }
         LayerStyleSlider(layerIDs: ids, label: "Opacity",
                          reading: glows.reading { $0.glowEffect(at: index)?.opacity ?? 0 },
-                         range: 0...1,
-                         format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
+                         range: 0...1, typing: .percent) { style, v in
             style.updateGlowEffect(at: index) { $0.opacity = v }
         }
     }
@@ -794,7 +789,7 @@ private struct BlurEffectRow: View {
         let selection = editorState.layerStyleSelection
         LayerStyleSlider(layerIDs: row.switchIDs, label: "Amount",
                          reading: selection.number { $0.blurRadius }, range: 0...50,
-                         format: points, field: .blur) { style, v in
+                         field: .blur) { style, v in
             style.blurRadius = CGFloat(v)
         }
     }

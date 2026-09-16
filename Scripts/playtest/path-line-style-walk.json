@@ -80,7 +80,7 @@
     { "do": "action", "action": "togglePathOutline" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectPath", "anchors": 3, "closed": true, "width": 4 },
-    { "do": "expect", "field": "Thickness", "reads": "4 px" },
+    { "do": "expect", "field": "Thickness", "reads": "4" },
     { "do": "describe", "stage": "7-outline-back", "note": "and one press brings the line back, at the weight a freshly drawn shape wears, wearing the colour it had before" },
 
     { "do": "key", "key": "p" },

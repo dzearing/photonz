@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 230,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-16T03:30:44.378Z",
+  "updated": "2026-09-16T03:48:53.103Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -56,6 +56,35 @@
     {
       "t": "2026-09-16T03:30:44.377Z",
       "note": "Do NOT write a fourth number box for this. The one box landed on 2026-09-16: Sources/Photonz/PanelNumberField.swift, on top of NumberBox in PhotonzCore (tested, Tests/PhotonzCoreTests/NumberBoxTests.swift). Geometry, Arrangement, the knobs on a copy, the four sides popout, the motion rows and the timing strip are all this one control now.\n\nWhat you pass it for an Effects slider:\n  showing:      NumberBox.showing(value, standingIn: isMixed ? MixedValue.text : \"\")\n  label:        the slider's own name (it becomes the placeholder AND the accessibility label, so a walk's focus step finds it by name)\n  suffix:       the unit mark, where the number means nothing without one\n  floor/ceiling: the ends of the slider's range. The box holds the number inside them BEFORE it reaches the model, so a typed 140 on a 0-100 strength shows 100 rather than 140 over a slider at the top\n  wholeNumbers: true for the strengths that count in whole numbers\n  spell:        how this panel writes a number, if it is not whole points\n  land:         set it, and hand back what it really became (nil where it took what it was given)\n\nYou get for free, decided once: Return and Tab land it, Escape puts it back, both hand the keyboard to the picture; clicking in selects the whole number; up and down step by 1 and Shift by 10 from the number ON SCREEN; the word Mixed as the box's own text at the dock strength (MixedLook); landing nothing again when the number is already there, so no undo step is spent on a change nobody can see; and emptying the box is a property you set (clear:) rather than something to re-decide."
+    },
+    {
+      "t": "2026-09-16T03:33:48.844Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T03:48:52.885Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The mock for this is just \"make the readout editable\", and taken literally that is a fourth number box; the design review was right, so this is PanelNumberField and nothing new. (2) The real cost is ROOM: measured offscreen with real AppKit metrics, a slider row goes from 29pt to 37pt when its readout becomes a box, and a layer wearing a shadow, a border and a glow carries about eleven of those rows. I tried the two alternatives. Putting the box at the end of the slider's own track saves one point (36pt), not worth the move. Putting name, slider and box all on ONE line would save 8pt a row, but at the 264pt panel width it leaves the slider about 70pt of track, which is not a slider any more. So: the box sits exactly where the readout sat, and the room cost is in the audit for the user to react to. (3) Shortest version: one shared readout view, one description of how each row's number is written, and no new rules."
+    },
+    {
+      "t": "2026-09-16T03:48:52.929Z",
+      "note": "ADVERSARIAL REVIEW, after building, by reading rather than using: THE SCREEN WAS LOCKED for this whole task, so no walk could run and the app was never seen. What I could check: swift build clean, 7359 tests pass, and every claim below traced through the source. I could not check what it LOOKS like."
+    },
+    {
+      "t": "2026-09-16T03:48:52.971Z",
+      "note": "A claim of mine that turned out to be wrong, and the code that came out because of it: I added a reread hook so a shadow's Direction would show what the layer TOOK, on the theory that typing 360 comes back as 0. Checked it with real arithmetic instead of assuming: setDirectionDegrees(360) stores an offset whose atan2 reads back 360.0, so it shows 360. I then went through every Effects row: none of them clamp, none transform, all store the number as given, so the box's own clamp to the slider's range is the only limit that exists. The reread is gone and the reason is written where the next person will look (SliderReadout.land)."
+    },
+    {
+      "t": "2026-09-16T03:48:53.015Z",
+      "note": "left rough: Label corners keeps its plain readout on purpose, because its answer is a WORD at both ends (Square, Pill) and there is nothing to type. Not filed."
+    },
+    {
+      "t": "2026-09-16T03:48:53.059Z",
+      "note": "Found and fixed on the way, both the same defect: TWO panels were writing a length in \"pt\" while the whole app says \"px\" (DocumentUnit's one-word rule, which the app has a check for). EffectStylePanel had a points() of its own; MotionListInspector gave a stroke width row the suffix \"pt\". Both now say DocumentUnit.word."
+    },
+    {
+      "t": "2026-09-16T03:48:53.102Z",
+      "note": "Filed the-last-three-sliders-whose-number-you-still-ca (p2): Corner Radius, a measurement's Chip size and the older shape controls' Width are the three readouts left that cannot be typed. Corner Radius was held back on purpose, not forgotten: it carries a wall with an answer line and a four-numbers stand-in, and whether a number typed below the wall should raise that same answer is a question worth deciding rather than guessing."
     }
-  ]
+  ],
+  "started": "2026-09-16T03:33:48.843Z"
 }

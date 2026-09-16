@@ -100,6 +100,7 @@ struct AnnotationInspector: View {
                         reading: selection.outlineWidth,
                         range: AnnotationStyles.strokeWidthRange,
                         format: { DocumentUnit.text($0) },
+                        typing: .points,
                         preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                         commit: { editorState.commitOutlineWidth(ids: $0, $1) })
                 .panelHelp(Experiments.shared.shapePartsEnabled
@@ -117,6 +118,7 @@ struct AnnotationInspector: View {
                         reading: selection.number { $0.captionFontSize },
                         range: MeasureContent.labelSizeRangePx,
                         format: { DocumentUnit.text($0) },
+                        typing: .points,
                         preview: { editorState.previewCaptionFontSize(ids: $0, $1) },
                         commit: { editorState.commitCaptionFontSize(ids: $0, $1) })
         case .labelCorners:
@@ -154,6 +156,7 @@ struct AnnotationInspector: View {
                         reading: selection.number { $0.arrowheadScale },
                         range: AnnotationStyles.arrowheadScaleRange,
                         format: { "×\(String(format: "%.1f", $0))" },
+                        typing: .times,
                         round: { $0 },
                         preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
                         commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })

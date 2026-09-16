@@ -105,6 +105,7 @@ struct MeasurePartSettings: View {
                                           isMixed: editorState.measureIsMixed(ids) { $0.chipBorderWidth }),
                     range: MeasureContent.chipBorderWidthRange,
                     format: { DocumentUnit.text($0) },
+                    typing: .points,
                     preview: { editorState.previewMeasureChipBorderWidth(ids: $0, $1) },
                     commit: { editorState.commitMeasureChipBorderWidth(ids: $0, $1) })
             .panelHelp("How thick the ring round the readout chip is. Take it off with the switch.")
