@@ -1,0 +1,29 @@
+{
+  "feature": "A second screen lands where you can get to it",
+  "epic": "ui-building",
+  "summary": "Asking for a second screen used to put it past the right edge of the canvas, where nothing draws it and no amount of scrolling reaches it. Now the canvas makes room: it grows to the right (or down) far enough to hold the new screen, in the same undo step, and nothing already on the canvas moves.",
+  "setup": "Photonz Dev, release Next, Experiments window: Build on a frame is on by default in Next. Start from File > New with a small canvas, for example 1600 x 1100.",
+  "try": [
+    { "do": "Open a blank 1600 x 1100 canvas." },
+    { "do": "Layer > New Frame, pick Desktop, press Add Frame." },
+    { "do": "Layer > New Frame, pick Desktop, press Add Frame again." },
+    { "do": "Scroll right, or press Cmd+0 to fit, and look at the second screen." },
+    { "do": "Open Image > Canvas Size and read the width: it should be 3120." },
+    { "do": "Press Cmd+Z once." },
+    { "do": "Check the second screen and the extra canvas both went away together, and the first screen has not moved." }
+  ],
+  "evaluate": [
+    "When the second screen appears, is it obvious that the canvas grew to make room, or does the canvas quietly changing size behind you feel like something the app should have said out loud?",
+    "Is the canvas ending 80 points after the last screen the right amount of air, or does the edge feel too tight or too loose?",
+    "Does one Cmd+Z putting back both the screen and the canvas feel right, or would you expect the canvas size to be its own step?",
+    "Adding screens forever would make the document a slow, enormous bitmap, so the row wraps to a second row once it reaches 8192 points across, which is about five desktop screens. Is a second row what you would expect there?",
+    "A document that started as a screenshot now gets wider the moment you add a screen to it, and Export of the whole document gets wider with it. Is that acceptable, or should a screenshot document refuse to grow?"
+  ],
+  "rough": [
+    "There are no pictures in this audit at all. The Mac's screen was locked for the whole of this task, so every scripted walk refused to run and no snapshot or offscreen render could be taken. What is proved is proved by unit tests, not by a picture of the app.",
+    "The walk that holds this, Scripts/playtest/frame-second-screen-walk.json, was written and its steps all parse, but it has never been RUN. A sweep has been requested so the loop runs it once the screen is unlocked.",
+    "Growing the canvas clears a marching-ants selection, because the app throws a selection away whenever the canvas size changes. For a grow that pins the top left corner the selection is still perfectly good, so this is a small unnecessary loss.",
+    "The app does not say the canvas grew. There is no pill, no readout, nothing in the layers list. If the answer to the first question above is that it should say so, that is a follow-up.",
+    "Past the ceiling in both directions, roughly 35 desktop screens, a new screen would go somewhere the canvas still cannot reach. Nothing stops that, and nothing warns about it."
+  ]
+}

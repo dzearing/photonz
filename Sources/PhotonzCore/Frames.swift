@@ -400,6 +400,15 @@ extension PhotonzDocument {
     /// their name labels never touch, narrow enough that both stay on screen.
     public static let frameGutter: CGFloat = 80
 
+    /// The biggest a canvas may grow to take in a new frame.
+    ///
+    /// The same ceiling a canvas typed by hand answers to
+    /// (`BlankCanvas.maximumSide`), and for the same reason: the canvas is a
+    /// real bitmap that is repainted whole, so one that grew without end would
+    /// cost more to draw with every screen added to it. A row of screens that
+    /// reaches this wraps to a second row rather than pushing past it.
+    public static let maximumCanvasSide: CGFloat = BlankCanvas.maximumSide
+
     /// Where a new frame of `size` should land.
     ///
     /// The first frame lands in the middle of what the person is looking at.
@@ -408,18 +417,81 @@ extension PhotonzDocument {
     /// a row rather than a pile — and a new screen never lands on top of one
     /// that is already there.
     ///
+    /// The row wraps. A screen that would push the canvas past
+    /// `maximumCanvasSide` starts a fresh row under the ones already there,
+    /// because the canvas cannot grow to reach it and a screen the canvas
+    /// cannot reach is one nothing draws and nothing scrolls to.
+    ///
+    /// Nothing is ever placed off the TOP or LEFT of the canvas either: the
+    /// canvas only ever grows right and down (`growCanvas(toTakeIn:)`), so a
+    /// negative corner is a corner no camera could follow. A frame bigger than
+    /// the canvas therefore starts at the canvas corner rather than centred on
+    /// a view that cannot hold it.
+    ///
     /// `visible` is the part of the canvas on screen, in document points; pass
     /// the whole canvas when that is not known.
     public func placementForNewFrame(size: CGSize, visible: CGRect) -> CGPoint {
+        let size = FramePreset.normalized(size)
         let boxes = frames.compactMap { canvasBounds(of: $0.id) }
-        if let rightmost = boxes.max(by: { $0.maxX < $1.maxX }) {
-            let top = boxes.map(\.minY).min() ?? rightmost.minY
-            return CGPoint(x: (rightmost.maxX + Self.frameGutter).rounded(), y: top.rounded())
+        guard !boxes.isEmpty else {
+            let room = visible.isNull || visible.isEmpty
+                ? CGRect(origin: .zero, size: canvasSize) : visible
+            return CGPoint(x: max(0, (room.midX - size.width / 2).rounded()),
+                           y: max(0, (room.midY - size.height / 2).rounded()))
         }
-        let room = visible.isNull || visible.isEmpty
-            ? CGRect(origin: .zero, size: canvasSize) : visible
-        return CGPoint(x: (room.midX - size.width / 2).rounded(),
-                       y: (room.midY - size.height / 2).rounded())
+        // The row being built is the one the LOWEST frame starts in: every
+        // frame that shares a line with it. Reading the row rather than the
+        // whole canvas is what keeps the screen after a wrap beside the
+        // wrapped one instead of back up beside the first.
+        let lowest = boxes.max { $0.minY < $1.minY } ?? boxes[0]
+        let row = boxes.filter { $0.minY < lowest.maxY && $0.maxY > lowest.minY }
+        let rowRight = row.map(\.maxX).max() ?? lowest.maxX
+        let rowTop = row.map(\.minY).min() ?? lowest.minY
+        let beside = CGPoint(x: rowRight.rounded() + Self.frameGutter, y: rowTop.rounded())
+        guard beside.x + size.width > Self.maximumCanvasSide else { return beside }
+        let left = boxes.map(\.minX).min() ?? 0
+        let bottom = boxes.map(\.maxY).max() ?? lowest.maxY
+        return CGPoint(x: max(0, left.rounded()), y: bottom.rounded() + Self.frameGutter)
+    }
+
+    /// Grows the canvas, right and down only, until `rect` is inside it.
+    ///
+    /// Nothing already on the canvas moves: the top left corner is pinned, so
+    /// the only thing that changes is how far the camera may travel and how
+    /// much the renderer paints. The canvas never shrinks, and never grows past
+    /// `maximumCanvasSide` — a canvas somebody has already made bigger than
+    /// that is left exactly as they made it.
+    ///
+    /// `margin` is the air left after the frame on whichever side had to grow,
+    /// so a screen added at the end of a row is not pressed against the edge.
+    public mutating func growCanvas(toTakeIn rect: CGRect, margin: CGFloat = frameGutter) {
+        guard !rect.isNull, !rect.isInfinite, rect.maxX.isFinite, rect.maxY.isFinite else { return }
+        let size = CGSize(width: Self.grownSide(canvasSize.width, toReach: rect.maxX, margin: margin),
+                          height: Self.grownSide(canvasSize.height, toReach: rect.maxY, margin: margin))
+        guard size != canvasSize else { return }
+        setCanvasSize(size, anchor: .topLeft)
+    }
+
+    private static func grownSide(_ side: CGFloat, toReach need: CGFloat,
+                                  margin: CGFloat) -> CGFloat {
+        guard need > side else { return side }
+        // A canvas already past the ceiling keeps the size it was given: the
+        // ceiling stops growth, it is not a size anything is cut down to.
+        return min((need + margin).rounded(), max(maximumCanvasSide, side))
+    }
+
+    /// Drops a new frame on the canvas AND makes sure the canvas can hold it.
+    ///
+    /// The one call every "make me a screen" route goes through. Adding the
+    /// frame on its own is not enough: the canvas is both what the renderer
+    /// paints and how far the camera may scroll, so a frame past its edge is a
+    /// screen you can see in the layers list and nowhere else.
+    @discardableResult
+    public mutating func addFrameMakingRoom(name: String? = nil, origin: CGPoint, size: CGSize,
+                                            backgroundHex: String? = Layer.defaultFrameBackgroundHex) -> Layer {
+        let made = addFrame(name: name, origin: origin, size: size, backgroundHex: backgroundHex)
+        growCanvas(toTakeIn: CGRect(origin: origin, size: made.frame.size))
+        return made
     }
 
     /// One frame as a document of its own: the canvas is the frame's box and

@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/frame-second-screen-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Desktop" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-one-screen", "note": "one desktop screen, in the middle of a canvas that only just holds it" },
+    { "do": "expectBox", "layer": "Frame", "at": [80, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
+    { "do": "snapshot", "name": "frame-second-screen-1-one" },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Desktop" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-two-screens", "note": "a second desktop screen beside the first, and a canvas that grew to take it in" },
+
+    { "do": "expectBox", "layer": "Frame 2", "at": [1600, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
+    { "do": "expectBox", "layer": "Frame", "at": [80, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "snapshot", "name": "frame-second-screen-2-two" },
+    { "do": "render", "name": "frame-second-screen-2-two-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-undone", "note": "one undo takes the second screen and the room it needed back together" },
+    { "do": "expectBox", "layer": "Frame", "at": [80, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "snapshot", "name": "frame-second-screen-3-undone" }
+  ]
+}

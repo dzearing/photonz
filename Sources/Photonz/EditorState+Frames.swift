@@ -56,13 +56,19 @@ extension EditorState {
     /// A frame drawn on the canvas, or dropped at a chosen size. One undo
     /// step, then the frame is selected with the Select tool in hand, the way
     /// every other created layer lands.
+    ///
+    /// The canvas makes room for it in the same step: the canvas is as far as
+    /// the camera may scroll and as much as the renderer paints, so a screen
+    /// placed past its edge would be one you could see in the layers list and
+    /// nowhere else (`PhotonzDocument.addFrameMakingRoom`). One undo puts the
+    /// screen and the room it took back together.
     @discardableResult
     func addFrame(at origin: CGPoint, size: CGSize, name: String? = nil) -> UUID? {
         guard document != nil else { return nil }
         let size = FramePreset.normalized(size)
         var madeID: UUID?
         perform { document in
-            madeID = document.addFrame(name: name, origin: origin, size: size).id
+            madeID = document.addFrameMakingRoom(name: name, origin: origin, size: size).id
         }
         lastFrameSize = size
         if let madeID { finishCreating(madeID) }

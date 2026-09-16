@@ -2223,8 +2223,8 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectBox", "layer": "Save", "at": [105, 105],
                        "size": [40, 20], "within": 1 } ] }
         """)
-        guard case .expectBox(let layer, let at, let size, let corner, let onScreen, let within) =
-                script.steps[0] else {
+        guard case .expectBox(let layer, let at, let size, let corner, let onScreen,
+                              let reachable, let within) = script.steps[0] else {
             Issue.record("expectBox"); return
         }
         #expect(layer == "Save")
@@ -2232,6 +2232,7 @@ struct PlaytestScriptTests {
         #expect(size?.point == CGPoint(x: 40, y: 20))
         #expect(corner == nil)
         #expect(onScreen == nil)
+        #expect(reachable == false)
         #expect(within == 1)
         #expect(script.steps[0].name == "expectBox")
         #expect(PlaytestStep.names.contains("expectBox"))
@@ -2243,7 +2244,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectBox", "layer": "Save", "corner": "bottomRight",
                        "onScreen": [300, 220] } ] }
         """)
-        guard case .expectBox(_, let at, _, let corner, let onScreen, let within) =
+        guard case .expectBox(_, let at, _, let corner, let onScreen, _, let within) =
                 script.steps[0] else {
             Issue.record("expectBox"); return
         }
@@ -2251,6 +2252,32 @@ struct PlaytestScriptTests {
         #expect(corner == .bottomRight)
         #expect(onScreen?.point == CGPoint(x: 300, y: 220))
         #expect(within == 2)
+    }
+
+    // A screen placed past the edge of the canvas is drawn by nothing and
+    // reached by nothing, and a picture cannot tell that apart from a screen
+    // that is merely off view right now. So a walk can claim the box is ON the
+    // canvas without saying where on it.
+    @Test("An expectBox step can claim a layer is somewhere the canvas reaches")
+    func expectBoxClaimsReachable() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBox", "layer": "Frame 2", "reachable": true } ] }
+        """)
+        guard case .expectBox(let layer, let at, _, _, _, let reachable, _) =
+                script.steps[0] else {
+            Issue.record("expectBox"); return
+        }
+        #expect(layer == "Frame 2")
+        #expect(at == nil)
+        #expect(reachable)
+    }
+
+    @Test func expectBoxNeverClaimsSomethingIsOutOfReach() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectBox", "layer": "Frame 2", "reachable": false } ] }
+            """)
+        }
     }
 
     @Test func expectBoxHasToClaimSomething() {

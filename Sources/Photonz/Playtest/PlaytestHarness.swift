@@ -1333,9 +1333,10 @@ private final class Run {
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
 
-        case .expectBox(let layer, let at, let size, let corner, let onScreen, let within):
+        case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
             note(number, step.name,
                  try checkBox(layer, at: at, size: size, corner: corner, onScreen: onScreen,
+                              reachable: reachable,
                               within: within),
                  state: describe())
 
@@ -3469,7 +3470,7 @@ private final class Run {
     /// above it, which is what says a resize held the far corner still.
     private func checkBox(_ layerName: String, at: PlaytestPoint?, size: PlaytestPoint?,
                           corner: LayerBoxCorner?, onScreen: PlaytestPoint?,
-                          within: CGFloat) throws -> String {
+                          reachable: Bool, within: CGFloat) throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document else {
             throw Failure(description: "no document is open, so there is no box to claim")
@@ -3502,6 +3503,22 @@ private final class Run {
                     + "allowed \(Self.round1(within))")
             }
             held.append("size \(Self.round1(box.width))x\(Self.round1(box.height))")
+        }
+        if reachable {
+            // The canvas is both how far the camera may scroll and how much
+            // the renderer paints, so a box past its edge is a layer nothing
+            // draws and nothing can be scrolled to.
+            let canvas = CGRect(origin: .zero, size: document.canvasSize)
+            guard canvas.contains(box) else {
+                throw Failure(description: "\"\(layerName)\" is at "
+                    + "\(Self.round1(box.minX)), \(Self.round1(box.minY)) and runs to "
+                    + "\(Self.round1(box.maxX)), \(Self.round1(box.maxY)) on a canvas that is only "
+                    + "\(Self.round1(canvas.width)) by \(Self.round1(canvas.height)). The camera "
+                    + "cannot go past the canvas and the renderer does not paint past it, so that "
+                    + "part of the layer is somewhere nobody can look")
+            }
+            held.append("on the canvas (\(Self.round1(canvas.width)) by "
+                + "\(Self.round1(canvas.height)))")
         }
         if let corner, let onScreen {
             // The corners of the box as DRAWN: the layer placed on the canvas,

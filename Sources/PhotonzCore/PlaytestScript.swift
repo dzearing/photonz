@@ -1930,8 +1930,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// corner looks exactly like one that held it. The first pair says the
     /// piece moved by what the hand moved, the second says the corner nobody
     /// touched stayed where it was.
+    ///
+    /// `reachable` is the third claim and the plainest one: the layer's whole
+    /// box is inside the canvas, so the camera can be scrolled to look at it.
+    /// A layer placed past the canvas edge is drawn by nothing and reached by
+    /// nothing — it shows in the layers list and nowhere else — and a picture
+    /// of the canvas cannot tell that apart from a layer that is merely off
+    /// screen right now.
     case expectBox(layer: String, at: PlaytestPoint?, size: PlaytestPoint?,
-                   corner: LayerBoxCorner?, onScreen: PlaytestPoint?, within: CGFloat)
+                   corner: LayerBoxCorner?, onScreen: PlaytestPoint?,
+                   reachable: Bool, within: CGFloat)
     /// Claims about the arrow caption field that is open right now: how the
     /// draft is laid out across its bubble, where the caret is waiting, and
     /// whether the blue outline is drawn round the bubble on screen.
@@ -2617,6 +2625,18 @@ public enum PlaytestStep: Sendable, Equatable {
             let at = fields["at"] == nil ? nil : try f.point("at")
             let size = fields["size"] == nil ? nil : try f.point("size")
             let onScreen = fields["onScreen"] == nil ? nil : try f.point("onScreen")
+            var reachable = false
+            if let raw = fields["reachable"] {
+                guard let flag = raw as? Bool else {
+                    throw f.invalid("reachable", "is true or false: true claims the layer's whole "
+                        + "box is on the canvas, where the camera can be scrolled to see it")
+                }
+                guard flag else {
+                    throw f.invalid("reachable", "only ever claims true. A walk saying a layer is "
+                        + "out of reach is a walk asking for the bug to stay")
+                }
+                reachable = flag
+            }
             var corner: LayerBoxCorner?
             if let raw = fields["corner"] {
                 guard let text = raw as? String, let parsed = LayerBoxCorner(rawValue: text) else {
@@ -2625,10 +2645,11 @@ public enum PlaytestStep: Sendable, Equatable {
                 }
                 corner = parsed
             }
-            guard at != nil || size != nil || onScreen != nil else {
+            guard at != nil || size != nil || onScreen != nil || reachable else {
                 throw f.invalid("at", "expectBox has to claim something: \"at\" with the [x, y] "
                     + "the layer's own panel should read, \"size\" with the [w, h] it should be, "
-                    + "or \"corner\" and \"onScreen\" with where a corner must sit on screen")
+                    + "\"corner\" and \"onScreen\" with where a corner must sit on screen, or "
+                    + "\"reachable\": true to claim its whole box is on the canvas")
             }
             if corner != nil, onScreen == nil {
                 throw f.invalid("onScreen", "naming a corner without saying where it should be "
@@ -2643,7 +2664,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a distance is zero or more, not \(boxWithin)")
             }
             self = .expectBox(layer: layer, at: at, size: size, corner: corner,
-                              onScreen: onScreen, within: CGFloat(boxWithin))
+                              onScreen: onScreen, reachable: reachable, within: CGFloat(boxWithin))
         case "expectHint":
             let contains = try f.string("contains")
             guard !contains.trimmingCharacters(in: .whitespaces).isEmpty else {

@@ -1079,6 +1079,34 @@ Step A2. The first thing in this ladder a person can build a screen on.
   along their top edge, so a document reads as a row of screens. Layer ▸ Frame
   Selection puts a frame around what you have, fitted exactly and with no
   surface painted, because that is a boundary drawn around existing work.
+- **The canvas makes room for a screen you ask for.** The canvas is both how
+  far the camera may scroll (`Viewport.clamped`) and how much the renderer
+  paints, so a frame placed past its edge is a screen that appears in the
+  layers list and nowhere else. Every route that makes a frame therefore goes
+  through `PhotonzDocument.addFrameMakingRoom`, which grows the canvas RIGHT
+  and DOWN until the new frame is inside it, with the same gutter after it that
+  sits between two screens. Only the side that ran out grows, nothing already
+  on the canvas moves (the top left corner is pinned), and the growth rides in
+  the same `History.perform` as the frame, so one undo takes the screen and the
+  room it needed back together.
+
+  Growth has a ceiling — `PhotonzDocument.maximumCanvasSide`, the same 8192 a
+  canvas typed by hand answers to — because the canvas is a real bitmap that is
+  repainted whole, and one that grew without end would cost more to draw with
+  every screen added to it. A row that reaches the ceiling wraps: the next
+  screen starts a fresh row under the ones already there, along the left edge
+  of the row above. Placement reads the row the LOWEST frame is in, not the
+  whole canvas, so the screen after a wrap lines up beside the wrapped one
+  rather than jumping back up to the first row. Nothing is ever placed off the
+  top or left either, since the canvas only grows the other way: a frame bigger
+  than the canvas starts at the canvas corner instead of centred on a view that
+  cannot hold it.
+
+  (Reported 2026-09-14: on a 1600 × 1100 canvas a second Desktop frame landed
+  at x = 1600, every one of its 1440 points outside the canvas, and the camera
+  stopped at centre 843 because `Viewport.clamped` pins it inside the document.
+  `Scripts/playtest/frame-second-screen-walk.json` is the walk that holds it,
+  and `expectBox`'s `reachable` claim is what it holds it with.)
 - **Export takes a scope.** With frames in the document the Export sheet asks
   what to write: the whole canvas, or one frame. It opens on the frame the
   selection is in, the size line shows that frame's box, and the file is named
