@@ -1143,11 +1143,21 @@ public final class DocumentRenderer: @unchecked Sendable {
                                shape: RingShape = .box, outline: PathContent? = nil,
                                scale: CGFloat = 1, borders: [BorderEffect]) -> CIImage {
         guard !borders.isEmpty else { return image }
+        // An OPEN outline is a line rather than a shape: two sides and nothing
+        // between them, so Inside, Center and Outside all name the one band
+        // running down the middle of it, which is the answer the layer's own
+        // edge has always given (`BorderEffect.ringOutset(aroundOpenLine:)`).
+        // Before this, Inside asked to reach nowhere at all, an open path has
+        // no fill for that to mean anything on, and the ring fell through to
+        // the box below: a plain rectangle round a chevron, with no ink on the
+        // chevron itself.
+        let openLine = outline.map { !$0.isClosed } ?? false
         var result = image
         for border in borders.reversed() {
             result = ringed(result, box: box, radii: radii, shape: shape, outline: outline,
                             scale: scale, width: border.width,
-                            outset: border.ringOutset, paint: border.paint)
+                            outset: border.ringOutset(aroundOpenLine: openLine),
+                            paint: border.paint)
         }
         return result
     }

@@ -538,6 +538,12 @@ private struct BorderFollowsRow: View {
 /// Not asked of a ring that is following a label's LETTERS: an outline grown
 /// out of the glyphs has no inside or outside to choose between, so the popup
 /// would be three words that do nothing (`BorderFollows.swift`).
+///
+/// Nor of a ring round an OPEN PATH, for the same reason: a line has two sides
+/// and no inside, so all three words draw the one band down the middle of it
+/// (`Layer.ringsAnOpenLine`). One line of small print goes in the popup's place
+/// rather than nothing at all, so nobody is left looking for a control that has
+/// quietly gone.
 private struct BorderPositionRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
@@ -550,8 +556,33 @@ private struct BorderPositionRow: View {
         return !reading.isMixed && reading.value == .box
     }
 
+    /// Whether every layer this row speaks for is an open line. One closed
+    /// shape in the selection and the popup comes back: the answer still moves
+    /// that one's ring.
+    private var ringsALine: Bool {
+        editorState.layerStyleSelection.borders(at: row.index).isOpenLineEverywhere
+    }
+
     var body: some View {
-        if isAboutAnEdge { picker }
+        if ringsALine {
+            lineNote
+        } else if isAboutAnEdge {
+            picker
+        }
+    }
+
+    /// Why the Position popup is not here, in the place it would have been.
+    @ViewBuilder private var lineNote: some View {
+        let words = "An open path is a line, so the border runs down the middle of it."
+        Text(words)
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .panelReadout(words)
+            // Named like the popup it replaces, so a walk asking for Position
+            // inside this border finds the answer rather than nothing.
+            .playtestField("Position")
     }
 
     @ViewBuilder private var picker: some View {
@@ -637,9 +668,11 @@ private struct BorderOffsetRow: View {
 
     /// Whether this ring has a side of an edge to stand off from at all. A ring
     /// following a label's LETTERS has no inside and no outside, exactly as the
-    /// Position popup above it has none to offer (`BorderFollows.swift`).
+    /// Position popup above it has none to offer (`BorderFollows.swift`), and
+    /// neither has a ring round an OPEN PATH (`Layer.ringsAnOpenLine`).
     private var isAboutAnEdge: Bool {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
+        if borders.isOpenLineEverywhere { return false }
         guard borders.hasLettersEverywhere else { return true }
         let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
         return !reading.isMixed && reading.value == .box

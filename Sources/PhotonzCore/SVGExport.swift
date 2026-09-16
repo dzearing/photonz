@@ -781,6 +781,13 @@ private struct Writer {
         let shapeRadii = layer.annotation?.boxCornerRadii(in: layer.frame.size) ?? .none
         let radii = shapeRadii.isRound ? shapeRadii : layer.style.cornerRadii
         let oval = layer.ringShape == .ellipse
+        // A PATH has a silhouette of its own, and the canvas rings it by
+        // sweeping that outline rather than by drawing a box round it
+        // (`DocumentRenderer.ringed`). A file that wrote the box instead came
+        // out as a chevron in a picture frame.
+        if let outline = layer.path, outline.anchors.count >= 2 {
+            return pathRings(borders, outline: outline, level: level)
+        }
         var lines: [String] = []
         for border in borders.reversed() {
             let outset = border.ringOutset
@@ -801,6 +808,71 @@ private struct Writer {
                 lines.append(boxElement(ride, radii: ringRadii.fitted(in: ride.size),
                                  paint: " fill=\"none\"" + ink, level: level))
             }
+        }
+        return lines
+    }
+
+    /// Every ring round a PATH, riding the outline itself.
+    ///
+    /// SVG has no such thing as a curve offset from another curve, so a band
+    /// that sits a given distance out from a shape is written the way this
+    /// exporter already writes a path's own inside and outside line: the
+    /// outline is stroked wide enough to cover the whole band, and everything
+    /// that should not be in the band is masked off. A ring standing `s` out
+    /// and `w` thick is a stroke of `2(s + w)` with the shape itself and a
+    /// stroke of `2s` taken out of it, which leaves exactly the band from `s`
+    /// to `s + w`.
+    ///
+    /// An OPEN path has no inside for any of that to cut against, so all three
+    /// positions come out as the one centred stroke down the middle of the
+    /// line, which is what the canvas draws too
+    /// (`BorderEffect.ringOutset(aroundOpenLine:)`).
+    mutating func pathRings(_ borders: [BorderEffect], outline: PathContent,
+                            level: Int) -> [String] {
+        let data = SVGExport.pathData(outline)
+        let box = outline.bounds
+        let openLine = !outline.isClosed
+        let rule = outline.fillRule == .evenOdd ? " fill-rule=\"evenodd\"" : ""
+        // The same joins the canvas sweeps the silhouette with, so a sharp
+        // corner carries as far in the file as it does on screen.
+        let joins = " stroke-linejoin=\"miter\" stroke-miterlimit=\"\(n(pathMiterLimit))\""
+            + " stroke-linecap=\"round\""
+        var lines: [String] = []
+        for border in borders.reversed() {
+            let width = border.width
+            guard width > 0 else { continue }
+            let stand = openLine ? 0 : max(0, border.appliesOffset ? border.offset : 0)
+            let ink = stroke(border.paint, box: box.insetBy(dx: -(stand + width),
+                                                            dy: -(stand + width)))
+            // Centred on the edge, and every ring round an open line: half in
+            // and half out, which a plain stroke of the asked-for width IS.
+            guard !openLine, border.position != .center else {
+                lines.append(indent(level) + "<path d=\"\(data)\" fill=\"none\"\(ink)"
+                    + " stroke-width=\"\(n(width))\"\(joins)/>")
+                continue
+            }
+            let keepsInside = border.position == .inside
+            let name = "ring-\(nextClipNumber)"
+            nextClipNumber += 1
+            // White shows, black hides. Inside keeps what is within the shape
+            // and outside keeps what is beyond it; either way the standoff
+            // nearest the edge is struck out with a stroke of its own.
+            let reach = (stand + width) * 2
+            let sheet = box.insetBy(dx: -reach, dy: -reach)
+            defs.append("    <mask id=\"\(name)\">")
+            defs.append("      <rect x=\"\(n(sheet.minX))\" y=\"\(n(sheet.minY))\""
+                + " width=\"\(n(sheet.width))\" height=\"\(n(sheet.height))\""
+                + " fill=\"\(keepsInside ? "#000000" : "#FFFFFF")\"/>")
+            defs.append("      <path d=\"\(data)\""
+                + " fill=\"\(keepsInside ? "#FFFFFF" : "#000000")\"\(rule)/>")
+            if stand > 0 {
+                defs.append("      <path d=\"\(data)\" fill=\"none\" stroke=\"#000000\""
+                    + " stroke-width=\"\(n(stand * 2))\"\(joins)/>")
+            }
+            defs.append("    </mask>")
+            lines.append(indent(level) + "<path d=\"\(data)\" fill=\"none\"\(ink)"
+                + " stroke-width=\"\(n(reach))\"\(joins)"
+                + " mask=\"url(#\(name))\"/>")
         }
         return lines
     }

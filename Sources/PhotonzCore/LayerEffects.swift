@@ -229,6 +229,29 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// What DRAWS it: the renderer grows the box by it, corners and all.
     public var ringOutset: CGFloat { position.ringOutset(width: width, offset: offset) }
 
+    /// The same number on a layer that may be an OPEN LINE rather than a shape
+    /// with an inside.
+    ///
+    /// A closed outline has an interior, so Inside, Center and Outside each
+    /// name a different place for the ring to sit. An open one does not: it is
+    /// a line with two sides and nothing between them, so all three name the
+    /// one band that runs down the middle of it, half a width to either side.
+    ///
+    /// The layer's own edge has always answered this way
+    /// (`PathContent.effectiveStrokePosition`), and a Border that answered
+    /// differently put the same three words in two different places on one
+    /// layer. The offset goes with it, for the reason a centred ring has never
+    /// had one: there is no side of the line to measure from.
+    public func ringOutset(aroundOpenLine: Bool) -> CGFloat {
+        guard aroundOpenLine else { return ringOutset }
+        return BorderPosition.center.ringOutset(width: width)
+    }
+
+    /// How far it reaches past the layer's edge, on a layer that may be a line.
+    public func outset(aroundOpenLine: Bool) -> CGFloat {
+        max(0, ringOutset(aroundOpenLine: aroundOpenLine))
+    }
+
     /// How far it reaches PAST the layer's edge. Zero for an inside ring
     /// however far it is offset, which is why an inner border never makes a
     /// layer take up more room.
@@ -592,7 +615,14 @@ extension LayerStyle {
     ///
     /// The furthest one decides rather than the sum of them: two rings round
     /// the same box overlap, they do not stack end to end.
-    public var borderEffectOutset: CGFloat { paintedBorders.map(\.outset).max() ?? 0 }
+    public var borderEffectOutset: CGFloat { borderEffectOutset(aroundOpenLine: false) }
+
+    /// The same reach on a layer that may be an OPEN LINE, where every ring is
+    /// centred on the line and so reaches half a width past it whatever its
+    /// Position says (`BorderEffect.ringOutset(aroundOpenLine:)`).
+    public func borderEffectOutset(aroundOpenLine: Bool) -> CGFloat {
+        paintedBorders.map { $0.outset(aroundOpenLine: aroundOpenLine) }.max() ?? 0
+    }
 
     /// The border at a place in the LIST — not a place among the borders —
     /// because that is the number a row in the panel already knows.

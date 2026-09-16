@@ -68,17 +68,23 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// highlight mark always mixes with the words under it
         /// (`Layer.mixingIsFixed`). The Blending row leaves those out.
         public let hasFixedMixing: Bool
+        /// True on an OPEN path: a line with two sides and no inside, so a ring
+        /// round it has no side of an edge to pick (`Layer.ringsAnOpenLine`).
+        /// The Border row's Position and Offset leave those out.
+        public let hasOpenLine: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
                     hasItsOwnThickness: Bool = false,
                     hasLetters: Bool = false,
-                    hasFixedMixing: Bool = false) {
+                    hasFixedMixing: Bool = false,
+                    hasOpenLine: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
             self.hasItsOwnThickness = hasItsOwnThickness
             self.hasLetters = hasLetters
             self.hasFixedMixing = hasFixedMixing
+            self.hasOpenLine = hasOpenLine
         }
     }
 
@@ -108,6 +114,14 @@ public struct LayerStyleSelection: Hashable, Sendable {
     /// would do nothing to it (`BorderFollows.swift`).
     public var hasLettersEverywhere: Bool {
         !members.isEmpty && members.allSatisfy(\.hasLetters)
+    }
+
+    /// Whether every layer this row speaks for is an OPEN LINE, which is what
+    /// decides whether the Border row offers a Position at all. One shape with
+    /// an inside in the selection and the question comes back, because the
+    /// answer still moves that one's ring.
+    public var isOpenLineEverywhere: Bool {
+        !members.isEmpty && members.allSatisfy(\.hasOpenLine)
     }
 
     /// What one row reads: the thing they all say, or that they differ.
@@ -269,7 +283,8 @@ extension PhotonzDocument {
                 cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
                 hasItsOwnThickness: layer.hasOutlineThickness,
                 hasLetters: layer.hasLetters,
-                hasFixedMixing: layer.mixingIsFixed))
+                hasFixedMixing: layer.mixingIsFixed,
+                hasOpenLine: layer.ringsAnOpenLine))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

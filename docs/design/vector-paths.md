@@ -227,6 +227,24 @@ chosen side, and it follows every curve for free.
 An open path reads `inside` and `outside` as `center`
 (`effectiveStrokePosition`), because a line has no inside to be within.
 
+**A Border in the Effects list answers the same way.** A ring round a path is
+baked from the outline's own silhouette, so it hugs whatever the path is; and on
+an OPEN path all three positions come out as the one band down the middle of the
+line, because there is no inside for a band to sit in
+(`BorderEffect.ringOutset(aroundOpenLine:)`). Before that, Inside asked to reach
+nowhere at all, which an open outline cannot draw, and the ring fell back to a
+rectangle round the layer's box: a chevron in a picture frame, with no ink on the
+chevron. Outside swept the full width to either side of the line, so an 8 point
+border came out 16 points thick. The Border row drops its Position popup on a
+line for the same reason the centred one drops its Offset, and one line of small
+print goes in its place (`EffectsListInspector.swift`).
+
+The exported file says the same thing. SVG has no offset curve, so a band
+standing `s` out from the shape and `w` thick is written as the outline stroked
+`2(s + w)` wide with the shape itself and a stroke of `2s` masked out of it,
+leaving exactly the band from `s` to `s + w` (`SVGExport.pathRings`). An open
+line needs no mask: a plain centred stroke of the width asked for IS the band.
+
 ### Its box, and the box you see round it
 
 A path layer's `frame` is the box the OUTLINE actually fills — curve bulge

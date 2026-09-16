@@ -1303,7 +1303,12 @@ extension LayerStyle {
     /// How far this style's effects can reach past the layer frame, in document
     /// points. Drag-preview sprites pad their canvas by this much so shadows
     /// and blur aren't clipped. 3σ covers a gaussian's visible tail.
-    public var previewPadding: CGFloat {
+    public var previewPadding: CGFloat { previewPadding(aroundOpenLine: false) }
+
+    /// The same reach on a layer that may be an OPEN LINE, where a ring is
+    /// centred on the line whatever its Position says, so even an Inside one
+    /// leaves half its width outside (`BorderEffect.ringOutset(aroundOpenLine:)`).
+    public func previewPadding(aroundOpenLine: Bool) -> CGFloat {
         var padding = blurRadius * 3
         // The furthest-reaching halo decides, not the sum of them: two shadows
         // and a glow round the same box overlap rather than stacking end to
@@ -1318,7 +1323,7 @@ extension LayerStyle {
         // room it needs is part of how far this style reaches. Rings round the
         // same box overlap, so the furthest of them decides; they do not stack
         // end to end.
-        padding += borderEffectOutset
+        padding += borderEffectOutset(aroundOpenLine: aroundOpenLine)
         return padding.rounded(.up)
     }
 

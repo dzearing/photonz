@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/border-follows-the-path",
+  "seed": "A path can be any silhouette at all, and a Border added to one in the Effects list used to come out as a plain rectangle round its bounding box: a triangle in a picture frame. The closed half of that was fixed when the ring learned to bake the outline's own silhouette. The open half was not: a line has no inside, so an Inside border reached nowhere, and the ring fell back to the box. This walk draws a closed shape and a line, puts a border on each, and looks at where the ink lands.",
+  "setup": {
+    "forget": ["shapes", "frames", "tools", "color", "panel"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [420, 240] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [560, 470] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [280, 470] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [420, 240] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Border", "choose": "Outside" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Slider", "in": "Width", "across": 0.25 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-triangle-outside", "note": "THE TEST: the border hugs the triangle. It used to be a rectangle round the shape's bounding box, painting the two top corners the triangle comes nowhere near." },
+    { "do": "panel", "stage": "1-triangle-outside" },
+    { "do": "snapshot", "name": "1-triangle-outside" },
+    { "do": "render", "name": "1-triangle-outside-doc" },
+
+    { "do": "panelMenu", "menu": "Border", "choose": "Inside" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-triangle-inside", "note": "the same ring eating into the shape instead of growing it: still on the outline, never on the box" },
+    { "do": "snapshot", "name": "2-triangle-inside" },
+    { "do": "render", "name": "2-triangle-inside-doc" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [720, 240] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [860, 470] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [1000, 240] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": false },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Slider", "in": "Width", "across": 0.25 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Position", "in": "Border", "present": false },
+    { "do": "expect", "control": "Slider", "in": "Offset", "present": false },
+    { "do": "describe", "stage": "3-line-border", "note": "THE TEST: a border on an open line runs DOWN the line, and the panel says why there is no Position to pick. It used to draw a rectangle round the chevron with no ink on the chevron at all." },
+    { "do": "panel", "stage": "3-line-border" },
+    { "do": "snapshot", "name": "3-line-border" },
+    { "do": "render", "name": "3-line-border-doc" }
+  ]
+}

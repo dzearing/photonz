@@ -117,10 +117,22 @@ extension Layer {
     /// Every ring counts, and the furthest of them decides: a layer can wear
     /// several Borders, and a line or an arrow still strokes its own path.
     public var outlineOutset: CGFloat {
-        var reach = style.borderEffectOutset
+        var reach = style.borderEffectOutset(aroundOpenLine: ringsAnOpenLine)
         if let annotation { reach = max(reach, annotation.strokeOutset) }
         if let path { reach = max(reach, path.strokeOutset) }
         return reach
+    }
+
+    /// Whether a ring round this layer has an inside to sit in.
+    ///
+    /// An OPEN path is a line: two sides and no interior, so Inside, Center and
+    /// Outside all name the same band down the middle of it. Everything else —
+    /// a closed path, a picture, a label, a frame, a group, an oval — has an
+    /// inside, and its rings sit where their Position says
+    /// (`BorderEffect.ringOutset(aroundOpenLine:)`).
+    public var ringsAnOpenLine: Bool {
+        guard let path else { return false }
+        return !path.isClosed
     }
 
     /// The outset the layer's own CONTENT bakes into its bitmap, as opposed to
@@ -133,6 +145,6 @@ extension Layer {
     /// its effects plus the reach of its outline. What a drag sprite is padded
     /// by, what a dirty rect grows by, and what `renderBounds` starts from.
     public var reachPadding: CGFloat {
-        (style.previewPadding + contentOutset).rounded(.up)
+        (style.previewPadding(aroundOpenLine: ringsAnOpenLine) + contentOutset).rounded(.up)
     }
 }

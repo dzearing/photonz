@@ -1,0 +1,29 @@
+{
+  "feature": "A border on a path follows the path",
+  "epic": "icon-vector",
+  "summary": "Add a Border to a shape you drew with the Pen and the ring now hugs the outline instead of drawing a rectangle round it, and a Border on an open line runs down the line at the width you asked for. The exported SVG says the same thing.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press P and click three points, then click the first one again to close a triangle.", "shot": "2026-09-16-border-follows-the-path-after.png" },
+    { "do": "Press V, then choose Add Effect and pick Border." },
+    { "do": "Set Position to Outside and drag the Width up." },
+    { "do": "Switch Position to Inside and watch the ring move to the other side of the same outline." },
+    { "do": "Press P again, click three points, and press Return to leave the path open." },
+    { "do": "Add a Border to that line and drag its Width up." },
+    { "do": "Read the line of small print where the Position popup would have been." },
+    { "do": "Export the document as SVG and open the file in a browser." }
+  ],
+  "evaluate": [
+    "Does the border sit where you expect on a shape that is not a rectangle, at a thin width and a fat one?",
+    "On an open line, does one band down the middle read as the right answer, or did you want to pick a side?",
+    "Does the small print where the Position popup was tell you enough, or does the popup vanishing feel like something broke?",
+    "Does the exported SVG look the same as the canvas at every position?",
+    "Is a Border on a path even the control you reach for, given the path arrives with a line of its own under Outline?"
+  ],
+  "rough": [
+    "No real screenshot. The Mac's screen was locked for this whole task, so macOS refuses every window capture and every walk refuses to run. The picture beside step one is an offscreen render of the document, not a photograph of the app.",
+    "The Position popup goes away on a line rather than staying and saying it cannot act. That follows what the panel already does when a border follows a label's letters, but it means picking a line and a box together makes the popup reappear, which may read as a flicker.",
+    "An Offset on a border round a closed path exports as an exact band, but the app bakes that band by sweeping the outline while the file writes it as a masked stroke. The two agree on the geometry and may differ by a fraction of a pixel where a corner is very sharp.",
+    "A path too big to bake a silhouette for (over two megapixels of ring) still falls back to a rectangle round its box. That ceiling is unchanged and nothing in the app says when it is hit."
+  ]
+}
