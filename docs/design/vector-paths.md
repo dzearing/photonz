@@ -178,13 +178,41 @@ of the shape's own bitmap.
 10). Core Graphics' default is 10 and SVG's is 4, so a file that stayed quiet
 would come back a different shape in a browser than it is on the canvas.
 
+**A sharp corner also needs room, and it is not the room a straight run needs.**
+Where two runs meet, the outer edge is thrown out along the bisector by the
+line's offset divided by the sine of half the angle: a right angle reaches 1.41
+offsets, a thirty degree one 3.9. `strokeOutset` therefore asks every join where
+its point would land and takes the furthest one PAST the outline's own box
+(`PathContent.sharpCornerOutset`). Measuring it per axis rather than as the
+length of the point is what keeps an ordinary shape costing nothing: the corner
+of a plain rectangle reaches 1.41 offsets diagonally and still only one offset
+along each axis. Before this a chevron drawn with a 12 point line lost 1.7
+points off its point to the edge of its own bitmap.
+
 The defaults are exactly what the rasterizer always drew — round ends, sharp
 corners, a solid line — and a file written before any of this existed decodes
 to them, so nothing anybody has already drawn changes.
 
-Only a PATH answers these three today. A line, an arrow and a Border in the
-Effects list still draw round ends and sharp corners and are not asked; that is
-the open task `a-drawn-line-has-round-ends-and-round-corners-or`.
+### The same question, asked of a line and an arrow
+
+A line and an arrow are asked **Ends** and nothing else, in the same spot under
+Outline beside their Thickness, reading the same `PathLineEnd`
+(`AnnotationContent.lineEnd`, behind `next-line-ends`). Round is what they have
+always drawn and what an older file opens as, the choice is one undo step, and
+it is written into an exported SVG as `stroke-linecap`.
+
+They are asked one question rather than three because they ARE one straight run:
+there is no second run for a corner to happen at, and a Pattern picker is a
+separate feature rather than part of this one. A box, an oval and a highlighter
+wash are closed or are not a line at all, so they are not asked either — the
+panel's own rule about a control that cannot act.
+
+**A Border in the Effects list is deliberately NOT asked.** A ring round a box
+is not stroked at all: `DocumentRenderer.ringed` draws it as one rounded rect
+with a smaller one cut out of it, so there is no join to set. Giving it one
+would mean rewriting that geometry for a result nobody could tell from Corner
+Radius, which rounds the path itself so the fill and the ring round together.
+The corner control for a box is its Corner Radius, and there is one of those.
 
 ### Where the line sits
 

@@ -182,3 +182,57 @@ struct PathLineStyleRenderingTests {
         }
     }
 }
+
+// MARK: - Room for a sharp corner
+
+extension PathLineStyleRenderingTests {
+
+    /// A chevron pointing right: its sharp corner sits on the right edge of
+    /// the shape's own box, which is where a carried point has furthest to go
+    /// and least room to go there.
+    private func chevron(width: CGFloat = 12) -> PathContent {
+        var path = PathContent(anchors: [PathAnchor(point: CGPoint(x: 0, y: 0)),
+                                         PathAnchor(point: CGPoint(x: 40, y: 50)),
+                                         PathAnchor(point: CGPoint(x: 0, y: 100))],
+                               isClosed: false, fill: nil)
+        path.colorHex = "#000000"
+        path.strokeWidth = width
+        path.lineEnd = .flat
+        path.lineCorner = .sharp
+        return path
+    }
+
+    @Test("A sharp corner is drawn in full rather than sliced off by the shape's own bitmap")
+    func sharpCornerHasRoomToBeDrawn() {
+        let path = chevron()
+        let pad = path.strokeOutset
+        let image = PathRasterizer.rasterize(path, size: path.bounds.size)!
+        // Where the point of the chevron actually lands: half a line width out
+        // along the bisector, divided by the sine of half the angle between
+        // the two runs. Two points short of it, so the test is about the point
+        // being THERE rather than about the last anti-aliased pixel of it.
+        let reach = (path.strokeWidth / 2) / sin(atan2(50.0, 40.0))
+        let tipX = 40 + reach - 2
+        #expect(pad >= reach, "the bitmap makes room for the whole point")
+        #expect(pixel(image, x: Int(tipX + pad), y: Int(50 + pad)).a == 255,
+                "the point of the chevron is inked")
+    }
+}
+
+extension PathLineStyleRenderingTests {
+
+    @Test("A corner too sharp to carry is sliced off, and asks for no more room than a straight run")
+    func aBeveledCornerAsksForNoRoom() {
+        // A hairpin: the line goes out and comes almost straight back. Past
+        // the limit the point is not drawn at all, so reading it as ten line
+        // widths would pad this bitmap by 120 points on every side.
+        var path = PathContent(anchors: [PathAnchor(point: CGPoint(x: 0, y: 0)),
+                                         PathAnchor(point: CGPoint(x: 100, y: 1)),
+                                         PathAnchor(point: CGPoint(x: 0, y: 2))],
+                               isClosed: false, fill: nil)
+        path.colorHex = "#000000"
+        path.strokeWidth = 12
+        path.lineCorner = .sharp
+        #expect(path.strokeOutset == 6, "the same room a straight run of this weight asks for")
+    }
+}

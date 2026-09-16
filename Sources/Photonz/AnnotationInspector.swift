@@ -66,6 +66,10 @@ struct AnnotationInspector: View {
         // keeps the section exactly as it was.
         guard !Experiments.shared.shapePartsEnabled else { return [] }
         return selection.rows.filter { row in
+            // What a line ENDS in is a Next row and lives under the Outline
+            // part with the rest of the line's settings, never in this
+            // section (`ShapePartSettings.swift`).
+            guard row != .lineEnds else { return false }
             // Captions are a Next feature; without it an arrow is a plain
             // arrow and neither the field nor its size row belongs here.
             guard Experiments.shared.arrowCaptionsEnabled
@@ -83,6 +87,10 @@ struct AnnotationInspector: View {
     @ViewBuilder
     private func row(_ row: ShapeSettingRow, selection: ShapeSelection, ids: [UUID]) -> some View {
         switch row {
+        case .lineEnds:
+            // Never reached: `visibleRows` keeps it out of this section. It
+            // belongs under the Outline part, where the thickness is.
+            EmptyView()
         case .thickness:
             // The ONE width of the line round a shape. It reads whichever ring
             // is actually on screen, so a box drawn before the Effects Border

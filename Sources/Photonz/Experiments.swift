@@ -343,6 +343,12 @@ extension Experiments {
     /// flag off takes away a way IN, never a document's contents.
     var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
 
+    /// `next-line-ends`: whether a line and an arrow are asked what their two
+    /// ends look like, under Outline beside the Thickness. The model and the
+    /// renderer are never flagged, for the reason the Pen gives above: a
+    /// document holding a square-ended line draws it either way.
+    var lineEndsEnabled: Bool { isEnabled(FeatureCatalog.lineEndsFlag) }
+
     /// The mark under the pointer saying where a press would put the first
     /// point of a shape (`CanvasDrawLanding`).
     var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }

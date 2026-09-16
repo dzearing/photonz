@@ -1,0 +1,76 @@
+{
+  "out": "/tmp/photonz-playtest/shape-line-ends",
+  "seed": "A line and an arrow have always ended in a half circle, with nothing anywhere to say otherwise, so a line drawing built out of the shape tools could never be made to match one drawn with the Pen. The walk draws a line, finds Ends under Outline beside its Thickness, switches it between flat, round and square, checks one undo puts it back, does the same to an arrow's tail, and confirms a box is not asked a question it cannot answer.",
+  "setup": {
+    "forget": ["shapes", "frames", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "l" },
+    { "do": "waitFor", "condition": "tool", "value": "line" },
+    { "do": "drag", "from": [300, 320], "to": [700, 320], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "expect", "field": "Thickness", "present": true },
+    { "do": "expect", "control": "Round", "in": "Ends", "present": true },
+    { "do": "describe", "stage": "1-ends-row", "note": "THE TEST: a line you drew is asked what its ends look like, under Outline right beside its Thickness. Before this the row was not there at all and a line ended in a half circle whatever anybody wanted." },
+    { "do": "panel", "stage": "1-ends-row" },
+    { "do": "snapshot", "name": "1-ends-row" },
+
+    { "do": "action", "action": "dragThicknessFat" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-thick-round", "note": "turned up to 24 so the difference between the three answers is something you can see across the room. This is the half circle it has always drawn." },
+    { "do": "snapshot", "name": "2-thick-round" },
+    { "do": "render", "name": "2-thick-round-doc" },
+
+    { "do": "press", "control": "Flat", "in": "Ends" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "3-flat", "note": "THE TEST: the line stops dead on the point it was dragged to. Compare its two ends with 2-thick-round." },
+    { "do": "snapshot", "name": "3-flat" },
+    { "do": "render", "name": "3-flat-doc" },
+
+    { "do": "press", "control": "Square", "in": "Ends" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "4-square", "note": "THE TEST: a half square past the last point, so the line reaches as far as the round one did and keeps its corners. Nothing is sliced off at the frame edge." },
+    { "do": "snapshot", "name": "4-square" },
+    { "do": "render", "name": "4-square-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-undone", "note": "one undo, one step back: square becomes flat again rather than the whole line disappearing" },
+    { "do": "snapshot", "name": "5-undone" },
+    { "do": "render", "name": "5-undone-doc" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [300, 560], "to": [700, 560], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Round", "in": "Ends", "present": true },
+    { "do": "action", "action": "dragThicknessFat" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Flat", "in": "Ends" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "6-arrow-tail", "note": "THE TEST: an arrow is asked the same question and the answer reaches its TAIL. The head is its own part with its own settings and is untouched." },
+    { "do": "panel", "stage": "6-arrow-tail" },
+    { "do": "snapshot", "name": "6-arrow-tail" },
+    { "do": "render", "name": "6-arrow-tail-doc" },
+
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "drag", "from": [820, 300], "to": [1080, 480], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Round", "in": "Ends", "present": false },
+    { "do": "describe", "stage": "7-box-not-asked", "note": "THE TEST: a box is closed and has no ends anybody can see, so it is not asked. The panel's own rule: a control that cannot act is not shown." },
+    { "do": "panel", "stage": "7-box-not-asked" },
+    { "do": "snapshot", "name": "7-box-not-asked" }
+  ]
+}

@@ -47,11 +47,21 @@ public enum PathLineEnd: String, CaseIterable, Hashable, Codable, Sendable {
 
     /// SVG's own word for it. The names part company here and nowhere else,
     /// so a file and the canvas can never disagree about what was drawn.
-    var svgName: String {
+    public var svgName: String {
         switch self {
         case .flat: return "butt"
         case .round: return "round"
         case .square: return "square"
+        }
+    }
+
+    /// The drawing engine's own answer, so nothing has to keep its own copy of
+    /// this switch: the rasterizers and the pictures on the picker all read it.
+    public var lineCap: CGLineCap {
+        switch self {
+        case .flat: return .butt
+        case .round: return .round
+        case .square: return .square
         }
     }
 
@@ -89,6 +99,16 @@ public enum PathLineCorner: String, CaseIterable, Hashable, Codable, Sendable {
 }
 
 extension PathLineCorner {
+
+    /// The drawing engine's own answer, kept beside the SVG one so the canvas
+    /// and the file cannot drift apart.
+    public var lineJoin: CGLineJoin {
+        switch self {
+        case .sharp: return .miter
+        case .round: return .round
+        case .flat: return .bevel
+        }
+    }
 
     /// SVG's own word for it.
     var svgName: String {
@@ -166,6 +186,44 @@ extension PathContent {
     /// then every dash has two, which is the whole reason the control stays on
     /// offer rather than being silently overridden.
     public var showsLineEnds: Bool { !isClosed || linePattern != .solid }
+}
+
+extension AnnotationContent {
+
+    /// Whether this shape has ends anybody can see, which is what decides
+    /// whether the panel asks about them.
+    ///
+    /// A line and an arrow have two: their stroke IS the shape, so it starts
+    /// and stops somewhere. A box, an oval and a highlight are closed or are
+    /// not a line at all, so an Ends picker over one would be a control that
+    /// cannot act — the same rule the rest of the panel follows.
+    public var showsLineEnds: Bool {
+        guard strokeWidth > 0 else { return false }
+        return shape == .line || shape == .arrow
+    }
+}
+
+// MARK: - Setting it on a shape
+
+extension PhotonzDocument {
+
+    /// One choice, every picked line and arrow. Returns how many took it, so a
+    /// caller can tell a no-op from an edit and never files an undo step for
+    /// one. Locked layers, and shapes with no ends to shape, are left exactly
+    /// as they are.
+    @discardableResult
+    public mutating func setShapeLineEnd(layerIDs: [UUID], to end: PathLineEnd) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  var shape = layer.annotation, shape.showsLineEnds,
+                  shape.lineEnd != end else { continue }
+            shape.lineEnd = end
+            updateLayer(id: id) { $0.content = .annotation(shape) }
+            changed += 1
+        }
+        return changed
+    }
 }
 
 // MARK: - Setting it
@@ -307,5 +365,120 @@ extension PhotonzDocument {
             members.append(PathLineStyleSelection.Member(id: id, content: path))
         }
         return PathLineStyleSelection(members: members, selectionCount: layerIDs.count)
+    }
+}
+
+// MARK: - Room for the point of a sharp corner
+
+extension PathContent {
+
+    /// How far the POINT of a sharp corner carries this line past the shape's
+    /// own outline, in document points.
+    ///
+    /// Where two runs meet at an angle, a corner carried out to a point throws
+    /// the outer edge along the bisector by the line's offset divided by the
+    /// sine of half that angle: a right angle reaches 1.41 offsets, a thirty
+    /// degree one reaches 3.9. Every other part of a stroke reaches exactly its
+    /// own offset, which is why nothing had to ask this before Sharp became
+    /// something a person could choose.
+    ///
+    /// Measured as how far the point lands PAST the outline's box rather than
+    /// as the length of the point itself. The corner of a plain rectangle
+    /// reaches 1.41 offsets diagonally and still only one offset along each
+    /// axis, so an ordinary shape asks for no more room than it always did and
+    /// only a genuinely sharp angle costs anything.
+    var sharpCornerOutset: CGFloat {
+        guard lineCorner == .sharp, strokeWidth > 0 else { return 0 }
+        let offset = effectiveStrokePosition.outset(width: strokeWidth)
+        guard offset > 0 else { return 0 }
+        let box = bounds
+        var worst: CGFloat = 0
+        for join in joins {
+            guard let tip = join.miterTip(offset: offset) else { continue }
+            worst = max(worst, box.minX - tip.x, tip.x - box.maxX,
+                        box.minY - tip.y, tip.y - box.maxY)
+        }
+        return max(0, worst)
+    }
+
+    /// Every place two runs of this outline meet, in no particular order.
+    ///
+    /// Read off the runs themselves rather than off the anchors, because the
+    /// runs are already split into rings: a path with a hole in it is one list
+    /// of runs where the hole's first run does not carry on from the rim's
+    /// last, and a join invented across that gap would be a corner nobody drew.
+    private var joins: [MiterJoin] {
+        let runs = segments
+        guard runs.count >= 2 else { return [] }
+        var joins: [MiterJoin] = []
+        var ringStart = 0
+        for index in runs.indices {
+            let run = runs[index]
+            let next = index + 1 < runs.count ? runs[index + 1] : nil
+            if let next, MiterJoin.sameSpot(run.end, next.start) {
+                joins.append(MiterJoin(arriving: run, leaving: next))
+                continue
+            }
+            // The end of a ring. A CLOSED one turns a corner here too, back
+            // into the run it started with.
+            let first = runs[ringStart]
+            if isClosed, index > ringStart, MiterJoin.sameSpot(run.end, first.start) {
+                joins.append(MiterJoin(arriving: run, leaving: first))
+            }
+            ringStart = index + 1
+        }
+        return joins
+    }
+}
+
+/// Two runs meeting at a point, and how far the outer edge of a sharp corner
+/// is thrown out there.
+private struct MiterJoin {
+    let corner: CGPoint
+    /// Which way the line was travelling as it arrived, as a unit vector.
+    let arriving: CGVector
+    /// Which way it sets off again.
+    let leaving: CGVector
+
+    init(arriving run: PathSegment, leaving next: PathSegment) {
+        corner = run.end
+        self.arriving = Self.unit(from: run.control2, to: run.end)
+            ?? Self.unit(from: run.start, to: run.end) ?? CGVector(dx: 1, dy: 0)
+        leaving = Self.unit(from: next.start, to: next.control1)
+            ?? Self.unit(from: next.start, to: next.end) ?? CGVector(dx: 1, dy: 0)
+    }
+
+    /// Where the point of a sharp corner lands, or nil where there is no
+    /// corner: two runs carrying straight on through have no point to throw.
+    func miterTip(offset: CGFloat) -> CGPoint? {
+        let apex = CGVector(dx: arriving.dx - leaving.dx, dy: arriving.dy - leaving.dy)
+        let length = (apex.dx * apex.dx + apex.dy * apex.dy).squareRoot()
+        guard length > 1e-9 else { return nil }
+        // Half the angle between the two runs, as a sine: the whole of how far
+        // the point goes. A line doubling exactly back on itself gives nought,
+        // which would go on for ever, and is exactly the case the limit
+        // catches.
+        let along = arriving.dx * leaving.dx + arriving.dy * leaving.dy
+        let half = max(0, (1 + along) / 2).squareRoot()
+        // Past the limit the point is not carried a LITTLE less far, it is not
+        // carried at all: the join is sliced off instead, and a sliced one
+        // reaches exactly the offset every straight run reaches. Reading that
+        // as `limit × offset` would pad a hairpin's bitmap ten line widths on
+        // every side for a corner that is drawn flat.
+        let stretch = half > 1e-9 && 1 / half <= pathMiterLimit ? 1 / half : 1
+        let reach = offset * stretch
+        return CGPoint(x: corner.x + apex.dx / length * reach,
+                       y: corner.y + apex.dy / length * reach)
+    }
+
+    static func sameSpot(_ a: CGPoint, _ b: CGPoint) -> Bool {
+        abs(a.x - b.x) < 1e-6 && abs(a.y - b.y) < 1e-6
+    }
+
+    private static func unit(from: CGPoint, to: CGPoint) -> CGVector? {
+        let dx = to.x - from.x, dy = to.y - from.y
+        let length = (dx * dx + dy * dy).squareRoot()
+        guard length > 1e-9 else { return nil }
+        return CGVector(dx: dx / length, dy: dy / length)
     }
 }

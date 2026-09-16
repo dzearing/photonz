@@ -16318,3 +16318,44 @@ shipped with the audit.
 Next: the audit's open questions are the names on the menu, whether the four
 want a keyboard shortcut, and whether a ring should keep the name of the oval it
 came from. A group still cannot take part.
+
+## 2026-09-15 — A line and an arrow say how they end
+
+`a-drawn-line-has-round-ends-and-round-corners-or`. The path half of this landed
+this morning; what was left was everything that is not a path. A line and an
+arrow now carry `AnnotationContent.lineEnd`, the same `PathLineEnd` a path
+reads, shown as an Ends row under Outline beside their Thickness, behind
+`next-line-ends`. It reaches the canvas, an exported SVG's `stroke-linecap`, and
+one undo step; round is what an older file opens as, so nothing already drawn
+moves.
+
+**They are asked ONE question rather than three, and that is the finding.** A
+line and an arrow are one straight run: there is no second run for a corner to
+happen at, so a Corners picker on one would be exactly the dead control the rest
+of the panel refuses to show. Nor is a Border in the Effects list given one: a
+ring round a box is not stroked at all, `DocumentRenderer.ringed` draws it as one
+rounded rect with a smaller one cut out, and a join setting there would produce
+something nobody could tell from Corner Radius. Same argument for a rectangle's
+own stroke. The task's "corners everywhere an outline lives" turns out to be one
+control in three costumes, and the audit says so.
+
+**The point of a sharp corner was being sliced off by the shape's own bitmap.**
+Left rough by the path work and reproduced here: a chevron drawn with a 12 point
+line lost 1.7 points off its point, because `strokeOutset` only ever knew about
+the line's ends and where the stroke sits. `PathContent.sharpCornerOutset` now
+asks every join where its point would land and takes the furthest one PAST the
+outline's box. Measuring it per axis is what keeps it free: the corner of a plain
+rectangle reaches 1.41 offsets diagonally and still only one along each axis, so
+the existing 130x100-becomes-140x110 assertion never moved. A join past the miter
+limit is drawn flat rather than pointed, so it asks for no room at all — reading
+it as ten line widths would have padded a hairpin's bitmap by 120 points a side.
+
+**The Mac's screen was locked for this whole task**, so not one walk could run
+and macOS refused every window capture. `Scripts/playtest/shape-line-ends-walk.json`
+has never been executed and a full sweep is requested. What IS verified: 7302
+tests green, including sixteen written before the code, and the audit ships a
+picture of the three ends side by side rendered through the app's own composite.
+
+Next: the audit asks whether Flat and Square are tellable apart at that size,
+whether a new line should remember the last end chosen, and whether a dashed
+redline arrow is something anybody reaches for.

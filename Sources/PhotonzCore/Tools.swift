@@ -341,11 +341,14 @@ extension AnnotationContent {
     public var renderPadding: CGFloat {
         switch shape {
         case .line:
-            (strokeWidth / 2).rounded(.up)
+            // How far the END of the line reaches past the point it stops on,
+            // which is half a width for a flat or a round one and further for
+            // a square one (`PathLineStyle.swift`).
+            (strokeWidth * lineEnd.reach).rounded(.up)
         case .arrow:
             // A round ending hangs past the point it marks, so this is the
             // ending's reach in every direction, not just its width.
-            max(strokeWidth / 2,
+            max(strokeWidth * lineEnd.reach,
                 Geometry.arrowheadReach(strokeWidth: strokeWidth, scale: arrowheadScale,
                                         style: arrowheadStyle)).rounded(.up)
         case .rectangle, .ellipse, .highlight:

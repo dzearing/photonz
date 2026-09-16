@@ -494,14 +494,21 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// else: the ink lands in exactly the same place either way.
     public var strokeOutset: CGFloat {
         guard strokeWidth > 0 else { return 0 }
-        let reach = effectiveStrokePosition.outset(width: strokeWidth)
+        var reach = effectiveStrokePosition.outset(width: strokeWidth)
         // A SQUARE end reaches further than the half width every other end
         // does: its far corner sits width/√2 from the last point rather
         // than width/2, so without this the corners of a square-ended line
         // would be sliced off by the edge of its own bitmap
         // (`PathLineStyle.swift`).
-        guard showsLineEnds, lineEnd == .square else { return reach.rounded(.up) }
-        return max(reach, strokeWidth * lineEnd.reach).rounded(.up)
+        if showsLineEnds, lineEnd == .square {
+            reach = max(reach, strokeWidth * lineEnd.reach)
+        }
+        // ...and so does the POINT of a sharp corner, which is thrown out
+        // along the bisector by however sharp the angle is. Left out, a
+        // chevron drawn with a 12 point line lost 1.7 points off its point to
+        // the edge of its own bitmap (`PathLineStyle.sharpCornerOutset`).
+        reach = max(reach, sharpCornerOutset)
+        return reach.rounded(.up)
     }
 
     /// The position the line is actually drawn in, once an open path's missing

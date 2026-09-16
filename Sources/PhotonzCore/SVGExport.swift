@@ -625,7 +625,8 @@ private struct Writer {
             return [indent(level) + "<line x1=\"\(n(annotation.start.x))\""
                 + " y1=\"\(n(annotation.start.y))\" x2=\"\(n(annotation.end.x))\""
                 + " y2=\"\(n(annotation.end.y))\"\(ink)"
-                + width(annotation.strokeWidth) + " stroke-linecap=\"round\"/>"]
+                + width(annotation.strokeWidth)
+                + " stroke-linecap=\"\(annotation.lineEnd.svgName)\"/>"]
         case .ellipse:
             var lines: [String] = []
             if let inside = annotation.fill {

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-15T12:14:53.464Z",
+  "updated": "2026-09-16T02:25:19.855Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -56,6 +56,23 @@
     {
       "t": "2026-09-15T12:14:53.463Z",
       "note": "seq 140 -> 180"
+    },
+    {
+      "t": "2026-09-16T02:08:09.715Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T02:18:30.889Z",
+      "note": "Adversarial review before building, on what was LEFT after the path work landed. (1) A line and an arrow are ONE straight run, so they have ends and no corners at all: a Corners picker on a line would be exactly the dead control the rest of the panel refuses to show. Built Ends for them and not Corners, and said so. (2) A rectangle annotation's corners are already governed by Corner Radius, which rounds the PATH so the fill and the line round together; a join setting would round only the outer edge of the line and leave the fill square, which is a second, worse way to say the same thing. Not built. (3) A Border in the Effects list is not stroked at all - DocumentRenderer.ringed draws it as one rounded rect with a smaller one cut out (Sources/PhotonzRender/DocumentRenderer.swift:1141) - so a corner setting there is a rewrite of the ring geometry for a result indistinguishable from Corner Radius on a box. Not built; this is the finding the task asked for about the outline row rather than a reason to invent a section. (4) 'They travel with a saved outline style' has no vehicle: EffectStyle saves a shadow, a glow, a border or a blur, and there is no saved style anywhere that carries a path's or a line's stroke. Left undone and recorded rather than invented."
+    },
+    {
+      "t": "2026-09-16T02:25:19.810Z",
+      "note": "Built, in Next. (a) The clipping bug the last runner left is FIXED and was reproduced first: Scripts/test.sh --filter sharpCornerHasRoomToBeDrawn printed 'Expectation failed: (pad -> 6.0) >= (reach -> 7.683749084919419)' on a chevron with a 12pt line, so its point was short by 1.7pt. PathContent.sharpCornerOutset asks every join where its miter tip lands and takes the furthest overhang PAST the outline's box, per axis - which is why the existing 130x100-becomes-140x110 assertion in PathRenderingTests did NOT move: a square corner reaches 1.41 offsets diagonally and one offset along each axis. A join past the miter limit is drawn flat, so it asks for no room; reading it as limit x offset would have padded a hairpin by ten line widths a side. (b) AnnotationContent.lineEnd, the same PathLineEnd, drawn by AnnotationRasterizer, written out by SVGExport as stroke-linecap, one undo step, decodes to round for an older file. Ends row under Outline beside Thickness (ShapeLineEndSettings in PathLineStylePickers.swift), behind the new flag next-line-ends. 7302 tests green; 16 written before the code across ShapeLineEndTests, ShapeLineEndRenderTests, PathLineStyleRenderingTests and SVGExportTests. Deviation: it ships behind its OWN flag rather than the Pen's, because the Pen's flag is about a tool a line and an arrow have nothing to do with."
+    },
+    {
+      "t": "2026-09-16T02:25:19.854Z",
+      "note": "left rough, not filed: Flat and Square read almost the same at a glance, in the panel and on the canvas, because the whole difference is half a line width at each end - the word beside the caption carries it. Said of the path's own row on 2026-09-15 and still true, and it is a question for the user in the audit rather than a defect. Also left rough: a line and an arrow are not offered Pattern (solid/dashed/dotted), which a path is. A dashed redline arrow may well be worth having, but it is a feature nobody has asked for and the audit asks whether it is wanted before anybody builds it."
     }
-  ]
+  ],
+  "started": "2026-09-16T02:08:09.714Z"
 }

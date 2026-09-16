@@ -1,0 +1,32 @@
+{
+  "feature": "A line and an arrow say how they end",
+  "epic": "icon-vector",
+  "summary": "A line and an arrow have always ended in a half circle with nothing anywhere to say otherwise. They now show Ends under Outline beside their Thickness, offering the same Flat, Round and Square a path drawn with the Pen already offers, and it comes across into an exported SVG. Separately, the point of a sharp corner is no longer sliced off by the edge of the shape's own bitmap.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Say how a line and an arrow end\" is on by default.",
+  "try": [
+    { "do": "Press L and drag a line across the canvas." },
+    { "do": "Press V and click it. Under Outline, beside Thickness, there is a row called Ends." },
+    { "do": "Pull Thickness right up to about 24 so the difference is something you can see." },
+    { "do": "Press the left-hand picture on Ends: the line stops dead on the two points you dragged between.", "shot": "2026-09-15-shape-line-ends.png" },
+    { "do": "Press the right-hand picture: a half square past each point, as long as the round one but with corners." },
+    { "do": "Press Command Z once. The end goes back one step and the line is still there." },
+    { "do": "Press A, drag an arrow, pick it, and set its Ends to flat: the TAIL is cut square and the head is untouched." },
+    { "do": "Press R and drag a box, then pick it: there is no Ends row, because a box has no ends." }
+  ],
+  "evaluate": [
+    "Ends sits under Outline beside Thickness, which is where a path keeps the same picker. Is that where you would look for it on a line?",
+    "A line and an arrow get Ends and nothing else, where a path also gets Pattern and Corners. Does the shorter row list read as correct, or as something missing?",
+    "Flat and Square are the same shape at two lengths, so the two pictures differ only in how long the stub is. Can you tell them apart without reading the word?",
+    "Round is still what a new line comes out as. Should a line you draw for pointing at a screenshot stay round, or should the app remember the last end you chose the way it remembers thickness?",
+    "A box is not asked about ends at all, rather than being asked and having the answer do nothing. Is a row that comes and goes with the shape you picked helpful, or unsettling?",
+    "A dashed or dotted line is NOT offered on a line or an arrow, only on a path. Is a dashed redline arrow something you would reach for?"
+  ],
+  "rough": [
+    "No real window captures this run: the Mac's screen was locked from before the task started, so macOS drew nothing and every walk refused to run. The picture shipped here is the document rendered through the app's own composite, not a photograph of the window. The new walk Scripts/playtest/shape-line-ends-walk.json has never been executed, and a full sweep is requested.",
+    "Flat and Square read almost the same at a glance in the panel, and in the picture: the whole difference is half a line width at each end. The word beside the caption is doing the work. The same was said of the path's row on 2026-09-15 and it is still true.",
+    "A Border in the Effects list is NOT given a corner setting, and this is a decision rather than an omission. A ring round a box is not stroked at all, it is one rounded rect with a smaller one cut out, so there is no join to set, and giving it one would produce something nobody could tell from Corner Radius. The corner control for a box is its Corner Radius.",
+    "A rectangle's own stroke gets no corner setting either, for the same reason: rounding the join would round the outer edge of the line and leave the fill square, which is a second and worse way to say what Corner Radius already says.",
+    "The task asked for these to travel with a saved outline style. There is no such thing anywhere in the app yet: a saved style holds a shadow, a glow, a border or a blur, and nothing holds a stroke's weight and kind. That is a feature, not a gap in this one, and it is left recorded rather than invented.",
+    "It ships behind its own flag, next-line-ends, rather than behind the Pen's. The Pen's flag is about a tool a line and an arrow have nothing to do with, so a person who turned the Pen off would have lost the row on shapes the Pen never drew."
+  ]
+}

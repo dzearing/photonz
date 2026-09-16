@@ -88,7 +88,18 @@ extension AnnotationContent {
     /// How far this shape's own stroke reaches past its box, in document
     /// points. Zero unless the stroke is centred or outside.
     public var strokeOutset: CGFloat {
-        guard shape.hasOutlinePosition else { return 0 }
+        guard shape.hasOutlinePosition else {
+            // A line and an arrow ARE their stroke, so there is no edge for it
+            // to sit on one side of, and the frame their drag left them
+            // already holds half a line width of slack all round
+            // (`AnnotationBuilder.layer`). What that slack does not hold is
+            // the extra a SQUARE end reaches — its far corner sits width/√2
+            // from the last point rather than width/2 — and an end switched
+            // after the shape was drawn never grew the frame at all, so the
+            // bitmap makes the difference up itself (`PathLineStyle.swift`).
+            guard showsLineEnds else { return 0 }
+            return max(0, strokeWidth * (lineEnd.reach - 0.5)).rounded(.up)
+        }
         return strokePosition.outset(width: strokeWidth)
     }
 }

@@ -50,9 +50,9 @@ struct ShapePartSettings: View {
                 // ...and what KIND of line it is, under the same bracket,
                 // because the ends, the corners and the dashes are as much a
                 // part of the outline as its weight is
-                // (`PathLineStylePickers.swift`). Only a path answers these
-                // today; a line and an arrow still draw round ends and sharp
-                // corners and are not asked.
+                // (`PathLineStylePickers.swift`). A path answers all three; a
+                // line and an arrow answer the one of them they HAVE, which is
+                // what their two ends look like.
                 let lineStyle = editorState.pathLineStyleSelection.of(ids)
                 // Nothing at all while the part is switched OFF. A shape with
                 // no outline used to keep a Thickness reading 0 px under a
@@ -63,6 +63,7 @@ struct ShapePartSettings: View {
                     OwnedSettings(owner: row.title) {
                         self.thickness(thickness, ids: thickness.layerIDs)
                         PathLineStyleSettings(selection: lineStyle)
+                        ShapeLineEndSettings(selection: selection)
                     }
                 }
             case .captionText where !selection.isEmpty:

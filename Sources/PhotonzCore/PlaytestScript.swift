@@ -961,6 +961,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// shapes into a known state whatever the last walk left the shape default
     /// at (each kind remembers what its last object was set to).
     case dragThicknessThin, dragShapeCornersSquare
+    /// Thickness pulled right up, for a walk about what happens at the ENDS of
+    /// a line: the whole difference between a flat, a round and a square end
+    /// is the last half width, so on a hairline there is nothing to photograph.
+    case dragThicknessFat
     /// The Shadow section's switch, over the whole selection.
     case toggleShadow
     /// Put the selected copy's whole look back to the original's, which is

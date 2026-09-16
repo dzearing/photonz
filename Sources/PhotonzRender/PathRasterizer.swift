@@ -92,18 +92,8 @@ public enum PathRasterizer {
         // drew: corners carried out to a point, because a corner anchor exists
         // to be sharp and a round join would quietly curve every one of them,
         // and round ends, which is what every other stroke in the app ends in.
-        let join: CGLineJoin
-        switch content.lineCorner {
-        case .sharp: join = .miter
-        case .round: join = .round
-        case .flat: join = .bevel
-        }
-        let cap: CGLineCap
-        switch content.lineEnd {
-        case .flat: cap = .butt
-        case .round: cap = .round
-        case .square: cap = .square
-        }
+        let join = content.lineCorner.lineJoin
+        let cap = content.lineEnd.lineCap
         // The dashes are measured off the width the line is WORN at, never the
         // doubled width an inside or outside line is drawn with below: doubling
         // the pattern too would make an inside dashed line's dashes twice as

@@ -120,6 +120,18 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// shape drawn before there was a choice wears, and it is what an older
     /// document opens as (`BorderPosition.swift`).
     public var strokePosition: BorderPosition = .inside
+    /// What the ENDS of an open line look like: flat, round or square.
+    ///
+    /// The same three answers a drawn path gives, read off the same model
+    /// (`PathLineStyle.swift`), because "what does a line end in" is one
+    /// question wherever the line was drawn. Round is what every line and
+    /// every arrow in the app ended in before there was a choice, so nothing
+    /// already on a canvas moves.
+    ///
+    /// It reaches a line's two ends and an arrow's tail. A box, an oval and a
+    /// highlight have no ends at all and are never asked
+    /// (`AnnotationContent.showsLineEnds`).
+    public var lineEnd: PathLineEnd = .round
     /// For arrows/lines: start and end in layer-local coordinates.
     public var start: CGPoint
     public var end: CGPoint
@@ -257,7 +269,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// hex string there. Only a gradient writes an object, so a document with
     /// none in it is byte for byte what it always was.
     private enum CodingKeys: String, CodingKey {
-        case shape, strokeWidth, strokePosition
+        case shape, strokeWidth, strokePosition, lineEnd
         case paint = "colorHex"
         // The head's own colour, and the label's three. All four postdate every
         // arrow already on disk, so an absent key is what says "this one was
@@ -290,6 +302,9 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         // shape written before then is wearing `inside` and draws unchanged.
         strokePosition = try c.decodeIfPresent(BorderPosition.self, forKey: .strokePosition)
             ?? .inside
+        // Every line and every arrow drawn before 2026-09-15 ended in a half
+        // circle, so an absent key is `round` and an old picture is unchanged.
+        lineEnd = try c.decodeIfPresent(PathLineEnd.self, forKey: .lineEnd) ?? .round
         // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
         // `arrowheadStyle` postdates the head being one shape; every arrow

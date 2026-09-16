@@ -133,7 +133,7 @@ struct ContentSelectionTests {
     @Test func oneArrowOffersThicknessCaptionAndHead() {
         let doc = document([shape(.arrow)])
         let rows = doc.shapeSelection(layerIDs: doc.layers.map(\.id)).rows
-        #expect(rows == [.thickness, .caption, .headStyle, .headSize])
+        #expect(rows == [.thickness, .lineEnds, .caption, .headStyle, .headSize])
     }
 
     @Test func anArrowWithACaptionOffersItsLabelSize() {
@@ -145,7 +145,7 @@ struct ContentSelectionTests {
     @Test func twoArrowsOfferWhatBothHave() {
         let doc = document([shape(.arrow, caption: "One"), shape(.arrow, caption: "Two")])
         let rows = doc.shapeSelection(layerIDs: doc.layers.map(\.id)).rows
-        #expect(rows == [.thickness, .labelSize, .labelCorners, .headStyle, .headSize])
+        #expect(rows == [.thickness, .lineEnds, .labelSize, .labelCorners, .headStyle, .headSize])
     }
 
     @Test func aCaptionIsNotOfferedOverMoreThanOneArrow() {

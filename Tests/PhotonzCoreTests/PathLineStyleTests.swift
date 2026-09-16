@@ -87,10 +87,29 @@ struct PathLineStyleTests {
 
     @Test("A CLOSED path has no ends, so a square end asks for no extra room")
     func closedPathHasNoEnds() {
-        var path = openPath(width: 10)
-        path.isClosed = true
-        path.lineEnd = .square
-        #expect(path.strokeOutset == 5)
+        var round = openPath(width: 10)
+        round.isClosed = true
+        // Turned so the shape's own CORNERS are not what decides the answer:
+        // a sharp one carries its point out past the outline and asks for room
+        // of its own, which is a different question from this one.
+        round.lineCorner = .round
+        var square = round
+        square.lineEnd = .square
+        #expect(round.strokeOutset == 5)
+        #expect(square.strokeOutset == round.strokeOutset)
+    }
+
+    @Test("A closed path DOES ask for room for the point of a sharp corner")
+    func closedPathMakesRoomForItsPoint() {
+        var round = openPath(width: 10)
+        round.isClosed = true
+        round.lineCorner = .round
+        var sharp = round
+        sharp.lineCorner = .sharp
+        // Closing this shape brings its two ends together at about 31 degrees,
+        // and a point carried out of an angle that sharp reaches nearly four
+        // times the half width (`PathContent.sharpCornerOutset`).
+        #expect(sharp.strokeOutset > round.strokeOutset)
     }
 
     // MARK: On disk

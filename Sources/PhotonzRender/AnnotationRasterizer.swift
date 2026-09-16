@@ -53,7 +53,12 @@ public enum AnnotationRasterizer {
         context.setStrokeColor(color)
         context.setFillColor(color)
         context.setLineWidth(annotation.strokeWidth)
-        context.setLineCap(.round)
+        // What the two ends of an open line look like, which the shape itself
+        // now answers (`PathLineStyle.swift`). Round is what every line and
+        // every arrow drew before there was a choice, and it is what a closed
+        // shape, which has no ends at all, goes on being drawn with.
+        let cap: CGLineCap = annotation.showsLineEnds ? annotation.lineEnd.lineCap : .round
+        context.setLineCap(cap)
         // Rectangles join with miters so a thick stroke doesn't fake a corner
         // radius the inspector doesn't show — `cornerRadius` alone rounds them
         // (it curves the path itself). Open strokes keep soft round joins.
@@ -62,7 +67,7 @@ public enum AnnotationRasterizer {
 
         /// Every outline in here goes through one call, so a gradient reaches
         /// a line, an arrow's shaft and a box's border by the same route.
-        func strokeInk(_ path: CGPath, cap: CGLineCap = .round) {
+        func strokeInk(_ path: CGPath, cap: CGLineCap = cap) {
             GradientPainter.stroke(path: path, with: ink, width: annotation.strokeWidth,
                                    lineJoin: join, lineCap: cap, in: context)
         }

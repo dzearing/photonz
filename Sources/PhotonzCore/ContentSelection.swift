@@ -112,6 +112,10 @@ public struct TextLayerSelection: Hashable, Sendable {
 public enum ShapeSettingRow: String, CaseIterable, Hashable, Sendable {
     /// How thick the stroke is. Every shape but a highlight.
     case thickness
+    /// What the ENDS of an open line look like, straight after its weight
+    /// because they are as much a part of the line as its thickness is. A line
+    /// and an arrow only: nothing else here has an end anybody can see.
+    case lineEnds
     /// The words on an arrow. Content rather than looks, so it is offered for
     /// ONE arrow only: a single field over three arrows could only give all
     /// three the same words, which nobody has ever wanted.
@@ -149,6 +153,10 @@ extension AnnotationContent {
     public var settingRows: [ShapeSettingRow] {
         var rows: [ShapeSettingRow] = []
         if shape != .highlight { rows.append(.thickness) }
+        // Straight after the weight, because the ends are as much a part of
+        // the line as its thickness is — which is exactly where a drawn path
+        // keeps them (`PathLineStylePickers.swift`).
+        if showsLineEnds { rows.append(.lineEnds) }
         if shape == .arrow {
             rows.append(.caption)
             if hasCaption {

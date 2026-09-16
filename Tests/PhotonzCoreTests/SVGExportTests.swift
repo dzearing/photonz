@@ -178,6 +178,23 @@ struct SVGExportTests {
         #expect(svg.contains("x2=\"60\""))
         #expect(svg.contains("y2=\"40\""))
         #expect(svg.contains("stroke-width=\"3\""))
+        // Round is what a line ends in unless somebody says otherwise, and it
+        // is written out rather than left to the reader: SVG's own default is
+        // a flat end, so a file that did not say would come back chopped.
+        #expect(svg.contains("stroke-linecap=\"round\""))
+    }
+
+    @Test func aLineCarriesTheEndItWasGiven() {
+        var mark = AnnotationContent(shape: .line, strokeWidth: 3, colorHex: "#000000",
+                                     start: CGPoint(x: 0, y: 0), end: CGPoint(x: 60, y: 40))
+        mark.lineEnd = .square
+        let layer = Layer(name: "Line", content: .annotation(mark),
+                          frame: CGRect(x: 5, y: 5, width: 60, height: 40))
+        #expect(Self.write(Self.document([layer])).text.contains("stroke-linecap=\"square\""))
+        mark.lineEnd = .flat
+        let flat = Layer(name: "Line", content: .annotation(mark),
+                         frame: CGRect(x: 5, y: 5, width: 60, height: 40))
+        #expect(Self.write(Self.document([flat])).text.contains("stroke-linecap=\"butt\""))
     }
 
     @Test func aBorderWritesAsAStrokeRoundTheShape() {

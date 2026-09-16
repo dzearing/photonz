@@ -204,3 +204,42 @@ struct PathLineStyleSettings: View {
 }
 
 
+
+// MARK: - The same question, asked of a line or an arrow
+
+/// What the ends of a LINE or an ARROW look like, under the Outline row in
+/// Appearance beside its Thickness — the very spot a drawn path keeps the same
+/// picker (`PhotonzCore/PathLineStyle.swift`).
+///
+/// One row rather than three. A path can be dashed and can turn a corner
+/// because it is made of several runs; a line and an arrow are one straight
+/// run, so the only thing about their line anybody can choose is what happens
+/// at the two ends. Offering the other two would be exactly the dead control
+/// the rest of this panel goes out of its way not to show.
+struct ShapeLineEndSettings: View {
+    @Environment(EditorState.self) private var editorState
+    /// The picked shapes this Outline row speaks for.
+    let selection: ShapeSelection
+
+    var body: some View {
+        // Only where there are ends to see: a box and an oval are closed, and
+        // a highlight is a wash rather than a line (`showsLineEnds`).
+        if Experiments.shared.lineEndsEnabled, selection.rows.contains(.lineEnds) {
+            let ids = selection.layerIDs
+            PathLineStyleRow(label: "Ends",
+                             reading: selection.reading(\.lineEnd),
+                             title: \.title,
+                             glyph: { PathLineStyleGlyph.end($0, named: $0.title) },
+                             help: { Self.help($0) },
+                             pick: { editorState.setShapeLineEnd(ids: ids, $0) })
+        }
+    }
+
+    private static func help(_ end: PathLineEnd) -> String {
+        switch end {
+        case .flat: return "The line stops dead on its last point"
+        case .round: return "A half circle past the last point"
+        case .square: return "A half square past the last point"
+        }
+    }
+}

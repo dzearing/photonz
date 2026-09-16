@@ -1984,6 +1984,9 @@ private final class Run {
             case .dragThicknessThin:
                 let ids = editor.outlineThicknessSelection.layerIDs
                 if !ids.isEmpty { editor.commitOutlineWidth(ids: ids, 3) }
+            case .dragThicknessFat:
+                let ids = editor.outlineThicknessSelection.layerIDs
+                if !ids.isEmpty { editor.commitOutlineWidth(ids: ids, 24) }
             // Rounding is ONE row now, so a walk that rounds a shape and a walk
             // that rounds a picture pull the same slider.
             case .dragShapeCornersSquare:

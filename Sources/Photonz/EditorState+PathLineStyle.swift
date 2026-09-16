@@ -39,6 +39,14 @@ extension EditorState {
         perform { _ = $0.setPathLinePattern(layerIDs: ids, to: pattern) }
     }
 
+    /// What the ends of a LINE or an ARROW look like. The same three answers
+    /// and the same one step, on a shape the Pen did not draw.
+    func setShapeLineEnd(ids: [UUID], _ end: PathLineEnd) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { _ = $0.setShapeLineEnd(layerIDs: ids, to: end) }
+    }
+
     /// What the three pickers read across the picked layers: the paths among
     /// them, and what they agree about.
     var pathLineStyleSelection: PathLineStyleSelection {
