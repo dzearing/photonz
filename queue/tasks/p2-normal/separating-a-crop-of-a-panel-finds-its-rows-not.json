@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:17:18.212Z",
-  "updated": "2026-09-16T12:28:48.128Z",
+  "updated": "2026-09-16T14:18:33.789Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "REPRODUCED with the bench on a real capture, not read. /tmp/separate-bench/inspector-dark.png is a 602x704 2x crop of this app's inspector panel.\n\n  PHOTONZ_SEPARATE_BENCH=/tmp/separate-bench/inspector-dark.png Scripts/test.sh -c release --filter SeparateBench\n  BENCH inspector-dark.png | 602 x 704 (0.4 MP) at 2x | 10 runs, 3 boxes, 10 left (10 unclear, 0 crowded out)\n\nThree boxes out of a panel with a dozen rows in it. Diagnosed: BoxSweep.islands() drops any island touching the picture edge (the comment is \"the frame cut it in half, so its real shape is not in the picture and the app does not guess it\"), and in a crop of a panel the rows and cards run to the left and right edges. The biggest thing thrown away measured 439x307 of a 602x704 picture.\n\nThe rule is deliberate and documented (docs/design/separate-into-layers.md, The boxes, step 3) so it was left alone by the task that made dark windows work at all (separate-finds-the-boxes-in-a-dark-window-too-no, done 2026-09-16). The open question is what a cut piece should come back AS: its real corners are off the picture, so a rounded card would come back square. That is a look-at-it question before it is a code question.",
+  "notes": "DIAGNOSIS CORRECTED. The frame-cut rule was not the cause and is untouched. Proved by turning it off entirely (a PHOTONZ_KEEP_CUT experiment in BoxSweep's offering pass) and re-running the bench on /tmp/separate-bench/inspector-dark.png: still exactly 3 boxes. The 439x307 piece the old notes called 'the biggest thing thrown away' is not cut at all; it is refused for filling 8% of its own bounding box against a minFill of 75%.\n\nThe real cause, instrumented pixel by pixel: PatchDecision.decide refuses the ring around a box when the WORST single sample is off the median, and around each of the X/Y/W/H fields that worst sample is the field's OWN EDGE. The field's edge is 8 levels off the panel (46,56,57 against 38,45,48) with an antialiased step under BoxSweep.colorTolerance somewhere down its rounded corner, so the two chain into one colour region, the edge counts as background, the island stops inside it, and the band read just outside the field is one row of that edge. The rings were 85% one flat colour and all three were refused.\n\nFix in LayerSeparator's box planning: when the band right against a box will not agree, the box grows a pixel and the ring is read again, up to BoxSweep.maxBorderWidth. Growing rather than just reading further out is what stops the box leaving a hairline ghost of its own edge behind, and it keeps the ring anchored to the rect that is about to be painted. A box sitting on another box never steps: that refusal is deliberate and is what keeps a knob inside its switch (aBoxWithSomethingOnItComesOutAsPixelsAndKeepsThem caught it when the first version stepped everywhere).\n\nPinned by Tests/PhotonzRenderTests/Fixtures/dark-fields-2x.png (a 502x144 2x crop of the four inspector fields) and SeparatedDarkFieldsTests. Design doc: docs/design/separate-into-layers.md, 'Stepping off the box's own edge'.",
   "acceptance": [
     "A crop of a dark inspector panel gives back most of its rows as layers, not three",
     "The number of boxes out of Tests/PhotonzRenderTests/Fixtures/app-window-2x.png does not fall",
@@ -31,6 +31,36 @@
     {
       "t": "2026-09-16T12:28:48.127Z",
       "note": "Partly moved already, by separate-finds-the-boxes-in-a-dark-window-too-no. A piece the frame cut is still never OFFERED, but if it is big and full of holes it is now read as scenery, so things sitting on it do come out. Measured: a card running off the right edge with a row on it used to give zero boxes and now gives the row, and the space the row leaves repairs to the card's own colour at 0/255 off (Tests/PhotonzRenderTests/SeparateIntoLayersFixtureTests.swift, aCardTheFrameCutStaysInThePictureButTheRowOnItComesOut). The dark inspector crop moved 0 -> 3 boxes on the same change, so the three you are looking at are the new floor, not the old one. What is still open is exactly your acceptance item 3: a cut piece whose own shape is unknowable."
+    },
+    {
+      "t": "2026-09-16T13:32:19.788Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T13:42:37.808Z",
+      "note": "Reproduced the 3 boxes. The diagnosis in notes is WRONG: turning the frame-cut rule OFF entirely (PHOTONZ_KEEP_CUT experiment, BoxSweep.swift, offering pass) changes the inspector crop not at all, still 3 boxes. The 439x307 piece the notes call 'the biggest thing thrown away' is refused for FILL (0.08 against minFill 0.75), not for being cut, and it is not cut. Real cause is elsewhere; digging."
+    },
+    {
+      "t": "2026-09-16T14:18:12.809Z",
+      "note": "Bench, before -> after, boxes/left-behind: inspector-dark 3/10 -> 6/7; app-window-2x 10/5 -> 10/5; settings-pane 10/0 -> 10/0; photonz-fullscreen 19/28 -> 19/28; dashboard-crop 30/367 -> 30/363; wikipedia-web 11/119 -> 11/119; comp-panels 4/96 -> 4/96; photograph 0/0 -> 0/0; photo-real 0/0 -> 0/0. Nothing fell. Scripts/test.sh: 7599 tests in 608 suites, all pass."
+    },
+    {
+      "t": "2026-09-16T14:18:17.040Z",
+      "note": "Acceptance, item by item. 1) A crop of a dark inspector panel gives back most of its rows, not three: 3 boxes -> 6, all four number fields, as real rounded rectangles rather than pictures. The sliders and section rows are NOT layers and never could be on that capture: the panel is one flat surface with labels painted straight onto it, so there is no row shape to find. 2) app-window-2x does not fall: 10 boxes before and after, measured with the bench. 3) A piece the frame cut is still left alone: the rule is untouched and aCardTheFrameCutStaysInThePictureButTheRowOnItComesOut still passes. 4) A photograph still gives back nothing: photograph.png and photo-real.png both 0 runs and 0 boxes."
+    },
+    {
+      "t": "2026-09-16T14:18:17.083Z",
+      "note": "NO WALK COULD RUN: the Mac's screen was locked for the whole task, so Scripts/playtest-all.sh separate reported COULD NOT RUN on the first walk. Asked for a sweep instead (queue/bin/sweep.sh request) and said so in the audit's rough list. The audit picture is an offscreen render, not a photograph of the window, and it says that in plain words."
+    },
+    {
+      "t": "2026-09-16T14:18:17.128Z",
+      "note": "left rough, not filed: a field comes back with no edge (the edge is the thing the app mistook for the panel, so it is neither in the layer nor left behind) and the four fields come back 43, 43, 45 and 46 px tall when they are plainly identical. Both are in the audit's evaluate list, because whether they matter is the user's call and not mine. Also left rough: seven words on that crop still stay in the picture because a red redline annotation crosses the band around them. Refusing those is correct, not a defect: lifting the word would erase part of a line somebody drew."
+    },
+    {
+      "t": "2026-09-16T14:18:33.787Z",
+      "note": "Separating a dark panel now gives back the controls on it. The cause was not the frame-cut rule the task named (proved by turning that rule off and measuring no change) but a box's own edge chaining into the panel's colour region, which put the edge in the band the app reads to find out what is behind the box and refused a ring that was 85% flat. A box now grows a pixel and reads again when the close band will not agree; growing is what stops a hairline ghost being left behind, and a box on another box never steps so a knob still stays in its switch. Inspector crop 3 -> 6 boxes with all four number fields as real rounded rectangles, app-window-2x unchanged at 10, photographs still give nothing, 7599 tests pass. Audit: queue/audits/2026-09-16-separate-dark-panel.json. The screen was locked all task so no walk could run; a sweep is requested and the audit says its picture is an offscreen render."
     }
-  ]
+  ],
+  "started": "2026-09-16T13:32:19.787Z",
+  "completed": "2026-09-16T14:18:33.788Z"
 }

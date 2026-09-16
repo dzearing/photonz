@@ -16922,3 +16922,33 @@ and says so.
 
 **Next:** the sweep, and whatever the user makes of the audit's four questions
 — chiefly whether a field coming back without its own edge is good enough.
+
+## 2026-09-16 — a layer row says what the layer actually is
+
+A text layer nobody has named by hand now wears its own words in the layers
+list instead of `Text 9`, and follows them as they are retyped. The words are
+read off the layer as the list is built (`Layer.displayName`) rather than
+written into its name: writing them down is the version that breaks, because the
+moment the words become the name it stops looking app-written and the next
+retype cannot move it. Reading them means retyping works by construction and the
+whole thing costs no undo step. Turn into Text stops naming the layer at all and
+`makeTextEditable` lost its `name` parameter.
+
+A shape goes the other way on purpose: it stops being a rectangle once, so
+`turnLayerIntoPath` writes the new name inside the same mutation as the shape
+change and one undo puts both back. Batches turn bottom-of-stack first for a
+fixed numbering, and the weld that follows ignores the survivor's own name so
+three lines become a row called `Path` rather than `Path 3`.
+
+Behind `next-a-row-says-its-words`, on by default in Next. Nine walks carried
+the old row names and were updated; two gained checks for the new behaviour.
+
+**Not verified in the app.** The Mac's screen was locked for the whole session,
+so every walk reported `status: "locked"` and refused to run: no captures, no
+walk results. A full sweep is requested and the audit
+(`queue/audits/2026-09-16-a-row-says-what-it-is.json`) says so in plain words
+rather than shipping renders as if they were the app.
+
+Next: the sweep result for those nine walks, and
+`two-shapes-joined-into-one-stop-calling-themselv` — joining two ovals still
+leaves a row saying Ellipse, which is the same rule from a third direction.

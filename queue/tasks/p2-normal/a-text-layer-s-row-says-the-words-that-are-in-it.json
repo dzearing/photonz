@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:46.726Z",
-  "updated": "2026-09-16T12:23:33.532Z",
+  "updated": "2026-09-16T14:43:29.181Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Named in audit 2026-09-13-turn-into-text, rough note three: \"Retyping a label does not rename its layer. The row still says General after you have typed Appearance into it. That is how every text layer in the app already behaves, so it was left alone rather than changed here, but it looks wrong on a row this command just named after its words.\"\n\nThe same audit and 2026-09-13-separate-into-layers both call the naming the weakest part of Separate into Layers: \"a list of nine identical-looking names is not what a person would have written\". Turn into Text is the moment the app learns the characters, so it is the moment the name can stop being a number.\n\nNote the ordering: this does not need text recognition. It only needs the names to follow the words the app already has.",
@@ -56,6 +56,44 @@
     {
       "t": "2026-09-16T12:23:33.531Z",
       "note": "seq 520 -> 50"
+    },
+    {
+      "t": "2026-09-16T14:21:02.803Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T14:27:19.510Z",
+      "note": "Adversarial review before building. The mock-ish framing of this task is 'rename the layer when the words change', and that is the version that does not work: the moment you write the words into the name, the name stops looking app-written (LayerNaming.isAutoName) and the NEXT retype cannot move it. That is exactly the bug the task describes, one step later. So text is READ, not renamed: Layer.displayName returns the words when the stored name is one the app wrote, and the stored name otherwise. Retyping moves the row by construction, it costs no undo step because there is no step, and it fixes every text layer in the app at once rather than only the ones Turn into Text made."
+    },
+    {
+      "t": "2026-09-16T14:27:19.558Z",
+      "note": "Shapes go the other way, and deliberately. A layer stops being a rectangle ONCE, at a moment you can point at, so Turn Into Path writes the new name into the document inside the same mutation as the shape change — which is what makes 'one undo puts both back' literally true, and matches what joining several outlines already did. Deriving 'Path' from a stored 'Rectangle 3' would have left two mechanisms for one visible thing."
+    },
+    {
+      "t": "2026-09-16T14:27:19.607Z",
+      "note": "Third finding from the review, and it is the one a first-time user hits: the rename field opens filled with what the row SAYS. Press Return on it untouched and the old code would store those words as a hand name, silently freezing the row away from the words with nothing on screen to say so. PhotonzDocument.renameLayer now treats 'the name already on the row' as not a rename, the same way it already treated an empty field."
+    },
+    {
+      "t": "2026-09-16T14:38:48.782Z",
+      "note": "Gated behind a Next flag, next-a-row-says-its-words, on by default in Next. The text half is the only part of this that Current could see: Turn Into Path and Turn into Text are already behind next-turn-into-path and next-separate-into-layers, so renaming a rectangle off its shape cannot reach anyone on Current. The flag is threaded into layerRows the same way next-auto-layout's marksOutOfView is."
+    },
+    {
+      "t": "2026-09-16T14:38:48.869Z",
+      "note": "Filed two-shapes-joined-into-one-stop-calling-themselv: joining two ovals leaves one path whose row still says Ellipse. Reproduced with a throwaway test against PathCombining rather than read off the code (output in that task's notes). Deliberately NOT folded in here: combining is a different command with its own question and its own walk, and the Mac's screen was locked for this entire task so no walk could be run to check a second behaviour change."
+    },
+    {
+      "t": "2026-09-16T14:43:19.993Z",
+      "note": "Acceptance, item by item, and how each was checked. 1, 2, 3, 5, 7, 8 and 9: covered by thirteen new tests in Tests/PhotonzCoreTests/LayerDisplayNameTests.swift, all green in a full run of 7613. 4 (Turn into Text takes its words straight away): the stored rename was REMOVED from EditorState+ReadText and makeTextEditable lost its name parameter, because the derived name does it and a written-down one would freeze the row against the next retype; TurnIntoTextTests now asserts displayName instead. 6 (an audit with real captures): NOT met. The Mac's screen was locked for the whole task, every walk reported status locked and refused to run, so there is not one picture and not one walk result. The audit at queue/audits/2026-09-16-a-row-says-what-it-is.json says so in its first rough line, and a full sweep is requested."
+    },
+    {
+      "t": "2026-09-16T14:43:20.037Z",
+      "note": "left rough: renaming a row to exactly the words it already shows is treated as not a rename, so a person who meant to PIN the name at those words has no way to say so and nothing says so on screen. Did not earn a task: the common case (open the field, think better of it, press Return) is much commoner than the pinning one, and the pinning intent has an obvious workaround, which is to type anything else."
+    },
+    {
+      "t": "2026-09-16T14:43:29.179Z",
+      "note": "A text layer nobody renamed now wears its own words in the layers list and follows them as they are retyped (Layer.displayName, read not stored, so no undo step); a hand name is theirs and survives retyping; Turn Into Path renames a Rectangle row to Path inside the same undo step as the shape change. Behind next-a-row-says-its-words, on by default in Next. Scripts/test.sh green, 7613 tests, 13 new in LayerDisplayNameTests. NOT verified in the app: the Mac's screen was locked all task, every walk reported status locked, so there are no captures and the audit says so; a sweep is requested for the 9 walks whose row names changed. Audit: queue/audits/2026-09-16-a-row-says-what-it-is.json"
     }
-  ]
+  ],
+  "started": "2026-09-16T14:21:02.802Z",
+  "completed": "2026-09-16T14:43:29.180Z"
 }
