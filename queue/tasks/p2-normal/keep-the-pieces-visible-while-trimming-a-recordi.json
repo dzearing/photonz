@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 340,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T13:10:09.639Z",
-  "updated": "2026-09-16T12:23:34.814Z",
+  "updated": "2026-09-16T23:25:14.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-09-15-video-cutting.json. Today Sources/Photonz/VideoEditorView.swift bottomRow shows TrimTimeline while state.isTrimming and CutStrip otherwise, so the two never appear together. The model side already composes correctly: VideoEditorState.applyTrim calls VideoCutList.keep(fromTimeline:toTimeline:), which narrows the pieces the window crosses and drops the rest (tested in VideoCutsTests keepTimelineRange). So this is entirely a drawing job: TrimTimeline needs to draw the piece blocks CutStrip draws, under its handles and dim mask.\n\nNOT VERIFIED ON SCREEN: the Mac was locked for the whole of the task that built cutting, so nobody has yet looked at either strip in a drawn window. Run Scripts/playtest/cut-a-recording-walk.json first.",
@@ -26,6 +26,32 @@
     {
       "t": "2026-09-16T12:23:34.813Z",
       "note": "seq 2640 -> 340"
+    },
+    {
+      "t": "2026-09-16T23:17:25.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T23:24:37.046Z",
+      "note": "Adversarial review before building. Walking it as a first-time user: you cut a recording into three pieces, press the scissors, and today everything you just made vanishes into one bar, so the handles are dragging the ends of something you cannot see. Putting the blocks back under the handles is the whole fix. What I cut from the idea: no selected-piece accent inside trim mode (there is no Delete there, and an accent block would fight the accent handles and the accent kept-window border), and no snapping of a handle to a join (it changes what a drag does, which is a behaviour question, not a drawing one; noted as left rough). What I added beyond the drawing: the piece count beside the scissors now reads \"2 of 3 pieces\" while trimming, because the blocks say which pieces and the count says how many, and a handle sitting near a join is exactly when a person wants the number."
+    },
+    {
+      "t": "2026-09-16T23:25:12.145Z",
+      "note": "Review of the built thing: could not be done on screen. The Mac was locked for the whole task (ioreg says CGSSessionScreenIsLocked true at every check), so Scripts/playtest.sh exits 3 with status locked and takes no pictures at all, real or offscreen. What I could verify: VideoTrimTrackTests lays the blocks out (6 tests: widths match piece lengths, the gap at a cut is the only space between blocks, the lit part never escapes its block, a zero length recording lays out) and VideoPieceTrimTests ties what is drawn as kept to what keep() leaves for eight different windows, which is the path commitTrim takes, so acceptance 3 is proved rather than eyeballed. Acceptance 1 and 2 are proved as geometry and unproved as a picture."
+    },
+    {
+      "t": "2026-09-16T23:25:12.191Z",
+      "note": "left rough: no snap when a handle passes a cut, so trimming exactly to a join takes a steady hand. Deliberate: it changes what a drag does, not what it draws, and the audit asks the user whether they want handles to be magnetic. Also left rough: the lit and unlit greys (0.5 and 0.12 white) were picked without being able to look at them, and a dropped block sits over the already dimmed end of the track. Both are in the audit's rough list for the user to react to; neither earns its own task before somebody has seen the thing drawn."
+    },
+    {
+      "t": "2026-09-16T23:25:12.238Z",
+      "note": "Asked for a sweep (trim-with-pieces-walk.json has never run once, and the trim track change touches cut-a-recording and the two tutorial-trim walks). Noticed on the way past: sweep.sh reported 67 pending requests, which fits a machine that has been locked for a long time rather than a broken sweep, and walks-that-fail-in-the-full-sweep is already open for what it finds. Not filed."
+    },
+    {
+      "t": "2026-09-16T23:25:14.475Z",
+      "note": "The trim track keeps the pieces: TrimTimeline draws a block per piece with the kept part lit, the readout beside the scissors reads '2 of 3 pieces' while trimming, and VideoCutList.piecesUnderTrim + VideoTrimTrackBlock hold the geometry in PhotonzCore. 13 new tests, one of which pins what is drawn as kept to exactly what Done keeps; whole suite (7902) green. Committed 84f87ab4 and pushed. Not seen on screen: the Mac was locked all task so no walk could run and there are no pictures; trim-with-pieces-walk.json is written and a sweep is requested. Audit: queue/audits/2026-09-16-video-cutting-trim.json"
     }
-  ]
+  ],
+  "started": "2026-09-16T23:17:25.158Z",
+  "completed": "2026-09-16T23:25:14.476Z"
 }

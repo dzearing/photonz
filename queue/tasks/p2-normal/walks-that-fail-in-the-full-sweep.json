@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-16T19:44:02.354Z",
+  "updated": "2026-09-16T23:52:40.665Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -271,6 +271,10 @@
     {
       "t": "2026-09-16T19:44:02.353Z",
       "note": "name-chip-reads-anywhere-walk fails on today's main, and it is the walk that is out of date rather than the app. Reproduced twice, the second time with every source change of mine stashed and the probe rebuilt from clean main (screen locked, so PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/name-chip-reads-anywhere-walk.json). Both runs: step 25 (dragTile): no tile called \"Badge\" is in the panel; the ones that are: Button / Components, Text Field / Components, Card / Components. All five starter components still exist in Sources/PhotonzCore/StarterComponents.swift (button, textField, card, navBar, badge), so the shelf is only offering the three that fit: the walk drags Badge and Nav Bar, which are below the fold in that window size. Either the walk scrolls the shelf first or it uses the three tiles it can reach."
+    },
+    {
+      "t": "2026-09-16T23:52:40.664Z",
+      "note": "Three walks fail on main today, each verified as pre-existing by stashing the day's change and re-running: motion-swings-a-layer-walk at step 10 (expect: no field called \"Motion Empty\"), four-sided-popout-walk at step 33 (focus: no editable field labelled \"Padding\"), position-and-size-on-screen-walk at step 56 (waitFor: sectionInView(\"Effects\") did not happen within 4.0s). The first two are the locked-screen field-lookup effect and will pass once the Mac is unlocked; the third is a layout wait and may be real."
     }
   ]
 }

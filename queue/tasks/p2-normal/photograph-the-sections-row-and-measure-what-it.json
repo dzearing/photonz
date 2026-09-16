@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T16:54:21.985Z",
-  "updated": "2026-09-16T12:23:34.901Z",
+  "updated": "2026-09-16T23:53:12.824Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The feature shipped in 8b306e18. The walk exists and parses; it has never been executed, because Scripts/playtest.sh exited 3 with status locked on every attempt between 16:40 and 17:20 on 2026-09-15 (the Mac locked at 2026-09-14 20:46 and had not been unlocked). Nothing is broken: this is the verification half of the-panel-shows-the-panes-that-matter-and-you-ca, which could not be done.\n\nWhat to run:\n  Scripts/playtest-all.sh --no-build panel-sections\nStages 1 and 3 are the before and after: 1 is everything automatic, 3 is Motion turned off in the Sections list. Read dockSections and dockViewport out of /tmp/photonz-playtest/panel-sections/log.json.\n\nThis is NOT the same thing as an-audit-gets-a-real-picture-of-the-app-again, which is about the Screen Recording grant failing with SCStreamErrorDomain -3811 while claiming to be granted. A locked screen refuses capture for a different reason and the app already reports it correctly.",
@@ -27,6 +27,48 @@
     {
       "t": "2026-09-16T12:23:34.900Z",
       "note": "seq 2700 -> 360"
+    },
+    {
+      "t": "2026-09-16T23:39:26.204Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T23:52:58.507Z",
+      "note": "The screen is still locked, and I confirmed it independently rather than taking the app's word: CGSessionCopyCurrentDictionary read from a plain swift script in this terminal returns CGSSessionScreenIsLocked = 1, locked since 2026-09-15 08:44:26 PDT, 32 hours ago. Scripts/playtest.sh exits 3 with status locked, same as yesterday. Nothing can unlock it."
+    },
+    {
+      "t": "2026-09-16T23:52:58.551Z",
+      "note": "But the lock does not stop everything. The camera works: a forced run (PHOTONZ_ALLOW_LOCKED_WALK=1) wrote 5 real -sc.png window captures. And 'press'/'expect' on a control go through the playtestControl registry, not accessibility, so they work too. Only 'focus', 'field' and 'panelMenu' come back empty. So the numbers and the pictures this task wanted were gettable after all; details folded into a-hundred-and-fifteen-walks-fail-on-code-that-pa."
+    },
+    {
+      "t": "2026-09-16T23:52:58.597Z",
+      "note": "THE NUMBERS, from panel-sections-walk's own dockSections, window 1280x900, scrolling area 841pt. Plain box, everything automatic: 552pt (Layers 6-177, Appearance 177-409, Effects 409-477, Motion 477-558). Motion turned off: 471pt. Motion costs 81pt. Use Automatic For All puts it back at 552pt exactly, to the point, as claimed. Text picked: 1046pt automatic, 965pt with Motion off, same 81pt. Component copy: 1240pt automatic, 1172pt with Motion off, 68pt (its Motion section is shorter there)."
+    },
+    {
+      "t": "2026-09-16T23:52:58.644Z",
+      "note": "What the numbers say: with a plain box the dock already fits the 841pt space with 289pt to spare, so turning Motion off buys nothing visible. With text (1046) and with a component copy (1240) the dock overflows, and taking Motion away leaves 965 and 1172, still overflowing. In every case measured, turning Motion off either was not needed or did not stop the scrolling. That is in the audit's evaluate list as a question for the user."
+    },
+    {
+      "t": "2026-09-16T23:52:58.688Z",
+      "note": "The walk had never run and two things in it were wrong. It committed text with Escape, which throws the text away (every other text walk uses cmd+return), so stage 5 proved nothing. And it closed the Sections list with Escape, which in a scripted run reaches the canvas and clears the selection while the list stays open. Both fixed; the walk now passes all 70 steps and all six stages."
+    },
+    {
+      "t": "2026-09-16T23:52:58.733Z",
+      "note": "The picture showed two things no assertion would have caught. The switches in the Sections list did not line up: Motion's and Arrange's sat half way across the row because a one-line subtitle let the Toggle shrink to fit its own label. Fixed in PanelSectionsFooter.swift by laying the words and the switch out side by side with a Spacer between them, verified in a fresh capture. And the row reads 'Sections . 5 hidden' in a brand new document where you have hidden nothing, which is a UX call for the user, so it is a question in the audit rather than a change."
+    },
+    {
+      "t": "2026-09-16T23:52:58.779Z",
+      "note": "Checked three neighbouring walks and each failure is pre-existing, verified by stashing today's change and re-running: motion-swings-a-layer-walk (expect on a field), four-sided-popout-walk (focus on a field), position-and-size-on-screen-walk (waitFor sectionInView Effects). Folded into walks-that-fail-in-the-full-sweep."
+    },
+    {
+      "t": "2026-09-16T23:52:58.822Z",
+      "note": "left rough: acceptance item 1 says the walk passes ON AN UNLOCKED SCREEN. It passes all six stages with 5 real window captures, but under PHOTONZ_ALLOW_LOCKED_WALK=1, so it is not an official pass. A sweep is already pending and will re-run it the moment the Mac is unlocked."
+    },
+    {
+      "t": "2026-09-16T23:53:12.822Z",
+      "note": "Measured and photographed. Window 1280x900, 841pt of scrolling area: a plain box is 552pt with everything automatic and 471pt with Motion off (81pt saved), a piece of text 1046 -> 965pt (81pt), a copy of a component 1240 -> 1172pt (68pt); Use Automatic For All restores 552pt to the point. All from panel-sections-walk's own dockSections. Audit at queue/audits/2026-09-15-panel-sections.json with three real -sc.png window captures beside it, one of the Sections list open. The walk now passes all 70 steps and all six stages after fixing two defects in it (text committed with Escape threw the text away; the list was closed with Escape, which reaches the canvas instead). The picture also showed the list's switches out of column, fixed in PanelSectionsFooter.swift and re-photographed. CAVEAT on acceptance item 1: the screen has been locked since 2026-09-15 08:44 (verified independently via CGSessionCopyCurrentDictionary), so the run was forced with PHOTONZ_ALLOW_LOCKED_WALK=1 after establishing that the camera and the playtestControl lookups are unaffected by a lock. Real pictures, real layout, but not an official pass; the pending sweep re-runs it once the Mac is unlocked. Scripts/test.sh green (7904 tests). Committed 86c22404, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-16T23:39:26.203Z",
+  "completed": "2026-09-16T23:53:12.823Z"
 }
