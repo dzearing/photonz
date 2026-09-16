@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 320,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:06:37.792Z",
-  "updated": "2026-09-16T06:32:05.185Z",
+  "updated": "2026-09-16T06:32:13.968Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The detail line is already on every LibraryEntry and already correct (\"shared\", \"starter\", \"2 copies\"); LibraryComponentTile just never draws it. See Sources/Photonz/ComponentPanel.swift, LibraryComponentTile, and LibraryShelfLayout for the room a caption has. Raised by the audit queue/audits/2026-09-12-shared-components.json.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-16T06:32:05.184Z",
       "note": "left rough: a component of yours that IS shared wears no word either, so the shelf still cannot tell you which of your own components are published (only the Component section can). Did not file it: it is a feature idea rather than a defect, nothing in the queue covers it, and it is the fifth question in the audit so the user can turn it into a task by reacting if they want it. Also left rough: the drag preview for a starter or shared tile carries the corner word with it, since the preview is the same thumbnail view. Harmless and arguably useful."
+    },
+    {
+      "t": "2026-09-16T06:32:13.966Z",
+      "note": "Every tile on the Components shelf that is not in your document now wears one word in the corner of its picture, 'shared' or 'starter'; one already in your file wears nothing. PhotonzCore/ComponentShelfOrigin.swift holds the policy (10 tests), LibraryShelfLayout holds the metrics (2 tests proving the tile stays 68 points tall), LibraryComponentTile draws it. Verified: Scripts/test.sh green, 7451 tests; Current release untouched because both flags are Next-only. NOT verified visually: the Mac's screen was locked for the whole task, so no walk could run and the harness writes neither captures nor offscreen renders in that state. Scripts/playtest/shelf-origin-walk.json is written and its script decodes under the walk tests but has never been run; sweep requested. Audit: queue/audits/2026-09-16-shelf-tile-origin.json."
     }
   ],
-  "started": "2026-09-16T06:21:43.055Z"
+  "started": "2026-09-16T06:21:43.055Z",
+  "completed": "2026-09-16T06:32:13.967Z"
 }
