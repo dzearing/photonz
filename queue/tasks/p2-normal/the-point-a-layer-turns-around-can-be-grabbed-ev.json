@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:56.205Z",
-  "updated": "2026-09-16T12:23:34.376Z",
+  "updated": "2026-09-16T20:28:51.110Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review. Rough line in queue/audits/2026-09-15-motion-pivot.json: \"The crosshair is read AFTER the box's own resize handles and the turn knob, so a pivot parked within about eleven points of a corner cannot be grabbed on the canvas; it can still be set from the Around menu or the At boxes. Resizing has no other way in, which is why it was ordered this way.\"\n\nThis is the SECOND time in two days that the order canvas chrome is read in has been wrong in this direction. The other: queue/audits/2026-09-15-path-points-under-the-pen.json says \"The pointer cue over a path's points used to be read AFTER the canvas's own boundary handles, which is the opposite of the order the press itself uses. Moving it fixed that mismatch as a side effect; nothing was ever reported about it.\" Two hand-rolled answers to the same question means the canvas needs ONE written order for what a press over overlapping chrome hits, and whoever takes this should write it down rather than reorder a third list. That is the part that stops a fourth.",
@@ -27,6 +27,23 @@
     {
       "t": "2026-09-16T12:23:34.375Z",
       "note": "seq 2870 -> 240"
+    },
+    {
+      "t": "2026-09-16T20:18:19.560Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:28:47.405Z",
+      "note": "Adversarial review BEFORE building. The task's own suggestion — read the crosshair before the box's handles — would have broken the case this whole feature exists for: the bell hanging from its mount puts the pivot just above the top edge, and the turn knob floats eighteen screen points out from that same edge, so 'pivot always first' swallows the knob. So the fix is not a reorder at all. The rule is: the NEAREST DRAWN MARK takes the press, which is the rule Handles.hit and CornerRadiusHandles.hit already used inside themselves. It answers the corner case (tie goes to the crosshair, which is the one of the two with no other way in), the knob case (aim at the knob, the knob is nearer, the knob answers), and the Top-centre case, without anybody choosing an order by hand again."
+    },
+    {
+      "t": "2026-09-16T20:28:51.065Z",
+      "note": "Acceptance, item by item. (1) and (2) are the rule, unit tested in CanvasHitOrderTests: a mark parked on a corner takes the press aimed at it, a corner eight points away keeps the press aimed at the corner, the turn knob keeps the press aimed at the knob, and a mark wins a press the box would have refused anyway. (3) the cue and the press now call ONE motionPivotTakesPress, so they cannot disagree; a new expectCue walk step makes that claimable, parse-tested. (4) NOT VERIFIED: Scripts/playtest/motion-pivot-in-a-corner-walk.json is written and decodes, but the Mac's screen was locked for the whole task and the walk needs the panel by name to add a Rotation at all, so unlike the screen-name walk it cannot be forced past a lock. Scripts/playtest.sh exited 3 with status locked on both attempts. Sweep requested; the loop runs it once the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T20:28:51.109Z",
+      "note": "left rough: a crosshair parked EXACTLY on the turn knob takes the knob's presses, because the tie rule gives it to the mark drawn on the picture. Turning is still reachable through the A field and dragging the crosshair away gives the knob back, and nobody has hit it, so it is written into the audit's rough for the user to react to rather than filed as its own task."
     }
-  ]
+  ],
+  "started": "2026-09-16T20:18:19.559Z"
 }

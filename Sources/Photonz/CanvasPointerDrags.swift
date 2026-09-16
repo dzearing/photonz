@@ -407,6 +407,16 @@ extension CanvasNSView {
                 return
             }
         }
+        // The pivot: a crosshair sitting ON the drawing, and very often right
+        // in the middle of it, so it is read here — before the box's own
+        // handles, and before the press that would pick the layer up. It does
+        // not simply win: the nearest drawn mark takes the press, so the turn
+        // knob still answers a hand aimed at the turn knob and seven corners
+        // still resize while the eighth holds a crosshair
+        // (`motionPivotTakesPress`, `docs/design/canvas-hit-order.md`). It
+        // only ever answers while a turning layer is picked, so the rest of
+        // the time there is nothing here at all.
+        if motionPivotMouseDown(at: p, event: event) { return }
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
@@ -476,16 +486,6 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
-        // The pivot: a crosshair sitting ON the drawing, and very often right
-        // in the middle of it, so it MUST be read before the press that picks
-        // the layer up — a handle you cannot reach because the thing it sits
-        // on answers first is not a handle. It is read AFTER the box's own
-        // handles, because resizing and turning are gestures with no other way
-        // in, while a pivot parked on a corner can still be set by name or by
-        // typing two numbers in the Around row. It only ever answers while a
-        // turning layer is picked, so the rest of the time there is nothing
-        // here at all.
-        if motionPivotMouseDown(at: p, event: event) { return }
         // A SELECTED collage exposes its filled cells for swap-by-drag (like
         // measure corners: selection first, then inner manipulation). Grabbing
         // a gutter, the backdrop margin, or an empty well still moves the layer,

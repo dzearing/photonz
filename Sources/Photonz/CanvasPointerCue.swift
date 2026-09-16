@@ -110,6 +110,19 @@ extension CanvasNSView {
         }
         guard let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
+        // The pivot, read between the grabs that belong to the layer's own
+        // CONTENT — a line's ends, a caption pill, a caliper's feet — and the
+        // box drawn round it, exactly where `mouseDown` reads it. Whether it
+        // beats the box is the nearest-mark rule, asked once in
+        // `motionPivotTakesPress` so the cue can never promise a grab the
+        // press does not make (`docs/design/canvas-hit-order.md`).
+        if CanvasPointer.contentGrab(at: uprightPoint(p, of: layer.id), layer: layer,
+                                     zoom: viewport.zoom,
+                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
+                                     captionPillSize: layer.measuredCaptionPillSize) == nil,
+           motionPivotTakesPress(at: p) {
+            return (.grab, .identity)
+        }
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
         let cue = CanvasPointer.cue(at: uprightPoint(p, of: layer.id), layer: layer,
@@ -120,11 +133,6 @@ extension CanvasNSView {
                                     captionPillSize: layer.measuredCaptionPillSize,
                                     cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled,
                                     edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
-        // The pivot, where nothing else has answered: it sits ON the drawing
-        // rather than round it, so it is read after the box's own handles and
-        // before the press that would pick the layer up, exactly as
-        // `mouseDown` reads it.
-        if cue == nil, motionPivotHit(at: p) != nil { return (.grab, .identity) }
         // The turn the pointer reads is the one a person SEES: the layer's own
         // plus the swing of the cards above it, so the arrows over a piece
         // inside a card on a slant point along its edges.

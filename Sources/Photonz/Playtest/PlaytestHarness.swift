@@ -1327,6 +1327,9 @@ private final class Run {
         case .expectHint(let contains):
             note(number, step.name, try checkHint(contains: contains), state: describe())
 
+        case .expectCue(let says):
+            note(number, step.name, try checkCue(says: says), state: describe())
+
         case .expectNotice(let says, let absent):
             note(number, step.name, try checkNotice(says: says, absent: absent), state: describe())
 
@@ -3779,6 +3782,21 @@ private final class Run {
                 : "the chip says \"\(reading)\", which does not carry \"\(contains)\"")
         }
         return "the chip says \"\(reading)\", carrying \"\(contains)\" as claimed"
+    }
+
+    /// What the canvas says a press at the pointer would take hold of.
+    ///
+    /// The canvas's own answer, recorded as the cue was read, rather than the
+    /// real OS cursor: a walk's pointer is synthesized while the real one is
+    /// somewhere else on the screen entirely, so the cursor is corroboration
+    /// and this is the claim.
+    private func checkCue(says: String) throws -> String {
+        let reading = try requireCanvas().playtestPointerCue
+        guard reading == says else {
+            throw Failure(description: "the canvas says a press here would be \"\(reading)\", "
+                + "not \"\(says)\"")
+        }
+        return "the canvas says a press here would be \"\(reading)\", as claimed"
     }
 
     /// What the notice pill under the canvas is saying right now.

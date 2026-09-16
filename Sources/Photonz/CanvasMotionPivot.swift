@@ -73,6 +73,40 @@ extension CanvasNSView {
         return hypot(there.x - here.x, there.y - here.y) <= reach ? handle : nil
     }
 
+    /// True where a press at `p` (document points) belongs to the crosshair
+    /// rather than to the box drawn round the layer: the crosshair is in
+    /// reach, and nothing the box draws is nearer.
+    ///
+    /// The crosshair sits ON the drawing and very often right in the middle of
+    /// it, so it cannot be read after the press that picks the layer up. It
+    /// used to be read after the box's own handles as well, on the reasoning
+    /// that resizing and turning have no other way in — and that left a pivot
+    /// parked within eleven points of a corner impossible to pick up on the
+    /// canvas at all, which is the one thing a handle has to be. The nearest
+    /// drawn mark takes the press instead, which keeps the turn knob for the
+    /// hand aiming at the turn knob and keeps seven corners resizing while the
+    /// eighth holds a crosshair. See `docs/design/canvas-hit-order.md`.
+    func motionPivotTakesPress(at p: CGPoint) -> Bool {
+        guard let viewport, let handle = motionPivotHit(at: p) else { return false }
+        guard let layer = document?.canvasLayer(id: handle.layerID),
+              handle.layerID == selectedLayerID else { return true }
+        let offersHandles = offersOwnHandles(layer)
+        let frame = offersHandles && editablePath == nil && layer.allowsFrameResize
+            ? selectedLayerFrame : nil
+        let knob = offersRotation(layer)
+            ? layer.rotateKnobPoint(zoom: viewport.zoom)
+                .map { CanvasPointer.handleSpacePoint($0, layer: layer) }
+            : nil
+        return CanvasHitOrder.markTakesPress(
+            at: handleSpacePoint(p, layer: layer),
+            mark: handleSpacePoint(handle.point, layer: layer),
+            frame: frame, zoom: viewport.zoom, knob: knob,
+            roundingDots: Experiments.shared.cornerHandlesEnabled && offersHandles
+                && layer.offersCornerRadiusHandles && selectedLayerFrame != nil,
+            radii: layer.roundedCornerRadii,
+            edgeGrab: Experiments.shared.edgeGrabEnabled)
+    }
+
     // MARK: - The chrome
 
     func setUpMotionPivotChrome() {
@@ -152,7 +186,8 @@ extension CanvasNSView {
     /// A press with a pivot showing. True when the pivot took it, which stops
     /// the press from also picking the layer up or starting a marquee.
     func motionPivotMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
-        guard event.clickCount == 1, let handle = motionPivotHit(at: p) else { return false }
+        guard event.clickCount == 1, motionPivotTakesPress(at: p),
+              let handle = motionPivotHit(at: p) else { return false }
         motionPivotDrag = MotionPivotDrag(handle: handle, current: handle.point, moved: false)
         applyGrabCursor(.closedHand)
         // A pivot cannot be judged on a still picture: with the layer sitting

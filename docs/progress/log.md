@@ -17230,3 +17230,44 @@ component's name got a day earlier (Next, `next-frames`).
 
 Next: the audit is `queue/audits/2026-09-16-screen-name-plate.json`. The Mac's
 screen was locked all session, so every walk ran forced and a sweep is pending.
+
+## 2026-09-16 — One written order for what a press on the canvas takes
+
+The pivot crosshair on a turning layer could not be picked up once it sat
+within about eleven points of a corner: the corner's resize square was read
+first, so somebody who parked the point there on purpose could only get it back
+from the Around menu or the two number fields. That was the SECOND hand-rolled
+answer to the same question in two days (the first: the pointer over a path's
+points read after the canvas boundary handles while the press read it before),
+so the fix is the rule rather than a third reordering.
+
+- **`docs/design/canvas-hit-order.md`** — the rule, in prose: a press is read in
+  bands, and within a band the nearest drawn mark takes it. Eight bands, from
+  the mode you are in down to empty canvas. Two corollaries do the work: a mark
+  only competes where it is actually in reach, and a mark drawn ON the picture
+  wins a tie against the box drawn round it.
+- **`CanvasHitOrder`** (PhotonzCore, 16 tests) is that rule as code.
+  `Handles.grab` and `CornerRadiusHandles.grab` are new: the same answers `hit`
+  already gave, with how near the press landed, which is what a comparison
+  needs. `CanvasPointer.contentGrab` splits the layer's own content grabs (a
+  line's ends, a caption pill, a caliper's feet) out of `cue`, so the crosshair
+  has a place to sit between them and the box.
+- The press and the pointer cue both call one `motionPivotTakesPress`, so the
+  cursor cannot promise a grab the press does not make. The crosshair now beats
+  a corner it is parked on, and still yields to the turn knob eighteen points
+  above the top edge — which is exactly where a bell's mount goes, so ordering
+  it "pivot always first" would have eaten the knob in the case the feature
+  exists for.
+- **New walk step, `expectCue`.** A walk could read the pointer's cue in its log
+  and never fail on it. It can now claim it, which is the check that would have
+  caught the path-points drift.
+- New walk: `motion-pivot-in-a-corner-walk.json`. It parks the crosshair on a
+  corner, claims the cue is a grab there, drags it off and reads back where it
+  went, then resizes from the opposite corner.
+
+Next: the audit is `queue/audits/2026-09-16-pivot-in-a-corner.json`. The Mac's
+screen was locked for the whole session, so the new walk has NEVER RUN — it
+needs the panel by name to add a Rotation at all, so it cannot be forced past a
+lock the way the screen-name walk could. The core rule is tested and all 7759
+tests pass; the app wiring is verified by the compiler and nothing else. A
+sweep is pending.

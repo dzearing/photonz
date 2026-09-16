@@ -179,6 +179,10 @@ public enum Handles {
         return (CGPoint(x: frame.minX + reach, y: y), CGPoint(x: frame.maxX - reach, y: y))
     }
 
+    /// Screen-point slack around a resize square, and around the stretch of an
+    /// edge that grabs. It is the default every caller takes.
+    public static let tolerance: CGFloat = 6
+
     /// The handle under a document-space point, if any. Nearest wins. Only the
     /// handles the layout actually offers can be hit: an edge handle a cramped
     /// frame does not draw is not a press either.
@@ -187,8 +191,22 @@ public enum Handles {
     /// edges, each live down its whole run (`grabRun`). The squares are still
     /// read first, so a corner always beats the edge it ends.
     public static func hit(at p: CGPoint, frame: CGRect, zoom: CGFloat,
-                           screenTolerance: CGFloat = 6,
+                           screenTolerance: CGFloat = tolerance,
                            edgeGrab: Bool = false) -> ResizeHandle? {
+        grab(at: p, frame: frame, zoom: zoom, screenTolerance: screenTolerance,
+             edgeGrab: edgeGrab)?.handle
+    }
+
+    /// The same answer as `hit`, with HOW NEAR the press landed to the handle
+    /// that took it.
+    ///
+    /// The distance is what settles an overlap with a mark drawn on the
+    /// picture rather than round it — the crosshair a turning layer carries.
+    /// The nearest drawn mark takes the press: see `CanvasHitOrder`.
+    public static func grab(at p: CGPoint, frame: CGRect, zoom: CGFloat,
+                            screenTolerance: CGFloat = tolerance,
+                            edgeGrab: Bool = false) -> (handle: ResizeHandle,
+                                                        distance: CGFloat)? {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         let arrangement = layout(in: frame, zoom: zoom)
         var best: (handle: ResizeHandle, distance: CGFloat)?
@@ -199,7 +217,7 @@ public enum Handles {
                 best = (handle, distance)
             }
         }
-        if let best { return best.handle }
+        if let best { return best }
         guard edgeGrab else { return nil }
         var bestEdge: (handle: ResizeHandle, distance: CGFloat)?
         for edge in ResizeHandle.allCases where !edge.isCorner {
@@ -210,7 +228,7 @@ public enum Handles {
                 bestEdge = (edge, distance)
             }
         }
-        return bestEdge?.handle
+        return bestEdge
     }
 
     /// Distance from `p` to an axis-aligned segment, clamped to its ends.

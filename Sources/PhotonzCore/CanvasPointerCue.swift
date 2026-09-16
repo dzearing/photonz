@@ -57,14 +57,9 @@ public enum CanvasPointer {
         // press starts nothing, so the pointer stays a plain arrow over all of
         // it. See `Layer.offersHandles`.
         guard layer.offersHandles else { return nil }
-        // Endpoint handles come first, and only for annotations: a caliper's
-        // feet look like endpoints but the press routes them to the measure
-        // branch below, which is where their hand comes from.
-        if layer.annotation != nil,
-           AnnotationEndpoints.hit(at: p, layer: layer, zoom: zoom) != nil { return .grab }
-        // The caption pill, and a caliper's number, feet and head dot.
-        if CanvasGrab.hit(at: p, layer: layer, zoom: zoom, captionsEnabled: captionsEnabled,
-                          captionPillSize: captionPillSize) != nil { return .grab }
+        if let grab = contentGrab(at: p, layer: layer, zoom: zoom,
+                                  captionsEnabled: captionsEnabled,
+                                  captionPillSize: captionPillSize) { return grab }
         // The rotate knob, which floats clear of the top edge and so is never
         // in a frame handle's way.
         if offersRotation, let knob = layer.rotateKnobPoint(zoom: zoom),
@@ -83,6 +78,30 @@ public enum CanvasPointer {
         guard layer.allowsFrameResize else { return nil }
         return Handles.hit(at: local, frame: frame, zoom: zoom,
                            edgeGrab: edgeGrabEnabled).map { .resize($0) }
+    }
+
+    /// The grabs that belong to a layer's own CONTENT rather than to the box
+    /// drawn round it: either end of a line or arrow, an arrow's caption pill,
+    /// and a caliper's number, feet and head dot.
+    ///
+    /// They are read before everything else, in the cue and in the press
+    /// alike, because they ARE the object — a caliper is its two feet — and
+    /// because the box's chrome is the thing with somewhere else to be
+    /// grabbed. Split out so the marks read between them and the box, chiefly
+    /// the crosshair a turning layer carries, can be slotted in at the one
+    /// place they belong (`CanvasHitOrder`).
+    public static func contentGrab(at p: CGPoint, layer: Layer, zoom: CGFloat,
+                                   captionsEnabled: Bool,
+                                   captionPillSize: CGSize? = nil) -> CanvasPointerCue? {
+        guard layer.offersHandles else { return nil }
+        // A caliper's feet look like endpoints but the press routes them to
+        // the measure branch, which is where their hand comes from, so the
+        // endpoint test is for annotations only.
+        if layer.annotation != nil,
+           AnnotationEndpoints.hit(at: p, layer: layer, zoom: zoom) != nil { return .grab }
+        if CanvasGrab.hit(at: p, layer: layer, zoom: zoom, captionsEnabled: captionsEnabled,
+                          captionPillSize: captionPillSize) != nil { return .grab }
+        return nil
     }
 
     /// Screen-point slop around a crop handle, matching the crop press, which

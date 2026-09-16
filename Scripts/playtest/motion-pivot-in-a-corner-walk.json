@@ -1,0 +1,64 @@
+{
+  "out": "/tmp/photonz-playtest/motion-pivot-in-a-corner",
+  "seed": "A pivot parked on a corner of the layer's box used to be a handle nobody could pick up again: the corner's resize square was read first, however near the crosshair was drawn, so the only ways back to it were the Around menu and the two number fields. This walk parks the pivot ON the top left corner, checks the pointer says grab there rather than resize, drags it off the corner and reads back where it went, and then checks the other three corners still resize and the layer never changed size while any of it happened. The rule it is pinning down is docs/design/canvas-hit-order.md: the nearest drawn mark takes the press.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 230], "to": [660, 380], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [540, 305] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
+
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "control": "Around", "reads": "Its centre" },
+
+    { "do": "drag", "from": [540, 305], "to": [420, 230], "steps": 14 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-parked-on-the-corner", "note": "the crosshair is dragged from the middle of the shape onto its top left corner, where the resize square already is. The Around row reading the corner's own numbers is the proof it got there." },
+    { "do": "expect", "control": "Around", "reads": "420, 230" },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
+    { "do": "snapshot", "name": "1-pivot-parked-on-a-corner" },
+
+    { "do": "move", "at": [420, 230] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-the-pointer-says-grab", "note": "THE TEST, before any press happens. Two marks are drawn on this one spot — the crosshair and the corner's resize square — and the pointer has to say which of the two the next press belongs to. The nearer mark takes it, and on a tie the crosshair does, because it is the one with no other way in." },
+    { "do": "expectCue", "says": "grab" },
+
+    { "do": "drag", "from": [420, 230], "to": [500, 300], "steps": 14 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-picked-up-again", "note": "THE BUG, and the whole of it. This press starts exactly on the corner. Before, it took hold of the corner square and resized the layer, and the pivot could never be moved from the picture again. Now the crosshair answers, and the Around row reads where it was taken. The box is the second half of the claim: 240 by 150, untouched, so nothing resized." },
+    { "do": "expect", "control": "Around", "reads": "500, 300" },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
+    { "do": "snapshot", "name": "3-crosshair-moved-off-the-corner" },
+
+    { "do": "move", "at": [660, 380] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-the-far-corner-still-resizes", "note": "the other half of the rule: where the crosshair is NOT, the box's own handles answer exactly as they always did. The opposite corner says resize." },
+    { "do": "expectCue", "says": "resize-up-left-down-right" },
+
+    { "do": "drag", "from": [660, 380], "to": [700, 420], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-resized", "note": "and it really resizes: the bottom right corner pulled out forty points each way, with the top left corner staying put." },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [280, 190], "within": 1.5 },
+    { "do": "snapshot", "name": "5-the-other-corners-still-resize" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
+
+    { "do": "panelMenu", "menu": "Around", "choose": "Top centre" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "move", "at": [540, 230] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "6-on-the-top-edge", "note": "the named spot a bell hangs from puts the crosshair on the middle of the top edge, which is where the top edge's own resize square is drawn. Same answer: the crosshair takes it." },
+    { "do": "expect", "control": "Around", "reads": "Top centre" },
+    { "do": "expectCue", "says": "grab" },
+    { "do": "snapshot", "name": "6-crosshair-on-the-top-edge" }
+  ]
+}

@@ -70,6 +70,16 @@ public enum CornerRadiusHandles {
     /// that draws no handles answers no press.
     public static func hit(at p: CGPoint, frame: CGRect, radii: CornerRadii, zoom: CGFloat,
                            screenTolerance: CGFloat = tolerance) -> CornerRadii.Corner? {
+        grab(at: p, frame: frame, radii: radii, zoom: zoom,
+             screenTolerance: screenTolerance)?.corner
+    }
+
+    /// The same answer as `hit`, with HOW NEAR the press landed to the dot
+    /// that took it — what settles an overlap with a mark drawn on the picture
+    /// rather than round it (`CanvasHitOrder`).
+    public static func grab(at p: CGPoint, frame: CGRect, radii: CornerRadii, zoom: CGFloat,
+                            screenTolerance: CGFloat = tolerance)
+        -> (corner: CornerRadii.Corner, distance: CGFloat)? {
         guard offered(in: frame, zoom: zoom) else { return nil }
         let z = zoom > 0 ? zoom : 1
         let slop = screenTolerance / z
@@ -81,7 +91,7 @@ public enum CornerRadiusHandles {
                 best = (corner, distance)
             }
         }
-        return best?.corner
+        return best
     }
 
     /// How round a pull to `p` asks `corner` to be.

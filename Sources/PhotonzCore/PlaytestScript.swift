@@ -29,6 +29,15 @@ public struct PlaytestScript: Sendable, Equatable {
     /// `setup`, where the runner can act on it.
     static let knownKeys = ["out", "seed", "setup", "steps"]
 
+    /// Every answer the canvas gives for what a press at the pointer would
+    /// take hold of, which is what `expectCue` may claim. A walk naming
+    /// anything else is a typo, and a typo that reads as a passing claim is
+    /// worse than no claim at all.
+    public static let pointerCueNames: [String] =
+        ["none", "grab", "rotate", "name-grab", "drag-copy",
+         "screen-sweep", "screen-move", "screen-copy"]
+        + ResizeAxis.allCases.map { "resize-\($0.rawValue)" }
+
     /// Parses a script, naming the step and field of the first problem.
     public static func decode(_ data: Data) throws -> PlaytestScript {
         let raw: Any
@@ -1837,6 +1846,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// substring rather than the whole line, so a walk claims the PROMISE the
     /// chip makes rather than breaking on a comma.
     case expectHint(contains: String)
+    /// What the canvas says a press at the pointer would take hold of, right
+    /// now: `none`, `grab`, `rotate`, or `resize-<axis>`.
+    ///
+    /// The pointer's shape is the only invitation canvas chrome has — a small
+    /// mark sitting on top of a much larger object looks like the object until
+    /// the cursor says otherwise — so a walk has to be able to claim it. It is
+    /// the app's own answer for the point the walk last moved to, which makes
+    /// it exact and repeatable; the real OS cursor is somewhere else entirely
+    /// during a walk and comes back in the log as corroboration only.
+    case expectCue(says: String)
     /// What the NOTICE PILL under the canvas is saying, or that there is none.
     ///
     /// The pill and the tool chip share the slot under the canvas and the pill
@@ -2143,7 +2162,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2204,6 +2223,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
+        case .expectCue: "expectCue"
         case .expectNotice: "expectNotice"
         case .expectLayers: "expectLayers"
         case .expectBox: "expectBox"
@@ -2719,6 +2739,14 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "carry; an empty claim passes against every chip and against no chip")
             }
             self = .expectHint(contains: contains)
+        case "expectCue":
+            let says = try f.string("says")
+            guard PlaytestScript.pointerCueNames.contains(says) else {
+                throw f.invalid("says", "the canvas answers one of "
+                    + PlaytestScript.pointerCueNames.joined(separator: ", ")
+                    + "; \"\(says)\" is none of them")
+            }
+            self = .expectCue(says: says)
         case "expectNotice":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent")

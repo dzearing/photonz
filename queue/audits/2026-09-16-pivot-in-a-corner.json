@@ -1,0 +1,30 @@
+{
+  "feature": "The crosshair wins where it is drawn",
+  "epic": "icon-animate",
+  "summary": "A turning layer's crosshair can be picked up anywhere it is drawn, including on a corner of the layer's box, where the resize square used to take every press and leave the crosshair unreachable for good. Which of two overlapping marks a press belongs to is now one written rule rather than a hand-ordered list: the nearest drawn mark takes it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Motion is on by default under next-motion. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle, press Escape, then click it once to pick it." },
+    { "do": "Press the plus on the Motion header and choose Rotation." },
+    { "do": "Drag the crosshair from the middle of the shape onto its top left corner and let go." },
+    { "do": "Rest the pointer on that corner without pressing: the cursor should be an open hand, not resize arrows." },
+    { "do": "Drag from that corner back into the middle of the shape. The crosshair should come with you and the shape should not change size." },
+    { "do": "Rest the pointer on the opposite corner: resize arrows. Pull it. The layer resizes as it always did." },
+    { "do": "Open the Around menu and choose Top centre, then try to drag the crosshair off the top edge." },
+    { "do": "Grab the turn knob floating above that same top edge and swing the layer." }
+  ],
+  "evaluate": [
+    "At step 4, did the open hand tell you clearly enough that the next press was the crosshair and not a resize?",
+    "At step 5, did the shape staying exactly the same size read as correct, or did you expect the corner you pressed to win?",
+    "At step 7, with the crosshair sitting on the top edge's own resize handle, could you still get at the width and height you wanted?",
+    "At step 8, did the turn knob still feel like the turn knob with a crosshair ten points below it?",
+    "Is losing one corner's resize while a crosshair is parked there a fair trade, or should a parked crosshair step aside for a press aimed at the handle under it?"
+  ],
+  "rough": [
+    "NO PICTURE OF THE APP, and no walk run either. The Mac's screen was locked for the whole of this task, so macOS refuses every capture and a walk cannot find a single control by name. Scripts/playtest.sh reported status locked on every attempt. That is now three slices of this epic in a row with no picture.",
+    "So the app-level half of this is UNVERIFIED by anything but the compiler. The rule itself is pure and tested (16 tests in CanvasHitOrderTests), and the whole suite of 7759 is green, but nobody and nothing has watched a crosshair get picked up off a corner in the running app. The walk that would do it is written and parses: Scripts/playtest/motion-pivot-in-a-corner-walk.json. A sweep has been asked for.",
+    "A crosshair parked EXACTLY on the turn knob takes the knob's presses, because a tie goes to the mark drawn on the picture. Turning is still reachable through the A field in Position and Size, and dragging the crosshair away gives the knob back, so this is a trade rather than a trap. Nobody has hit it; say if it bothers you.",
+    "A resize pulled from a corner that holds the crosshair is gone while it is parked there. Seven other handles, the four edges and the Position and Size fields all still resize, which is why this went the way it did: the crosshair had no other way in at all.",
+    "The walk now claims the POINTER as well as the document, through a new expectCue step. Until today a walk could read the cue in its log and not fail on it, which is how the pointer over a path's points drifted out of step with the press for weeks without anything noticing."
+  ]
+}

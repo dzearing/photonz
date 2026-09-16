@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T19:59:04.889Z",
+  "updated": "2026-09-16T20:28:22.293Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -128,6 +128,10 @@
     {
       "t": "2026-09-16T19:59:04.888Z",
       "note": "2026-09-16: happened again. a-card-that-crops-what-is-inside-it-can-have-rou shipped with no photograph of the app at all, because the screen was locked for the whole task and a walk will not run at all then. Its audit had to fall back to an offscreen render written by a throwaway test."
+    },
+    {
+      "t": "2026-09-16T20:28:22.292Z",
+      "note": "2026-09-16, third day running: the screen was locked for the whole of the-point-a-layer-turns-around-can-be-grabbed-ev, so its new walk (Scripts/playtest/motion-pivot-in-a-corner-walk.json) has never run once and its audit ships with no picture of the app. The walk decodes and Scripts/playtest.sh exits 3 with status locked. The specific thing the lock cost here: the walk is the ONLY check of the app-level fix (the core rule is unit tested, the wiring is not), so the task lands verified in PhotonzCore and unverified in the app."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

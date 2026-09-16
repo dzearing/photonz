@@ -1798,6 +1798,46 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// The pointer's shape is the only invitation canvas chrome has, and until
+    /// now a walk could read it in the log and not claim it. It is the claim
+    /// that catches a crosshair and a corner square disagreeing about which of
+    /// them the next press belongs to (`docs/design/canvas-hit-order.md`).
+    @Test("An expectCue step claims what a press at the pointer would take")
+    func expectCueClaimsWhatThePressWouldTake() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCue", "says": "grab" } ] }
+        """)
+        guard case .expectCue(let says) = script.steps[0] else {
+            Issue.record("expectCue"); return
+        }
+        #expect(says == "grab")
+        #expect(script.steps[0].name == "expectCue")
+        #expect(PlaytestStep.names.contains("expectCue"))
+    }
+
+    @Test func expectCueTakesEveryAnswerTheCanvasGives() throws {
+        for name in PlaytestScript.pointerCueNames {
+            let script = try decode("""
+            { "steps": [ { "do": "expectCue", "says": "\(name)" } ] }
+            """)
+            guard case .expectCue(let says) = script.steps[0] else {
+                Issue.record("expectCue \(name)"); return
+            }
+            #expect(says == name)
+        }
+        #expect(PlaytestScript.pointerCueNames.contains("resize-up-left-down-right"))
+    }
+
+    /// A misspelled cue would otherwise pass against nothing and be read as a
+    /// claim that held.
+    @Test func expectCueRefusesAnAnswerTheCanvasNeverGives() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectCue", "says": "crosshair" } ] }
+            """)
+        }
+    }
+
     @Test("An expectPicked step names the layers that must be picked")
     func expectPickedNamesTheLayers() throws {
         let script = try decode("""
