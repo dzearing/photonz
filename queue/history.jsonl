@@ -4563,3 +4563,14 @@
 {"t":"2026-09-16T20:38:09.404Z","ev":"task_note","id":"a-motion-s-from-and-to-colours-are-picked-in-thi"}
 {"t":"2026-09-16T20:38:09.450Z","ev":"task_note","id":"a-motion-s-from-and-to-colours-are-picked-in-thi"}
 {"t":"2026-09-16T20:38:18.300Z","ev":"task_done","id":"a-motion-s-from-and-to-colours-are-picked-in-thi","from":"in_progress","note":"The From and To swatches on a Colour motion now open the app's own picker (ColorWellButton in Sources/Photonz/MotionListInspector.swift), with the saved colours offered by name on the swatchpalette mark beside each one; picking stays one undo step via the new motionValuePreview, and the loop plays the colour under your hand while you drag. Verified: swift build clean, Scripts/test.sh green (7759 tests). NOT verified: the new walk Scripts/playtest/motion-colour-picker-walk.json has never run, because the Mac's screen was locked all task and every walk refuses on a locked screen; a sweep is requested. Audit: queue/audits/2026-09-16-motion-colour-picker.json. Committed b4e96d9f."}
+{"t":"2026-09-16T20:38:55.996Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T20:38:56.102Z","ev":"task_started","id":"a-piece-that-slides-inside-an-icon-that-grows-sl","title":"A piece that slides inside an icon that grows slides the wrong distance","priority":"p2-normal"}
+{"t":"2026-09-16T20:48:12.329Z","ev":"task_created","id":"an-icon-drawn-in-a-frame-exports-as-a-still-pict","priority":"p1-high","title":"An icon drawn in a frame exports as a still picture instead of an animated SVG"}
+{"t":"2026-09-16T20:48:20.256Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.301Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.346Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.390Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.436Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.482Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.527Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}
+{"t":"2026-09-16T20:48:20.572Z","ev":"task_note","id":"a-piece-that-slides-inside-an-icon-that-grows-sl"}

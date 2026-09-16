@@ -374,3 +374,83 @@ struct MotionScaleRenderTests {
         }
     }
 }
+
+/// A piece that moves INSIDE an icon that is itself growing.
+///
+/// Growing an icon magnifies everything in it, so a piece told to slide 20pt
+/// has to travel 40pt when the icon is drawn at twice the size: that is what
+/// an exported file does, where the slide is written inside the growth and a
+/// browser multiplies the two. The canvas used to slide it 20pt, so the same
+/// icon played one way in the app and another way everywhere else.
+@Suite("A piece inside an icon that grows slides the grown distance")
+struct NestedMotionRenderTests {
+
+    private func render(_ document: PhotonzDocument) -> CGImage? {
+        DocumentRenderer().render(document, store: ImageStore(), scale: 1)
+    }
+
+    /// The box the ink covers, in pixels, or nil where nothing was drawn.
+    private func inkBox(_ image: CGImage) -> CGRect? {
+        let width = image.width, height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(data: &data, width: width, height: height,
+                                bitsPerComponent: 8, bytesPerRow: width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var minX = width, minY = height, maxX = -1, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where data[(y * width + x) * 4 + 3] > 40 {
+                minX = min(minX, x); maxX = max(maxX, x)
+                minY = min(minY, y); maxY = max(maxY, y)
+            }
+        }
+        guard maxX >= 0 else { return nil }
+        return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+    }
+
+    /// A 10pt black square at (10, 10) inside a group at (20, 20), where the
+    /// group is drawn at 200% for the whole lap and the square slides 20pt
+    /// along by the half way mark.
+    private func slidingInsideAGrowingIcon() -> PhotonzDocument {
+        var dot = Layer(name: "Dot",
+                        content: .annotation(AnnotationContent(shape: .rectangle,
+                                                               strokeWidth: 0,
+                                                               colorHex: "#000000",
+                                                               start: .zero,
+                                                               end: CGPoint(x: 10, y: 10),
+                                                               fillColorHex: "#000000")),
+                        frame: CGRect(x: 10, y: 10, width: 10, height: 10))
+        dot.motions = [LayerMotion(property: .position,
+                                   from: .point(CGPoint(x: 10, y: 10)),
+                                   to: .point(CGPoint(x: 30, y: 10)),
+                                   timing: MotionTiming(startMS: 0, durationMS: 500),
+                                   curve: .linear, repeats: .forever)]
+        var icon = Layer(name: "Icon", content: .group(GroupContent(children: [dot])),
+                         frame: CGRect(x: 20, y: 20, width: 50, height: 50))
+        icon.motions = [LayerMotion(property: .scale,
+                                    from: .number(200), to: .number(200),
+                                    timing: MotionTiming(startMS: 0, durationMS: 1000),
+                                    curve: .linear, repeats: .forever)]
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200),
+                                       layers: [icon])
+        document.motionCycleMS = 1000
+        return document
+    }
+
+    /// THE TEST, in pixels: the ink itself ends up 40pt along, not 20pt. The
+    /// model tests next door settle the number; this settles that the picture
+    /// the canvas draws carries it.
+    @Test func aPieceInsideAGrowingIconSlidesTheGrownDistance() throws {
+        let document = slidingInsideAGrowingIcon()
+        let top = try #require(render(document.moved(toMotionTimeMS: 0)))
+        let end = try #require(render(document.moved(toMotionTimeMS: 900)))
+        let atTheTop = try #require(inkBox(top))
+        let atTheEnd = try #require(inkBox(end))
+        #expect(abs(atTheTop.width - 20) <= 1, "the piece is drawn at twice the size")
+        #expect(abs(atTheEnd.width - 20) <= 1)
+        let travelled = atTheEnd.midX - atTheTop.midX
+        #expect(abs(travelled - 40) <= 1,
+                "20pt of slide inside a group at 200% moves the ink 40pt, got \(travelled)")
+    }
+}

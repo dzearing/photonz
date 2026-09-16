@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 260,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T13:28:55.170Z",
-  "updated": "2026-09-16T12:23:34.465Z",
+  "updated": "2026-09-16T20:48:20.571Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-15 right after fixing a-shape-told-to-grow-does-not-grow, which is what exposed it: before that fix a scaling group did not magnify its children at all, so nothing composed. Now the child grows correctly and only the slide distance is left short.\n\nCause: Layer.movedTree applies a group's own motions, then recurses and applies each child's motions to the already-magnified child. MotionProperty.applied for .position writes `moved.frame.origin + (point - authored.frame.origin)`, and `point` is stated in the child's ORIGINAL coordinates, so the delta is never multiplied by the magnification an ancestor has already applied. SVGMotionExport nests translate inside scale (MotionProperty.nestingOrder), where the outer scale does multiply it. Likely fix: thread the accumulated magnification down through movedTree and multiply a position delta by it.\n\nThe probe, run as Tests/PhotonzCoreTests/ZZNestTests.swift (deleted after; paste it back to re-run): a 10pt rectangle child at (0,0) with a .position motion from (0,0) to (20,0), inside a group at (0,0,100,100) with a .scale motion pinned at 200%, then `group.movedTree(toMotionTimeMS: 999, cycleMS: 1000)`.\n\nRan with: Scripts/test.sh --filter ZZNest\nPrinted:\n  ZZNEST dot frame in a group doubled: (19.98, 0.0, 20.0, 20.0)\n\nThe size is right (10 -> 20). The x is 19.98 where it should be about 40.",
@@ -26,6 +26,43 @@
     {
       "t": "2026-09-16T12:23:34.464Z",
       "note": "seq 2650 -> 260"
+    },
+    {
+      "t": "2026-09-16T20:38:56.100Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T20:48:20.254Z",
+      "note": "Adversarial review before building. The task's fix (thread the magnification down through movedTree) is the right one and there is no UX question in it: a browser already multiplies a nested slide by the growth above it, so the app has exactly one correct answer and no choice to offer. What the review DID turn up is that the position row is not the only length stated in points. A stroke-width motion sets an absolute width, the file writes it inside the growth, and a browser multiplies it too, so the same divergence was there for the line round a piece. Reproduced and fixed with the same number."
+    },
+    {
+      "t": "2026-09-16T20:48:20.299Z",
+      "note": "Reproduced first, as tests: Tests/PhotonzCoreTests/NestedMotionTests.swift (six tests, five failed on the old code) and one pixel-level test in Tests/PhotonzRenderTests/MotionRenderTests.swift. The pixel one renders the real composite path and measures where the ink lands: 20.0pt of travel on the old code, 40.0pt after. Checked by neutering the fix (grown = 1) and watching it fail with 'got 20.0', then restoring."
+    },
+    {
+      "t": "2026-09-16T20:48:20.344Z",
+      "note": "Built: Layer.moved / movedTree / MotionProperty.applied take a magnification, Layer.motionMagnification reads a layer's own scale row as a factor, and movedTree multiplies it down the tree. The two lengths stated in points (a position delta and a stroke width) are multiplied by it; percentages, degrees, opacity and colour are not, which is what a browser does with the same file. Default of 1 everywhere, so every existing caller is unchanged."
+    },
+    {
+      "t": "2026-09-16T20:48:20.388Z",
+      "note": "Verified: Scripts/test.sh green, 7766 tests in 623 suites. The app-and-file agreement is pinned by theCanvasSlidesByExactlyWhatTheFileSays, which reads the translate and the scale out of the written SVG, multiplies them the way a browser does, and compares with where the canvas puts the piece."
+    },
+    {
+      "t": "2026-09-16T20:48:20.434Z",
+      "note": "This is a PhotonzCore fix, so it is shared by both releases rather than scoped to next: a document model that composes motions one way in Current and another in Next would be two answers to one question, and the export path both releases share reads the same numbers."
+    },
+    {
+      "t": "2026-09-16T20:48:20.480Z",
+      "note": "Could not run a single walk: the Mac's screen was locked for the whole task (playtest-all reported COULD NOT RUN). A sweep was already pending before this task started, so nothing new was requested."
+    },
+    {
+      "t": "2026-09-16T20:48:20.525Z",
+      "note": "Filed as its own task, reproduced: an-icon-drawn-in-a-frame-exports-as-a-still-pict, p1-high. An icon drawn inside an icon FRAME exports as one still base64 PNG with no animation at all, and the Export sheet never says the motion was lost. Found because a frame group in the test fixture exported an empty file."
+    },
+    {
+      "t": "2026-09-16T20:48:20.570Z",
+      "note": "left rough: the Motion rows say nothing about being inside something that grows, so you type 20 and the piece moves 40 with no hint why. It is in the audit for the user to react to rather than filed, because whether a row should show the magnified distance is a question about what the panel should SAY, not a defect."
     }
-  ]
+  ],
+  "started": "2026-09-16T20:38:56.099Z"
 }

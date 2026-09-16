@@ -1,0 +1,28 @@
+{
+  "id": "an-icon-drawn-in-a-frame-exports-as-a-still-pict",
+  "title": "An icon drawn in a frame exports as a still picture instead of an animated SVG",
+  "goal": "Draw an icon inside an icon frame, give something in it a motion, and export it as an Animated SVG: the file that comes out is one still photograph of the icon with no animation in it at all. The tutorials tell you to start on an icon frame and then to export an animated SVG, so following both in order hands you a file that does not move. The Export sheet warns that the frame rides along as a picture but never says the motion was thrown away.",
+  "epic": "icon-export",
+  "priority": "p1-high",
+  "seq": 300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-16T20:48:12.325Z",
+  "updated": "2026-09-16T20:48:12.328Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-16 while fixing a-piece-that-slides-inside-an-icon-that-grows-sl.\n\nCause: a frame clips by default (Layer.clipsContents returns isFrame when nothing was set), and SVGExport.answer returns .picture(\"a group that cuts off what sticks out of it\") for any group that clips. EditorState.exportSVG exports a frame through PhotonzDocument.frameDocument(id:), which keeps the frame itself as the root LAYER, so the whole icon goes out through the picture path as one base64 PNG. MotionSVG.wrap still runs on that picture layer, so a motion on the FRAME would still animate the bitmap, but every motion inside the frame is baked into the pixels and lost. The unmoved list is empty, so ExportDialog's \"what the file could not carry\" line says nothing.\n\nPossible answers: export a frame's CHILDREN as the document (the frame becomes the viewBox and the background rect, which it already knows how to write in SVGExport.surface) rather than keeping the frame as a clipping layer; or write a clipping group as <clipPath> so it stays shapes. The first is smaller and is what a frame means on export anyway.\n\nRun as Tests/PhotonzRenderTests/ZZProbeTests.swift (deleted after; paste back to re-run):\n\nimport CoreGraphics\\nimport Foundation\\nimport PhotonzCore\\nimport Testing\\n@testable import PhotonzRender\\n\\n@Suite(\"probe\")\\nstruct ZZProbeTests {\\n    @Test func whatAnAnimatedIconInAFrameExportsAs() throws {\\n        var dot = Layer(name: \"Dot\", content: .annotation(AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: \"#000000\", start: .zero, end: CGPoint(x: 10, y: 10), fillColorHex: \"#000000\")), frame: CGRect(x: 4, y: 4, width: 10, height: 10))\\n        dot.motions = [LayerMotion(property: .position, from: .point(CGPoint(x: 4, y: 4)), to: .point(CGPoint(x: 14, y: 4)), timing: MotionTiming(startMS: 0, durationMS: 500), curve: .linear, repeats: .forever)]\\n        let icon = Layer(name: \"Icon\", content: .group(GroupContent(children: [dot], isFrame: true, backgroundHex: \"#FFFFFF\")), frame: CGRect(x: 0, y: 0, width: 32, height: 32))\\n        var document = PhotonzDocument(canvasSize: CGSize(width: 64, height: 64), layers: [icon])\\n        document.motionCycleMS = 1000\\n        let target = try #require(document.frameDocument(id: icon.id))\\n        let result = SVGExporter.export(target, store: ImageStore(), animation: .moving(cycleMS: 1000))\\n        print(\"=== FALLBACKS:\", result.fallbacks.map { \"\\\\($0.layerName): \\\\($0.reason)\" })\\n        print(\"=== UNMOVED:\", result.unmoved.map { \"\\\\($0.layerName): \\\\($0.reason)\" })\\n        print(\"=== has animate:\", result.text.contains(\"<animate\"))\\n        print(\"=== has base64:\", result.text.contains(\"base64\"))\\n    }\\n}\n\nRan with: Scripts/test.sh --filter ZZProbe\nPrinted:\n  === FALLBACKS: [\"Icon: a group that cuts off what sticks out of it\"]\n  === UNMOVED: []\n  === has animate: false\n  === has base64: true\nand the whole file was one <image ... base64> element.\n\nNot reproduced in the window itself: the Mac's screen was locked for the whole task, so no walk could run.",
+  "acceptance": [
+    "An icon drawn inside an icon frame, with one piece of it moving, exports as an Animated SVG that moves when opened in a browser",
+    "That file carries no embedded picture when everything in the frame is shapes",
+    "Anything the file still cannot carry is named in the Export sheet before you save",
+    "A test exports a frame holding a moving piece and asserts the written file has animation elements in it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-16T20:48:12.327Z",
+      "note": "created (manual)"
+    }
+  ]
+}

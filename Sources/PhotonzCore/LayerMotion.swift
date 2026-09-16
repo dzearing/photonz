@@ -711,7 +711,16 @@ extension Layer {
     /// Never stored. The document keeps the layer you drew, and this is what
     /// the canvas is handed to draw instead — the same bargain the rest of the
     /// styling strikes, where nothing is ever baked into pixels.
-    public func moved(toMotionTimeMS ms: Int, cycleMS: Int) -> Layer {
+    ///
+    /// `magnification` is how much bigger than drawn everything ABOVE this
+    /// layer is at this moment. It matters because the lengths a motion states
+    /// in points — how far to slide, how thick a line to draw — are stated in
+    /// the size the layer was drawn at, and an exported file writes them
+    /// inside the growth, where a browser multiplies them without being asked
+    /// (`MotionProperty.nestingOrder`). One is passed in rather than read off
+    /// the layer because a layer cannot see what contains it.
+    public func moved(toMotionTimeMS ms: Int, cycleMS: Int,
+                      magnification: CGFloat = 1) -> Layer {
         var moved = self
         // From the INSIDE out, so the picture does not depend on which order
         // somebody happened to add the rows in and matches the way an exported
@@ -723,7 +732,8 @@ extension Layer {
             return l > r
         }) {
             moved = motion.property.applied(motion.value(atMS: ms, cycleMS: cycleMS),
-                                            to: moved, authored: self)
+                                            to: moved, authored: self,
+                                            magnification: magnification)
         }
         return moved
     }
@@ -736,8 +746,16 @@ extension MotionProperty {
     /// `authored` is the layer as it was drawn, which is what scale is a
     /// percentage OF: reading the size off a layer another motion has already
     /// grown would compound frame by frame and run away.
-    func applied(_ value: MotionValue, to layer: Layer, authored: Layer) -> Layer {
+    ///
+    /// `magnification` is how much everything containing this layer has
+    /// already grown it, which is what the two lengths stated in points get
+    /// multiplied by.
+    func applied(_ value: MotionValue, to layer: Layer, authored: Layer,
+                 magnification: CGFloat = 1) -> Layer {
         var moved = layer
+        // A growth of nought leaves nothing to draw and a growth that is not a
+        // number is not one, so neither is allowed to eat the distance.
+        let grown = magnification.isFinite && magnification > 0 ? magnification : 1
         switch (self, value) {
         case let (.position, .point(point)):
             // Written as a MOVE from where it was drawn rather than as an
@@ -745,8 +763,15 @@ extension MotionProperty {
             // same layer gives the same box whichever order the two are in. An
             // origin set outright would be the top-left of whatever size scale
             // had just made it, which is a different place.
-            moved.frame.origin = CGPoint(x: moved.frame.origin.x + (point.x - authored.frame.origin.x),
-                                         y: moved.frame.origin.y + (point.y - authored.frame.origin.y))
+            //
+            // The distance is multiplied by whatever has already magnified
+            // this layer from above: a piece told to slide 20pt inside an icon
+            // drawn at twice the size travels 40pt, because that is what the
+            // same file does in a browser, where the translate is written
+            // inside the scale.
+            moved.frame.origin = CGPoint(
+                x: moved.frame.origin.x + (point.x - authored.frame.origin.x) * grown,
+                y: moved.frame.origin.y + (point.y - authored.frame.origin.y) * grown)
         case let (.scale, .number(percent)):
             // A real magnification about the middle of the box, so the drawing
             // grows and not just the box round it: anchors, endpoints, line
@@ -773,7 +798,12 @@ extension MotionProperty {
         case let (.color, .color(hex)):
             if let painted = Fill.filled(moved, colorHex: hex, solidRef: nil) { moved = painted }
         case let (.strokeWidth, .number(points)):
-            moved.setOutlineWidthForMotion(CGFloat(max(0, points)))
+            // Points again, and magnified for the same reason: the file writes
+            // the width inside the growth, so 3pt of line on a drawing at
+            // twice the size is drawn 6pt thick. The layer's OWN growth does
+            // this already by wrapping this row (`nestingOrder`); what is
+            // multiplied here is only what came from above.
+            moved.setOutlineWidthForMotion(CGFloat(max(0, points)) * grown)
         default:
             break
         }
@@ -879,12 +909,33 @@ extension Layer {
 
     /// This layer and everything inside it, moved. A motion on a layer INSIDE
     /// a group has to be found or half an icon would animate.
-    func movedTree(toMotionTimeMS ms: Int, cycleMS: Int) -> Layer {
-        var moved = moved(toMotionTimeMS: ms, cycleMS: cycleMS)
+    ///
+    /// The growth carries DOWN. Applying this layer's own motions magnifies
+    /// everything inside it, so by the time a child is asked what it does, it
+    /// is already drawn bigger, and the distances its own motions state in
+    /// points have to be read at that size or the app and an exported file
+    /// part company on the first nested slide.
+    func movedTree(toMotionTimeMS ms: Int, cycleMS: Int,
+                   magnification: CGFloat = 1) -> Layer {
+        var moved = moved(toMotionTimeMS: ms, cycleMS: cycleMS, magnification: magnification)
         if var group = moved.group {
-            group.children = group.children.map { $0.movedTree(toMotionTimeMS: ms, cycleMS: cycleMS) }
+            let inside = magnification * motionMagnification(atMS: ms, cycleMS: cycleMS)
+            group.children = group.children.map {
+                $0.movedTree(toMotionTimeMS: ms, cycleMS: cycleMS, magnification: inside)
+            }
             moved.content = .group(group)
         }
         return moved
+    }
+
+    /// How much this layer's own growth magnifies what is drawn inside it at
+    /// `ms`: the scale row's value as a factor, and 1 where it has no scale
+    /// row or the row says something that is not a size.
+    func motionMagnification(atMS ms: Int, cycleMS: Int) -> CGFloat {
+        guard let growth = (motions ?? []).first(where: { $0.isOn && $0.property == .scale }),
+              case let .number(percent) = growth.value(atMS: ms, cycleMS: cycleMS)
+        else { return 1 }
+        let factor = CGFloat(percent) / 100
+        return factor.isFinite && factor > 0 ? factor : 1
     }
 }

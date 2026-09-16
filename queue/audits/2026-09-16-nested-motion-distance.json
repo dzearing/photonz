@@ -1,0 +1,26 @@
+{
+  "feature": "A piece that moves inside an icon that grows",
+  "epic": "icon-animate",
+  "summary": "A piece told to slide inside an icon that is itself told to grow now travels the grown distance: 20pt of slide inside an icon drawn at 200% moves it 40pt, which is what the same icon does in a browser. Before this the app moved it 20pt, so an icon you built and checked in the app played differently for everybody you sent it to. The line round a piece behaves the same way now: 3pt of line on a drawing at twice the size is drawn 6pt thick.",
+  "setup": "Photonz Dev, release Next, Motion section on (it is on by default). Nothing new to turn on.",
+  "try": [
+    { "do": "File > New Canvas, take the default size, Create." },
+    { "do": "Draw two small shapes, select both, and press Cmd+G to group them." },
+    { "do": "With the group selected, open Motion in the right pane, press the plus and pick Scale. Set it to run from 100% to 200%." },
+    { "do": "Click one shape INSIDE the group to select it on its own, press the plus and pick Position. Drag its To handle 20pt to the right, or type the number." },
+    { "do": "Press the play button on the Motion header and watch one lap: the piece should end up level with the same place on the grown drawing at every moment, not lagging behind it." },
+    { "do": "File > Export, pick Animated SVG, save it, and open the file in a browser beside the app." },
+    { "do": "Play both and watch the same moment of the lap in each. The piece should be in the same place in both." }
+  ],
+  "evaluate": [
+    "Playing it in the app and playing it in a browser, can you see any moment where the piece is in a different place?",
+    "You typed 20pt of slide and the piece travels 40pt on screen while the icon is at 200%. Reading the row, is that the number you expected to type, or did you want to type the distance you see?",
+    "Does the slide still feel like it belongs to the drawing when the growth is animating rather than pinned, or does it look like it is sliding on its own?",
+    "Is there anywhere in the Motion rows that should tell you the distance is being magnified by the group above it?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and there are no pictures of the window here: every launch reports status locked and macOS refuses every capture in that state. The evidence is at the pixel level instead, which needs no screen: the same document is rendered through the real composite path at two moments and the ink is measured, and it moves 40pt where it used to move 20pt. A sweep was already pending before this task started, so the motion walks run once the screen is unlocked.",
+    "The Motion rows say nothing about being inside something that grows. You type 20 and the piece moves 40, and the only way to know why is to remember the group above it is at 200%.",
+    "Separately, and worse: an icon drawn inside an icon FRAME and exported as an Animated SVG comes out as one still picture with no animation in it at all, because a frame cuts off what sticks out of it and that can only leave as pixels. The Export sheet says the frame rides along as a picture but never says the motion was lost. Filed as its own task with the reproduction."
+  ]
+}
