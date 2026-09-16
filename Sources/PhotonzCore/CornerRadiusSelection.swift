@@ -36,14 +36,19 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         /// have, because a group masks its corners off and a mask can never put
         /// a curve back (`ContainerRounding.swift`).
         public let floor: CornerRadii
+        /// True when this layer is a card told to cut off whatever sticks out
+        /// past its edge, so the number rounds the curve it CROPS with rather
+        /// than a corner it paints (`ContainerRounding.swift`).
+        public let cropsContents: Bool
 
         public init(id: UUID, radii: CornerRadii, limit: CGFloat, roundsViaStyle: Bool,
-                    floor: CornerRadii = .none) {
+                    floor: CornerRadii = .none, cropsContents: Bool = false) {
             self.id = id
             self.radii = radii
             self.limit = limit
             self.roundsViaStyle = roundsViaStyle
             self.floor = floor
+            self.cropsContents = cropsContents
         }
     }
 
@@ -66,6 +71,14 @@ public struct CornerRadiusSelection: Hashable, Sendable {
     /// Whether this row is speaking for what is inside something picked rather
     /// than for the thing itself.
     public var reachesContents: Bool { reachedIntoContainers > 0 }
+
+    /// Whether everything this row speaks for is a card that CROPS, so the
+    /// number is the curve its edge cuts with. Everything, not some: a sentence
+    /// that was true of one of three picked layers would be the panel guessing
+    /// on the reader's behalf.
+    public var cropsContents: Bool {
+        !members.isEmpty && members.allSatisfy(\.cropsContents)
+    }
 
     public var count: Int { members.count }
     public var isEmpty: Bool { members.isEmpty }
@@ -326,7 +339,8 @@ extension PhotonzDocument {
             radii: shown,
             limit: max(1, min(bounds.width, bounds.height) / 2),
             roundsViaStyle: !layer.roundsItsOwnOutline,
-            floor: readingWhatShows ? layer.cornerRadiusFloor : .none)
+            floor: readingWhatShows ? layer.cornerRadiusFloor : .none,
+            cropsContents: readingWhatShows && layer.roundingCropsItsContents)
     }
 
     /// The number the row shows for one layer: the one that is rounding it.

@@ -473,6 +473,10 @@ struct CornerRadiusRow: View {
     /// The number is theirs, and saying so is the difference between a row you
     /// trust and a row you have to experiment with.
     ///
+    /// A card told to cut off what sticks out is the one group with an edge you
+    /// can SEE, so the row stays on the card and rounds the curve it crops
+    /// with: the photo inside it is left alone.
+    ///
     /// A group somebody masked by hand still rounds by masking, and there the
     /// track also says WHY it will not go below where it is: a mask can take a
     /// corner away but never put a curve back, so the number cannot go under
@@ -483,6 +487,9 @@ struct CornerRadiusRow: View {
         // one a click on the row puts underneath it, so the three can never
         // drift apart (`CornerRadiusSelection.wallSentence`).
         if let wall = selection.wallSentence { return wall }
+        if selection.cropsContents {
+            return "This card cuts off what sticks out, so this rounds the edge it cuts with."
+        }
         if selection.reachesContents {
             return "A group has no corners of its own, so this rounds what is inside it."
         }

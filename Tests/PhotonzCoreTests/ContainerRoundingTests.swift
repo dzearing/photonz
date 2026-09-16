@@ -472,3 +472,116 @@ struct ContainerReachTests {
         #expect(row.reading.value == 0)
     }
 }
+
+/// What Corner Radius means over a card that CROPS.
+///
+/// A group with a size of its own can be told to cut off whatever sticks out
+/// past its edge (`ClipContentsTests`). That edge is drawn: it is the line a
+/// photo stops at. So unlike every other group, this one has corners you can
+/// see, and the row has something of its own to round.
+///
+/// Before this, the row reached past the card to the photo inside it: the pull
+/// rounded the photo, the card's square crop cut the rounded photo straight
+/// back to a hard box, and the canvas did not move. So a card that crops keeps
+/// the row for itself, and the number is the curve it crops with.
+@Suite("Rounding a card that crops")
+struct CroppingCardRoundingTests {
+
+    private func photo(_ frame: CGRect, radius: CGFloat = 0) -> Layer {
+        Layer(name: "Shot", content: .image(ImageRef(pixelSize: frame.size)), frame: frame,
+              style: LayerStyle(cornerRadius: CornerRadii(radius)))
+    }
+
+    /// A card held to 100 by 100 with a photo inside it, and the photo's size
+    /// is the caller's: 200 by 200 hangs out of the card on every side, 100 by
+    /// 100 fills it exactly.
+    private func card(clips: Bool = true, photo photoSize: CGFloat = 200,
+                      photoRadius: CGFloat = 0, maskRadius: CGFloat = 0) -> Layer {
+        var content = GroupContent(
+            children: [photo(CGRect(x: 0, y: 0, width: photoSize, height: photoSize),
+                             radius: photoRadius)],
+            clipsContents: clips)
+        content.layout = .free(width: 100, height: 100)
+        return Layer(name: "Card", content: .group(content),
+                     frame: CGRect(x: 10, y: 10, width: 0, height: 0),
+                     style: LayerStyle(cornerRadius: CornerRadii(maskRadius)))
+    }
+
+    private func document(_ layers: [Layer]) -> PhotonzDocument {
+        PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: layers)
+    }
+
+    // MARK: - Nothing inside it paints the card's corners
+
+    @Test func aPhotoHangingOutOfTheCardPaintsNoneOfItsCorners() {
+        // The photo is bigger than the card on every side, so its own curve is
+        // outside the card entirely and what meets the card's corners is the
+        // middle of the picture: square.
+        #expect(card(photoRadius: 40).containedCornerRadii == .none)
+    }
+
+    @Test func aPhotoFillingTheCardExactlyStillPaintsThem() {
+        #expect(card(photo: 100, photoRadius: 24).containedCornerRadii == CornerRadii(24))
+    }
+
+    // MARK: - The row the card keeps for itself
+
+    @Test func theRowMasksTheCardRatherThanReachingInside() {
+        let card = card()
+        let row = document([card]).cornerRadiusSelection(layerIDs: [card.id],
+                                                         readingWhatShows: true)
+        #expect(row.layerIDs == [card.id])
+        #expect(!row.reachesContents)
+        #expect(row.cropsContents)
+    }
+
+    @Test func theKnobStartsAtNoughtBecauseTheCropDecides() {
+        let card = card(photoRadius: 40)
+        let row = document([card]).cornerRadiusSelection(layerIDs: [card.id],
+                                                         readingWhatShows: true)
+        #expect(row.reading.value == 0)
+        #expect(row.floor == 0)
+    }
+
+    @Test func pullingRoundsTheEdgeTheCardCropsWith() {
+        var doc = document([card()])
+        let id = doc.layers[0].id
+        let row = doc.cornerRadiusSelection(layerIDs: [id], readingWhatShows: true)
+        doc.setCornerRadii(layerIDs: row.layerIDs, to: CornerRadii(20), onlyWhatShows: true)
+        #expect(doc.layer(id: id)?.style.cornerRadii == CornerRadii(20))
+        // ...and the photo inside is untouched: rounding the card must not
+        // quietly round the picture instead.
+        #expect(doc.layer(id: id)?.children.first?.style.cornerRadii == CornerRadii.none)
+    }
+
+    @Test func theCardReadsBackTheCurveItWasGiven() {
+        let card = card(maskRadius: 20)
+        let row = document([card]).cornerRadiusSelection(layerIDs: [card.id],
+                                                         readingWhatShows: true)
+        #expect(row.reading.value == 20)
+    }
+
+    @Test func takingTheCropOffHandsTheRowBackToWhatIsInsideIt() {
+        var doc = document([card(clips: false)])
+        let id = doc.layers[0].id
+        let row = doc.cornerRadiusSelection(layerIDs: [id], readingWhatShows: true)
+        #expect(row.reachesContents)
+        #expect(!row.cropsContents)
+        doc.setCornerRadii(layerIDs: row.layerIDs, to: CornerRadii(20), onlyWhatShows: true)
+        #expect(doc.layer(id: id)?.children.first?.style.cornerRadii == CornerRadii(20))
+        #expect(doc.layer(id: id)?.style.cornerRadii == CornerRadii.none)
+    }
+
+    @Test func aCardThatCropsIsRoundedWhenTheGroupHoldingItIsPulled() {
+        // A cropping card inside a plain group: the pull reaches through the
+        // plain group and lands on the card's crop, because the crop is a
+        // corner you can see.
+        let outer = Layer(name: "Group", content: .group(GroupContent(children: [card()])),
+                          frame: .zero)
+        var doc = document([outer])
+        let id = doc.layers[0].id
+        let row = doc.cornerRadiusSelection(layerIDs: [id], readingWhatShows: true)
+        doc.setCornerRadii(layerIDs: row.layerIDs, to: CornerRadii(16), onlyWhatShows: true)
+        #expect(doc.layer(id: id)?.children.first?.style.cornerRadii == CornerRadii(16))
+    }
+}

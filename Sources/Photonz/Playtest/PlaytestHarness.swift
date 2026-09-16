@@ -7500,8 +7500,11 @@ private final class Run {
                 // for the things inside it, which is the whole of what a pull on
                 // a group does now.
                 let reach = selection.reachesContents ? " reaching" : ""
+                // "cropping" when the row is rounding the edge a card cuts its
+                // contents off at, which is the one group the row stays on.
+                let crop = selection.cropsContents ? " cropping" : ""
                 return "\(body) from \(Int(selection.floor.rounded()))"
-                    + "\(reach) ×\(selection.count)"
+                    + "\(reach)\(crop) ×\(selection.count)"
             }(),
             "shapeSection": editor.shapeSelection.title,
             // What the toolbar swatch is showing: the outline and the inside

@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/crop-rounds-the-card",
+  "seed": "A card told to cut off what sticks out past its edge used to be stuck with square corners. Corner Radius over a group reaches past it to what is inside, so the pull rounded the photo, the card's square crop cut the rounded photo straight back to a hard box, and nothing on the canvas moved. A card that crops has an edge you can SEE, so it keeps the row for itself: the number is the curve it crops with, and the photo inside is left alone.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [520, 340] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-card", "note": "a photo in a group. The group closes around it, so there is nothing hanging out and no Clip contents switch yet." },
+    { "do": "snapshot", "name": "crop-round-1-card" },
+    { "do": "panel", "stage": "1-card" },
+
+    { "do": "reveal", "control": "Limits", "in": "Width" },
+    { "do": "press", "control": "Limits", "in": "Width" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "focus", "field": "Largest width" },
+    { "do": "type", "text": "200" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "reveal", "control": "Limits", "in": "Height" },
+    { "do": "press", "control": "Limits", "in": "Height" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "focus", "field": "Largest height" },
+    { "do": "type", "text": "120" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "reveal", "control": "Clip contents" },
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-cropped-square", "note": "the card is held to 200 by 120 and crops the photo to it. Every corner is a hard box." },
+    { "do": "snapshot", "name": "crop-round-2-cropped-square" },
+    { "do": "render", "name": "crop-round-2-cropped-square-doc" },
+    { "do": "panel", "stage": "2-cropped-square" },
+
+    { "do": "reveal", "control": "Slider", "in": "Corner Radius" },
+    { "do": "focus", "field": "Corner Radius" },
+    { "do": "type", "text": "28" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "field": "Corner Radius", "reads": "28" },
+    { "do": "describe", "stage": "3-cropped-round", "note": "THE TEST: the photo is cut to a rounded corner rather than a hard box. The number is the card's own crop, not the photo's." },
+    { "do": "snapshot", "name": "crop-round-3-cropped-round" },
+    { "do": "render", "name": "crop-round-3-cropped-round-doc" },
+    { "do": "panel", "stage": "3-cropped-round" }
+  ]
+}

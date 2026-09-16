@@ -1,0 +1,28 @@
+{
+  "feature": "A card that crops can have rounded corners",
+  "epic": "ui-components",
+  "summary": "A group told to cut off whatever sticks out past its edge can now be rounded, and the photo inside it is cut to that curve. Before this the same pull rounded the photo, the square crop cut the rounded photo straight back to a hard box, and nothing on the canvas moved.",
+  "setup": "Photonz Dev, Experiments window, release Next. No new flag: this is the Corner Radius row the Next panel already shows.",
+  "try": [
+    { "do": "Drag a photo onto a blank canvas." },
+    { "do": "Press Command G to put it in a group." },
+    { "do": "In Layout, open Limits under Width and type 200 into Largest width." },
+    { "do": "Open Limits under Height and type 120 into Largest height. The photo now hangs out of the card." },
+    { "do": "Tick Clip contents. The photo is cut to a hard box." },
+    { "do": "Type 28 into Corner Radius. The crop itself rounds.", "shot": "2026-09-16-crop-rounds-the-card.png" },
+    { "do": "Double click into the card and pick the photo. Its own Corner Radius still reads 0." },
+    { "do": "Untick Clip contents, pick the card again, and pull Corner Radius: it rounds the photo inside, the way it always did." }
+  ],
+  "evaluate": [
+    "When a card crops, is rounding its own edge what you expected the number to do?",
+    "Does the sentence on the row ('This card cuts off what sticks out, so this rounds the edge it cuts with') tell you what you needed before you tried it?",
+    "Is it a surprise that the same row means the photo inside on a card that does NOT crop, and the crop on one that does?",
+    "When you want the photo rounded rather than the card, is picking the photo an obvious enough way in?",
+    "Does a rounded crop look right at the edges, or does it need the corner softened any further?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and there is no photograph of the app. The picture here is an offscreen render straight from the renderer: the same card twice, cropping at 0 and at 28. The new walk (crop-rounds-the-card) has never been run; the sweep already pending will run it as soon as the screen is unlocked.",
+    "A card that crops keeps the row for itself, so the way to round the photo inside a cropping card is to pick the photo. That is one more click than before, and the row's own sentence is the only thing that says so.",
+    "Rounding a card and then unticking Clip contents leaves the curve on the card as a plain mask, which is the existing rule for a group somebody masked by hand. It is consistent, and it does mean the row stops reaching through that group from then on."
+  ]
+}

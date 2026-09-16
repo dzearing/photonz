@@ -56,11 +56,16 @@ extension Layer {
         guard let group else { return .none }
         let box = contentsBox
         guard box.width > 0, box.height > 0 else { return .none }
-        // Later children draw on top, so the last one covering the box is the
-        // one whose corners you can actually see.
+        // Later children draw on top, so the last one whose corners ARE the
+        // box's corners is the one whose curve you can actually see. A child
+        // bigger than the box is not that child: its own curve is outside the
+        // box altogether, and what meets the box's corners is the middle of
+        // it, which is square. That is the everyday case inside a card that
+        // crops, where a photo is deliberately larger than what is shown of
+        // it.
         for child in group.children.reversed() where child.isVisible {
             let childBox = child.localBounds
-            guard childBox.covers(box) else { continue }
+            guard childBox.matches(box) else { continue }
             return child.boxCornerRadii(boxSize: childBox.size).fitted(in: box.size)
         }
         return .none
@@ -110,11 +115,11 @@ extension CornerRadii {
 
 extension CGRect {
 
-    /// True when this box covers all of `other`, give or take the half point
-    /// that rounding a drag to the grid can leave behind.
-    func covers(_ other: CGRect, slack: CGFloat = 0.5) -> Bool {
-        minX <= other.minX + slack && minY <= other.minY + slack
-            && maxX >= other.maxX - slack && maxY >= other.maxY - slack
+    /// True when this box is the same box as `other`, give or take the half
+    /// point that rounding a drag to the grid can leave behind.
+    func matches(_ other: CGRect, slack: CGFloat = 0.5) -> Bool {
+        abs(minX - other.minX) <= slack && abs(minY - other.minY) <= slack
+            && abs(maxX - other.maxX) <= slack && abs(maxY - other.maxY) <= slack
     }
 }
 
@@ -145,6 +150,11 @@ extension CGRect {
 /// - **A group somebody already masked**, because a mask can only have got
 ///   there by being asked for and is not taken away underneath anybody. Pull it
 ///   back down off the group and the row starts reaching through from then on.
+/// - **A card that CROPS**, told to cut off whatever sticks out past its edge.
+///   That edge is drawn — it is the line a photo stops at — so it has corners
+///   you can see, and the number rounds the curve it crops with. Reaching
+///   through one rounded the photo and left the square crop to cut the rounded
+///   photo back to a hard box, so the canvas never moved.
 extension Layer {
 
     /// Whether anything is painted at this layer's OWN corners, so rounding it
@@ -158,15 +168,27 @@ extension Layer {
         case .text, .measure, .path: return false
         // A container paints its corners when it has a surface behind its
         // contents, or a mask somebody asked for.
-        case .group(let group): return group.background != nil || style.cornerRadii.isRound
+        // ...and when it crops, because the edge it crops at is a line you
+        // can see and rounding it rounds what the crop cuts.
+        case .group(let group):
+            return group.background != nil || style.cornerRadii.isRound || clipsToBounds
         }
     }
 
     /// Whether the Corner Radius row reaches PAST this container to what is
     /// inside it, rather than masking the container itself.
     var roundingReachesItsContents: Bool {
-        guard let group, !group.isFrame, !isComponentInstance else { return false }
+        guard let group, !group.isFrame, !isComponentInstance, !clipsToBounds else { return false }
         return !style.cornerRadii.isRound && !group.children.isEmpty
+    }
+
+    /// Whether the Corner Radius row over this layer is rounding the edge it
+    /// CROPS with, rather than a corner it paints or a corner inside it. What
+    /// lets the row say so, since "this card cuts off what sticks out, so this
+    /// rounds the edge it cuts with" is the whole difference between a number
+    /// that works and a number you have to experiment with.
+    public var roundingCropsItsContents: Bool {
+        clipsToBounds && !isFrame && !isComponentInstance
     }
 
     /// The layers a pull on this container's Corner Radius row rounds: the

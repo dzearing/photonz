@@ -97,6 +97,36 @@ struct GroupClipRenderingTests {
         #expect(pixel(image, x: 52, y: 52).g == 100)
     }
 
+    @Test func pullingTheRowOnACroppingCardRoundsWhatItCrops() {
+        // The whole path, panel to pixels: a photo bigger than the card, the
+        // card told to crop it, and the Corner Radius row the panel shows
+        // pulled to 30. Before this the row reached past the card to the photo,
+        // so the photo was rounded, the card's square crop cut it back to a
+        // hard box, and this corner stayed red.
+        let store = ImageStore()
+        let fill = store.register(solidImage(width: 160, height: 160, r: 255, g: 0, b: 0))
+        let photo = Layer(name: "Shot", content: .image(fill),
+                          frame: CGRect(x: 0, y: 0, width: 160, height: 160))
+        var content = GroupContent(children: [photo])
+        content.layout = .free(width: 100, height: 100)
+        let card = Layer(name: "Card", content: .group(content),
+                         frame: CGRect(x: 50, y: 50, width: 0, height: 0))
+        var doc = document(store, [card])
+        let id = doc.layers[1].id
+        doc.setClipsContents(id: id, true)
+
+        let row = doc.cornerRadiusSelection(layerIDs: [id], readingWhatShows: true)
+        #expect(row.layerIDs == [id])
+        doc.setCornerRadii(layerIDs: row.layerIDs, to: CornerRadii(30), onlyWhatShows: true)
+
+        let image = DocumentRenderer().render(doc, store: store)!
+        #expect(pixel(image, x: 100, y: 100).r > 200)
+        #expect(pixel(image, x: 52, y: 52).r == 100)
+        #expect(pixel(image, x: 52, y: 52).g == 100)
+        // ...and the photo itself was never touched.
+        #expect(doc.layer(id: id)?.children.first?.style.cornerRadii == CornerRadii.none)
+    }
+
     @Test func whatIsCutOffIsNotExportedEither() {
         let store = ImageStore()
         var doc = document(store, [card(store)])
