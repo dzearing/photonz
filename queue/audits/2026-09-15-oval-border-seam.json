@@ -1,0 +1,29 @@
+{
+  "feature": "A border on an oval follows the oval",
+  "epic": "ui-building",
+  "summary": "Put an outside border on an oval and the border now meets the fill with nothing showing through, and it stands the same distance from the curve all the way round instead of drifting nearer on the flanks. A circle looks exactly as it did.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Any oval with a Border in its Effects list.",
+  "try": [
+    { "do": "Draw an oval about twice as wide as it is tall, and fill it a strong colour." },
+    { "do": "Put something contrasting behind it, so a leak would show: a rectangle in a different colour, or a screenshot." },
+    { "do": "Add a Border under Effects, set it to Outside, and take it to 8." },
+    { "do": "Zoom to 400% and follow the inside of the border round the oval, past the diagonals.", "shot": "2026-09-15-oval-border-seam.png" },
+    { "do": "Look along the flanks and then the ends, and judge whether the line keeps its thickness." },
+    { "do": "Switch the border to Inside and then to Centre, and watch for the same two things." },
+    { "do": "Draw a circle, give it the same border, and compare it with one you drew before today." }
+  ],
+  "evaluate": [
+    "Zoomed in on the diagonals, is the join between border and fill now one clean step, with no trace of what is behind?",
+    "Does the border read as the same thickness on the flanks as on the ends of a stretched oval?",
+    "Does a circle with a border look untouched next to one drawn before this change?",
+    "Turn an oval into a path (Turn Into Path) with its border on: does the picture stay still?",
+    "At 200% and 400%, does the border round a PATH keep its curve rather than squaring off at the corners?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and no window capture was possible. The picture here is an offscreen render from the renderer's own composite path, magnified 16x, not a photograph of the app.",
+    "The mock is not involved: this is a defect report, so the shape of the answer was decided by what the geometry actually is rather than by a drawing.",
+    "A 12-megapixel oval is still drawn the old rough way, because baking a silhouette that big is out of the question. At that size one pixel of drift is far too small to see, but it does mean the very largest ovals are not held to the same rule as the rest.",
+    "Opening a document saved before oval strokes became Borders now redraws the ring from the offset curves rather than from the stroke Core Graphics drew. About one sample in sixty along the ring moves, none by more than a seventh of full strength. It is invisible, but it is no longer bit-identical, and OutlineFoldRenderTests says so out loud.",
+    "Found and fixed on the way: a border round a PATH reached twice as far as asked on any render above 100%, ran off the edge of its own bitmap, and came back squared off, so a circle with a border at 2x had an octagon round it. It measured right along the axes, which is why nobody caught it."
+  ]
+}

@@ -105,7 +105,21 @@ struct OutlineFoldRenderTests {
 
         let opened = saved.retiringItsOutline()
         #expect(opened.annotation?.strokeWidth == 0)
-        #expect(rendered(opened) == before)
+        // Not to the byte any more, and on purpose. An oval's ring is built
+        // from the two offset curves either side of the oval now, so that an
+        // outside border meets the fill with nothing showing through round the
+        // diagonals (`OvalBorderRenderTests`). The old ring WAS the stroke
+        // Core Graphics draws for the shape, which is why this matched to the
+        // bit — and why it left a trace of the background against the fill.
+        // What is left is antialiasing along the ring's two edges: about one
+        // sample in sixty moves at all, none of them by more than a seventh of
+        // full strength, and the ring is in the same place.
+        let after = rendered(opened)
+        #expect(after.count == before.count)
+        let moved = zip(before, after).filter { $0 != $1 }.count
+        let worst = zip(before, after).map { abs(Int($0) - Int($1)) }.max() ?? 0
+        #expect(worst <= 40, "worst \(worst) of 255, \(moved) of \(before.count) samples moved")
+        #expect(moved < before.count / 50, "\(moved) of \(before.count) samples moved")
     }
 }
 

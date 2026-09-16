@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 230,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-16T03:48:53.103Z",
+  "updated": "2026-09-16T03:49:18.120Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -84,7 +84,12 @@
     {
       "t": "2026-09-16T03:48:53.102Z",
       "note": "Filed the-last-three-sliders-whose-number-you-still-ca (p2): Corner Radius, a measurement's Chip size and the older shape controls' Width are the three readouts left that cannot be typed. Corner Radius was held back on purpose, not forgotten: it carries a wall with an answer line and a four-numbers stand-in, and whether a number typed below the wall should raise that same answer is a question worth deciding rather than guessing."
+    },
+    {
+      "t": "2026-09-16T03:49:18.118Z",
+      "note": "Every slider readout in Effects and Appearance is the app's one number box now (PanelNumberField on NumberBox), described per row by a new SliderNumber in PhotonzCore with 7 tests written first. Converted LayerStyleSlider, ShapeSlider and the effect styles editor's own slider, which was a fifth hand-rolled readout; a typed number is clamped to the slider's own ends, a word leaves the old number alone, and it costs one undo step. Also put two panels back on the app's one unit word (they were saying pt). VERIFIED: swift build clean, all 7359 tests pass, and the arithmetic behind every claim checked by hand. NOT VERIFIED IN THE APP: the Mac's screen was locked for the whole task, so macOS never drew the window and no walk could run at all. The walk that proves it is committed (Scripts/playtest/type-into-an-effects-slider-walk.json) and a full sweep is requested, so the first sweep after the screen is unlocked settles it. Audit: queue/audits/2026-09-16-type-a-number-into-a-slider.json (b9582e8c)."
     }
   ],
-  "started": "2026-09-16T03:33:48.843Z"
+  "started": "2026-09-16T03:33:48.843Z",
+  "completed": "2026-09-16T03:49:18.119Z"
 }

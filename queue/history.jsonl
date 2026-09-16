@@ -4049,3 +4049,13 @@
 {"t":"2026-09-16T03:48:53.017Z","ev":"task_note","id":"type-a-number-into-any-effects-slider-not-just-d"}
 {"t":"2026-09-16T03:48:53.061Z","ev":"task_note","id":"type-a-number-into-any-effects-slider-not-just-d"}
 {"t":"2026-09-16T03:48:53.104Z","ev":"task_note","id":"type-a-number-into-any-effects-slider-not-just-d"}
+{"t":"2026-09-16T03:49:18.121Z","ev":"task_done","id":"type-a-number-into-any-effects-slider-not-just-d","from":"in_progress","note":"Every slider readout in Effects and Appearance is the app's one number box now (PanelNumberField on NumberBox), described per row by a new SliderNumber in PhotonzCore with 7 tests written first. Converted LayerStyleSlider, ShapeSlider and the effect styles editor's own slider, which was a fifth hand-rolled readout; a typed number is clamped to the slider's own ends, a word leaves the old number alone, and it costs one undo step. Also put two panels back on the app's one unit word (they were saying pt). VERIFIED: swift build clean, all 7359 tests pass, and the arithmetic behind every claim checked by hand. NOT VERIFIED IN THE APP: the Mac's screen was locked for the whole task, so macOS never drew the window and no walk could run at all. The walk that proves it is committed (Scripts/playtest/type-into-an-effects-slider-walk.json) and a full sweep is requested, so the first sweep after the screen is unlocked settles it. Audit: queue/audits/2026-09-16-type-a-number-into-a-slider.json (b9582e8c)."}
+{"t":"2026-09-16T03:51:29.131Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":16,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T03:51:29.236Z","ev":"task_started","id":"an-oval-s-outside-border-meets-the-oval-cleanly","title":"An oval's border follows the oval, not an oval inset inside it","priority":"p2-normal"}
+{"t":"2026-09-16T04:12:35.797Z","ev":"task_note","id":"two-timing-tests-only-fail-when-the-whole-suite"}
+{"t":"2026-09-16T04:14:25.518Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}
+{"t":"2026-09-16T04:14:25.563Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}
+{"t":"2026-09-16T04:14:25.606Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}
+{"t":"2026-09-16T04:14:25.650Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}
+{"t":"2026-09-16T04:14:25.694Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}
+{"t":"2026-09-16T04:14:25.738Z","ev":"task_note","id":"an-oval-s-outside-border-meets-the-oval-cleanly"}

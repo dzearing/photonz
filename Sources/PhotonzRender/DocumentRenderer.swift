@@ -1170,7 +1170,28 @@ public final class DocumentRenderer: @unchecked Sendable {
         // An oval has no corners to round, so it is drawn as an oval rather
         // than as a rounded rect that would have to be a capsule to come close
         // and a square everywhere else (`RingShape.swift`).
+        //
+        // And it is drawn as the SAME OVAL a path would be: the oval turned
+        // into its four Bezier arcs and swept by the same silhouette baker the
+        // outline route above uses, so "eight points outside this shape" means
+        // the offset curve here too rather than an oval inset inside another
+        // one (`ovalRing`). Two ovals inset from each other are
+        // only parallel on a circle; on a 2:1 oval they part company round the
+        // diagonals, which showed both ways at once — the border drifting
+        // nearer the curve on the flanks, and a trace of the background
+        // surviving between the border and the fill (reported 2026-09-09,
+        // still there after the seam fix).
         if shape == .ellipse {
+            if scale > 0,
+               let band = ovalRing(box: box, outset: outset, width: width,
+                                   scale: scale, paint: paint, in: outerRect) {
+                return laid(band.ink, outerMask: band.outer, innerMask: band.inner,
+                            opacity: paintOpacity(paint), over: image, outerRect: outerRect)
+            }
+            // Too big to bake a silhouette for. The stroke below is a rougher
+            // answer, but it is an OVAL: falling through to the box would put
+            // a square frame round a round shape, which is the worse of the
+            // two by a mile (reported on the probe, 2026-09-08).
             guard let oval = ellipseRing(in: outerRect, width: width, paint: paint)
             else { return image }
             // The oval's two silhouettes, so the ring can be LAID on the
@@ -1311,9 +1332,19 @@ public final class DocumentRenderer: @unchecked Sendable {
         return CIImage(cgImage: bitmap)
     }
 
-    /// A path's silhouette, pushed `reaching` points OUT from its outline (or
-    /// pulled that far in when the number is negative), as a white mask on
-    /// Core Image's Y-up canvas.
+    /// A path's silhouette, pushed `reaching` OUT from its outline (or pulled
+    /// that far in when the number is negative), as a white mask on Core
+    /// Image's Y-up canvas.
+    ///
+    /// `reaching` is in OUTPUT PIXELS, the unit the ring's box and the bitmap
+    /// are both in, because that is the unit a border arrives in: a magnified
+    /// render restates every length in the style before anything is drawn
+    /// (`DocumentMagnification`). The outline itself is the other way round —
+    /// still in the layer's own points — which is what `scale` is for, and
+    /// scaling the reach by it as well is the mistake this says out loud: at
+    /// 2x it pushed the silhouette twice as far as asked, past the edge of the
+    /// bitmap it was drawn into, and a border round a circle came back as an
+    /// octagon with the corners cut off.
     ///
     /// This is what lets a ring follow a curve. Growing a shape by `d` is its
     /// outline swept by a disc of radius `d`, and a stroke twice that wide IS
@@ -1380,7 +1411,7 @@ public final class DocumentRenderer: @unchecked Sendable {
             context.addPath(shape)
             context.fillPath(using: content.fillRule == .evenOdd ? .evenOdd : .winding)
         }
-        let sweep = abs(reaching) * scale
+        let sweep = abs(reaching)
         if sweep > 0 {
             let swept = shape.copy(strokingWithWidth: sweep * 2, lineCap: .round,
                                    lineJoin: .miter, miterLimit: 10)
@@ -1571,16 +1602,60 @@ public final class DocumentRenderer: @unchecked Sendable {
             .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
     }
 
+    /// The band a border makes round an OVAL, and the two silhouettes it sits
+    /// between, as `laid` needs them.
+    ///
+    /// The oval is turned into the same four Bezier arcs `PathContent.ellipse`
+    /// gives it and handed to the silhouette baker every PATH already uses, so a
+    /// border round an oval and a border round that same oval turned into a
+    /// path are one piece of code and cannot drift apart. Each silhouette is
+    /// the shape swept outwards, or eaten inwards, by a distance — the offset
+    /// curve, every point of which is exactly that far from the oval all the
+    /// way round. An oval inset inside another oval is only that on a circle.
+    ///
+    /// The band is the outer silhouette with the inner one cut out of it, so
+    /// the ink covers exactly the ground `laid` believes it covers. That is
+    /// what closes the last of the seam: a stroke ridden round a middle oval
+    /// covers slightly less than the masks say, and the difference is
+    /// background showing through between the border and the fill.
+    ///
+    /// Nil when the oval is too big to bake a silhouette for, which is the
+    /// caller's cue to fall back rather than to give up.
+    private func ovalRing(box: CGRect, outset: CGFloat, width: CGFloat, scale: CGFloat,
+                          paint: Paint, in rect: CGRect)
+        -> (ink: CIImage, outer: CIImage, inner: CIImage?)? {
+        // The outline is wanted in the layer's own points, with the box's
+        // top-left at the origin: that is the frame `pathSilhouette` places
+        // and scales from.
+        let outline = PathContent.ellipse(in: CGRect(origin: .zero,
+                                                     size: CGSize(width: box.width / scale,
+                                                                  height: box.height / scale)))
+        guard let outer = pathSilhouette(outline, reaching: outset, box: box,
+                                         scale: scale, in: rect) else { return nil }
+        let inner = pathSilhouette(outline, reaching: outset - width, box: box,
+                                   scale: scale, in: rect)
+        var band = outer
+        if let inner {
+            band = outer.applyingFilter("CISourceOutCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: inner])
+        }
+        band = paint.isGradient ? poured(paint, through: band, in: rect)
+                                : tinted(band, ciColor(hex: paint.hex))
+        return (band, outer, inner)
+    }
+
     /// One oval ring filling `rect`, `width` thick inwards from its edge.
     ///
+    /// The FALLBACK, for an oval so big that baking its silhouette is out of
+    /// the question; `ovalRing` is what an oval's border is normally made of.
     /// Drawn as a STROKE down the middle of the ring rather than as one oval
-    /// with a smaller one cut out of it, because a stroke is what the shape
-    /// itself draws (`AnnotationRasterizer`): at the same width and the same
-    /// position the two land on the same pixels, which is the whole reason a
-    /// shape has one line round it and not two (`OutlineWidth.swift`). Two
-    /// ovals inset from each other would instead be up to a twentieth of a
-    /// width off round the diagonals of a stretched oval, and would show as a
-    /// seam wherever a border sat on top of an outline.
+    /// with a smaller one cut out of it, which is the nearer of the two rough
+    /// answers: the stroke's edges at least curve away from the oval the way
+    /// the offset curve does, where a second oval inset inside the first drifts
+    /// by up to a twentieth of a width round the diagonals of a stretched one.
+    /// It is still rough, and the trace of background it leaves against the
+    /// fill is the whole reason `ovalRing` exists — at the sizes this branch
+    /// answers for, a pixel of a 12-megapixel oval is far too small to see it.
     ///
     /// The shape is baked as a white mask and the colour laid into it, so an
     /// added border is the same colour here as it is round a box — the mask

@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:28:47.801Z",
-  "updated": "2026-09-15T12:14:53.531Z",
+  "updated": "2026-09-16T04:14:25.737Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Left over from the border seam fix (BorderSeamRenderTests, the ovalBordersStayClean case, which allows up to 24 pixels at under 70/255 for .outside only). An oval's ring is drawn as a STROKE ridden round the oval rather than as two ovals inset from each other, because the shape draws its own edge the same way (DocumentRenderer.ellipseRing, and the comment there explains why). A stroke's inner boundary is the oval walked inwards by half the width, which on a stretched oval is not itself an oval: it misses the oval inset by the width by up to a twentieth of the width round the diagonals. So the ring genuinely does not reach the shape's edge there, and laid() cannot close a gap that is really in the geometry. Worth trying: derive the ring's inner and outer silhouettes by FILLING and CLEAR-STROKING the same mid-oval path in drawEllipseRing, so the masks match the drawn band exactly, and then check whether the residual is the mask arithmetic or the offset-curve geometry.",
+  "notes": "Left over from the border seam fix (BorderSeamRenderTests, the ovalBordersStayClean case, which allows up to 24 pixels at under 70/255 for .outside only). An oval's ring is drawn as a STROKE ridden round the oval rather than as two ovals inset from each other, because the shape draws its own edge the same way (DocumentRenderer.ellipseRing, and the comment there explains why). A stroke's inner boundary is the oval walked inwards by half the width, which on a stretched oval is not itself an oval: it misses the oval inset by the width by up to a twentieth of the width round the diagonals. So the ring genuinely does not reach the shape's edge there, and laid() cannot close a gap that is really in the geometry. Worth trying: derive the ring's inner and outer silhouettes by FILLING and CLEAR-STROKING the same mid-oval path in drawEllipseRing, so the masks match the drawn band exactly, and then check whether the residual is the mask arithmetic or the offset-curve geometry.\n\n--- 2026-09-15 ---\n- Before, on the case BorderSeamRenderTests uses (a 100x80 oval, 8pt outside border, pure red fill on pure green): 20 pixels carried BOTH colours, worst (102,50) r=188 g=61. After: 0. Measured the same way at 1x, 1.5x, 2x, 2.75x, 4x and on a 3:1 oval, all 0.\n- Distance from the fill to the outside of the ring, sampled all round (thinnest whole-pixel reach at 2x, 8pt border): 2:1 oval was 8.322, now 8.500, which is exactly what a circle measures; a 3:1 oval with a 12pt border was 11.800, now 12.500. So the band is now the same distance from the curve everywhere.\n- How: an oval's ring is no longer a stroke ridden round a middle oval with two inset ovals for masks. It is built by `ovalRing`, which turns the oval into PathContent.ellipse and hands it to `pathSilhouette` -- the same offset-curve baker a PATH border already used. outer = silhouette(reaching: outset), inner = silhouette(reaching: outset - width), band = outer sourceOut inner, so the ink covers exactly the ground `laid` believes it covers and the inner edge of an outside border IS the fill's own curve.\n- SEPARATE BUG found and fixed on the way: drawPathSilhouette computed `sweep = abs(reaching) * scale`, but `reaching` arrives in OUTPUT PIXELS (a magnified render restates every style length before drawing, DocumentMagnification) while only the outline is in points. So at 2x every path border reached twice as far as asked, overflowed the bitmap it was drawn into, and came back clipped: a circle with an 8pt border at 2x had an OCTAGON round it, bulging to the corners. It measured right along the axes, which is why it survived. Reproduced with SILHOUETTE/PATHRING instrumentation (at 2.0x the ring reached 170.25 on the diagonal, asked for 156.0; at 3.0x it reached 280.5, asked for 234.0) and pinned by `pathBorderKeepsItsCurveAtZoom`, which fails on the old code at 2x and 3x.\n- Byte comparison before/after over the whole render: a rectangle's border is IDENTICAL in all three positions. A circle at 1x differs by at most 3 bytes of 281600 (worst 1 level for outside); at 2x by at most 16 bytes (worst 13 levels). Not literally byte for byte as the acceptance asked, but sub-pixel antialiasing on a handful of edge pixels, and the ring is in the same place.\n- OutlineFoldRenderTests.anOvalsSavedStrokeOpensAsABorderAndLooksTheSame was an exact-equality test and now carries a tolerance: 994 samples of 64000 move, none by more than 38 of 255, in a faint ring along both edges of the band. That is the cost of the band no longer being the CG stroke itself. Checked it is not flattening (stroking a 4x copy and scaling back changed nothing).\n- Perf: 40 bordered ovals on a 1600x1000 canvas, warm median 5.2ms before / 5.4ms after, cold 5.7 / 5.8. Both silhouettes go through the existing bakedMask cache. Every render perf budget passes with room (12MP/10-layer render 35.4ms against 98ms; export at 2x 114.2ms against 326ms).\n- The old stroke route is kept as the FALLBACK for an oval too big for pathSilhouette to bake (maskBakeCap, 2M pixels). EllipseBorderRenderTests.aHugeOvalStillRings exercises it. Falling through to the box branch would put a square frame round an oval, which is the 2026-09-08 bug.",
   "acceptance": [
     "Sample the pixels along the inside of an outside border on a stretched oval and record how much background each carries, before and after",
     "No pixel between an oval's outside border and its fill carries any of the background colour, checked by sampling at one hundred percent and at several zooms",
@@ -50,6 +50,35 @@
     {
       "t": "2026-09-15T12:14:53.530Z",
       "note": "seq 200 -> 240"
+    },
+    {
+      "t": "2026-09-16T03:51:29.234Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T04:14:25.516Z",
+      "note": "Reproduced first: the 100x80 oval with an 8pt outside border carried 20 pixels of both fill and background, worst r=188 g=61 at (102,50). Tests written before the change (Tests/PhotonzRenderTests/OvalBorderRenderTests.swift), five of nine failing on the old code."
+    },
+    {
+      "t": "2026-09-16T04:14:25.561Z",
+      "note": "Shipped: an oval's border is now built from the offset curves either side of the oval, by the same silhouette baker a path border already used (ovalRing in DocumentRenderer). Leaks: 20 -> 0, and 0 at 1.5x, 2x, 2.75x, 4x, on 2:1 and 3:1 ovals and with a 3pt border."
+    },
+    {
+      "t": "2026-09-16T04:14:25.604Z",
+      "note": "Also fixed: a border round a PATH reached twice as far as asked at any scale above 1, overflowed its own bitmap and came back squared off, so a circle at 2x had an octagon round it. One line in drawPathSilhouette; pinned by a test that fails on the old code."
+    },
+    {
+      "t": "2026-09-16T04:14:25.648Z",
+      "note": "left rough: the very largest ovals (past the 2M-pixel silhouette bake cap) still take the old stroke route, so they keep a sub-pixel drift nobody can see at that size. Did not file: no person would notice it, and EllipseBorderRenderTests.aHugeOvalStillRings already guards that branch."
+    },
+    {
+      "t": "2026-09-16T04:14:25.692Z",
+      "note": "left rough: the full walk sweep could not be run. The Mac's screen was locked for the whole task, so playtest-all.sh reported COULD NOT RUN and no window capture was possible. The audit says so in rough and ships offscreen renders. Did NOT request a sweep: the walks would report locked too."
+    },
+    {
+      "t": "2026-09-16T04:14:25.736Z",
+      "note": "Folded into two-timing-tests-only-fail-when-the-whole-suite rather than filing: aGridOverALargeScreenshotPaysForTheBorderQuery failed once in a full run and passed alone seconds later."
     }
-  ]
+  ],
+  "started": "2026-09-16T03:51:29.233Z"
 }
