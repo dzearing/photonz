@@ -98,14 +98,17 @@ extension CanvasNSView {
         // and on an image that fills the window the matte alone wasn't reachable,
         // so this makes "double-click the bg to maximize" work everywhere. Editable
         // layers (text/annotations) stay double-click-to-edit.
-        // ...except with the Pen in hand, which is the one tool that draws by
-        // CLICKING several times in a row rather than by dragging once. Two of
-        // its anchors placed quickly a couple of points apart are a double
-        // click as far as the window is concerned, and the window was winning:
-        // the second anchor never landed and the window zoomed instead
-        // (reproduced 2026-09-13, 1280x900 to 1728x1028 on the second click).
-        // A short edge on an icon is exactly that pair of clicks.
-        if event.clickCount == 2, tool != .pen,
+        //
+        // Which tools it belongs to is the TOOL's answer, not a list of
+        // exemptions here (`Tool.doubleClickOnEmptyCanvasZoomsWindow`). The
+        // gesture stays with Select, Crop and the marquee trio, which put
+        // nothing on the picture; every tool that draws, measures or paints
+        // owns its own clicks, because two of them placed quickly a short span
+        // apart arrive as a double click and the window used to win. That was
+        // reproduced with the Pen on 2026-09-13 — 1280x900 to 1728x1028 on the
+        // second click, and the anchor never landed — and a short edge on an
+        // icon is exactly that pair of clicks.
+        if event.clickCount == 2, tool.doubleClickOnEmptyCanvasZoomsWindow,
            document?.canvasHitTest(p, zoom: viewport.zoom) == nil {
             performWindowTitleBarAction()
             return

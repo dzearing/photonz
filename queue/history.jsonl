@@ -3975,3 +3975,13 @@
 {"t":"2026-09-16T01:23:36.442Z","ev":"task_note","id":"a-rectangle-or-an-ellipse-you-drew-becomes-a-pat"}
 {"t":"2026-09-16T01:23:38.822Z","ev":"task_note","id":"a-rectangle-or-an-ellipse-you-drew-becomes-a-pat"}
 {"t":"2026-09-16T01:23:51.743Z","ev":"task_done","id":"a-rectangle-or-an-ellipse-you-drew-becomes-a-pat","from":"in_progress","note":"Shipped in 6e035252. A highlighter wash now turns into a path and goes on mixing with what is under it (proved byte for byte on a composite over a backdrop, plus a pixel check that pins the multiply result), so a wash is no longer stuck being a box. After any turn the chip under the canvas says in one line what just happened, which is what stands in for the question once Don't ask again is ticked. The Experiments switch now names the wash, names the arrow as the one exception, and says it needs Reshape a path and so the Pen. The ARROW is deliberately still out: PathContent holds one subpath and three of the four arrowheads are separate contours, so the picture could not survive the turn, and the solid one only survives by becoming a silhouette with its points on the outside and its caption gone. Scripts/test.sh green, 7239 tests, the new ones written first. The walk grew a wash leg but COULD NOT RUN: the Mac's screen was locked (status locked, 0 steps), so a sweep is requested and the audit ships document renders rather than photographs, and says so. Audit: queue/audits/2026-09-15-turn-into-a-path-wash.json"}
+{"t":"2026-09-16T01:34:28.366Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T01:34:28.469Z","ev":"task_started","id":"maximising-the-window-on-a-double-click-belongs","title":"Maximising the window on a double click belongs to Select, not to a tool you are drawing with","priority":"p2-normal"}
+{"t":"2026-09-16T01:41:31.339Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.382Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.426Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.469Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.512Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.554Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.598Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}
+{"t":"2026-09-16T01:41:31.641Z","ev":"task_note","id":"maximising-the-window-on-a-double-click-belongs"}

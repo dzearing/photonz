@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/double-click-belongs-to-select-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "0-open", "note": "the window the walk starts in, so every later line can be read against it" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "click", "at": [200, 200] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [260, 200], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-measure-short-span", "note": "THE POINT: a caliper's two feet placed quickly a short span apart. The second foot must land and the window must still be the size it was" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [300, 400] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [360, 400], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-pen-short-edge", "note": "the same pair of clicks with the Pen: two anchors, window unmoved. This one was carved out by hand on 2026-09-13" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "r" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle" },
+    { "do": "click", "at": [500, 550], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-rectangle-double-click", "note": "a drawing tool in hand: a double click on the matte belongs to the tool, so the window does not move" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "click", "at": [500, 550], "count": 2 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-select-double-click", "note": "THE OTHER HALF: with Select in hand the same double click still zooms the window, exactly as it did before" },
+    { "do": "snapshot", "name": "4-select-zoomed-the-window" }
+  ]
+}

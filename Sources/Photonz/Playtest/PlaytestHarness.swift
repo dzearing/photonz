@@ -6842,6 +6842,12 @@ private final class Run {
             // The canvas's own size, so a walk can prove a number typed into
             // the Canvas section landed on the document rather than nowhere.
             "canvas": document.map { "\(Int($0.canvasSize.width))x\(Int($0.canvasSize.height))" } ?? "none",
+            // The editor WINDOW's own size in points. The app hides its title
+            // bar, so a double click on bare canvas is its stand-in for double
+            // clicking one, and that gesture zooms the window. This is how a
+            // walk proves the window jumped, or proves it stayed exactly where
+            // it was while a tool was being drawn with.
+            "window": window.map { "\(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none",
             "measures": measures,
             "arrows": arrows,
             "textRows": textRows,

@@ -1,0 +1,27 @@
+{
+  "feature": "Double clicking bare canvas belongs to Select",
+  "epic": "icon-vector",
+  "summary": "The app has no title bar, so double clicking the background behind the picture stands in for double clicking one and zooms the window. That gesture now belongs only to the tools that put nothing on the picture. With anything that draws, measures or paints in hand, two quick clicks are yours: they go to the tool and the window stays exactly where it is.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on. The same change is in Current, because the canvas is one shared file.",
+  "try": [
+    { "do": "Open any picture, press V for Select, and double click the grey matte outside the picture. The window zooms, the same as before." },
+    { "do": "Double click the matte again to put the window back." },
+    { "do": "Press I for Measure, click once on the picture to drop the first foot, then click again a short span away, fast, as you would placing a small dimension." },
+    { "do": "Check both feet landed and the window did not move." },
+    { "do": "Press R for Rectangle and double click the matte. Nothing happens: no window, no shape." },
+    { "do": "Press P for the Pen and click two corners about a centimetre apart, quickly. Both anchors land." },
+    { "do": "Press C for Crop and double click the matte. The window zooms, because Crop trims rather than adds." }
+  ],
+  "evaluate": [
+    "Placing two Measure feet a short span apart: does it feel like the tool is listening to you now?",
+    "With Rectangle in hand, a double click on the matte does nothing at all. Is nothing the right answer, or should the matte still zoom the window for the tools that draw by dragging rather than clicking?",
+    "Crop and the marquee keep the window zoom. Does that split read as obvious when you are using them, or arbitrary?",
+    "Do you ever double click the background to zoom the window while a drawing tool is in hand, and would you miss it?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for the whole of this task, so macOS never drew the app and not one walk could be run. There are no screenshots here and no offscreen renders either: the walk did not run at all. Everything above is from the tests, which pass, and from reading the code. A walk that proves both halves is committed as Scripts/playtest/double-click-belongs-to-select-walk.json and a full sweep has been asked for.",
+    "The Pen was the only tool carved out before, and the reason given was that it is the only one that draws over several clicks. That was not the whole story: Measure places its two feet by clicking too, so placing a short dimension on a screenshot was hitting the same collision, and nobody had reported it.",
+    "With the paint bucket, a double click on the same spot now fills twice and leaves two undo steps for one result. Before, the second click zoomed the window instead, which was worse; this is a small nit rather than a regression, and it is in the task log rather than filed.",
+    "Crop keeps the window zoom on the strength of the plan rather than of use: a double click outside the crop rectangle could reasonably belong to Crop. It is easy to change if it reads wrong."
+  ]
+}

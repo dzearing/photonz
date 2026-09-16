@@ -76,6 +76,40 @@ struct ToolTests {
         #expect(!Tool.text.preservesLayerSelection)
         #expect(!Tool.measure.preservesLayerSelection)
     }
+
+    /// Double clicking bare canvas stands in for double clicking a title bar
+    /// the app does not have, so it zooms the window. It belongs to the tools
+    /// that put nothing on the picture, and to no others: a tool that places by
+    /// clicking gets two quick clicks a short span apart as a double click, and
+    /// the window jumping to full screen in the middle of that is unrecoverable.
+    @Test func onlyTheToolsThatPutNothingOnThePictureZoomTheWindow() {
+        // Half one: the resting state keeps the gesture, along with the tools
+        // that trim and sweep rather than add.
+        #expect(Tool.select.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(Tool.crop.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(Tool.rectSelect.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(Tool.ellipseSelect.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(Tool.wand.doubleClickOnEmptyCanvasZoomsWindow)
+        // Half two: everything that draws, measures or paints owns its clicks.
+        // The Pen was the one carved out by hand; Measure places its two feet
+        // by clicking too, so it had the same collision waiting for it.
+        #expect(!Tool.pen.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(!Tool.measure.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(!Tool.text.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(!Tool.fill.doubleClickOnEmptyCanvasZoomsWindow)
+        #expect(!Tool.frame.doubleClickOnEmptyCanvasZoomsWindow)
+    }
+
+    /// The rule said over the whole set, so a click-to-place tool added later
+    /// cannot silently inherit the window zoom. A new tool that makes a layer,
+    /// or paints one, has to be on the wrong side of this or the test fails.
+    @Test func aToolThatMakesOrPaintsSomethingNeverZoomsTheWindow() {
+        for tool in Tool.allCases {
+            let putsSomethingOnThePicture = tool.createsLayers || tool == .fill
+            #expect(tool.doubleClickOnEmptyCanvasZoomsWindow == !putsSomethingOnThePicture,
+                    "\(tool.rawValue) is on the wrong side of the window zoom rule")
+        }
+    }
 }
 
 @Suite("AnnotationDrag")

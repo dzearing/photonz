@@ -137,6 +137,32 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
 
+    /// Whether a double click on BARE canvas — the matte, or a locked base
+    /// image, anywhere that is not an editable layer — zooms the window.
+    ///
+    /// The app hides its title bar, so there is no strip left to double click
+    /// and the background behind the picture stands in for one. That is a help
+    /// while you are looking at a picture and wrong while you are drawing on
+    /// it: a tool that places by CLICKING gets two quick clicks a short span
+    /// apart delivered as a double click, and the window jumping to full screen
+    /// in the middle of a stroke is not something you can undo.
+    ///
+    /// So the window keeps the gesture only where nothing is being put on the
+    /// picture: Select, which is the resting state, Crop, which trims rather
+    /// than adds, and the marquee trio, which sweep a region. Every tool that
+    /// draws, measures or paints owns its own clicks.
+    ///
+    /// Exhaustive on purpose. The Pen was carved out of the old rule by name
+    /// after it collided with it; a click-to-place tool added later has to
+    /// answer here instead of waiting for someone to hit the same thing.
+    public var doubleClickOnEmptyCanvasZoomsWindow: Bool {
+        switch self {
+        case .select, .crop, .rectSelect, .ellipseSelect, .wand: true
+        case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
+             .zoomCallout, .lens, .measure, .fill, .frame, .pen: false
+        }
+    }
+
     /// Whether this tool MAKES something: finish the gesture and the document
     /// has a layer in it that was not there before.
     ///
