@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:19:55.263Z",
-  "updated": "2026-09-16T00:59:47.055Z",
+  "updated": "2026-09-16T01:00:02.421Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
@@ -128,7 +128,12 @@
     {
       "t": "2026-09-16T00:59:47.054Z",
       "note": "Filed a-card-that-crops-what-is-inside-it-can-have-rou (p2): a group set to hide what sticks out can no longer have its crop rounded, because the pull reaches the picture inside and the square crop cuts it straight back. Reproduced with real output before filing. The user's own 2026-09-13 answer named this as the thing it gives up."
+    },
+    {
+      "t": "2026-09-16T01:00:02.419Z",
+      "note": "Pulling Corner Radius on a group now rounds what is inside it. PhotonzCore/ContainerRounding.swift reaches a picked group through to the things inside it that have corners and paint them, all the way down; a screen, a copy of a component and a hand-masked group are left as they were. Next only, behind shapePartsEnabled. Verified at the pixel: ContainerReachRenderTests renders the canvas and shows the old pull changing nothing at all and the new one taking the button's corner off, plus 20 new core tests; full suite green, 7212. Acceptance 4 is NOT claimed by a walk: the Mac's screen was locked for the whole task, so every walk reported status locked and no capture was possible. The walk is written (corner-reaches-the-group-walk.json) and a sweep is requested. Audit: queue/audits/2026-09-16-corner-over-a-group.json, with canvas renders rather than window captures and a plain line saying why. Its first rough line raises the real open question: you answered this twice, in opposite directions, and this is the 2026-09-13 answer."
     }
   ],
-  "started": "2026-09-16T00:46:19.636Z"
+  "started": "2026-09-16T00:46:19.636Z",
+  "completed": "2026-09-16T01:00:02.420Z"
 }
