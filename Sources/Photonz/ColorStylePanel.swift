@@ -118,9 +118,8 @@ struct ColorStyleControl: View {
                     Button(saveTitle(selection)) { editorState.beginNamingColorStyle(target) }
                 }
                 if !styles.isEmpty {
-                    Section(selection.count > 1
-                            ? "\(offerTitle), for all \(selection.count)"
-                            : offerTitle) {
+                    Section(CrowdWords.all(selection.count).map { "\(offerTitle), for \($0)" }
+                            ?? offerTitle) {
                         ForEach(styles) { option in
                             Button {
                                 editorState.useColorStyle(target, styleID: option.id)
@@ -929,15 +928,16 @@ struct SelectionColorWell: View {
             // clicking would do to that, because "sets the fill color" over a
             // color somebody deliberately linked is the wrong half of the
             // story to lead with.
-            lines.append(selection.count > 1
-                         ? "All \(selection.count) of these \(noun) colors come from "
-                            + "the style \(style.name)."
-                         : "This \(noun) color comes from the style \(style.name).")
+            // The crowd opens the sentence here, so it wears a capital: the
+            // helper hands back the words, never the punctuation of a spot.
+            lines.append(CrowdWords.all(selection.count).map {
+                             "\($0.prefix(1).uppercased())\($0.dropFirst()) of these \(noun) colors "
+                                + "come from the style \(style.name)."
+                         } ?? "This \(noun) color comes from the style \(style.name).")
         } else {
-            lines.append(selection.count > 1
-                         ? "Sets the \(noun) color of all \(selection.count) of them, "
-                            + "in one step."
-                         : "Sets the \(noun) color.")
+            lines.append(CrowdWords.them(selection.count).map {
+                             "Sets the \(noun) color of \($0), in one step."
+                         } ?? "Sets the \(noun) color.")
         }
         // What a pick would let go of: for a row that disagrees, the layers it
         // would take off their styles; for a row wearing one, the style itself.
@@ -1033,9 +1033,8 @@ struct SelectionColorInspector: View {
     private func switchHelp(_ slot: ColorSlot, _ part: String) -> String {
         let count = editorState.colorSwitch(slot: slot).layerIDs.count
         let noun = part.lowercased()
-        return count > 1
-            ? "Turns the \(noun) on or off for all \(count) of them"
-            : "Turns the \(noun) on or off"
+        guard let crowd = CrowdWords.them(count) else { return "Turns the \(noun) on or off" }
+        return "Turns the \(noun) on or off for \(crowd)"
     }
 
 }

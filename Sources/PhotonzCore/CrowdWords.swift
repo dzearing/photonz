@@ -19,7 +19,22 @@ public enum CrowdWords {
     /// name and every caller says something different about a single target
     /// ("this text", "Fill", nothing at all).
     public static func them(_ count: Int) -> String? {
+        guard let all = all(count) else { return nil }
+        return "\(all) of them"
+    }
+
+    /// The crowd standing in front of a noun, or on its own: "both copies",
+    /// "all 3 labels", "for both".
+    ///
+    /// Same rule as `them`, which is built out of this one so the two can never
+    /// disagree about where counting starts. Sentences in the panel needed a
+    /// word for the crowd that was not "of them" — a Detach tip, a menu section
+    /// heading, a font menu tip — and every one of them was counting at two
+    /// because there was nothing else to reach for.
+    ///
+    /// Nil when the sentence is about one thing, for the same reason `them` is.
+    public static func all(_ count: Int) -> String? {
         guard count > 1 else { return nil }
-        return count == 2 ? "both of them" : "all \(count) of them"
+        return count == 2 ? "both" : "all \(count)"
     }
 }

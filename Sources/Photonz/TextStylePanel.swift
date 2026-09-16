@@ -63,9 +63,8 @@ struct TextStyleControl: View {
                     Button(saveTitle(selection)) { editorState.beginNamingTextStyle() }
                 }
                 if !styles.isEmpty {
-                    Section(selection.count > 1
-                            ? "Saved text styles, for all \(selection.count)"
-                            : "Saved text styles") {
+                    Section(CrowdWords.all(selection.count).map { "Saved text styles, for \($0)" }
+                            ?? "Saved text styles") {
                         ForEach(styles) { option in
                             Button {
                                 editorState.useTextStyle(styleID: option.id)

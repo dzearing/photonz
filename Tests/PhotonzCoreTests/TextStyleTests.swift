@@ -388,4 +388,17 @@ struct TextStyleTests {
         let row = doc.textStyleSelection(layerIDs: [a.id])
         #expect(row.unlinkNote == "Changing the font, size, weight or colour takes this off the style.")
     }
+
+    /// Two are both of them, three start counting: the same crowd words the
+    /// drop lines use, so one selection is not described two ways an inch
+    /// apart in the same panel.
+    @Test func aStyledRowOverSeveralSaysBothOrHowMany() {
+        let a = text("A"), b = text("B"), c = text("C")
+        var doc = document([a, b, c])
+        _ = doc.saveTextStyle(from: [a.id, b.id, c.id], name: "Heading")
+        #expect(doc.textStyleSelection(layerIDs: [a.id, b.id]).unlinkNote
+                == "Changing the font, size, weight or colour takes both of them off the style.")
+        #expect(doc.textStyleSelection(layerIDs: [a.id, b.id, c.id]).unlinkNote
+                == "Changing the font, size, weight or colour takes all 3 of them off the style.")
+    }
 }

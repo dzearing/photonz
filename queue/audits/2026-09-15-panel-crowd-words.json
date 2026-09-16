@@ -1,0 +1,26 @@
+{
+  "feature": "The panel stops counting at two",
+  "epic": "ui-building",
+  "summary": "Pick exactly two layers and every tooltip, note and menu heading in the panel now says \"both\" instead of \"all 2\". Three or more still names the number, because that is the part worth knowing.",
+  "setup": "Photonz Dev, release Next. No flags: this is wording, it is on everywhere.",
+  "try": [
+    { "do": "Draw two rectangles and select both." },
+    { "do": "Hover the Fill swatch in the panel and read the tip: it should say \"Sets the fill color of both of them, in one step\"." },
+    { "do": "Hover the Shadow switch and read it: \"Turns the shadow on or off for both of them\"." },
+    { "do": "Save a fill color as a style, apply it to both, then hover the Fill swatch again: \"Both of these fill colors come from the style ...\" and under the row, \"A color picked here takes both of them off the style.\"" },
+    { "do": "Open the styles menu beside Fill and read its section heading: \"Fill styles, for both\"." },
+    { "do": "Draw a third rectangle, select all three, and repeat: every one of those should now name the number instead." },
+    { "do": "Select one rectangle and check the same tips read as singular, with no number at all." }
+  ],
+  "evaluate": [
+    "Reading two of these tips an inch apart, do they sound like one app talking?",
+    "At three and up, is the number the thing you actually want to know before you click?",
+    "Does \"both\" ever read as vague where the old count read as precise?",
+    "In the menu headings, does \"for both\" land, or does a heading want the noun back (\"for both layers\")?"
+  ],
+  "rough": [
+    "No walk could run and no screenshot could be taken: the Mac's screen was locked for this whole run, so macOS never drew the window. Everything here is verified by unit tests and by reading the sentences, not by watching them on screen.",
+    "The menu headings are the weakest of the fourteen. \"Saved text styles, for both\" ends on a bare word where the old \"for all 2\" at least ended on a thing. It is still better than counting at two, but a noun may read better.",
+    "A source rule now fails the build if any file spells out \"all <count>\" itself, which is what actually keeps these from drifting apart again. It asks for a count specifically, so a measurement like \"all 320 pt of it\" is left alone."
+  ]
+}

@@ -4105,3 +4105,12 @@
 {"t":"2026-09-16T06:03:39.666Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
 {"t":"2026-09-16T06:13:01.678Z","ev":"task_note","id":"a-measurement-end-follows-your-hand-instead-of-j"}
 {"t":"2026-09-16T06:13:15.478Z","ev":"task_done","id":"a-measurement-end-follows-your-hand-instead-of-j","from":"in_progress","note":"A measurement's end now keeps the grip the press took on it: it travels as far as the hand did and the way the hand went, instead of teleporting under the pointer. MeasureHandleGrip in PhotonzCore (six tests) holds the offset, bounded by the nine points of grab slack, and it is applied before the magnets so EdgeSnapping, the span window and the shift-held line all judge the point the FOOT is aiming at. A press on the dot takes no grip, so that case is unchanged. New expectFeet walk step asks the document where the ends are, documented in docs/design/playtest-harness.md. Verified by Scripts/playtest/caliper-foot-keeps-its-grip-walk.json, 40 of 40 steps with a real window capture, plus a differential run showing the magnets judging the foot (same hand landing: 700 with no grip, 708 with a grip of eight). playtest-all caliper 6/6, measure 9/10 with the one failure reproduced identically without these changes. Scripts/test.sh 7431/7431. Audit: queue/audits/2026-09-16-measure-foot-grip.json. Committed as e02a53a6 and pushed."}
+{"t":"2026-09-16T06:13:59.956Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T06:14:00.061Z","ev":"task_started","id":"the-rest-of-the-panel-still-counts-at-two","title":"The rest of the panel still counts at two","priority":"p2-normal"}
+{"t":"2026-09-16T06:20:53.577Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.621Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.663Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.707Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.751Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.795Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}
+{"t":"2026-09-16T06:20:53.836Z","ev":"task_note","id":"the-rest-of-the-panel-still-counts-at-two"}

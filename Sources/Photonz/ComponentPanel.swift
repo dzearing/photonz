@@ -758,9 +758,9 @@ struct ComponentInstanceInspector: View {
                         .controlSize(.small)
                         .playtestControl("Detach")
                         .disabled(!editorState.canDetachInstance)
-                        .panelHelp(selection.count == 1
-                              ? "Turns this copy into ordinary layers that no longer follow the original"
-                              : "Turns all \(selection.count) copies into ordinary layers that no longer follow the original")
+                        .panelHelp(CrowdWords.all(selection.count).map {
+                                  "Turns \($0) copies into ordinary layers that no longer follow the original"
+                              } ?? "Turns this copy into ordinary layers that no longer follow the original")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -2019,7 +2019,8 @@ private struct InstanceColorKnob: View {
             return "Sets this copy\u{2019}s \(property.name.lowercased()). "
                 + "The original, and every copy that has not been given one, keeps following it"
         }
-        return "Sets the \(property.name.lowercased()) of all \(selection.count) of them, in one step"
+        return "Sets the \(property.name.lowercased()) of "
+            + "\(CrowdWords.them(selection.count) ?? "this"), in one step"
     }
 }
 

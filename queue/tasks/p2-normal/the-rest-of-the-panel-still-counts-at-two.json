@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 310,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:43:33.962Z",
-  "updated": "2026-09-15T12:14:53.609Z",
+  "updated": "2026-09-16T06:20:53.835Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CrowdWords.them(_:) landed in Sources/PhotonzCore/CrowdWords.swift on 2026-09-12 and returns \"both of them\" / \"all N of them\" / nil for one. The drop lines (ColorDrop, TextStyleDrop) and EffectsListInspector already use it.\n\nThe sites still counting, read on 2026-09-12:\nSources/PhotonzCore/TextStyleLibrary.swift:438, Sources/PhotonzCore/EffectStyles.swift:537, Sources/PhotonzCore/ColorStyleSelection.swift:178, Sources/Photonz/PartsInspector.swift:324 and :327, Sources/Photonz/LayerEffectsInspector.swift:267 and :269, Sources/Photonz/ComponentPanel.swift:689 and :1865, Sources/Photonz/ColorStylePanel.swift:899 and :1004.\n\nCore ones are test-first; check Tests/PhotonzCoreTests for pinned strings (most use 3, so they should pass unchanged) and add a two-selected case per sentence.",
@@ -43,6 +43,39 @@
     {
       "t": "2026-09-15T12:14:53.608Z",
       "note": "seq 270 -> 310"
+    },
+    {
+      "t": "2026-09-16T06:14:00.059Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T06:20:53.575Z",
+      "note": "Pre-build review: the idea holds. 'both' is only ever offered at exactly 2, which is exactly when it is true, so there is no count where it reads wrong. Shortest version is one helper plus one call per site; nothing decorative to cut. The one real risk was a helper that still lets a caller hand-write, so the guard is a source rule rather than a convention."
+    },
+    {
+      "t": "2026-09-16T06:20:53.619Z",
+      "note": "Widened past the 11 sites in notes to 14. The goal asks that one selection not be described two ways an inch apart, and the Fill styles menu heading ('Fill styles, for all 2') sits an inch from the note that now says 'both of them'. So the noun and bare forms are in too: Detach ('Turns both copies into ordinary layers'), the three style menu headings ('for both'), the two Reset label tips ('Put both labels back'), the font menu tips ('The font of both selected layers') and the styled-row readout ('Both of these fill colors come from the style X')."
+    },
+    {
+      "t": "2026-09-16T06:20:53.661Z",
+      "note": "Added CrowdWords.all(_:) -> 'both' / 'all N' / nil, and rebuilt them(_:) on top of it so the two cannot disagree about where counting starts (test pins them(n) == all(n) + ' of them')."
+    },
+    {
+      "t": "2026-09-16T06:20:53.705Z",
+      "note": "Acceptance 3 is enforced, not just done: CrowdWordsDriftTests reads every Swift file under Sources and fails on 'all \\(...count...' outside CrowdWords.swift. Proved it bites by reintroducing the TextInspector tally (it failed naming the file and line), then restored. It asks for a count specifically so PlaytestHarness's 'all \\(points(room.natural)) of it' - a measurement, right at any number - is left alone."
+    },
+    {
+      "t": "2026-09-16T06:20:53.749Z",
+      "note": "Scripts/test.sh: 7439 tests in 594 suites pass. Walks could NOT run: the Mac's screen was locked for the whole run, so playtest-all reported COULD NOT RUN and no walk is a pass or a failure. No walk pins any of these sentences (grepped Scripts/playtest for each), so the tests carry the verification; the locked screen is recorded in the audit's rough."
+    },
+    {
+      "t": "2026-09-16T06:20:53.793Z",
+      "note": "Porting rule: nothing here is forked. All fourteen sites are shared files; Sources/Photonz/Releases/{Next,Current,Legacy} hold no copy of any of them, so Next has the change already."
+    },
+    {
+      "t": "2026-09-16T06:20:53.834Z",
+      "note": "Post-build review, read rather than watched because of the locked screen: the three menu headings are the weakest result. 'Saved text styles, for both' ends on a bare word where 'for all 2' ended on a thing. Left rough, it is in the audit for the user to react to rather than filed: still strictly better than counting at two, and whether a noun belongs there is their call, not a defect."
     }
-  ]
+  ],
+  "started": "2026-09-16T06:14:00.058Z"
 }

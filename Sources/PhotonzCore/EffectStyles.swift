@@ -533,9 +533,8 @@ public struct EffectStyleSelection: Hashable, Sendable {
         let styled = members.count { $0.styleID != nil }
         guard styled > 0 else { return nil }
         if case .style = reading {
-            return count > 1
-                ? "Changing any setting below takes all \(count) of them off the style."
-                : "Changing any setting below takes this off the style."
+            let crowd = CrowdWords.them(count) ?? "this"
+            return "Changing any setting below takes \(crowd) off the style."
         }
         return "Changing any setting below takes \(styled) of them off their style."
     }

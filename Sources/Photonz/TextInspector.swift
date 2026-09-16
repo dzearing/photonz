@@ -201,7 +201,8 @@ struct TextInspector: View {
     /// What a menu says it is. Over a selection it says how far it reaches, so
     /// a menu reading Mixed also says what it is mixed about.
     private func help(_ part: String, _ count: Int) -> String {
-        count > 1 ? "The \(part) of all \(count) selected layers" : "The \(part) of this text"
+        CrowdWords.all(count).map { "The \(part) of \($0) selected layers" }
+            ?? "The \(part) of this text"
     }
 
     /// Curated families plus any the picked labels are already set in, so a

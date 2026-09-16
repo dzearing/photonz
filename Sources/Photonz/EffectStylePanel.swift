@@ -162,9 +162,9 @@ private struct EffectStyleControl: View {
                 Button(saveTitle(selection)) { editorState.beginNamingEffectStyle(row: row) }
             }
             if !styles.isEmpty {
-                Section(selection.count > 1
-                        ? "Saved \(row.kind.title.lowercased())s, for all \(selection.count)"
-                        : "Saved \(row.kind.title.lowercased())s") {
+                Section(CrowdWords.all(selection.count)
+                            .map { "Saved \(row.kind.title.lowercased())s, for \($0)" }
+                        ?? "Saved \(row.kind.title.lowercased())s") {
                     ForEach(styles) { option in
                         Button {
                             editorState.useEffectStyle(row: row, styleID: option.id)

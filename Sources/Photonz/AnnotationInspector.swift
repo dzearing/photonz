@@ -43,9 +43,9 @@ struct AnnotationInspector: View {
                     }
                     .font(.caption)
                     .controlSize(.small)
-                    .panelHelp(pinned.count > 1
-                          ? "Put all \(pinned.count) labels back where the app places them"
-                          : "Put the label back where the app places it")
+                    .panelHelp(CrowdWords.all(pinned.count)
+                                .map { "Put \($0) labels back where the app places them" }
+                          ?? "Put the label back where the app places it")
                 }
                 SelectionStyleNotes(notes: [selection.note])
             }

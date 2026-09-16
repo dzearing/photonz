@@ -306,12 +306,12 @@ private struct PartRowView: View {
         let noun = row.title.lowercased()
         // While they disagree the switch has no state to turn off, so the tip
         // says what the press it CAN take would do.
+        let crowd = CrowdWords.them(row.switchIDs.count)
         if row.isMixed {
-            return "Gives all \(row.switchIDs.count) of them \(row.part?.article ?? "a") \(noun)"
+            return "Gives \(crowd ?? "this") \(row.part?.article ?? "a") \(noun)"
         }
-        return row.switchIDs.count > 1
-            ? "Turns the \(noun) on or off for all \(row.switchIDs.count) of them"
-            : "Turns the \(noun) on or off"
+        guard let crowd else { return "Turns the \(noun) on or off" }
+        return "Turns the \(noun) on or off for \(crowd)"
     }
 
     // MARK: The colour

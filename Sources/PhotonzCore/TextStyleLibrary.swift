@@ -441,9 +441,8 @@ public struct TextStyleSelection: Hashable, Sendable {
         let styled = members.count { $0.styleID != nil }
         guard styled > 0 else { return nil }
         if case .style = reading {
-            return count > 1
-                ? "Changing the font, size, weight or colour takes all \(count) of them off the style."
-                : "Changing the font, size, weight or colour takes this off the style."
+            let crowd = CrowdWords.them(count) ?? "this"
+            return "Changing the font, size, weight or colour takes \(crowd) off the style."
         }
         return "Changing the font, size, weight or colour takes \(styled) of them off their style."
     }

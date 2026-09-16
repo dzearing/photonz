@@ -370,6 +370,19 @@ struct EffectStyleTests {
         #expect(selection.unlinkNote == "Changing any setting below takes this off the style.")
     }
 
+    /// Two rows are both of them, three start counting: the same crowd words
+    /// the drop lines use, so the Effects panel and the drop line an inch away
+    /// describe one selection the same way.
+    @Test func aStyledRowOverSeveralSaysBothOrHowMany() {
+        var doc = document([carded("A", lift), carded("B", lift), carded("C", lift)])
+        let ids = doc.layers.map(\.id)
+        doc.saveEffectStyle(from: ids, at: 0, name: "Card lift")
+        #expect(doc.effectStyleSelection(layerIDs: Array(ids.prefix(2)), at: 0, kind: .shadow).unlinkNote
+                == "Changing any setting below takes both of them off the style.")
+        #expect(doc.effectStyleSelection(layerIDs: ids, at: 0, kind: .shadow).unlinkNote
+                == "Changing any setting below takes all 3 of them off the style.")
+    }
+
     // MARK: - The file
 
     @Test func aDocumentWithNoEffectStylesWritesNoKey() throws {

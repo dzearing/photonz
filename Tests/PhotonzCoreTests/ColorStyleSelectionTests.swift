@@ -491,6 +491,17 @@ struct ColorStyleSelectionTests {
                 == "A color picked here takes all 3 of them off the style.")
     }
 
+    /// Two rows are both of them. The drop lines learned this on 2026-09-12
+    /// and the picker sat an inch away still counting.
+    @Test func aStyledRowOverTwoLayersSaysBothOfThem() {
+        let accent = UUID()
+        let selection = ColorStyleSelection(slot: .fill, members: [
+            member(UUID(), "#00A870", accent), member(UUID(), "#00A870", accent),
+        ], selectionCount: 2)
+        #expect(selection.styleReplacementNote
+                == "A color picked here takes both of them off the style.")
+    }
+
     /// A row painted with a colour of its own has no style to lose, and a row
     /// that disagrees already says so under itself with `unlinkNote`. Saying it
     /// twice in two different places is how a warning stops meaning anything.

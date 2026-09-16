@@ -174,9 +174,7 @@ public struct ColorStyleSelection: Hashable, Sendable {
     /// warning is about layers you cannot see from the picker.
     public var styleReplacementNote: String? {
         guard case .style = reading else { return nil }
-        return count > 1
-            ? "A color picked here takes all \(count) of them off the style."
-            : "A color picked here takes this off the style."
+        return "A color picked here takes \(CrowdWords.them(count) ?? "this") off the style."
     }
 
 }

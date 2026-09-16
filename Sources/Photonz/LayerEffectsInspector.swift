@@ -255,10 +255,10 @@ struct ShadowInspector: View {
                                   isMixed: Bool) -> String {
         // While they disagree the switch has no state to turn off, so the tip
         // says what the press it CAN take would do.
-        if isMixed { return "Gives all \(selection.count) of them a shadow" }
-        return selection.count > 1
-            ? "Turns the shadow on or off for all \(selection.count) of them"
-            : "Turns the shadow on or off"
+        let crowd = CrowdWords.them(selection.count)
+        if isMixed { return "Gives \(crowd ?? "this") a shadow" }
+        guard let crowd else { return "Turns the shadow on or off" }
+        return "Turns the shadow on or off for \(crowd)"
     }
 
     private func shadowColorNote(_ shadows: LayerStyleSelection, at index: Int) -> String? {
