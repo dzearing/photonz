@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 25,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:24:21.933Z",
-  "updated": "2026-09-16T13:31:28.922Z",
+  "updated": "2026-09-16T13:31:42.487Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED by the 2026-09-16 triage pass, from a real instance that happened today rather than a hypothetical.\n\nAt 05:18 local the runner on separate-finds-the-boxes-in-a-dark-window-too-no ran out of turn waiting for the full test suite. queue/loop.log:\n\n  [go-loop] 03:57:59 running task separate-finds-the-boxes-in-a-dark-window-too-no\n  [go-loop] 05:18:01 task separate-finds-the-boxes-in-a-dark-window-too-no runner exited 0\n  [go-loop] 05:18:02 unhealthy: 1 consecutive runner failures; waiting 30s. Last error: Waiting on the full suite...\n\nThe task went back to pending and seven files stayed changed in the working tree:\n  M Sources/Photonz/EditorState+Separate.swift\n  M Sources/PhotonzCore/BoxSweep.swift\n  M Tests/PhotonzCoreTests/BoxSweepTests.swift\n  M docs/design/separate-into-layers.md\n  ?? Scripts/playtest/separate-dark-window-walk.json\n  ?? Tests/PhotonzRenderTests/AppWindowSeparateFixtureTests.swift\n  ?? Tests/PhotonzRenderTests/Fixtures/app-window-2x.png\n\nNothing in the loop mentions them. The triage pass handled this one instance by hand, by moving that task to the very front of p2 (seq 5) so the runner who inherits the files is the one who owns them. That is a patch for today, not the fix: the next time it happens nobody will be watching.\n\nNote the exit code. The runner exited 0, which is how a runner says it finished, and the loop still classed it a failure from the shape of its last message. So 'did the task finish' and 'did the runner exit cleanly' are already known to disagree; this task is what the loop should DO about the tree when they do.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-16T13:31:28.921Z",
       "note": "Left rough, no task filed (below the bar): stash entries accumulate one per incident and nothing prunes them, which is harmless because the record stores the commit sha rather than stash@{n}. A record owned by a finished task, or by the digest/manager pass, never clears itself; the daily triage pass is now told to look at those and decide, rather than inventing an expiry."
+    },
+    {
+      "t": "2026-09-16T13:31:42.485Z",
+      "note": "The loop now snapshots the working tree before every runner and, when the runner ends, names every file it left changed, stashes them under that task's id, records it in queue/leftovers/, shows it on the dashboard hero, and hands the record back to the owning task the next time it is claimed. queue/ and anything the user had already changed are never touched; a stash git refuses is reported louder, not quieter. Shipped in queue/bin/leftovers.mjs, queue-lib.mjs, go-loop.sh and the dashboard page; drilled end to end by queue/bin/leftovers-drill.sh (18 checks, both scenarios green) plus failure-drill (90), manager-due-drill (14), the node drills and Scripts/test.sh (7597 tests). Audit: queue/audits/2026-09-16-task-leftovers.json. Commit 10b411c3, pushed."
     }
   ],
-  "started": "2026-09-16T13:15:21.409Z"
+  "started": "2026-09-16T13:15:21.409Z",
+  "completed": "2026-09-16T13:31:42.486Z"
 }
