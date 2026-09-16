@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 460,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T05:12:44.706Z",
-  "updated": "2026-09-15T12:14:53.777Z",
+  "updated": "2026-09-16T10:02:35.114Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-13 while building the Colours and Styles track.\n\n  Scripts/playtest.sh Scripts/playtest/tutorial-save-a-colour-as-a-style-walk.json --no-build\n\nThen look at /tmp/photonz-playtest/tutorial-save-a-colour-as-a-style-walk/3-on-the-shelf-sc.png: the ring is round the Library section, the Styles shelf is showing, and the Brand tile that just landed is cut in half by the bottom edge of the window. Same in tutorial-the-library-walk 3-a-tile-is-a-handle-sc.png.\n\nWhy it happens: TutorialController asks for .revealTarget, which scrolls until TutorialAnchorView.isWhollyShown, and the Library section is taller than the room left under the sections above it, so the reveal can never be satisfied and stops after its fixed number of tries wherever it got to. Options worth weighing: reveal to the section HEADER plus one tile row rather than the whole section; or let a step name how much of its target it needs.",
@@ -42,6 +42,15 @@
     {
       "t": "2026-09-15T12:14:53.776Z",
       "note": "seq 420 -> 460"
+    },
+    {
+      "t": "2026-09-16T09:59:33.900Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T10:02:35.113Z",
+      "note": "Reproduced from the 02:31 sweep (screen was unlocked then; it is locked now). The task's stated cause is WRONG: the reveal is not failing and the ring is not half off the window. In tutorial-save-a-colour-as-a-style the dock reads dockViewport 621, dockSections ['Layers -67-96','Appearance 96-327','Effects 327-395','Motion 395-476','Library 476-621'] - the Library section is entirely inside the dock. What is cut is its BODY: dockListRoom says 'Library 112/157', i.e. the height budget squeezed it to DockMetrics.listFloor (112) when it wants 157. The body scroller then cuts through the tile row, and what it cuts away is the caption UNDER the picture, which is the tile's name. The guide says 'the Brand tile that just landed' and you cannot read the word Brand. Same in five more walks: the-library 112/305, make-a-component 112/233, text-styles 112/157, use-it-again-and-again 112/233, change-it-everywhere 112/157."
     }
-  ]
+  ],
+  "started": "2026-09-16T09:59:33.899Z"
 }

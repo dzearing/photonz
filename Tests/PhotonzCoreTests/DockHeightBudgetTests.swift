@@ -341,4 +341,60 @@ struct DockHeightBudgetTests {
         let heights = DockHeightBudget.flexibleHeights(groups, viewport: 996)
         #expect(heights["effects"] == 171)
     }
+
+    // MARK: The Library shelf, measured against the real dock
+
+    /// The exact dock a guide points a tutorial ring at, measured on the probe
+    /// on 2026-09-16 running `tutorial-save-a-colour-as-a-style-walk`: a 621
+    /// point dock holding a layers list, three forms, and the Library with one
+    /// tile on its shelf.
+    ///
+    /// The Library's chrome — the scope picker, the search box and the grab bar
+    /// — is paid up front like any other fixed part, and only the tile grid is
+    /// the dock's to take away. Its floor is one whole row, because the caption
+    /// under a tile picture is the tile's NAME and a shelf cut across a row is
+    /// a row of pictures nobody has named.
+    private var libraryDock: [DockHeightBudget.Group] {
+        [
+            DockHeightBudget.Group(key: "layers", fixed: 29, flexible: 200, floor: 112),
+            form("appearance", 199),
+            form("effects", 36),
+            form("motion", 49),
+            DockHeightBudget.Group(key: "library", fixed: 29 + 85,
+                                   flexible: LibraryShelfLayout.oneRowHeight,
+                                   floor: LibraryShelfLayout.oneRowHeight),
+        ]
+    }
+
+    @Test("A squeezed dock still draws a whole row of tiles on the Library shelf")
+    func libraryKeepsAWholeRowOfTiles() {
+        let heights = DockHeightBudget.flexibleHeights(libraryDock, viewport: 621)
+        // The dock is over-subscribed and the layers list has gone to its floor.
+        #expect(heights["layers"] == 112)
+        // The shelf is not squeezed at all: one row is both what it wants and
+        // as low as it may go, so what it draws is a tile with its name under
+        // it rather than the top two thirds of a picture.
+        #expect(heights["library"] == LibraryShelfLayout.oneRowHeight)
+        #expect(DockHeightBudget.overflow(libraryDock, viewport: 621) > 0)
+    }
+
+    @Test("A shelf with more rows than the dock can hold still keeps one whole")
+    func libraryWithManyRowsKeepsOneRowWhole() {
+        var groups = libraryDock
+        // Three rows of tiles, which is what the Library guide's shelf holds.
+        groups[4] = DockHeightBudget.Group(key: "library", fixed: 29 + 85, flexible: 220,
+                                           floor: LibraryShelfLayout.oneRowHeight)
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: 621)
+        #expect(heights["library"] == LibraryShelfLayout.oneRowHeight)
+    }
+
+    @Test("A dock with room to spare leaves the shelf every row it asked for")
+    func libraryIsNotSqueezedWhenTheDockFits() {
+        var groups = libraryDock
+        groups[4] = DockHeightBudget.Group(key: "library", fixed: 29 + 85, flexible: 220,
+                                           floor: LibraryShelfLayout.oneRowHeight)
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: 1200)
+        #expect(heights["library"] == 220)
+        #expect(heights["layers"] == 200)
+    }
 }

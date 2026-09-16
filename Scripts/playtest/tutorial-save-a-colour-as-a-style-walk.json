@@ -28,6 +28,7 @@
     { "do": "key", "key": "return" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "on-the-shelf", "timeout": 6 },
     { "do": "wait", "seconds": 1 },
+    { "do": "expectInView", "field": "Brand", "whole": true, "note": "the tile the guide is naming is on screen WHOLE, caption and all: the caption is the tile's name, and a shelf the dock has squeezed used to cut it away" },
     { "do": "describe", "stage": "3-on-the-shelf", "note": "saving really moved the guide on, and the Library turned to Styles by itself with the Brand tile on it" },
     { "do": "panel", "stage": "3-on-the-shelf" },
     { "do": "snapshot", "name": "3-on-the-shelf" },

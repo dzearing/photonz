@@ -35,6 +35,26 @@ struct LibraryPanel: View {
     /// Where the shelf is scrolled to, and whether it owes someone a scroll.
     /// A reference on purpose: see the note at the grid's geometry reader.
     @State private var shelfReveal = ShelfRevealScratch()
+    /// What the scope picker, search box and grab bar around the tiles come to.
+    @State private var chromeHeight: CGFloat = 0
+
+    /// A second ceiling, from the dock rather than from the grab bar: what the
+    /// panel can spare once every form section has been paid for. The stored
+    /// ceiling is what the reader ASKED the shelf for; this is what the dock
+    /// HAS, and the shelf is drawn at the smaller of the two, exactly the way
+    /// the layers list is (`LayersListView.dockCeiling`).
+    ///
+    /// The shelf takes this itself rather than letting the dock wrap the whole
+    /// section in a second scroller, which is what it used to do. Two scrollers
+    /// over one shelf meant the outer one cut the inner one's window: the tile
+    /// the app had just scrolled to could be perfectly placed in the shelf and
+    /// still behind the fade, and what the cut took was the CAPTION under a
+    /// tile picture, which is the tile's name.
+    var dockCeiling: CGFloat?
+    /// Told how tall the shelf would be with only the grab bar pressing on it,
+    /// and what the picker, search box and grab bar around it cost, so the dock
+    /// can budget for both separately: the shelf scrolls and they do not.
+    var onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat) -> Void)?
 
     static let scopeKey = "library.scope"
     /// How tall the shelf may get, remembered across launches.
@@ -72,6 +92,26 @@ struct LibraryPanel: View {
         }
         .padding(.horizontal, 12)
         .padding(.top, 2)
+        // What the section costs the dock, split into the part that scrolls and
+        // the part that must not. Measured as a whole and the shelf taken back
+        // out of it, because the chrome is not one contiguous piece: the picker
+        // and the search box sit above the tiles and the grab bar below them.
+        //
+        // No loop in that: what is left after the shelf comes out does not
+        // depend on how tall the shelf was drawn, and the height reported for
+        // the shelf itself is the UNPRESSED one, so the dock never budgets from
+        // a number it just handed out.
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { total in
+            let extras = max(0, total - shelfHeight)
+            if chromeHeight != extras { chromeHeight = extras }
+            onMetrics?(unpressedShelfHeight, extras)
+        }
+        .onAppear { onMetrics?(unpressedShelfHeight, chromeHeight) }
+        // A shelf that gained a row without growing — because the dock was
+        // already pressing on it — changes what it is ASKING for and nothing
+        // else, so the measurement above never fires and the dock would keep
+        // budgeting for the old shelf.
+        .onChange(of: unpressedShelfHeight) { onMetrics?(unpressedShelfHeight, chromeHeight) }
         // Switching scope with a search still running would show an empty
         // shelf for a reason that is not on screen anymore.
         .onChange(of: scopeRaw) { query = "" }
@@ -239,11 +279,27 @@ struct LibraryPanel: View {
             + visibleTextStyles.count + visibleEffectStyles.count
     }
 
-    /// The height the shelf takes: its tiles, capped at the ceiling the grab
-    /// bar sets. A shelf holding one thing is one tile tall, so the dock under
-    /// it is not a patch of empty glass.
+    /// The height the shelf takes: its tiles, capped at the LOWER of the two
+    /// ceilings pressing on it — what the grab bar was dragged to, and what the
+    /// dock has room for. A shelf holding one thing is one tile tall, so the
+    /// dock under it is not a patch of empty glass.
     private var shelfHeight: CGFloat {
-        LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth, cap: maxHeight)
+        // An empty shelf is a sentence, not a list: there is no grid to cap and
+        // nothing for the dock to take away.
+        guard !isEmpty else { return 0 }
+        return LibraryShelfLayout.shelfHeight(
+            tileCount: tileCount, width: shelfWidth,
+            cap: min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude))
+    }
+
+    /// ...and what it would be if the dock were NOT pressing on it: its tiles,
+    /// capped by the ceiling the reader set with the grab bar. This is what the
+    /// dock budgets from, so it reserves room for the shelf that was asked for
+    /// rather than for the one it has already shortened.
+    private var unpressedShelfHeight: CGFloat {
+        guard !isEmpty else { return 0 }
+        return LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth,
+                                              cap: maxHeight)
     }
 
     @ViewBuilder
@@ -400,9 +456,14 @@ struct LibraryPanel: View {
     /// The grab bar decides for itself whether there is anything to resize: an
     /// empty shelf, or one holding a single row of tiles, offers none.
     private var resizeHandle: some View {
+        // Never past what the dock can spare, so every point of the bar still
+        // moves the shelf: a bar that refused to move would be a control that
+        // cannot act. The room is still there to be had — collapsing a section
+        // you are not using is what frees it.
         PanelAreaResizeHandle(maxHeight: $maxHeight,
                               area: "Library",
-                              contentHeight: shelfContentHeight,
+                              contentHeight: min(shelfContentHeight,
+                                                 dockCeiling ?? .greatestFiniteMagnitude),
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the Library")

@@ -1,0 +1,27 @@
+{
+  "feature": "The Library shelf is never cut through a tile",
+  "epic": "ui-building",
+  "summary": "When the right hand panel runs out of room it now takes the Library shelf down to one whole row of tiles and stops, instead of slicing the bottom third off the row. The scope tabs, the search box and the shelf's own grab bar stay put while it does.",
+  "setup": "Photonz Dev, Experiments window, release Next. Library, Styles and Components flags are on by default. Use a window about 900 points tall so the panel has more in it than it can show.",
+  "try": [
+    { "do": "Open a screenshot and click a shape on it, so Appearance, Effects and Motion all open in the right hand panel." },
+    { "do": "Turn the Library on from the View menu if it is not already showing." },
+    { "do": "Press the little palette button beside Fill and choose Save as Style, then type Brand and press Return." },
+    { "do": "Look at the Library at the foot of the panel: the Brand tile and the word Brand under it are both on screen.", "shot": "2026-09-16-library-shelf-cut-before.png" },
+    { "do": "Drag the Library's grab bar up and down and watch the shelf take rows away rather than halves of rows." },
+    { "do": "Collapse Effects and watch the shelf take the freed room back." },
+    { "do": "Run Help ▸ Guides ▸ Save a colour as a style and read the step that says the Brand tile just landed." }
+  ],
+  "evaluate": [
+    "When the panel is short, is one row of tiles with their names readable the right thing to keep, rather than two rows with the second one cut?",
+    "The shelf now jumps from about two rows to one row when the panel gets tight. Does that read as the panel making room, or as the shelf losing your tiles?",
+    "With the shelf at one row, the panel scrolls a little further than it used to. Is anything you needed now below the fold?",
+    "The scope tabs and the search box no longer scroll away inside the Library. Is that worth the room it costs?"
+  ],
+  "rough": [
+    "The screen on this Mac was locked for the whole of this task, so not one scripted walk could run and not one picture of the fix could be taken. Everything here is reasoned from the numbers the 02:31 sweep recorded plus the unit tests; nobody has watched it happen. A sweep has been asked for.",
+    "The picture on step four is the BEFORE state, taken by the 02:31 sweep: the Brand tile with its name sliced off by the bottom of the shelf. It is what the fix is aimed at, not a picture of the fix.",
+    "The shelf drops straight from what it was to one row when the dock gets tight. Somewhere in between, at two rows plus a sliver of a third, would say more clearly that there is more below, and it is not done.",
+    "An empty Library now costs the panel its whole sentence instead of being cut in half. That is right, but it makes the panel scroll a little more on a short window."
+  ]
+}

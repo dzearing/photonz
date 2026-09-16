@@ -278,4 +278,32 @@ struct LibraryShelfLayoutTests {
         #expect(LibraryShelfLayout.tileReveal(index: 6, width: 0,
                                               gridTop: 0, viewportHeight: 0) == .none)
     }
+
+    // MARK: The least room a shelf may be squeezed to
+
+    @Test func theSmallestShelfStillHoldsAWholeRowOfTiles() {
+        #expect(LibraryShelfLayout.oneRowHeight == 72)
+        #expect(LibraryShelfLayout.oneRowHeight
+            == LibraryShelfLayout.contentHeight(tileCount: 1, width: 236))
+    }
+
+    @Test func theSmallestShelfIsTheSameHoweverWideTheDockIs() {
+        // A row is a row: pulling the dock wider puts more tiles ON the row
+        // rather than making it taller, so the floor cannot move with width.
+        for width in [80.0, 140.0, 236.0, 380.0] as [CGFloat] {
+            #expect(LibraryShelfLayout.contentHeight(tileCount: 1, width: width)
+                == LibraryShelfLayout.oneRowHeight)
+        }
+    }
+
+    @Test func aShelfSqueezedToItsFloorStillShowsATileWhole() {
+        // What the dock hands the shelf when it has nothing to spare. The tile
+        // and its caption both have to be inside it, because the caption IS the
+        // tile's name and a guide saying "the Brand tile" is pointing at a word.
+        let floor = LibraryShelfLayout.oneRowHeight
+        let shown = LibraryShelfLayout.shelfHeight(tileCount: 9, width: 236, cap: floor)
+        #expect(shown == floor)
+        #expect(LibraryShelfLayout.tileTop(index: 0, width: 236)
+            + LibraryShelfLayout.tileHeight <= shown)
+    }
 }

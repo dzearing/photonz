@@ -228,6 +228,16 @@ struct DockBudgetScratch: Equatable {
     /// you just opened OR JUST ADDED, so adding a second effect to a short
     /// window makes room for the new one rather than for the one above it.
     private func squeezeFloor(for id: InspectorSectionID, room: CGFloat?) -> CGFloat {
+        // The Library shelf is a grid of TILES, and a tile is a picture with its
+        // name under it. Cut one across the middle and it does not read as a
+        // list with more in it, the way a cut list of rows does: it reads as a
+        // row of pictures nobody has named, and the name was the whole of what
+        // the tile said. So the shelf's floor is one whole row and no lower.
+        //
+        // 72 points against the 112 every other list gets, which is LESS, so
+        // this cannot starve anything: it only stops the shelf being handed a
+        // number that has no honest way to spend it.
+        if id == .library { return LibraryShelfLayout.oneRowHeight }
         guard let panes = budget.listPanes[id], !panes.isEmpty else {
             return DockMetrics.listFloor
         }

@@ -121,6 +121,12 @@
       "seconds": 1
     },
     {
+      "do": "expectInView",
+      "field": "Brand",
+      "whole": true,
+      "note": "the tile the guide is naming is on screen WHOLE, caption and all: the caption is the tile's name, and a shelf the dock has squeezed used to cut it away"
+    },
+    {
       "do": "describe",
       "stage": "3-a-tile-is-a-handle",
       "note": "THE TEST: a colour let go of on the shelf was kept under a name, and that really moved the guide on"

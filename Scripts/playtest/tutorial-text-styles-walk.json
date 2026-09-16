@@ -174,6 +174,12 @@
       "seconds": 1
     },
     {
+      "do": "expectInView",
+      "field": "Section Heading",
+      "whole": true,
+      "note": "the tile the guide is naming is on screen WHOLE, caption and all: the caption is the tile's name, and a shelf the dock has squeezed used to cut it away"
+    },
+    {
       "do": "describe",
       "stage": "4-drag-it-on",
       "note": "the saved name really is offered in the same menu, and the ring is now on the Library shelf the tile is dragged off"

@@ -95,6 +95,24 @@ public enum LibraryShelfLayout {
             + gridVerticalPadding * 2
     }
 
+    /// The least room the shelf may be squeezed to: one whole row of tiles.
+    ///
+    /// A tile is a picture with its NAME under it, and the name is the whole of
+    /// what a tile says. So a shelf cut across a row does not read as "there is
+    /// more below" the way a cut list of rows does — it reads as a row of
+    /// anonymous pictures, and the thing the app was pointing at has lost the
+    /// only label it had.
+    ///
+    /// Measured on the probe on 2026-09-16: six tutorial walks rang the Library
+    /// with the dock squeezing its body to the generic 112 point list floor
+    /// (`DockMetrics.listFloor`), and every one of them photographed the tile
+    /// the guide was talking about with its caption cut away. "The Brand tile
+    /// that just landed" over a shelf with no word Brand on it.
+    ///
+    /// Independent of width, because a wider dock puts more tiles ON a row
+    /// rather than making the row taller.
+    public static let oneRowHeight: CGFloat = contentHeight(tileCount: 1, width: tileMinimumWidth)
+
     /// The height the shelf actually takes: its content, but never more than
     /// the ceiling the drag handle sets, so the sections under it stay in view
     /// and a long shelf scrolls on its own.

@@ -202,15 +202,20 @@ struct InspectorPanel: View {
                                     },
                                     onReorderEnd: { endSectionDrag(in: sections) },
                                     accessory: sectionAccessory(id),
-                                    // The layers list bounds itself — it has had
-                                    // its own scroller and grab bar since long
-                                    // before the dock had a budget — so the
-                                    // ceiling reaches it through `LayersListView`
-                                    // instead of through a second scroller round
-                                    // the outside of the one it already has.
-                                    bodyCeiling: id == .layers ? nil : ceilings[id],
+                                    // Two sections bound themselves — the layers
+                                    // list and the Library shelf both had their
+                                    // own scroller and grab bar since long before
+                                    // the dock had a budget — so the ceiling
+                                    // reaches them through `LayersListView` and
+                                    // `LibraryPanel` instead of through a second
+                                    // scroller round the outside of the one they
+                                    // already have. A shelf inside two scrollers
+                                    // had the outer one cutting the inner one's
+                                    // window, and what it cut was the caption
+                                    // under a tile, which is the tile's name.
+                                    bodyCeiling: Self.boundsItself(id) ? nil : ceilings[id],
                                     onBodyHeight: { height in
-                                        guard id != .layers else { return }
+                                        guard !Self.boundsItself(id) else { return }
                                         record(bodyHeight: height, for: id)
                                     },
                                     onHeaderHeight: { record(headerHeight: $0, for: id) },
@@ -394,6 +399,17 @@ struct InspectorPanel: View {
         guard availableSections.contains(id) else { return }
         guard budget.bodies[id] != bodyHeight else { return }
         budget.bodies[id] = bodyHeight
+    }
+
+    /// Whether this section applies the dock's ceiling to its own list rather
+    /// than being wrapped in a scroller from the outside.
+    ///
+    /// Two do, and for the same reason: each already has a scroller and a grab
+    /// bar of its own, so a second one round the outside would cut the first
+    /// one's window — and the part that goes is the bottom of the list, which
+    /// is the grab bar, and for a shelf the caption under a tile.
+    static func boundsItself(_ id: InspectorSectionID) -> Bool {
+        id == .layers || id == .library
     }
 
     /// The same, for the header row, which measures itself on the way out too.
@@ -912,7 +928,17 @@ struct InspectorPanel: View {
             // the tab, the header and the search box and left the old tiles
             // sitting under them (2026-09-03). Sparing the shelf a re-run has
             // to start from what the shelf is actually made of.
-            LibraryPanel()
+            // The shelf reports the two halves of what it costs the dock — the
+            // tile grid, which the dock may take from, and the picker, search
+            // box and grab bar around it, which it may not — and takes the
+            // ceiling back the same way the layers list does.
+            LibraryPanel(dockCeiling: ceiling,
+                         onMetrics: { natural, extras in
+                             record(bodyHeight: natural, for: .library)
+                             if budget.listExtras[.library] != extras {
+                                 budget.listExtras[.library] = extras
+                             }
+                         })
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came
             // from: a capture's details, or a component's.
