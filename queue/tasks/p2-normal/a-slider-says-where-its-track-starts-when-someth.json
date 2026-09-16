@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:08.148Z",
-  "updated": "2026-09-15T12:14:53.497Z",
+  "updated": "2026-09-16T03:11:30.445Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-12 design review in queue/audits/2026-09-12-corner-over-a-group.json, which says it plainly in its own rough notes:\n\n  \"The knob at the far left reading 18 looks exactly like the old knob at the far left reading 0. The number is right and the pull works from the first nudge, but nothing on the row itself says the track starts at 18. Only the tooltip does.\"\n  \"A group whose contents are already as round as the box goes, like a pill, has nothing left to pull, so the slider turns itself off. That is honest but silent: it looks the same as a slider you simply have not grabbed yet.\"\n\nUX-PATTERNS.md section 4 already rules that a control that cannot act must never explain itself with a hover tip alone: pressing it puts the reason in the line under the section straight away. That line under the section is section 4's own surface and is the obvious place for this. What the rule does NOT have is a row for a control that CAN act, but only over part of its range, which is what a clamped slider is. Filed alongside the scrub task for that gap.\n\nThis is separate from find-out-what-corner-radius-should-say-over-a-gr, which is blocked on a decision about a group with padding. This task is about the case that already shipped and works.",
@@ -47,6 +47,31 @@
     {
       "t": "2026-09-15T12:14:53.496Z",
       "note": "seq 170 -> 210"
+    },
+    {
+      "t": "2026-09-16T02:59:31.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T03:11:26.212Z",
+      "note": "Adversarial review before building. (1) The case this was filed for has NARROWED under it: afbdef6a (2026-09-15) made a plain group hand this row to what is inside it, so a group holding a button rounded 18 now has no floor at all and its knob already sits three tenths along. Proved with a unit probe: plain group -> floor 0, reading 18, limit 60. A wall is now only what a container that really masks has: a frame, a copy of a component, or a group somebody masked by hand. The 2026-09-12 audit screenshot is of a state the app no longer produces. (2) Shortest version: no custom slider. Measured NSSliderCell at controlSize .small -- bar (0,5,W,4) across the whole frame, knob 18x14 with its LEFT EDGE at p*(W-18), view height 14 -- so a live slider inset by the spent width starts its own fill exactly at the wall for free, and only the spent stretch has to be drawn. (3) Cut: no permanent caption line under the row. UX-PATTERNS is explicit that drawing the wall BUYS BACK the section's line, so it is the wall or the sentence, never both."
+    },
+    {
+      "t": "2026-09-16T03:11:26.256Z",
+      "note": "Built. PhotonzCore: CornerRadiusSelection gains wall (the fraction of the track that is refused), hasWall, isSpent and wallSentence, the one constant the track, the hover tip and the answer line all read (9 tests in Tests/PhotonzCoreTests/ClampedCornerRadiusTests.swift). App: CornerRadiusRow insets the live slider by the spent width, draws the refused stretch behind it and a keyline at the wall, drops .disabled for the spent case in favour of .allowsHitTesting so the row is never dimmed, answers a click on the row with the sentence for six seconds, and says the same thing when a corner typed in the popout settles onto the wall. 7326 tests pass."
+    },
+    {
+      "t": "2026-09-16T03:11:26.299Z",
+      "note": "Tone measured rather than guessed, because the mock's greys are not this panel's. Off the real 2026-09-15 window capture: empty groove 76,80,85; filled 135,140,144; knob 224,224,225; panel 45,48,53. The filled stretch is GREY because the accent picked in System Settings is grey, so the mock's accent-against-neutral contrast is not available here and tone alone would be thin. Hence the keyline is drawn as a one point mark standing a little proud of the bar rather than as an inset shadow: it also puts an end stop beside a knob resting against it. Spent sits at 106, between the groove and the fill."
+    },
+    {
+      "t": "2026-09-16T03:11:30.400Z",
+      "note": "Could not photograph any of it. The Mac's screen was locked for the whole run (Scripts/playtest.sh reported status locked, exit 3, 'Window captures: none'), so no walk ran and macOS refused every capture. The two pictures in the audit are the row's drawing rendered outside the app through NSHostingView in both themes, labelled as such in the audit's rough list. Scripts/playtest/clamped-corner-wall-walk.json is written and reaches both states through Frame Selection (proved in a unit probe: framing a box rounded 18 gives floor 18 / limit 60 / wall 0.3; framing a pill gives floor 60 / limit 60 / spent), and a sweep is requested so it runs on an unlocked screen."
+    },
+    {
+      "t": "2026-09-16T03:11:30.444Z",
+      "note": "left rough: the line a click puts under this row sits under the ROW, because Appearance has no single line under the whole section the way Position and Size does. It works and nobody has been stopped by it, so it is in the audit's rough list for the user to react to rather than filed as its own task. Also left: the spent tone and the filled tone sit within about 30 values of each other while the accent picked in System Settings is grey; the keyline carries the difference and a coloured accent would separate them on its own."
     }
-  ]
+  ],
+  "started": "2026-09-16T02:59:31.604Z"
 }

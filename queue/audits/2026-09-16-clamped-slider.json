@@ -1,0 +1,29 @@
+{
+  "feature": "A slider says where its track starts",
+  "epic": "ui-components",
+  "summary": "When something underneath a layer has already rounded its corners, the Corner Radius row now shows where its track starts: the knob rests part way along, the refused stretch behind it is drawn spent with a keyline at the wall, and a row with nothing left to give keeps its place undimmed instead of quietly switching off.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: the row draws this wherever a container really masks its corners, which is a frame, a copy of a component, or a group somebody masked by hand.",
+  "try": [
+    { "do": "Open a new canvas." },
+    { "do": "Press R and drag out a wide box." },
+    { "do": "Pull Corner Radius about a third of the way along." },
+    { "do": "Choose Layer > Frame Selection." },
+    { "do": "Look at the Corner Radius row: the knob rests where the number says, with the stretch behind it drawn spent and a keyline at its end.", "shot": "2026-09-16-clamped-slider-dark.png" },
+    { "do": "Pull the knob further right and watch the fill start at the keyline, not at the end of the track." },
+    { "do": "Click the row and read the line that appears under it." },
+    { "do": "Undo back to the bare box, pull Corner Radius all the way to a pill, and frame it again: the whole track is spent and the row is still there." }
+  ],
+  "evaluate": [
+    "Without hovering anything, can you tell that this slider will not go below where its knob is?",
+    "Does the spent stretch read as range that belongs to something else, rather than as something you set?",
+    "Is the keyline at the wall doing enough work, or is it too quiet to notice?",
+    "Does a frame around a pill read as a slider that has been spent, rather than one nobody has touched?",
+    "Is the sentence the right one: does it tell you what to go and do?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole run, so macOS refused every screen capture and no walk could run. The two pictures here are the row's own drawing rendered outside the app, in both themes, not photographs of the panel. The walk that photographs it is written and waiting for an unlocked screen.",
+    "The case this was filed for has narrowed under it. Since a plain group started handing this row to what is inside it, a group holding a rounded button has no wall at all and starts at nought. A wall is now what a frame, a copy of a component, or a group somebody masked by hand has.",
+    "The mock draws the wall as a one point keyline and leans on the accent either side of it. With a grey accent picked in System Settings the filled stretch is grey too, so the keyline is drawn a little proud of the bar rather than inside it. Worth a look with a coloured accent as well as a grey one.",
+    "The line a click puts under the row sits under the ROW, not under the whole section: Appearance has no single line under it the way Position and Size does. If this row is going to keep answering clicks, that line probably wants to move to the section."
+  ]
+}

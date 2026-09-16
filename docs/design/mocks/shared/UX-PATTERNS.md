@@ -1117,10 +1117,31 @@ Specimen and rules: `pages/comp-sliders.html`, block **05**.
 | Corner Radius on a measurement, no corners at all | nothing to act on | no row. The ladder's field row settled this already: a caliper has no radius the way an arrow has no width |
 | Border Width 0 to 20 on a 24 pixel icon frame | range wider than the subject uses | nothing. Nothing refuses you, and one point of width costs about 10 points of travel, which is a fine target. Left alone on purpose, and that is the rule's answer rather than an omission |
 
-**No behaviour changed when this was written.** The first three cases are open
-work and stay open, in `a-slider-says-where-its-track-starts-when-someth` and
-`a-measurement-offers-a-corner-radius-it-has-noth`, both of which were waiting
-for this row and can now be built from it without inventing anything.
+**Built in the app on 2026-09-16**, first two cases, by
+`a-slider-says-where-its-track-starts-when-someth`
+(`Sources/Photonz/AnnotationInspector.swift`, `CornerRadiusRow`). The third,
+a measurement with no corners at all, is still open in
+`a-measurement-offers-a-corner-radius-it-has-noth`.
+
+Two things the app had to settle that the mock did not:
+
+- **The wall is DRAWN, not just implied by two tones.** The mock leans on the
+  accent either side of the keyline to carry the difference. A macOS panel
+  cannot: with a grey accent picked in System Settings the filled stretch is
+  grey too, and measured off the real window the spent stretch (106), the
+  filled stretch (135) and the empty groove (79) sit close enough that tone
+  alone is thin. So the keyline is a one point mark standing a little proud of
+  the bar, which also puts an end stop beside a knob resting against it.
+- **No custom slider was needed.** A small `NSSlider` puts its bar across its
+  whole frame and its knob's LEFT EDGE at the value's fraction of the leftover
+  width, so a live slider inset by the spent width starts its own fill exactly
+  at the wall, for free. Only the spent stretch is drawn.
+
+Since the rule was written, one of the two cases it was taken from has narrowed:
+a plain group now hands the row to what is inside it
+(`ContainerRounding.swift`, 2026-09-15), so it has no wall at all and starts at
+nought. A wall is now what a container that really does mask has — a frame, a
+copy of a component, or a group somebody masked by hand.
 
 #### What a key press says when it cannot act
 

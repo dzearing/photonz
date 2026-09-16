@@ -130,6 +130,45 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         members.map { Double($0.floor.uniform ?? $0.floor.largest) }.min() ?? 0
     }
 
+    /// Where the WALL stands on this row's own track, from 0 at the square end
+    /// to 1 at fully round.
+    ///
+    /// The track runs from nought to `limit` whatever is picked, and the
+    /// stretch below `floor` is refused: something under this layer is already
+    /// that round and a mask can take a corner away but never put one back. So
+    /// the row draws that stretch SPENT rather than shortening its track, which
+    /// is what left a knob resting on 18 looking exactly like a knob at nought
+    /// (UX-PATTERNS §4, "A control that can only act over part of its range").
+    public var wall: Double {
+        guard limit > 0 else { return 0 }
+        return min(max(floor / limit, 0), 1)
+    }
+
+    /// Whether any of this row's track belongs to something else, so there is
+    /// a wall to draw at all. Nought for everything that rounds itself.
+    public var hasWall: Bool { !members.isEmpty && floor > 0 }
+
+    /// Whether the track is spent end to end: what is inside this is already
+    /// as round as a box that size goes, so there is nothing left to pull.
+    ///
+    /// The row STAYS, undimmed, with its thumb against the wall. Switching it
+    /// off was the old answer and it looked exactly like a slider nobody had
+    /// touched yet.
+    public var isSpent: Bool { hasWall && floor >= limit }
+
+    /// The one sentence the wall is explained with, or nil when there is no
+    /// wall. It names the owner with the noun on screen and gives one thing to
+    /// do, and it is ONE constant so the hover tip and the line a click puts
+    /// under the section can never drift apart (UX-PATTERNS §4, "The wording").
+    public var wallSentence: String? {
+        guard hasWall else { return nil }
+        let takeItLower = "Round the contents less to take it lower."
+        if isSpent {
+            return "What is inside this is already as round as a box goes. " + takeItLower
+        }
+        return "What is inside this is already rounded \(Int(floor.rounded())) px. " + takeItLower
+    }
+
     /// The one picked layer whose rounding is a part of its look that a copy
     /// of a component can own, when exactly one is picked and it rounds that
     /// way. It is what puts the "follow the original again" arrow on this row,

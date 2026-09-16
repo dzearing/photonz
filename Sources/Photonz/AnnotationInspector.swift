@@ -193,25 +193,95 @@ struct CornerRadiusRow: View {
     /// though what it sends is whole points.
     @State private var draft: Double?
 
-    /// Where the track runs. It starts at nought for everything that rounds
-    /// itself, and over a group whose contents are already round it starts at
-    /// THEIR curve: a group masks its corners off and a mask can never put a
-    /// curve back, so the stretch below that did nothing at all and the knob
-    /// sat at the far left beside a button that was plainly round
-    /// (`PhotonzCore/ContainerRounding.swift`).
+    /// What the row is answering, when it has been asked. A control that can
+    /// only act over part of its range says who owns the rest and the one
+    /// thing to do about it, in the line under the row, the moment it is
+    /// clicked — never in a hover tip alone (UX-PATTERNS §4).
+    @State private var answer: String?
+
+    /// How long the answer holds. Long enough to read twice, short enough that
+    /// the row goes back to being a row.
+    private static let answerSeconds: Double = 6
+
+    private func fadeAnswer() async {
+        guard answer != nil else { return }
+        try? await Task.sleep(for: .seconds(Self.answerSeconds))
+        guard !Task.isCancelled else { return }
+        answer = nil
+    }
+
+    /// Where the LIVE part of the track runs: from the wall to fully round.
+    ///
+    /// The whole track still means nought to fully round. What the knob may
+    /// reach is only the part above the wall, and the refused stretch under it
+    /// is drawn spent rather than cut off the end (`spentTrack`), which is the
+    /// difference between a knob resting on 18 and a knob at nothing.
     private var range: ClosedRange<Double> {
         let top = max(1, selection.limit)
         let bottom = min(max(0, selection.floor), top)
-        // A group holding a pill is already as round as its box goes, so its
-        // floor and its ceiling meet. A track with no length to it is not a
-        // control, so the row keeps a point of slack and turns itself off
-        // instead (`isAlreadyAsRoundAsItGoes`).
+        // A frame holding a pill is already as round as its box goes, so its
+        // floor and its ceiling meet. A range of no length is not a range, so
+        // the row keeps a point of slack; the track it draws is spent end to
+        // end and the knob against the wall takes no pointer (`isSpent`).
         return bottom >= top ? (top - 1)...top : bottom...top
     }
 
-    /// True when there is nothing left to pull: what is inside this group is
-    /// already round to its half edge, which is as round as any box gets.
-    private var isAlreadyAsRoundAsItGoes: Bool { selection.floor >= selection.limit }
+    /// How wide the row is, so the wall can be put where the number says it
+    /// is. Read off the row itself rather than guessed, because the dock
+    /// resizes.
+    @State private var rowWidth: CGFloat = 0
+
+    /// A small slider's own metrics, measured off `NSSliderCell`: an 18 by 14
+    /// knob whose LEFT EDGE sits at the value's fraction of the leftover
+    /// width, on a 4 point bar centred in a 14 point row. Everything drawn here
+    /// comes off those two numbers so the wall lands exactly where the knob
+    /// stops.
+    private static let knobWidth: CGFloat = 18
+    private static let barHeight: CGFloat = 4
+
+    /// How much of the row belongs to something else. Nought when nothing is
+    /// clamped, which is every shape that rounds its own outline.
+    private var spentWidth: CGFloat {
+        guard selection.hasWall, rowWidth > Self.knobWidth else { return 0 }
+        return CGFloat(selection.wall) * (rowWidth - Self.knobWidth)
+    }
+
+    /// The refused stretch of track, drawn spent: the groove one shade down,
+    /// no fill in it, and a keyline standing where it stops.
+    ///
+    /// It is on screen with nothing hovered, which is the whole point of it
+    /// (UX-PATTERNS §4, "A control that can only act over part of its range").
+    /// The knob's left edge comes to rest exactly on its end, so a row at its
+    /// floor reads as a knob against a wall instead of a knob at nothing.
+    @ViewBuilder
+    private var spentTrack: some View {
+        if spentWidth > 0 {
+            UnevenRoundedRectangle(topLeadingRadius: Self.barHeight / 2,
+                                   bottomLeadingRadius: Self.barHeight / 2)
+                // Neutral ink, never the accent: this stretch is range that
+                // exists and is not yours, not something you did. Denser than
+                // the empty groove beside it in either theme, because
+                // `.primary` is the ink of whichever one is on.
+                .fill(Color.primary.opacity(0.28))
+                .padding(.trailing, 1)
+                .frame(width: spentWidth, height: Self.barHeight)
+                // The wall itself, standing a little proud of the groove.
+                //
+                // The mock draws this as a one point keyline and leans on the
+                // accent either side of it to carry the difference. This panel
+                // cannot: with a grey accent chosen in System Settings the
+                // filled stretch is grey too, so spent track and filled track
+                // land within a few values of each other and the only thing
+                // left saying where the wall is, is the wall. So it is drawn,
+                // and drawn taller than the bar, which is also what puts an end
+                // stop beside a knob resting against it.
+                .overlay(alignment: .trailing) {
+                    Capsule().fill(Color.primary.opacity(0.5))
+                        .frame(width: 1, height: Self.barHeight + 5)
+                }
+                .allowsHitTesting(false)
+        }
+    }
 
     private var knob: Double {
         min(max(draft ?? selection.reading.value ?? 0, range.lowerBound), range.upperBound)
@@ -303,12 +373,40 @@ struct CornerRadiusRow: View {
                 }
             }
             .controlSize(.small)
-            .disabled(ids.isEmpty || isAlreadyAsRoundAsItGoes)
+            // Named on the LIVE slider rather than on the padded row, so a
+            // walk pressing a fraction of the way along presses a fraction of
+            // the range it can actually reach. A press at 0.3 of a row whose
+            // first three tenths are spent lands on the wall and moves nothing.
             .playtestControl("Slider", detail: "Corner Radius")
+            // The live slider starts at the wall, so its own fill measures
+            // what YOU added rather than what was already there: a knob
+            // resting on the floor shows no fill at all.
+            .padding(.leading, spentWidth)
+            .disabled(ids.isEmpty)
+            // Spent end to end: the knob stops taking the pointer, and the row
+            // is NOT dimmed. Dimming says broken or waiting, and this one has
+            // simply been spent.
+            .allowsHitTesting(!selection.isSpent)
+            .overlay(alignment: .leading) { spentTrack }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
             .help(sliderHelp)
+            // A control that can only act over part of its range answers a
+            // click on the row, in the line under it, rather than leaving the
+            // reason to a hover tip nobody has asked for.
+            if let said = answer {
+                Text(said)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
+            }
         }
+        .contentShape(.rect)
+        .onTapGesture { answer = selection.wallSentence }
+        .animation(.easeOut(duration: 0.12), value: answer)
         .playtestField("Corner Radius")
-        .onChange(of: selection.layerIDs) { cornersOpen = false }
+        .task(id: answer) { await fadeAnswer() }
+        .onChange(of: selection.layerIDs) { cornersOpen = false; answer = nil }
     }
 
     /// The row's own word. It opens nothing: the four corners come out of the
@@ -333,14 +431,10 @@ struct CornerRadiusRow: View {
     /// the curve the things inside it already have. Without this the knob
     /// simply refuses to move and leaves you guessing.
     private var sliderHelp: String {
-        if isAlreadyAsRoundAsItGoes {
-            return "What is inside this is already as round as it goes."
-        }
-        let floor = Int(selection.floor.rounded())
-        if floor > 0 {
-            return "What is inside this is already rounded \(floor) px. "
-                + "A group can take more off its corners, never put it back."
-        }
+        // The same constant the wall on the track is drawn from and the same
+        // one a click on the row puts underneath it, so the three can never
+        // drift apart (`CornerRadiusSelection.wallSentence`).
+        if let wall = selection.wallSentence { return wall }
         if selection.reachesContents {
             return "A group has no corners of its own, so this rounds what is inside it."
         }
@@ -360,7 +454,15 @@ struct CornerRadiusRow: View {
                 title: corner.title,
                 help: "How round the \(corner.spoken) corner is.",
                 value: reading.value.map { CGFloat($0) },
-                commit: { editorState.commitCornerRadius(ids: ids, corner: corner, $0) })
+                commit: { typed in
+                    editorState.commitCornerRadius(ids: ids, corner: corner, typed)
+                    // Typing a number under the wall lands ON the wall, and
+                    // saying so is how a person learns where the wall is.
+                    // Settling in silence is the one thing it must not do.
+                    if Double(typed) < selection.floor, let wall = selection.wallSentence {
+                        answer = wall
+                    }
+                })
         }
     }
 }

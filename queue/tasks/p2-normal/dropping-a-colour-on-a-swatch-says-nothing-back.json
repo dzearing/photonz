@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:43:38.493Z",
-  "updated": "2026-09-16T02:58:03.707Z",
+  "updated": "2026-09-16T02:58:14.808Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-12 with Scripts/playtest.sh Scripts/playtest/mixed-part-keeps-its-colour-walk.json --no-build. The hold capture 2-colour-over-the-swatch-sc.png shows the Fill swatch lit with a blue ring and no sentence anywhere in the window.\n\nThe sentence exists: ColorDrop.answer(...).note. Sources/Photonz/ColorSwatchDrag.swift:84, LibraryColorDrop.swift:52 and OffPartColorDrop.swift:45 and :150 hang it on .accessibilityValue only, with a comment saying a tip does not show while a drag is in the air. The text style equivalent is drawn: StyleRowDropNote in Sources/Photonz/InspectorSections.swift:222 for the panel, CanvasTextStyleDrop.swift:141 for the canvas pill.\n\nThe playtest dragColor step has no \"says\" field, so no walk can pin the colour sentence today; dragTile does (Sources/PhotonzCore/PlaytestScript.swift:1503). Adding the same field is part of this.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-16T02:58:03.706Z",
       "note": "left rough: the pill has no tail pointing at the row it is about. It is level with the swatch and it names the part, which was enough in every case tried, but two colour rows close together lean on the alignment alone. Not filed: nobody has been confused by it yet and a tail is a change to the text style drop's idiom as well as this one."
+    },
+    {
+      "t": "2026-09-16T02:58:14.806Z",
+      "note": "The sentence every colour drop target already worked out is now drawn beside it: one pill over the window, placed by PhotonzCore/DropNotePlacement so it lines up with the swatch and stands clear of the whole panel. Swatches, switched-off part and effect rows, and the Library shelf all speak through it; the shelf's own 'Save this color' capsule is gone. dragColor walks can pin the words with says. 7317 tests pass; the crowd line and the refusal plate are both photographed in queue/audits/2026-09-15-colour-drop-says-what-it-will-do.json. Four colour walks could not run because the screen is locked, and a sweep is requested for them. Pushed as c975b6db."
     }
   ],
-  "started": "2026-09-16T02:41:15.867Z"
+  "started": "2026-09-16T02:41:15.867Z",
+  "completed": "2026-09-16T02:58:14.807Z"
 }

@@ -4015,3 +4015,11 @@
 {"t":"2026-09-16T02:58:03.623Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
 {"t":"2026-09-16T02:58:03.665Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
 {"t":"2026-09-16T02:58:03.708Z","ev":"task_note","id":"dropping-a-colour-on-a-swatch-says-nothing-back"}
+{"t":"2026-09-16T02:58:14.809Z","ev":"task_done","id":"dropping-a-colour-on-a-swatch-says-nothing-back","from":"in_progress","note":"The sentence every colour drop target already worked out is now drawn beside it: one pill over the window, placed by PhotonzCore/DropNotePlacement so it lines up with the swatch and stands clear of the whole panel. Swatches, switched-off part and effect rows, and the Library shelf all speak through it; the shelf's own 'Save this color' capsule is gone. dragColor walks can pin the words with says. 7317 tests pass; the crowd line and the refusal plate are both photographed in queue/audits/2026-09-15-colour-drop-says-what-it-will-do.json. Four colour walks could not run because the screen is locked, and a sweep is requested for them. Pushed as c975b6db."}
+{"t":"2026-09-16T02:59:31.502Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T02:59:31.607Z","ev":"task_started","id":"a-slider-says-where-its-track-starts-when-someth","title":"A slider says where its track starts when something under it sets the floor","priority":"p2-normal"}
+{"t":"2026-09-16T03:11:26.214Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-16T03:11:26.258Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-16T03:11:26.301Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-16T03:11:30.402Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-16T03:11:30.446Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
