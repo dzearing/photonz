@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 410,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T21:18:08.950Z",
-  "updated": "2026-09-15T12:14:53.722Z",
+  "updated": "2026-09-16T08:41:00.756Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today the family slot answers to whichever member it is wearing: EditorView.groupButton hangs .tutorialAnchor(.tool(editorState.lastTool(in: group))). So .tool(.rectangle) resolves when Rectangle is the remembered member and silently does not when it is not, which lands the callout in the middle of the window (the honest fallback, but not a good tutorial).\n\nEvidence: Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json logs where every anchor resolved to; the family slot only ever reports one tool. See docs/design/tutorials.md, \"What this framework deliberately does not do\".",
@@ -43,6 +43,27 @@
     {
       "t": "2026-09-15T12:14:53.721Z",
       "note": "seq 370 -> 410"
+    },
+    {
+      "t": "2026-09-16T08:28:27.590Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-16T08:40:58.142Z",
+      "note": "Adversarial review before building. The premise held up, but the important half turned out to be the WORDS, not the ring. Ringing the family slot on its own is what the framework already did (the toolGroup anchor), and for a step saying 'press R for the rectangle' it rings a button drawn as a LINE with nothing on the card to explain it: a first-time user clicks it, gets the line, and the step never advances because it is waiting for the rectangle. So the shortest version that delivers the value is the fallback chain plus ONE sentence on the card. Rejected: opening the slot's list or the More menu for the person (breaks the prepare rule, and the task says not to), and a 'Show me' button on the card (same thing wearing a button)."
+    },
+    {
+      "t": "2026-09-16T08:40:58.185Z",
+      "note": "Built. PhotonzCore: TutorialStandIn.swift holds the chain (tool -> its family slot -> the More button) and the two sentences the card can add, with 13 tests; TutorialAnchor gained .moreTools, .tool and .toolGroup accessors. App: TutorialController.place walks the chain and rings the first thing really on screen, the cue takes THAT control's shape, and the card carries the line; EditorView hangs .moreTools on the overflow button; TutorialCalloutView grew an optional note line. The Building UI guide's rectangle step names .tool(.rectangle) again instead of the family slot, which is the whole point of the change, and its frame step's body stopped saying 'click this button at the end of the tool bar' because on a narrow window there is no button to click. Scripts/test.sh green: 7521 tests."
+    },
+    {
+      "t": "2026-09-16T08:40:58.229Z",
+      "note": "NOT VERIFIED IN THE RUNNING APP. The Mac's screen was locked for the whole task: every walk reported status locked and refused to run, so nothing was photographed and the new walk has never been run once. What was verified: the full test suite, and the card itself rendered offscreen by a scratch ImageRenderer script from a copy of the view, which is how the copy and the card's height were judged (queue/audits/2026-09-16-hidden-tool-card-*.png are those renders, and the audit says plainly that they are not pictures of the app). A sweep has been asked for with that reason, so the loop runs the tutorial walks when the screen is unlocked."
+    },
+    {
+      "t": "2026-09-16T08:41:00.755Z",
+      "note": "Left rough, not filed: the card says 'the More menu' while the button's tooltip says 'More tools' and the button is drawn as three dots, so the words and the control are not quite the same name; and when the person opens that menu it opens over the card, which nothing moves out of the way. Both are in the audit's rough list for the user to react to rather than filed as tasks of their own, since neither stops anybody and the audit is where they get judged."
     }
-  ]
+  ],
+  "started": "2026-09-16T08:28:27.589Z"
 }

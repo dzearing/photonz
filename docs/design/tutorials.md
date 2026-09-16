@@ -99,6 +99,38 @@ is on the bar only for somebody who has drawn a rectangle before.
 `TutorialAnchor.toolGroup(.shapes)` is there whatever the slot is wearing, and it
 is what a step meaning "the shapes button" points at.
 
+**A step naming a tool that is not on the bar is rung through what is holding
+it.** A step should be free to name the tool it is TEACHING, and the bar does not
+always show that tool: a shape whose slot is wearing a different member has no
+button of its own, and a narrow window pushes the last slots into the More menu
+at the end of the bar. So a name is looked for down a short chain
+(`TutorialAnchorStandIns.chain`), nearest first:
+
+```
+tool.ellipse  ->  toolGroup.shapes  ->  moreTools
+```
+
+The first one really on screen is what gets the ring, and when it is not the
+name the step gave, the card grows ONE extra line saying where the tool went:
+
+> The Ellipse is inside the Shapes button. Press and hold the button to reach it.
+> The Frame is in the More menu at the end of the tool bar. Open the menu to reach it.
+
+The line is the app speaking, not the guide author, so it is drawn apart from
+the step's own words: accent tinted, with a small pointing hand. It is never a
+button. **Nothing opens the slot or the menu for the person**, because a step
+that says "pick the Ellipse" and then opens the list itself has done the lesson
+for them, which is the prepare rule in another costume. The step still waits for
+them to really take the tool.
+
+`TutorialAnchor.moreTools` is the name on that More button. No step names it: it
+is only ever the end of a chain, and it is only on the bar while something has
+really been pushed into it.
+
+The chain is one list of two rules, in `PhotonzCore`, with its copy beside it
+(`TutorialStandIn.swift`), so what the card says is a unit test rather than a
+string in a view.
+
 **A sheet is named too, and it is the one name that comes and goes.**
 `TutorialAnchor.dialog(.newFrame)` and `.dialog(.export)` name the two sheets a
 guide really sends people to. A sheet is a window of its own laid over the
@@ -181,9 +213,12 @@ card has to stand on its own.
 > What it caught the day it was written: the Building UI guide's step about the
 > rectangle pointed at `tool.rectangle`, and the shapes slot wears whichever
 > shape you used last, which on a machine nobody has drawn on yet is the LINE.
-> For the exact person a tutorial is for, that step rang nothing. The fix is the
-> `toolGroup` anchor below: a family slot answers to its family's name whatever
-> member it is wearing.
+> For the exact person a tutorial is for, that step rang nothing. The first fix
+> was the `toolGroup` anchor: point at the family instead. That rang a real
+> button, and it rang one drawn as a LINE for a step asking for a rectangle,
+> with nothing on the card to explain the mismatch. So the step names
+> `tool.rectangle` again and the stand-in chain above rings the slot holding it
+> and says so in words.
 
 ## How a step advances
 
@@ -311,7 +346,12 @@ is the checks below.
    `Scripts/playtest/tutorial-mark-it-up-walk.json`: `startGuide` takes the
    guide's id, starts it the way the Help menu does and moves the walk into
    whatever window it teaches in, `waitFor tutorialStep` fails the walk when a
-   step does not advance, and the log carries where every anchor resolved to.
+   step does not advance, and the log carries where every anchor resolved to,
+   including which stand-in it went through (`tool.frame via moreTools at ...`).
+   `startGuide` also takes `width` and `height`, which set the size of the
+   window the guide brings: a guide's own window otherwise arrives roomy, and
+   some of what a guide has to get right only happens when it is NARROW
+   (`tutorial-hidden-tool-walk.json`).
 
 ## What a guide brings with it
 
@@ -341,9 +381,13 @@ is none.
   teaching flow that needs branches is two guides.
 - **Prepare never acts for you.** See above. This is the rule most likely to be
   bent, and bending it is how a tutorial starts lying.
-- **No pointing at something that is not on screen.** A tool hidden inside a
-  family button or behind the tool bar's more affordance cannot be pointed at
-  until it is showing. A family button answers to the member it is wearing.
+- **No pointing at something that is not on screen.** Where a name resolves to
+  nothing at all, the card goes to the middle of the window with no ring and no
+  beak, and the walk driving that guide fails on it. A tool inside a family slot
+  or in the More menu is not that case any more: it is rung through the button
+  holding it, with a line saying so (the anchor contract above).
+- **No opening things on the person's behalf.** The card says which button the
+  tool is inside; it never presses it. Same rule as prepare.
 - **No back-porting.** Tutorials are Next only, behind `next-tutorials`.
 
 ## The first launch

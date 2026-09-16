@@ -24,6 +24,13 @@ struct TutorialCalloutView: View {
     let count: Int
     let title: String
     let message: String
+    /// One line the APP adds when the control the step named is not on the bar
+    /// in its own right: which button it is inside, and how to reach it. Nil
+    /// whenever the ring is on the control the step really named, which is
+    /// almost always. Set apart from `message` because it is not the guide
+    /// author speaking, it is the app saying where the thing went
+    /// (`TutorialConcealment`).
+    var note: String? = nil
     /// "Next", "Done", or "Skip This Step" for a step that is waiting on you.
     let buttonTitle: String
     let canGoBack: Bool
@@ -65,6 +72,9 @@ struct TutorialCalloutView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let note {
+                        whereItIs(note)
+                    }
                 }
                 Spacer(minLength: 0)
                 Button(action: onClose) {
@@ -94,6 +104,22 @@ struct TutorialCalloutView: View {
         }
         .padding(12)
         .frame(width: Self.width, alignment: .leading)
+    }
+
+    /// The "it is inside this one" line: a small pointing hand and the
+    /// sentence, tinted so it reads as the app helping rather than as more of
+    /// the lesson. Never a button: opening the list is the person's move.
+    private func whereItIs(_ note: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Image(systemName: "hand.point.up.left")
+                .font(.system(size: 10, weight: .semibold))
+                .accessibilityHidden(true)
+            Text(note)
+                .font(.system(size: 11))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Color.accentColor)
+        .padding(.top, 2)
     }
 
     var body: some View {

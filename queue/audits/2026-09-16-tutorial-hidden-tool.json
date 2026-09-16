@@ -1,0 +1,29 @@
+{
+  "feature": "A guide can point at a tool that is not on the bar",
+  "epic": "ui-building",
+  "summary": "A tutorial step can now name the tool it is teaching even when that tool has no button on the bar. The ring lands on whatever is holding it, the shapes slot or the More button at the end of the bar, and the card adds one line saying which and how to reach it. Before this the card fell to the middle of the window with no ring at all.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Building UI > Frames are screens. Nothing to switch on.",
+  "try": [
+    { "do": "Draw nothing first: the shapes slot has to still be wearing the Line, which it is on a machine nobody has drawn a shape on." },
+    { "do": "Open Help > Tutorials, pick Building UI, and start Frames are screens." },
+    { "do": "Press Next once, to the step that hands over the frame tool. On a roomy window the ring is on the frame button itself and the card says nothing extra." },
+    { "do": "Drag the window narrow, about 800 points wide, and watch the frame tool slide into the ... button at the end of the bar. The ring follows it there and a blue line appears on the card saying the frame tool is in the More menu.", "shot": "2026-09-16-hidden-tool-card-more-menu.png" },
+    { "do": "Open that menu yourself and pick Frame. Nothing opened it for you and the step did not move on until you took the tool." },
+    { "do": "Drag a screen out, press Next, and read the step asking for the rectangle: the ring is on the shapes slot, which is drawn as a line, and the card says the Rectangle is inside the Shapes button.", "shot": "2026-09-16-hidden-tool-card-family-slot.png" },
+    { "do": "Press and hold that button, pick Rectangle, and watch the blue line stop appearing: the slot wears the rectangle now, so there is nothing left to explain." }
+  ],
+  "evaluate": [
+    "Does the blue line read as the app telling you where something went, rather than as more of the lesson?",
+    "Is a ring on a button drawn as a line, for a step asking for a rectangle, confusing without the line, and fixed by it?",
+    "Three lines of blue nearly doubles the height of the card. Is that too much, or is it worth it?",
+    "Would you rather the guide opened the menu for you, or is being told where it is the right amount of help?",
+    "When the ring is on the ... button and you open that menu, the menu covers the card. Does that matter in practice?"
+  ],
+  "rough": [
+    "NOT PHOTOGRAPHED IN THE APP. The Mac's screen was locked for the whole of this task, so every walk reported status locked and refused to run, and macOS refuses screen capture in that state. The two pictures here are offscreen renders of the CARD ALONE, drawn by a scratch script from a copy of the callout view, not pictures of the running app. Nothing about the real tool bar has been seen.",
+    "The new walk, Scripts/playtest/tutorial-hidden-tool-walk.json, has never been run. A sweep has been asked for so the loop runs it once the screen is unlocked.",
+    "Its narrow window is 820 points wide, picked by working backwards from the toolbar widths two older narrow walks recorded. If that turns out to be too narrow, the shapes slot will be in the More menu too and the walk will show the same case twice instead of both. It still passes either way, and the toolbar json beside the shots says which happened.",
+    "The card calls it the More menu; the button's own tooltip says More tools and the button is drawn as three dots. The ring is on it, so it should be findable, but the two names are not the same word.",
+    "When the person opens the More menu, the menu opens over the card. Nothing moves the card out of the way."
+  ]
+}

@@ -35,7 +35,7 @@
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-rectangle", "timeout": 5 },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4b-take-the-rectangle", "note": "the card rings the SHAPES SLOT, which is on the bar whichever shape it is wearing; on a machine nobody has drawn on it is wearing the line" },
+    { "do": "describe", "stage": "4b-take-the-rectangle", "note": "the step names the RECTANGLE, and the rectangle has no button of its own: the shapes slot is wearing the line because nobody has drawn a shape yet. So the card rings the shapes slot and carries a line saying the rectangle is inside that button and to press and hold it. tutorial-hidden-tool-walk does the same on a narrow window, where the More button is the one holding things" },
     { "do": "snapshot", "name": "4b-take-the-rectangle" },
 
     { "do": "key", "key": "r" },

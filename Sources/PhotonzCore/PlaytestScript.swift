@@ -1981,7 +1981,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// at: `{ "do": "startGuide", "guide": "mark-it-up" }`. `startTour` is the
     /// same thing for the one promoted guide, kept because the first run
     /// offers that one by name.
-    case startGuide(String)
+    ///
+    /// `width` and `height` set the size of that window, the same way `open`
+    /// does. A guide's own window otherwise arrives at whatever size the app
+    /// gives it, which is always roomy, and some of what a guide has to get
+    /// right only happens when the window is NARROW: the tool bar sheds its
+    /// last buttons into a More menu, and a step naming one of those tools has
+    /// to point at the menu instead.
+    case startGuide(String, window: CGSize? = nil)
 
     public static let defaultTimeout: Double = 10
     public static let defaultDragSteps = 8
@@ -2192,7 +2199,9 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":
-            self = .startGuide(try f.string("guide"))
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            self = .startGuide(try f.string("guide"), window: window)
         case "snapshot":
             self = .snapshot(name: try f.string("name"), window: try f.optionalString("window"))
         case "dropComponent":

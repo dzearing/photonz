@@ -965,6 +965,11 @@ struct EditorView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .toolTip("More tools")
+        // Where a guide's ring lands when the tool a step names has been
+        // pushed off the bar by a narrow window. Only on the bar while
+        // something really is in here, which is exactly when a step needs it
+        // (`TutorialAnchorStandIns`).
+        .tutorialAnchor(.moreTools)
     }
 
     /// Contextual options for the active tool (wand tolerance, crop aspects). In

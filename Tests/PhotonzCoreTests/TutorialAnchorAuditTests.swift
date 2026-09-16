@@ -36,7 +36,7 @@ struct TutorialAnchorAuditTests {
             var waitsOn: [String] = []
             for step in script.steps {
                 switch step {
-                case .startGuide(let id):
+                case .startGuide(let id, _):
                     guides.append(id)
                 // The tour has its own way in, because first run offers it by
                 // name. It is the same guide either way.

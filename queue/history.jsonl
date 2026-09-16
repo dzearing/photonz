@@ -4191,3 +4191,9 @@
 {"t":"2026-09-16T08:25:29.061Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}
 {"t":"2026-09-16T08:25:29.111Z","ev":"task_note","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d"}
 {"t":"2026-09-16T08:26:56.966Z","ev":"task_done","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d","from":"in_progress","note":"The highlight ring now takes each control's own shape: pill on the floating tool bar, circle on a round tool button, and the same squarer corner a panel section always had. TutorialCueShape + TutorialAnchor.cueShape in PhotonzCore, TutorialCueView and placeCue in the app, tutorials.md updated. Verified by 7508 green tests including a new suite for the shape of every anchor family, and by an offscreen render of the shipping ring code (queue/audits/2026-09-16-tutorial-ring-shapes.png). Acceptance 4 is only half met: the screen was locked all task so no walk could photograph the app, and a sweep is pending for when it is unlocked. Committed ad381ba8, pushed."}
+{"t":"2026-09-16T08:28:27.485Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-16T08:28:27.592Z","ev":"task_started","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w","title":"A guide can point at a tool that shares a slot with others","priority":"p2-normal"}
+{"t":"2026-09-16T08:40:58.144Z","ev":"task_note","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w"}
+{"t":"2026-09-16T08:40:58.187Z","ev":"task_note","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w"}
+{"t":"2026-09-16T08:40:58.231Z","ev":"task_note","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w"}
+{"t":"2026-09-16T08:41:00.757Z","ev":"task_note","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w"}

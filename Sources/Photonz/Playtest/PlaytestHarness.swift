@@ -1635,7 +1635,7 @@ private final class Run {
         // Help menu does, and followed into the window it teaches in. Always
         // from step one: a guide picks up where it was left, and a walk always
         // means the beginning.
-        case .startGuide(let id):
+        case .startGuide(let id, let size):
             guard let guide = TutorialCatalog.guide(id: id) else {
                 throw Failure(description: "there is no guide called \"\(id)\" in the catalogue")
             }
@@ -1671,7 +1671,7 @@ private final class Run {
                                          subject: "\(guide.title), in the empty window it brought",
                                          number: number)
                 } else {
-                    try await adopt(opened, window: nil, step: step.name,
+                    try await adopt(opened, window: size, step: step.name,
                                     subject: "\(guide.title), in the window it brought",
                                     number: number)
                 }

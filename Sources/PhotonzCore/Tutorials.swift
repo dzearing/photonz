@@ -87,6 +87,14 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     public static let canvas = TutorialAnchor("canvas")
     /// The floating tool bar as a whole.
     public static let toolBar = TutorialAnchor("toolBar")
+    /// The "..." button at the end of the tool bar, which a narrow window grows
+    /// to hold the slots that no longer fit.
+    ///
+    /// No step names this on purpose. It is where a step looking for a TOOL
+    /// ends up when the window is too narrow to show that tool's own button
+    /// (`TutorialAnchorStandIns`), and it is only on the bar while something
+    /// really has been pushed into it.
+    public static let moreTools = TutorialAnchor("moreTools")
     /// The docked panel on the right, as a whole.
     public static let panel = TutorialAnchor("panel")
     /// The window's title bar.
@@ -204,6 +212,17 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         part(after: Prefix.panelSection)
     }
 
+    /// The tool this anchor names, or nil when it names something else. What
+    /// the stand-in rules read to find the family slot a tool lives in.
+    public var tool: Tool? {
+        part(after: Prefix.tool).flatMap(Tool.init(rawValue:))
+    }
+
+    /// The family slot this anchor names, or nil when it names something else.
+    public var toolGroup: ToolGroup? {
+        part(after: Prefix.toolGroup).flatMap(ToolGroup.init(rawValue:))
+    }
+
     /// What a family of names starts with. Written down once so the factory
     /// that builds a name and the reader that takes one apart cannot drift.
     private enum Prefix {
@@ -233,7 +252,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     public var cueShape: TutorialCueShape {
         // The bar is a glass pill, and so is every round button on it: a pill
         // round a button as tall as it is wide comes out a circle.
-        if name == Self.toolBar.name { return .pill }
+        if name == Self.toolBar.name || name == Self.moreTools.name { return .pill }
         if part(after: Prefix.tool) != nil || part(after: Prefix.toolGroup) != nil {
             return .pill
         }
@@ -300,7 +319,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// This is the PROMISE. That the app keeps it in a live window is checked
     /// separately, by a walk that drives the real editor.
     public static var all: [TutorialAnchor] {
-        [canvas, toolBar, panel, titleBar, timingStrip]
+        [canvas, toolBar, moreTools, panel, titleBar, timingStrip]
             + Tool.allCases.map(tool)
             + ToolGroup.allCases.map(toolGroup)
             + knownPanelSections.map(panelSection)

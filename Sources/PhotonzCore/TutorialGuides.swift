@@ -1294,7 +1294,14 @@ public enum TutorialGuides {
                 id: "take-the-frame-tool",
                 anchor: .tool(.frame),
                 title: "Take the frame tool",
-                body: "Press F, or click this button at the end of the tool bar.",
+                // Not "click this button at the end of the tool bar": on a
+                // narrow window the frame tool is not a button on the bar at
+                // all, it is a row in the More menu, and the card's own line
+                // is what says where it went (`TutorialAnchorStandIns`).
+                // Saying "the end of the tool bar" here as well left the card
+                // printing that phrase twice, and "click this button" is not
+                // true on a window where there is no button to click.
+                body: "Press F, or pick it up from the tool bar.",
                 advance: .waitsFor(.toolPicked(.frame))),
             TutorialStep(
                 id: "drag-one-out",
@@ -1311,9 +1318,14 @@ public enum TutorialGuides {
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "take-the-rectangle",
-                // The shapes SLOT, not the rectangle: the slot wears whichever
-                // shape was last used, and on a fresh machine that is the line.
-                anchor: .toolGroup(.shapes),
+                // The RECTANGLE, even though the shapes slot wears whichever
+                // shape was last used and on a fresh machine that is the line.
+                // Naming the tool is now the honest thing to do: when its own
+                // button is not on the bar the ring goes to the slot holding
+                // it and the card says the rectangle is inside that button
+                // (`TutorialAnchorStandIns`). Naming the slot instead rang a
+                // button drawn as a line and explained nothing.
+                anchor: .tool(.rectangle),
                 title: "Now draw on it",
                 body: "Press R for the rectangle.",
                 advance: .waitsFor(.toolPicked(.rectangle))),

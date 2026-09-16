@@ -51,6 +51,12 @@ final class TutorialController {
     /// unchanged and wrong, because "no anchor" and "no anchor yet" look the
     /// same from here.
     @ObservationIgnored private var drawnStepID: String?
+    /// The anchor the panels are currently drawing ON, which is not always the
+    /// one the step named: a tool that is not on the bar is rung through the
+    /// slot or the More button holding it. Compared before anything is skipped
+    /// as unchanged, so a step that moves from the family slot to the tool's
+    /// own button redraws even if the two happen to sit at the same rectangle.
+    @ObservationIgnored private var drawnStandIn: TutorialAnchor?
     /// Passes left to keep asking for the step's target to be scrolled into
     /// view. Counted down in `place`, so the ask survives the section arriving
     /// a beat late.
@@ -133,9 +139,16 @@ final class TutorialController {
     func liveDescription(in window: NSWindow?) -> String {
         guard let run else { return "none" }
         let anchor = run.step.anchor
-        let where_ = TutorialAnchorRegistry.shared.screenFrame(of: anchor, in: window)
-            .map { "(\(Int($0.minX)), \(Int($0.minY))) \(Int($0.width))x\(Int($0.height))" }
-            ?? "NOT ON SCREEN"
+        // Through the stand-in chain, the same way the ring is placed, and it
+        // SAYS when it went through one: "tool.frame via moreTools" is the
+        // difference between a step pointing at nothing and a step pointing at
+        // the button the tool is inside.
+        let found = window.flatMap { standIn(for: anchor, in: $0) }
+        let where_ = found.map { standIn in
+            let via = standIn.anchor == anchor ? "" : " via \(standIn.anchor.name)"
+            let box = standIn.frame
+            return "\(via) (\(Int(box.minX)), \(Int(box.minY))) \(Int(box.width))x\(Int(box.height))"
+        } ?? " NOT ON SCREEN"
         let host = hostWindow.map {
             "; host window \($0.isMiniaturized ? "miniaturized" : "up"), "
                 + "occlusion \($0.occlusionState.contains(.visible) ? "visible" : "HIDDEN")"
@@ -145,7 +158,7 @@ final class TutorialController {
                 + String(format: "%.1fs on screen", $0.shown)
         } ?? ""
         return "\(run.guide.id)/\(run.step.id) \(run.number) of \(run.count); "
-            + "\(anchor.name) at \(where_); card \(cardPanel.map { "\(Int($0.frame.minX)), \(Int($0.frame.minY)) \(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none")"
+            + "\(anchor.name) at\(where_); card \(cardPanel.map { "\(Int($0.frame.minX)), \(Int($0.frame.minY)) \(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none")"
             + host + verdict
     }
 
@@ -240,6 +253,7 @@ final class TutorialController {
         lastAnchorFrame = nil
         lastWindowFrame = nil
         drawnStepID = nil
+        drawnStandIn = nil
         follow?.invalidate()
         follow = nil
         if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
@@ -323,6 +337,7 @@ final class TutorialController {
         // frame worth reading, so the first placement waits one turn.
         lastAnchorFrame = nil
         drawnStepID = nil
+        drawnStandIn = nil
         DispatchQueue.main.async { [weak self] in self?.place() }
     }
 
@@ -360,7 +375,12 @@ final class TutorialController {
         // tutorial walks fail on the night of 2026-09-14 with nothing wrong in
         // the app (`PlaytestScreenState`).
         openStep?.tick()
-        let anchor = TutorialAnchorRegistry.shared.screenFrame(of: run.step.anchor, in: window)
+        // Not just the name the step gave. A tool that is not on the bar right
+        // now — a shape whose slot is wearing a different member, anything a
+        // narrow window has pushed into the More menu — is rung through the
+        // thing it is INSIDE, and the card says which (`TutorialStandIn`).
+        let standIn = standIn(for: run.step.anchor, in: window)
+        let anchor = standIn?.frame
         // Found once is found: the step's verdict is settled here, before any
         // of the shortcuts below can return early on a frame where nothing
         // moved.
@@ -376,6 +396,7 @@ final class TutorialController {
             // rather than deciding nothing moved.
             lastAnchorFrame = nil
             drawnStepID = nil
+            drawnStandIn = nil
             return
         }
         // On screen WHOLE: stop asking, so a person who scrolls somewhere else
@@ -387,20 +408,22 @@ final class TutorialController {
         // Component section hanging off the top with its Name box out of sight.
         // A sliver used to count as arrived, so the guide stopped asking and
         // rang the two rows that were left.
-        if anchor != nil, TutorialAnchorRegistry.shared.isWhollyShown(run.step.anchor,
-                                                                     in: window) {
+        if let standIn, TutorialAnchorRegistry.shared.isWhollyShown(standIn.anchor,
+                                                                    in: window) {
             revealTries = 0
         }
         let container = window.frame
         // Nothing moved: do not touch the panels, so a still window is a still
         // callout rather than a frame being reset thirty times a second.
         if anchor == lastAnchorFrame, container == lastWindowFrame,
-           drawnStepID == run.step.id, cardPanel?.isVisible == true { return }
+           drawnStepID == run.step.id, drawnStandIn == standIn?.anchor,
+           cardPanel?.isVisible == true { return }
         lastAnchorFrame = anchor
         lastWindowFrame = container
         drawnStepID = run.step.id
+        drawnStandIn = standIn?.anchor
 
-        guard let anchor else {
+        guard let standIn, let anchor else {
             // The control is not on screen. Nobody gets stranded: the card goes
             // to the middle of the window with no beak and no ring, and the way
             // on still works. The step's verdict stays unresolved, and a walk
@@ -409,15 +432,52 @@ final class TutorialController {
             cuePanel?.orderOut(nil)
             return
         }
-        placeCallout(anchor: anchor, container: container, window: window, run: run)
-        placeCue(anchor: anchor, shape: run.step.anchor.cueShape, window: window)
+        placeCallout(anchor: anchor, container: container, window: window, run: run,
+                     note: note(for: standIn))
+        // The ring takes the shape of what it is really round. A tool rung
+        // through the More button gets the More button's outline, not the
+        // outline of a button that is not on the bar.
+        placeCue(anchor: anchor, shape: standIn.anchor.cueShape, window: window)
+    }
+
+    /// Where this step's control is to be found right now, and what is hiding
+    /// it. Nil when nothing in the chain is on screen at all, which is the one
+    /// case the card admits to by going to the middle of the window.
+    private func standIn(for wanted: TutorialAnchor,
+                         in window: NSWindow) -> (anchor: TutorialAnchor,
+                                                  concealment: TutorialConcealment?,
+                                                  frame: CGRect)? {
+        for candidate in TutorialAnchorStandIns.chain(for: wanted) {
+            guard let frame = TutorialAnchorRegistry.shared.screenFrame(of: candidate.anchor,
+                                                                       in: window) else { continue }
+            return (candidate.anchor, candidate.concealment, frame)
+        }
+        return nil
+    }
+
+    /// The extra line for the card, or nil when the ring is on the very control
+    /// the step named and there is nothing to explain.
+    private func note(for standIn: (anchor: TutorialAnchor,
+                                    concealment: TutorialConcealment?,
+                                    frame: CGRect)) -> String? {
+        guard let concealment = standIn.concealment, let run else { return nil }
+        return concealment.sentence(for: Self.subject(of: run.step.anchor))
+    }
+
+    /// What the card calls the thing the step is really about. The tool's own
+    /// name where there is one, and the family's where a step names the slot.
+    private static func subject(of anchor: TutorialAnchor) -> String {
+        if let tool = anchor.tool { return tool.barTitle }
+        if let group = anchor.toolGroup { return "\(group.title) button" }
+        return "control"
     }
 
     private func placeCallout(anchor: CGRect, container: CGRect, window: NSWindow,
-                              run: TutorialRun) {
+                              run: TutorialRun, note: String?) {
         let flippedAnchor = TutorialGeometry.flip(anchor, in: container)
         let flippedContainer = TutorialGeometry.flip(container, in: container)
-        let cardSize = CGSize(width: TutorialCalloutView.width, height: measuredCardHeight(run))
+        let cardSize = CGSize(width: TutorialCalloutView.width,
+                              height: measuredCardHeight(run, note: note))
         let placed = TutorialCalloutLayout.place(anchor: flippedAnchor, size: cardSize,
                                                  container: flippedContainer,
                                                  preferred: run.step.side)
@@ -433,7 +493,7 @@ final class TutorialController {
             frame.origin.x -= TutorialCalloutView.beakHeight
             frame.size.width += TutorialCalloutView.beakHeight
         }
-        show(view(for: run, side: placed.side, beakOffset: placed.beakOffset),
+        show(view(for: run, side: placed.side, beakOffset: placed.beakOffset, note: note),
              at: TutorialGeometry.flip(frame, in: container), in: window)
     }
 
@@ -447,10 +507,10 @@ final class TutorialController {
     }
 
     private func view(for run: TutorialRun, side: TutorialSide,
-                      beakOffset: CGFloat?) -> TutorialCalloutView {
+                      beakOffset: CGFloat?, note: String? = nil) -> TutorialCalloutView {
         TutorialCalloutView(
             number: run.number, count: run.count,
-            title: run.step.title, message: run.step.body,
+            title: run.step.title, message: run.step.body, note: note,
             buttonTitle: run.buttonTitle, canGoBack: run.canGoBack,
             side: side, beakOffset: beakOffset,
             onBack: { [weak self] in self?.back() },
@@ -461,8 +521,9 @@ final class TutorialController {
     /// The card's height at its fixed width. Measured with no beak, so the
     /// number is the plate alone and the beak is added on the side it points
     /// from.
-    private func measuredCardHeight(_ run: TutorialRun) -> CGFloat {
-        let probe = NSHostingView(rootView: view(for: run, side: .above, beakOffset: nil))
+    private func measuredCardHeight(_ run: TutorialRun, note: String? = nil) -> CGFloat {
+        let probe = NSHostingView(rootView: view(for: run, side: .above, beakOffset: nil,
+                                                 note: note))
         probe.frame.size.width = TutorialCalloutView.width
         let fitted = probe.fittingSize.height
         return max(80, fitted - TutorialCalloutView.beakHeight)
