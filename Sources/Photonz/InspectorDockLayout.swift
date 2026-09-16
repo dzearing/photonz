@@ -56,6 +56,64 @@ import SwiftUI
 // away in the Sections row at the foot of the panel, which sits OUTSIDE this
 // scroller for exactly that reason. Written for a reader in
 // `docs/design/panel-sections.md`.
+//
+// MARK: - ...and the rule about HOW TALL they are allowed to be
+//
+// The two rules above decide the order and the cast. This one is the budget,
+// and it is the one every section added from here on has to be read against.
+//
+// The user asked on 2026-09-07 for a promise: **Appearance and Effects are the
+// two sections nobody should ever have to scroll to.** They are the two touched
+// on every single layer, so they are the two that must always be whole on
+// screen. That promise has been walked back by every feature that wanted room,
+// seven times, because nobody wrote down what it COSTS.
+//
+// This is what it costs. The smallest window the app supports is 1200 by 720,
+// which gives the dock **621 points**, less `listTopPadding` top and bottom, so
+// **609 points to share**. Out of that:
+//
+//     the layers list at its floor         163pt   (112 body + header + count line)
+//   + the section named after your pick    109-311pt
+//   + Appearance                           195-669pt
+//   + Effects                               68-391pt
+//   ------------------------------------------------
+//     must come to 609 or less.
+//
+// Measured across 3,334 recorded dock states, from 185 walks run on
+// 2026-09-16, it never does, and Appearance or Effects was below the fold in
+// 15% of them overall. At a 621pt dock that is **44%** of states; at the 781pt
+// dock a taller window gives, **50%**; and even at the 969pt dock of the
+// largest window this display can open, **12%**. Four worked examples at
+// 1200 by 720:
+//
+//   | picked      | Layers | pick | Appearance | Effects | wants | over by |
+//   | ---         | ---    | ---  | ---        | ---     | ---   | ---     |
+//   | a piece of text | 163 | 198 |  231       |  68     |  747  |  126    |
+//   | an arrow        | 163 |   - |  447       |  68     |  765  |  144    |
+//   | a component copy| 163 | 311 |  195       |  68     | 1102  |  481    |
+//   | a measurement   | 163 | 109 |  489       |  68     |  702  |   81    |
+//
+// Two things fall straight out of that table and neither was known before it
+// was measured:
+//
+// 1. **Appearance is the biggest thing in the dock, not a small form.** It is a
+//    LIST of the parts a thing is made of, and every switched-on part unfolds
+//    all of its settings at once (`PartsInspector`, `ShapePartSettings`). An
+//    arrow is 447pt of it and a measurement 489pt; the tallest recorded is
+//    **669pt, which is more than the whole 621pt dock**. `scrollingSections`
+//    below still calls it a form, so the budget may never shorten it.
+// 2. **No ordering fixes this.** Ordering only decides which section is the one
+//    left below the fold. It has now been re-ordered six times (the migrations
+//    in `InspectorPanel`) and the total has not moved.
+//
+// So: **a section may not be added, and an existing one may not be allowed to
+// grow, without saying which line of that table it spends from.** If the answer
+// is "from Appearance's", it is not an answer.
+//
+// How the promise gets KEPT is an open question with the user as of
+// 2026-09-16: see the task `appearance-is-below-the-fold-again-because-the-p`
+// and its decision card. Until it is answered this comment is the measurement,
+// not the fix.
 /// The numbers every section in the dock is measured in.
 enum DockMetrics {
     /// One section header's row: the height `CollapsibleSection` pins its

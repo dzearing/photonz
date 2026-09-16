@@ -1,0 +1,72 @@
+{
+  "id": "appearance-is-below-the-fold-again-because-the-p-appearance-and-effects-will-not",
+  "taskId": "appearance-is-below-the-fold-again-because-the-p",
+  "question": "Appearance and Effects will not both fit a laptop window. How should the panel keep them on screen?",
+  "context": "Measured on 2026-09-16 across 3,334 recorded panel states from 185 scripted runs: at a 1200 by 720 window the panel has 609 points to share and wants 660 to 1102 of them, so Appearance or Effects is below the fold 44% of the time. Appearance alone reaches 669 points, which is taller than the whole panel. Six re-orderings have not moved the total.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Guarantee the fold",
+      "summary": "The panel works out how much room the sections above Appearance are allowed, and when Appearance is still taller than what is left, Appearance scrolls inside its own section instead of falling off the bottom. Appearance and Effects are then always both on screen, on every layer, in every window, by arithmetic rather than by hope. The cost is that on an arrow or a measurement Appearance can get a small scrollbar of its own.",
+      "pros": [
+        "It cannot fail. Every other answer fixes some layers and misses others; this one is a rule the panel has to satisfy before it draws.",
+        "It is the rule the panel already follows for the layers list, Effects, Measurements and the Library shelf. Appearance is the only promised section exempt from it.",
+        "Nothing moves and nothing gains a click. The panel looks the same on the layers where it already fit."
+      ],
+      "cons": [
+        "A scrollbar inside a section is a second place to scroll, which is the thing the panel has been trying to get rid of.",
+        "On an arrow you could end up seeing three of the arrow's parts and scrolling for the fourth."
+      ],
+      "mitigation": "The section never shrinks below the part you are working on, the way the Effects list already keeps the effect you just opened whole. So the thing under your hand is always shown in full, and what scrolls away is the parts you are not touching."
+    },
+    {
+      "id": "b",
+      "label": "One part at a time",
+      "summary": "Appearance lists the parts a thing is made of: an arrow's line, head and caption, a measurement's line, ticks, chip and label. Today every switched-on part has all of its settings unfolded underneath it at once, which is why Appearance is 447 points tall on an arrow and 489 on a measurement. Instead the part you are working on shows its settings and the others fold to a single row, exactly the way the Effects list under it already behaves.",
+      "pros": [
+        "It makes Appearance stop being the biggest thing on screen rather than finding somewhere to put the biggest thing on screen.",
+        "Appearance and Effects would read the same way: a list of rows, one of them open.",
+        "It answers the original complaint in the same words it was made in: cluttered, hard to read."
+      ],
+      "cons": [
+        "An arrow's thickness is one click further away than it is today, and arrows are what redlining is made of.",
+        "It fixes the two tallest cases and not the others. With a piece of text or a component copy picked, the panel is still over by 15 and 93 points."
+      ],
+      "mitigation": "The part you last touched stays open, so a session spent setting arrow thickness opens the Line drawer once and never again."
+    },
+    {
+      "id": "c",
+      "label": "Layers gets its own side",
+      "summary": "The layers list moves out of the right hand panel into a dock of its own on the left, where Figma and Sketch put it. The right panel becomes properties only and gets the full height of the window, and the layers list gets a full height home instead of five rows squeezed on top of everything else. This is the big one: it rearranges the whole window, and every part of the app that talks about the right panel has to follow.",
+      "pros": [
+        "It hands the properties panel back 163 points at a stroke, which fixes text, arrows and component copies outright.",
+        "The layers list stops being cut to three rows on a laptop and becomes as long as the document.",
+        "It is the arrangement people arrive from other tools already expecting."
+      ],
+      "cons": [
+        "It is much more work than the other two and it touches every screen in the app.",
+        "It still does not fit a measurement, whose Appearance alone is 489 points.",
+        "It takes width away from the canvas, which on a laptop is the thing you are actually looking at."
+      ],
+      "mitigation": "The left dock collapses to a rail with one click, so the canvas gets its width back whenever you are not picking through layers."
+    },
+    {
+      "id": "d",
+      "label": "Leave it, you scroll",
+      "summary": "Accept that a panel with this much in it does not fit a laptop window, drop the promise made on 2026-09-07, and let people scroll to Appearance and Effects like any other section. Nothing changes in the app.",
+      "pros": [
+        "No work, no new idiom, no click added anywhere.",
+        "It stops the panel being re-ordered every few days by a promise nothing can keep."
+      ],
+      "cons": [
+        "Appearance and Effects are the two sections touched on every single layer, so it is the most-used pair in the app that you scroll to.",
+        "At a 1200 by 720 window one or other of them is below the fold 44% of the time."
+      ],
+      "mitigation": "The Sections row at the foot of the panel already lets you turn off sections you never use, which buys some of the room back by hand.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-16T16:46:05.828Z"
+}
