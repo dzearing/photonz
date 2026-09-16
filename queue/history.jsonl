@@ -4540,3 +4540,8 @@
 {"t":"2026-09-16T20:08:25.768Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
 {"t":"2026-09-16T20:08:25.874Z","ev":"task_started","id":"choose-how-thick-the-pen-draws-before-you-draw","title":"Choose how thick the Pen draws before you draw","priority":"p2-normal"}
 {"t":"2026-09-16T20:15:34.062Z","ev":"task_created","id":"the-pen-s-width-row-shows-the-weight-the-line-wi","priority":"p2-normal","title":"The Pen's Width row shows the weight the line will actually land at"}
+{"t":"2026-09-16T20:17:41.034Z","ev":"task_note","id":"choose-how-thick-the-pen-draws-before-you-draw"}
+{"t":"2026-09-16T20:17:41.081Z","ev":"task_note","id":"choose-how-thick-the-pen-draws-before-you-draw"}
+{"t":"2026-09-16T20:17:41.127Z","ev":"task_note","id":"choose-how-thick-the-pen-draws-before-you-draw"}
+{"t":"2026-09-16T20:17:41.173Z","ev":"task_note","id":"choose-how-thick-the-pen-draws-before-you-draw"}
+{"t":"2026-09-16T20:17:41.219Z","ev":"task_done","id":"choose-how-thick-the-pen-draws-before-you-draw","from":"in_progress","note":"The Pen's toolbar swatch now opens on a Width beside its colour (tooltip 'Path Style'), and what you set there is what the next path comes out at. Shipped in b746d885, shared code so Next has it. 7740 tests green, two new ones proving the number shown is the number drawn, on an icon frame and off it. NOT verified on screen: the Mac was locked all task, so the walk written for it (pen-width-before-you-draw-walk.json) could not run; a sweep is requested. Audit: queue/audits/2026-09-16-pen-width.json"}
