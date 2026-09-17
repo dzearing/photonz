@@ -780,6 +780,36 @@ The pill says which happened. A run set in the page's family when its own ink
 said something else is a stated fallback rather than an answer, for the same
 reason two grotesques within a hair of each other are.
 
+### And the labels like it settle its weight
+
+The family vote settles half the face. The other half wobbled the same way and
+was more visible once a whole page came back at once: at label size two weights
+of one family are a few percent apart, so six row labels of one settings pane
+came back four Regular and two Medium while being identical on screen, and
+"Corner Radius", "Border 1" and "Border 2" came back Semibold, Medium and
+Medium while being section labels of one style.
+
+It cannot be settled the way the family is. A page is one family; a page is not
+one weight, and a page-wide vote would drag a heading down to the weight of its
+rows. So the weight is settled per KIND of label, and what says what kind a
+label is, is what the app already measured about it: **how big it is and what
+colour its ink is** (`TextReading.WeightBallot`, `TextReading.pageWeights`).
+Labels of one size and one ink settle on the weight they agree on best; a
+heading is a different size, and a white section label over grey rows is a
+different colour, so neither is flattened into the rows under it.
+
+Picking all six row labels of the settings pane now shows Weight: Regular in
+the panel where it used to show Mixed, which is the app saying in one word that
+two of those labels came back heavier than the four beside them.
+
+Nothing is lost to it. Where the weight the page settled cannot account for a
+run's ink at all, that run is set on its family alone exactly as before — which
+is the case the escape exists for, because a run that scores far better heavier
+than everything beside it usually IS heavier. Measured on the three study
+captures the reading counts do not move: 9 of 9, 30 of 40, 74 of 142. Full
+design: `docs/design/separate-reads-the-words.md`, "One page, one weight per
+kind of label".
+
 ### The name becomes the words
 
 `Text 9` becomes `Save Changes`, which is the whole visible reward for having

@@ -17761,3 +17761,46 @@ half of the set that works under a lock. Two walks fail for real on content
 (dock-picked-first-walk wants a layer called "Zoom" and the list says "Magnify";
 name-chip-reads-anywhere-walk wants a "Badge" component tile); folded into
 walks-that-fail-in-the-full-sweep.
+
+## 2026-09-17 — A page of labels comes back at one weight
+
+Finished `a-label-read-back-into-text-comes-back-in-the-we`. Reading a
+screenshot's labels back into text already settled the FAMILY for the whole
+page by a vote; the weight still wobbled, and it wobbled confidently: on
+`settings-pane-2x` two of six identical row labels came back Medium at 0.795
+against Regular's 0.720, a lead wider than `distinctMargin`.
+
+The vote could not be the page's, because a page is one family but not one
+weight. It is per KIND of label instead, grouped by the two things the reader
+already measured: the size the family's lightest weight fits the ink at, and
+the colour of the ink. `TextReading.WeightBallot`, `weightCohorts`,
+`pageWeight`, `pageWeights`, all pure and unit tested on the numbers the reader
+really produces. Colour is what carries the named case: the Effects panel's
+white section labels settle heavier than the grey rows under them instead of
+being flattened into them.
+
+Two things fell out of it:
+
+- **`TextReader` split into `measure` and `settle`.** Everything that costs
+  (the recogniser, the ink, the thirteen faces scored) happens once per run;
+  choosing among faces already scored and fitting the winner is cheap and now
+  happens twice, once free to vote with and once held to what the page settled.
+  That made the whole page reading FASTER than before despite doing more:
+  1812 ms against 1966 ms on `dense-page-1x`, spread.
+- **The weight never costs a reading.** Where a cohort's weight cannot account
+  for a run's ink, the run keeps its family-only answer. Counts unchanged on
+  all three study captures: 9/9, 30/40, 74/142.
+
+New: `Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png` (a 2x crop of the
+app window; note it needs the 144 dpi tag or the app reads it at 1x),
+`ReadPageWeightFixtureTests`, and `Scripts/playtest/label-weight-walk.json`.
+Full suite green (8144 tests). Docs updated in
+`separate-reads-the-words.md` and `separate-into-layers.md`.
+
+Next: the SIZE wobbles exactly the way the weight did — the same six labels
+come back 27.6 to 28.5 points, so Size reads Mixed where Weight now reads
+Regular. Filed as `a-label-read-back-into-text-comes-back-at-the-si`.
+
+Open question: the three Effects section labels settle on Medium, and on screen
+they may be Semibold. They agree now, which was the task, but the answer they
+agreed on is not certain.

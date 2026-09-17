@@ -295,4 +295,190 @@ struct TextReadingTests {
         #expect(sfSemibold.displayName == "SF Pro Semibold")
         #expect(TextReading.Face(fontName: "SF Pro", weight: .regular).displayName == "SF Pro")
     }
+
+    // MARK: - The weight a page sets one kind of label in
+
+    /// A ballot: the size the page's family fits this run's ink at, the colour
+    /// of the ink, and how each weight did.
+    private func ballot(_ size: CGFloat, _ hex: String,
+                        _ agreement: [TextWeight: Double]) -> TextReading.WeightBallot {
+        TextReading.WeightBallot(size: size, color: RGBA(hex: hex) ?? RGBA(r: 0, g: 0, b: 0),
+                                 agreement: agreement)
+    }
+
+    /// The row labels of the settings pane fixture, with the numbers the
+    /// reader actually produced on them (`ReadRunAsTextFixtureTests`). Two of
+    /// the six say Medium and say it confidently, by more than
+    /// `distinctMargin`, and all six are the same weight in the picture.
+    private var sixRowLabels: [TextReading.WeightBallot] {
+        [ballot(12.85, "#111111", [.regular: 0.720, .medium: 0.795, .semibold: 0.733, .bold: 0.5]),
+         ballot(13.17, "#111111", [.regular: 0.660, .medium: 0.719, .semibold: 0.697, .bold: 0.5]),
+         ballot(13.03, "#111111", [.regular: 0.903, .medium: 0.806, .semibold: 0.605, .bold: 0.4]),
+         ballot(13.00, "#111111", [.regular: 0.866, .medium: 0.787, .semibold: 0.704, .bold: 0.4]),
+         ballot(12.85, "#111111", [.regular: 0.722, .medium: 0.681, .semibold: 0.650, .bold: 0.4]),
+         ballot(12.85, "#111111", [.regular: 0.718, .medium: 0.652, .semibold: 0.676, .bold: 0.4])]
+    }
+
+    @Test func sixRowLabelsOfOnePaneComeBackAtOneWeight() throws {
+        // The bug, in numbers: read one at a time these come back four Regular
+        // and two Medium, and they are identical on screen.
+        let settled = TextReading.pageWeights(of: sixRowLabels.map { $0 })
+        #expect(settled == [TextWeight](repeating: .regular, count: 6).map { $0 })
+    }
+
+    @Test func aHeadingOverItsRowsIsNotDraggedDownToThem() throws {
+        // The thing a page-wide vote would break. The heading is half again
+        // the size of the rows, so it is not a label of their kind and its own
+        // answer stands.
+        let heading = ballot(23.63, "#111111",
+                             [.regular: 0.60, .medium: 0.782, .semibold: 0.836, .bold: 0.920])
+        let settled = TextReading.pageWeights(of: ([heading] + sixRowLabels).map { $0 })
+        #expect(settled.first == .bold)
+        #expect(settled.dropFirst().allSatisfy { $0 == .regular })
+    }
+
+    @Test func aSectionLabelIsNotDraggedDownToTheRowsUnderIt() throws {
+        // The app's own Effects panel, measured: "Corner Radius", "Border 1"
+        // and "Border 2" are white and the Style/Color/Position rows under
+        // them are grey, at the same size. Ink colour is what tells a person
+        // they are not the same kind of label, and it is what tells the app.
+        let sections = [
+            ballot(10.37, "#EAEAEB", [.regular: 0.60, .medium: 0.693, .semibold: 0.723]),
+            ballot(10.55, "#EAEAEB", [.regular: 0.691, .medium: 0.715, .semibold: 0.652]),
+            ballot(10.37, "#EAEAEB", [.regular: 0.683, .medium: 0.732, .semibold: 0.708]),
+        ]
+        // Every grey row of the two Border sections, with the numbers the
+        // reader produced: five say Regular, four say Medium and two say
+        // Semibold, and they are one weight on screen.
+        let rows = [
+            ballot(10.00, "#7C7C7C", [.regular: 0.779, .medium: 0.725, .semibold: 0.608]),
+            ballot(10.00, "#7C7C7C", [.regular: 0.779, .medium: 0.725, .semibold: 0.608]),
+            ballot(10.37, "#7C7C7C", [.regular: 0.691, .medium: 0.602, .semibold: 0.517]),
+            ballot(10.37, "#7C7C7C", [.regular: 0.690, .medium: 0.602, .semibold: 0.517]),
+            ballot(9.93, "#7C7C7C", [.regular: 0.703, .medium: 0.738, .semibold: 0.656]),
+            ballot(9.93, "#7C7C7C", [.regular: 0.703, .medium: 0.738, .semibold: 0.656]),
+            ballot(9.93, "#7C7C7C", [.regular: 0.724, .medium: 0.772, .semibold: 0.745]),
+            ballot(10.37, "#7C7C7C", [.regular: 0.660, .medium: 0.570, .semibold: 0.468]),
+            ballot(9.90, "#7C7C7C", [.regular: 0.768, .medium: 0.771, .semibold: 0.808]),
+            ballot(10.29, "#7C7C7C", [.regular: 0.690, .medium: 0.701, .semibold: 0.737]),
+            ballot(10.29, "#7C7C7C", [.regular: 0.809, .medium: 0.821, .semibold: 0.820]),
+        ]
+        let settled = TextReading.pageWeights(of: (sections + rows).map { $0 })
+        // Each group settles, and they settle on DIFFERENT weights: the
+        // section labels stay heavier than their rows.
+        #expect(Set(settled.prefix(3)).count == 1)
+        #expect(Set(settled.dropFirst(3)).count == 1)
+        #expect(settled.first != settled.last)
+    }
+
+    @Test func aColourAPixelOrTwoOffIsTheSameColour() throws {
+        // Ink colour is a median of sampled pixels, so one label reads #EAEAEB
+        // and the identical one beside it #E8E8E8. Those are one colour.
+        let a = ballot(10.40, "#EAEAEB", [.regular: 0.60, .medium: 0.70])
+        let b = ballot(10.40, "#E8E8E8", [.regular: 0.68, .medium: 0.60])
+        let settled = TextReading.pageWeights(of: [a, b])
+        #expect(settled[0] == settled[1])
+    }
+
+    @Test func aRunWithNothingLikeItKeepsItsOwnAnswer() throws {
+        // One label of its size and colour on the whole page: there is no
+        // second opinion to have, so the run's own reading stands.
+        let lone = ballot(30, "#0000FF", [.regular: 0.64, .medium: 0.70, .bold: 0.81])
+        let settled = TextReading.pageWeights(of: (sixRowLabels + [lone]).map { $0 })
+        #expect(settled.last == .bold)
+    }
+
+    @Test func aRunNobodyCouldReadCastsNoVoteAndGetsNoAnswer() throws {
+        var ballots: [TextReading.WeightBallot?] = sixRowLabels.map { $0 }
+        ballots.insert(nil, at: 2)
+        let settled = TextReading.pageWeights(of: ballots)
+        #expect(settled.count == 7)
+        #expect(settled[2] == nil)
+        #expect(settled.compactMap { $0 }.allSatisfy { $0 == .regular })
+    }
+
+    @Test func theCohortIsTheOneWithTheMostAgreementNotTheMostHands() throws {
+        // Three runs. Two of them pick Medium by a whisker and the third picks
+        // Regular by a mile, and Regular is what the three of them agree on
+        // best. A show of hands would throw that away.
+        let ballots = [
+            ballot(12, "#000000", [.regular: 0.700, .medium: 0.705]),
+            ballot(12, "#000000", [.regular: 0.700, .medium: 0.706]),
+            ballot(12, "#000000", [.regular: 0.900, .medium: 0.600]),
+        ]
+        #expect(TextReading.pageWeights(of: ballots.map { $0 })
+            == [TextWeight.regular, .regular, .regular])
+    }
+
+    @Test func labelsOfEverySizeOnAPageDoNotBecomeOneCohort() throws {
+        // Sizes stepping up a little at a time, from a row label to a title.
+        // Each is close to its neighbour, and a rule that only looked at
+        // neighbours would chain the whole page into one cohort and set a
+        // title in body weight.
+        let ballots = (0..<12).map { step in
+            ballot(10 * pow(1.03, CGFloat(step)), "#111111",
+                   [.regular: step < 6 ? 0.9 : 0.5, .medium: 0.6,
+                    .bold: step < 6 ? 0.5 : 0.9])
+        }
+        let settled = TextReading.pageWeights(of: ballots.map { $0 })
+        #expect(settled.first == .regular)
+        #expect(settled.last == .bold)
+    }
+
+    @Test func aWeightOnlySomeOfThemCouldBeSetInDoesNotWinOnTheirScoresAlone() throws {
+        // Only a weight every run in the cohort was scored against can be the
+        // answer, or a weight two runs of six happen to do well in takes the
+        // page on two numbers.
+        let ballots = [
+            ballot(12, "#000000", [.regular: 0.70, .medium: 0.65]),
+            ballot(12, "#000000", [.regular: 0.70, .medium: 0.65]),
+            ballot(12, "#000000", [.regular: 0.60, .medium: 0.65, .bold: 0.99]),
+        ]
+        #expect(TextReading.pageWeights(of: ballots.map { $0 })
+            == [TextWeight.regular, .regular, .regular])
+    }
+
+    @Test func nobodyOnThePageMeansNobodyToAnswerFor() throws {
+        #expect(TextReading.pageWeights(of: []).isEmpty)
+        #expect(TextReading.pageWeights(of: [nil, nil]) == [nil, nil])
+    }
+
+    // MARK: - Setting a run at the weight its kind of label is in
+
+    @Test func theRunTakesItsCohortsWeightEvenWhenAnotherScoredHigher() throws {
+        // "Launch at login" on the settings pane: on its own it says Medium
+        // 0.795 against Regular's 0.720, and the five labels beside it, which
+        // are the same weight on screen, say Regular.
+        let regular = TextReading.Face(fontName: "SF Pro", weight: .regular)
+        let outcome = TextReading.decide(
+            string: "Launch at login",
+            scores: [TextReading.Scored(face: sfMedium, fontSize: 12.7, agreement: 0.795),
+                     TextReading.Scored(face: regular, fontSize: 12.85, agreement: 0.720)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro", at: .regular)
+        let reading = try #require(outcome.reading)
+        #expect(reading.face == regular)
+        // The page answered, not the run, and the audit is told which.
+        #expect(reading.provenance == .fallback)
+    }
+
+    @Test func aRunAlreadyInItsCohortsWeightIsUnchangedByBeingHeldToIt() throws {
+        let regular = TextReading.Face(fontName: "SF Pro", weight: .regular)
+        let outcome = TextReading.decide(
+            string: "Reset",
+            scores: [TextReading.Scored(face: regular, fontSize: 13, agreement: 0.923),
+                     TextReading.Scored(face: sfMedium, fontSize: 12.8, agreement: 0.846)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro", at: .regular)
+        #expect(outcome.reading?.face == regular)
+        #expect(outcome.reading?.provenance == .matched)
+    }
+
+    @Test func aRunItsCohortsWeightCannotAccountForRefusesRatherThanGuessing() throws {
+        let regular = TextReading.Face(fontName: "SF Pro", weight: .regular)
+        let outcome = TextReading.decide(
+            string: "Border 1",
+            scores: [TextReading.Scored(face: sfSemibold, fontSize: 10, agreement: 0.80),
+                     TextReading.Scored(face: regular, fontSize: 10.4, agreement: 0.31)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro", at: .regular)
+        #expect(outcome.refusal == .noFaceMatches)
+    }
 }

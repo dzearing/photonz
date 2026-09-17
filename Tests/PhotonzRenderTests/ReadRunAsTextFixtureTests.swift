@@ -112,6 +112,17 @@ struct ReadRunAsTextFixtureTests {
         }
     }
 
+    @Test func everyLabelOfOnePageComesBackAtOneWeightPerKindOfLabel() throws {
+        // The other half of what reading the whole picture at once can do that
+        // reading one label at a time never can: the six row labels are
+        // compared with each other, so none of them comes back heavier than
+        // the identical label beside it, and the heading over them keeps its
+        // own weight.
+        let rows = Self.spread[1...6].compactMap(\.outcome.reading?.face.weight)
+        #expect(Set(rows) == [.regular])
+        #expect(Self.spread[0].outcome.reading?.face.weight == .bold)
+    }
+
     @Test func everyLabelOfOnePageComesBackInOneFamily() throws {
         // The thing reading the whole picture at once can do that reading one
         // label at a time never can: the labels are compared with each other,
@@ -185,10 +196,45 @@ struct ReadRunAsTextFixtureTests {
     }
 
     @Test func mostOfThemAreAnAnswerRatherThanAFallback() throws {
-        // A face that beat every other FAMILY by a clear margin is an answer,
-        // and the audit is told which runs those were.
+        // A face that beat every other FAMILY and every other WEIGHT by a
+        // clear margin is an answer, and the audit is told which runs those
+        // were. Three of the nine are the page answering rather than the run:
+        // one whose own best face is in a family this pane does not contain,
+        // and the two row labels the page holds to Regular against their own
+        // confident Medium.
         let matched = try (0..<9).filter { try reading($0).provenance == .matched }
-        #expect(matched.count >= 7)
+        #expect(matched.count >= 6)
+    }
+
+    // MARK: - The weight
+
+    /// Runs 1 to 6 are the six row labels of the two cards, and the picture
+    /// says plainly that they are one weight. Run 0 is the heading over them.
+    private static let rowLabels = 1...6
+
+    @Test func theRowLabelsOfOnePaneComeBackAtOneWeight() throws {
+        // The bug: read one at a time, "Launch at login" and "Show in menu
+        // bar" come back Medium and the four under them come back Regular.
+        let found = try Set(Self.rowLabels.map { try reading($0).face.weight })
+        #expect(found == [.regular])
+    }
+
+    @Test func theHeadingIsNotDraggedDownToItsRows() throws {
+        // What a page-wide vote would have broken. "General" is half again
+        // the size of the labels under it, so it is not a label of their kind
+        // and its own answer stands.
+        #expect(try reading(0).face.weight == .bold)
+    }
+
+    @Test func settlingTheWeightNeverCostsAReading() throws {
+        // A weight a shade off is a smaller harm than a label that stays a
+        // picture, so the weight the page settled is never the reason one
+        // does. Held to the family alone, exactly as many labels come back.
+        let held = Self.runImages.map {
+            TextReader.read($0, captureScale: 2, preferring: "SF Pro")
+        }
+        #expect(held.compactMap(\.outcome.reading).count
+            == Self.reads.compactMap(\.outcome.reading).count)
     }
 
     @Test func aSerifAndAMonospaceAreNowhereNearTheAnswer() throws {

@@ -177,6 +177,66 @@ question on the way: a label inside a group could always be double clicked into
 typing, and the walk that said otherwise was clicking three times into a field
 that had already opened.
 
+### One page, one weight per kind of label
+
+**Landed 2026-09-17** behind the queue task
+`a-label-read-back-into-text-comes-back-in-the-we`. No flag: it is part of how
+the reader answers.
+
+The family vote settles half of the face. The other half wobbled for the same
+reason, and it was MORE visible once the whole page came back at once: two
+weights of one family are a few percent apart at label size, so a run deciding
+alone comes back Medium beside an identical label that came back Regular. On
+`settings-pane-2x` two of the six row labels did, and they did it confidently:
+"Launch at login" scored Medium 0.795 against Regular 0.720, a lead wider than
+`distinctMargin`, so no bar and no provenance filter could tell it from a label
+that really is heavier.
+
+**The vote could not be the page's**, though, and that is the whole design. A
+page is one family; a page is not one weight. A page-wide vote would have
+dragged "General" down to the weight of the rows under it, which is a worse
+answer than the wobble, because somebody hands a redline over and acts on it.
+
+So the vote is per KIND of label, and the two things the app already measured
+that say what kind a label is are **how big it is** and **what colour its ink
+is**:
+
+- The size is taken at the family's LIGHTEST weight, so the size a run is
+  grouped by does not depend on which weight happened to win it.
+- Labels join a cohort smallest first, each needing a member within 3 per cent
+  of its size and 2/255 of its ink, and no cohort may span more than 8 per cent
+  of size. The span cap is what stops a page whose labels step up a little at a
+  time — a row, a subhead, a head, a title — chaining into one cohort.
+- A cohort settles on the weight with the highest TOTAL agreement across it,
+  not the most hands. Two runs picking Medium by a thousandth and one picking
+  Regular by a fifth are three runs that agree on Regular.
+
+Colour is what carries the case the audits named. In this app's own Effects
+panel, "Corner Radius", "Border 1" and "Border 2" are #EAEAEB and the "Style",
+"Color", "Position", "Width" and "Offset" rows under them are #7C7C7C, at the
+same size. A person can see at a glance which labels are meant to match, and so
+can the reader: the sections settle on one weight, the rows settle on a lighter
+one, and neither is flattened into the other.
+
+**The weight is never a reason to lose a reading.** Where the cohort's weight
+cannot account for a run's ink at all, the run is settled on its family alone,
+the way it was before there was a weight vote. That escape is not a
+compromise — it is the case it exists for: the bold key cap in this app's own
+hint line scores 0.72 bold against 0.52 semibold, and it keeps its bold while
+the two runs beside it settle together. Measured on all three study captures,
+the reading counts are unchanged: 9 of 9, 30 of 40, 74 of 142.
+
+It is also FASTER than what it replaced, because it forced the reader apart into
+the half that costs (the recogniser, the ink, the thirteen faces scored) and the
+half that does not (choosing among faces already scored, and fitting the winner
+at the layer's size). The page is measured once and settled twice, where before
+it was read once and the strays READ again. Spread over the cores on
+`dense-page-1x`: **1812 ms against the 1966 ms** the family vote alone cost.
+
+What it does not fix: the SIZE still wobbles. Pick the six row labels of the
+settings pane and the Weight menu now says Regular, while the Size menu says
+Mixed, because each run is fitted to its own ink and they land 27.6 to 28.5.
+
 ## What was rejected, and why
 
 | shape | why not |
@@ -184,7 +244,7 @@ that had already opened.
 | Read every confident run inside the command | 4 of 31 wrong on this app's own window, 13 of 82 on the dashboard, silently, and three to thirty-four times slower |
 | Read only where the app says `matched` | Keeps every one of the four errors and drops eight correct readings; confidence does not correlate with correctness here |
 | Raise the agreement bar until the errors drop | The bar would be 0.82, which keeps three readings of thirty-one |
-| Let the page vote on one family, then read automatically | The vote is a real improvement and HAS happened (2026-09-17), but it makes the reader better, not the automation safer. It does not touch the speed, and it does not fix the weight wobble (Border 1 reads Medium while Corner Radius reads Semibold, both section labels of one style) |
+| Let the page vote on one family, then read automatically | The vote is a real improvement and HAS happened (2026-09-17), and so has the weight vote beside it, but both make the reader better rather than the automation safer. Neither touches the speed |
 | Do nothing at all | The discovery problem is real: the second command is a menu row under the first and nothing on the row or the pill points at it |
 
 ## Rough edges the study turned up
@@ -195,12 +255,10 @@ that had already opened.
   page's family and `dense-page-1x` reads 77 of 142 with none off it. The counts
   in this document are what reading each run ON ITS OWN gave, which is what the
   study was about.
-- **The weight wobble is the remaining inconsistency even with the family
-  settled.** Six row labels of one settings pane come back four Regular and two
-  Medium; two section labels of one panel come back Medium and Semibold. At 13
-  points that is a few percent of stroke, and the measurement is honest about
-  what it sees, but it is the least consistent part of the answer. Already
-  recorded in `queue/audits/2026-09-13-turn-into-text`.
+- **The weight is settled as of 2026-09-17 too**, by a vote of its own. See
+  "One page, one weight per kind of label" below. Before it, six row labels of
+  one settings pane came back four Regular and two Medium, and the section
+  labels of one panel came back Semibold, Medium and Medium.
 - **Six runs of the app window hold no words at all** (`noWords`): the sweep
   found them as runs and they are icons. Under any automatic shape they would
   quietly stay pictures, which is the right outcome and needs no message.

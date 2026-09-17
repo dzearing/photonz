@@ -127,43 +127,90 @@ public enum TextReader {
     /// Text does before anything has told it what the page is.
     public static func read(_ image: CGImage, captureScale: CGFloat = 1,
                             layerScale: CGFloat = 1,
-                            preferring family: String? = nil) -> Read {
-        let captureScale = max(captureScale, 0.01), layerScale = max(layerScale, 0.01)
+                            preferring family: String? = nil,
+                            at weight: TextWeight? = nil) -> Read {
+        switch measure(image, captureScale: captureScale) {
+        case .refused(let read):
+            return read
+        case .measured(let measured):
+            return settle(measured, layerScale: layerScale, preferring: family, at: weight)
+        }
+    }
+
+    /// Everything reading a picture COSTS, done once.
+    ///
+    /// Split out from the deciding because a page settles its family and the
+    /// weight of each kind of label AFTER every run has been read, and holding
+    /// a run to what the page settled must not mean recognising its characters
+    /// and scoring thirteen faces all over again. The recogniser is most of
+    /// the cost of a reading (1650 ms of the dense page's 3643), and a second
+    /// pass over it buys nothing: the characters, the ink and the colour do
+    /// not change when the page tells a run what family it is in.
+    struct Measured: Sendable {
+        let mask: TextReading.Mask
+        let inkRect: CGRect
+        let string: String
+        let color: RGBA
+        /// Every face tried, at the size the TYPE was set at. Nothing in here
+        /// depends on what the page settles, which is what makes settling
+        /// cheap.
+        let scores: [TextReading.Scored]
+    }
+
+    /// A run measured, or the refusal that ended it before it got that far.
+    enum Measurement: Sendable {
+        case measured(Measured)
+        case refused(Read)
+    }
+
+    static func measure(_ image: CGImage, captureScale: CGFloat = 1) -> Measurement {
+        let captureScale = max(captureScale, 0.01)
         guard let ink = ink(image), let inkRect = ink.mask.inkBounds() else {
-            return Read(outcome: .refused(.tooFaint), inkRect: nil, scores: [])
+            return .refused(Read(outcome: .refused(.tooFaint), inkRect: nil, scores: []))
         }
         guard let color = TextReading.inkColor(ink.samples) else {
-            return Read(outcome: .refused(.tooFaint), inkRect: inkRect, scores: [])
+            return .refused(Read(outcome: .refused(.tooFaint), inkRect: inkRect, scores: []))
         }
         let string: String
         switch recognize(ink.mask, inkHeight: inkRect.height) {
         case .failure(let refusal):
-            return Read(outcome: .refused(refusal), inkRect: inkRect, scores: [])
+            return .refused(Read(outcome: .refused(refusal), inkRect: inkRect, scores: []))
         case .success(let read):
             string = read
         }
         let scores = score(string, against: ink.mask, inkHeight: inkRect.height,
                            scale: captureScale)
-        let identified = TextReading.decide(string: string, scores: scores, color: color,
-                                            preferring: family)
+        return .measured(Measured(mask: ink.mask, inkRect: inkRect, string: string,
+                                  color: color, scores: scores))
+    }
+
+    /// Which face a measured run comes back in, and at what size, given what
+    /// the page has settled.
+    static func settle(_ run: Measured, layerScale: CGFloat = 1,
+                       preferring family: String? = nil,
+                       at weight: TextWeight? = nil) -> Read {
+        let layerScale = max(layerScale, 0.01)
+        let identified = TextReading.decide(string: run.string, scores: run.scores,
+                                            color: run.color, preferring: family, at: weight)
         guard let reading = identified.reading else {
-            return Read(outcome: identified, inkRect: inkRect, scores: scores)
+            return Read(outcome: identified, inkRect: run.inkRect, scores: run.scores)
         }
         // The face has been identified at the size the type was set at. The
         // SIZE is a different question with a different answer: what the layer
         // needs is whatever makes that face cover the space the picture's ink
         // covers, in the document's own units. So the size is matched again, in
         // the chosen face, at the scale the layer will be drawn at.
-        guard let landed = best(string, in: reading.face, against: ink.mask,
-                                inkHeight: inkRect.height, scale: layerScale),
+        guard let landed = best(run.string, in: reading.face, against: run.mask,
+                                inkHeight: run.inkRect.height, scale: layerScale),
               landed.agreement >= TextReading.landedBar
         else {
-            return Read(outcome: .refused(.noFaceMatches), inkRect: inkRect, scores: scores)
+            return Read(outcome: .refused(.noFaceMatches), inkRect: run.inkRect,
+                        scores: run.scores)
         }
         return Read(outcome: .read(TextReading.Reading(
             string: reading.string, face: reading.face, fontSize: landed.fontSize,
             colorHex: reading.colorHex, agreement: landed.agreement,
-            provenance: reading.provenance)), inkRect: inkRect, scores: scores)
+            provenance: reading.provenance)), inkRect: run.inkRect, scores: run.scores)
     }
 
     /// Every run cut out of ONE picture, read, with the picture's own family
@@ -218,50 +265,109 @@ public enum TextReader {
     public static func readPage(_ runs: [PageRun], captureScale: CGFloat = 1,
                                 preferring family: String? = nil,
                                 spreadingOverTheCores: Bool = false) -> [Read] {
-        var settled = readEachOf(runs, captureScale: captureScale, preferring: family,
-                                 spreading: spreadingOverTheCores)
-        // Told the family, there is nothing to vote on: every run was already
-        // held to it.
-        guard family == nil,
-              let voted = TextReading.pageFamily(of: settled.compactMap(\.outcome.reading))
-        else { return settled }
-        let strays = runs.indices.filter { index in
-            guard let reading = settled[index].outcome.reading else { return false }
-            return reading.face.fontName != voted
+        let measured = measureEachOf(runs, captureScale: captureScale,
+                                     spreading: spreadingOverTheCores)
+        // Read free first, so the page has something to vote with. Nothing
+        // expensive happens twice here: the characters, the ink and the scores
+        // were taken once above, and settling a run again is one face laid
+        // over the ink at a handful of sizes.
+        let free = settleEachOf(measured, runs: runs, preferring: family,
+                                at: nil, spreading: spreadingOverTheCores)
+        // One family for the whole picture, unless the caller already knows
+        // it: a screenshot whose family has been voted on once must not be
+        // voted on again and come back with a different answer.
+        guard let voted = family
+            ?? TextReading.pageFamily(of: free.compactMap(\.outcome.reading))
+        else { return free }
+        // And then one weight per KIND of label, which is the half the family
+        // vote leaves open: six row labels of one pane can be four Regular and
+        // two Medium while being one weight on screen.
+        let weights = TextReading.pageWeights(of: measured.map { ballot($0, in: voted) })
+        let settled = settleEachOf(measured, runs: runs, preferring: voted,
+                                   at: weights, spreading: spreadingOverTheCores)
+        return measured.indices.map { index in
+            // A run the page's own FAMILY cannot account for stays a picture,
+            // and that is the safety net under the vote: a page that genuinely
+            // mixes families loses a reading rather than gaining a label in
+            // the wrong face.
+            //
+            // The WEIGHT is never a reason to lose one. A weight a shade off
+            // is a smaller harm than a label that does not come back at all,
+            // and a run whose ink the cohort's weight cannot account for is
+            // exactly the run that really is heavier than the labels beside
+            // it — the bold key cap in this app's own hint line, measured at
+            // 0.72 bold against 0.52 semibold. So it is settled on its family
+            // alone, the way it was before there was a weight vote at all.
+            guard settled[index].outcome.reading == nil, weights[index] != nil,
+                  case .measured(let run) = measured[index] else { return settled[index] }
+            return settle(run, layerScale: runs[index].layerScale, preferring: voted)
         }
-        guard !strays.isEmpty else { return settled }
-        let again = readEachOf(strays.map { runs[$0] }, captureScale: captureScale,
-                               preferring: voted, spreading: spreadingOverTheCores)
-        for (nth, index) in strays.enumerated() where nth < again.count {
-            settled[index] = again[nth]
-        }
-        return settled
     }
 
-    /// One pass of the reader over a list of runs, across the cores or not.
+    /// What one measured run says about the weight its kind of label is set
+    /// in. Nil where there was nothing to read, which is a run with no vote to
+    /// cast.
+    private static func ballot(_ measurement: Measurement,
+                               in family: String) -> TextReading.WeightBallot? {
+        guard case .measured(let run) = measurement else { return nil }
+        let inFamily = run.scores.filter { $0.face.fontName == family }
+        guard !inFamily.isEmpty else { return nil }
+        var agreement: [TextWeight: Double] = [:]
+        for scored in inFamily { agreement[scored.face.weight] = scored.agreement }
+        // The size at the family's LIGHTEST weight, so the size a run is put
+        // in a cohort by does not depend on which weight happened to win it.
+        let lightest = TextWeight.allCases.first { agreement[$0] != nil }
+        guard let size = inFamily.first(where: { $0.face.weight == lightest })?.fontSize
+        else { return nil }
+        return TextReading.WeightBallot(size: size, color: run.color, agreement: agreement)
+    }
+
+    /// One pass of the RECOGNISER over a list of runs, across the cores or not.
     ///
     /// This is where nearly all the cost of reading a page is: measured on a
     /// release build, 143 ms for nine runs, 1910 ms for a hundred and forty
     /// two, spread — about half what the same work costs one after another.
-    private static func readEachOf(_ runs: [PageRun], captureScale: CGFloat,
-                                   preferring family: String?, spreading: Bool) -> [Read] {
+    private static func measureEachOf(_ runs: [PageRun], captureScale: CGFloat,
+                                      spreading: Bool) -> [Measurement] {
         guard spreading, runs.count > 1 else {
-            return runs.map {
-                read($0.image, captureScale: captureScale, layerScale: $0.layerScale,
-                     preferring: family)
-            }
+            return runs.map { measure($0.image, captureScale: captureScale) }
         }
-        var landed = [Read?](repeating: nil, count: runs.count)
+        var landed = [Measurement?](repeating: nil, count: runs.count)
         landed.withUnsafeMutableBufferPointer { buffer in
             guard let raw = buffer.baseAddress else { return }
             DispatchQueue.concurrentPerform(iterations: runs.count) { index in
-                (raw + index).pointee = read(runs[index].image, captureScale: captureScale,
-                                             layerScale: runs[index].layerScale,
-                                             preferring: family)
+                (raw + index).pointee = measure(runs[index].image, captureScale: captureScale)
             }
         }
         // Every slot is written by the loop above. The fallback is unreachable
         // and is here because this module holds no force unwrap.
+        return landed.map {
+            $0 ?? .refused(Read(outcome: .refused(.noWords), inkRect: nil, scores: []))
+        }
+    }
+
+    /// And one pass of the DECIDING over the same runs, holding each to what
+    /// the page settled. Cheap by comparison: one face laid over the ink at a
+    /// handful of sizes, with nothing recognised again.
+    private static func settleEachOf(_ measured: [Measurement], runs: [PageRun],
+                                     preferring family: String?, at weights: [TextWeight?]?,
+                                     spreading: Bool) -> [Read] {
+        @Sendable func one(_ index: Int) -> Read {
+            switch measured[index] {
+            case .refused(let read): return read
+            case .measured(let run):
+                return settle(run, layerScale: runs[index].layerScale,
+                              preferring: family, at: weights?[index])
+            }
+        }
+        guard spreading, measured.count > 1 else { return measured.indices.map(one) }
+        var landed = [Read?](repeating: nil, count: measured.count)
+        landed.withUnsafeMutableBufferPointer { buffer in
+            guard let raw = buffer.baseAddress else { return }
+            DispatchQueue.concurrentPerform(iterations: measured.count) { index in
+                (raw + index).pointee = one(index)
+            }
+        }
         return landed.map { $0 ?? Read(outcome: .refused(.noWords), inkRect: nil, scores: []) }
     }
 

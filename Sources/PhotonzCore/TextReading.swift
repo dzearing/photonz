@@ -386,12 +386,20 @@ public enum TextReading {
     /// which is what a run deciding on its own produces on about one in eight
     /// of them. Nil is one run on its own, with no page to ask, and is
     /// unchanged.
+    ///
+    /// `weight` is the weight the page sets this run's KIND of label in, where
+    /// the page has settled one (`pageWeights`). It narrows the choice the
+    /// same way and for the same reason: two weights of one family are a few
+    /// percent apart at label size, so a run deciding alone comes back Medium
+    /// beside an identical label that came back Regular.
     public static func decide(string: String, scores: [Scored], color: RGBA?,
-                              preferring family: String? = nil) -> Outcome {
+                              preferring family: String? = nil,
+                              at weight: TextWeight? = nil) -> Outcome {
         let string = string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !string.isEmpty else { return .refused(.noWords) }
         guard let color else { return .refused(.tooFaint) }
-        let pool = family.map { name in scores.filter { $0.face.fontName == name } } ?? scores
+        var pool = family.map { name in scores.filter { $0.face.fontName == name } } ?? scores
+        if let weight { pool = pool.filter { $0.face.weight == weight } }
         guard let best = pool.max(by: { $0.agreement < $1.agreement }),
               best.agreement >= agreementBar
         else { return .refused(.noFaceMatches) }
@@ -407,10 +415,9 @@ public enum TextReading {
         // is the PAGE answering rather than the run, which is exactly what a
         // stated fallback means. Saying it out loud keeps the audit able to
         // count how often the vote had to overrule a run.
-        if let family, scores.max(by: { $0.agreement < $1.agreement })?
-            .face.fontName != family {
-            provenance = .fallback
-        }
+        let free = scores.max(by: { $0.agreement < $1.agreement })?.face
+        if let family, free?.fontName != family { provenance = .fallback }
+        if let weight, free?.weight != weight { provenance = .fallback }
         let chosen = families.count > 1
             ? (tied.filter { $0.face.fontName == fallbackFamily }
                    .max { $0.agreement < $1.agreement } ?? best)
@@ -418,6 +425,185 @@ public enum TextReading {
         return .read(Reading(string: string, face: chosen.face, fontSize: chosen.fontSize,
                              colorHex: color.hexString, agreement: chosen.agreement,
                              provenance: provenance))
+    }
+
+    // MARK: - The weight a page sets one KIND of label in
+
+    /// One run's say in what weight the labels like it are set in.
+    ///
+    /// The weight is the half of the face the family vote does not settle, and
+    /// it wobbles for the same reason the family did: at label size two
+    /// weights of one family are a few percent apart, so a run deciding alone
+    /// comes back Medium beside an identical label that came back Regular.
+    /// Measured on the settings-pane fixture, two of six row labels that are
+    /// plainly one weight on screen come back Medium, and they come back
+    /// CONFIDENT — 0.795 against Regular's 0.720, a lead wider than
+    /// `distinctMargin` — so no bar and no provenance filter can tell them
+    /// apart from a label that really is heavier.
+    ///
+    /// But a page is NOT one weight the way it is one family, so the vote
+    /// cannot be the page's: a heading dragged down to the weight of its rows
+    /// is a worse answer than the wobble. The vote is per KIND of label, and
+    /// the only two things the app measured that say what kind a label is are
+    /// how big it is and what colour its ink is. That is enough for the case
+    /// this exists for: in this app's own Effects panel the section labels
+    /// ("Corner Radius", "Border 1") are white and the rows under them
+    /// ("Style", "Color") are grey, so the sections settle heavier than their
+    /// rows rather than being flattened into them.
+    public struct WeightBallot: Sendable, Hashable {
+        /// The size the page's family fits this run's ink at, at its LIGHTEST
+        /// weight.
+        ///
+        /// Weight-free on purpose. A heavier face reaches the same ink height
+        /// at a smaller size, so a size measured off whichever weight happened
+        /// to win would let the wobble decide who is in which cohort, which is
+        /// the thing being fixed.
+        public let size: CGFloat
+        /// The colour of the ink.
+        public let color: RGBA
+        /// How well each weight of the page's family agreed with that ink.
+        public let agreement: [TextWeight: Double]
+
+        public init(size: CGFloat, color: RGBA, agreement: [TextWeight: Double]) {
+            self.size = size
+            self.color = color
+            self.agreement = agreement
+        }
+    }
+
+    /// How far apart two labels' sizes may be and still be labels of one kind.
+    ///
+    /// Measured. The six row labels of the settings pane fit between 12.85 and
+    /// 13.17 points, a spread of 2.5 per cent, because which glyphs a run
+    /// happens to contain moves its measured size about. The next kind of
+    /// label up on the app's own panel sits four per cent away. Three is the
+    /// gap between those two numbers.
+    public static let weightCohortStep: CGFloat = 0.03
+
+    /// And how far apart the smallest and the largest in one cohort may be,
+    /// however small each step between them was.
+    ///
+    /// Without it, a page whose labels step up a little at a time — a row, a
+    /// subhead, a head, a title — chains into one cohort and the title comes
+    /// back in body weight.
+    public static let weightCohortSpan: CGFloat = 0.08
+
+    /// How far apart two labels' ink may be, per channel, and still be one
+    /// colour. Ink colour is a median of sampled pixels, so one label reads
+    /// #EAEAEB and the identical label beside it #E8E8E8.
+    public static let weightCohortInkStep = 0.02
+
+    /// And how far the lightest and darkest in one cohort may be, so a page
+    /// with a ramp of greys on it does not chain into one.
+    public static let weightCohortInkSpan = 0.05
+
+    /// Which runs are labels of ONE KIND: indices into `ballots`, every run in
+    /// exactly one cohort.
+    ///
+    /// Walked smallest first, each run joining the nearest cohort that has a
+    /// member close to it in both size and ink and that stays inside
+    /// `weightCohortSpan` with it added. Sorted rather than paired off so the
+    /// answer does not depend on the order the runs were separated in: a page
+    /// read twice settles the same way twice.
+    public static func weightCohorts(of ballots: [WeightBallot]) -> [[Int]] {
+        let order = ballots.indices.sorted {
+            ballots[$0].size == ballots[$1].size ? $0 < $1 : ballots[$0].size < ballots[$1].size
+        }
+        var cohorts: [[WeightBallot]] = []
+        var members: [[Int]] = []
+        for index in order {
+            let ballot = ballots[index]
+            var joined = false
+            // Nearest in size first: the walk is smallest first, so the last
+            // cohort started is the one this run is closest to.
+            for slot in cohorts.indices.reversed() where holds(cohorts[slot], ballot) {
+                cohorts[slot].append(ballot)
+                members[slot].append(index)
+                joined = true
+                break
+            }
+            if !joined {
+                cohorts.append([ballot])
+                members.append([index])
+            }
+        }
+        return members.map { $0.sorted() }
+    }
+
+    /// Whether a cohort would still be one kind of label with this run in it.
+    private static func holds(_ cohort: [WeightBallot], _ ballot: WeightBallot) -> Bool {
+        guard cohort.contains(where: { alike($0, ballot) }) else { return false }
+        let sizes = cohort.map(\.size) + [ballot.size]
+        guard let low = sizes.min(), let high = sizes.max(), low > 0,
+              high / low <= 1 + weightCohortSpan else { return false }
+        return inkSpread(cohort + [ballot]) <= weightCohortInkSpan
+    }
+
+    /// Whether two runs are close enough to be the same kind of label.
+    private static func alike(_ a: WeightBallot, _ b: WeightBallot) -> Bool {
+        let low = min(a.size, b.size), high = max(a.size, b.size)
+        guard low > 0, high / low <= 1 + weightCohortStep else { return false }
+        return inkGap(a.color, b.color) <= weightCohortInkStep
+    }
+
+    /// How far apart two inks are, on their furthest channel.
+    private static func inkGap(_ a: RGBA, _ b: RGBA) -> Double {
+        max(abs(a.r - b.r), max(abs(a.g - b.g), abs(a.b - b.b)))
+    }
+
+    /// And how far apart the two furthest inks in a group are.
+    private static func inkSpread(_ ballots: [WeightBallot]) -> Double {
+        var spread = 0.0
+        for (nth, one) in ballots.enumerated() {
+            for other in ballots[(nth + 1)...] {
+                spread = max(spread, inkGap(one.color, other.color))
+            }
+        }
+        return spread
+    }
+
+    /// The one weight a cohort of labels is set in.
+    ///
+    /// The TOTAL agreement rather than a show of hands, because a show of
+    /// hands throws away how close each run was: two runs picking Medium by a
+    /// thousandth and one picking Regular by a fifth are three runs that agree
+    /// on Regular. Only a weight every run was scored against can win, or a
+    /// weight two runs of six happen to do well in takes the cohort on their
+    /// two numbers alone. A tie goes to the lighter, so a page read twice
+    /// answers the same way twice.
+    ///
+    /// Nil where there is nothing they all share, which is a cohort with no
+    /// answer rather than a cohort set in nothing.
+    public static func pageWeight(of cohort: [WeightBallot]) -> TextWeight? {
+        guard !cohort.isEmpty else { return nil }
+        let candidates = TextWeight.allCases.filter { weight in
+            cohort.allSatisfy { $0.agreement[weight] != nil }
+        }
+        func total(_ weight: TextWeight) -> Double {
+            cohort.reduce(0) { $0 + ($1.agreement[weight] ?? 0) }
+        }
+        func lightness(_ weight: TextWeight) -> Int {
+            TextWeight.allCases.firstIndex(of: weight) ?? 0
+        }
+        return candidates.max {
+            total($0) == total($1) ? lightness($0) > lightness($1) : total($0) < total($1)
+        }
+    }
+
+    /// The weight each run's own kind of label settled on, in step with
+    /// `ballots`.
+    ///
+    /// Nil where the run could not be read at all, which is a run with no vote
+    /// to cast and no answer to be given.
+    public static func pageWeights(of ballots: [WeightBallot?]) -> [TextWeight?] {
+        let cast = ballots.indices.filter { ballots[$0] != nil }
+        let voting = cast.compactMap { ballots[$0] }
+        var settled = [TextWeight?](repeating: nil, count: ballots.count)
+        for cohort in weightCohorts(of: voting) {
+            guard let weight = pageWeight(of: cohort.map { voting[$0] }) else { continue }
+            for nth in cohort { settled[cast[nth]] = weight }
+        }
+        return settled
     }
 
     // MARK: - Naming

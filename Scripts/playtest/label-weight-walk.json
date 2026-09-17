@@ -1,0 +1,303 @@
+{
+  "out": "/tmp/photonz-playtest/label-weight",
+  "seed": "ONE PAGE, ONE WEIGHT. Reading every label of a screenshot back into words already settles the typeface for the whole picture by a vote, so forty labels come back in one family. The weight was not settled that way: six row labels that are identical on screen came back four Regular and two Medium, and picking all six showed Weight reading Mixed. The walk reads a settings pane, picks its six row labels together and asks the panel what weight they are; then it does the same to this app's own Effects panel, where the section labels and the rows under them are two different weights and each of them has to settle on one.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.6
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Read the Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 5
+    },
+    {
+      "do": "describe",
+      "stage": "1-every-label-is-words",
+      "note": "Every label in the pane is real text now. The six rows of the two cards are the thing to look at: they are one weight in the picture, and until this landed two of them came back Medium and four came back Regular."
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-1-all-read"
+    },
+    {
+      "do": "selectRow",
+      "row": "Launch at login"
+    },
+    {
+      "do": "selectRow",
+      "row": "Show in menu bar",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Play sound on capture",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Save captures to",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "File name prefix",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Copy to clipboard",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-all-six-rows-at-one-weight",
+      "note": "THE FIRST TEST, and the whole point of the task: all six row labels picked at once, and the Weight menu says Regular. It used to say Mixed, which is the app telling you in one word that two of these labels came back heavier than the four beside them."
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Regular"
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "SF Pro"
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-2-six-rows-regular"
+    },
+    {
+      "do": "selectRow",
+      "row": "General"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-heading-keeps-its-own-weight",
+      "note": "THE SECOND TEST: settling the weight must not flatten the page. The heading over those rows is half again their size, so it is not a label of their kind and it comes back Bold, exactly as it did before."
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Bold"
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-3-heading-still-bold"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.6
+    },
+    {
+      "do": "press",
+      "control": "Read the Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 5
+    },
+    {
+      "do": "describe",
+      "stage": "4-a-panel-with-two-weights-in-it",
+      "note": "This app's own Effects panel, which is the case two audits named. The section labels Corner Radius, Border 1 and Border 2 are white and heavier; the Style, Color, Position, Width and Offset rows under them are grey and lighter. Read one at a time the sections came back Semibold, Medium and Medium, and the rows came back a mix of Regular, Medium and Semibold."
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-4-panel-read"
+    },
+    {
+      "do": "selectRow",
+      "row": "Corner Radius"
+    },
+    {
+      "do": "selectRow",
+      "row": "Border 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Border 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-three-section-labels-at-one-weight",
+      "note": "THE THIRD TEST: the three section labels picked together read one weight instead of Mixed."
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Medium"
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-5-sections-agree"
+    },
+    {
+      "do": "selectRow",
+      "row": "Style"
+    },
+    {
+      "do": "selectRow",
+      "row": "Color",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Position",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Width",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Offset",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-and-their-rows-at-a-lighter-one",
+      "note": "THE FOURTH TEST, and the one that says this settles wobble rather than flattening a page: the five rows under those sections read one weight too, and it is a LIGHTER one. The panel comes back reading like the panel."
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Regular"
+    },
+    {
+      "do": "snapshot",
+      "name": "weight-6-rows-lighter"
+    },
+    {
+      "do": "render",
+      "name": "weight-7-panel-doc"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true,
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": false,
+      "next-a-separation-arrives-shut": false
+    }
+  }
+}

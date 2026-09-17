@@ -1,0 +1,37 @@
+{
+  "feature": "A page of labels comes back at one weight",
+  "epic": "ui-building",
+  "summary": "Reading a screenshot's labels back into text already settled the typeface for the whole page. Now it settles the weight too, per kind of label: labels of one size and one ink colour come back at one weight, while a heading over its rows and a white section label over grey rows keep their own.",
+  "setup": "Photonz Dev, Experiments window, release Next. Read every label needs next-read-every-label, which is on by default. No new flag and no new control: this is how the reader answers now.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row and run Separate into Layers." },
+    { "do": "Press Read the Words on the line that appears at the bottom of the canvas." },
+    {
+      "do": "Pick all six row labels at once, from Launch at login down to Copy to clipboard, and read the Weight menu in the Text section.",
+      "shot": "2026-09-17-label-weight-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    { "do": "Pick General on its own and read the Weight menu again: it says Bold." },
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png, separate it and press Read the Words." },
+    { "do": "Pick Corner Radius, Border 1 and Border 2 together and read the Weight menu." },
+    {
+      "do": "Pick Style, Color, Position, Width and Offset together and read it again: one weight, and a lighter one.",
+      "shot": "2026-09-17-label-weight-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    }
+  ],
+  "evaluate": [
+    "Picking six identical labels and seeing Weight say Regular instead of Mixed: is that the moment you would have noticed the old bug, or would you have spotted it on the canvas first?",
+    "In the Effects panel shot, do the section labels still read as headings over their rows, or has anything been flattened?",
+    "Size still says Mixed for those same six labels, because each one is fitted to its own ink and they land between 27.6 and 28.5 points. Is that as annoying as the weight was?",
+    "The rule leans on ink colour to tell a section label from its rows. Does that match how you would tell them apart yourself?",
+    "Nothing about this is a setting. Would you ever want to turn it off and see each label's own answer?"
+  ],
+  "rough": [
+    "The SIZE wobbles exactly the way the weight used to. Six labels that are 13 points on screen come back 27.6, 27.1, 28.5, 28.0, 28.5 and 28.4, so the Size menu reads Mixed for a set the Weight menu now reads Regular for. Filed as its own task.",
+    "Two labels the same size AND the same ink colour that genuinely differ in weight will be flattened. It does not happen on any of the three study captures, because emphasis in real UI nearly always moves the colour too, and the escape hatch catches the extreme case: a run the cohort's weight cannot account for at all keeps its own answer. But it is a real trade and it is the one to watch for.",
+    "The three section labels of the Effects panel settle on Medium. On screen they may well be Semibold: Corner Radius's own answer was Semibold 0.723 and the two Borders said Medium 0.715 and 0.732, so the total agreement picked Medium by a nose. The task was to stop them disagreeing, and they no longer do, but the answer they agreed on is not certain.",
+    "A walk cannot use 'expect row' on most rows of a separated screenshot: the layers list only builds about five rows at a time in a 1400x900 window, so a row further down reports as missing when it is simply not built yet. label-weight-walk works around it with selectRow, which goes through the editor's own register. Folded into walks-that-fail-in-the-full-sweep, which has three walks failing on exactly this."
+  ]
+}
