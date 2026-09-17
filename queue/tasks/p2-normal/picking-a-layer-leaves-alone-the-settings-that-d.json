@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2795,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T03:36:05.097Z",
-  "updated": "2026-09-17T04:24:25.278Z",
+  "updated": "2026-09-17T04:24:34.985Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SUCCESSOR to a-section-that-appears-in-the-right-hand-panel-a, which was dropped because its premise was wrong. The measurements are in the comment above `arrivals` in Sources/Photonz/InspectorPanel.swift and the walk that takes them is Scripts/playtest/perf/pick-cost-walk.json (kept out of Scripts/playtest so the sweep never runs a stopwatch). Measured 2026-09-17, probe build, longest single run loop pass per pick, median of 5, screen locked with PHOTONZ_ALLOW_LOCKED_WALK=1 so absolute numbers may be understated; every comparison is one variable at a time in the same session.\n\nWHAT IS TRUE. Two identical arrows, picked back and forth: 33.4 / 35.1ms. A box and an arrow, which show the same SECTIONS but different rows: 25.9 / 39.0ms. So a pick that changes nothing about the panel's shape still costs two frames, and new rows arriving are only about 4ms of the 39.\n\nWHERE IT IS. With PartsInspector's body replaced by a blank the arrow pick is 16.3ms and the box pick 18.5ms: the Appearance form is the whole difference. Inside it, taking out the three segmented picture pickers is worth 7ms, the five sliders 4ms, the number boxes beside them 3ms. No villain: roughly a millisecond per control that is handed a new value, and an arrow's Appearance hands out about twenty.\n\nIT IS NOT THE NUMBER OF CONTROLS. Ten extra sliders added to Appearance, wrapped so their value never changes between picks, cost nothing at all (34.6 against 35.8). A control whose inputs are unchanged is free. That is the whole opening.\n\nTHE PRIZE AND THE HAZARD, both measured. Wrapping each part row in PartsInspector in an EquatableView keyed on what it draws took the arrow-to-arrow pick from 33.8 to 20.2ms. It ALSO put the other arrow's pick up to 51.6ms and left stale values on screen, because a skipped row keeps the closures it was built with and those name the layer that WAS picked. So the row cannot simply be wrapped: it has to stop carrying the selection in its closures first. A row should take the reading it shows (a value, already Equatable) plus enough to name WHAT it edits, and resolve which layers that reaches from EditorState at the moment the control is used. Then a stale-but-identical row is behaviourally identical, and the wrap is safe.\n\nSTART AT PartsInspector.swift (the ForEach over layerPartRows), ShapePartSettings.swift and InspectorControls.swift (ShapeSlider, LayerStyleSlider, SliderReadout). LayerPartRow.id is already stable across selections, so the ForEach identity is not the problem.\n\nTRIED AND WORTH NOTHING, do not repeat: caching the segmented pickers' pictures (PathLineStyleGlyph, ArrowheadStyle.glyph) so they are drawn once instead of per pick. Changed nothing measurable (35.6 against 35.8), because NSImage(size:flipped:) defers its drawing block anyway. The 7ms those rows cost is the NSSegmentedControl being updated, not the pictures being made.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-17T04:24:25.277Z",
       "note": "left rough: the == on these controls leaves out format, round, preview, commit and apply, which is only sound because every call site's closures depend on nothing but what they are handed. Nothing enforces that. No task: it is an invariant, spelled out on both == implementations, and a call site that broke it would have to take a PanelReach instead."
+    },
+    {
+      "t": "2026-09-17T04:24:34.983Z",
+      "note": "Every slider and picture picker in Appearance now takes the NAME of what it edits (Sources/Photonz/PanelReach.swift) and looks the layers up when it is used, so SwiftUI can skip one whose reading has not changed. Arrow to arrow 33.2-34.0ms -> 24.3-25.6ms (median of 12 picks, three runs each way, probe built once then --no-build). Acceptance 1 asked for 22 and this is 24-26: the rest is not in Appearance, which now costs about 6ms of a pick against a 16-19ms floor, so the colour rows are filed as the-colour-rows-redraw-themselves-on-every-click. Acceptance 2 and 3 proved by a new walk with teeth (pick-leaves-settings-alone-walk); acceptance 4 ran before and after with the same results. 7965 tests pass. Audit: queue/audits/2026-09-17-pick-cost.json. Sweep requested: the Mac was locked all session so every walk ran with PHOTONZ_ALLOW_LOCKED_WALK=1, as the task's own measurements did."
     }
   ],
-  "started": "2026-09-17T03:38:03.834Z"
+  "started": "2026-09-17T03:38:03.834Z",
+  "completed": "2026-09-17T04:24:34.984Z"
 }
