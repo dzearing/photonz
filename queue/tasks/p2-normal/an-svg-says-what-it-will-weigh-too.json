@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2940,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T15:20:33.359Z",
-  "updated": "2026-09-17T15:20:44.534Z",
+  "updated": "2026-09-17T17:10:06.528Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-17 from Scripts/playtest/svg-export-walk.json, snapshot svg-export-5-svg-picked-sc.png: with SVG picked the sheet reads \"Shapes, sharp at any size. Drawn at 900 x 700.\" and nothing else, while the same sheet on PNG now reads \"Lossless - 21 KB\" and on JPEG \"High - 20 KB\". The cause is in Sources/Photonz/ExportDialog.swift: refreshVectorSize() bails unless asksWhereItIsGoing (animatedSVGExportEnabled AND the target has motion), and the line that would print the size, sizeNote(_:), is only built inside handoffNote, which is itself only shown when asksWhereItIsGoing. So a still drawing never asks for the byte count and has nowhere to show it. The fix is to weigh the SVG whenever SVG is picked (editorState.svgPreflight already returns bytes and is cheap, no encoder involved) and to show the same sizeNote view the picture formats use, which is already factored out in ExportDialog.",
@@ -27,7 +27,35 @@
     {
       "t": "2026-09-17T15:20:44.533Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-17T16:57:40.198Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T17:09:36.922Z",
+      "note": "walks none -> svg-export-size-walk"
+    },
+    {
+      "t": "2026-09-17T17:09:36.969Z",
+      "note": "Adversarial review before building: the mock-free version of this is one caption line, and the shortest thing that delivers the value is to reuse the picture formats' own line rather than invent a vector one. Checked what a first-time user hits: the SVG block is an icon-led list of what the file can and cannot say, so a plain caption dropped into it hangs out to the left of its neighbours; gave the line the block's own symbol instead of leaving it ragged. Cut the idea of weighing a drawing that carries a photograph: that costs a render of the picture while somebody is still choosing a format, and the line naming the picture is already directly underneath."
+    },
+    {
+      "t": "2026-09-17T17:09:39.656Z",
+      "note": "left rough: the word SVG on the size line is mildly redundant with the SVG button lit directly above it. Kept because it is the wording the animated case already shipped with (Animated SVG - 3.4 KB), where the word is news. Did not earn a task."
+    },
+    {
+      "t": "2026-09-17T17:09:39.702Z",
+      "note": "left rough: an SVG carrying a photograph still shows no size, because weighing it means rendering the photograph. The picture formats already do exactly that off the main thread with a 140ms settle, so it could be done for SVG one day. Not filed: nobody is stopped by it and the line naming the picture that rides along sits where the size would have been."
+    },
+    {
+      "t": "2026-09-17T17:10:06.526Z",
+      "note": "Export on SVG now says the file size on its own line under how big the drawing was made, in the words the picture formats use (ExportQuality.note(forName:bytes:weighed:), which note(forFormat:) now goes through). Weighing runs for every SVG rather than only moving ones; handoffNote no longer prints a second copy. Verified by svg-export-size-walk: SVG - 251 bytes, 313 with the background in, 251 back out, and Lossless - 21 KB on PNG from the same control, with three real window captures. Perf gated at 3.4ms for 100 shapes. Full suite 8205 green. Audit queue/audits/2026-09-17-svg-export-size.json. Commit a4a7dbf7."
     }
   ],
-  "walks": []
+  "walks": [
+    "svg-export-size-walk"
+  ],
+  "started": "2026-09-17T16:57:40.197Z",
+  "completed": "2026-09-17T17:10:06.527Z"
 }

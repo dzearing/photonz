@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 2950,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T15:35:19.495Z",
-  "updated": "2026-09-17T15:35:19.498Z",
+  "updated": "2026-09-17T17:31:35.212Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-17 against a freshly built probe, on source with and without the undo-while-trimming change (verified by stashing that change and re-running: identical failure), so it is not a regression from that work.\n\nThe committed walk fails:\n  $ PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/trim-keeps-the-piece-you-picked-walk.json --no-build\n  [24 key] delete\n  [26 expectRecording] FAILED: it is in 3 pieces, not 2; the window keeps 2 pieces, not 1; the window is 6.00s long, not 2.00s (the recording reads: 3 pieces, piece 2 picked, 2 of 3 kept, window 6.00s, starts at 2.00s, caught on nothing, trim open)\n\nIt is not about trim mode. The same key does nothing with the handles CLOSED, three pieces, playhead in the middle one:\n  [11 expectRecording] the recording reads 3 pieces, piece 2 picked, 3 of 3 kept, window 8.00s, trim closed, as claimed\n  [12 key] delete\n  [14 expectRecording] FAILED: it is in 3 pieces, not 2\n\nKeys DO reach the view under the same conditions, so this is not focus and not the locked screen: B, handled two lines away in the same VideoEditorView.handleKey switch, cuts every time.\n  [4 key] b\n  [6 expectRecording] the recording reads 2 pieces, piece 2 picked, 2 of 2 kept, as claimed\n\nAnd the menu has no key equivalent for it at all, though EditorCommands.swift:288 writes one:\n  [12 shortcut] FAILED: no menu item carries delete; a `menus` step lists every shortcut the app has\n\nSo both routes are dead: the Video menu's \"Delete This Piece\" (.keyboardShortcut(.delete, modifiers: []), EditorCommands.swift:287-289) registers nothing with AppKit, and VideoEditorView.handleKey's `case .delete, .deleteForward` (VideoEditorView.swift:212) never fires. Worth checking first whether SwiftUI's KeyEquivalent.delete and KeyPress.Key.delete disagree about which character U+007F vs U+0008 is, since the harness sends U+007F with key code 51, which is what a real backspace sends (PlaytestScript.swift:421).\n\nThree places in the app promise this key: the trash tooltip outside trim mode, the trash tooltip inside trim mode, and the menu item.\n\nThe walk that catches it already exists and needs no changes: Scripts/playtest/trim-keeps-the-piece-you-picked-walk.json.",
@@ -23,9 +23,44 @@
     {
       "t": "2026-09-17T15:35:19.497Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T17:10:41.235Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T17:31:19.527Z",
+      "note": "walks trim-keeps-the-piece-you-picked-walk -> trim-keeps-the-piece-you-picked-walk, delete-key-drops-a-piece-walk"
+    },
+    {
+      "t": "2026-09-17T17:31:19.572Z",
+      "note": "Reproduced first: trim-keeps-the-piece-you-picked-walk failed at step 26 exactly as the notes said. Root cause proved, not guessed. SwiftUI's KeyEquivalent.delete holds U+0008 (the backspace control character) while the key above Return sends U+007F, so the two never meet. Measured two ways: a temporary print in handleKey reported 'key=U+007F isDelete=false' for a real press, and a standalone NSMenu given one item answered performKeyEquivalent false for every U+0008 item and true for every U+007F one, with and without command or option. A dump of the running probe's menu bar showed SwiftUI had registered [U+0008] for all three of the app's Delete-key rows."
+    },
+    {
+      "t": "2026-09-17T17:31:25.396Z",
+      "note": "Adversarial review before building: the one worry with a plain Delete menu shortcut is that it outranks a text field, so backspace would eat a piece while somebody was typing. Checked: the recording window has no text field of any kind, and the menu row is disabled whenever no video window has the focus, so there is nowhere for it to steal from. Left the shortcut plain rather than adding a modifier the tooltip would then have to be rewritten for."
+    },
+    {
+      "t": "2026-09-17T17:31:25.442Z",
+      "note": "left rough: after a piece goes, the piece AFTER it becomes the picked one, so two presses of Delete take two pieces. It is defensible (the playhead lands on the join and the join belongs to what follows) and one undo puts each back, so it did not earn a task; it is an evaluate question on the audit instead, for the user to settle."
+    },
+    {
+      "t": "2026-09-17T17:31:25.488Z",
+      "note": "shortcut steps are lock-safe and now say so. Forced delete-key-drops-a-piece-walk under the lock: its shortcut step named its item correctly ('delete is Video > Delete This Piece') because it reads the app's own menu data rather than an accessibility name, so 'shortcut' was added to PlaytestLockSafety.stepsThatSurviveALock with the evidence. Ran every one of the twelve walks that use a shortcut step afterwards: history-thumbnail-shapes-walk is newly un-refused and passes, history-tooltips-walk passes, the other nine are still refused for other steps. No new failures."
+    },
+    {
+      "t": "2026-09-17T17:31:25.535Z",
+      "note": "Filed delete-layer-and-fill-with-foreground-answer-the: Layer > Delete Layer (command delete) and Edit > Fill with Foreground (option delete) are dead the same way, but they live in shared code that Current uses, and this task is scoped to next, so they were not touched here."
+    },
+    {
+      "t": "2026-09-17T17:31:35.210Z",
+      "note": "Delete now drops the piece the playhead is in, by key and by menu row. Root cause: SwiftUI's KeyEquivalent.delete is U+0008 and the key sends U+007F, so neither VideoEditorView.handleKey nor the menu shortcut ever matched. The fact now lives in PhotonzCore.DeleteKeyCharacters with tests; VideoEditorView and EditorCommands compare against it. Verified: trim-keeps-the-piece-you-picked-walk green again (handles open), new delete-key-drops-a-piece-walk green (handles closed, plus a shortcut step that finds Video > Delete This Piece carrying plain Delete), Scripts/test.sh green at 8210 tests, and the trim/cut/piece walk families all re-run green. Audit: queue/audits/2026-09-17-delete-a-piece.json with three real window captures. Commit 19e03001."
     }
   ],
   "walks": [
-    "trim-keeps-the-piece-you-picked-walk"
-  ]
+    "trim-keeps-the-piece-you-picked-walk",
+    "delete-key-drops-a-piece-walk"
+  ],
+  "started": "2026-09-17T17:10:41.234Z",
+  "completed": "2026-09-17T17:31:35.211Z"
 }
