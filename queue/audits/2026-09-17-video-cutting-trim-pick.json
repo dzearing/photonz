@@ -1,0 +1,32 @@
+{
+  "feature": "The piece you picked stays picked while you trim, and Delete still takes it",
+  "epic": "video-cutting",
+  "summary": "Opening the trim handles used to make the piece you were working on anonymous: the track was about the window and nothing else. The picked piece now keeps a quiet white outline under the handles, the trash button comes into the trim row beside Reset, and Delete drops that piece without throwing away the window you were half way through setting: the start handle stays where you left it and the end handle slides back by the length that went.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Cut a recording into pieces and drop the one you do not want\" (next-cut-a-recording), on by default. You need a recording: use the menu-bar recorder, or open any clip from the capture history.",
+  "try": [
+    { "do": "Open a recording and press space to stop it." },
+    { "do": "Press B a quarter of the way in, then again three quarters of the way in, so it is in three pieces." },
+    { "do": "Click the middle block. It goes accent, and the trash button appears." },
+    { "do": "Press the scissors button. Look for the middle piece: it now wears a white hairline instead of the accent block." },
+    { "do": "Drag the start handle right until it passes the first cut, and watch whether the outline is still telling you which piece is picked." },
+    { "do": "Press Delete, or the trash button that is now on the trim row, and watch the two handles rather than the blocks." },
+    { "do": "Press Command-Z. The piece and the window both come back, and you are still trimming." },
+    { "do": "Press Done." }
+  ],
+  "evaluate": [
+    "Under the handles, can you tell at a glance which piece Delete would take?",
+    "Is a white outline enough, or does the pick disappear next to two accent handles and an accent window border?",
+    "On a piece the window keeps in full, does the outline still read, or does it vanish into that piece's own bright fill?",
+    "When Delete drops a piece, does what happens to the two handles look like what you expected, or would you rather they went back to the ends?",
+    "Dragging a handle moves the playhead, and the playhead is what picks a piece, so a handle drag changes the pick. Does that feel right, or does the pick want to stay where you put it?",
+    "Does a round trash button sitting next to the words Reset, Cancel and Done look like it belongs on that row?"
+  ],
+  "rough": [
+    "NOTHING HERE HAS BEEN SEEN ON A SCREEN, AND THERE ARE NO OFFSCREEN RENDERS EITHER. The Mac's screen was locked for the whole of this task, which makes a walk refuse to run at all, so there is no real capture and no render. That is now three video tasks in a row nobody has looked at. What IS checked: 8096 tests pass, eight of them pin the window-moves-with-the-pieces arithmetic, and two more replay both new walks against the model so every number those walks claim is right before anybody runs them. A sweep is requested.",
+    "The colour choice is the thing to look at first and the thing least possible to check. The outline is white at 0.95 over a kept fill of white at 0.5, so on a piece the window keeps in full it is a step of 0.45 in alpha and nothing else. It may be too quiet there. Brightening the picked block's fill as well was the first attempt and was taken back out: it left the outline with almost no contrast against its own block, and a brighter block reads as one the window keeps more of, which is a different claim.",
+    "The trash button is a round icon button standing next to three text buttons. It is discoverable, which the key alone was not, but the row is now a mix of two kinds of button and I could not look at it.",
+    "A handle drag moves the playhead, and the playhead is what picks a piece, so dragging a handle silently changes which piece Delete would take. That is inherent to there being no separate selection, and it is the right model, but it means the pick under the handles is less stable than the pick on the strip.",
+    "Handles still do not catch on a cut as they pass. Unchanged from the last audit and deliberately still open.",
+    "The Undo button is hidden in trim mode (the whole edit-button row is), so undoing a delete you made while trimming means Command-Z or the Edit menu. That works, but there is no button saying so."
+  ]
+}

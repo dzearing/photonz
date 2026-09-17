@@ -469,8 +469,22 @@ struct VideoEditorView: View {
     }
 
     /// Trim-mode session chrome, mirroring the crop row's Reset/Cancel/Done.
+    ///
+    /// The trash comes in here too. Handles can only take time off the two
+    /// ends, so dropping a piece out of the MIDDLE while the handles are open
+    /// is a thing only Delete can do, and hiding the button left the key as the
+    /// only way to reach it — a key nobody is told about. It appears on exactly
+    /// the same condition as it does outside trim mode, so it is never a button
+    /// that would do nothing.
     private var trimModeButtons: some View {
         HStack(spacing: 12) {
+            if cuttingAvailable, state.canDeleteSelectedPiece {
+                Button { state.deleteSelectedPiece() } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(IconActionButtonStyle())
+                .help("Delete This Piece (⌫)")
+            }
             Button("Reset") { state.resetTrimSelection() }
                 .buttonStyle(.plain)
                 .font(.caption)

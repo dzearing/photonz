@@ -320,3 +320,45 @@ extension VideoCutList {
         return reading
     }
 }
+
+extension VideoCutList {
+    /// Where a live trim window lands once a piece is thrown away.
+    ///
+    /// Dropping a piece shortens the timeline and slides everything after it
+    /// up, so a window measured against the old timeline points at the wrong
+    /// recording the instant the piece goes. Resetting it to the whole clip is
+    /// the easy answer and the wrong one: somebody who has just placed two
+    /// handles and then dropped a piece out of the middle has not asked for
+    /// their handles back at the ends.
+    ///
+    /// So the window moves with the pieces. A handle before the dropped piece
+    /// stays put, a handle after it comes back by the length that went, and a
+    /// handle standing INSIDE the piece that is going lands on the join the
+    /// delete closes — which is where that moment of the recording now is.
+    /// A window that was wholly inside the dropped piece has nothing left to
+    /// describe, so it opens back up to the whole of what remains rather than
+    /// collapsing to a sliver.
+    ///
+    /// Asking to remove a piece that cannot go (the last one, or an index that
+    /// is not there) leaves the window exactly as it was.
+    ///
+    /// Called on the list that STILL HAS the piece in it — the one the caller
+    /// is holding at the moment the person presses Delete — because `index` and
+    /// the length that is about to go are both read from it.
+    public func trimAfterRemovingPiece(at index: Int, from trim: VideoTrim) -> VideoTrim {
+        guard canRemovePiece(at: index), let range = timelineRange(ofPiece: index) else {
+            return trim
+        }
+        let gone = max(0, range.end - range.start)
+        let remaining = max(0, timelineDuration - gone)
+        func moved(_ seconds: TimeInterval) -> TimeInterval {
+            if seconds <= range.start { return seconds }
+            if seconds >= range.end { return seconds - gone }
+            return range.start
+        }
+        let lo = moved(trim.inPoint)
+        let hi = moved(trim.outPoint)
+        guard hi - lo > 1e-6 else { return VideoTrim(duration: remaining) }
+        return VideoTrim(inPoint: lo, outPoint: hi, duration: remaining)
+    }
+}

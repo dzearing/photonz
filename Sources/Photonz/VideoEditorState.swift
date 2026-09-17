@@ -522,6 +522,7 @@ final class VideoEditorState {
         // A split changes no frames, so there is nothing to rebuild and nothing
         // to interrupt: the strip simply grows a join.
         editUndo.append(EditStep(kind: .cut, cuts: cuts, trim: trim, crop: crop,
+                                 trimSessionBaseline: trimBeforeSession,
                                  playheadAfterUndo: at))
         cuts = next
     }
@@ -540,9 +541,20 @@ final class VideoEditorState {
     func deleteSelectedPiece() {
         guard canDeleteSelectedPiece, let index = selectedPieceIndex else { return }
         let landing = cuts.timelineStart(ofPiece: index)
+        // The trim handles, if they are open, move with the pieces rather than
+        // being thrown back to the ends: somebody who has just placed a window
+        // and then dropped a piece out of the middle of it has not asked for
+        // their handles back. The baseline Cancel restores moves the same way,
+        // or Cancel would put the handles somewhere the timeline no longer
+        // reaches.
+        let movedTrim = isTrimming ? cuts.trimAfterRemovingPiece(at: index, from: trim) : nil
+        let movedBaseline = trimBeforeSession
+            .map { cuts.trimAfterRemovingPiece(at: index, from: $0) }
         var next = cuts
         guard next.removePiece(at: index) else { return }
-        apply(next, kind: .deletePiece, playheadAt: min(landing, next.timelineDuration),
+        if isTrimming { trimBeforeSession = movedBaseline }
+        apply(next, kind: .deletePiece, nextTrim: movedTrim,
+              playheadAt: min(landing, next.timelineDuration),
               playheadAfterUndo: landing)
     }
 
@@ -550,13 +562,19 @@ final class VideoEditorState {
     /// and land the playhead. The one path every edit that changes what plays
     /// goes through, so the player is never left showing frames that are no
     /// longer in the recording.
+    ///
+    /// `nextTrim` is where the live trim window lands afterwards; nil means the
+    /// edit has consumed the window, so it re-opens to the whole of what is
+    /// left (which is what applying a trim does).
     private func apply(_ next: VideoCutList, kind: EditKind,
+                       nextTrim: VideoTrim? = nil,
                        playheadAt landing: TimeInterval,
                        playheadAfterUndo: TimeInterval = 0) {
         editUndo.append(EditStep(kind: kind, cuts: cuts, trim: trim, crop: crop,
+                                 trimSessionBaseline: trimBeforeSession,
                                  playheadAfterUndo: playheadAfterUndo))
         cuts = next
-        trim = VideoTrim(duration: next.timelineDuration)
+        trim = nextTrim ?? VideoTrim(duration: next.timelineDuration)
         // Move the playhead in the same breath as the pieces. Re-pointing the
         // player is asynchronous, and a strip left for a frame showing the
         // playhead inside a piece that is already gone is exactly the kind of
@@ -691,7 +709,10 @@ final class VideoEditorState {
             rebuildPlayer(resumeAt: trim.inPoint, keepPlaying: false)
         case .cut, .deletePiece:
             // Land the playhead back on the cut that just came back, so what
-            // undo did is the thing you are looking at.
+            // undo did is the thing you are looking at. The trim session's
+            // baseline comes back with it, so Cancel after an undone delete
+            // still restores the window the mode opened with.
+            if isTrimming { trimBeforeSession = prev.trimSessionBaseline }
             pause()
             currentTime = min(max(0, prev.playheadAfterUndo), cuts.timelineDuration)
             if cutsChanged { rebuildPlayer(resumeAt: currentTime, keepPlaying: false) }
@@ -799,6 +820,10 @@ final class VideoEditorState {
         let cuts: VideoCutList
         let trim: VideoTrim
         let crop: VideoCrop?
+        /// The window trim mode opened with, when a mode was open — what Cancel
+        /// restores. Carried here because an edit made DURING a trim session
+        /// moves it, and undoing that edit has to move it back.
+        var trimSessionBaseline: VideoTrim?
         /// Where to put the playhead after this step is undone, in the restored
         /// timeline's own time.
         var playheadAfterUndo: TimeInterval = 0

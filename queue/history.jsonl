@@ -4958,3 +4958,12 @@
 {"t":"2026-09-17T11:35:58.978Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
 {"t":"2026-09-17T11:35:59.023Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
 {"t":"2026-09-17T11:35:59.069Z","ev":"task_done","id":"the-dashboard-says-when-the-loop-has-gone-blind","from":"in_progress","note":"queue-lib sweepState carries screenLocked and a blindSince taken from the unbroken run of locked sweeps (handed the history aggregateState already read); dashboard.html says 'no walk sweep for 2 days: the screen is locked · 83 waiting' in the hero corner over the amber strip that says what to do, and reads exactly as before when a sweep actually ran. Drill queue/bin/sweep-line-drill.mjs covers both states from the real page functions; verified live in a browser against the real queue (queue/audits/2026-09-17-dashboard-blind-loop-1.png), Scripts/test.sh green, committed 3619a09b and pushed."}
+{"t":"2026-09-17T11:36:40.897Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T11:36:41.013Z","ev":"task_started","id":"while-you-trim-a-recording-you-can-still-see-and","title":"While you trim a recording you can still see and delete the piece you picked","priority":"p2-normal"}
+{"t":"2026-09-17T11:38:18.232Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
+{"t":"2026-09-17T11:47:49.247Z","ev":"task_walks","id":"while-you-trim-a-recording-you-can-still-see-and","walks":["trim-keeps-the-piece-you-picked-walk","trim-cancel-after-a-delete-walk"]}
+{"t":"2026-09-17T11:48:06.724Z","ev":"task_note","id":"a-trim-handle-catches-on-a-cut-as-it-passes"}
+{"t":"2026-09-17T11:48:06.773Z","ev":"task_created","id":"undo-is-reachable-while-you-are-trimming-a-recor","priority":"p2-normal","title":"Undo is reachable while you are trimming a recording"}
+{"t":"2026-09-17T11:48:12.725Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
+{"t":"2026-09-17T11:48:12.775Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
+{"t":"2026-09-17T11:48:12.823Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}

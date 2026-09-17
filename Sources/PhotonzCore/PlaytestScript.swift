@@ -595,7 +595,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The two handle moves take the quarter and three quarter marks of the
     /// clip, which is a real drag's outcome without a walk having to know how
     /// long the sample is.
-    case videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone, videoCopyGIF
+    case videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone, videoTrimCancel, videoCopyGIF
     /// Open a recording window on the guides' sample clip WITHOUT a guide: a
     /// fresh eight second MP4 with dead air at both ends and something
     /// happening in the middle. What a cutting walk needs, since every other
@@ -627,7 +627,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// picture editor. What tells a walk which window to ask.
     public var drivesRecording: Bool {
         switch self {
-        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF,
+        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
+             .videoCopyGIF,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause: true
         default: false
@@ -1889,6 +1890,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// exactly right (`TutorialLauncher`). Panels do not count, so a callout or
     /// a tooltip floating over a window is never mistaken for one.
     case expectWindows(titled: String, count: Int)
+    /// What the recording in front of the walk is made of: how many pieces it
+    /// is in, which one is picked (1-based, 0 for none), how many of them the
+    /// live trim window keeps, and how long that window is. Every claim is
+    /// optional; the step has to make at least one.
+    case expectRecording(pieces: Int?, picked: Int?, keeps: Int?, seconds: Double?)
     /// Which tutorial shelves must be on offer right now, and which must not,
     /// by the name a person reads ("Redlining").
     ///
@@ -2286,7 +2292,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2342,6 +2348,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectMeasures: "expectMeasures"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
+        case .expectRecording: "expectRecording"
         case .expectTutorialTracks: "expectTutorialTracks"
         case .expectFeet: "expectFeet"
         case .expectRegion: "expectRegion"
@@ -2813,6 +2820,26 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of windows is a whole number, zero or more, not \(howMany)")
             }
             self = .expectWindows(titled: titled, count: Int(howMany))
+        case "expectRecording":
+            func whole(_ key: String) throws -> Int? {
+                guard fields[key] != nil else { return nil }
+                let value = try f.number(key)
+                guard value >= 0, value == value.rounded() else {
+                    throw f.invalid(key, "\(key) is a whole number, zero or more, not \(value)")
+                }
+                return Int(value)
+            }
+            let pieces = try whole("pieces")
+            let picked = try whole("picked")
+            let keeps = try whole("keeps")
+            let seconds = fields["seconds"] != nil ? try f.number("seconds") : nil
+            guard pieces != nil || picked != nil || keeps != nil || seconds != nil else {
+                throw f.invalid("pieces", "expectRecording has to claim something about the "
+                    + "recording: \"pieces\" for how many pieces it is in, \"picked\" for which "
+                    + "one is picked (1-based, 0 for none), \"keeps\" for how many of them the "
+                    + "trim window keeps, or \"seconds\" for how long the window is")
+            }
+            self = .expectRecording(pieces: pieces, picked: picked, keeps: keeps, seconds: seconds)
         case "expectTutorialTracks":
             let with = try f.optionalStrings("with")
             let without = try f.optionalStrings("without")

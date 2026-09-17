@@ -1407,6 +1407,12 @@ private final class Run {
             note(number, step.name, try checkWindows(titled: titled, count: count),
                  state: describe())
 
+        case .expectRecording(let pieces, let picked, let keeps, let seconds):
+            note(number, step.name,
+                 try checkRecording(pieces: pieces, picked: picked, keeps: keeps,
+                                    seconds: seconds),
+                 state: describe())
+
         case .expectFeet(let layerName, let start, let end, let reads, let within):
             note(number, step.name,
                  try checkFeet(layerName, start: start, end: end, reads: reads, within: within),
@@ -1976,6 +1982,7 @@ private final class Run {
             case .videoTrimStart: video.setTrimIn(video.duration * 0.25)
             case .videoTrimEnd: video.setTrimOut(video.duration * 0.75)
             case .videoTrimDone: video.commitTrim()
+            case .videoTrimCancel: video.cancelTrim()
             case .videoCopyGIF: coordinator.copyRecording(video, as: .gif)
             case .videoSeekQuarter: video.scrub(to: video.duration * 0.25)
             case .videoSeekMiddle: video.scrub(to: video.duration * 0.5)
@@ -2652,7 +2659,8 @@ private final class Run {
                 editor.isBlankCanvasDialogPresented = false
                 editor.isResizeDialogPresented = false
                 editor.isCanvasSizeDialogPresented = false
-            case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF,
+            case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
+                 .videoCopyGIF,
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
                  .openSampleRecording:
@@ -6530,6 +6538,47 @@ private final class Run {
              + "\(Int(opened.naturalSize.width))x\(Int(opened.naturalSize.height)); "
              + "window \(Int(window.frame.width))x\(Int(window.frame.height)) pt",
              state: describe())
+    }
+
+    /// What the recording in front of the walk is made of, checked rather than
+    /// photographed. The video walks were written as describe-and-snapshot
+    /// scripts, which means a run on a Mac that cannot photograph anything
+    /// proves nothing at all; this is the step that fails.
+    private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,
+                                seconds: Double?) throws -> String {
+        let video = try requireRecording()
+        let counted = video.trimmedPieceCount
+        // 1-based on the way in and on the way out, because "piece 2" is what
+        // the strip, the readout and a person all say; 0 means none is picked.
+        let picking = (video.selectedPieceIndex.map { $0 + 1 } ?? 0)
+        let window = video.trim.effectiveDuration
+        let saying = "\(video.cuts.pieceCount) piece\(video.cuts.pieceCount == 1 ? "" : "s")"
+            + ", \(picking == 0 ? "none picked" : "piece \(picking) picked")"
+            + ", \(counted.kept) of \(counted.total) kept"
+            + ", window \(String(format: "%.2f", window))s"
+            + (video.isTrimming ? ", trim open" : ", trim closed")
+
+        var wrong: [String] = []
+        if let pieces, pieces != video.cuts.pieceCount {
+            wrong.append("it is in \(video.cuts.pieceCount) pieces, not \(pieces)")
+        }
+        if let picked, picked != picking {
+            wrong.append(picking == 0
+                ? "no piece is picked, not piece \(picked)"
+                : "piece \(picking) is picked, not piece \(picked)")
+        }
+        if let keeps, keeps != counted.kept {
+            wrong.append("the window keeps \(counted.kept) pieces, not \(keeps)")
+        }
+        if let seconds, abs(seconds - window) > 0.05 {
+            wrong.append("the window is \(String(format: "%.2f", window))s long, not "
+                + "\(String(format: "%.2f", seconds))s")
+        }
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + " (the recording reads: "
+                + saying + ")")
+        }
+        return "the recording reads \(saying), as claimed"
     }
 
     private func requireRecording() throws -> VideoEditorState {

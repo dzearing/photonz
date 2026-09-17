@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:00.657Z",
-  "updated": "2026-09-17T10:56:06.591Z",
+  "updated": "2026-09-17T11:48:12.822Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json, written by the runner who built trim mode: \"Trim mode does not show which piece is selected, the way the strip does outside it. There is no Delete while trimming, and an accent block would compete with the accent handles and the accent window border, so the track stays about the window and nothing else.\" That colour argument is the thing to solve rather than to repeat: the pick probably wants a quieter mark than the accent block used outside trim mode. Code: Sources/Photonz/TrimTimeline.swift draws the blocks and the handles, Sources/Photonz/VideoEditorState.swift holds the pieces (cuts, VideoCutList) and deleteSelectedPiece() at line 540, Sources/Photonz/VideoEditorView.swift:212 is where the Delete key is gated on cuttingAvailable and canDeleteSelectedPiece. Nothing about this has been seen on a screen: the whole video track was built while the Mac was locked, and that audit says so at the top in capitals.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-17T10:56:06.590Z",
       "note": "seq 2930 -> 50"
+    },
+    {
+      "t": "2026-09-17T11:36:41.011Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T11:38:18.230Z",
+      "note": "Adversarial review, before building. (1) The pick is NOT actually lost on entering trim mode: selectedPieceIndex is derived from the playhead (VideoEditorState.swift:52) and beginTrim does not move it. What is lost is the SIGN of it (TrimTimeline draws no picked state) and the trash button (editButtons is swapped for trimModeButtons at VideoEditorView.swift:322). (2) The rough note that said 'there is no Delete while trimming' is not what the code says either: handleKey (VideoEditorView.swift:212) guards Delete on isReady, !isCropping, cuttingAvailable and canDeleteSelectedPiece, and none of those is isTrimming, so the key fires. What it then does is worse than nothing: apply() resets trim to VideoTrim(duration:) so the window you were half way through setting is thrown away, and trimBeforeSession still holds in/out points from the OLD longer timeline, so Cancel afterwards puts the handles past the end of the track. That is the real defect to fix, and it is the thing worth a core test. (3) So the shortest version that delivers the value is not 'add Delete', it is: carry the trim window THROUGH a delete (pure, testable), mark the picked block quietly, and give the trash button a home in trim mode so the key is discoverable. (4) The accent argument from the audit holds: accent is the handles and the window border, both of which mean 'the window'. The pick is a different idea, so it gets a white hairline outline and a slightly stronger fill, in the family the kept-fill and playhead already use. (5) Cut: I am NOT undoing the delete on Cancel. Cancel cancels the trim window; a delete is an applied edit with its own undo step, and Undo is reachable while trimming through Command-Z (EditorCommands.swift:396) even though the Undo button is hidden."
+    },
+    {
+      "t": "2026-09-17T11:47:49.245Z",
+      "note": "owns these walks: trim-keeps-the-piece-you-picked-walk, trim-cancel-after-a-delete-walk"
+    },
+    {
+      "t": "2026-09-17T11:48:12.723Z",
+      "note": "Built and shipped. Core: VideoCutList.trimAfterRemovingPiece(at:from:) in Sources/PhotonzCore/VideoCuts.swift maps a live trim window through a piece being dropped (handle before it stays, handle after it slides back, handle inside it lands on the join, a window wholly inside it opens back up). Eight tests pin it. App: VideoEditorState.apply gained nextTrim and EditStep gained trimSessionBaseline, so deleting while trimming keeps the window AND keeps Cancel honest; TrimTimeline draws the picked block with a white hairline and nothing else; the trash button joined trimModeButtons. Harness: a new expectRecording step (pieces / picked / keeps / seconds) so a video walk can FAIL rather than only photograph, which is the gap that let three video features ship unseen."
+    },
+    {
+      "t": "2026-09-17T11:48:12.773Z",
+      "note": "Post-build review, as honest as a locked Mac allows. The screen was locked for the whole task, so both new walks parse and neither has ever run: instead TrimPickWalkArithmeticTests replays both walks step by step against the model, so every number they claim is checked before a sweep ever runs them. What that does NOT check is the app wiring (does the Delete key reach the video window in trim mode, does the outline read on screen). A sweep is requested. Changed away from my own first pass: the picked block originally got brighter fills as well as the outline, and I took that back out — it left the outline with almost no contrast against its own block, and a brighter block reads as one the window keeps more of, which is a claim the fills are already making about something else."
+    },
+    {
+      "t": "2026-09-17T11:48:12.821Z",
+      "note": "left rough, not filed: (a) the outline may be too quiet on a piece the window keeps in full — cannot be settled without looking at it, so it is an evaluate question on the audit rather than a task; (b) the trim row is now a round icon button next to three text buttons, a look nobody has seen; (c) dragging a handle moves the playhead and the playhead is what picks a piece, so a handle drag quietly changes which piece Delete would take — inherent to there being no separate selection, and on the audit for the user to react to. Folded into an existing task: handles still do not catch on a cut (a-trim-handle-catches-on-a-cut-as-it-passes). Filed: undo-is-reachable-while-you-are-trimming-a-recor."
     }
+  ],
+  "started": "2026-09-17T11:36:41.010Z",
+  "walks": [
+    "trim-keeps-the-piece-you-picked-walk",
+    "trim-cancel-after-a-delete-walk"
   ]
 }

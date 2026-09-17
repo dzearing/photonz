@@ -59,9 +59,10 @@ struct TrimTimeline: View {
                 // An uncut recording has no pieces to show and keeps its plain
                 // track, exactly as before.
                 if showsPieces {
+                    let picked = state.selectedPieceIndex
                     ForEach(pieceBlocks(trackW: trackW, duration: duration),
                             id: \.index) { block in
-                        pieceBlock(block)
+                        pieceBlock(block, isPicked: block.index == picked)
                     }
                 }
 
@@ -102,6 +103,21 @@ struct TrimTimeline: View {
             .coordinateSpace(.named(Self.space))
         }
         .frame(height: trackHeight)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Trim window")
+        .accessibilityValue(trackSummary)
+    }
+
+    /// What the track says out loud: the window, and which piece is picked. A
+    /// walk finds a control by its name, so this is also how the pick can be
+    /// checked without reading pixels.
+    private var trackSummary: String {
+        let window = "\(VideoTimecode.label(state.trim.inPoint))"
+            + " to \(VideoTimecode.label(state.trim.outPoint))"
+        guard showsPieces else { return window }
+        let counted = state.trimmedPieceCount
+        let picked = state.selectedPieceIndex.map { "piece \($0 + 1) picked" } ?? "no piece picked"
+        return "\(window), \(counted.kept) of \(counted.total) pieces kept, \(picked)"
     }
 
     /// Whether there are pieces worth drawing: cutting has to be available in
@@ -123,7 +139,21 @@ struct TrimTimeline: View {
     /// One piece: the whole of it faintly, the part the trim window still keeps
     /// brighter on top. A piece the handles have let go of has no bright part
     /// at all, which is what "this one is going" looks like.
-    private func pieceBlock(_ block: VideoTrimTrackBlock) -> some View {
+    ///
+    /// The picked piece — the one Delete would take — wears a white hairline
+    /// round it. Deliberately NOT the accent block the strip uses outside trim
+    /// mode: in here the accent is already spoken for by the two handles and
+    /// the window border, and all three of those say the same thing, which is
+    /// where the window is. The pick is a different idea, so it gets a
+    /// different kind of mark, an outline rather than a fill.
+    ///
+    /// An outline and NOTHING else, on purpose. Brightening the picked block's
+    /// fills as well was the first try, and it is wrong twice over: it leaves
+    /// the outline with barely any contrast against the block it is drawn on,
+    /// and a piece drawn brighter than its neighbours reads as one the window
+    /// keeps more of, which would be a lie. The fills say kept or dropped and
+    /// only that; the outline says picked.
+    private func pieceBlock(_ block: VideoTrimTrackBlock, isPicked: Bool) -> some View {
         ZStack(alignment: .topLeading) {
             Rectangle()
                 .fill(.white.opacity(0.12))
@@ -136,6 +166,13 @@ struct TrimTimeline: View {
         }
         .frame(width: block.width, height: blockHeight)
         .clipShape(RoundedRectangle(cornerRadius: 5))
+        .overlay {
+            if isPicked {
+                RoundedRectangle(cornerRadius: 5)
+                    .strokeBorder(.white.opacity(0.95), lineWidth: 1.5)
+                    .frame(width: block.width, height: blockHeight)
+            }
+        }
         .offset(x: block.x, y: (trackHeight - blockHeight) / 2)
         .allowsHitTesting(false)
     }

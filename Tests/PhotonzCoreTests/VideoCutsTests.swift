@@ -433,3 +433,111 @@ struct VideoPieceTrimTests {
         }
     }
 }
+
+// MARK: - A live trim window survives a piece being thrown away
+
+/// Deleting a piece while the trim handles are open used to throw the window
+/// away: the pieces got shorter and the window was reset to the whole clip, so
+/// the handles a person had just placed jumped back to the ends. These pin the
+/// window MOVING with the pieces instead — the same stretch of recording stays
+/// inside it, measured against the shorter timeline.
+struct VideoTrimAfterRemovingPieceTests {
+    /// Three four-second pieces, twelve seconds of timeline.
+    private func threePieces() -> VideoCutList {
+        var cuts = VideoCutList(duration: 12)
+        cuts.split(atTimeline: 4)
+        cuts.split(atTimeline: 8)
+        return cuts
+    }
+
+    @Test func aWindowAfterTheDroppedPieceSlidesBackByItsLength() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 9, outPoint: 11, duration: 12)
+        let moved = cuts.trimAfterRemovingPiece(at: 0, from: window)
+        #expect(abs(moved.inPoint - 5) < 1e-6)
+        #expect(abs(moved.outPoint - 7) < 1e-6)
+        #expect(abs(moved.clipDuration - 8) < 1e-6)
+    }
+
+    @Test func aWindowBeforeTheDroppedPieceStaysWhereItIs() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 1, outPoint: 3, duration: 12)
+        let moved = cuts.trimAfterRemovingPiece(at: 2, from: window)
+        #expect(abs(moved.inPoint - 1) < 1e-6)
+        #expect(abs(moved.outPoint - 3) < 1e-6)
+        #expect(abs(moved.clipDuration - 8) < 1e-6)
+    }
+
+    /// The window straddles the piece being dropped: it keeps its start, and
+    /// its end comes back by the length that went out of the middle of it.
+    @Test func aWindowAroundTheDroppedPieceShrinksByItsLength() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 2, outPoint: 10, duration: 12)
+        let moved = cuts.trimAfterRemovingPiece(at: 1, from: window)
+        #expect(abs(moved.inPoint - 2) < 1e-6)
+        #expect(abs(moved.outPoint - 6) < 1e-6)
+    }
+
+    /// A handle standing inside the piece that is going lands on the join the
+    /// delete closes, which is where that stretch of recording now is.
+    @Test func aHandleInsideTheDroppedPieceLandsOnTheJoin() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 6, outPoint: 11, duration: 12)
+        let moved = cuts.trimAfterRemovingPiece(at: 1, from: window)
+        #expect(abs(moved.inPoint - 4) < 1e-6)
+        #expect(abs(moved.outPoint - 7) < 1e-6)
+    }
+
+    /// Untouched handles stay untouched: a full-clip window is a full-clip
+    /// window of whatever is left.
+    @Test func anUnmovedWindowStaysTheWholeOfWhatIsLeft() {
+        let cuts = threePieces()
+        let moved = cuts.trimAfterRemovingPiece(at: 1, from: VideoTrim(duration: 12))
+        #expect(!moved.isTrimmed)
+        #expect(abs(moved.clipDuration - 8) < 1e-6)
+    }
+
+    /// The whole window was inside the piece that went. There is no stretch
+    /// left for it to describe, so it opens back up to everything rather than
+    /// becoming a sliver nobody asked for.
+    @Test func aWindowWhollyInsideTheDroppedPieceOpensBackUp() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 5, outPoint: 7, duration: 12)
+        let moved = cuts.trimAfterRemovingPiece(at: 1, from: window)
+        #expect(!moved.isTrimmed)
+        #expect(abs(moved.clipDuration - 8) < 1e-6)
+    }
+
+    /// An index that is not there, or the last piece (which cannot be dropped),
+    /// leaves the window alone.
+    @Test func anImpossibleRemovalLeavesTheWindowAlone() {
+        let cuts = VideoCutList(duration: 12)
+        let window = VideoTrim(inPoint: 2, outPoint: 10, duration: 12)
+        #expect(cuts.trimAfterRemovingPiece(at: 0, from: window) == window)
+        #expect(threePieces().trimAfterRemovingPiece(at: 7, from: window) == window)
+    }
+
+    /// The promise the whole thing rests on: what the moved window keeps of the
+    /// shortened timeline is the same recording as what the old window kept of
+    /// the old one, minus whatever of it was in the piece that went.
+    @Test func theMovedWindowKeepsTheSameRecording() {
+        let cuts = threePieces()
+        let window = VideoTrim(inPoint: 2, outPoint: 10, duration: 12)
+
+        var before = cuts
+        before.keep(fromTimeline: window.inPoint, toTimeline: window.outPoint)
+        var withoutMiddle = before
+        // The middle piece, as the window left it, is the second of three.
+        withoutMiddle.removePiece(at: 1)
+
+        // Read against the list that STILL has the piece, which is what the
+        // caller has in hand at the moment the person presses Delete.
+        let moved = cuts.trimAfterRemovingPiece(at: 1, from: window)
+        var after = cuts
+        after.removePiece(at: 1)
+        var kept = after
+        kept.keep(fromTimeline: moved.inPoint, toTimeline: moved.outPoint)
+
+        #expect(kept.pieces == withoutMiddle.pieces)
+    }
+}

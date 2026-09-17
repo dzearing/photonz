@@ -17677,3 +17677,45 @@ Next: the Mac is still locked, so the 83 waiting sweeps and every audit's missin
 picture are still waiting on that. Open question is the one already on the card
 for `a-hundred-and-fifteen-walks-fail-on-code-that-pa`: whether the loop should
 keep the Mac awake at all.
+
+## 2026-09-17 — The piece you picked stays picked while you trim
+
+Task `while-you-trim-a-recording-you-can-still-see-and` (epic `video-cutting`).
+
+The premise needed correcting before it could be built. The pick was never
+actually lost on the way into trim mode: `selectedPieceIndex` is derived from
+the playhead, and `beginTrim` does not move it. What was missing was the SIGN of
+it, and the Delete key was not dead either — it fired, and then `apply` reset
+the live trim window to the whole clip while `trimBeforeSession` went on holding
+in/out points from the longer timeline, so Cancel afterwards put the handles
+past the end of the track.
+
+- `VideoCutList.trimAfterRemovingPiece(at:from:)` (PhotonzCore) maps a live trim
+  window through a piece being dropped: a handle before it stays, a handle after
+  it slides back by the length that went, a handle inside it lands on the join,
+  and a window wholly inside it opens back up to everything that is left. Eight
+  tests. Note it is called on the list that STILL HAS the piece.
+- `VideoEditorState.apply` gained `nextTrim:`, `EditStep` gained
+  `trimSessionBaseline`, so a delete made during a trim session moves both the
+  window and the baseline Cancel restores, and undoing that delete moves them
+  back.
+- `TrimTimeline` marks the picked block with a white hairline and NOTHING else.
+  Brightening its fills too was tried and removed: it killed the outline's own
+  contrast, and a brighter block reads as one the window keeps more of.
+- The trash button joined `trimModeButtons`, so Delete-while-trimming is
+  discoverable rather than a key nobody is told about.
+- New walk step `expectRecording` (`pieces` / `picked` / `keeps` / `seconds`).
+  Every video walk before this was describe-and-snapshot, which proves nothing
+  at all on a Mac that cannot photograph. Documented in
+  `docs/design/playtest-harness.md`.
+- New walks `trim-keeps-the-piece-you-picked-walk` and
+  `trim-cancel-after-a-delete-walk`, plus a `videoTrimCancel` action.
+
+**The screen was locked for this whole task, so neither walk has ever run** —
+that is three video tasks in a row nobody has looked at. Instead
+`TrimPickWalkArithmeticTests` replays both walks against the model, so every
+number they claim is right before a sweep runs them. A sweep is requested.
+
+Next: the sweep, and then the colour question on the audit
+(`queue/audits/2026-09-17-video-cutting-trim-pick.json`) — whether a white
+hairline is loud enough next to two accent handles.

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:06.635Z",
-  "updated": "2026-09-17T10:56:12.266Z",
+  "updated": "2026-09-17T11:48:06.723Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json: \"A handle does not catch on a cut as it passes. Trimming exactly to a join is therefore a steady hand, not a snap. I left it out deliberately: it changes what a drag does rather than what it draws, and whether handles should be magnetic is a feel question worth answering by trying this first.\" That trial has not happened, because the Mac has been locked since 2026-09-15 and nobody has driven the video editor by hand, so build it behind the existing flag and let the audit be where it is judged. The cut positions are VideoCutList.pieces boundaries in timeline seconds (Sources/PhotonzCore/VideoCuts.swift), the handle drag is in Sources/Photonz/TrimTimeline.swift (timeFor/xFor convert points to seconds, so the catch distance converts the other way), and the existing minimum piece floor is VideoCutList.minPieceDuration. The app already has snapping idioms to copy the feel from: next-measure-center-snap and next-measure-layer-snap.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-17T10:56:12.265Z",
       "note": "seq 2930 -> 60"
+    },
+    {
+      "t": "2026-09-17T11:48:06.722Z",
+      "note": "Still open after the pick landed in trim mode (2026-09-17). Worth more now than it was: the picked piece wears an outline under the handles, so the join a handle is creeping up on is visibly the edge of a named piece, and stopping one pixel short of it is more obviously a miss than it used to be."
     }
   ]
 }

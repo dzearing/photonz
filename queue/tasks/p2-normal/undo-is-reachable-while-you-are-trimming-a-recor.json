@@ -1,0 +1,28 @@
+{
+  "id": "undo-is-reachable-while-you-are-trimming-a-recor",
+  "title": "Undo is reachable while you are trimming a recording",
+  "goal": "While the trim handles are open, the row of edit buttons is hidden, and Undo is one of them. Somebody who drops a piece while trimming and immediately wants it back finds no way back on screen: it works from the Edit menu or with Command-Z, but nothing in the window says so. Put a way back where they are looking.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2940,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T11:48:06.769Z",
+  "updated": "2026-09-17T11:48:06.772Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building while-you-trim-a-recording-you-can-still-see-and. VideoEditorView.swift:322 swaps editButtons (which carries saveButton, the Undo button, cut, trash, trim, crop, copy, export) for trimModeButtons while state.isTrimming, and trimModeButtons is Reset/Cancel/Done plus the trash button that task added. Command-Z is wired for recordings in EditorCommands.swift:396 and works, so nothing is lost, only unsaid. Not reproduced against a running app: the Mac was locked for that whole task and no walk could run, so this is read off the code and off the fact that the Undo button is inside the branch that is skipped. It is a missing affordance rather than a break, which is why it is p2.",
+  "acceptance": [
+    "With the trim handles open and an edit to undo, there is a way to undo it without leaving trim mode or opening a menu",
+    "It says what it would undo, the way the button outside trim mode does",
+    "It is not there when there is nothing to undo",
+    "A walk covers it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T11:48:06.771Z",
+      "note": "created (manual)"
+    }
+  ]
+}
