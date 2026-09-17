@@ -4692,3 +4692,9 @@
 {"t":"2026-09-17T01:06:16.614Z","ev":"task_note","id":"find-out-why-the-failure-drill-failed-once-and-p"}
 {"t":"2026-09-17T01:06:16.660Z","ev":"task_note","id":"find-out-why-the-failure-drill-failed-once-and-p"}
 {"t":"2026-09-17T01:06:16.706Z","ev":"task_note","id":"find-out-why-the-failure-drill-failed-once-and-p"}
+{"t":"2026-09-17T01:06:33.190Z","ev":"task_done","id":"find-out-why-the-failure-drill-failed-once-and-p","from":"in_progress","note":"Named it: the drill's loop exec-restarts onto any edit of queue/bin/go-loop.sh landing mid-run, and that restart calls reset-health, zeroing the health, failure count and environment streak scenario 1 asserts on. Reproduced 4/4 failing checks by appending one comment line six seconds in; 18 untouched runs of scenario 1 passed. Fixed by pinning PHOTONZ_LOOP_RELOAD=0 for the drill, with scenario 4 turning it back on for its own writable copy. Full drill 90/90 three runs in a row. Committed aa03141f, pushed. Loop-side half filed as a-fix-landing-in-the-loop-does-not-make-it-forge."}
+{"t":"2026-09-17T01:07:01.245Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T01:07:01.369Z","ev":"task_started","id":"two-shapes-joined-into-one-stop-calling-themselv","title":"Two shapes joined into one stop calling themselves a shape","priority":"p2-normal"}
+{"t":"2026-09-17T01:11:28.411Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
+{"t":"2026-09-17T01:11:30.678Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
+{"t":"2026-09-17T01:11:31.886Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}

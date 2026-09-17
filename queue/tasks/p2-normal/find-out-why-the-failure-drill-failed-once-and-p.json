@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 390,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:46:56.264Z",
-  "updated": "2026-09-17T01:06:16.705Z",
+  "updated": "2026-09-17T01:06:33.189Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-13 while landing a-manager-pass-does-not-wake-itself-up-again. First run: queue/bin/failure-drill.sh printed [drill] FAILED (scenario 1 exit 1, scenario 2 exit 0, scenario 3 exit 0, scenario 4 exit 0). I had piped it through tail -30, so the failing check itself is lost; scenarios 2 to 4 were all green in that same run. Immediate full rerun on the identical tree: 61 PASS, 0 FAIL, exit 0, [drill] all checks passed. Nothing between the runs but the rerun.\n\nSo this is filed as a question, not a bug: I cannot reproduce it. Scenario 1 is the always-failing runner (backoff, park after three tries, environment unpark), and the parts of it most likely to be timing-sensitive are the growing waits (PHOTONZ_BACKOFF_STEPS) and the regex that greps the loop window for them. Start by running it in a loop capturing full output: for i in $(seq 1 10); do queue/bin/failure-drill.sh > /tmp/fd-$i.txt 2>&1; echo $i $?; done",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-17T01:06:16.704Z",
       "note": "left rough: the loop-side half is real and is filed separately as a-fix-landing-in-the-loop-does-not-make-it-forge (p2) with the reproduction. A reload keeps the loop's pid, queue and pass count but not its health, so landing a fix while the loop is stuck resets its backoff and leaves a parked task parked. No audit: this is loop plumbing, nothing a person can try in the app."
+    },
+    {
+      "t": "2026-09-17T01:06:33.187Z",
+      "note": "Named it: the drill's loop exec-restarts onto any edit of queue/bin/go-loop.sh landing mid-run, and that restart calls reset-health, zeroing the health, failure count and environment streak scenario 1 asserts on. Reproduced 4/4 failing checks by appending one comment line six seconds in; 18 untouched runs of scenario 1 passed. Fixed by pinning PHOTONZ_LOOP_RELOAD=0 for the drill, with scenario 4 turning it back on for its own writable copy. Full drill 90/90 three runs in a row. Committed aa03141f, pushed. Loop-side half filed as a-fix-landing-in-the-loop-does-not-make-it-forge."
     }
   ],
-  "started": "2026-09-17T00:43:58.071Z"
+  "started": "2026-09-17T00:43:58.071Z",
+  "completed": "2026-09-17T01:06:33.188Z"
 }

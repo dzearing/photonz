@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 2750,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T14:37:46.815Z",
-  "updated": "2026-09-16T14:37:46.818Z",
+  "updated": "2026-09-17T01:11:31.885Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while landing a-text-layer-s-row-says-the-words-that-are-in-it, which made Turn Into Path rename its layer (PhotonzDocument.turnLayerIntoPath) and left the boolean combines as the one command that does not.\n\nReproduced on 2026-09-16 with a throwaway test against PathCombining, since combining has no walk that reads the row name back:\n\n  var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))\n  // two ellipse layers, \"Ellipse\" and \"Ellipse 2\", overlapping\n  document.combineLayers(ids: ids, .join)\n  print(document.layers.map(\\.displayName))\n\nOutput:\n\n  PROBE combine union leaves rows: [\"Ellipse\"]\n  PROBE is it a path: [true]\n\nSo the layer IS a path and its row says Ellipse. The fix mirrors turnLayerIntoPath: in PhotonzDocument.combiningLayers, work out freshLayerName(base: PathBuilder.defaultName) before the mutation when LayerNaming.isAutoName(keeper.name), and set it inside the same updateLayer that swaps the content, so it rides in the one undo step. Watch combine-shapes-walk.json, which picks rows called Ellipse 2 and Ellipse 3 AFTER a combine and will need those names updated.\n\nNot folded into the task that found it on purpose: the Mac's screen was locked for that whole task, so not one walk could be run to check it, and combining is a different command with its own question and its own walk.",
@@ -24,6 +24,23 @@
     {
       "t": "2026-09-16T14:37:46.817Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T01:07:01.367Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T01:11:28.409Z",
+      "note": "Adversarial review before building: the row is the only place the app says what a layer IS, and after a boolean it was saying a word (Ellipse) that no longer describes anything on the canvas. Turn Into Path already fixed this for one shape, so the shortest honest version is the same rule in the same place, not a new vocabulary. I considered naming the result after the command (Ring, Joined shape) and cut it: the app has no such vocabulary, and the word would be wrong the moment you drag a point. Two traps found by walking it: a survivor already called Path must not be bumped to Path 3 when the Paths it absorbed have just been deleted, and the notice under the canvas must keep naming the row as the person last saw it."
+    },
+    {
+      "t": "2026-09-17T01:11:30.676Z",
+      "note": "Landed in PhotonzCore/PathCombining.swift combiningLayers: the new name is worked out after the absorbed rows are removed and written inside the same updateLayer that swaps the content, so it is one undo step. The keeper's own name does not count as taken, which is what keeps a Path that just absorbed a Path 2 reading Path. Seven new tests in PathCombineDocumentTests cover all four operations, a hand-typed name, the Path-already-taken case, the single undo, and the notice still naming the row as it read before. Full suite green: 7911 tests in 632 suites."
+    },
+    {
+      "t": "2026-09-17T01:11:31.884Z",
+      "note": "Could not drive the app: the Mac's screen was locked for this whole task, so combine-shapes-walk.json reported status locked and exited 3 without running a step, and no window could be photographed. Read the walk instead: it only names rows (Ellipse, Ellipse 2, Ellipse 3) BEFORE a combine or after two undos have put the ovals and their names back, so the rename does not touch it and its names need no update, contrary to the worry in the task notes. A sweep was already pending from 01:07 and stays pending until the screen is unlocked, so the walk gets run there rather than asked for twice."
     }
-  ]
+  ],
+  "started": "2026-09-17T01:07:01.366Z"
 }

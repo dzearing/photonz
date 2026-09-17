@@ -1,0 +1,25 @@
+{
+  "feature": "A combined shape stops calling itself an oval",
+  "epic": "icon-vector",
+  "summary": "Join, Cut Out, Keep Overlap and Drop Overlap now leave the surviving row reading Path, the way Turn Into Path already does, so the layers list says what the shape actually is. A row somebody named by hand keeps their name.",
+  "setup": "Photonz Dev, Experiments window, release Next, with the pen turned on. Nothing else to switch on.",
+  "try": [
+    { "do": "Press O and drag a big circle on the canvas." },
+    { "do": "Press O again and drag a smaller circle inside it." },
+    { "do": "Press Escape, then click the row called Ellipse and shift-click Ellipse 2." },
+    { "do": "Right click Ellipse 2 and choose Combine Shapes > Cut Out." },
+    { "do": "Read the one row left in the layers list: it says Path." },
+    { "do": "Press Command Z once and check both circles come back with their old names." },
+    { "do": "Rename one circle to Card, pick both again, and Join them: the row still says Card." }
+  ],
+  "evaluate": [
+    "When the row flips from Ellipse to Path, does that read as the app keeping up with you, or as the app losing your layer?",
+    "Is Path the right word for what you just made, or would you rather the row said something about the combination?",
+    "One undo puts the shapes and their names back together. Did anything feel like it took two undos?",
+    "The line under the canvas still says 'keeping Ellipse's fill, outline and effects' while the row now says Path. Is naming the shape as it was a moment ago helpful there, or confusing?"
+  ],
+  "rough": [
+    "No pictures with this one: the Mac's screen was locked for the whole task, so no walk could run and macOS would not photograph the window. Everything here was proved by tests against the document, not by driving the app.",
+    "The notice under the canvas names the row by the name it had BEFORE the combine, on purpose, because by the time you read it the rows it is talking about are gone. It does mean the sentence and the row disagree for a moment."
+  ]
+}

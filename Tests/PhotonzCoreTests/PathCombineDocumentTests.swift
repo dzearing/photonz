@@ -191,6 +191,83 @@ struct PathCombineDocumentTests {
         #expect(plan.detail.contains("2 pieces"))
     }
 
+    // MARK: What the row is called afterwards
+
+    /// The pair as the shape tool actually leaves it: two ovals nobody has
+    /// named, so their rows read "Ellipse" and "Ellipse 2".
+    private func unnamedPair() -> PhotonzDocument {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
+        document.layers = [ellipseLayer("Ellipse", at: CGPoint(x: 40, y: 40)),
+                           ellipseLayer("Ellipse 2", at: CGPoint(x: 100, y: 40), fill: "#FF9F0A")]
+        return document
+    }
+
+    @Test("Two unnamed ovals combined leave one row called Path")
+    func combiningRenamesTheSurvivor() throws {
+        for operation in PathCombine.Operation.allCases {
+            var document = unnamedPair()
+            let plan = document.combineLayers(ids: ids(document), operation)
+            #expect(plan.didAnything, "\(operation) should have combined the pair")
+            let survivor = try #require(document.layers.first)
+            #expect(survivor.path != nil)
+            #expect(survivor.displayName == "Path",
+                    "\(operation) left the row saying \(survivor.displayName)")
+        }
+    }
+
+    @Test("A layer somebody called Card is still called Card")
+    func aHandNamedShapeKeepsItsName() throws {
+        for operation in PathCombine.Operation.allCases {
+            var document = unnamedPair()
+            document.layers[0].name = "Card"
+            document.combineLayers(ids: ids(document), operation)
+            #expect(document.layers.first?.name == "Card")
+        }
+    }
+
+    @Test("A survivor already called Path keeps its number rather than taking the next one")
+    func anAlreadyPathNameIsNotBumped() throws {
+        var document = unnamedPair()
+        document.layers[0].name = "Path"
+        document.layers[1].name = "Path 2"
+        document.combineLayers(ids: ids(document), .join)
+        #expect(document.layers.first?.name == "Path",
+                "the two it absorbed are gone, so there is nothing to be told apart from")
+    }
+
+    @Test("A Path already in the list means the new one takes the next number")
+    func theNewNameAvoidsOneAlreadyTaken() throws {
+        var document = unnamedPair()
+        var elsewhere = ellipseLayer("Path", at: CGPoint(x: 300, y: 200))
+        elsewhere.name = "Path"
+        document.addLayer(elsewhere)
+        let pairIDs = Set(document.layers.prefix(2).map(\.id))
+        document.combineLayers(ids: pairIDs, .join)
+        #expect(document.layers.first?.name == "Path 2")
+    }
+
+    @Test("The new name rides in the same step, so one undo puts both back")
+    func theRenameRidesInTheSameUndoStep() throws {
+        let document = unnamedPair()
+        let bottom = try #require(document.layers.first?.id)
+        var history = History(document: document)
+        history.perform { $0.combineLayers(ids: Set(document.layers.map(\.id)), .join) }
+        #expect(history.current.layer(id: bottom)?.name == "Path")
+        history.undo()
+        #expect(history.current.layers.count == 2)
+        #expect(history.current.layer(id: bottom)?.name == "Ellipse")
+        #expect(history.current.layer(id: bottom)?.annotation?.shape == .ellipse)
+        #expect(!history.canUndo)
+    }
+
+    @Test("The line under the canvas names the row the way it read before the combine")
+    func theNoticeUsesTheNameThatWasOnScreen() {
+        var document = unnamedPair()
+        let plan = document.combineLayers(ids: ids(document), .join)
+        #expect(plan.keeper == "Ellipse")
+        #expect(plan.detail.contains("keeping Ellipse's fill, outline and effects"))
+    }
+
     // MARK: It survives the disk
 
     @Test("A document with a hole in it saves and opens again with the hole")

@@ -432,11 +432,15 @@ extension PhotonzDocument {
     /// that says what happened.
     ///
     /// The shape at the BOTTOM of the picked ones is the one that survives: it
-    /// keeps its id, its slot in the stack, its name, its effects and its look,
-    /// and its content becomes the combined outline. Everything above it is
-    /// removed. That is one row changed and the rest gone, so undo has one
-    /// thing to put back and the result sits exactly where the shape it came
-    /// from sat.
+    /// keeps its id, its slot in the stack, its effects and its look, and its
+    /// content becomes the combined outline. Everything above it is removed.
+    /// That is one row changed and the rest gone, so undo has one thing to put
+    /// back and the result sits exactly where the shape it came from sat.
+    ///
+    /// Its NAME is the one thing that does not survive untouched: a row nobody
+    /// named by hand stops calling itself an oval, because what is there now is
+    /// a shape no oval could be, so it reads "Path" exactly as Turn Into Path
+    /// leaves it. A name somebody typed is kept.
     ///
     /// When the answer is NOTHING the document comes back untouched and the
     /// plan says so. Deleting both shapes and leaving a blank canvas is the one
@@ -462,6 +466,20 @@ extension PhotonzDocument {
 
         var next = self
         next.removeLayers(ids: Set(taking.dropFirst()))
+        // "Ellipse 2" is a poor name for a shape neither oval could be, and the
+        // survivor is a path now whichever of the four ran. The new name is
+        // worked out here, inside the same mutation that swaps the content, so
+        // one undo puts the ovals and their names back together
+        // (`turnLayerIntoPath` does the same for a single shape). The keeper's
+        // own name is the one name that does not count as taken: two paths
+        // joined leave a row reading "Path", not "Path 3" with no Path or
+        // Path 2 anywhere in the list. A name a person typed is theirs and is
+        // never in this at all (`LayerNaming.isAutoName`).
+        let renamed = LayerNaming.isAutoName(keeper.name)
+            ? LayerNaming.firstFree(base: PathBuilder.defaultName,
+                                    taken: Set(next.allLayers.lazy
+                                        .filter { $0.id != keeperID }.map(\.name)))
+            : nil
         next.updateLayer(id: keeperID) { layer in
             // A rectangle or a wash becomes a path first, which is what carries
             // a highlighter's mixing across into a setting it can keep
@@ -473,6 +491,7 @@ extension PhotonzDocument {
             let local = result.offsetBy(dx: -base.frame.origin.x, dy: -base.frame.origin.y)
             base.content = .path(local)
             layer = PathBuilder.refit(base, content: local)
+            if let renamed { layer.name = renamed }
         }
         return (next, plan)
     }
