@@ -1,0 +1,31 @@
+{
+  "id": "the-delete-key-drops-a-piece-the-way-the-tooltip",
+  "title": "The Delete key drops a piece, the way the tooltip says it does",
+  "goal": "Every button and menu item that drops a piece out of a recording tells you the key for it is Delete, and pressing Delete does nothing at all. The trash button works and B still splits, so the only thing broken is the key the app keeps advertising. Make the key do what the app says it does.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2950,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T15:35:19.495Z",
+  "updated": "2026-09-17T15:35:19.498Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-17 against a freshly built probe, on source with and without the undo-while-trimming change (verified by stashing that change and re-running: identical failure), so it is not a regression from that work.\n\nThe committed walk fails:\n  $ PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/trim-keeps-the-piece-you-picked-walk.json --no-build\n  [24 key] delete\n  [26 expectRecording] FAILED: it is in 3 pieces, not 2; the window keeps 2 pieces, not 1; the window is 6.00s long, not 2.00s (the recording reads: 3 pieces, piece 2 picked, 2 of 3 kept, window 6.00s, starts at 2.00s, caught on nothing, trim open)\n\nIt is not about trim mode. The same key does nothing with the handles CLOSED, three pieces, playhead in the middle one:\n  [11 expectRecording] the recording reads 3 pieces, piece 2 picked, 3 of 3 kept, window 8.00s, trim closed, as claimed\n  [12 key] delete\n  [14 expectRecording] FAILED: it is in 3 pieces, not 2\n\nKeys DO reach the view under the same conditions, so this is not focus and not the locked screen: B, handled two lines away in the same VideoEditorView.handleKey switch, cuts every time.\n  [4 key] b\n  [6 expectRecording] the recording reads 2 pieces, piece 2 picked, 2 of 2 kept, as claimed\n\nAnd the menu has no key equivalent for it at all, though EditorCommands.swift:288 writes one:\n  [12 shortcut] FAILED: no menu item carries delete; a `menus` step lists every shortcut the app has\n\nSo both routes are dead: the Video menu's \"Delete This Piece\" (.keyboardShortcut(.delete, modifiers: []), EditorCommands.swift:287-289) registers nothing with AppKit, and VideoEditorView.handleKey's `case .delete, .deleteForward` (VideoEditorView.swift:212) never fires. Worth checking first whether SwiftUI's KeyEquivalent.delete and KeyPress.Key.delete disagree about which character U+007F vs U+0008 is, since the harness sends U+007F with key code 51, which is what a real backspace sends (PlaytestScript.swift:421).\n\nThree places in the app promise this key: the trash tooltip outside trim mode, the trash tooltip inside trim mode, and the menu item.\n\nThe walk that catches it already exists and needs no changes: Scripts/playtest/trim-keeps-the-piece-you-picked-walk.json.",
+  "acceptance": [
+    "With a recording cut into pieces and the playhead in one of them, pressing Delete drops that piece",
+    "It works both with the trim handles open and with them closed",
+    "The Video menu item Delete This Piece really carries the key it shows, so a walk asking which menu item carries Delete finds it",
+    "trim-keeps-the-piece-you-picked-walk passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T15:35:19.497Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "trim-keeps-the-piece-you-picked-walk"
+  ]
+}

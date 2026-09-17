@@ -1,0 +1,46 @@
+{
+  "feature": "Undo while you are trimming a recording",
+  "epic": "video-cutting",
+  "summary": "Dropping a piece with the trim handles open used to leave a window with no way back in it. Now the way back is on the same row as the trash, it names the thing it would undo, and using it keeps the handles open.",
+  "setup": "Photonz Dev, a recording window. Release Next, with \"Cut a recording into pieces\" on (it is on by default there).",
+  "try": [
+    {
+      "do": "Open a recording and press space to pause it."
+    },
+    {
+      "do": "Press B twice at two different moments to cut it into three pieces."
+    },
+    {
+      "do": "Click the scissors to open the trim handles."
+    },
+    {
+      "do": "Click the trash on the right of the controller to drop the piece you are on.",
+      "shot": "2026-09-17-undo-while-trimming-3-piece-dropped.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Rest the pointer on the curved arrow next to the trash and read what it says it would undo."
+    },
+    {
+      "do": "Click it, and watch the piece come back with the handles still open.",
+      "shot": "2026-09-17-undo-while-trimming-4-piece-back.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Click Cancel, open the handles again on an untouched recording, and see that no arrow is offered."
+    }
+  ],
+  "evaluate": [
+    "When you drop the wrong piece, is your eye already on the arrow, or do you still look for the menu bar first?",
+    "Does the gap between the two icons and Reset/Cancel/Done say clearly enough that Undo is not another word for Cancel?",
+    "Is a curved arrow the right thing here, or would the word Undo carry further on a row that already has three words on it?",
+    "Reading \"Undo Delete Piece\" in the tooltip, is that the phrase you would have used for what you just did?",
+    "The arrow sits to the LEFT of Reset/Cancel/Done so those three never move when it appears. Does that hold up when you use it quickly?"
+  ],
+  "rough": [
+    "The Delete key does nothing in a recording window, in trim mode or out, though the trash tooltip and the Video menu both say it is the key for this. The button works; only the key is dead. Filed as the-delete-key-drops-a-piece-the-way-the-tooltip with the reproduction, and it is why trim-keeps-the-piece-you-picked-walk fails.",
+    "The tooltip says \"Undo Delete Piece\" and does not mention Command Z, while every other button on this row names its key (\"Split at Playhead (B)\", \"Save (Command S)\"). Adding the key would teach it, but the same button outside trim mode does not say it either, and making only one of the two say it would be worse than neither. Left alone deliberately.",
+    "Undoing while the handles are open can offer \"Undo Crop\" or \"Undo Trim\" if that is what you did last, because there is one undo stack and a mode is not a reason to fork it. The tooltip always names it, so it never surprises silently, but it is worth judging whether reaching past the trim session like that feels right.",
+    "The pictures were taken on a locked Mac. The window is the real one, drawn and driven for real, but colours can read a little dimmed."
+  ]
+}

@@ -45,13 +45,21 @@ public enum PlaytestLockSafety {
     ///   accessibility — the pill's own sentence, and a control's geometry out
     ///   of the register `press` already uses — so a lock has nothing to take
     ///   away from either.
+    /// - `undo-while-trimming-walk`, 35 steps on a Mac locked since
+    ///   2026-09-14: expectRecording. It asks the open recording how many
+    ///   pieces it is in, which one is picked, how long the trim window is and
+    ///   whether the handles are open. Every one of those is the app's own
+    ///   state and none of them is a name, so the readings came back right
+    ///   three times over ("3 pieces, piece 2 picked, window 8.00s, trim
+    ///   open"). That un-refuses the video walks whose only blocked step was
+    ///   this one.
     ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
-        "expectPath", "expectPicked", "key", "measureMode", "move", "open", "panel", "pinch",
+        "expectPath", "expectPicked", "expectRecording", "key", "measureMode", "move", "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]

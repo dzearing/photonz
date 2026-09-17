@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T14:48:51.266Z",
+  "updated": "2026-09-17T15:35:21.899Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -327,6 +327,10 @@
     {
       "t": "2026-09-17T14:48:51.265Z",
       "note": "separate-boxes-walk fails on clean main (c5c13167), not on anything a runner changed: 'Scripts/playtest.sh Scripts/playtest/separate-boxes-walk.json' -> step 16 (expect): no row called \"Box 2\" is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3. Verified by stashing a runner's working tree and running it against HEAD, same failure both ways. separate-hierarchy-walk, separate-shadow-walk and separate-whole-screenshot-walk fail in the same batch (Scripts/playtest-all.sh --no-build separate: 0 passed, 4 failed, 5 could not run under the screen lock). The four all read the layers list after a separation, so it looks like one cause: the rows the panel builds after Separate into Layers are not the rows these walks were written against."
+    },
+    {
+      "t": "2026-09-17T15:35:21.898Z",
+      "note": "trim-keeps-the-piece-you-picked-walk is diagnosed and owned: the Delete key does nothing in a recording window, which is the-delete-key-drops-a-piece-the-way-the-tooltip. The walk is right and needs no edits; reproduced on source with and without the current in-flight change."
     }
   ]
 }

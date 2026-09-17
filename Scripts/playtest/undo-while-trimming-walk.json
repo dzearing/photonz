@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/undo-while-trimming-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Undo", "present": false },
+    { "do": "describe", "stage": "1-nothing-to-undo", "note": "the handles are open on a recording nothing has been done to, so the row is the three session buttons it always was and no way back is offered for a step nobody took" },
+    { "do": "snapshot", "name": "1-nothing-to-undo" },
+    { "do": "action", "action": "videoTrimCancel" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectRecording", "pieces": 3, "picked": 2 },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Undo", "reads": "Cut" },
+    { "do": "describe", "stage": "2-undo-names-the-cut", "note": "trim mode on a recording in three pieces: the way back is on the row with the trash, and it names the last thing done rather than saying only Undo" },
+    { "do": "snapshot", "name": "2-undo-names-the-cut" },
+
+    { "do": "press", "control": "Delete This Piece" },
+    { "do": "wait", "seconds": 1.6 },
+    { "do": "expectRecording", "pieces": 2 },
+    { "do": "expect", "control": "Undo", "reads": "Delete Piece" },
+    { "do": "describe", "stage": "3-piece-dropped-way-back-on-screen", "note": "the middle piece is gone, dropped by the real trash button while the handles were open, and the button beside it now reads Undo Delete Piece: the thing this walk exists to prove is on screen at the moment somebody wants it" },
+    { "do": "snapshot", "name": "3-piece-dropped-way-back-on-screen" },
+
+    { "do": "press", "control": "Undo" },
+    { "do": "wait", "seconds": 1.6 },
+    { "do": "expectRecording", "pieces": 3 },
+    { "do": "expect", "control": "Delete This Piece", "present": true },
+    { "do": "describe", "stage": "4-piece-back-handles-still-open", "note": "pressing it put the piece back and left the handles exactly where they were: the trash is still on the row, so the trim session was never closed to get the piece back" },
+    { "do": "snapshot", "name": "4-piece-back-handles-still-open" }
+  ]
+}

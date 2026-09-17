@@ -110,4 +110,28 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("writePicture"))
         #expect(!PlaytestLockSafety.stepsALockStops.contains("writePicture"))
     }
+
+    /// `expectRecording` asks the open recording what it is made of — how many
+    /// pieces, which one is picked, how long the trim window is, whether the
+    /// handles are open. Every one of those is read off the app's own state,
+    /// and none of them is a name, so a lock has nothing to take away. It was
+    /// refused only because nobody had watched it. Watched on 2026-09-17 under
+    /// a lock: `undo-while-trimming-walk` ran all 35 of its steps, three of
+    /// them `expectRecording`, and the readings were right each time ("3
+    /// pieces, piece 2 picked, window 8.00s, trim open"). That un-refuses the
+    /// five video walks whose only blocked step was this one.
+    @Test("Asking what the recording is made of needs no name, so a lock cannot stop it")
+    func readingTheRecordingRunsUnderALock() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectRecording"))
+        #expect(!PlaytestLockSafety.stepsALockStops.contains("expectRecording"))
+        let steps: [PlaytestStep] = [
+            .action(.openSampleRecording),
+            .action(.videoBeginTrim),
+            .expectRecording(pieces: 3, picked: 2, keeps: nil, seconds: nil,
+                             starts: nil, caught: nil),
+            .snapshot(name: "a-trimming", window: nil),
+        ]
+        #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)
+        #expect(PlaytestLockSafety.canRunLocked(steps))
+    }
 }

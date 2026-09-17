@@ -405,13 +405,7 @@ struct VideoEditorView: View {
     private var editButtons: some View {
         HStack(spacing: 6) {
             saveButton
-            if let action = state.lastEditActionName {
-                Button { state.undoLastEdit() } label: {
-                    Image(systemName: "arrow.uturn.backward")
-                }
-                .buttonStyle(IconActionButtonStyle())
-                .help("Undo \(action)")
-            }
+            undoButton
             if cuttingAvailable {
                 Button { state.cutAtPlayhead() } label: {
                     Image(systemName: "rectangle.split.2x1")
@@ -447,6 +441,26 @@ struct VideoEditorView: View {
         }
     }
 
+    /// The one way back on screen, wherever the row it lives in happens to be.
+    ///
+    /// It appears only once an applied edit exists to revert, and its tooltip
+    /// names that edit ("Undo Delete Piece"), so it never offers to undo
+    /// something that is not there and never misnames what it would take back.
+    /// Both the ordinary edit row and the trim session's row show this same
+    /// button, because the undo stack is one stack and a mode is not a reason
+    /// for the way back to disappear.
+    @ViewBuilder
+    private var undoButton: some View {
+        if let action = state.lastEditActionName {
+            Button { state.undoLastEdit() } label: {
+                Image(systemName: "arrow.uturn.backward")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help("Undo \(action)")
+            .playtestControl("Undo", detail: action)
+        }
+    }
+
     /// Save commits the trim/crop into the stored recording — the ordinary,
     /// expected path, not a second export flow. It appears once there's
     /// something to commit (and while the commit runs), the same way the Undo
@@ -476,26 +490,56 @@ struct VideoEditorView: View {
     /// only way to reach it — a key nobody is told about. It appears on exactly
     /// the same condition as it does outside trim mode, so it is never a button
     /// that would do nothing.
+    ///
+    /// And so does Undo, for the same reason turned around: a row that can drop
+    /// a piece has to show the way back from dropping one. ⌘Z always worked
+    /// here, but nothing on screen said so, so somebody who dropped the wrong
+    /// piece mid-trim saw a window with no way back in it.
+    ///
+    /// Two groups, not one row of five. Undo and the trash act on the
+    /// RECORDING; Reset, Cancel and Done end the trim SESSION. Run together
+    /// they read as three different ways of going back, and the gap between
+    /// them is what says Undo is not another word for Cancel.
     private var trimModeButtons: some View {
-        HStack(spacing: 12) {
-            if cuttingAvailable, state.canDeleteSelectedPiece {
-                Button { state.deleteSelectedPiece() } label: {
-                    Image(systemName: "trash")
+        HStack(spacing: 18) {
+            if showsRecordingActionsWhileTrimming {
+                HStack(spacing: 6) {
+                    undoButton
+                    if state.canDeleteSelectedPiece {
+                        Button { state.deleteSelectedPiece() } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(IconActionButtonStyle())
+                        .help("Delete This Piece (⌫)")
+                        .playtestControl("Delete This Piece", detail: "Trim mode")
+                    }
                 }
-                .buttonStyle(IconActionButtonStyle())
-                .help("Delete This Piece (⌫)")
             }
-            Button("Reset") { state.resetTrimSelection() }
-                .buttonStyle(.plain)
-                .font(.caption)
-                .disabled(!state.trim.isTrimmed)
-            Button("Cancel") { state.cancelTrim() }
-                .keyboardShortcut(.cancelAction)
-            Button("Done") { state.commitTrim() }
-                .keyboardShortcut(.defaultAction)
-                .buttonStyle(.borderedProminent)
-                .tutorialAnchor(.video(.trimDone))
+            HStack(spacing: 12) {
+                Button("Reset") { state.resetTrimSelection() }
+                    .buttonStyle(.plain)
+                    .font(.caption)
+                    .disabled(!state.trim.isTrimmed)
+                Button("Cancel") { state.cancelTrim() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Done") { state.commitTrim() }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                    .tutorialAnchor(.video(.trimDone))
+            }
         }
+    }
+
+    /// Whether the trim row carries the two buttons that act on the RECORDING
+    /// rather than on the trim session.
+    ///
+    /// They only belong to a recording that has been cut: dropping a piece out
+    /// of the middle is the thing handles cannot do, and the way back from
+    /// having dropped one is the other half of the same offer. Without cutting
+    /// there is nothing a trim session can do to the recording, so the row
+    /// stays the three session buttons it always was.
+    private var showsRecordingActionsWhileTrimming: Bool {
+        cuttingAvailable && (state.canDeleteSelectedPiece || state.lastEditActionName != nil)
     }
 
     /// Step-back · play/pause · step-forward. The play button is deliberately

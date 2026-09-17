@@ -5074,3 +5074,17 @@
 {"t":"2026-09-17T15:20:52.535Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
 {"t":"2026-09-17T15:20:52.580Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
 {"t":"2026-09-17T15:21:00.332Z","ev":"task_done","id":"a-png-says-what-it-will-weigh-before-you-save-it","from":"in_progress","note":"The Export sheet weighs a PNG, on the same line and in the same words as the lossy formats, and the number follows the canvas box, the scale and the frame. Shipped in Sources/Photonz/ExportDialog.swift with the wording in PhotonzCore ExportQuality.note(); also fixed the weight ignoring the background checkbox, which was live and wrong for WebP. Verified by Scripts/test.sh (8172 green, new tests in ExportQualityTests and ExportSizerTests) and Scripts/playtest/png-export-size-walk.json, which passed with four real pictures of the window. Audit: queue/audits/2026-09-17-png-export-size.json. Cost: 112 ms to weigh a 12 MP PNG, off the main actor."}
+{"t":"2026-09-17T15:21:43.355Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T15:21:43.472Z","ev":"task_started","id":"undo-is-reachable-while-you-are-trimming-a-recor","title":"Undo is reachable while you are trimming a recording","priority":"p2-normal"}
+{"t":"2026-09-17T15:35:19.499Z","ev":"task_created","id":"the-delete-key-drops-a-piece-the-way-the-tooltip","priority":"p2-normal","title":"The Delete key drops a piece, the way the tooltip says it does"}
+{"t":"2026-09-17T15:35:21.900Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T15:35:21.949Z","ev":"task_walks","id":"undo-is-reachable-while-you-are-trimming-a-recor","walks":["undo-while-trimming-walk"]}
+{"t":"2026-09-17T15:38:50.017Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.065Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.112Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.160Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.206Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.251Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.297Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.342Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}
+{"t":"2026-09-17T15:38:50.388Z","ev":"task_note","id":"undo-is-reachable-while-you-are-trimming-a-recor"}

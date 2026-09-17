@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T11:48:06.769Z",
-  "updated": "2026-09-17T12:13:56.891Z",
+  "updated": "2026-09-17T15:38:50.387Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building while-you-trim-a-recording-you-can-still-see-and. VideoEditorView.swift:322 swaps editButtons (which carries saveButton, the Undo button, cut, trash, trim, crop, copy, export) for trimModeButtons while state.isTrimming, and trimModeButtons is Reset/Cancel/Done plus the trash button that task added. Command-Z is wired for recordings in EditorCommands.swift:396 and works, so nothing is lost, only unsaid. Not reproduced against a running app: the Mac was locked for that whole task and no walk could run, so this is read off the code and off the fact that the Undo button is inside the branch that is skipped. It is a missing affordance rather than a break, which is why it is p2.",
@@ -27,6 +27,54 @@
     {
       "t": "2026-09-17T12:13:56.890Z",
       "note": "seq 2940 -> 100"
+    },
+    {
+      "t": "2026-09-17T15:21:43.470Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T15:35:21.947Z",
+      "note": "owns these walks: undo-while-trimming-walk"
+    },
+    {
+      "t": "2026-09-17T15:38:50.015Z",
+      "note": "Adversarial review before building. The task's own reasoning is the mirror of the one that put the trash in this row, and it holds: a row that can drop a piece has to show the way back from dropping one. The risk is the opposite one, that trim mode would end up with THREE ways of going back on one row (Reset, Cancel, Undo) and a first-timer reading Undo as \"undo my handle drag\". So it is not five buttons in a row: Undo and the trash are one group that acts on the RECORDING, Reset/Cancel/Done are a second group that ends the trim SESSION, with a wider gap between them. Shortest version that delivers the value: one icon button, present only when there is something to undo, tooltip naming the edit. No new state, no new undo model."
+    },
+    {
+      "t": "2026-09-17T15:38:50.063Z",
+      "note": "Built: VideoEditorView.swift. The undo affordance is now one shared `undoButton` used by both the ordinary edit row and the trim row, so the two can never drift; trimModeButtons splits into the two groups described above; and `showsRecordingActionsWhileTrimming` keeps the whole left group off the row unless cutting is on AND there is something to delete or undo, so a trim session on an uncut recording is exactly the three buttons it always was."
+    },
+    {
+      "t": "2026-09-17T15:38:50.110Z",
+      "note": "Scoping: VideoEditorView.swift is shared by both releases, and the new group is gated on Experiments.shared.cutRecordingEnabled (next-only), so Current's trim row is byte-for-byte what it was. Refactoring the existing Undo into a shared property changes no Current behaviour: same view, same tooltip, same condition."
+    },
+    {
+      "t": "2026-09-17T15:38:50.158Z",
+      "note": "A walk covers it, and it presses the real buttons rather than calling the state. Scripts/playtest/undo-while-trimming-walk.json, 35 steps: handles open on an untouched recording and `expect control Undo present:false`; then two cuts, handles open, `expect control Undo reads \"Cut\"`; then a real mouse press on the trim row's trash, `expect control Undo reads \"Delete Piece\"`; then a real mouse press on Undo, the recording back to 3 pieces with \"trim open\", and the trim row's trash still on screen, which is what proves the session was never closed to get the piece back. This needed two playtestControl markers (the trim row's Undo and its trash) so a press step can find them the way it finds a panel control."
+    },
+    {
+      "t": "2026-09-17T15:38:50.204Z",
+      "note": "expectRecording moved to PlaytestLockSafety.stepsThatSurviveALock, test first (Tests/PhotonzCoreTests/PlaytestLockSafetyTests.swift). It reads the app's own state and never a name, and the forced run proved it: undo-while-trimming-walk ran all 35 steps under a lock with three correct expectRecording readings. That un-refuses the video walks that were blocked on this one step alone, which is why trim-cancel-after-a-delete-walk, trim-catches-on-a-cut-walk and trim-with-pieces-walk could be run at all this session."
+    },
+    {
+      "t": "2026-09-17T15:38:50.249Z",
+      "note": "Verified: Scripts/test.sh green, 8173 tests in 650 suites. Scripts/playtest-all.sh --no-build trim: 4 passed (trim-cancel-after-a-delete, trim-catches-on-a-cut, trim-with-pieces, undo-while-trimming), 2 could not run (the two tutorial walks, which need a control by name and the screen is locked), 1 failed (trim-keeps-the-piece-you-picked) for a reason that is not this change."
+    },
+    {
+      "t": "2026-09-17T15:38:50.295Z",
+      "note": "Filed: the-delete-key-drops-a-piece-the-way-the-tooltip. The Delete key does nothing in a recording window, in trim mode or out, though the trash tooltip and the Video menu both name it. Reproduced, and reproduced AGAIN on source with this change stashed, so it predates the change; `key b` in the same window on the same handler cuts every time, and `shortcut delete` reports no menu item carries the key at all. That is what trim-keeps-the-piece-you-picked-walk is failing on, and the walk is right as written. A pointer is folded into walks-that-fail-in-the-full-sweep so nobody diagnoses it twice."
+    },
+    {
+      "t": "2026-09-17T15:38:50.340Z",
+      "note": "left rough: the trim row's Undo tooltip does not name Command Z, while Split at Playhead (B) and Save (Command S) beside it do name their keys. The same button outside trim mode does not name it either, and making only one of the two say it would read worse than neither saying it, so both were left alone. Did not earn a task: nothing is broken and the button is right there."
+    },
+    {
+      "t": "2026-09-17T15:38:50.386Z",
+      "note": "left rough: no sweep asked for. Nothing here touches a walk outside the trim set, the four runnable trim walks were run directly, and a sweep is already pending from the loop."
     }
+  ],
+  "started": "2026-09-17T15:21:43.469Z",
+  "walks": [
+    "undo-while-trimming-walk"
   ]
 }

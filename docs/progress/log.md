@@ -17804,3 +17804,35 @@ Regular. Filed as `a-label-read-back-into-text-comes-back-at-the-si`.
 Open question: the three Effects section labels settle on Medium, and on screen
 they may be Semibold. They agree now, which was the task, but the answer they
 agreed on is not certain.
+
+## 2026-09-17 — Undo is reachable while you are trimming a recording
+
+Dropping a piece with the trim handles open left a window with no way back in
+it: the edit row is swapped out for the trim session's Reset/Cancel/Done while
+trimming, and the Undo button lives in the row that goes away. Command Z always
+worked and nothing on screen said so.
+
+- `VideoEditorView.swift`: the Undo affordance is now one shared `undoButton`
+  used by both rows, so they cannot drift. The trim row splits into two groups
+  with a wider gap between them: Undo and the trash act on the RECORDING,
+  Reset/Cancel/Done end the trim SESSION. Three back-ish controls run together
+  would read as three ways of cancelling; the gap is what says they are not.
+  The left group is gated on the next-only cutting flag, so Current's trim row
+  is unchanged.
+- New walk `undo-while-trimming-walk` (35 steps) presses the real buttons with
+  real mouse events rather than calling the state, and claims all four things
+  the task asked for, including that the handles are still open afterwards.
+- `expectRecording` joined `PlaytestLockSafety.stepsThatSurviveALock` (test
+  first). It reads the app's own state, never a name, and was watched running
+  correctly three times over under a lock. That un-refuses the video walks that
+  were blocked on that one step.
+
+Found and filed, not fixed here: **the Delete key does nothing in a recording
+window**, in trim mode or out, though the trash tooltip and the Video menu both
+name it as the key. `key b` on the same handler in the same window cuts every
+time, and `shortcut delete` reports no menu item carries the key at all.
+Reproduced again with this change stashed, so it predates it. It is
+`the-delete-key-drops-a-piece-the-way-the-tooltip`, and it is what
+`trim-keeps-the-piece-you-picked-walk` has been failing on.
+
+Next: that Delete key, and the pending sweep once the screen is unlocked.
