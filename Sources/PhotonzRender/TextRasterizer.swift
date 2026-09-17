@@ -199,7 +199,8 @@ public enum TextRasterizer {
         // The words lay out in the width they were measured against, which is
         // the box less the inset it carries on each side.
         let room = max(1, width - frameInset * 2)
-        guard naturalSize(text).width - frameInset * 2 > room else { return text }
+        guard naturalSize(text).width - frameInset * 2 > room + truncationSlack
+        else { return text }
         var token = text
         token.string = ellipsis
         let tokenWidth = CTLineGetTypographicBounds(
@@ -212,6 +213,23 @@ public enum TextRasterizer {
         out.string = head.trimmingCharacters(in: .whitespacesAndNewlines) + ellipsis
         return out
     }
+
+    /// How much narrower than its words a box may be before they are cut.
+    ///
+    /// A hairsbreadth, and it is here because a box is MEASURED in document
+    /// points and DRAWN through a zoom. A label whose box was measured for its
+    /// own words is exactly as wide as they are, the canvas states that box in
+    /// output pixels, and the rasterizer divides it back: `w * zoom / zoom` is
+    /// not always `w` in binary floating point, so at some zooms the box
+    /// arrives one ulp short of the words it was measured for. One ulp used to
+    /// cost three characters and an ellipsis — a label read out of a screenshot
+    /// came back "Show in menu b…" on the canvas at 151% and read whole at
+    /// 150%.
+    ///
+    /// A hundredth of a point is far more than any round trip can lose and far
+    /// less than anybody can see, so a box that really is too narrow is still
+    /// cut exactly as it was.
+    static let truncationSlack: CGFloat = 0.01
 
     /// What stands in for the words that did not fit. One character, not three
     /// dots, so it is one glyph wide and reads as a cut rather than a pause.

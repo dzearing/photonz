@@ -4,8 +4,8 @@ import PhotonzCore
 @testable import PhotonzRender
 import Testing
 
-/// The WEIGHT a page comes back in, measured on a real capture of this app's
-/// own Effects panel.
+/// The WEIGHT and the SIZE a page comes back in, measured on a real capture of
+/// this app's own Effects panel.
 ///
 /// `Fixtures/effects-panel-2x.png` is a 2x crop of `app-window-2x.png`, and it
 /// holds the case two audits named: "Corner Radius", "Border 1" and "Border 2"
@@ -20,9 +20,14 @@ import Testing
 /// (`TextReading.WeightBallot`), which is why the fix settles each group
 /// without flattening one into the other.
 ///
+/// The sizes wobbled the same way and are settled the same way, per cohort: the
+/// rows fit at 22.2, 21.4, 22.4, 22.4 and 21.9 points on their own and are one
+/// size on screen, while the sections over them really are bigger and stay so.
+///
 /// Serialized, like the suite next door and for the same reason: every test
 /// here waits on ONE lazily read capture.
-@Suite("The weight a page of labels comes back in, on a real capture", .serialized)
+@Suite("The weight and size a page of labels comes back in, on a real capture",
+       .serialized)
 struct ReadPageWeightFixtureTests {
 
     private static let capture: CGImage? = {
@@ -91,6 +96,55 @@ struct ReadPageWeightFixtureTests {
         // them a different kind of label, so nothing in the reading should.
         let found = try weights(of: ["Style", "4 px", "16 px"])
         #expect(Set(found).count == 1)
+    }
+
+    // MARK: - One kind of label, one size
+
+    private func size(of words: String) throws -> CGFloat {
+        try #require(Self.readings.first { $0.string == words },
+                     "\(words) did not come back at all").fontSize
+    }
+
+    private func sizes(of words: [String]) throws -> [CGFloat] {
+        try words.map { try size(of: $0) }
+    }
+
+    @Test func theRowsUnderThemComeBackAtOneSize() throws {
+        // Read one at a time these fit at 22.2, 21.4, 22.4, 22.4 and 21.9
+        // points, and they are the same size on screen.
+        let found = try sizes(of: ["Style", "Color", "Position", "Width", "Offset"])
+        #expect(Set(found).count == 1)
+    }
+
+    @Test func theSectionLabelsComeBackAtOneSizeToo() throws {
+        let found = try sizes(of: ["Corner Radius", "Border 1", "Border 2"])
+        #expect(Set(found).count == 1)
+    }
+
+    @Test func aSectionLabelIsNotFlattenedIntoTheSizeOfItsRows() throws {
+        // The same thing the weight vote must not do. These sections really
+        // are a shade bigger than the rows under them, and they stay so.
+        let sections = try sizes(of: ["Corner Radius", "Border 1", "Border 2"])
+        let rows = try sizes(of: ["Style", "Color", "Position", "Width", "Offset"])
+        let biggestRow = try #require(rows.max())
+        let smallestSection = try #require(sections.min())
+        #expect(smallestSection > biggestRow)
+    }
+
+    @Test func theRetypedWordsStillCoverTheInkTheyReplace() throws {
+        // What holding a label to its cohort's size must not cost: the words
+        // still have to land on the ink the picture had, or a label ends up
+        // somewhere other than where it was.
+        for read in Self.reads {
+            guard let reading = read.outcome.reading, let ink = read.inkRect else { continue }
+            let mask = try #require(TextReader.render(reading.string, in: reading.face,
+                                                      size: reading.fontSize, scale: 1))
+            let bounds = try #require(mask.inkBounds())
+            #expect(abs(bounds.width - ink.width) <= 3,
+                    "\(reading.string) came out \(bounds.width) px wide, was \(ink.width)")
+            #expect(abs(bounds.height - ink.height) <= 3,
+                    "\(reading.string) came out \(bounds.height) px tall, was \(ink.height)")
+        }
     }
 
     // MARK: - What settling the weight must not cost

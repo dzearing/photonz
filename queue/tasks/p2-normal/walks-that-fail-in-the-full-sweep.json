@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T15:35:21.899Z",
+  "updated": "2026-09-17T16:54:04.408Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -331,6 +331,10 @@
     {
       "t": "2026-09-17T15:35:21.898Z",
       "note": "trim-keeps-the-piece-you-picked-walk is diagnosed and owned: the Delete key does nothing in a recording window, which is the-delete-key-drops-a-piece-the-way-the-tooltip. The walk is right and needs no edits; reproduced on source with and without the current in-flight change."
+    },
+    {
+      "t": "2026-09-17T16:54:04.407Z",
+      "note": "words-down-the-box-walk fails on today's main and is not about text: 'Scripts/playtest.sh Scripts/playtest/words-down-the-box-walk.json' -> step 8 (dragTile): no tile called \"Nav Bar\" is in the panel; the ones that are: Badge / Components, Button / Components, Text Field / Components. Reproduced twice, once with the size-settling change stashed, so it is the library's tile list that moved on and not the walk's text work."
     }
   ]
 }

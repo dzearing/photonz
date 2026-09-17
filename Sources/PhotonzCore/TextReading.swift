@@ -606,6 +606,70 @@ public enum TextReading {
         return settled
     }
 
+    /// The one size a cohort of labels is set at: the MIDDLE of the sizes they
+    /// each fit best at.
+    ///
+    /// The other half of what the family and the weight left open, and the
+    /// half a vote cannot answer. A weight is one of four things, so the
+    /// cohort can be asked which of the four they agree on best; a size is a
+    /// number, and six labels that are 13 points on screen fit at 27.6, 28.0,
+    /// 28.4, 28.0, 28.5 and 28.4 because which glyphs a run happens to contain
+    /// moves its measured ink about. Nobody wants six sizes there, and
+    /// anybody who picks all six and sets a size is tidying up after the app.
+    ///
+    /// The middle rather than the average, because the average is dragged by
+    /// the one label whose ink was measured badly — a row whose descender ran
+    /// into the divider under it — while the middle ignores it. Measured on
+    /// this app's own captures, the middle is also the size the cohort agrees
+    /// with BEST: on the settings pane's six rows it scores 4.571 against the
+    /// nearest whole point's 4.204, and on the Effects panel's rows 4.484
+    /// against 4.484. So there is nothing to be gained by searching for a
+    /// better one, and a search costs a render per label per candidate.
+    ///
+    /// It is deliberately NOT rounded to a whole point, tempting as that is.
+    /// Measured: holding the settings pane's six rows to 28 rather than 28.38
+    /// puts "Copy to clipboard" 3 pixels short of the ink it is replacing and
+    /// drops its agreement to 0.502, under `landedBar`, so the label that was
+    /// meant to come back tidy comes back not at all. The Size menu says whole
+    /// points anyway (`TextStyles.sizeWords`), so six labels settled at 28.38
+    /// all read "28 pt" — one number, which is the thing being asked for.
+    ///
+    /// Nil for an empty cohort, which is a cohort with nothing to settle.
+    public static func pageSize(of fits: [CGFloat]) -> CGFloat? {
+        guard !fits.isEmpty else { return nil }
+        let sorted = fits.sorted()
+        let middle = sorted.count / 2
+        guard sorted.count.isMultiple(of: 2) else { return sorted[middle] }
+        return (sorted[middle - 1] + sorted[middle]) / 2
+    }
+
+    /// The size each run's own kind of label settled on, in step with
+    /// `ballots`.
+    ///
+    /// The cohorts are the ones the weight settled on (`weightCohorts`): the
+    /// runs that are one size and one ink colour in the picture are the runs
+    /// that should come back one size, and a heading is not one of its rows.
+    ///
+    /// `fits` is the size each run fits its own ink at, in whatever unit the
+    /// caller can compare them in — they are only ever compared with each
+    /// other. Nil is a run with no size to offer and none to be given: one
+    /// nobody could read, or one held to a heavier face than its cohort, whose
+    /// size means something different because a heavier face reaches the same
+    /// ink height at a smaller size.
+    public static func pageSizes(of ballots: [WeightBallot?],
+                                 fitting fits: [CGFloat?]) -> [CGFloat?] {
+        var settled = [CGFloat?](repeating: nil, count: ballots.count)
+        guard fits.count == ballots.count else { return settled }
+        let cast = ballots.indices.filter { ballots[$0] != nil }
+        let voting = cast.compactMap { ballots[$0] }
+        for cohort in weightCohorts(of: voting) {
+            let rows = cohort.map { cast[$0] }
+            guard let size = pageSize(of: rows.compactMap { fits[$0] }) else { continue }
+            for row in rows where fits[row] != nil { settled[row] = size }
+        }
+        return settled
+    }
+
     // MARK: - Naming
 
     /// What a run of words is called: the words themselves, which is the whole

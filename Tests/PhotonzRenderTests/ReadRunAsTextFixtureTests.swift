@@ -268,6 +268,49 @@ struct ReadRunAsTextFixtureTests {
         }
     }
 
+    @Test func theRowLabelsOfOnePaneComeBackAtOneSize() throws {
+        // The other half of the bug the weight vote fixed. Left to fit itself,
+        // each of these six labels comes back at its own size — 27.6, 28.0,
+        // 28.5, 28.0, 28.5, 28.4 — while every one of them is 13 points on
+        // screen, so picking all six reads Mixed in the Size menu.
+        let sizes = try Set(Self.rowLabels.map { try reading($0).fontSize })
+        #expect(sizes.count == 1)
+        // And it is a size out of what they measured, not a number from
+        // somewhere else: they each fitted between 28.0 and 28.5.
+        let one = try #require(sizes.first)
+        #expect(one > 28 && one < 28.5)
+    }
+
+    @Test func theHeadingIsNotDraggedToTheSizeOfItsRows() throws {
+        // What settling the size must never do, and the reason it is settled
+        // per kind of label. "General" is half again the size of the labels
+        // under it.
+        let heading = try reading(0).fontSize
+        let rows = try Self.rowLabels.map { try reading($0).fontSize }
+        #expect(rows.allSatisfy { $0 < heading * 0.8 })
+    }
+
+    @Test func aButtonLabelOfItsOwnKindKeepsItsOwnSize() throws {
+        // "Save Changes" is white on a blue button: nothing else on the pane
+        // is that kind of label, so there is no second opinion to have and its
+        // own size stands rather than being pulled onto the grey rows'.
+        let button = try reading(8).fontSize
+        let rows = try Self.rowLabels.map { try reading($0).fontSize }
+        #expect(!rows.contains(button))
+    }
+
+    @Test func settlingTheSizeNeverCostsAReading() throws {
+        // The same promise the weight makes. A label back at the size it
+        // fitted itself is a smaller harm than a label that does not come back
+        // at all, so a run whose ink its cohort's size cannot account for
+        // keeps its own.
+        let held = Self.runImages.map {
+            TextReader.read($0, captureScale: 2, preferring: "SF Pro")
+        }
+        #expect(Self.reads.compactMap(\.outcome.reading).count
+            == held.compactMap(\.outcome.reading).count)
+    }
+
     @Test func theRetypedWordsAreTheSizeTheOldOnesWere() throws {
         // The number this feature lives on. Set the words the app chose and
         // measure them: they have to cover the space the picture's ink covered,

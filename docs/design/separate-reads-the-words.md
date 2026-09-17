@@ -233,9 +233,58 @@ at the layer's size). The page is measured once and settled twice, where before
 it was read once and the strays READ again. Spread over the cores on
 `dense-page-1x`: **1812 ms against the 1966 ms** the family vote alone cost.
 
-What it does not fix: the SIZE still wobbles. Pick the six row labels of the
-settings pane and the Weight menu now says Regular, while the Size menu says
-Mixed, because each run is fitted to its own ink and they land 27.6 to 28.5.
+### One kind of label, one size
+
+**Landed 2026-09-17** behind the queue task
+`a-label-read-back-into-text-comes-back-at-the-si`. No flag, like the two votes
+above it.
+
+The weight vote left the last of the wobble showing. Picking the six row labels
+of the settings pane made the Weight menu say Regular and the Size menu say
+Mixed, because each run is fitted to its own ink and which glyphs a run happens
+to contain moves that about: 27.6, 28.0, 28.5, 28.0, 28.5 and 28.4 points for
+six labels that are 13 points on screen. Anybody who then set a size was tidying
+up after the app.
+
+The cohorts are the ones the weight settled on, so a heading is not one of its
+rows and a white section label is not one of its grey ones. What is different is
+the ANSWER a cohort gives, because a size is not one of four things to vote on:
+
+- **The middle of what they fit**, not the average, so the one label whose ink
+  was measured badly cannot drag the other five off the size they plainly are.
+  It is also the size they agree with best, measured: on the settings pane's six
+  rows the middle scores 4.571 total against the nearest whole point's 4.204,
+  and on the Effects panel's rows 4.484 against 4.484. There is nothing to be
+  gained by searching for a better one, and a search costs a render per label
+  per candidate.
+- **Settled in the size the layer is SET at**, not the size the face was
+  identified at. Those two are not one number divided by the other: rendering
+  the same words at a different scale moves the ink by an antialiased edge
+  either side, which on this fixture is a 6 to 10 per cent difference, per run.
+  A run drawn at its own scale is multiplied back up by that scale so it is
+  still comparable with the labels beside it.
+- **Not rounded to a whole point**, tempting as that is. Holding those six rows
+  to 28 rather than 28.38 puts "Copy to clipboard" 3 pixels short of the ink it
+  replaces and drops its agreement to 0.502, under `landedBar`, so the label
+  meant to come back tidy comes back not at all. The Size menu says whole points
+  anyway, so all six read "28 px": one number, which is what was asked for.
+- **Never a reason to lose a reading**, exactly as the weight is not. A run
+  whose ink the settled size cannot account for keeps the size it fitted itself
+  at, and a run held to its own heavier face is neither counted nor answered,
+  because a heavier face reaches the same ink height at a smaller size.
+
+The Effects panel is the case that says this settles wobble rather than
+flattening a page: its section labels come back at 23.03 and the rows under them
+at 22.22, each group agreeing with itself.
+
+**A box exactly as wide as its words was a hairsbreadth from being cut.** Found
+landing this, and older than it: a label's box is measured for its own words, the
+canvas states that box in output pixels and the rasterizer divides it back, and
+`w * zoom / zoom` is not always `w` in binary floating point. One ulp short was
+enough for `TextRasterizer.truncating` to cut "Show in menu bar" down to "Show in
+menu b…" on the canvas at 151% while it read whole at 150%. It now allows a
+hundredth of a point of shortfall, which is far more than any round trip can lose
+and far less than anybody can see.
 
 ## What was rejected, and why
 
@@ -259,6 +308,9 @@ Mixed, because each run is fitted to its own ink and they land 27.6 to 28.5.
   "One page, one weight per kind of label" below. Before it, six row labels of
   one settings pane came back four Regular and two Medium, and the section
   labels of one panel came back Semibold, Medium and Medium.
+- **And the size, later the same day.** See "One kind of label, one size". Before
+  it, those same six row labels came back at six different sizes between 27.6
+  and 28.5 points, and the Size menu read Mixed for them.
 - **Six runs of the app window hold no words at all** (`noWords`): the sweep
   found them as runs and they are icons. Under any automatic shape they would
   quietly stay pictures, which is the right outcome and needs no message.

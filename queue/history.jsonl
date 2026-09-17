@@ -5093,3 +5093,13 @@
 {"t":"2026-09-17T15:39:46.687Z","ev":"task_started","id":"a-walk-can-prove-what-resting-the-pointer-on-som","title":"A walk can prove what resting the pointer on something does","priority":"p2-normal"}
 {"t":"2026-09-17T15:50:24.360Z","ev":"task_note","id":"a-walk-can-prove-what-resting-the-pointer-on-som"}
 {"t":"2026-09-17T16:23:49.537Z","ev":"task_walks","id":"a-walk-can-prove-what-resting-the-pointer-on-som","walks":["notice-waits-under-the-pointer-walk","tool-tips","segment-tooltips-walk","panel-toggle-titlebar-walk","marquee-answers-to-m-walk"]}
+{"t":"2026-09-17T16:24:16.498Z","ev":"task_note","id":"a-walk-can-prove-what-resting-the-pointer-on-som"}
+{"t":"2026-09-17T16:24:16.546Z","ev":"task_note","id":"a-walk-can-prove-what-resting-the-pointer-on-som"}
+{"t":"2026-09-17T16:24:16.592Z","ev":"task_done","id":"a-walk-can-prove-what-resting-the-pointer-on-som","from":"in_progress","note":"Every hover in the app is now .playtestHover, which is .onHover plus a marker a walk's pointer can find and run (Sources/Photonz/Playtest/PlaytestPointer.swift, 20 call sites rewritten, PlaytestHoverIsReachableTests guards it). move takes control: as well as at:, wait takes onTheClock, expectNotice takes held, and hover joined the steps a lock cannot touch after six tooltip walks were forced and watched. Verified: Scripts/playtest/notice-waits-under-the-pointer-walk.json is green and proves the pill outlives its six seconds under the pointer and leaves once the pointer walks away; it was checked against a deliberately broken holdCanvasNotice and fails there naming the control. Scripts/test.sh green, 8179 tests. 20 walks run green including redline-walk; a full sweep requested because move and hover are in 59 walks. Audit: queue/audits/2026-09-17-a-walk-can-rest-a-pointer.json. Commit c6aa1536, pushed."}
+{"t":"2026-09-17T16:24:52.005Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T16:24:52.113Z","ev":"task_started","id":"a-label-read-back-into-text-comes-back-at-the-si","title":"A label read back into text comes back at the size its neighbours are, not its own","priority":"p2-normal"}
+{"t":"2026-09-17T16:54:04.409Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T16:54:38.483Z","ev":"task_walks","id":"a-label-read-back-into-text-comes-back-at-the-si","walks":["label-size-walk"]}
+{"t":"2026-09-17T16:54:38.528Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-at-the-si"}
+{"t":"2026-09-17T16:54:38.573Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-at-the-si"}
+{"t":"2026-09-17T16:54:38.620Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-at-the-si"}

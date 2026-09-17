@@ -53,6 +53,34 @@ struct OneLineTextRenderTests {
         #expect(TextRasterizer.truncating(short, toFit: 160) == short)
     }
 
+    @Test("A box a hairsbreadth under its words is not a reason to cut them")
+    func aHairsbreadthIsNotTooNarrow() {
+        // Measured, on a label read out of a screenshot: its box is EXACTLY as
+        // wide as its words, because that is what a box measured for them is,
+        // and the canvas states that box in output pixels and divides it back
+        // by the zoom to draw it. `w * zoom / zoom` is not always `w` in binary
+        // floating point, so at some zooms and not others the box arrives one
+        // ulp short — and one ulp used to cost three characters and an
+        // ellipsis. "Show in menu bar" came back "Show in menu b…" on the
+        // canvas at 151%, and read fine at 150%.
+        let words = title("Show in menu bar")
+        let box = TextRasterizer.naturalSize(words).width
+        let zoom: CGFloat = 1.50961
+        let roundTripped = (box * zoom) / zoom
+        #expect(TextRasterizer.truncating(words, toFit: roundTripped) == words)
+        #expect(TextRasterizer.truncating(words, toFit: box.nextDown) == words)
+    }
+
+    @Test("A box genuinely narrower than its words still cuts them")
+    func aRealShortfallStillCuts() {
+        // The other side of that slack: it is a hundredth of a point, far more
+        // than any round trip can lose and far less than a person can see, so
+        // a box that is actually too narrow is cut exactly as it always was.
+        let words = title("Show in menu bar")
+        let box = TextRasterizer.naturalSize(words).width
+        #expect(TextRasterizer.truncating(words, toFit: box - 1).string.hasSuffix("…"))
+    }
+
     @Test("Words that may wrap are never cut short")
     func wrappingWordsAreNeverCut() {
         let paragraph = title("A very long navigation bar title indeed", oneLine: false)

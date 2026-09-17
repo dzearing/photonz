@@ -1,0 +1,37 @@
+{
+  "feature": "A page of labels comes back at one size",
+  "epic": "ui-building",
+  "summary": "Reading a screenshot's labels back into text already settled the typeface for the whole page and the weight for each kind of label. Now it settles the size the same way: labels of one size and one ink colour come back at one size, while a heading over its rows and a section label over the rows under it stay bigger.",
+  "setup": "Photonz Dev, Experiments window, release Next. Read every label needs next-read-every-label, which is on by default. No new flag and no new control: this is how the reader answers now.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row and run Separate into Layers." },
+    { "do": "Press Read the Words on the line at the bottom of the canvas." },
+    {
+      "do": "Pick all six row labels at once, from Launch at login down to Copy to clipboard, and read the Size menu in the Text section: 28 px, where it used to say Mixed.",
+      "shot": "2026-09-17-label-size-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    { "do": "Pick General on its own and read the Size menu again: 44 px, its own size." },
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png, separate it and press Read the Words." },
+    { "do": "Pick Corner Radius, Border 1 and Border 2 together: 23 px." },
+    {
+      "do": "Pick Style, Color, Position, Width and Offset together: 22 px, one number and a smaller one.",
+      "shot": "2026-09-17-label-size-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    }
+  ],
+  "evaluate": [
+    "Six labels reading 28 px instead of Mixed: is the Size menu where you would have looked, or would you have judged it on the canvas first?",
+    "The settled size is the middle of what the six labels measured, not a round number, so the menu says 28 px while the value behind it is 28.38. Does that matter to you, or only if you retype it?",
+    "In the Effects panel shot, do the section labels still read as headings over their rows now that both groups have agreed with themselves?",
+    "The rule leans on ink colour and size to say what kind of label something is. Has it grouped anything here that you would have kept apart?",
+    "The retyped words sit within 2 pixels of the ink they replaced on this capture. Can you see any label that has moved?"
+  ],
+  "rough": [
+    "The size is still about 9 per cent bigger than the type really was: those row labels are 13 points on screen and come back as a 28 point layer on a 2x capture, where 26 would be the true answer. Every one of them is wrong by the same amount now, which is the part this task was about, but a redline taken off the Size menu would read high. Not filed: it is the same measurement the feature has always made, and it needs its own study rather than a near-twin task.",
+    "A label somebody resized after separating is compared with the labels beside it by multiplying its size back up by its own scale, which assumes the two are proportional. They are within a few per cent rather than exactly, so a page of mixed-scale labels may settle a hair off. The agreement check catches the bad case and hands that label its own size back.",
+    "Found landing this and fixed here: a label whose box is exactly as wide as its words was being cut short on the canvas at some zooms and not others, because the box round trips through the zoom and can come back one ulp narrow. Show in menu bar drew as Show in menu b… at 151%. TextRasterizer now allows a hundredth of a point of shortfall before it cuts.",
+    "words-down-the-box-walk fails on main for an unrelated reason (the components library has no Nav Bar tile any more). Reproduced with this change stashed and folded into walks-that-fail-in-the-full-sweep."
+  ]
+}

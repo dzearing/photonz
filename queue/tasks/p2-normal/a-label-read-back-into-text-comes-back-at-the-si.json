@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2930,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T14:09:52.522Z",
-  "updated": "2026-09-17T14:09:54.956Z",
+  "updated": "2026-09-17T16:54:38.619Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-17 finishing a-label-read-back-into-text-comes-back-in-the-we, which settled the WEIGHT and is done; see queue/audits/2026-09-17-label-weight.json and the screenshot beside it, where the Text section reads Font SF Pro, Weight Regular, Size Mixed for six labels picked together. The machinery to copy is already there and is pure: TextReading.WeightBallot groups the runs of a page into cohorts of one size and one ink colour (TextReading.weightCohorts) and TextReading.pageWeights settles each cohort. The size question is not identical though, and that is the interesting part: the weight is one of four values so a vote works, while the size is continuous, so the answer is probably the cohort s median fit rounded to something a person would type, and it has to stay inside the tolerance theRetypedWordsAreTheSizeTheOldOnesWere holds (3 px on the ink box). Careful with the two scales: the size a cohort is grouped BY is at captureScale, and the size a layer is SET at is at layerScale, and TextReader.settle is where the second one is worked out. Note the cohort sizes above are at 2x (13 points of type in a 2x capture opened whole is a 27ish point layer).",
@@ -30,7 +30,30 @@
     {
       "t": "2026-09-17T14:09:54.955Z",
       "note": "walks label-weight-walk -> none"
+    },
+    {
+      "t": "2026-09-17T16:24:52.111Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T16:54:38.481Z",
+      "note": "walks none -> label-size-walk"
+    },
+    {
+      "t": "2026-09-17T16:54:38.526Z",
+      "note": "Adversarial review before building: the mock is not the question here, the RULE is. Three things could have gone wrong and were checked on real captures before a line landed. (1) A page-wide size would flatten a heading onto its rows: rejected, the cohorts are the weight vote's, which already keep General and the section labels apart. (2) Rounding to a whole point, which the task suggested: MEASURED and rejected, holding the settings pane's six rows to 28 rather than 28.38 drops Copy to clipboard to 0.502 agreement, under landedBar, so a label that was meant to come back tidy would not come back at all, and it lands 3px short of the ink. The Size menu truncates to whole points anyway, so all six read 28 px either way. (3) Converting the size the face was identified at into the size the layer is set at by scale alone: rejected, measured they differ 6 to 10 per cent per run because an antialiased edge does not scale, so the size is settled in the size the layer is SET at."
+    },
+    {
+      "t": "2026-09-17T16:54:38.571Z",
+      "note": "Shipped. TextReading.pageSize/pageSizes in PhotonzCore settle each weight cohort on the MIDDLE of the sizes its runs fit at; TextReader.holdEachToItsCohortsSize re-sets each run at it and keeps the run's own size when the settled one cannot account for its ink (agreement under landedBar), so settling a size never costs a reading, exactly as settling a weight never does. Settings pane: rows 1-7 all 28.38 (were 27.6 to 28.5). Effects panel: rows 22.22, sections 23.03. Every retyped word still covers its ink within 2px of 3 allowed."
+    },
+    {
+      "t": "2026-09-17T16:54:38.618Z",
+      "note": "Found while verifying, and fixed here because it made the feature look broken in its own screenshot: a text box exactly as wide as its words was being cut with an ellipsis on the canvas at some zooms. A box is measured in document points and drawn through a zoom, the canvas states the frame in output pixels and the rasterizer divides it back, and w*zoom/zoom is not always w in binary floating point. One ulp cost three characters: 'Show in menu bar' drew as 'Show in menu b…' at 151%. Reproduced at the arithmetic (154 of 2000 zoom steps in a thousandth either side of the walk's zoom put that width under) and in the app (screenshot before and after, old build reproduced with the change stashed). TextRasterizer.truncationSlack = 0.01pt, covered by two tests in OneLineTextRenderTests. Shared code, so Current gets the fix too, which is right: it is a defect, not a Next behaviour."
     }
   ],
-  "walks": []
+  "walks": [
+    "label-size-walk"
+  ],
+  "started": "2026-09-17T16:24:52.110Z"
 }

@@ -282,10 +282,11 @@ public enum TextReader {
         // And then one weight per KIND of label, which is the half the family
         // vote leaves open: six row labels of one pane can be four Regular and
         // two Medium while being one weight on screen.
-        let weights = TextReading.pageWeights(of: measured.map { ballot($0, in: voted) })
+        let ballots = measured.map { ballot($0, in: voted) }
+        let weights = TextReading.pageWeights(of: ballots)
         let settled = settleEachOf(measured, runs: runs, preferring: voted,
                                    at: weights, spreading: spreadingOverTheCores)
-        return measured.indices.map { index in
+        let held = measured.indices.map { index in
             // A run the page's own FAMILY cannot account for stays a picture,
             // and that is the safety net under the vote: a page that genuinely
             // mixes families loses a reading rather than gaining a label in
@@ -302,6 +303,80 @@ public enum TextReader {
                   case .measured(let run) = measured[index] else { return settled[index] }
             return settle(run, layerScale: runs[index].layerScale, preferring: voted)
         }
+        // And finally one SIZE per kind of label, which is what the weight
+        // vote leaves open in its turn: those same six row labels come back
+        // 27.6, 28.0, 28.5, 28.0, 28.5 and 28.4 points while every one of them
+        // is 13 points on screen, so picking all six reads Mixed and anybody
+        // who then sets a size is tidying up after the app.
+        return holdEachToItsCohortsSize(held, runs: runs, measured: measured,
+                                        ballots: ballots, weights: weights,
+                                        spreading: spreadingOverTheCores)
+    }
+
+    /// Sets every run at the size its KIND of label settled on.
+    ///
+    /// Settled in layer points rather than in the size the face was identified
+    /// at, because those two are not one number divided by the other: rendering
+    /// the same words at a different scale moves the ink by an antialiased edge
+    /// either side, and measured on the settings pane that is a 6 to 10 per
+    /// cent difference, per run. So the sizes compared here are the ones each
+    /// run would actually be SET at, multiplied back up by its own scale so a
+    /// label somebody shrank after separating is still comparable with the
+    /// labels beside it.
+    ///
+    /// Two runs never take it:
+    ///
+    /// - one held to its own face rather than its cohort's, whose size means
+    ///   something different, because a heavier face reaches the same ink
+    ///   height at a smaller size;
+    /// - one whose ink the settled size cannot account for. Settling a size
+    ///   never costs a reading, exactly as settling a weight never does: a
+    ///   label back at its own size is a smaller harm than a label that does
+    ///   not come back at all.
+    private static func holdEachToItsCohortsSize(
+        _ reads: [Read], runs: [PageRun], measured: [Measurement],
+        ballots: [TextReading.WeightBallot?], weights: [TextWeight?],
+        spreading: Bool
+    ) -> [Read] {
+        let fits: [CGFloat?] = reads.indices.map { index in
+            guard let reading = reads[index].outcome.reading else { return nil }
+            if let settled = weights[index], reading.face.weight != settled { return nil }
+            return reading.fontSize * runs[index].layerScale
+        }
+        let sizes = TextReading.pageSizes(of: ballots, fitting: fits)
+        @Sendable func one(_ index: Int) -> Read {
+            guard let settled = sizes[index], case .measured(let run) = measured[index],
+                  runs[index].layerScale > 0
+            else { return reads[index] }
+            return hold(reads[index], of: run, to: settled / runs[index].layerScale,
+                        scale: runs[index].layerScale)
+        }
+        guard spreading, reads.count > 1 else { return reads.indices.map(one) }
+        var landed = [Read?](repeating: nil, count: reads.count)
+        landed.withUnsafeMutableBufferPointer { buffer in
+            guard let raw = buffer.baseAddress else { return }
+            DispatchQueue.concurrentPerform(iterations: reads.count) { index in
+                (raw + index).pointee = one(index)
+            }
+        }
+        return landed.indices.map { landed[$0] ?? reads[$0] }
+    }
+
+    /// One run set at `size` instead of the size it fitted itself at, if its
+    /// own ink can still be accounted for at that size. The run as it was
+    /// otherwise.
+    private static func hold(_ read: Read, of run: Measured, to size: CGFloat,
+                             scale: CGFloat) -> Read {
+        guard let reading = read.outcome.reading, size > 0.5, size < 2000,
+              size != reading.fontSize,
+              let mask = render(reading.string, in: reading.face, size: size, scale: scale)
+        else { return read }
+        let agreement = TextReading.agreement(run.mask, mask)
+        guard agreement >= TextReading.landedBar else { return read }
+        return Read(outcome: .read(TextReading.Reading(
+            string: reading.string, face: reading.face, fontSize: size,
+            colorHex: reading.colorHex, agreement: agreement,
+            provenance: reading.provenance)), inkRect: read.inkRect, scores: read.scores)
     }
 
     /// What one measured run says about the weight its kind of label is set

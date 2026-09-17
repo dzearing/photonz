@@ -443,6 +443,93 @@ struct TextReadingTests {
         #expect(TextReading.pageWeights(of: [nil, nil]) == [nil, nil])
     }
 
+    // MARK: - The size a page sets one kind of label at
+
+    /// What the six row labels of the settings pane fixture come back at when
+    /// each is left to fit itself: 27.6 to 28.5 points for six labels that are
+    /// one size on screen. Measured, at the scale a 2x capture opened whole is
+    /// set at.
+    private let sixRowFits: [CGFloat] = [28.38, 28.00, 28.47, 28.00, 28.47, 28.38]
+
+    @Test func sixRowLabelsOfOnePaneComeBackAtOneSize() throws {
+        // The bug, in numbers: six labels that are 13 points on screen come
+        // back at six different sizes, so picking them all reads Mixed.
+        let settled = TextReading.pageSizes(of: sixRowLabels.map { $0 },
+                                            fitting: sixRowFits.map { $0 })
+        #expect(Set(settled.map { $0 ?? 0 }).count == 1)
+        let one = try #require(settled.first ?? nil)
+        #expect(one >= 28.00 && one <= 28.47)
+    }
+
+    @Test func theSizeTheySettleOnIsTheMiddleOfWhatTheyFit() throws {
+        // A middle rather than an average, so one label whose ink the reader
+        // measured badly cannot drag the other five off the size they plainly
+        // are.
+        var fits = sixRowFits
+        fits[3] = 40
+        let settled = TextReading.pageSizes(of: sixRowLabels.map { $0 },
+                                            fitting: fits.map { $0 })
+        #expect(settled.allSatisfy { ($0 ?? 0) < 29 })
+    }
+
+    @Test func aHeadingOverItsRowsIsNotDraggedDownToTheirSize() throws {
+        // The same thing the weight vote must not do. The heading is half
+        // again the size of the rows, so it is not a label of their kind and
+        // its own size stands.
+        let heading = ballot(23.63, "#111111",
+                             [.regular: 0.60, .medium: 0.782, .semibold: 0.836, .bold: 0.920])
+        let settled = TextReading.pageSizes(of: ([heading] + sixRowLabels).map { $0 },
+                                            fitting: ([44.97] + sixRowFits).map { $0 })
+        #expect(settled.first ?? nil == 44.97)
+        #expect(Set(settled.dropFirst().map { $0 ?? 0 }).count == 1)
+    }
+
+    @Test func aRunWithNothingLikeItKeepsTheSizeItFits() throws {
+        let lone = ballot(30, "#0000FF", [.regular: 0.64, .medium: 0.70, .bold: 0.81])
+        let settled = TextReading.pageSizes(of: (sixRowLabels + [lone]).map { $0 },
+                                            fitting: (sixRowFits + [61.5]).map { $0 })
+        #expect(settled.last ?? nil == 61.5)
+    }
+
+    @Test func aRunThatCouldNotBeSetAtItsCohortsWeightIsNotCountedOrAnswered() throws {
+        // A run held to its own face rather than its cohort's fits its ink at
+        // a different size by definition, so it is neither a vote nor a run
+        // the cohort's size can be handed to.
+        var fits: [CGFloat?] = sixRowFits.map { $0 }
+        fits[2] = nil
+        let settled = TextReading.pageSizes(of: sixRowLabels.map { $0 }, fitting: fits)
+        #expect(settled[2] == nil)
+        #expect(Set(settled.compactMap { $0 }).count == 1)
+    }
+
+    @Test func aRunNobodyCouldReadCastsNoSizeAndGetsNone() throws {
+        var ballots: [TextReading.WeightBallot?] = sixRowLabels.map { $0 }
+        ballots.insert(nil, at: 2)
+        var fits: [CGFloat?] = sixRowFits.map { $0 }
+        fits.insert(nil, at: 2)
+        let settled = TextReading.pageSizes(of: ballots, fitting: fits)
+        #expect(settled.count == 7)
+        #expect(settled[2] == nil)
+        #expect(Set(settled.compactMap { $0 }).count == 1)
+    }
+
+    @Test func aPageSettlesItsSizesTheSameWayWhicheverOrderItIsRead() throws {
+        let settled = TextReading.pageSizes(of: sixRowLabels.map { $0 },
+                                            fitting: sixRowFits.map { $0 })
+        let order = [4, 1, 5, 0, 3, 2]
+        let shuffled = TextReading.pageSizes(of: order.map { sixRowLabels[$0] },
+                                             fitting: order.map { sixRowFits[$0] })
+        #expect(Set(shuffled.compactMap { $0 }) == Set(settled.compactMap { $0 }))
+    }
+
+    @Test func nobodyOnThePageMeansNoSizeToSettle() throws {
+        #expect(TextReading.pageSizes(of: [], fitting: []).isEmpty)
+        #expect(TextReading.pageSizes(of: [nil, nil], fitting: [nil, nil]) == [nil, nil])
+        // Two lists that do not line up are a caller bug, not an answer.
+        #expect(TextReading.pageSizes(of: sixRowLabels.map { $0 }, fitting: [28])
+            == [CGFloat?](repeating: nil, count: 6))
+    }
+
     // MARK: - Setting a run at the weight its kind of label is in
 
     @Test func theRunTakesItsCohortsWeightEvenWhenAnotherScoredHigher() throws {

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T11:48:06.769Z",
-  "updated": "2026-09-17T15:38:50.387Z",
+  "updated": "2026-09-17T15:39:11.759Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building while-you-trim-a-recording-you-can-still-see-and. VideoEditorView.swift:322 swaps editButtons (which carries saveButton, the Undo button, cut, trash, trim, crop, copy, export) for trimModeButtons while state.isTrimming, and trimModeButtons is Reset/Cancel/Done plus the trash button that task added. Command-Z is wired for recordings in EditorCommands.swift:396 and works, so nothing is lost, only unsaid. Not reproduced against a running app: the Mac was locked for that whole task and no walk could run, so this is read off the code and off the fact that the Undo button is inside the branch that is skipped. It is a missing affordance rather than a break, which is why it is p2.",
@@ -71,10 +71,15 @@
     {
       "t": "2026-09-17T15:38:50.386Z",
       "note": "left rough: no sweep asked for. Nothing here touches a walk outside the trim set, the four runnable trim walks were run directly, and a sweep is already pending from the loop."
+    },
+    {
+      "t": "2026-09-17T15:39:11.757Z",
+      "note": "The trim row now carries the way back. VideoEditorView.swift: one shared undoButton used by both the edit row and the trim row, appearing only when there is an applied edit and naming it in its tooltip; the trim row splits into a recording group (Undo, trash) and a session group (Reset, Cancel, Done) with a wider gap between them, gated on the next-only cutting flag so Current is unchanged. Verified by a new 35-step walk that presses the real buttons with real mouse events, undo-while-trimming-walk: no Undo on an untouched recording, \"Undo Cut\" after two cuts, \"Undo Delete Piece\" after the trash, and one press puts the piece back with the handles still open. Scripts/test.sh green, 8173 tests. Audit: queue/audits/2026-09-17-undo-while-trimming.json with two real window captures. Also moved expectRecording onto the lock-safe step list (test first) after watching it run correctly under a lock, which un-refuses the video walks blocked on it. Filed the-delete-key-drops-a-piece-the-way-the-tooltip: the Delete key does nothing in a recording window, reproduced and shown to predate this change."
     }
   ],
   "started": "2026-09-17T15:21:43.469Z",
   "walks": [
     "undo-while-trimming-walk"
-  ]
+  ],
+  "completed": "2026-09-17T15:39:11.758Z"
 }

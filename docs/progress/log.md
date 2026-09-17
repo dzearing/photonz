@@ -17881,3 +17881,52 @@ requested, because `move` and `hover` are in 59 walks between them.
 Next: the sweep's answer. Open question: a pointer resting on a region whose view
 is covered by another still counts as resting on it; nothing in the app hits that
 today, but it is the one place this differs from a hand.
+
+## 2026-09-17 — A page of labels comes back at one size
+
+Third and last of the three things a reader can only settle by looking at the
+whole picture at once. The family landed this morning, the weight after it, and
+the SIZE still wobbled: the six row labels of `settings-pane-2x` came back 27.6,
+28.0, 28.5, 28.0, 28.5 and 28.4 points while every one of them is 13 points on
+screen, so picking all six read Mixed in the Size menu and anybody who then set a
+size was tidying up after the app.
+
+- `TextReading.pageSize` / `pageSizes` (PhotonzCore, pure, 9 tests) settle each
+  weight cohort on the MIDDLE of the sizes its runs fit at. The middle rather
+  than the average, so one badly measured label cannot drag the other five; and
+  measured, the middle is also the size the cohort agrees with best (4.571 total
+  against the nearest whole point's 4.204 on the settings pane).
+- **Not rounded to a whole point**, which the task had suggested. Measured:
+  holding those six to 28 rather than 28.38 drops "Copy to clipboard" to 0.502
+  agreement, under `landedBar`, so the label meant to come back tidy would not
+  come back at all. The Size menu says whole points anyway, so all six read
+  "28 px" either way.
+- `TextReader.holdEachToItsCohortsSize` re-sets each run at the settled size and
+  keeps the run's own size when the settled one cannot account for its ink.
+  Settling a size never costs a reading, exactly as settling a weight never does.
+- Settled in the size the layer is SET at, not the size the face was identified
+  at: those two are not one number divided by the other, because an antialiased
+  edge does not scale, and on this fixture they differ 6 to 10 per cent per run.
+- Effects panel: rows settle at 22.22 and the sections over them at 23.03, so the
+  rule settles wobble without flattening a page.
+
+**A box exactly as wide as its words was a hairsbreadth from being cut.** Found
+while verifying and older than this change: the canvas states a layer's frame in
+output pixels and the rasterizer divides it back, and `w * zoom / zoom` is not
+always `w`. One ulp short cut "Show in menu bar" down to "Show in menu b…" at
+151% while it read whole at 150%. `TextRasterizer.truncationSlack` (0.01pt) now
+stands between the two, with two tests in `OneLineTextRenderTests`. Shared code,
+so Current has the fix too: it is a defect, not a Next behaviour.
+
+`Scripts/playtest/label-size-walk.json` is the new walk, 60 steps, six real
+pictures of the window (it never looks a control up by name, so it runs on a
+locked Mac). It fails on the old build at step 23 with "Mixed", which is what
+makes it a test. Full suite 8197 green.
+
+Audit: `queue/audits/2026-09-17-label-size.json`.
+
+Next: the size is settled but still about 9 per cent bigger than the type really
+was (13 points of screen type comes back as a 28 point layer on a 2x capture
+where 26 is the truth). Every label is wrong by the same amount now, which is
+what this task was about, but a redline taken off the Size menu reads high. Open
+question: is that worth its own study, or does anybody read the number?

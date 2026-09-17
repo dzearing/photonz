@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T11:28:16.144Z",
-  "updated": "2026-09-17T16:23:49.536Z",
+  "updated": "2026-09-17T16:24:16.591Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-17 while fixing the notice pill. The harness move step sends a synthesized mouseMoved through window.sendEvent and then delivers mouseEntered/mouseExited BY HAND, but only to its own HintTooltipController anchor views (PlaytestHarness, case .move). SwiftUI .onHover never fires. Reproduction, with EditorState.canvasNoticeHeld newly exposed in the describe state as noticeHeld: /tmp/nw/hover.json separates a screenshot, then moves to window (687, 806) which is the middle of the pill button, then to (500, 806) which is its words, then back. Every describe reports noticeHeld=false: \"1-on-the-button held= False, 2-on-the-words held= False, 3-back-on-the-button held= False\". Run again with the pill fix stashed and the probe rebuilt, so that .onHover sits on the whole capsule as it shipped, the answer is the same three falses, so this is the harness and not the app and it has always been so. Likely fix: after sending the move, tell AppKit the pointer moved for real (NSWindow tracking updates read the actual mouse location), or drive the hosting view's tracking areas the way the tooltip anchors are driven. Worth checking whether a walk can instead ask the app what it thinks is hovered, which would be cheaper and is how expectCue already works.",
@@ -43,6 +43,18 @@
     {
       "t": "2026-09-17T16:23:49.535Z",
       "note": "walks none -> notice-waits-under-the-pointer-walk, tool-tips, segment-tooltips-walk, panel-toggle-titlebar-walk, marquee-answers-to-m-walk"
+    },
+    {
+      "t": "2026-09-17T16:24:16.496Z",
+      "note": "Adversarial review before building: the obvious idea (make a synthesized event drive AppKit's tracking) was tried five ways and is not possible from a background process without taking the user's cursor, so the shortest thing that delivers the same value is to run the control's OWN hover closure from a marker sitting on the very view the hover is attached to, which is the path toolFlyout already takes for a SwiftUI list no click can reach. The trap that idea carries is that a hover written later is silently untestable, which is today's failure mode again, so it is guarded by a test that fails on a bare .onHover anywhere in Sources/Photonz. The second trap is aiming: the pill's button moves whenever its label changes, so a walk pointing at numbers would rest beside it and pass; that is why move gained a control: form rather than leaving walks to write coordinates."
+    },
+    {
+      "t": "2026-09-17T16:24:16.544Z",
+      "note": "left rough: a pointer resting on a hover region whose view is COVERED by another surface still counts as resting on it, because occlusion inside one SwiftUI hosting view cannot be worked out from the AppKit tree. Nothing in the app hits this today (the overlapping surfaces are all at different places) and no walk does either, so it did not earn a task; it is the one place this differs from a hand and it is written into the audit's rough list where the user can react to it."
+    },
+    {
+      "t": "2026-09-17T16:24:16.589Z",
+      "note": "Every hover in the app is now .playtestHover, which is .onHover plus a marker a walk's pointer can find and run (Sources/Photonz/Playtest/PlaytestPointer.swift, 20 call sites rewritten, PlaytestHoverIsReachableTests guards it). move takes control: as well as at:, wait takes onTheClock, expectNotice takes held, and hover joined the steps a lock cannot touch after six tooltip walks were forced and watched. Verified: Scripts/playtest/notice-waits-under-the-pointer-walk.json is green and proves the pill outlives its six seconds under the pointer and leaves once the pointer walks away; it was checked against a deliberately broken holdCanvasNotice and fails there naming the control. Scripts/test.sh green, 8179 tests. 20 walks run green including redline-walk; a full sweep requested because move and hover are in 59 walks. Audit: queue/audits/2026-09-17-a-walk-can-rest-a-pointer.json. Commit c6aa1536, pushed."
     }
   ],
   "walks": [
@@ -52,5 +64,6 @@
     "panel-toggle-titlebar-walk",
     "marquee-answers-to-m-walk"
   ],
-  "started": "2026-09-17T15:39:46.684Z"
+  "started": "2026-09-17T15:39:46.684Z",
+  "completed": "2026-09-17T16:24:16.590Z"
 }
