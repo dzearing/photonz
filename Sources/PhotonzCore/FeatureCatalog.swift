@@ -172,6 +172,8 @@ public enum FeatureCatalog {
 
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
 
+    public static let separatedRowSaysItsWordsFlag = "next-a-separated-row-says-its-words"
+
     public static let findALayerFlag = "next-find-a-layer"
 
     public static let separationArrivesShutFlag = "next-a-separation-arrives-shut"
@@ -613,6 +615,15 @@ public enum FeatureCatalog {
                     name: rowSaysItsWordsFlag,
                     title: "A row says the words that are in it",
                     description: "A piece of text in the layers list says Text, then Text 2, Text 3, whatever it actually holds, and a screenshot taken apart hands back a hundred and forty rows called Text 1 to Text 142 with nothing to tell them apart. With this on, a piece of text nobody has named by hand simply wears its own words: the row under a button's label says Save Changes, the heading's row says General, and a list you had to click through one row at a time is a list you can read. Retype the words on the canvas and the row follows them as you type, because the name is not written down anywhere, it IS the words. Long words are cut at a word boundary and end in an ellipsis, so one long paragraph cannot push every other row off the edge of the list. The moment you type a name of your own it is yours: it stays put whatever the words do afterwards, and opening the rename field and pressing Return without changing anything leaves the row following the words rather than quietly pinning it. Nothing about the document changes, so it costs no undo step and a document made with this on is byte for byte an ordinary document. Off means a piece of text says Text and its number, which is what it has always said.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: separatedRowSaysItsWordsFlag,
+                    title: "A separated run of text says the words in it",
+                    description: "Take a screenshot apart and the pieces that are text arrive as pictures of words: the layers list calls them Text 1 to Text 142 and the only way to tell one from another is a thumbnail the size of a postage stamp. With this on the app reads each piece as soon as the command has landed, and the rows fill in with what is actually written in them: the row under a button's label says Save Changes, the heading's row says General, and typing a word you can see on the canvas into the find field goes straight to the piece holding it. The reading happens in the background, a dozen pieces at a time from the top of the list down, so Separate into Layers is exactly as fast as it was and the names appear behind it. It reads the WORDS only, never what face they are set in, which is both the quick half and the reliable half. Nothing is written into the document: the row works its name out as it is drawn, so no undo step is spent, the picture is untouched, and turning a piece into real text or naming it yourself takes over from the reading straight away. A piece with nothing readable in it, an icon or a switch, keeps the name the app gave it. Off means every piece says Text and its number.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

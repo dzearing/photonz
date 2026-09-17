@@ -107,7 +107,8 @@ extension EditorState {
         if isSearchingLayers {
             return document?.layerRows(matching: layerSearchQuery, selected: selected,
                                        saysItsWords: Experiments.shared.rowSaysItsWordsEnabled,
-                                       separations: separationLeftovers) ?? []
+                                       separations: separationLeftovers,
+                                       readWords: readWordsForRows) ?? []
         }
         return document?.layerRows(
             expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [],
@@ -120,7 +121,11 @@ extension EditorState {
             // cannot: the picture's own row (`next-what-a-separation-left-behind`).
             // Empty until something has actually been separated, so an ordinary
             // document never pays for the lookup.
-            separations: separationLeftovers) ?? []
+            separations: separationLeftovers,
+            // And what was READ out of each separated run, so a piece of a
+            // screenshot says its own words rather than Text 57
+            // (`EditorState+RunWords`).
+            readWords: readWordsForRows) ?? []
     }
 
     /// What the layers list is CALLING this layer right now, which is what a
@@ -129,7 +134,8 @@ extension EditorState {
     /// `next-a-row-says-its-words` is on (`Layer.displayName`).
     func rowName(of id: UUID) -> String? {
         guard let layer = document?.layer(id: id) else { return nil }
-        return Experiments.shared.rowSaysItsWordsEnabled ? layer.displayName : layer.name
+        return Experiments.shared.rowSaysItsWordsEnabled
+            ? layer.displayName(readWords: readWordsForRows) : layer.name
     }
 
     /// How many rows the layers area keeps room for: every row a twist could
@@ -479,7 +485,7 @@ extension EditorState {
     }
 
     func renameLayer(id: UUID, to name: String) {
-        perform { $0.renameLayer(id: id, to: name) }
+        perform { $0.renameLayer(id: id, to: name, readWords: readWordsForRows) }
     }
 
     func deleteLayer(id: UUID) {

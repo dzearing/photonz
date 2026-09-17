@@ -244,6 +244,12 @@ extension EditorState {
                                          gatheredAs: gatheredAs)
         }
         guard !made.isEmpty else { return }
+        // The pieces are in the document and the command is over. NOW the words
+        // in each run are read, in the background, so the rows stop saying
+        // Text 57 and start saying what is written in them
+        // (`EditorState+RunWords`). Nothing about the document changes and the
+        // command is exactly as fast as it was.
+        readWordsOffRuns()
         // Gathered, the ONE thing picked is the group itself, shut. Picking a
         // piece inside it would open every twist above it to bring its row
         // into view, which is the whole arrangement undone in the first frame.

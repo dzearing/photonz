@@ -53,6 +53,24 @@ final class EditorState {
     /// bitmap again, so the offer goes away the moment undo takes that picture
     /// out of the document.
     var lastSeparated: ImageRef?
+    /// The words the app has read off each separated run of text, so its row
+    /// can say them instead of saying Text 57
+    /// (`EditorState+RunWords`, `next-a-separated-row-says-its-words`).
+    ///
+    /// Keyed by the BITMAP, like the leftover counts above and for the same
+    /// reasons: undoing a separation and running it again finds the reading
+    /// already there, and two layers cut from one picture agree. Session
+    /// chrome, never the document — a reading is a guess about pixels, so it
+    /// costs no undo step and a file saved with this on is byte for byte an
+    /// ordinary file.
+    var wordsReadOffPictures: [ImageRef: String] = [:]
+    /// Whether a background reading pass is still working through the runs a
+    /// separation just made. The find field says so rather than saying no layer
+    /// says that, which would be a wrong answer a second early.
+    var readingWordsOffPictures = false
+    /// The pass itself, held so a second separation can call off the first
+    /// rather than leaving both grinding away at once.
+    @ObservationIgnored var wordReadingPass: Task<Void, Never>?
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 
@@ -1678,6 +1696,11 @@ final class EditorState {
         // The outgoing picture's open groups mean nothing to the incoming one,
         // and clearing them must not be mistaken for the user shutting them.
         withoutRememberingOpenGroups { expandedGroupIDs = [] }
+        // Neither do the words read off the outgoing picture's runs. A file
+        // opened with separated runs already in it is read again from here, so
+        // its rows say their words the same as if it had just come apart.
+        forgetWordsReadOffPictures()
+        defer { readWordsOffRuns() }
         viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
         selection = nil
         selectionTargetsPixels = false

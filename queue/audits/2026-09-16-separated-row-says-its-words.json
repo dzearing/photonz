@@ -1,0 +1,30 @@
+{
+  "feature": "A separated run of text says the words in it",
+  "epic": "ui-building",
+  "summary": "Take a screenshot apart and the pieces that are text now say what is written in them: the row under a button's label reads Save Changes instead of Text 57, and typing a word you can see on the canvas into the find field goes straight to the piece holding it. The words are read in the background after the command, and nothing is written into the document.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-a-separated-row-says-its-words, on by default; it needs next-a-row-says-its-words and next-find-a-layer, which are both on by default too.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png and press Fit." },
+    { "do": "Pick the Background row and run Layer > Separate into Layers. Count how long the pill takes." },
+    { "do": "Watch the layers list for the next second or two: the rows change from Text 1, Text 2 to the words in each piece, from the top of the list down." },
+    { "do": "Type recommended into the find field over the list. It used to answer No layer says that." },
+    { "do": "Click the result and check the outline on the canvas lands on the word Recommended." },
+    { "do": "Press Command Z once. The whole separation goes in that one press." },
+    { "do": "Separate it again and watch the rows say their words immediately, without a second reading." },
+    { "do": "Open Fixtures/settings-pane-2x.png, separate it, and read the list: General, Launch at login, Save Changes." }
+  ],
+  "evaluate": [
+    "Do the rows turning from numbers into words a second after the command feel like the list filling in, or like the list changing under you?",
+    "Is a row that says a fragment of a sentence, which is what a page of prose gives you, better than the same row saying Text 57?",
+    "When you typed a word and it found the piece, did you expect that, or did you expect to have to turn something on first?",
+    "The words are never saved: close the document and open it again and they are read afresh. Is that invisible to you, or does something feel slow about opening a separated file?",
+    "Should a row that could not be read say something other than Text 57, or is the number the right answer for an icon?"
+  ],
+  "rough": [
+    "NO PICTURES WITH THIS AUDIT AND THE WALK HAS NEVER RUN. The Mac's screen was locked for the whole of this task, so no scripted walk could run at all and macOS takes no screenshots. Everything claimed here was verified headlessly, over the same two capture fixtures, in Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift. The walk Scripts/playtest/separated-rows-say-their-words-walk.json is written and waiting for an unlocked screen; a sweep has been asked for.",
+    "The dense page is prose, so its rows say fragments: keeps, recoloured, row for, that you. That is honestly what is written in each piece, and it is far more use than Text 57, but it is not the tidy list the settings pane gives.",
+    "143 of the dense page's 173 rows say words. The rest are icons, switches and pieces with nothing readable in them, and they keep the name the command gave them with nothing to say why.",
+    "The reading is not saved, so opening a document that already holds separated runs reads them again in the background. On a page of a hundred and forty runs that is a few hundred milliseconds of quiet work after the file opens.",
+    "Nine walks that test the separation itself now pin this flag off, so they keep checking against Text 1 and Text 9 rather than against words that move. That is deliberate, but it does mean the default behaviour is covered by one walk rather than by all of them."
+  ]
+}

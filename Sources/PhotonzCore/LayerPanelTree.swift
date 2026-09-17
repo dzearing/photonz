@@ -466,10 +466,16 @@ extension PhotonzDocument {
     /// named by hand wear its own words instead of the number the app gave it
     /// (`Layer.displayName`). With it off every row says exactly what it is
     /// stored as, which is what Current shows.
+    /// `readWords` is what the app has read off the pictures beside it: a
+    /// separated run of text is a picture of words, so its row wears the words
+    /// that were read rather than the number the command gave it
+    /// (`Layer.displayName(readWords:)`). Empty until something has been read,
+    /// which is every document that has not been taken apart.
     public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
                           marksOutOfView: Bool = true,
                           saysItsWords: Bool = true,
-                          separations: [ImageRef: SeparationLeftover] = [:]) -> [LayerRowDisplay] {
+                          separations: [ImageRef: SeparationLeftover] = [:],
+                          readWords: [ImageRef: String] = [:]) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
         // Which components hold more than one drawing of themselves, and what
         // those drawings are called. A version name is only worth printing
@@ -538,7 +544,7 @@ extension PhotonzDocument {
                                        isExpanded: open, parentID: parent),
                     // Not `layer.name`: a piece of text nobody has renamed by
                     // hand says the words it holds (`Layer.displayName`).
-                    name: saysItsWords ? layer.displayName : layer.name,
+                    name: saysItsWords ? layer.displayName(readWords: readWords) : layer.name,
                     isVisible: layer.isVisible,
                     isLocked: layer.isLocked,
                     isSelected: selected.contains(layer.id),
@@ -548,7 +554,8 @@ extension PhotonzDocument {
                     componentNote: ComponentRowNote.forRow(
                         isMain: layer.isMainComponent,
                         isInstance: layer.isComponentInstance,
-                        rowName: saysItsWords ? layer.displayName : layer.name,
+                        rowName: saysItsWords
+                            ? layer.displayName(readWords: readWords) : layer.name,
                         componentName: layer.instanceOf.flatMap { componentNames[$0] },
                         versionName: version),
                     isRasterizable: layer.isRasterizable,

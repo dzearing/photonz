@@ -815,6 +815,59 @@ Walks: `Scripts/playtest/read-a-label-by-double-click-walk.json` for the reading
 `Scripts/playtest/double-click-a-label-walk.json` for the plain case of a label
 that is already words and lives inside a group.
 
+### A separated row says the words in its picture
+
+Flag: `next-a-separated-row-says-its-words`, on by default in Next. Landed
+2026-09-16.
+
+The rule above — a piece of text nobody has named by hand wears its own words —
+could not reach the case it was written for, because a separated run holds no
+words. It holds a PICTURE of words, so a dense page came apart into a hundred
+and forty rows called Text 1 to Text 142 with nothing to tell them apart but a
+thumbnail the size of a postage stamp, and typing "recommended" into the find
+field, with the word plainly on the canvas, answered "No layer says that".
+
+Now the app reads the words off each piece and the rows say them. Three things
+decide the shape of it, and each one is a line somebody could disagree with:
+
+- **The words only, never the face.** `TextReader.words` runs the recogniser and
+  stops. It does not identify the family, the weight or the size, which is the
+  half the study found unreliable: four of thirty one runs of this app's own
+  window came back set in a face the window does not contain, and the app called
+  all four its confident verdict. The words were right in every one of those. A
+  name needs the reliable half and nothing else. It also answers where the whole
+  reading gives up: sixty of the dense page's hundred and forty two runs are
+  refused for having no matching face, and each of those is still a label
+  somebody would search for.
+- **After the command, never inside it.** Separate into Layers is untouched and
+  exactly as fast as it was. The reading starts once the pieces have landed
+  (`EditorState.readWordsOffRuns`), takes a dozen pieces at a time from the top
+  of the list down, spreads each dozen over the cores at a priority that yields
+  to whatever the person is doing, and fills the names in behind itself. The
+  dense page's 142 runs read in 1650 ms one after another, which is a few
+  hundred spread out, so the numbers become words about a second after the pill
+  appears.
+- **Nothing is written into the document.** The reading is held against the
+  BITMAP, beside the document and not in it, the way the leftover counts already
+  are (`EditorState.wordsReadOffPictures`). The row works its name out as it is
+  drawn (`Layer.displayName(readWords:)`). So the separated picture is byte for
+  byte what it was, no undo step is spent on it, undoing the separation and
+  running it again finds the reading already there, and the moment somebody
+  names a piece by hand or turns it into real text their answer takes over.
+  Opening the rename field on a row that is saying read words and pressing
+  Return changes nothing, the same promise a text layer's row already makes.
+
+A piece with nothing readable in it — an icon, a switch, a patch of flat panel —
+keeps the name the command gave it, and is asked once and never again. While the
+pass is still working, a find that matches nothing says "Still reading the
+words" rather than "No layer says that", which would be a wrong answer given a
+second early.
+
+Walk: `Scripts/playtest/separated-rows-say-their-words-walk.json`. The walks that
+test the separation itself pin this flag OFF, so they keep testing against names
+that do not move; `find-a-layer-walk` does the same and photographs the old
+behaviour for comparison.
+
 ## Which piece sits in which
 
 A pile is not what the screen looked like. A label that sits in a button is part

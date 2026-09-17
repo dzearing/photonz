@@ -219,6 +219,7 @@
   "setup": {
     "forget": [
       "groups"
-    ]
+    ],
+    "flags": { "next-a-separated-row-says-its-words": false }
   }
 }

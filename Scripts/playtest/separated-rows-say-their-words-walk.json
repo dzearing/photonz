@@ -1,0 +1,172 @@
+{
+  "out": "/tmp/photonz-playtest/separated-rows-say-their-words",
+  "seed": "A HUNDRED AND FORTY ROWS THAT SAY WHAT IS IN THEM. Taking a dense screenshot apart used to hand back rows called Text 1 to Text 142, with nothing to tell them apart but a thumbnail the size of a postage stamp, and searching the list for a word you could plainly SEE on the canvas found nothing. The walk separates the same page, photographs the list the moment the pieces land, waits while the words are read off the pictures in the background, and photographs it again: the rows now say Recommended, Decision, Dashboard. Then it types one of those words into the find field and lands on the piece holding it. Last it presses undo ONCE and the whole separation goes, which is the proof that reading the words wrote nothing into the document.",
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-find-a-layer": true,
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": true,
+      "next-a-separation-arrives-shut": false
+    }
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-pieces-land",
+      "note": "THE COMMAND, unchanged: well over a hundred pieces, as fast as it ever was, and the rows are still the numbers the command gave them. Reading the words has not started until this moment, which is the point: the command does not pay for it"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 100,
+      "atMost": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 6
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-rows-say-their-words",
+      "note": "THE FIRST TEST: the words have been read off the pictures in the background and the rows now say them. A list you had to click through one row at a time is a list you can read"
+    },
+    {
+      "do": "expect",
+      "row": "Recommended",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "words-1-rows-say-their-words"
+    },
+    {
+      "do": "focus",
+      "field": "Find a layer"
+    },
+    {
+      "do": "type",
+      "text": "recommended"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-and-the-find-field-reaches-it",
+      "note": "THE SECOND TEST, and the one this task was filed for: the word Recommended is on the page in front of you, and typing it into the find field now reaches the piece holding it. It used to say No layer says that"
+    },
+    {
+      "do": "expect",
+      "field": "Search count",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Recommended",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "layerRowInView",
+      "value": "Recommended",
+      "timeout": 3
+    },
+    {
+      "do": "snapshot",
+      "name": "words-2-found-by-its-words"
+    },
+    {
+      "do": "selectRow",
+      "row": "Recommended"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-clicking-it-picks-the-piece",
+      "note": "THE THIRD TEST: a row that says its words is a row like any other. Clicking it picks that piece on the canvas, so the outline lands on the words you typed"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Recommended"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "words-3-picked-by-its-words"
+    },
+    {
+      "do": "press",
+      "control": "Clear the search"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-press-takes-it-all-back",
+      "note": "THE LAST TEST: one press of undo and the picture is whole again. Reading the words wrote nothing into the document, so it cost no undo step of its own and there is nothing left over to take back"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "words-4-one-undo-and-its-whole"
+    }
+  ]
+}

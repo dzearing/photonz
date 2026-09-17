@@ -51,7 +51,8 @@ extension PhotonzDocument {
     /// it.
     public func layerRows(matching query: String, selected: Set<UUID>,
                           saysItsWords: Bool = true,
-                          separations: [ImageRef: SeparationLeftover] = [:]) -> [LayerRowDisplay] {
+                          separations: [ImageRef: SeparationLeftover] = [:],
+                          readWords: [ImageRef: String] = [:]) -> [LayerRowDisplay] {
         guard !LayerSearch.normalized(query).isEmpty else { return [] }
         // Every row the panel could ever show, which is what makes a piece
         // inside a shut group findable. `marksOutOfView` is off: a result row
@@ -61,7 +62,7 @@ extension PhotonzDocument {
         // walk can do.
         return layerRows(expanded: openableGroupIDs, selected: selected,
                          marksOutOfView: false, saysItsWords: saysItsWords,
-                         separations: separations)
+                         separations: separations, readWords: readWords)
             .filter { LayerSearch.matches(name: $0.name, query: query) }
             .map { display in
                 LayerRowDisplay(

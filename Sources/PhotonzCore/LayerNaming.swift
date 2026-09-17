@@ -190,11 +190,39 @@ extension Layer {
     /// moment you can point at, so Turn Into Path writes the new name into the
     /// document inside that same step (`PhotonzDocument.turnLayerIntoPath`).
     public var displayName: String {
+        displayName(readWords: [:])
+    }
+
+    /// The same question for a document whose pictures have been READ.
+    ///
+    /// A run of text that Separate into Layers lifted off a screenshot is a
+    /// picture of words, not words, so there is nothing in the document to name
+    /// it after and a hundred and forty of them arrive called Text 1 to
+    /// Text 142. The words are in the pixels, and the app reads them in the
+    /// background once the command has landed; `readWords` is what came back,
+    /// held against each BITMAP so undoing a separation and running it again
+    /// finds the reading still there.
+    ///
+    /// A reading names a row and nothing else. It is a guess about a picture —
+    /// a good one for the characters, and the study behind
+    /// `docs/design/separate-reads-the-words.md` says an unreliable one for the
+    /// face — so it is never written into the document, never undoable, and
+    /// gone the moment somebody types a name of their own or turns the picture
+    /// into real text.
+    public func displayName(readWords: [ImageRef: String]) -> String {
         // Asked in this order because nearly every row in a list is not text,
         // and matching the case is a great deal cheaper than reading the name
         // against every stem the app mints names from.
-        guard let text, LayerNaming.isAutoName(name) else { return name }
-        let words = LayerNaming.name(fromWords: text.string)
+        if let text {
+            guard LayerNaming.isAutoName(name) else { return name }
+            let words = LayerNaming.name(fromWords: text.string)
+            return words.isEmpty ? name : words
+        }
+        // Only a run the separation lifted OFF a screenshot, so nothing can
+        // rename an ordinary photograph after a word on a sign in it.
+        guard isARunOfText == true, !readWords.isEmpty, let ref = imageRef,
+              let read = readWords[ref], LayerNaming.isAutoName(name) else { return name }
+        let words = LayerNaming.name(fromWords: read)
         return words.isEmpty ? name : words
     }
 }
@@ -209,9 +237,15 @@ extension PhotonzDocument {
     /// layer exactly as it was. Without that, opening the rename field on a
     /// piece of text and thinking better of it would quietly pin its name away
     /// from its words, and nothing on screen would say so.
-    public mutating func renameLayer(id: UUID, to typed: String) {
+    /// `readWords` is what has been read off the pictures, for the same reason
+    /// the list is given it: a separated run's row is already saying the words
+    /// that were read, so pressing Return on that untouched would otherwise
+    /// write them down as a name nobody typed.
+    public mutating func renameLayer(id: UUID, to typed: String,
+                                     readWords: [ImageRef: String] = [:]) {
         let trimmed = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != layer(id: id)?.displayName else { return }
+        guard !trimmed.isEmpty,
+              trimmed != layer(id: id)?.displayName(readWords: readWords) else { return }
         updateLayer(id: id) { $0.name = trimmed }
     }
 

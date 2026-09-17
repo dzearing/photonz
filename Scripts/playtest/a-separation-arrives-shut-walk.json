@@ -3,7 +3,7 @@
   "seed": "THE OTHER ANSWER TO A HUNDRED NEW ROWS, AND WHAT IT COSTS. With next-a-separation-arrives-shut on, a separation big enough to fill the layers list arrives inside ONE group named after the picture it came from, and the group arrives shut: the list is one row longer rather than a hundred and something. The walk proves that, and then proves the price in the same run - a click on the canvas, over a piece you can see, picks the whole group rather than the piece, so the one thing a fresh separation is good for is two clicks away instead of one. Both halves are the point: this walk is the comparison for find-a-layer-walk, not a feature being shipped. It finishes on a small capture to show that taking a card apart still hands the pieces straight to you.",
   "setup": {
     "forget": ["groups"],
-    "flags": { "next-a-separation-arrives-shut": true, "next-find-a-layer": false }
+    "flags": { "next-a-separation-arrives-shut": true, "next-find-a-layer": false, "next-a-separated-row-says-its-words": false }
   },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png", "width": 1400, "height": 900 },

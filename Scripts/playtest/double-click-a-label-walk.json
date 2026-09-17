@@ -76,5 +76,5 @@
     },
     { "do": "expect", "row": "Save Changes", "present": true }
   ],
-  "setup": { "forget": ["groups"] }
+  "setup": { "forget": ["groups"], "flags": { "next-a-separated-row-says-its-words": false } }
 }

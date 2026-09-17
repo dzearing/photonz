@@ -156,6 +156,47 @@ public enum TextReader {
             provenance: reading.provenance)), inkRect: inkRect, scores: scores)
     }
 
+    /// Just the WORDS in a picture of a run of text, for something that wants
+    /// to SAY them rather than set them — the row in the layers list under a
+    /// separated label (`docs/design/separate-into-layers.md`, "A separated row
+    /// says its words").
+    ///
+    /// The same recogniser `read` uses, and then it stops. Everything after the
+    /// characters — the colour, the size, and above all the face, which sets
+    /// the words again in thirteen faces at nine sizes each and lays every one
+    /// of them over the picture's ink — exists to put real text back on the
+    /// canvas. A row needs none of it, and a row must not HAVE it: the study
+    /// measured the face coming back wrong on four of thirty one runs of this
+    /// app's own window, with the app calling all four its confident verdict.
+    /// The words were right in every one of those. So a name takes the half
+    /// that is reliable and leaves the half that is not.
+    ///
+    /// It is cheaper too, though by less than it looks: optimised, the
+    /// recogniser is most of the cost. Reading the settings pane's nine runs
+    /// for their words is 276 ms against 358 ms whole, and the dense page's
+    /// hundred and forty two are 1650 ms against 3643 ms — about half, spread
+    /// over the cores a few hundred milliseconds, which is what makes a pass
+    /// over a whole page something that finishes behind the command.
+    ///
+    /// It also answers where the whole reading gives up. Sixty of the dense
+    /// page's hundred and forty two runs are refused for having no face the app
+    /// can match, and every one of those is still a label somebody would read
+    /// and search for.
+    ///
+    /// Nil when there is no ink to find or nothing readable in it, which is the
+    /// honest answer for a switch, an icon or a patch of flat panel: the row
+    /// keeps the name the app gave it.
+    public static func words(in image: CGImage) -> String? {
+        guard let ink = ink(image), let bounds = ink.mask.inkBounds() else { return nil }
+        // Every line of it, joined. `read` refuses a picture holding more than
+        // one run, because it could only set ONE of them back on the canvas; a
+        // name has no such trouble and two lines of a label are two words of a
+        // name (`LayerNaming.name(fromWords:)` folds them into one line).
+        let lines = lines(ink.mask, inkHeight: bounds.height)
+        let words = lines.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        return words.isEmpty ? nil : words
+    }
+
     // MARK: - The ink
 
     /// The shape of the ink in a picture, and samples of its colour from the
@@ -240,7 +281,23 @@ public enum TextReader {
     /// entirely.
     static func recognize(_ mask: TextReading.Mask,
                           inkHeight: CGFloat) -> Result<String, TextReading.Refusal> {
-        guard inkHeight > 0 else { return .failure(.tooFaint) }
+        let lines = lines(mask, inkHeight: inkHeight)
+        guard !lines.isEmpty else { return .failure(.noWords) }
+        // More than one run is a signpost rather than a dead end: Separate into
+        // Layers takes a picture apart into runs first, and then each one of
+        // them is a single line this can read.
+        guard lines.count == 1 else { return .failure(.moreThanOneRun) }
+        return .success(lines[0])
+    }
+
+    /// Every line of text the recogniser finds in a shape of ink, top down.
+    ///
+    /// Empty when there is nothing readable there, which covers a switch, an
+    /// icon and a patch of flat panel alike. The caller decides what more than
+    /// one line means: putting words back on the canvas refuses, naming a row
+    /// joins them.
+    static func lines(_ mask: TextReading.Mask, inkHeight: CGFloat) -> [String] {
+        guard inkHeight > 0 else { return [] }
         // Small ink is scaled up before it is read. A row label on a 1x capture
         // is thirteen pixels tall, which is near the floor of what text
         // recognition reads reliably.
@@ -256,15 +313,15 @@ public enum TextReader {
                                       bitsPerComponent: 8, bytesPerRow: w * 4,
                                       space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return .failure(.noWords) }
+        else { return [] }
         context.setFillColor(gray: 1, alpha: 1)
         context.fill(CGRect(x: 0, y: 0, width: w, height: h))
-        guard let inkImage = maskImage(mask) else { return .failure(.noWords) }
+        guard let inkImage = maskImage(mask) else { return [] }
         context.interpolationQuality = .high
         context.draw(inkImage, in: CGRect(x: CGFloat(margin), y: CGFloat(margin),
                                           width: CGFloat(mask.width) * up,
                                           height: CGFloat(mask.height) * up))
-        guard let page = context.makeImage() else { return .failure(.noWords) }
+        guard let page = context.makeImage() else { return [] }
 
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
@@ -274,17 +331,13 @@ public enum TextReader {
         request.usesLanguageCorrection = false
         request.recognitionLanguages = ["en-US"]
         let handler = VNImageRequestHandler(cgImage: page, options: [:])
-        guard (try? handler.perform([request])) != nil else { return .failure(.noWords) }
-        let observations = request.results ?? []
-        guard !observations.isEmpty else { return .failure(.noWords) }
-        // More than one run is a signpost rather than a dead end: Separate into
-        // Layers takes a picture apart into runs first, and then each one of
-        // them is a single line this can read.
-        guard observations.count == 1 else { return .failure(.moreThanOneRun) }
-        guard let best = observations[0].topCandidates(1).first,
-              !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        else { return .failure(.noWords) }
-        return .success(best.string)
+        guard (try? handler.perform([request])) != nil else { return [] }
+        return (request.results ?? []).compactMap {
+            guard let best = $0.topCandidates(1).first,
+                  !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            else { return nil }
+            return best.string
+        }
     }
 
     /// Coverage as a black-on-transparent bitmap, so it can be drawn onto a

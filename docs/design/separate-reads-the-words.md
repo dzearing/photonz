@@ -135,6 +135,19 @@ three differences that all favour it:
   and eight of eighty-two on the dense page. Per-run Turn into Text can never do
   this, because it only ever sees one run.
 
+### The rows say their words, even though the canvas does not
+
+**Landed 2026-09-16** behind `next-a-separated-row-says-its-words`, on by
+default in Next. See `docs/design/separate-into-layers.md`, "A separated row
+says the words in its picture".
+
+Saying no to automatic reading is about what goes ON THE CANVAS: a guess set in
+the wrong face is evidence nobody can tell is a guess. A NAME is not that. It
+costs no undo step, it is never saved, a wrong word in a list is a wrong word in
+a list, and the half of the reading this study found unreliable — the face — is
+not asked for at all. So the rows read, the canvas does not, and the two answers
+agree with each other rather than contradicting.
+
 ### Double clicking a separated label reads it and opens it for typing
 
 **Landed 2026-09-16** behind `next-double-click-reads-a-label`, on by default in

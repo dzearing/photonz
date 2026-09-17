@@ -476,6 +476,15 @@ extension Experiments {
     /// every row back to the number it had.
     var rowSaysItsWordsEnabled: Bool { isEnabled(FeatureCatalog.rowSaysItsWordsFlag) }
 
+    /// `next-a-separated-row-says-its-words`: whether a run of text Separate
+    /// into Layers lifted off a screenshot wears the words READ off its picture
+    /// (`EditorState+RunWords`). It is the same row rule one step further on,
+    /// so it needs that rule and it needs there to be separated pieces at all.
+    var separatedRowSaysItsWordsEnabled: Bool {
+        separateIntoLayersEnabled && rowSaysItsWordsEnabled
+            && isEnabled(FeatureCatalog.separatedRowSaysItsWordsFlag)
+    }
+
     /// `next-find-a-layer`: whether a find field sits over the layers list, so
     /// one label in a hundred and forty is reached by typing rather than by
     /// scrolling. It reads the names the list is ALREADY showing, so what you
