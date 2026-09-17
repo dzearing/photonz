@@ -250,4 +250,81 @@ struct TutorialsTests {
             }
         }
     }
+
+    // MARK: A step can wait for a setting to REACH a value
+
+    @Test func aStepWaitingOnAValueIsNotSatisfiedByTheEventThatCarriedIt() {
+        // The whole point. Pulling a slider one point raises the same "an edit
+        // was made" as pulling it all the way, so a step that says "pull
+        // Strength up until the address cannot be read" used to move on at the
+        // first flicker. A value trigger is a QUESTION about the document, and
+        // no event can answer it.
+        let step = TutorialStep(id: "how-hard", anchor: .canvas, title: "t", body: "b",
+                                advance: .waitsFor(.settingReached(.lensAmount, atLeast: 20)))
+        let run = TutorialRun(guide: TutorialGuide(
+            id: "g", track: .looks, title: "t", summary: "s", minutes: 1,
+            sample: nil, steps: [step]))
+        #expect(run.step.waits)
+        #expect(run.waitsOnAValue)
+        #expect(!run.isSatisfied(by: .editMade))
+        #expect(!run.isSatisfied(by: .layerSelected))
+        // Not even by an identical value trigger handed in as an event: the
+        // only thing that settles it is reading the real setting.
+        #expect(!run.isSatisfied(by: .settingReached(.lensAmount, atLeast: 20)))
+    }
+
+    @Test func aStepWaitingOnAnEventStillMovesOnWhenTheEventHappens() {
+        // The change above must not make every other waiting step deaf.
+        var run = TutorialRun(guide: TutorialGuides.takeTheTour)
+        run.advance()
+        #expect(!run.waitsOnAValue)
+        #expect(run.isSatisfied(by: .toolPicked(.measure)))
+    }
+
+    @Test func aValueTriggerSaysWhichSettingAndHowFar() {
+        let trigger = TutorialTrigger.settingReached(.lensAmount, atLeast: 20)
+        #expect(trigger.watchedValue?.setting == .lensAmount)
+        #expect(trigger.watchedValue?.atLeast == 20)
+        // Every other trigger is a moment that passed, and has no value to read.
+        #expect(TutorialTrigger.editMade.watchedValue == nil)
+        #expect(TutorialTrigger.gridShown.watchedValue == nil)
+    }
+
+    @Test func aStepWaitingOnAValueStillOffersSkipSoNobodyIsStuck() {
+        // A threshold nobody can find is the one way this feature could strand
+        // somebody, so the escape hatch is part of it.
+        let step = TutorialStep(id: "how-hard", anchor: .canvas, title: "t", body: "b",
+                                advance: .waitsFor(.settingReached(.lensAmount, atLeast: 20)))
+        var run = TutorialRun(guide: TutorialGuide(
+            id: "g", track: .looks, title: "t", summary: "s", minutes: 1,
+            sample: nil, steps: [step]))
+        #expect(run.buttonTitle == "Skip This Step")
+        // ...and a setting already past the mark when the step came up is not a
+        // step to skip, it is a step already finished.
+        run.markStepAlreadyTrue()
+        #expect(run.buttonTitle == "Done")
+    }
+
+    @Test func aValueTriggerSurvivesBeingWrittenDownAndReadBack() throws {
+        // Guides are data, and progress and the catalogue both ride through
+        // Codable.
+        let trigger = TutorialTrigger.settingReached(.lensAmount, atLeast: 20)
+        let data = try JSONEncoder().encode(trigger)
+        #expect(try JSONDecoder().decode(TutorialTrigger.self, from: data) == trigger)
+    }
+
+    @Test func theGuideThatTeachesHowStrongIsStrongEnoughWaitsForIt() throws {
+        // The step whose words promise a threshold has to be waiting on one.
+        let guide = try #require(TutorialCatalog.guide(id: "blur-what-is-underneath"))
+        let step = try #require(guide.steps.first { $0.id == "how-hard" })
+        let watched = try #require(step.advance.trigger?.watchedValue)
+        #expect(watched.setting == .lensAmount)
+        // Inside what the Strength slider offers, and well short of its top
+        // end: a guide that only lets go at the maximum is arguing with
+        // somebody whose address is already gone.
+        let range = LensAdjustment.blur.range
+        #expect(range.contains(watched.atLeast))
+        #expect(watched.atLeast < range.upperBound)
+        #expect(watched.atLeast > LensAdjustment.blur.defaultAmount)
+    }
 }

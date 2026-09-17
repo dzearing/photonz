@@ -31,7 +31,7 @@ enum LensCopy {
 
 extension EditorState {
 
-    private static let lensToolKey = "tool.lens.content"
+    static let lensToolKey = "tool.lens.content"
 
     /// The lens tool's own memory: what the NEXT lens you draw does, and how
     /// hard it does it. The same shape as the layer's content, so a setting

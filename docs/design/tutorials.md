@@ -257,6 +257,51 @@ drag cannot be satisfied by picking a tool.
 When a guide needs to wait for something with no event yet, **add the event
 here and wire it where it happens**. Do not fake it.
 
+### Waiting for a value rather than a moment
+
+One trigger is not an event at all: `.settingReached(setting, atLeast:)`.
+
+Every trigger above is a MOMENT, and the app announces it as it passes. That
+cannot answer a step that teaches **how much**. Pulling a slider one point
+raises exactly the same `.editMade` as pulling it all the way, so the Looks
+track's "pull Strength up until even the shape of the words is gone" moved on
+at the first flicker, however far you pulled, and taught where the control is
+instead of what it is for.
+
+A value trigger is a QUESTION about the document, and it is asked over and over
+while the step is up: `TutorialController` puts it to the host on the same pass
+that keeps the callout glued to its control, through the `tutorialIsAlreadyTrue`
+the host already answers.
+
+**Asking on a repeat is not a timer, and the difference is the whole rule.** A
+timer moves a step on whether or not you did the thing. This reads the real
+document and moves on only when it really holds the value, waiting as long as it
+takes otherwise, with Skip This Step on the card the whole while. A setting
+already past the mark when the step comes up is `stepWasAlreadyTrue`, exactly
+like the grid being on already, so the card shows Next and nothing is skipped
+past unread.
+
+| Setting | Read from |
+| --- | --- |
+| `.lensAmount` | the PICKED lens's own number, in the unit its adjustment states. Nothing picked is an answer of no, so the step waits rather than moving on for a lens nobody is looking at |
+
+Two rules for choosing the number a step asks for:
+
+- **Photograph it.** The mark is a claim about what a person can see, so look at
+  the renders on both sides of it before writing it down. The blur step's 16pt
+  came from stills at 8, 9, 15 and 16: a fresh lens at 8 already hides the
+  address, and what it still shows is the RHYTHM of the words, which is what 16
+  takes away. The step's words were rewritten to match, because "until the
+  address cannot be read at all" was asking for something the drag had already
+  done.
+- **Leave room above it.** A mark at the top of the slider is a guide arguing
+  with somebody who got there three pulls ago.
+
+A walk proves a value step with `setLensAmount` and `expectTutorialStep`:
+waiting proves a step ARRIVED, and only asking on the spot proves a step
+STAYED. `tutorial-blur-what-is-underneath-walk.json` sets 9, checks the guide
+has not moved, sets 15, checks again, then sets 16 and waits for the next step.
+
 ## Preparing a step
 
 `TutorialPrep` is a closed list, and the closure is the guard rail: a prepare

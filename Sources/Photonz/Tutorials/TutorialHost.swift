@@ -25,9 +25,15 @@ protocol TutorialHost: AnyObject {
     /// host has no equivalent of is ignored.
     func tutorialPrepare(_ prep: TutorialPrep)
 
-    /// Whether what a step is waiting for is already the case. Only a trigger
+    /// Whether what a step is waiting for is the case RIGHT NOW. Only a trigger
     /// that describes a STATE can be: nothing is already true about "the person
     /// made an edit".
+    ///
+    /// Asked twice over for two different reasons. Once as a step comes up, to
+    /// spot a step asking for something that is already so, which shows Next
+    /// rather than stranding somebody on Skip. And again, over and over, while
+    /// a step waits on a VALUE (`TutorialTrigger.settingReached`), because a
+    /// number the person is pulling towards is a question nothing can announce.
     func tutorialIsAlreadyTrue(_ trigger: TutorialTrigger) -> Bool
 
     /// A guide started or stopped over this window. The picture editor does not
@@ -88,6 +94,29 @@ extension EditorState: TutorialHost {
         }
     }
 
+    /// Whether a setting a guide can wait for has reached its mark.
+    ///
+    /// Answered off what the person has SETTLED ON, never off a slider still
+    /// under their finger. A pull that swept up past the mark and came back
+    /// before letting go ends BELOW the mark, and a step that had already moved
+    /// on for the highest number the pull passed through would be claiming
+    /// something the person did not do, which is the exact lie this trigger
+    /// exists to stop.
+    ///
+    /// Today the committed value is all `selectedLens` can answer anyway: a
+    /// live pull renders through `submit` and never reaches the document until
+    /// `commitLensAmount`. The guard says so out loud rather than resting on
+    /// it, because where a preview is kept is a rendering decision and this is
+    /// a promise to the person.
+    private func isSetting(_ setting: TutorialSetting, atLeast mark: CGFloat) -> Bool {
+        switch setting {
+        case .lensAmount:
+            guard let picked = selectedLens else { return false }
+            guard lensAmountPreview?.id != picked.id else { return false }
+            return picked.content.amount >= mark
+        }
+    }
+
     func tutorialIsAlreadyTrue(_ trigger: TutorialTrigger) -> Bool {
         switch trigger {
         case .toolPicked(let tool): activeTool == tool
@@ -101,6 +130,12 @@ extension EditorState: TutorialHost {
         case .gridShown: canvasGrid.isVisible
         case .keylinesShown: iconKeylinesShowing
         case .dialogOpened(let dialog): isShowing(dialog)
+        // The one that is a NUMBER rather than a switch. Read off the lens the
+        // person is holding, because that is the one whose slider the step is
+        // pointing at; with nothing picked there is no number and the answer is
+        // no, which leaves the step waiting with Skip on it rather than moving
+        // on for a lens somebody is not looking at.
+        case .settingReached(let setting, let mark): isSetting(setting, atLeast: mark)
         // Nothing a recording's window can do is ever already true in a
         // picture window, because none of it exists here.
         case .trimModeOpened, .trimStartMoved, .trimEndMoved, .trimApplied,
@@ -138,9 +173,9 @@ extension VideoEditorState: TutorialHost {
         case .trimStartMoved, .trimEndMoved, .trimApplied, .recordingCopied: false
         case .toolPicked, .measureMode, .panelShown, .layerSelected, .editMade,
              .undone, .pictureCopied, .specListCopied: false
-        // A recording's window has no canvas, no grid and neither of these
-        // sheets, so none of them is ever already so in here either.
-        case .gridShown, .keylinesShown, .dialogOpened: false
+        // A recording's window has no canvas, no grid, neither of these sheets
+        // and no lens, so none of them is ever already so in here either.
+        case .gridShown, .keylinesShown, .dialogOpened, .settingReached: false
         }
     }
 

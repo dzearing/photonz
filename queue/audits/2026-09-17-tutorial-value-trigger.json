@@ -1,0 +1,29 @@
+{
+  "feature": "A guide step that waits for a setting to reach a value",
+  "epic": "ui-building",
+  "summary": "A tutorial step can now name a setting and a number it has to reach, and it waits until the setting really gets there. The lens guide's Strength step used to move on the moment you touched the slider, one point in, so it taught where the control is and nothing about how far to pull it.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Looks > Hide an address or a name before you send a screenshot on. The guide brings its own practice window.",
+  "try": [
+    { "do": "Start the guide and press Next once." },
+    { "do": "Press K to pick up the lens." },
+    { "do": "Drag a box across the address in the sample, then let go." },
+    { "do": "Read the card: it asks you to pull Strength up until even the shape of the words is gone." },
+    { "do": "Nudge the Strength slider by a point or two and let go. The guide stays where it is.", "shot": "2026-09-17-value-trigger-9pt.png" },
+    { "do": "Pull Strength up past 16. The guide moves on by itself the moment you let go.", "shot": "2026-09-17-value-trigger-16pt.png" },
+    { "do": "Start the guide again and press Skip This Step on that card, to check nobody can be stuck on it." }
+  ],
+  "evaluate": [
+    "Is the card moving on the clear signal that you have pulled far enough, or did you expect the card to tell you how close you were?",
+    "At the moment it moves on, does the address look properly gone to you, or did it look gone several pulls earlier?",
+    "Does letting go feel like the right beat for it to move on, rather than the instant the slider sweeps past the mark mid drag?",
+    "Is 'until even the shape of the words is gone' a thing you would want taught, or would you rather the step just said what the slider does?",
+    "If you pulled to the top of the slider straight away, did the guide moving on immediately feel right or abrupt?"
+  ],
+  "rough": [
+    "The screen was locked for this whole task, so the walk was run with the harness's own override. The two pictures are real captures of the window and the Strength readout in them is real, but the guide's own card is missing from both: a locked Mac puts the login window in front, and the callout takes itself down whenever the window it teaches in is covered. So nothing here shows what the card looks like at the moment it moves on. Somebody should look at that on an unlocked screen.",
+    "The step's words changed. It used to say 'pull Strength up until the address cannot be read at all', and the renders say that is already true at the strength a fresh lens starts at, so the step was asking for something the drag had already done. It now asks for the shape of the words to go, which is what pulling further actually takes away.",
+    "The guide waits for a number rather than for your judgement. Somebody who thinks the address is gone at 14 has to keep pulling, or press Skip. The mark was put at 16 out of 60 to keep that gap small, but it is still the app deciding for them.",
+    "The number the step asks for is in points on this guide's own sample picture. On a much bigger or much smaller screenshot the same number would mean a different amount of hiding, so this is only safe in a guide that brings its own picture.",
+    "Nothing shows you how close you are while you pull. A live hint on the card was considered and cut as nagging: the card moving on is the feedback. Worth disagreeing with if it feels like guesswork."
+  ]
+}

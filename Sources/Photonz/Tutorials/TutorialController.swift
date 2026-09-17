@@ -380,6 +380,32 @@ final class TutorialController {
         }
     }
 
+    /// A step waiting on a VALUE is answered by READING the document, not by
+    /// being told something happened.
+    ///
+    /// "Pull Strength up until the address cannot be read at all" is a question
+    /// about where the slider is NOW, and every event that could carry it is
+    /// raised just as loudly one point in as it is at the far end, so the step
+    /// used to move on at the first flicker. The question is asked again on
+    /// every pass while the step is up instead.
+    ///
+    /// Asking on a repeat is not advancing on a timer, and the difference is
+    /// the whole rule. A timer moves the step on whether or not the person did
+    /// the thing; this reads the real document and moves on only when it really
+    /// holds the value, waiting as long as it takes otherwise, with Skip This
+    /// Step on the card the whole while.
+    private func checkWatchedValue() {
+        guard let run, let host, run.waitsOnAValue,
+              // Already there when the step came up, so the card is showing
+              // Next and the person has not been asked for anything. Moving on
+              // by ourselves here would flash the step past them unread.
+              !run.stepWasAlreadyTrue,
+              let trigger = run.step.advance.trigger,
+              host.tutorialIsAlreadyTrue(trigger)
+        else { return }
+        next()
+    }
+
     /// Applies the step's prepare actions and puts the callout up. Prepare may
     /// only REVEAL: showing the panel so a step can point at the Layers list is
     /// fine, picking the tool for a step that says "pick the tool" is the timer
@@ -421,7 +447,10 @@ final class TutorialController {
     private func startFollowing() {
         follow?.invalidate()
         let timer = Timer(timeInterval: Self.followInterval, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.place() }
+            MainActor.assumeIsolated {
+                self?.checkWatchedValue()
+                self?.place()
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
         follow = timer

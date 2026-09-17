@@ -1805,6 +1805,44 @@ private final class Run {
         // Help menu does, and followed into the window it teaches in. Always
         // from step one: a guide picks up where it was left, and a walk always
         // means the beginning.
+        case .setLensAmount(let value, let hold):
+            let editor = try requireEditor()
+            guard let lens = editor.selectedLens else {
+                throw Failure(description: "no lens layer is picked, so there is no Strength "
+                              + "slider to put on \(value)")
+            }
+            let range = lens.content.adjustment.range
+            guard range.contains(value) else {
+                throw Failure(description: "\(lens.content.adjustment.title) offers "
+                              + "\(range.lowerBound) to \(range.upperBound), so its slider "
+                              + "cannot be put on \(value)")
+            }
+            // The same two calls a finger makes: previews on the way down, one
+            // committed undo step when it is let go. `hold` stops before the
+            // letting go.
+            editor.previewLensAmount(value)
+            if !hold { editor.commitLensAmount() }
+            await sleep(0.2)
+            // What the SLIDER reads, which is where the pull has got to while
+            // one is live and the document's own number the rest of the time.
+            let now = lens.content.adjustment.label(editor.selectedLensAmount ?? value)
+            note(number, step.name,
+                 "\(lens.content.adjustment.title) is now \(now)"
+                 + (hold ? ", with the slider still under the finger" : ""),
+                 state: describe())
+
+        case .expectTutorialStep(let id):
+            guard let run = TutorialController.shared.run else {
+                throw Failure(description: "no guide is running, so nothing is on step \"\(id)\"")
+            }
+            guard run.step.id == id else {
+                throw Failure(description: "the guide moved on: it is on step "
+                              + "\"\(run.step.id)\" (\(run.number) of \(run.count)), "
+                              + "not \"\(id)\"")
+            }
+            note(number, step.name,
+                 "still on \"\(id)\", \(run.number) of \(run.count)", state: describe())
+
         case .startGuide(let id, let size):
             guard let guide = TutorialCatalog.guide(id: id) else {
                 throw Failure(description: "there is no guide called \"\(id)\" in the catalogue")

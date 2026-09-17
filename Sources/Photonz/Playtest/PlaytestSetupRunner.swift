@@ -34,7 +34,20 @@ extension PlaytestMemory {
         case .measure:
             [EditorState.measureModeKey, EditorState.measureStylesKey]
         case .tools:
-            EditorState.toolMemoryKeys + [EditorState.wandToleranceKey]
+            // The lens's two memories are listed BY HAND because they are not
+            // "which member of the family the button is wearing", which is all
+            // `toolMemoryKeys` covers. They are what the lens will next DRAW:
+            // the kind, and the numbers each adjustment was last set to.
+            //
+            // Left out, they turned every walk that draws a lens into a walk
+            // whose answer depended on what ran before it. The probe's stored
+            // kind was `magnify` on 2026-09-17, left behind by some earlier
+            // run, so the blur guide's own walk drew a MAGNIFIER over the
+            // address while its card said everything under the box goes soft.
+            // Nothing in the app was wrong and nothing in the walk said so.
+            EditorState.toolMemoryKeys
+                + [EditorState.wandToleranceKey,
+                   EditorState.lensToolKey, EditorState.lensToolKindKey]
         case .groups:
             [EditorState.openGroupsKey]
         case .panel:

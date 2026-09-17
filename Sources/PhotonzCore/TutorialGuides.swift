@@ -664,9 +664,31 @@ public enum TutorialGuides {
                 id: "how-hard",
                 anchor: .panelSection("lens"),
                 title: "How hard it does it",
-                body: "Lens in the panel says what it does and how much. Pull Strength up until the address cannot be read at all.",
+                // The words had to change with the trigger, and the renders are
+                // why. A fresh lens starts at 8, and at 8 the address is
+                // already unreadable, so "pull it up until the address cannot
+                // be read at all" was asking for something the drag had
+                // already done. What 8 still shows is the RHYTHM of the words:
+                // light gaps where the spaces and the dots are, which is the
+                // shape of an address and a length you could count. That is
+                // what pulling further takes away, and it is worth teaching.
+                body: "Lens in the panel says what it does and how much. Pull Strength up until even the shape of the words is gone.",
                 side: .leading,
-                advance: .waitsFor(.editMade),
+                // The step that MEANS its words. Waiting on "an edit was made"
+                // let it move on a single point in, so it taught where the
+                // slider is and nothing at all about how far to pull it: the
+                // one thing this step exists to teach
+                // (`TutorialTrigger.settingReached`).
+                //
+                // Sixteen points, on a slider that offers one to sixty: twice
+                // the strength a fresh lens starts at, and about twice the
+                // height of the letters in the address this guide brings.
+                // Photographed at 8, 9, 15 and 16 on 2026-09-17, that is where
+                // the smear stops carrying the rhythm of the words and becomes
+                // one even bar. Well short of the top end on purpose, because a
+                // guide that only lets go at the maximum is arguing with
+                // somebody whose address went three pulls ago.
+                advance: .waitsFor(.settingReached(.lensAmount, atLeast: 16)),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "pixelate",

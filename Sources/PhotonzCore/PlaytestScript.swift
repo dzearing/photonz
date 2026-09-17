@@ -2219,6 +2219,27 @@ public enum PlaytestStep: Sendable, Equatable {
     /// last buttons into a More menu, and a step naming one of those tools has
     /// to point at the menu instead.
     case startGuide(String, window: CGSize? = nil)
+    /// Put the picked lens's own slider on an exact number, the way a finger
+    /// that landed precisely would: live previews on the way, one undo step at
+    /// the end.
+    ///
+    /// `pullLensAmount` takes it to the far end, which is enough for a walk
+    /// that only wants the lens strong. A walk about a THRESHOLD needs both
+    /// sides of the line, one point under and one point over, and neither end
+    /// of the slider is either of those.
+    ///
+    /// `hold` leaves the finger DOWN: the picture follows the pull and nothing
+    /// is settled, which is the only way a walk can drag past a mark and come
+    /// back the way a hand does.
+    case setLensAmount(CGFloat, hold: Bool)
+    /// Which step of a guide is up RIGHT NOW, by the step's id.
+    ///
+    /// The other half of `waitFor tutorialStep`, and the half that can prove a
+    /// guide DID NOT move on. Waiting proves a step arrived; only asking on the
+    /// spot proves a step stayed. A guide that advances on a change far short
+    /// of what it asked for passes every waiting step in its walk, because the
+    /// step it wrongly moved to is the step the walk was waiting for.
+    case expectTutorialStep(String)
 
     public static let defaultTimeout: Double = 10
     public static let defaultDragSteps = 8
@@ -2232,9 +2253,9 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
 
     /// The `do` name this step answers to.
@@ -2242,6 +2263,8 @@ public enum PlaytestStep: Sendable, Equatable {
         switch self {
         case .open: "open"
         case .startGuide: "startGuide"
+        case .setLensAmount: "setLensAmount"
+        case .expectTutorialStep: "expectTutorialStep"
         case .appearance: "appearance"
         case .blank: "blank"
         case .wait: "wait"
@@ -2440,6 +2463,15 @@ public enum PlaytestStep: Sendable, Equatable {
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .startGuide(try f.string("guide"), window: window)
+        case "setLensAmount":
+            guard fields["to"] != nil else {
+                throw f.invalid("to", "setLensAmount has to say what to put the slider on, "
+                    + "in the unit the lens's own adjustment states: points for Blur and Pixelate")
+            }
+            self = .setLensAmount(CGFloat(try f.number("to")),
+                                  hold: try f.optionalFlag("hold") ?? false)
+        case "expectTutorialStep":
+            self = .expectTutorialStep(try f.string("step"))
         case "snapshot":
             self = .snapshot(name: try f.string("name"), window: try f.optionalString("window"))
         case "dropComponent":

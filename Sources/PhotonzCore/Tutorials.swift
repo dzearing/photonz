@@ -390,6 +390,52 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     /// stands between a step and the sheet anchor it names: a card pointed at a
     /// sheet that is not up yet has nothing to point at.
     case dialogOpened(TutorialAnchor.Dialog)
+    /// The person pushed a setting to at least this much, and it really is
+    /// there now.
+    ///
+    /// The odd one out, deliberately. Every other case above is a MOMENT that
+    /// passed, and the app says so as it happens. This one is a QUESTION about
+    /// the document, and it is asked over and over while the step is up.
+    ///
+    /// It exists because a moment cannot answer "how strong is strong enough".
+    /// Nudging a slider one point raises exactly the same "an edit was made" as
+    /// pulling it all the way, so a step saying "pull Strength up until the
+    /// address cannot be read at all" moved on at the first flicker, however
+    /// far you pulled, and taught where the control is instead of what it is
+    /// for.
+    ///
+    /// This is still not a timer. A timer moves a step on whether or not you
+    /// did the thing; this moves on only when the setting really holds the
+    /// value, and waits as long as it takes otherwise. As with every waiting
+    /// step, the button says Skip This Step meanwhile.
+    case settingReached(TutorialSetting, atLeast: CGFloat)
+}
+
+/// A number in the app a guide can wait for.
+///
+/// Named off the model, like every other name a guide uses, so rewording the
+/// label beside the slider cannot break a guide. One entry today: the list
+/// grows a case when a guide genuinely needs to teach a threshold, not in
+/// advance of one.
+public enum TutorialSetting: String, CaseIterable, Hashable, Codable, Sendable {
+    /// The picked lens layer's own number, in the unit its adjustment states
+    /// it in: a blur's strength and a pixelate's block size are in document
+    /// points, a greyscale's amount is nought to one.
+    case lensAmount
+}
+
+extension TutorialTrigger {
+    /// The setting this trigger watches and how far it has to go, or nil when
+    /// the trigger is a moment rather than a value.
+    ///
+    /// What the difference decides: a value is answered by READING the
+    /// document, an event by being TOLD it happened.
+    public var watchedValue: (setting: TutorialSetting, atLeast: CGFloat)? {
+        if case .settingReached(let setting, let atLeast) = self {
+            return (setting, atLeast)
+        }
+        return nil
+    }
 }
 
 /// How a step moves on.
@@ -917,10 +963,21 @@ public struct TutorialRun: Hashable, Sendable {
         return true
     }
 
+    /// True while this step is waiting on a VALUE the document holds rather
+    /// than on something that happened. Such a step is moved on by reading the
+    /// setting, so the caller keeps asking instead of listening.
+    public var waitsOnAValue: Bool { step.advance.trigger?.watchedValue != nil }
+
     /// Something happened in the editor. Returns true when it is the thing this
     /// step was waiting for, so the caller advances.
+    ///
+    /// A step waiting on a value is never satisfied here, whatever comes in.
+    /// The event that carries a slider change is raised just as loudly one
+    /// point in as it is at the far end, so letting one through would be the
+    /// framework claiming you did something you did not.
     public func isSatisfied(by event: TutorialTrigger) -> Bool {
-        step.advance.trigger == event
+        guard let trigger = step.advance.trigger, trigger.watchedValue == nil else { return false }
+        return trigger == event
     }
 }
 
