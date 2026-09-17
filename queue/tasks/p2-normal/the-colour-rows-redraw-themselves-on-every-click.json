@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2880,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T04:24:16.184Z",
-  "updated": "2026-09-17T07:01:39.479Z",
+  "updated": "2026-09-17T07:01:56.135Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SUCCESSOR to picking-a-layer-leaves-alone-the-settings-that-d, which did the same thing for the sliders and the picture pickers and took the arrow-to-arrow pick from 33.5 to 25ms. The pattern to copy is Sources/Photonz/PanelReach.swift: a control takes the NAME of what it edits plus the reading it shows, looks the layers up from EditorState when somebody uses it, and is then wrapped in .equatable() so SwiftUI can skip it.\n\nWHY THE COLOUR ROWS ARE HARDER. ColorStyleRow (Sources/Photonz/ColorStylePanel.swift:508) reads editorState.colorStyleSelection(target) and editorState.colorStyleNaming in its OWN body, and so do SelectionColorWell and ColorStyleControl under it. A view that reads the selection itself invalidates on every pick no matter what its parent does, so wrapping it changes nothing: the reading has to be hoisted into PartRowView, which already has row.colors, and handed down.\n\nMEASURED 2026-09-17, probe build, screen locked with PHOTONZ_ALLOW_LOCKED_WALK=1, median of 12 picks, two runs: with PartRowView.colorControl returning nothing the arrow-to-arrow pick is 22.6 and 23.3ms against 24.3 to 25.6 with it. The arrow Caption block is worth about another 1ms (23.2 to 25.2 with ArrowLabelSettings blanked) and could go the same way.\n\nWHAT IS NOT WORTH DOING. Below about 19ms there is nothing in Appearance left to win: blanking PartsInspector entirely reads 16 to 19ms in the same session, and that floor is the canvas, the selection, the layers list and the dock shell. Anyone who wants a pick under 20ms should start there, not here.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-17T07:01:39.478Z",
       "note": "left rough: the arrow's Caption block is the next millisecond in Appearance and is deliberately not done here. Its field is bound to one arrow's WORDS, so two arrows are genuinely two different fields and the trick above does not apply; it needs a different answer. Written into the note in InspectorPanel.swift rather than filed, since the note is where the next person looks."
+    },
+    {
+      "t": "2026-09-17T07:01:56.133Z",
+      "note": "Colour rows are handed their reading and hold the NAME of what they paint (ColorTarget.Source + EditorState.resolved), so a click between two alike shapes builds ZERO colour rows, proved by color-row-leaves-alone-walk; color-row-reaches-what-is-picked-walk proves a skipped row still paints the shape picked NOW (and fails when resolved() is made a no-op). Pick is 23.3-23.4ms against 24.1-25.8 interleaved in the same session; the 23ms bar is below today's floor of 23.1-24.6 measured with the colour rows removed entirely. Scripts/test.sh green (8030). The four named walks could not run: screen locked all task, sweep requested. Committed 91d36077, pushed. Audit: queue/audits/2026-09-17-colour-rows-leave-alone.json"
     }
   ],
-  "started": "2026-09-17T06:19:32.939Z"
+  "started": "2026-09-17T06:19:32.939Z",
+  "completed": "2026-09-17T07:01:56.134Z"
 }
