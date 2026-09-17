@@ -17979,3 +17979,50 @@ Audit: `queue/audits/2026-09-17-svg-export-size.json`.
 Next: an SVG of an icon is a few hundred bytes, so the line reads in bytes where
 PNG reads in KB. That is the honest number, but it is the first thing to ask the
 user about.
+
+## 2026-09-17 — A question you turned off can be turned back on
+
+Photonz has a Settings window. It is the app's first, and it exists for one
+reason: "Don't ask again" must never be a door that locks behind you. Tick that
+box on Turn Into Picture and the question was gone for good, with nowhere in the
+app to bring it back, which is the hole `UX-PATTERNS` §3 wrote down against
+itself on 2026-09-08. The decision card answered "A Settings window" on
+2026-09-09 and this is that window.
+
+One page, no sidebar. It lists ONLY the questions actually silenced, each by the
+name of the command that asks it and one line saying what the question was
+protecting, with **Ask Me Again** on the row. Silence nothing and it says
+"Photonz is asking you every question it knows how to ask." rather than showing a
+row of switches: a page of unticked switches is an invitation to go and turn
+warnings off, which is the opposite of the point.
+
+Two ways in, both behind `next-settings-window` (on by default in Next, absent
+from Current):
+
+- the app menu's own Settings slot on ⌘,
+- a Settings row in the menu-bar menu, which is the ONLY way in while Photonz is
+  a windowless agent, the state it spends most of its life in
+
+New pure core `SettingsWindowModel` holds the words and the rows and takes the
+heading, the empty sentence and the button off `SilencedQuestions`, so no second
+surface can drift from them. Six tests, written first.
+
+`Scripts/playtest/a-silenced-question-comes-back-walk.json` is the proof, 61
+steps and green: it ticks the box on a real sheet, watches the next Turn Into
+Picture go through silently, opens Settings with the real ⌘, chord, presses Ask
+Me Again, sees the row go, and turns a third shape to get the question back word
+for word. Five real pictures of the window, and the whole walk survives a locked
+screen because everything it presses it finds through the app's own register
+rather than by asking accessibility for a name.
+
+Harness gained `turnIntoPicture`, `showSettings` and `closeSettings` actions, and
+a `questions` area of memory so a walk that silences a question cannot leave it
+silent for every walk after it. `panelWindows()` now includes the Settings window
+while it is open, so `press` and `expect` reach it the ordinary way.
+
+Audit: `queue/audits/2026-09-17-silenced-questions.json`.
+
+Next: the window is mostly empty below its one row, which is honest for today and
+is where the rest of the app's settings will go. Worth asking the user whether an
+almost empty Settings reads as reassurance or as unfinished. Current still has
+the one way door and gets the way back when Next is promoted.

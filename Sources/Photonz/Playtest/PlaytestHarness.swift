@@ -2648,6 +2648,10 @@ private final class Run {
                     TutorialController.shared.restart(tour, in: editor)
                 }
             case .showTutorials: coordinator.showTutorials()
+            case .turnIntoPicture: editor.rasterizeSelection()
+            case .showSettings: coordinator.showSettings()
+            case .closeSettings:
+                NSApp.windows.first { $0.title == SettingsWindowModel.windowTitle }?.close()
             case .readTutorialWindow, .pressTutorialStart:
                 break // handled above: neither needs an editor
             case .freshInstall, .oldInstall, .launchHook, .expectWelcome,
@@ -2786,7 +2790,15 @@ private final class Run {
         // walk could photograph the New Frame sizes and never pick one. Its
         // named controls read exactly like the panel's.
         let sheet = host.attachedSheet.map { [$0] } ?? []
-        return [host] + attached + sheet
+        // The Settings window is neither a child nor a sheet — it opens with no
+        // document on screen at all, which is the state somebody is in when they
+        // go looking for a setting — but its controls carry the same markers the
+        // dock's do, so `press` and `expect` reach them the ordinary way. It is
+        // in this list only while it is open.
+        let settings = NSApp.windows.filter {
+            $0.title == SettingsWindowModel.windowTitle && $0.isVisible
+        }
+        return [host] + attached + sheet + settings
     }
 
     /// Every named thing the panel and whatever is open above it are showing

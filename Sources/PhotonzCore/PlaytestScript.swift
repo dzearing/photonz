@@ -324,6 +324,10 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// put the strip away and did not put it back would hand every later walk
     /// a window with no strip in it, and no walk could say why.
     case motion
+    /// Which of the app's questions have been told not to ask again. A walk
+    /// that ticks "Don't ask again" and does not forget it leaves that question
+    /// silent for every walk after it, and none of them could say why.
+    case questions
 }
 
 /// One feature a walk switches on or off for the length of its run.
@@ -582,6 +586,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// It is an ordinary app window, so a walk photographs it by name:
     /// `{ "do": "snapshot", "name": "hub", "window": "Tutorials" }`.
     case showTutorials, closeTutorials
+    /// Open (or close) the Settings window, the one place a question you told
+    /// the app to stop asking can be turned back on. Its controls carry the
+    /// same markers the panel's do, so a walk presses "Ask Me Again" with an
+    /// ordinary `press` step and claims things about it with `expect`.
+    case showSettings, closeSettings
     /// Read the Tutorials window the way a screen reader does, and press the
     /// first guide's own button the way a keyboard does. The window is an
     /// ordinary SwiftUI surface with no playtest markers in it, so this is how
@@ -840,6 +849,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// words. Reads off the main thread like the sweep, so a walk waits a beat
     /// after it.
     case turnIntoText
+    /// Layer ▸ Turn Into Picture on the SELECTED layers. It raises the question
+    /// that asks first, as a sheet on the window, so a walk that wants the turn
+    /// itself presses the sheet's own buttons afterwards: "Don't ask again" is
+    /// a button on that sheet like any other. Asked for as an action rather
+    /// than through the layer row's right click menu so the walk still runs
+    /// with the screen locked, where an open menu cannot be driven.
+    case turnIntoPicture
     /// Layer ▸ New Layer (⌘N): a fresh empty layer on top, with the marquee
     /// left up so the select → new layer → fill flow can be walked. A menu
     /// chord like the rest of the Layer menu, so this is a walk's way in.

@@ -73,6 +73,8 @@ extension PlaytestMemory {
             [TutorialController.progressKey]
         case .motion:
             [EditorState.motionStripOpenKey]
+        case .questions:
+            SilenceableQuestion.all.map(\.storageKey)
         }
     }
 }

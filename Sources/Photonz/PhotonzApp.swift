@@ -179,8 +179,9 @@ struct MenuBarLabel: View {
 /// with no editor window open — capture, history, window-spawning, and the
 /// updater all route through the `AppCoordinator`. Every item here does
 /// something: a menu item that only promises a feature is a dead end, so
-/// nothing is listed until it works (Preferences returns when there is a
-/// settings window behind it).
+/// nothing is listed until it works. Settings arrived on 2026-09-17 with a
+/// window behind it (`SettingsDialog`), which is what that rule was waiting
+/// for.
 struct MenuBarMenu: View {
     @Bindable var coordinator: AppCoordinator
 
@@ -231,6 +232,12 @@ struct MenuBarMenu: View {
         }
         .disabled(coordinator.isCheckingForUpdates)
         Button("Welcome & Permissions…") { coordinator.showWelcome() }
+        // The app is a menu-bar agent with no menu bar of its own most of the
+        // time, so ⌘, and the app menu's Settings row are both out of reach:
+        // this menu is the only way in from a windowless app.
+        if Experiments.shared.settingsWindowEnabled {
+            Button(SettingsWindowModel.menuItem) { coordinator.showSettings() }
+        }
         Button("Experiments…") { coordinator.showExperiments() }
         Button("About \(AppInfo.name)") { coordinator.showAbout() }
         Button("Open Source Notices…") { coordinator.showOpenSourceNotices() }

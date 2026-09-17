@@ -124,6 +124,8 @@ public enum FeatureCatalog {
 
     public static let selectionUndoFlag = "next-undo-puts-back-your-marquee"
 
+    public static let settingsWindowFlag = "next-settings-window"
+
     public static let marqueeIntentFlag = "next-a-box-says-what-it-picks"
 
     public static let layerBoxIsItsPixelsFlag = "next-a-layer-is-its-pixels"
@@ -914,6 +916,15 @@ public enum FeatureCatalog {
                     name: selectionUndoFlag,
                     title: "Undo puts back a marquee you lost",
                     description: "A marquee is something you place by hand, so Command Z takes it back like everything else. Draw one, nudge it with the arrow keys, drag the outline somewhere better, invert it or clear it, and each of those is one press to undo and one to put back. Before this, a marquee never entered the undo history at all: press Command Z after spending a minute lining one up and it stepped over your last edit to the picture instead, and the outline was gone for good. Steps interleave, so undo always takes back whatever you did last, paint or outline, in the order you did it. A run of arrow-key nudges counts as one act, the way letting go of a drag does, so holding the key down is still a single press to undo. An edit that consumes the marquee, like grouping layers or New Layer via Copy, still undoes in one press and hands the outline back with it. Off means the marquee stays outside the undo history and is lost the moment it changes.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: settingsWindowFlag,
+                    title: "Turn a silenced question back on",
+                    description: "A command that is about to take away something you cannot see going asks you first, and that question carries a “Don’t ask again” box. Ticking it used to be permanent: the question went quiet for good and there was nowhere in the app to bring it back, so somebody who ticked it on their first day, or by accident, had given up that warning forever. With this on, Photonz has a Settings window, on Command-comma and in the menu bar menu, and its page lists every question you have silenced by the name of the command that asks it, one line saying what that question was protecting, and a button that starts it asking again from the very next time you use the command. Silence nothing and the page says so in one sentence rather than showing a row of switches, because a list of warnings you have not turned off is an invitation to go and turn them off. Off means there is no Settings window and “Don’t ask again” is a door that locks behind you.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -1,0 +1,45 @@
+{
+  "feature": "Turn a silenced question back on",
+  "epic": "design-system",
+  "summary": "Photonz has a Settings window. Its one page lists every question you have told the app to stop asking, by the name of the command that asks it, and a button on each row starts it asking again from the very next time you use that command.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Turn a silenced question back on\" and it is on by default.",
+  "try": [
+    {
+      "do": "Draw a rectangle, pick it, and choose Layer ▸ Turn Into Picture."
+    },
+    {
+      "do": "On the question that appears, tick Don't ask again, then press Turn Into Picture."
+    },
+    {
+      "do": "Draw a second rectangle, pick it, and choose Layer ▸ Turn Into Picture again. It turns with no question at all."
+    },
+    {
+      "do": "Press Command-comma, or choose Settings in the menu-bar menu.",
+      "shot": "2026-09-17-a-question-comes-back-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Press Ask Me Again on the Turn Into Picture row.",
+      "shot": "2026-09-17-a-question-comes-back-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Close Settings, draw a third rectangle and choose Turn Into Picture. It asks again, word for word.",
+      "shot": "2026-09-17-a-question-comes-back-3.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    }
+  ],
+  "evaluate": [
+    "Command-comma is where you went looking, or did you look somewhere else first?",
+    "Does the page read as a list of what you turned off, rather than as a set of switches you are being invited to flip?",
+    "Is \"Ask Me Again\" the right words on that button, or would you rather it said something else?",
+    "When the last row goes and the page says Photonz is asking you every question it knows how to ask, does that read as reassurance or as an empty screen?",
+    "Is one line of explanation under the heading the right amount, too much, or not enough?"
+  ],
+  "rough": [
+    "The window is mostly empty below the one row. That is honest for today and it is where the rest of the app's settings will go, but until they arrive a settings window with one page in it may read as unfinished.",
+    "Only Next has this. On Current, Don't ask again is still a door that locks behind you, and it gets the way back when Next is promoted. Nothing about Current changed.",
+    "The page only ever lists what was actually silenced, so somebody who has silenced nothing sees a sentence and no rows. That was the deliberate call on the decision card, and it is the line most worth disagreeing with: the alternative is a list of every question with a switch each, which invites turning warnings off.",
+    "The second silenceable question, Turn Into Path, is already in the roll call, so the page draws two rows the moment both are silenced. Only the unit tests have seen that state; the walk silences one question, and nobody has looked at the page with two rows on it."
+  ]
+}

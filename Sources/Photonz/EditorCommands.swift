@@ -814,10 +814,23 @@ struct EditorCommands: Commands {
         viewAndHelpCommands
     }
 
-    /// The View menu's additions and the Help menu, together in one place.
-    /// They are paired only because a `Commands` body takes ten statements and
-    /// this file had ten before the guides arrived.
+    /// The View menu's additions, the Help menu, and the app menu's Settings
+    /// row, together in one place. They are grouped only because a `Commands`
+    /// body takes ten statements and this file had ten before the guides
+    /// arrived.
     @CommandsBuilder private var viewAndHelpCommands: some Commands {
+        // Settings sits where every Mac app puts it: its own slot under the app
+        // menu, on ⌘,. It is the one place a silenced question can be turned
+        // back on, so the app menu has to offer it even though today it opens a
+        // window with one page (`SettingsDialog`). Next only: with the flag off
+        // the slot stays empty and the app menu is exactly what it was.
+        CommandGroup(replacing: .appSettings) {
+            if Experiments.shared.settingsWindowEnabled {
+                Button(SettingsWindowModel.menuItem) { coordinator.showSettings() }
+                    .keyboardShortcut(",", modifiers: .command)
+            }
+        }
+
         CommandGroup(after: .sidebar) {
             let hasDocument = editor?.document != nil
             // A setting, so one name and a checkmark: the item never renames

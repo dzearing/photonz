@@ -478,11 +478,17 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
     send someone must not carry your answer, and a question silenced on one
     machine is not silenced on the next.
   - **A person must be able to get the question back**, in one place that lists
-    every question they have silenced and turns any of them back on. Nothing
-    ships this yet, and the first silenceable question was allowed through
-    without it, which is why the rule says it here rather than after the second
-    one. Until that place exists, an answer of "don't ask again" is a door that
-    locks behind you.
+    every question they have silenced and turns any of them back on. This ships
+    in Next as of 2026-09-17 (`next-settings-window`): the app's first Settings
+    window, on Command-comma and in the menu-bar menu, whose one page lists each
+    silenced question by the name of the command that asks it, with a button
+    that starts it asking again from the very next use. It lists ONLY what was
+    actually silenced and says one plain sentence when that is nothing, because
+    a page of unticked switches is an invitation to go and turn warnings off.
+    Current does not have it yet and gets it when Next is promoted, so on
+    Current an answer of "don't ask again" is still a door that locks behind
+    you. **No release may grow a second silenceable question without the way
+    back being reachable in it.**
 
 ### What a surface looks like while something is held over it
 

@@ -58,6 +58,12 @@ final class AppCoordinator {
     /// finished. App-level for the same reason Experiments is.
     @ObservationIgnored private let tutorialsWindow = TutorialHubWindowController()
 
+    /// The Settings window: today, the one place that lists the questions you
+    /// have silenced and turns any of them back on. App-level for the same
+    /// reason Experiments is, and more so: the moment somebody goes looking for
+    /// a setting there may be no window open at all.
+    @ObservationIgnored private let settingsWindow = SettingsWindowController()
+
     /// One entry in the global focus history (`focusMRU`).
     private enum FocusToken {
         /// A non-Photonz app that came forward. Held strongly — the notification's
@@ -166,6 +172,14 @@ final class AppCoordinator {
     /// Menu "Experiments…": the release picker and per-release feature flags.
     func showExperiments() {
         experimentsWindow.present()
+    }
+
+    /// Menu "Settings…" (and ⌘,): the questions you have told the app to stop
+    /// asking, and the way back from each of them. Next only for now
+    /// (`next-settings-window`), so the rows that call this are behind the same
+    /// flag and Current has no Settings anywhere.
+    func showSettings() {
+        settingsWindow.present(store: EditorState.silencedQuestions)
     }
 
     /// "Take the Tour" on the first run offer. The tour brings a sample

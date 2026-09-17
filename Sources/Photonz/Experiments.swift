@@ -290,6 +290,12 @@ extension Experiments {
     /// Help ▸ guided tutorials (Next, `next-tutorials`).
     var tutorialsEnabled: Bool { isEnabled(FeatureCatalog.tutorialsFlag) }
 
+    /// `next-settings-window`: the Settings window, and with it the one place
+    /// that lists the questions you have told the app to stop asking and turns
+    /// any of them back on. Exists only in the Next release's catalog, so
+    /// Current reads false and has no Settings row anywhere.
+    var settingsWindowEnabled: Bool { isEnabled(FeatureCatalog.settingsWindowFlag) }
+
     /// `next-setup-takes-no-for-an-answer`: whether closing the first run setup
     /// window without granting Screen Recording is remembered as a no, so the
     /// window stops opening itself at every launch. Exists only in the Next
