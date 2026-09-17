@@ -43,10 +43,11 @@ export function previousFailures(notes) {
   return m[1].split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-// owners: { "<walk-name>": ["<task id>", ...] } for failing walks that another
-// open task already owns. The sweep's own list and the task's acceptance stop
-// disagreeing about which walks this task is meant to fix, because the list
-// itself says which ones belong to somebody else.
+// owners: { "<walk-name>": { ids: ["<task id>", ...], declared: true|false } }
+// for failing walks that another open task already owns. The sweep's own list
+// and the task's acceptance stop disagreeing about which walks this task is
+// meant to fix, because the list itself says which ones belong to somebody
+// else, and whether that task said so or was guessed at.
 export function machineBlock(result, { previous = [], owners = {} } = {}) {
   const failed = result.failed || [];
   const list = failed.join(', ');
@@ -62,13 +63,24 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
     `Failing walks (${failed.length}): ${list}`,
   ];
 
-  const ownedHere = failed.filter((w) => !owners[w]?.length);
-  const ownedElsewhere = failed.filter((w) => owners[w]?.length);
+  const ownedHere = failed.filter((w) => !owners[w]?.ids?.length);
+  const ownedElsewhere = failed.filter((w) => owners[w]?.ids?.length);
   if (ownedElsewhere.length) {
+    // A task that SAID it owns a walk and a task that merely mentioned the name
+    // are worth very different amounts, and a line that reads the same for both
+    // is how a real failure gets handed to somebody who was never working on
+    // it. So each line says which it is.
+    const guessed = ownedElsewhere.filter((w) => !owners[w].declared);
     lines.push(
       ``,
       `Already named by another open task, so read that one before re-diagnosing (${ownedElsewhere.length}):`,
-      ...ownedElsewhere.map((w) => `  ${w} -> ${owners[w].join(', ')}`),
+      ...ownedElsewhere.map((w) => `  ${w} -> ${owners[w].ids.join(', ')}`
+        + (owners[w].declared ? ` (that task says it owns this walk)` : ` (guessed from its wording, so read it before believing it)`)),
+      ...(guessed.length
+        ? [``, `${guessed.length} of those are guesses. A task stops being guessed at by naming its walks:`,
+           `  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]`,
+           `  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)`]
+        : []),
       ``,
       ownedHere.length
         ? `This task owns the other ${ownedHere.length}: ${ownedHere.join(', ')}`
@@ -108,17 +120,51 @@ export function mergeNotes(oldNotes, result, owners = {}) {
   return human ? `${block}\n\n${human}\n` : block;
 }
 
-// Which open tasks already name each failing walk. A walk name is long and
-// specific enough ("border-effect-walk") that a task mentioning it anywhere is
-// about it; the standing task itself is skipped, and so is anything finished.
+// The name of a walk as the sweep knows it: "border-effect-walk", never
+// "Scripts/playtest/border-effect-walk.json". Somebody declaring a walk reaches
+// for the path they just ran, so both spellings are read as the same walk.
+export function walkName(s) {
+  return String(s || '').trim().replace(/^.*\//, '').replace(/\.json$/i, '').trim();
+}
+
+// The walks a task SAYS it owns, or null when it has not said anything.
+//
+// An empty list is a statement too, and an important one: a task ABOUT the walk
+// machinery quotes walk names as examples, and without a way to say "I own none
+// of these" it claims every walk it talks about. That is how this very task came
+// out owning dock-picked-first-walk on 2026-09-14.
+export function declaredWalks(task) {
+  const raw = task && task.walks;
+  if (raw == null) return null;
+  const list = (Array.isArray(raw) ? raw : String(raw).split(',')).map(walkName).filter(Boolean);
+  return [...new Set(list)];
+}
+
+// Which open tasks own each failing walk, asking the task first and reading its
+// prose only as a fallback.
+//
+// Two rules, and they are the whole of it:
+//   A task that declares its walks is TAKEN AT ITS WORD. Its prose is not read
+//   at all, so naming a walk as an example no longer claims it.
+//   For a walk somebody declared, the tasks that only mention it are dropped.
+//   The guess is what you get when nobody has said, not a second opinion.
+// A walk name is long and specific enough ("border-effect-walk") that a task
+// mentioning it is usually about it, which is why the guess is worth keeping;
+// it was also wrong often enough to be worth labelling. The standing task
+// itself is skipped, and so is anything finished.
 export function ownersOfWalks(failed, tasks, standingId) {
+  const open = (tasks || []).filter((t) => t.id !== standingId && !['done', 'dropped'].includes(t.status));
+  const said = open.map((t) => [t, declaredWalks(t)]);
   const owners = {};
-  for (const walk of failed) {
-    const hits = tasks
-      .filter((t) => t.id !== standingId && !['done', 'dropped'].includes(t.status))
-      .filter((t) => [t.title, t.goal, t.notes].concat(t.acceptance || []).filter(Boolean).join('\n').includes(walk))
-      .map((t) => t.id);
-    if (hits.length) owners[walk] = hits;
+  for (const name of failed) {
+    const walk = walkName(name);
+    const declared = said.filter(([, w]) => w && w.includes(walk)).map(([t]) => t.id);
+    if (declared.length) { owners[name] = { ids: declared, declared: true }; continue; }
+    const guessed = said
+      .filter(([, w]) => w === null)
+      .filter(([t]) => [t.title, t.goal, t.notes].concat(t.acceptance || []).filter(Boolean).join('\n').includes(walk))
+      .map(([t]) => t.id);
+    if (guessed.length) owners[name] = { ids: guessed, declared: false };
   }
   return owners;
 }

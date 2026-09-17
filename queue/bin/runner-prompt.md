@@ -87,6 +87,21 @@ The machine you run on is the user's. Anything you start, you finish.
   names in it. **You do not wait for it and you do not report on it.** Say in
   your task log that you asked for one and why, and finish.
 
+- **If your task owns a failing walk, say so on the task.** The sweep's list of
+  failures says which of them another open task is already on, so nobody
+  re-diagnoses a walk somebody is fixing. When a task has not said, that is
+  guessed from the walk name appearing anywhere in its words, and a name quoted
+  as an example reads exactly like a name claimed as work. Say it and the guess
+  stops:
+  ```
+  node queue/bin/queue.mjs walks <task id> <walk-name> [<walk-name> ...]
+  node queue/bin/queue.mjs walks <task id> --none     # it only quotes them as examples
+  ```
+  A task that has said is taken at its word: the walks it named are its own and
+  nothing else it mentions is. Do this for the task you are running whenever a
+  walk is part of the work, and put it on any follow-up you file about a walk
+  (`addjson` takes `"walks": ["..."]`).
+
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:38:46.256Z",
-  "updated": "2026-09-16T12:23:35.213Z",
+  "updated": "2026-09-17T08:53:34.015Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Looks track (2026-09-13). The lens guide step blur-what-is-underneath/how-hard says \"Pull Strength up until the address cannot be read at all\" and waits on TutorialTrigger.editMade, which is raised at EditorState.perform for ANY change to the document. Reproduced in Scripts/playtest/tutorial-blur-what-is-underneath-walk.json: the walk pulls the slider with the pullLensAmount action and the step advances, but so would a one point nudge.\n\nEvery waiting trigger today is an event (a tool picked, an edit made, a copy taken). This is the first want for a trigger about a VALUE. The framework rule to keep is the one in docs/design/tutorials.md: nothing advances on a timer and nothing may claim you did something you did not, so a value trigger has to read the real document rather than a guess. TutorialRun.stepWasAlreadyTrue already has the shape of the answer for a state that holds when the step comes up (TutorialController.isAlreadyTrue), so a value trigger is the same question asked continuously.\n\nWorth deciding whether it is worth it at all: the alternative is that a guide never asks for a threshold and simply says what the control does.",
@@ -54,6 +54,48 @@
     {
       "t": "2026-09-16T12:23:35.212Z",
       "note": "seq 90 -> 30"
+    },
+    {
+      "t": "2026-09-17T08:17:00.746Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T08:53:14.541Z",
+      "note": "ADVERSARIAL REVIEW, before building. Walked the step as a first-time user. The step's own words already promised a threshold, so the choice was to change the words or change the trigger, and the words are the better lesson: a blur that still carries the rhythm of an address leaks the shape and length of it. Cut a live 'keep going' hint on the card as nagging: the card moving on IS the feedback, and it is the shortest version that delivers the lesson. Kept Skip This Step, which is what stops a threshold nobody can find from stranding anybody. Rejected the alternative the task offered (never ask for a threshold, just say what the control does) because the guide would then teach where a slider is and nothing about how far to pull it, and that is the one thing the step exists for."
+    },
+    {
+      "t": "2026-09-17T08:53:14.587Z",
+      "note": "ADVERSARIAL REVIEW, on the built thing. Caught a real flaw: reading the picked lens's number naively would answer the LIVE pull, so a drag that swept up past the mark and came back before letting go would move the step on while ending below the mark. Fixed by answering off the settled value only, and the walk now proves it: hold at 40, come back to 12, let go, still on the step. Also found the step's copy was wrong: photographed at 8, 9, 15 and 16, the address is already unreadable at the strength a fresh lens starts at, so 'until the address cannot be read at all' asked for something the drag had done. Rewritten to ask for the shape of the words to go, which is what 16 actually takes away."
+    },
+    {
+      "t": "2026-09-17T08:53:14.633Z",
+      "note": "SHIPPED. TutorialTrigger.settingReached(TutorialSetting, atLeast:) in PhotonzCore, the first trigger that is a question about the document rather than a moment that passed. TutorialRun.isSatisfied(by:) now refuses every event for a value trigger, so no edit can answer it. TutorialController asks the host again on each follow pass while such a step is up (checkWatchedValue), which is not a timer: it reads the real document and waits as long as it takes. EditorState answers .lensAmount off the PICKED lens and only off the settled value. Blur guide step how-hard waits for 16pt. 7 new core tests; all 8076 pass."
+    },
+    {
+      "t": "2026-09-17T08:53:14.678Z",
+      "note": "HARNESS. Two new playtest steps: setLensAmount (to, optional hold) puts the picked lens's slider on an exact number the way a finger does, with hold leaving the finger down; expectTutorialStep claims which step is up RIGHT NOW, which is the only way a walk can prove a guide did NOT move on. Waiting proves a step arrived, asking on the spot proves a step stayed. Both documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-17T08:53:14.725Z",
+      "note": "BUG FOUND AND FIXED on the way. setup.forget: [tools] did not clear the lens tool's two memories, so any walk that draws a lens drew whatever the last lens walk left armed. Reproduced: defaults read com.dzearing.photonz.probe tool.lens.kind answered magnify, and the blur guide's walk drew a MAGNIFIER over the address while its card said everything under the box goes soft. tool.lens.kind and tool.lens.content added to the .tools forget list. Folded into walks-that-fail-in-the-full-sweep rather than filed as its own task."
+    },
+    {
+      "t": "2026-09-17T08:53:14.770Z",
+      "note": "VERIFICATION, and its limit. The Mac's screen was locked for this whole task (CGSSessionScreenIsLocked true, and it stayed true), so no walk could run normally. Ran tutorial-blur-what-is-underneath-walk.json under the harness's own PHOTONZ_ALLOW_LOCKED_WALK=1: it passes all 58 steps and 6 of 6 guide steps found their control. Every claim in that walk is about the guide and the document rather than about a name, so the lock cannot have manufactured the result: 9pt still on how-hard, 15pt still on how-hard, held at 40 then back to 12 still on how-hard, 16pt moves on. Scripts/test.sh green twice. lens-walk and magnify-lens-walk pass."
+    },
+    {
+      "t": "2026-09-17T08:53:14.815Z",
+      "note": "The locked screen breaks 12 of the 45 tutorial walks, and they are NOT this change. Ran the four worst with my work stashed and rebuilt: tutorial-tour, tutorial-layers-and-undo, tutorial-mark-it-up and tutorial-get-the-timing-right fail identically without any of my code, with the classic name-lookup errors (points at panel.geometry and nothing carries that name; no menu called Add Effect). Stash popped and verified. Nothing filed: they are the lock, exactly as PlaytestScreenState says."
+    },
+    {
+      "t": "2026-09-17T08:53:14.861Z",
+      "note": "LEFT ROUGH, no task earned. (1) The mark a value step asks for is in document points, so it only means the same thing in a guide that brings its own picture; there is one such step today and the doc says so. (2) The step gives no sense of how close you are while pulling, which was cut on purpose and is in the audit for the user to disagree with. (3) The probe's -sc.png captures are real but do not show the guide's card, because a locked Mac puts the login window in front and the callout takes itself down when its window is covered; said in the audit's rough."
+    },
+    {
+      "t": "2026-09-17T08:53:34.013Z",
+      "note": "Shipped TutorialTrigger.settingReached(setting, atLeast:) in PhotonzCore: the first waiting trigger that is a question about the document rather than a moment that passed, asked again on every pass while the step is up and answerable by no event. The lens guide's Strength step now waits for 16pt instead of moving on at the first flicker, and its words were rewritten to match what the pictures actually show. Answered off the settled value only, so a pull that sweeps past the mark and comes back does not count. Skip This Step is unchanged, and a setting already past the mark shows Next. Verified: Scripts/test.sh green (8076 tests, 7 new), and tutorial-blur-what-is-underneath-walk.json passes all 58 steps proving it stays put at 9, at 15, and at a pull held to 40 and returned to 12, then moves on at 16. Caveat, stated in the audit: the Mac's screen was locked all task, so that walk ran under the harness's own PHOTONZ_ALLOW_LOCKED_WALK=1; every claim in it is about the guide and the document rather than a control name, and 6 of 6 guide steps found their control, but a sweep is requested for a clean run. Also fixed: setup.forget [tools] did not clear the lens tool's memory, so any walk drawing a lens drew whatever the last one left armed. Audit: queue/audits/2026-09-17-tutorial-value-trigger.json."
     }
-  ]
+  ],
+  "started": "2026-09-17T08:17:00.745Z",
+  "completed": "2026-09-17T08:53:34.014Z"
 }

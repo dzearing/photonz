@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T01:40:05.359Z",
-  "updated": "2026-09-16T12:23:35.389Z",
+  "updated": "2026-09-17T10:43:20.927Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12 while building the Basics tutorials track.\n\nWhat I ran:\n  Scripts/playtest.sh Scripts/playtest/tutorial-first-capture-walk.json\nWhat it wrote: /tmp/photonz-playtest/tutorial-first-capture-walk/1-capture-row-sc.png is a white rectangle holding only the guide's own card and cue ring; the offscreen 1-capture-row.png from the same step holds the whole window (Drop a photo or screenshot here, the four onboarding rows, the tool bar). The same walk, same grant, same run.\n\nFor contrast, /tmp/photonz-playtest/tutorial-mark-it-up-walk/5-copy-it-sc.png (a window WITH a document) is a correct capture: shadow, glass tool bar, the drawn arrow, everything.\n\nWhat I tried and it did not help: letting the window composite for 0.5s before hiding it (alphaValue = 0 moved after the sleep in PlaytestHarness.adoptEmpty). Still blank. So it is not simply that the window was hidden before it ever drew.\n\nWhere to look: PlaytestHarness.screenCapture uses SCContentFilter(desktopIndependentWindow:). An empty editor window is a SwiftUI window with no CanvasNSView in it, so the theory worth testing first is that its content is in a layer tree that filter does not reach, the same shape of problem as drawScrollingPanels in the offscreen path.",
@@ -46,6 +46,52 @@
     {
       "t": "2026-09-16T12:23:35.388Z",
       "note": "seq 50 -> 70"
+    },
+    {
+      "t": "2026-09-17T10:24:56.701Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T10:43:01.868Z",
+      "note": "ADVERSARIAL REVIEW, before fixing: the task's own theory (SwiftUI layer tree the SCContentFilter cannot reach) predicts that NO empty window can ever be photographed, which would make this unfixable. Worth testing before believing, because a cheaper theory fits the same evidence: the walk hides its window and a hidden window has nothing to photograph. Tested the cheap one first."
+    },
+    {
+      "t": "2026-09-17T10:43:01.915Z",
+      "note": "REPRODUCED. The Mac's screen was locked all through this task, so every walk ran with PHOTONZ_ALLOW_LOCKED_WALK=1 (the escape hatch that exists for harness work). The lock is not the cause and the runs prove it: on ONE locked run, tutorial-first-capture-walk wrote 1-capture-row-sc.png as a pure white 1800x900 rectangle while tutorial-mark-it-up-walk wrote 5-copy-it-sc.png as a perfect photograph of the editor, arrow and all. Same Mac, same lock, same grant, minutes apart."
+    },
+    {
+      "t": "2026-09-17T10:43:01.961Z",
+      "note": "CAUSE. A window at alphaValue 0 cannot be photographed: the compositor holds nothing for it and ScreenCaptureKit returns a blank rectangle. Every walk hides its window at alpha 0, but almost every walk is then at alpha 1 again by picture time, because opening a document reveals it. Logged the alpha at capture time to settle it: tutorial-mark-it-up-walk reported alpha=1.0 on all five of its captures. The empty editor is the one window nothing ever reveals, so it is still at 0 and its picture was blank."
+    },
+    {
+      "t": "2026-09-17T10:43:02.009Z",
+      "note": "TWO THEORIES TESTED AND KILLED, so nobody retests them. (1) 'It only needs to have been drawn once': set the empty window to alpha 1, called display(), waited 0.5s, set it back to 0 — the capture was STILL blank. Being drawn once buys nothing; what is photographed is what the window is worth right now. (2) 'Hold it at a near-zero alpha so it composites but nobody sees it': at alphaValue 0.004 the window really does draw, and the capture comes back as a ghost, because ScreenCaptureKit applies the window's own alpha. Both dead ends."
+    },
+    {
+      "t": "2026-09-17T10:43:08.500Z",
+      "note": "WHAT SHIPPED. PlaytestHarness.screenCapture now reads window.alphaValue before the shot: still invisible, it shows the window, takes the one photograph and puts it straight back, and says so on its log line. Nothing else changed for the walks that already worked, because they are at alpha 1 already and never take that branch. The capture itself moved into photograph(_:as:), and the windows hung on the parent are read by hungWindows(on:), which never includes the parent — the old line built a list with the parent in it and then dropped its first entry, which silently lost a tooltip out of both the frame and the count whenever the parent was hidden."
+    },
+    {
+      "t": "2026-09-17T10:43:08.547Z",
+      "note": "ACCEPTANCE, each verified rather than assumed. (1) and (2): tutorial-first-capture-walk re-run, status ok, four real pictures, and 1-capture-row-sc.png is now the dark editor with Drop a photo or screenshot here, all four rows (Open a file, Capture a rectangle, Paste an image, Blank canvas), the glass tool bar and the window's real shadow. (3): arrow-endings-walk, blend-mode-walk, caliper-catches-a-drawn-edge-walk, component-whole-path-walk, tutorial-mark-it-up-walk, tutorial-tour-walk and tutorial-trim-a-recording-walk all photograph byte-for-byte the same shape as before — same pixel sizes, same hung-window counts (arrow-endings still reports 2800x1880 with 1 window hung on step 5) and not one of them took the new branch. Scripts/test.sh: 8083 tests in 643 suites passed. A full sweep is requested, since the capture path is shared by all 322 walks."
+    },
+    {
+      "t": "2026-09-17T10:43:08.594Z",
+      "note": "No audit written: this is loop plumbing, not something a person can open the app and try. What it buys is that an audit about the empty window can now ship a real photograph instead of an offscreen render. Also corrected queue/bin/runner-prompt.md, which told every runner that a locked screen means macOS stops drawing the app entirely — the app draws, animates and photographs fine under a lock, and the real reason a walk cannot run is that controls lose their names. That wrong sentence is the same one PlaytestScreenState.swift says four runners already burned time disproving."
+    },
+    {
+      "t": "2026-09-17T10:43:08.640Z",
+      "note": "Left rough, filed nowhere because no person would notice: adoptEmpty still opens with a poll waiting up to 2s for the empty window to reach alpha 1, which it never does, so every guide walk that starts empty burns two seconds on a poll that cannot succeed. Harmless, and out of this task's scope."
+    },
+    {
+      "t": "2026-09-17T10:43:08.686Z",
+      "note": "Left rough: adoptRecording keeps the video window fully visible for the length of its walk, partly because a capture at zero alpha came back blank. That reason is now handled in screenCapture, so it could go back to being hidden like every other walk — but its other reason stands (the offscreen render draws video as a black rectangle), so it needs its own look rather than a change made blind here."
+    },
+    {
+      "t": "2026-09-17T10:43:20.925Z",
+      "note": "A window a walk is holding invisible is now shown for the length of one photograph and put straight back, so the empty editor photographs like any other window. The cause was the zero alpha itself, not the SwiftUI layer tree: the compositor keeps nothing for a window at alpha 0, and every other walk got away with it because opening a document reveals its window again. Shipped in PlaytestHarness.screenCapture (commit 98559a17), with docs/design/playtest-harness.md and queue/bin/runner-prompt.md brought back in line. Verified: tutorial-first-capture-walk writes the real dark editor with its card, four rows, glass tool bar and shadow; seven other walks photograph at the same sizes with the same hung-window counts; Scripts/test.sh 8083 tests passed. A full sweep is requested because every walk shares the capture path."
     }
-  ]
+  ],
+  "started": "2026-09-17T10:24:56.700Z",
+  "completed": "2026-09-17T10:43:20.926Z"
 }

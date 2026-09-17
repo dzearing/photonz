@@ -1,0 +1,26 @@
+{
+  "feature": "A task says which failing walk it owns",
+  "epic": "unmanned-loop",
+  "summary": "A task can now say which scripted walks are its own, and the sweep's list of failures takes it at its word instead of matching the walk name against the task's wording. Lines that are still guesses say so on the line.",
+  "setup": "The dashboard at http://127.0.0.1:8791, Project section, Tasks. Nothing to turn on.",
+  "try": [
+    { "do": "Open the Tasks list and click the task \"A hundred and fifteen walks fail on code that passed this afternoon\"." },
+    { "do": "Read the Facts block: \"Walks it owns\" names the four walks that task reproduces with.", "shot": "2026-09-17-a-task-says-which-walks-it-owns.png" },
+    { "do": "Run `node queue/bin/queue.mjs walks a-task-says-which-failing-walk-it-owns-instead-o` in a terminal: it answers \"owns no walks; the ones it names are examples\"." },
+    { "do": "Open the task \"Walks that fail in the full sweep\" and read the paragraph under the sweep block: it now says ownership asks the task first." },
+    { "do": "Run `node queue/bin/queue.mjs walks <any task id> some-walk-that-does-not-exist`: it warns that no such walk file exists and records it anyway." },
+    { "do": "Wait for the next sweep and read its block: the four claimed walks say \"that task says it owns this walk\", and any guessed line says \"guessed from its wording\"." }
+  ],
+  "evaluate": [
+    "Reading a line that says \"guessed from its wording\", would you still go and read that task, or does the label make you skip it?",
+    "Is \"Walks it owns\" the right thing to call the row on the task dialog, or does it read like a list of walks the task runs?",
+    "Should a task claiming a walk pull that walk off the standing failing-walks task entirely, the way it does now, or should both be told?",
+    "Is a warning enough for a walk name that does not exist, or should the command refuse it?"
+  ],
+  "rough": [
+    "No live sweep proves the new block end to end: the Mac's screen has been locked since 2026-09-15, so every sweep since reports \"could not run\" and files nothing. The ownership list was recomputed against the real queue and the real failing list by hand instead, and the block text is covered by the drill.",
+    "There is no screenshot of a walk here because this feature is not in the app: the picture is of the dashboard, taken through the browser.",
+    "On the task dialog, four walk names wrap onto four lines in a narrow Facts column. It reads, but a long list will look cramped.",
+    "Nothing re-checks a claim later. A task that claims a walk, is renamed, or claims a walk that is then deleted keeps its claim until somebody edits it; only the moment of claiming warns."
+  ]
+}

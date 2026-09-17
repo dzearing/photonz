@@ -18,6 +18,11 @@
 //                                            status: how a finding folds into a task that already
 //                                            covers it, and where a rough edge goes when it does not
 //                                            earn its own task (queue/bin/follow-up-bar.md)
+//   node queue/bin/queue.mjs walks <id> [<walk> ... | --none]
+//                                            the scripted walks this task owns, so the sweep's
+//                                            failing list says so instead of guessing it from the
+//                                            task's wording. --none says the walks it names are only
+//                                            examples. With no arguments it prints what the task says
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
@@ -45,7 +50,8 @@
 //                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN/REASON) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import * as q from './queue-lib.mjs';
 
 const [cmd, ...args] = process.argv.slice(2);
@@ -116,6 +122,35 @@ try {
     case 'log':
       out(q.noteTask(args[0], args.slice(1).join(' ')).id);
       break;
+    // Ownership of a failing walk, said rather than guessed. The sweep reads
+    // title, goal, notes and acceptance for walk names when a task has not
+    // said, and a name quoted as an example reads exactly like a name claimed
+    // as work: on 2026-09-14 one failing walk came out owned by three tasks,
+    // one of which was the task about this very problem.
+    case 'walks': {
+      if (!args[0]) throw new Error('usage: queue.mjs walks <id> [<walk> ... | --none]');
+      const t = q.readTaskDetail(args[0]);
+      if (!t) throw new Error(`no task ${args[0]}`);
+      if (args.length === 1) {
+        out(!Array.isArray(t.walks) ? 'has not said; the sweep guesses from its wording'
+          : t.walks.length ? t.walks.join('\n') : 'owns no walks; the ones it names are examples');
+        break;
+      }
+      const list = args[1] === '--none' ? [] : args.slice(1);
+      // A walk that does not exist can never be reported failing, so a typo
+      // here is a declaration that silently does nothing. Say so and carry on:
+      // a walk about to be written is a fair thing to claim in advance.
+      // ...but only when the walks are in reach. A queue pointed somewhere else
+      // (a drill, a copy) cannot see the walk library, and a warning made up
+      // out of not looking is worse than no warning.
+      const library = join(q.REPO, 'Scripts', 'playtest');
+      const missing = existsSync(library)
+        ? q.normalizeWalks(list).filter((w) => !existsSync(join(library, `${w}.json`)))
+        : [];
+      if (missing.length) console.error(`No such walk: ${missing.join(', ')} (${library}/<name>.json). Recorded anyway; fix it if that is a typo.`);
+      out(q.setWalks(args[0], list).id);
+      break;
+    }
     case 'priority':
       out(q.setPriority(args[0], args[1]).id);
       break;

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-14T01:40:04.878Z",
-  "updated": "2026-09-16T12:23:35.432Z",
+  "updated": "2026-09-17T10:51:40.436Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Added by a-sweep-result-stops-wiping-what-a-person-wrote on 2026-09-13. ownersOfWalks in queue/bin/sweep-notes.mjs joins title, goal, notes and acceptance and does a substring match on the walk name. Real example from the 20:35Z sweep: dock-picked-first-walk came out owned by two tasks, picking-a-plain-shape-leaves-the-panel-parked-on and picking-a-text-layer-leaves-its-settings-below-t, and only the first is really about it. A declared field (walks: [\"...\"]) on the task, with the text match kept as a fallback, is the obvious shape.",
@@ -43,6 +43,40 @@
     {
       "t": "2026-09-16T12:23:35.431Z",
       "note": "seq 100 -> 80"
+    },
+    {
+      "t": "2026-09-17T10:43:56.215Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T10:45:21.395Z",
+      "note": "owns these walks: nope-not-a-walk"
+    },
+    {
+      "t": "2026-09-17T10:45:22.891Z",
+      "note": "walks nope-not-a-walk -> none"
+    },
+    {
+      "t": "2026-09-17T10:51:40.253Z",
+      "note": "ADVERSARIAL REVIEW, before building. The obvious shape (a walks field, text match kept as a fallback) is half a fix on its own: the real 20:35Z example had ONE task claiming dock-picked-first-walk correctly and two claiming it from a passing mention, and a per-walk 'declared beats guessed' rule only helps the walks somebody remembered to claim. So the rule is also per TASK: a task that has declared is taken at its word and its prose is not read at all, which gives a task about the walk machinery a way to stop claiming its own examples (walks: [] means 'I own none of them'). That is what made this task's own false claim on dock-picked-first-walk fixable rather than only illustrative. Rejected as decoration: validating claims against the walk library on every sweep (a walk about to be written is fair to claim in advance), and a second opinion where a guess is listed alongside a claim (the point is to stop the guess, not to rank it)."
+    },
+    {
+      "t": "2026-09-17T10:51:40.300Z",
+      "note": "Built. queue/bin/sweep-notes.mjs: walkName, declaredWalks, and ownersOfWalks now returning { ids, declared } per walk; machineBlock labels each ownership line as claimed or guessed and, when any line is a guess, prints the command that ends it. queue-lib.mjs: normalizeWalks, setWalks, and a walks option on addTask (absent and empty mean different things, so an empty array is stored rather than dropped). queue.mjs: 'walks <id> [<walk> ... | --none]', printing what the task has said when given no walks and warning about a name with no walk file behind it. dashboard.html: a 'Walks it owns' fact on the task dialog."
+    },
+    {
+      "t": "2026-09-17T10:51:40.346Z",
+      "note": "Verified. sweep-notes-drill.mjs is now 48 checks (was 25) and all pass; the new ones crash against the old code, proved by stashing the three source files and re-running. Every other drill green: failure-drill 90 checks, leftovers (2 scenarios), manager-due 14, decision, churn, audit-index, state-poll. Scripts/test.sh: 8083 tests in 643 suites, passed. Recomputed over the LIVE queue and the real 115-walk failing list: turn-into-a-path-walk is no longer claimed by a-hundred-and-fifteen-walks-fail-on-code-that-pa (it was, from a passing mention), and appearance-list-min, tutorial-mark-it-up-walk, size-limits-walk and first-run-walk now read as claimed. The dashboard row was read out of the live page at 127.0.0.1:8791 and photographed."
+    },
+    {
+      "t": "2026-09-17T10:51:40.392Z",
+      "note": "Live tasks updated to say what they own: a-hundred-and-fifteen-walks-fail-on-code-that-pa claims its four reproduction walks; an-audit-gets-a-real-picture-of-the-app-again says none (its walk is named only as a way to reproduce a capture failure); this task says none (dock-picked-first-walk is its example). The hand-written paragraph under the sweep block on walks-that-fail-in-the-full-sweep said ownership is always a text match, which is no longer true, so it now describes both."
+    },
+    {
+      "t": "2026-09-17T10:51:40.435Z",
+      "note": "LEFT ROUGH, none of it clearing the follow-up bar. (1) No real sweep has written the new block: the Mac has been locked since 2026-09-15 so every sweep since reports 'could not run', which is a-hundred-and-fifteen-walks-fail-on-code-that-pa's ground and not a new task. (2) On the task dialog four walk names wrap onto four lines in a narrow Facts column; it reads, but a long list will look cramped. (3) Nothing re-checks a claim after it is made: a task claiming a walk that is later renamed or deleted keeps the claim, and only the moment of claiming warns. Nobody is stopped by either of the last two, so they live here."
     }
-  ]
+  ],
+  "started": "2026-09-17T10:43:56.214Z",
+  "walks": []
 }

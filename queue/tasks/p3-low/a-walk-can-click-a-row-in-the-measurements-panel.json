@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:12:00.434Z",
-  "updated": "2026-09-16T12:23:35.345Z",
+  "updated": "2026-09-17T10:24:02.190Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). selectRow only looks in EditorState.panelRows (the layers list) and press only finds NSControl press targets, so neither reaches a Measurements row; rightClick does, because rightClickTarget falls back to panelTargets(), where the rows register as .row. The likely fix is for selectRow to fall back the same way and press the row with real mouse events. Walk to update afterwards: Scripts/playtest/tutorial-measurements-panel-walk.json, the step with the describe note explaining the workaround.",
@@ -46,6 +46,28 @@
     {
       "t": "2026-09-16T12:23:35.344Z",
       "note": "seq 60 -> 60"
+    },
+    {
+      "t": "2026-09-17T09:23:46.535Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T10:24:02.050Z",
+      "note": "Adversarial review before building: the shortest version is a fallback inside selectRow rather than a new step verb, so a walk author writes the same step for both lists and never has to know which one a row lives in. Rejected making rows pressable through the press machinery: 322 walks would suddenly have rows competing with controls for the same names."
+    },
+    {
+      "t": "2026-09-17T10:24:02.097Z",
+      "note": "left rough: rightClick still does not scroll to the row it names, the way press and now selectRow do. That is what breaks measure-row-menu-walk on unchanged HEAD; folded into walks-that-fail-in-the-full-sweep with the reproduction instead of filing its own task."
+    },
+    {
+      "t": "2026-09-17T10:24:02.142Z",
+      "note": "left rough: a walk cannot yet say WHICH list it means when a layers row and a measurement row wear the same name. The layers list wins, which picks the same layer either way, so nobody is misled; worth a qualifier only if a walk ever needs to prove the Measurements row specifically."
+    },
+    {
+      "t": "2026-09-17T10:24:02.188Z",
+      "note": "selectRow now reaches the Measurements list: a name the layers list does not know is looked up by the words its measurement row shows, waited for, scrolled to and settled exactly as a press is, clicked with real mouse events, and the selection read back afterwards so a click that changed nothing stops the walk. bringIntoReach and settled were generalised to take a closure saying where the thing is. Found and written down while building it: a synthesized click reaches a SwiftUI view only where something AppKit answers for it, so a layer row (which has onDrag under it) takes one and a measurement row does not while Photonz is not the active app; measured with a counter in the gesture, 20 clicks across the row fired it 0 times and adding an onDrag made the first one fire. The step therefore clicks, and when the click does not take it runs the row's own handler and names the reason in the log, which is what the layers list has always done. Verified: Scripts/test.sh green (8083 tests); tutorial-measurements-panel-walk 28 of 28 steps ok with 3 real window captures, its row step now clicking the Width row of the Measurements list, and the capture shows the 104 px caliper picked on the canvas; a bogus row name fails with both lists named. Caveat: the Mac has been locked since 2026-09-15, so both runs were forced (PHOTONZ_ALLOW_LOCKED_WALK=1) and could only exercise the fallback path; a sweep is requested to watch the real click land unlocked. Commit 551e360b, pushed. Audit: queue/audits/2026-09-17-measurements-row-click.json"
     }
-  ]
+  ],
+  "started": "2026-09-17T09:23:46.534Z",
+  "completed": "2026-09-17T10:24:02.189Z"
 }

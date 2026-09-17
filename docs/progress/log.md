@@ -17603,3 +17603,57 @@ either. `component-uneven-room-walk.json` was updated for the new behaviour (its
 old last stage claimed the copy keeps all four of its own, which is no longer
 true) and gained a stage that hands one side back, but it has not run once. A
 sweep is requested for when the screen is unlocked.
+
+## 2026-09-17 — A task says which failing walk it owns
+
+The sweep's list of failing walks has, since 2026-09-13, said which of them
+another open task is already on, so nobody re-diagnoses a walk somebody is
+fixing. It worked that out by looking for the walk name anywhere in the other
+task's title, goal, notes or checklist, and a walk name quoted as an EXAMPLE
+reads exactly like one claimed as work. The 20:35Z sweep on 2026-09-14 handed
+`dock-picked-first-walk` to three tasks, one of which was the task about this
+very problem, quoting the walk in its own notes.
+
+**The fix.** A task can carry `walks: ["<name>", ...]`, and ownership asks the
+task first (`ownersOfWalks` in `queue/bin/sweep-notes.mjs`). Two rules:
+
+- A task that has said is TAKEN AT ITS WORD. Its prose is not read at all, so
+  naming a walk as an example no longer claims it. An empty list is a statement
+  too, and the one a task about the walk machinery needs: "I talk about walks
+  and own none of them".
+- For a walk somebody claimed, the tasks that only mention it are dropped. The
+  guess is what you get when nobody has said, not a second opinion.
+
+Only a walk nobody claims is still matched against the wording, because a guess
+beats an empty list, and those lines now say which they are:
+
+```
+  appearance-list-min -> a-hundred-and-fifteen-walks... (that task says it owns this walk)
+  blend-mode-walk -> find-out-whether-command-z... (guessed from its wording, so read it before believing it)
+```
+
+When any line is a guess the block prints the command that ends the guessing.
+Setting it is `queue.mjs walks <id> <walk> ...` or `--none`; with no arguments it
+prints what the task has said. A name pasted as `Scripts/playtest/foo-walk.json`
+is read as `foo-walk`, and a name with no walk file behind it warns and is
+recorded anyway, since a walk about to be written is fair to claim in advance.
+The task dialog on the dashboard grew a "Walks it owns" fact, so a claim is
+visible to a person and not only to the sweep.
+
+Two live tasks were updated to say: `a-hundred-and-fifteen-walks-fail-on-code-that-pa`
+claims the four walks it reproduces with, which stops it claiming
+`turn-into-a-path-walk` (a passing mention of runner hours wasted), and
+`an-audit-gets-a-real-picture-of-the-app-again` says none, since its walk is
+named only as a way to reproduce a capture failure.
+
+**Verified.** `queue/bin/sweep-notes-drill.mjs`, now 48 checks including the CLI
+end to end, all passing; the new ones crash against the old code. Every other
+drill green (failure 90 checks, leftovers, manager-due, decision, churn,
+audit-index, state-poll) and `Scripts/test.sh` at 8083 tests. Recomputed over the
+real queue and the real 115-walk failing list: `turn-into-a-path-walk` is no
+longer claimed and the four claimed ones read as claimed. The dashboard row was
+read out of the live page.
+
+Next: no sweep has run since 2026-09-15 because the Mac's screen is locked, so
+the new block has not been written by a real sweep yet. It will be the first
+thing the next sweep writes.

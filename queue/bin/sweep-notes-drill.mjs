@@ -98,7 +98,7 @@ console.log('walks that stopped failing');
 }
 
 // ---- failures another task already owns -------------------------------------
-console.log('walks another task owns');
+console.log('walks another task owns, guessed from its wording');
 {
   const tasks = [
     { id: 'standing', status: 'pending', title: 'Walks that fail in the full sweep', notes: 'alpha-walk beta-walk' },
@@ -106,13 +106,75 @@ console.log('walks another task owns');
     { id: 'long-done', status: 'done', title: 'Old fix', notes: 'beta-walk' },
   ];
   const owners = notes.ownersOfWalks(['alpha-walk', 'beta-walk'], tasks, 'standing');
-  check('the open task that names a walk is found', owners['alpha-walk']?.join() === 'the-effect-panel-forgets', owners);
+  check('the open task that names a walk is found', owners['alpha-walk']?.ids.join() === 'the-effect-panel-forgets', owners);
+  check('...and is marked as a guess, not a claim', owners['alpha-walk']?.declared === false, owners);
   check('the standing task does not own its own list', !owners['standing']);
   check('a finished task does not own anything', owners['beta-walk'] === undefined, owners);
 
   const text = notes.mergeNotes('', result(), owners);
   check('the block says which failure belongs elsewhere', text.includes('alpha-walk -> the-effect-panel-forgets'));
+  check('...and says the ownership was guessed', text.includes('alpha-walk -> the-effect-panel-forgets (guessed from its wording'));
+  check('...and says how a task stops being guessed at', text.includes('queue.mjs walks <task id>'));
   check('...and says what is left for this task', text.includes('This task owns the other 1: beta-walk'));
+}
+
+// ---- a task that SAYS which walks are its own -------------------------------
+// The guess is only as good as the words, and walk names turn up in tasks that
+// are not about them. On 2026-09-14 dock-picked-first-walk came out owned by
+// three open tasks, one of which was the task about this very problem, quoting
+// the walk as an example. So a task can say, and what it says wins.
+console.log('walks a task says are its own');
+{
+  const declaring = { id: 'the-effect-panel-forgets', status: 'pending', title: 'The effect panel forgets', walks: ['alpha-walk'], notes: 'also mentions beta-walk in passing' };
+  const mentioner = { id: 'a-task-about-the-list', status: 'pending', title: 'A task about the list', notes: 'for example alpha-walk came out owned by two tasks' };
+  const standing = { id: 'standing', status: 'pending', title: 'Walks that fail in the full sweep', notes: 'alpha-walk beta-walk' };
+  const owners = notes.ownersOfWalks(['alpha-walk', 'beta-walk'], [standing, declaring, mentioner], 'standing');
+
+  check('a task that says it owns a walk owns it', owners['alpha-walk']?.ids.join() === 'the-effect-panel-forgets', owners);
+  check('...and the block says the task claimed it', notes.mergeNotes('', result(), owners).includes('alpha-walk -> the-effect-panel-forgets (that task says it owns this walk)'));
+  check('a task that only quotes the walk as an example does not own it',
+    !owners['alpha-walk']?.ids.includes('a-task-about-the-list'), owners);
+  check('a task that has said is not also read for names it did not say',
+    owners['beta-walk'] === undefined, owners);
+
+  // Saying nothing is the old behaviour, unchanged: a walk nobody claims is
+  // still guessed at, because a guess beats an empty list.
+  const half = notes.ownersOfWalks(['beta-walk'], [standing, declaring, { id: 'says-nothing', status: 'pending', title: 'Says nothing', notes: 'broke in beta-walk' }], 'standing');
+  check('a walk nobody claims still falls back to the wording',
+    half['beta-walk']?.ids.join() === 'says-nothing' && half['beta-walk'].declared === false, half);
+
+  // An empty list is a statement: "I talk about walks and own none of them".
+  const quiet = notes.ownersOfWalks(['alpha-walk'], [standing, { id: 'a-task-about-the-list', status: 'pending', title: 'A task about the list', walks: [], notes: 'for example alpha-walk' }], 'standing');
+  check('a task that says it owns none of them owns none of them', quiet['alpha-walk'] === undefined, quiet);
+
+  // A declaration written the way it was run.
+  const pasted = notes.ownersOfWalks(['alpha-walk'], [standing, { id: 'pasted', status: 'pending', title: 'Pasted', walks: ['Scripts/playtest/alpha-walk.json'] }], 'standing');
+  check('a walk declared as the path that was run is the same walk',
+    pasted['alpha-walk']?.ids.join() === 'pasted', pasted);
+  check('declaredWalks says nothing when the task has not said', notes.declaredWalks({ id: 'x' }) === null);
+  check('declaredWalks reads a comma-separated string too',
+    notes.declaredWalks({ walks: 'alpha-walk, beta-walk.json' }).join() === 'alpha-walk,beta-walk', notes.declaredWalks({ walks: 'alpha-walk, beta-walk.json' }));
+
+  // ...and a finished task cannot claim one either, however loudly it says so.
+  const shut = notes.ownersOfWalks(['alpha-walk'], [standing, { id: 'long-done', status: 'done', walks: ['alpha-walk'] }], 'standing');
+  check('a finished task owns nothing even when it said so', shut['alpha-walk'] === undefined, shut);
+}
+
+// ---- declaring through the CLI ----------------------------------------------
+console.log('a task declaring its walks through queue.mjs');
+{
+  const cli = (...a) => execFileSync('node', [join(REPO, 'queue/bin/queue.mjs'), ...a],
+    { env: { ...process.env, PHOTONZ_QUEUE_DIR: dir }, encoding: 'utf8' }).trim();
+  const id = cli('addjson', JSON.stringify({ title: 'A walk drill task', goal: 'g', acceptance: ['a'], notes: 'mentions alpha-walk in passing' }));
+  check('a new task has said nothing about walks', cli('walks', id).startsWith('has not said'), cli('walks', id));
+  cli('walks', id, 'Scripts/playtest/beta-walk.json', 'beta-walk');
+  const file = JSON.parse(readFileSync(join(dir, 'tasks', 'p2-normal', id + '.json'), 'utf8'));
+  check('what it owns is stored by name, once', JSON.stringify(file.walks) === '["beta-walk"]', file.walks);
+  check('...and the task log says so', (file.log || []).some((e) => e.note === 'owns these walks: beta-walk'), file.log);
+  cli('walks', id, '--none');
+  check('a task can say it owns none of them',
+    JSON.stringify(JSON.parse(readFileSync(join(dir, 'tasks', 'p2-normal', id + '.json'), 'utf8')).walks) === '[]');
+  check('...and reads back as having said it', cli('walks', id).startsWith('owns no walks'), cli('walks', id));
 }
 
 // ---- end to end, the way the sweep runs it ----------------------------------

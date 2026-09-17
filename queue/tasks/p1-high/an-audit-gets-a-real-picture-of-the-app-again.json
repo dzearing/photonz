@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-17T06:07:14.941Z",
+  "updated": "2026-09-17T10:45:50.723Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -144,7 +144,12 @@
     {
       "t": "2026-09-17T06:07:14.940Z",
       "note": "Real window captures ARE being written today, with the screen LOCKED, which contradicts both this task and the line in CLAUDE.md saying a locked screen makes a picture impossible. 2026-09-17, PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json: done.json has screenLocked true, status ok, and captures = 5 -sc.png files. panel-sections-1-shape-automatic-sc.png is 2560x1800, 1.9MB, and shows the real window with its rounded corners, traffic lights, drop shadow and the dark panel painted correctly, not an offscreen render (the offscreen sibling .png is 128KB at 1280x900). Two other walks the same hour did the same. So whatever was denying the grant has stopped denying it; worth re-checking what is actually left broken here before building anything."
+    },
+    {
+      "t": "2026-09-17T10:45:50.722Z",
+      "note": "owns no walks; the ones it names are examples"
     }
   ],
-  "started": "2026-09-15T10:05:49.238Z"
+  "started": "2026-09-15T10:05:49.238Z",
+  "walks": []
 }

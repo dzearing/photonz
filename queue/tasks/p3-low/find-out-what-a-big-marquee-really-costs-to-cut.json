@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:44:04.772Z",
-  "updated": "2026-09-16T12:23:35.257Z",
+  "updated": "2026-09-17T09:11:59.703Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Follow-up from the New Layer via Cut task on 2026-09-14. Everything measured so far was in a DEBUG test build, where Swift tight loops run many times slower than the release build the app ships, so the numbers below are an upper bound and not the answer.\n\nDebug numbers on a 4000x3000 picture, after the optimisations that landed with the feature:\n  small 200x120 marquee   81 ms\n  ellipse over half of it  1179 ms   (mask 197, read 42, spots 641, decide 157, middle 86, trimmed 85, extracted 3, patched 5)\n\nSmartCut.cut is the entry point (Sources/PhotonzRender/SmartCut.swift). The cost is inherently O(marquee area) because the mask has to be rasterised, so this is about the constant, not the shape of the algorithm. The three parts worth looking at are PatchRingWalk.spots (the edge pass over the mask), SmartCut.mask, and the fact that PatchDecision.decide and PatchDecision.middle each take their own median of the same ring, so the guessed path medians twice.\n\nTo measure the release build: swift test -c release --filter <bench>, or time it inside the probe app, which is already built with -c release. Do NOT report debug numbers as the answer: that is what this task exists to correct.",
+  "notes": "ANSWERED 2026-09-17. Release build (swift test -c release --filter SmartCutBench), 4000x3000 picture, best of three runs:\n  small 200x120 marquee                       4.7 ms\n  ellipse over half of it (3800x1600 box)    28.2 ms\n  marquee round the WHOLE picture            31.9 ms  <- the ceiling\n\nBreakdown of the half-picture case: mask 4.6, read pixels 1.2, ring walk 7.8, decide 2.4, middle 1.3, extract 3.1, trim 1.3, patch 5.0. Nothing is near a fifth of a second, so no optimisation was made.\n\nThe benchmark is Tests/PhotonzRenderTests/SmartCutBenchTests.swift. It is skipped unless PHOTONZ_BENCH=1 is set, so it costs the normal suite nothing; re-run it with\n  PHOTONZ_BENCH=1 Scripts/test.sh -c release --filter SmartCutBench\nIt must be run with -c release: in a debug build the same three cases read 81 ms, 1179 ms and worse, which is 17x to 42x the truth.\n\n--- ORIGINAL NOTES (the debug numbers this task existed to correct) ---\nFollow-up from the New Layer via Cut task on 2026-09-14. Everything measured so far was in a DEBUG test build, where Swift tight loops run many times slower than the release build the app ships, so the numbers below are an upper bound and not the answer.\n\nDebug numbers on a 4000x3000 picture, after the optimisations that landed with the feature:\n  small 200x120 marquee   81 ms\n  ellipse over half of it  1179 ms   (mask 197, read 42, spots 641, decide 157, middle 86, trimmed 85, extracted 3, patched 5)\n\nSmartCut.cut is the entry point (Sources/PhotonzRender/SmartCut.swift). The cost is inherently O(marquee area) because the mask has to be rasterised, so this is about the constant, not the shape of the algorithm. The three parts worth looking at are PatchRingWalk.spots (the edge pass over the mask), SmartCut.mask, and the fact that PatchDecision.decide and PatchDecision.middle each take their own median of the same ring, so the guessed path medians twice.\n\nTo measure the release build: swift test -c release --filter <bench>, or time it inside the probe app, which is already built with -c release. Do NOT report debug numbers as the answer: that is what this task exists to correct.",
   "acceptance": [
     "A number for the release build, not a test build, for a marquee covering half a 12 megapixel picture",
     "A number for the same picture with a small marquee",
@@ -46,6 +46,40 @@
     {
       "t": "2026-09-16T12:23:35.256Z",
       "note": "seq 110 -> 40"
+    },
+    {
+      "t": "2026-09-17T08:56:20.371Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T09:11:44.341Z",
+      "note": "ANSWER, release build (swift test -c release --filter SmartCutBench, Apple silicon, best of 3): small 200x120 marquee on a 4000x3000 picture = 4.7 ms. Ellipse marquee over half the picture (3800x1600 box, 6.1 of 12 megapixels) = 28.2 ms. Marquee round the WHOLE picture, the biggest one that can be drawn = 31.9 ms. Nothing is anywhere near a fifth of a second, so no optimisation was needed and none was made."
+    },
+    {
+      "t": "2026-09-17T09:11:44.389Z",
+      "note": "The debug numbers in this task's notes overstated the cost by 17x for the small marquee (81 vs 4.7) and 42x for the big one (1179 vs 28.2). Every pass the note flagged as expensive is cheap once optimised: the ring walk goes 641 ms -> 7.8 ms, the mask 197 -> 4.6, decide 157 -> 2.4, middle 86 -> 1.3. That is the whole reason this task existed."
+    },
+    {
+      "t": "2026-09-17T09:11:44.436Z",
+      "note": "Adversarial review before measuring: the honest worst case is not half a picture, it is a marquee round ALL of it, so that case was added as a third measurement. It is the slowest at 31.9 ms because the ring walk has to cross every pixel of the mask to find an edge that is not there, and it still lands inside two frames."
+    },
+    {
+      "t": "2026-09-17T09:11:44.481Z",
+      "note": "left rough: PatchDecision.decide and PatchDecision.middle each take their own median of the same ring, so the guessed path medians twice. At the ceiling that is 1.3 ms out of 31.9. Nobody could feel it, so it does not earn a task; recorded here for whoever next opens PatchFill.swift."
+    },
+    {
+      "t": "2026-09-17T09:11:44.528Z",
+      "note": "No audit written: this task changed no app behaviour, so there is nothing new for the user to try in the app. The durable artifact is Tests/PhotonzRenderTests/SmartCutBenchTests.swift, which is skipped unless PHOTONZ_BENCH=1 so it costs the normal suite nothing. Full suite green: 8079 tests in 643 suites."
+    },
+    {
+      "t": "2026-09-17T09:11:44.574Z",
+      "note": "No walk run and none needed: no Sources/ file changed."
+    },
+    {
+      "t": "2026-09-17T09:11:59.701Z",
+      "note": "Measured in a release build (swift test -c release), best of three, on a 4000x3000 picture: a 200x120 marquee costs 4.7 ms, an ellipse over half the picture costs 28.2 ms, and a marquee round the whole picture, the biggest that can be drawn, costs 31.9 ms. Nothing is close to a fifth of a second, so nothing needed speeding up and the renderer is unchanged. The debug numbers this task existed to correct were 17x to 42x too high. Shipped as Tests/PhotonzRenderTests/SmartCutBenchTests.swift, skipped unless PHOTONZ_BENCH=1 so the normal suite is unaffected; full suite green at 8079 tests. Committed dd82c097 and pushed."
     }
-  ]
+  ],
+  "started": "2026-09-17T08:56:20.370Z",
+  "completed": "2026-09-17T09:11:59.702Z"
 }

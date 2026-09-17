@@ -288,7 +288,7 @@ const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).rep
 //              because it is read last and by an agent.
 // The dashboard renders them in that order, so a task is legible before it is
 // implementable.
-export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
+export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null, walks = null }) {
   ensureDirs();
   if (!PRIORITIES.includes(priority)) priority = 'p2-normal';
   const all = readAllTasks();
@@ -311,6 +311,11 @@ export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', n
     notes, acceptance, log: [{ t: now(), note: `created (${source})` }],
     file: join(TASKS, priority, `${id}.json`),
   };
+  // `walks` is the scripted walks this task owns, and it is absent unless the
+  // task says. Absent and empty mean different things to the sweep (see
+  // declaredWalks in sweep-notes.mjs): absent is "nobody has said", empty is
+  // "I mention walks and own none of them", so an empty array is NOT dropped.
+  if (Array.isArray(walks)) task.walks = normalizeWalks(walks);
   saveTask(task);
   appendEvent('task_created', { id, priority, title });
   return task;
@@ -372,6 +377,34 @@ export function setPriority(id, priority) {
   saveTask(moved);
   appendEvent('task_reprioritized', { id, from: t.priority, to: priority });
   return moved;
+}
+
+// The walk names a task owns, cleaned up the way the sweep reads them: a bare
+// name, so a path or a .json pasted from the command just run means the same
+// walk. Duplicates collapse and order is kept.
+export function normalizeWalks(walks) {
+  const list = (Array.isArray(walks) ? walks : String(walks || '').split(','))
+    .map((w) => String(w || '').trim().replace(/^.*\//, '').replace(/\.json$/i, '').trim())
+    .filter(Boolean);
+  return [...new Set(list)];
+}
+
+// A task saying which failing walks are its own, so the sweep stops guessing it
+// from the words in the task. Passing an empty list is a real answer, not a
+// clearing: it says "I talk about walks and own none of them", which is what a
+// task about the walk machinery needs in order to stop claiming its examples.
+export function setWalks(id, walks) {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  const from = Array.isArray(t.walks) ? t.walks : null;
+  const to = normalizeWalks(walks);
+  t.walks = to;
+  appendLog(t, from === null
+    ? (to.length ? `owns these walks: ${to.join(', ')}` : 'owns no walks; the ones it names are examples')
+    : `walks ${from.length ? from.join(', ') : 'none'} -> ${to.length ? to.join(', ') : 'none'}`);
+  saveTask(t);
+  appendEvent('task_walks', { id, walks: to });
+  return t;
 }
 
 export function setSeq(id, seq) {

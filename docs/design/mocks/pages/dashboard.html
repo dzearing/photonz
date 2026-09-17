@@ -1183,7 +1183,13 @@
     h += '<div class="db-dsec"><div class="mlabel">Facts</div><div class="db-facts">';
     [['Opened', absTime(t.created)], ['Last update', absTime(t.updated)],
      ['Started', absTime(t.started)], ['Completed', absTime(t.completed)],
-     ['Area', t.area], ['Failures', t.failures ? String(t.failures) : null]
+     ['Area', t.area], ['Failures', t.failures ? String(t.failures) : null],
+     // The scripted walks the task SAYS are its own. Absent means it has not
+     // said and the sweep guesses from its wording; an empty list is a task
+     // saying the walk names in it are only examples.
+     ['Walks it owns', Array.isArray(t.walks)
+       ? (t.walks.length ? t.walks.join(', ') : 'none; the ones it names are examples')
+       : null]
     ].forEach(function (f) {
       if (!f[1]) return;
       h += '<div class="db-fact"><span class="k">' + f[0] + '</span><span class="v">' + esc(f[1]) + '</span></div>';

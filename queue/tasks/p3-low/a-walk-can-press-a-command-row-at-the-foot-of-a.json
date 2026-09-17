@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T08:26:31.124Z",
-  "updated": "2026-09-16T12:23:35.300Z",
+  "updated": "2026-09-17T09:23:12.333Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The footer reaches ToolModeButton as an opaque AnyView (EditorView.swift:1842, resizeMenuRow at :1013), so ToolModeFlyoutProbe cannot describe or fire it the way it does the mode rows. Giving the footer a small struct (title, symbol, action, disabled) instead of AnyView would let the same probe carry it, and would also let the button own the row's keyboardShortcut. The harness has no condition for isResizeDialogPresented either; PlaytestHarness.swift:1427 only forces it closed.",
@@ -50,6 +50,36 @@
     {
       "t": "2026-09-16T12:23:35.299Z",
       "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-09-17T09:14:25.709Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T09:22:58.363Z",
+      "note": "Adversarial review before building: the note's suggestion (give the footer a small struct instead of AnyView) survives it. Two things it did not say. First, a walk that can only PRESS the row still cannot tell a command from a mode, because a mode row would press fine too; the row has to say which kind it is, and the reading line has to print it, or the regression this task exists to catch is only caught by luck. Second, the shortest useful version is not one condition for the resize dialog but one for any dialog: a sheet is drawn by the app, so NONE of the five (Resize Image, Canvas Size, Export, New Frame, Blank Canvas) has a name in the window list, and a walk could say nothing about any of them. Same work, five times the reach."
+    },
+    {
+      "t": "2026-09-17T09:22:58.410Z",
+      "note": "Built: ToolCommand (title, symbol, shortcut, isEnabled, run) replaces ToolModeButton's opaque AnyView footer; the button builds the row itself, so the row owns its chord and its greying. ToolFlyoutRow gained isCommand and isEnabled, and the command rides in the probe signature so the list goes stale the moment Resize Image stops being pressable. The harness prints (ticked)/(command)/(greyed) per row, refuses to fire a greyed row, and forgives a trailing ellipsis so a walk writes \"Resize Image\" for a row that reads \"Resize Image…\". New condition dialog(name, up:) behind dialogUp/dialogGone in walk JSON; an unknown dialog name never reads as \"it has gone\", it says so with the list of names."
+    },
+    {
+      "t": "2026-09-17T09:22:58.458Z",
+      "note": "Also fixed on the way past: a command handed to a one-mode tool used to vanish, because the button only drew a menu when modes.count > 1. hasList now counts the command too, for the menu, the corner marker and the tooltip. No tool hits it today, so nothing changes on screen."
+    },
+    {
+      "t": "2026-09-17T09:22:58.506Z",
+      "note": "Verified: Scripts/test.sh green, 8083 tests. New walk Scripts/playtest/crop-resize-command-walk.json, 22 steps ok, and tool-flyout-picks-tool-walk.json still 34 steps ok. The log line reads 'Crop lists Free (ticked), 1:1, 4:3, 16:9, Resize Image… (command); chose Resize Image… (command)', then dialogUp holds and tool(select) still holds. THE SCREEN WAS LOCKED for the whole run, so both were forced with PHOTONZ_ALLOW_LOCKED_WALK=1, which PlaytestScreenState keeps for exactly this job. Neither walk looks a control up by name, which is the only thing a lock takes away, and the run still wrote a real screen capture (queue/audits/2026-09-17-tool-command-row.png shows the dialog up with Select still lit). A sweep is requested so both are re-run unlocked before anyone calls them green."
+    },
+    {
+      "t": "2026-09-17T09:22:58.552Z",
+      "note": "left rough: nothing exercises the greyed command row, because every walk opens a picture before it touches the tool bar. The refusal is in the harness and tested by nothing. Not filed: a person never sees it and no walk is wrong today."
+    },
+    {
+      "t": "2026-09-17T09:23:12.331Z",
+      "note": "ToolModeButton takes a described ToolCommand instead of an opaque AnyView footer, so the flyout probe carries Crop's Resize Image row beside the modes and marks it (command)/(greyed). New dialogUp/dialogGone walk conditions cover all five sheets. Scripts/playtest/crop-resize-command-walk.json: 22 steps ok (row opens the dialog, Select stays in hand); tool-flyout-picks-tool-walk.json still 34 steps ok; Scripts/test.sh green, 8083 tests. Both walks were forced past a locked screen (PHOTONZ_ALLOW_LOCKED_WALK=1, the harness-work hatch) since neither looks a control up by name; a sweep is requested to re-run them unlocked. Audit: queue/audits/2026-09-17-tool-command-row.json. Commit 6cb842f9, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-17T09:14:25.708Z",
+  "completed": "2026-09-17T09:23:12.332Z"
 }
