@@ -306,4 +306,44 @@ struct LibraryShelfLayoutTests {
         #expect(LibraryShelfLayout.tileTop(index: 0, width: 236)
             + LibraryShelfLayout.tileHeight <= shown)
     }
+
+    // MARK: ...and says there is more under it
+
+    @Test func theSmallestShelfKeepsTheTopOfTheNextRowInView() {
+        // One whole row, and then as much of the row under it as the dock's
+        // own "there is more this way" cue asks for.
+        let floor = LibraryShelfLayout.squeezeFloor(peek: 22)
+        #expect(floor == LibraryShelfLayout.oneRowHeight
+            - LibraryShelfLayout.gridVerticalPadding
+            + LibraryShelfLayout.tileSpacing + 22)
+        #expect(floor == 100)
+    }
+
+    @Test func theSliverIsPartOfTheNextTileRatherThanTheGapAboveIt() {
+        // The cue has to be TILE, not empty glass: a cut that lands in the gap
+        // between two rows ends the shelf on clean background and reads as the
+        // whole list (the same mistake a squeezed Effects list made on
+        // 2026-09-08).
+        let floor = LibraryShelfLayout.squeezeFloor(peek: 22)
+        let secondRowTop = LibraryShelfLayout.tileTop(index: 1, width: 80)
+        #expect(secondRowTop < floor)
+        #expect(floor - secondRowTop == 22)
+    }
+
+    @Test func aShelfThatFitsInOneRowIsNeverPaddedOutToShowASliver() {
+        // Five tiles across one wide row: there is no second row, so the floor
+        // must not buy room for a peek at nothing. `shelfHeight` caps at the
+        // content, which is what makes that true.
+        let width: CGFloat = 400
+        let floor = LibraryShelfLayout.squeezeFloor(peek: 22)
+        #expect(LibraryShelfLayout.rowCount(tileCount: 5, width: width) == 1)
+        #expect(LibraryShelfLayout.shelfHeight(tileCount: 5, width: width, cap: floor)
+            == LibraryShelfLayout.oneRowHeight)
+    }
+
+    @Test func theSmallestShelfIsStillShorterThanEveryOtherListFloor() {
+        // 100 points against the 112 every other list in the dock is given, so
+        // widening the shelf's floor cannot starve the sections above it.
+        #expect(LibraryShelfLayout.squeezeFloor(peek: 22) < 112)
+    }
 }

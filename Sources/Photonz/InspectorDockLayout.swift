@@ -290,12 +290,17 @@ struct DockBudgetScratch: Equatable {
         // name under it. Cut one across the middle and it does not read as a
         // list with more in it, the way a cut list of rows does: it reads as a
         // row of pictures nobody has named, and the name was the whole of what
-        // the tile said. So the shelf's floor is one whole row and no lower.
+        // the tile said. So the shelf's floor is one whole row, never part of
+        // one — plus the same sliver of the next row every other shortened body
+        // in the dock keeps, so a cut shelf says there is more under it instead
+        // of ending on clean glass and reading as the whole list.
         //
-        // 72 points against the 112 every other list gets, which is LESS, so
-        // this cannot starve anything: it only stops the shelf being handed a
-        // number that has no honest way to spend it.
-        if id == .library { return LibraryShelfLayout.oneRowHeight }
+        // 100 points against the 112 every other list gets, which is still
+        // LESS, so this cannot starve anything: it only stops the shelf being
+        // handed a number that has no honest way to spend it. A shelf that fits
+        // in one row never spends the sliver, because the budget never draws a
+        // list taller than its own content.
+        if id == .library { return LibraryShelfLayout.squeezeFloor(peek: DockMetrics.bodyPeek) }
         guard let panes = budget.listPanes[id], !panes.isEmpty else {
             return DockMetrics.listFloor
         }

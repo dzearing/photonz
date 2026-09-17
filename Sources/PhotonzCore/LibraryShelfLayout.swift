@@ -113,6 +113,33 @@ public enum LibraryShelfLayout {
     /// rather than making the row taller.
     public static let oneRowHeight: CGFloat = contentHeight(tileCount: 1, width: tileMinimumWidth)
 
+    /// The least room the shelf may be squeezed to when there is more of it
+    /// under the cut: one whole row, and then a sliver of the row below.
+    ///
+    /// `oneRowHeight` on its own is honest about the row it shows and silent
+    /// about the rows it does not. Squeezed to it, the shelf ends on clean
+    /// glass under a full row of named tiles, which reads as the whole list —
+    /// on 2026-09-17 a shelf cut to three of the app's five starters was read
+    /// that way by an audit, which reported the Nav Bar component missing from
+    /// an app that had it all along.
+    ///
+    /// So the floor buys the same cue every other shortened body in the dock
+    /// gets: enough of the next thing showing through the fade to mean "there
+    /// is more this way" rather than "that is all". The sliver is TILE and not
+    /// the gap above it, because a cut landing in the gap ends the shelf on
+    /// background and says nothing.
+    ///
+    /// A shelf that fits in one row is not padded out to show a sliver of
+    /// nothing: `shelfHeight` never draws more than the content, so the extra
+    /// is only ever spent when there is a row to spend it on.
+    ///
+    /// - Parameter peek: how much of the next row to keep on screen. The dock's
+    ///   own `bodyPeek`, handed in rather than pinned here, so the shelf uses
+    ///   the same number as every other cut body in the panel.
+    public static func squeezeFloor(peek: CGFloat) -> CGFloat {
+        gridVerticalPadding + tileHeight + tileSpacing + max(0, peek)
+    }
+
     /// The height the shelf actually takes: its content, but never more than
     /// the ceiling the drag handle sets, so the sections under it stay in view
     /// and a long shelf scrolls on its own.

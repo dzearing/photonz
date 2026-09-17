@@ -305,6 +305,78 @@ struct SectionFileDrop: DropDelegate {
     }
 }
 
+// MARK: - Saying there is more past the cut
+
+/// The "there is more this way" cue every shortened body in the dock wears: the
+/// content fades out at whichever edge it has more content past.
+///
+/// A body the dock has shortened is cut off mid-control, and macOS hides its
+/// scrollers until you scroll, so the first build of the dock's budget clipped
+/// a sentence in half and gave no hint why: it read as a rendering fault rather
+/// than as something that scrolls. The edge fading out is the ordinary way of
+/// saying there is more, and it is only ever drawn where there really is.
+///
+/// Every scroller the dock squeezes wears it — the sections it wraps itself,
+/// and the two that take the ceiling into their own scroller (the layers list
+/// and the Library shelf). One idiom, so a cut means the same thing wherever
+/// the panel cuts.
+private struct ScrollEdgeFade: ViewModifier {
+    /// Which way a shortened body has more to show. Starts as "more below",
+    /// which is what being shortened means, so the cue is right on the first
+    /// frame rather than one scroll later.
+    @State private var overflow = EdgeOverflow(above: false, below: true)
+
+    /// Which edges of a shortened body have more content past them.
+    private struct EdgeOverflow: Equatable {
+        let above: Bool
+        let below: Bool
+    }
+
+    /// Solid over the body, fading out at whichever edge has more past it.
+    private var fade: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [.black.opacity(0), .black],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: overflow.above ? DockMetrics.bodyEdgeFade : 0)
+            Rectangle()
+            LinearGradient(colors: [.black, .black.opacity(0)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: overflow.below ? DockMetrics.bodyEdgeFade : 0)
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            // Which way there is more to see, so the edge that says so is only
+            // drawn where it is true.
+            .onScrollGeometryChange(for: EdgeOverflow.self) { geometry in
+                EdgeOverflow(
+                    above: geometry.contentOffset.y > 1,
+                    below: geometry.contentOffset.y + geometry.containerSize.height
+                        < geometry.contentSize.height - 1)
+            } action: { _, edges in
+                overflow = edges
+            }
+            .mask { fade }
+            .animation(.easeOut(duration: 0.12), value: overflow)
+    }
+}
+
+extension View {
+    /// Fades this scroller's top or bottom edge whenever it is showing less
+    /// than it holds. See `ScrollEdgeFade`.
+    ///
+    /// - Parameter isShortened: false leaves the view exactly as it was. A
+    ///   scroller drawn at its own content's height has nothing past either
+    ///   edge, and a mask it does not need is a layer drawn for nothing — and
+    ///   for one frame, before the first scroll geometry lands, a bottom edge
+    ///   faded on a complete list.
+    @ViewBuilder
+    func scrollEdgeFade(isShortened: Bool = true) -> some View {
+        if isShortened { modifier(ScrollEdgeFade()) } else { self }
+    }
+}
+
 /// A titled section with a chevron (tap to collapse) and a drag affordance on
 /// its header (drag to reorder). Elegant/modern: clean header, smooth collapse.
 struct CollapsibleSection<Content: View>: View {
@@ -341,29 +413,6 @@ struct CollapsibleSection<Content: View>: View {
     /// Whether this header's press has travelled far enough to have picked the
     /// section up. See `headerGesture`.
     @State private var isCarrying = false
-    /// Which way a shortened body has more to show. Starts as "more below",
-    /// which is what being shortened means, so the cue is right on the first
-    /// frame rather than one scroll later.
-    @State private var overflow = EdgeOverflow(above: false, below: true)
-
-    /// Which edges of a shortened body have more content past them.
-    private struct EdgeOverflow: Equatable {
-        let above: Bool
-        let below: Bool
-    }
-
-    /// Solid over the body, fading out at whichever edge has more past it.
-    private var edgeFade: some View {
-        VStack(spacing: 0) {
-            LinearGradient(colors: [.black.opacity(0), .black],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.above ? DockMetrics.bodyEdgeFade : 0)
-            Rectangle()
-            LinearGradient(colors: [.black, .black.opacity(0)],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.below ? DockMetrics.bodyEdgeFade : 0)
-        }
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -398,25 +447,7 @@ struct CollapsibleSection<Content: View>: View {
             ScrollView(.vertical) { measured }
                 .frame(height: bodyCeiling)
                 .scrollBounceBehavior(.basedOnSize)
-                // Which way there is more to see, so the edge that says so is
-                // only drawn where it is true.
-                .onScrollGeometryChange(for: EdgeOverflow.self) { geometry in
-                    EdgeOverflow(
-                        above: geometry.contentOffset.y > 1,
-                        below: geometry.contentOffset.y + geometry.containerSize.height
-                            < geometry.contentSize.height - 1)
-                } action: { _, edges in
-                    overflow = edges
-                }
-                // A body the dock has shortened is cut off mid-control, and
-                // macOS hides its scrollers until you scroll, so the first
-                // build of this clipped a sentence in half and gave no hint
-                // why: it read as a rendering fault rather than as something
-                // that scrolls. The edge fades out instead, which is the
-                // ordinary way of saying there is more this way, and it is
-                // only ever on a body that really is shorter than its content.
-                .mask { edgeFade }
-                .animation(.easeOut(duration: 0.12), value: overflow)
+                .scrollEdgeFade()
         } else {
             measured
         }

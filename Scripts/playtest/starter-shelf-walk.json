@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/starter-shelf",
-  "seed": "The five the app comes with, on the shelf of a document that has taken none of them: Button, Text Field, Card, Nav Bar and Badge, with nothing typed in the search box. This is the walk that OWNS them. On 2026-09-17 a walk written about where words sit in a box was the only thing that noticed the Nav Bar tile could not be reached, and the audit that hit it concluded the app had lost the component; a starter going missing has to break the walk written for starters instead. Then it takes the last of the five off the shelf, which is the one furthest down it.",
+  "seed": "The five the app comes with, on the shelf of a document that has taken none of them: Button, Text Field, Card, Nav Bar and Badge, with nothing typed in the search box. This is the walk that OWNS them. On 2026-09-17 a walk written about where words sit in a box was the only thing that noticed the Nav Bar tile could not be reached, and the audit that hit it concluded the app had lost the component; a starter going missing has to break the walk written for starters instead. Then it builds the way a person builds: three off the shelf in a row, checking after each one that the shelf is still where it was left.",
   "setup": { "forget": ["text", "shapes", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
@@ -16,16 +16,28 @@
       "note": "THE TEST: all five tiles are on the Components shelf of a fresh document, with nothing typed. Every one of them is built and answers to its name, which is what a person means by finding one." },
     { "do": "snapshot", "name": "starter-shelf-1-five" },
     { "do": "dragTile", "tile": "Nav Bar", "to": [520, 260] },
-    { "do": "wait", "seconds": 0.8 },
+    { "do": "wait", "seconds": 1.0 },
     { "do": "expect", "row": "Nav Bar", "present": true },
+    { "do": "expectInView", "field": "Library section" },
     { "do": "describe", "stage": "2-navbar",
-      "note": "the Nav Bar came off the shelf and is in the picture as the original. It is the last of the five, so it is the one that ends up below the shelf's fold once the dock fills up." },
+      "note": "THE TEST: the Nav Bar came off the shelf and is in the picture as the original, AND the Library is still on screen. Placing it opened Component, Appearance, Effects, Motion and Layout above the shelf, which used to carry the Library 300 points below the bottom edge of the window; the dock brings back the shelf you are working out of." },
     { "do": "snapshot", "name": "starter-shelf-2-navbar" },
     { "do": "dragTile", "tile": "Card", "to": [820, 560] },
-    { "do": "wait", "seconds": 0.8 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "row": "Card", "present": true },
+    { "do": "expectInView", "field": "Library section" },
     { "do": "describe", "stage": "3-second-one",
-      "note": "WHAT THIS SHOWS: a SECOND starter fetched after the first one was placed. By now the selection has opened the Component, Appearance, Effects, Motion and Layout sections, which pushes the Library off the bottom of the dock and squeezes the shelf to one row, so the Card is under the shelf's own fold. The shelf scrolls to it, the way a person scrolls to it." },
+      "note": "WHAT THIS SHOWS: a SECOND starter fetched after the first one was placed, with no scrolling of the panel in between. The Card is under the shelf's own fold, so the shelf scrolls to it the way a person scrolls to it." },
+    { "do": "panel", "stage": "3-second-one" },
     { "do": "snapshot", "name": "starter-shelf-3-second-one" },
-    { "do": "render", "name": "starter-shelf-3-doc" }
+    { "do": "dragTile", "tile": "Button", "to": [520, 700] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "row": "Button", "present": true },
+    { "do": "expectInView", "field": "Library section" },
+    { "do": "describe", "stage": "4-third-one",
+      "note": "THE TEST: three starters off the shelf one after another, and the shelf is still in view after every one of them. This is what building a screen out of components actually is." },
+    { "do": "panel", "stage": "4-third-one" },
+    { "do": "snapshot", "name": "starter-shelf-4-third-one" },
+    { "do": "render", "name": "starter-shelf-4-doc" }
   ]
 }

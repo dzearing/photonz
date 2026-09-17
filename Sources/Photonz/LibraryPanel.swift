@@ -326,6 +326,14 @@ struct LibraryPanel: View {
                 .frame(height: shelfHeight)
                 .coordinateSpace(.named(Self.shelfSpace))
                 .scrollBounceBehavior(.basedOnSize)
+                // A shelf the dock has squeezed keeps a sliver of the next row
+                // on screen, and this is what turns that sliver into a
+                // sentence: the cut edge fades, the way every other shortened
+                // body in the dock does, so three tiles showing out of five
+                // read as three of five rather than as all there is. Without
+                // it, an audit read a cut shelf on 2026-09-17 and reported the
+                // Nav Bar component missing from an app that had it.
+                .scrollEdgeFade(isShortened: isShelfShortened)
                 // Only the WIDTH is measured. How tall the shelf wants to be
                 // is worked out from the tile count instead, because a lazy
                 // grid only builds the rows it can see and so answers a
@@ -443,6 +451,13 @@ struct LibraryPanel: View {
         } else if let first = visibleStyles.first {
             editorState.selectLibraryItem(first.entry.id)
         }
+    }
+
+    /// Whether the shelf is showing less than it holds, and so owes the reader
+    /// a cue saying so. Never before it has been measured: a shelf standing at
+    /// its ceiling for one frame is not a shelf that has been cut.
+    private var isShelfShortened: Bool {
+        shelfWidth > 0 && shelfHeight < shelfContentHeight - PanelAreaResize.tolerance
     }
 
     /// How tall the shelf would be with nothing capping it. Before anything

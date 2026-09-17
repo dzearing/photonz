@@ -1,0 +1,28 @@
+{
+  "feature": "The Components shelf stays where you left it",
+  "epic": "ui-components",
+  "summary": "Take a component off the Library shelf and the shelf is still on screen for the next one, instead of being carried a few hundred points below the bottom of the panel by the sections the new layer opens. A shelf the panel has had to shorten now shows the top of the row under the fold, faded out, so three tiles showing out of five read as three of five.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on: the Library and the starter components are on by default. A window about 1240 by 900 is where this is worth judging, because a taller one has room for everything and never had the problem.",
+  "try": [
+    { "do": "Open a new document and press View > Show Library, then set the shelf to Comps.", "shot": "2026-09-17-shelf-stays-put-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Drag the Nav Bar tile onto the canvas and let go." },
+    { "do": "Look at the right hand panel without touching the scroll wheel: the Library is at the bottom of it." },
+    { "do": "Drag the Card tile onto the canvas from where it is now." },
+    { "do": "Drag the Button tile onto the canvas, again without scrolling the panel.", "shot": "2026-09-17-shelf-stays-put-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Look at the bottom edge of the shelf: the tops of the two tiles under the fold show through a fade." },
+    { "do": "Scroll inside the shelf with the pointer over it to reach Text Field and Badge." }
+  ],
+  "evaluate": [
+    "The panel scrolls itself about a third of a second after the component lands. Does that read as the panel following you, or as the panel moving on its own?",
+    "Getting the shelf back costs you sight of the Component section for the thing you just placed, which is now above the top of the panel. Is that the right trade while you are fetching?",
+    "Is the faded sliver of the next row enough to tell you there are more components, or would you rather see a count?",
+    "The shelf holds one row of three while you have a component selected. Is one row enough to build from, or should it keep two?",
+    "The grab bar under the shelf goes away when the panel has nothing left to give it. Did you go looking for it?"
+  ],
+  "rough": [
+    "This only covers components. Placing a screenshot from the Media shelf still loses the shelf the same way, and it was left out on purpose: a media tile is dragged onto the canvas as a plain file, which the canvas cannot tell from a file dragged in from the Finder, so covering the double click and not the drag would make the same tile behave two ways.",
+    "The Library is the only self-bounding section in the panel that fades its cut edge. The layers list bounds itself the same way and still ends on a clean cut, so a squeezed layers list reads as the whole document.",
+    "A shelf squeezed to one row offers no grab bar, because there is no room in the panel for dragging it taller to do anything. That is honest, and it is also the moment you most want the shelf bigger. The way to get it is to collapse a section you are not using, and nothing on screen says so.",
+    "The panel scroll is asked for a third of a second after the drop, which is long enough for the sections the new layer opens to settle. It is a fixed wait rather than a wait on layout, so on a very slow pass the dock could still be moving under it."
+  ]
+}

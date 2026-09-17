@@ -169,6 +169,8 @@ extension EditorState {
         guard let placed else { return nil }
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
+        // Fetched off the shelf, so the shelf stays where you left it.
+        askForLibraryAfterFetching()
         return placed
     }
 
@@ -313,6 +315,8 @@ extension EditorState {
         guard let placed else { return nil }
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
+        // Fetched off the shelf, so the shelf stays where you left it.
+        askForLibraryAfterFetching()
         return placed
     }
 

@@ -250,6 +250,41 @@ final class EditorState {
 
     func libraryRevealHandled() { pendingLibraryReveal = false }
 
+    /// How long to wait after something is taken off the shelf before asking
+    /// the dock to bring the shelf back.
+    ///
+    /// A placement opens the sections named after what it just placed —
+    /// Component, Appearance, Effects, Motion, Layout — and those arrive over
+    /// several passes, with the dock's height budget settling behind them. Ask
+    /// too early and the reveal measures a shelf nothing has pushed anywhere
+    /// yet, decides nothing needs to move, and the new sections land on top of
+    /// it a frame later. A shade longer than the arrival of the last of them.
+    static let libraryFetchRevealDelay = 0.3
+
+    /// Something has just been taken off the Library shelf and put in the
+    /// picture. Ask the dock to put the shelf back where it was.
+    ///
+    /// Building a screen means fetching several things in a row, and the drop's
+    /// own selection opens five sections ABOVE the shelf, which sits at the
+    /// bottom of the dock. On a 900 point window that carried the Library 300
+    /// points below the bottom edge, so the second component cost a long scroll
+    /// and the third cost another (reported 2026-09-17). The shelf you are
+    /// working out of is the thing that stays put.
+    ///
+    /// Only for a fetch FROM the shelf. A component born any other way — a
+    /// copy, a paste, an undo — leaves the dock exactly where the reader left
+    /// it. So does a fetch made with the Library hidden or the dock closed:
+    /// `InspectorDockReveal.requestLibrary` makes that call, and `DockReveal`
+    /// makes the one after it, which is that a shelf already on screen never
+    /// moves at all.
+    func askForLibraryAfterFetching() {
+        guard Experiments.shared.libraryEnabled, isLibraryVisible else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.libraryFetchRevealDelay) {
+            guard self.isLibraryVisible else { return }
+            self.pendingLibraryReveal = true
+        }
+    }
+
     /// The tile the shelf itself has to scroll to, until it has.
     ///
     /// Bringing the Library into view puts the SHELF on screen; it says nothing
