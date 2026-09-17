@@ -737,6 +737,49 @@ picture*. That keeps a page consistent as well as honest: six row labels that
 each scored a hair differently all come back in one face rather than three in one
 and three in another, which is the thing a person would actually notice.
 
+### The page it came from settles the family
+
+A run cannot tell, by looking at itself, that it is the odd one out. This app's
+own window reads thirty-one of its forty runs, and four of those come back in
+Helvetica Neue on a window with no Helvetica Neue in it: "Corner Radius",
+"Border 1", "Offset" and "Width", each of them CONFIDENT, each scoring higher
+than plenty of the correct readings. So "Border 1" came back visibly heavier
+than the "Border 2" directly below it, which in the screenshot is the identical
+label. There is no bar that separates those four from the right answers: their
+scores sit in the upper half of the range, and the page's own family was 0.05 to
+0.15 behind in each case.
+
+What tells right from wrong is the rest of the page. Every screenshot anybody
+takes apart is set in one family, so the runs vote: the family the most of them
+came back in is the page's, each run is then set in its own best weight of THAT
+family, and a run the family cannot account for closely enough stays a picture
+instead (`TextReading.pageFamily`, `TextReader.read(preferring:)`).
+
+Measured on the three study captures:
+
+| capture | read before | read after | in a face the page does not contain |
+| --- | --- | --- | --- |
+| `settings-pane-2x` | 9 | 9 | 0 → 0 |
+| `app-window-2x` | 31 | 30 | **4 → 0** |
+| `dense-page-1x` | 82 | 77 | **13 → 0** |
+
+The three strays on this app's window come back as SF Pro Semibold, SF Pro
+Medium and SF Pro; the fourth, "Width", scores 0.58 in SF Pro and so stays a
+picture. That is the trade and it is the right way round: a picture is honest
+and a wrong face is not.
+
+**Turn into Text still works on one label with no page read.** The vote is
+counted from a dozen of the runs lying beside this one, spread across them, off
+the main thread and across the cores — about a tenth of a second, paid once on
+the first label anybody turns into text and remembered for the rest of that
+separation. Where there is no page to ask — a picture somebody dragged in, a
+whole screenshot, a run all on its own — nothing votes and the run decides for
+itself exactly as it did before.
+
+The pill says which happened. A run set in the page's family when its own ink
+said something else is a stated fallback rather than an answer, for the same
+reason two grotesques within a hair of each other are.
+
 ### The name becomes the words
 
 `Text 9` becomes `Save Changes`, which is the whole visible reward for having

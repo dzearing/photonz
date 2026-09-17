@@ -113,6 +113,9 @@ extension EditorState {
         wordReadingPass = nil
         readingWordsOffPictures = false
         wordsReadOffPictures = [:]
+        // And what the runs of that document voted their family to be: these
+        // are not those runs.
+        familyTheRunsAreSetIn = [:]
     }
 
     /// What the layers list and the find field name a separated run from:

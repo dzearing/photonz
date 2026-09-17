@@ -71,6 +71,17 @@ final class EditorState {
     /// The pass itself, held so a second separation can call off the first
     /// rather than leaving both grinding away at once.
     @ObservationIgnored var wordReadingPass: Task<Void, Never>?
+    /// The family the separated runs lying together turned out to be set in,
+    /// so Turn into Text can set a label in the face the rest of its page is in
+    /// rather than in whatever that one label's ink happened to score highest
+    /// (`EditorState+ReadText`, `TextReading.pageFamily`).
+    ///
+    /// Keyed by the group the separation put the runs in, or nil for the runs
+    /// it left loose on the canvas. A value of nil is a page that was asked and
+    /// had nothing to say, which is remembered too so it is only asked once.
+    /// Session chrome like the words above: counting a vote changes no pixel
+    /// and costs no undo step.
+    @ObservationIgnored var familyTheRunsAreSetIn: [UUID?: String?] = [:]
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 

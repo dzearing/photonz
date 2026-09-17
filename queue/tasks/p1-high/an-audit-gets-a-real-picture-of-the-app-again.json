@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-16T21:09:56.685Z",
+  "updated": "2026-09-17T01:43:20.658Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -136,6 +136,10 @@
     {
       "t": "2026-09-16T21:09:56.684Z",
       "note": "also hit on 2026-09-16 by 'two-paths-you-drew-with-the-pen-can-be-joined-in': the screen was locked for the whole task, so Scripts/playtest.sh reported status locked / 0 steps twice (13:5x and 14:1x) and the audit queue/audits/2026-09-16-join-two-pen-paths.json shipped with no pictures at all, not even offscreen renders, because a locked walk stops before its first step. The new walk Scripts/playtest/join-two-pen-paths-walk.json parses (85 steps) and has never been run."
+    },
+    {
+      "t": "2026-09-17T01:43:20.657Z",
+      "note": "2026-09-16 evening, another one: the whole of a-separated-run-of-text-says-the-words-in-it-wit ran with the screen locked, so its new walk (separated-rows-say-their-words) has never executed and its audit ships with no pictures at all. Verified headlessly instead (Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift). Probe launch said: 'Grants: probe Screen Recording granted · this terminal Accessibility denied · screen locked'."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

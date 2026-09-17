@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2760,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T15:00:09.671Z",
-  "updated": "2026-09-16T16:18:45.447Z",
+  "updated": "2026-09-17T01:43:41.591Z",
   "deps": [],
   "blockedBy": [],
   "notes": "FOUND WHILE MEASURING find-out-how-a-hundred-and-forty-new-rows-should on 2026-09-16, reproduced on the real app. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/find-a-layer-walk.json. The walk separates Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png (pill: \"142 runs of text and 30 boxes\"), types \"recommended\" into the layers find field, and the list says \"No layer says that\" while the word (Recommended) is plainly on the canvas. Picture: queue/audits/2026-09-16-list-3-nothing-says-that.png. Headless confirmation over the same fixture: HOW-MANY-SAY-WORDS=0, SEARCH-recommended=0, SEARCH-decision=0.\n\nWHY: Layer.displayName (Sources/PhotonzCore/LayerNaming.swift) returns the words only when the layer HAS text, and a separated run is .image until somebody runs Turn into Text on it, one row at a time (Sources/Photonz/EditorState+ReadText.swift). So next-a-row-says-its-words, which landed 2026-09-16, does not reach the case it was written for.\n\nCOST TO WEIGH: TextReader is documented at about 40ms per run in a release build, so 142 runs is roughly 5.7s, far too slow to do inside the command. Two cheaper shapes worth trying: read only the runs whose rows the list is actually drawing (it is lazy, five at a time) and fill the name in as you scroll; or read in the background after the command lands, so the numbers turn into words a second later. Either keeps Separate as fast as it is now.\n\nThis is the follow-up the audit 2026-09-16-a-hundred-and-forty-rows names in its rough notes as the real fix.",
@@ -28,6 +28,36 @@
     {
       "t": "2026-09-16T16:18:45.446Z",
       "note": "MEASURED 2026-09-16 by find-out-whether-separating-should-hand-you-text: reading every run is cheaper than this task's notes estimate. On a release build, spread over the cores, the dense-page fixture's 142 runs read in 1910 ms, not 5.7s (one after another it is 3643 ms); the app window's 40 read in 477 ms and the settings pane's 9 in 143 ms. Command: PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests. Still too slow to put inside the command, so the lazy or background shapes this task already names are right. ONE THING TO CARRY OVER: reading gets the FAMILY wrong on 4 of the 31 runs it reads on the app window and 13 of 82 on the dense page, and the app calls most of those its confident verdict. That does not matter for a NAME (the words are right; it is the face that is wrong) which is another reason this task's rule that nothing is written into the document is the right one. The reader's family problem is now its own task, a-label-read-back-into-text-keeps-the-face-the-r. Full study: docs/design/separate-reads-the-words.md"
+    },
+    {
+      "t": "2026-09-17T01:12:23.705Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T01:43:27.671Z",
+      "note": "BEFORE BUILDING, the adversarial pass. Two shapes were on the table (read the rows the list is drawing, lazily, or read in the background after the command). Lazy loses: the find field has to reach a piece whose row has never been drawn, which is the whole complaint, so a lazy reader would answer 'No layer says that' for anything below the fold. Background after the command it is. Second finding, and it changed the design: a NAME needs the characters and nothing else, so the face matching — the expensive half and, per the 2026-09-16 study, the unreliable half — is skipped entirely. TextReader.words is new and stops after the recogniser. That also reaches the 60 of 142 dense-page runs the whole reading refuses for having no matching face, which would otherwise have stayed numbers."
+    },
+    {
+      "t": "2026-09-17T01:43:27.716Z",
+      "note": "SHIPPED. TextReader.words (render) reads a run for its characters only; Layer.displayName(readWords:) names a row from what was read, threaded through layerRows and layerRows(matching:) so the find field reaches it; EditorState+RunWords runs the pass a dozen pieces at a time over the cores after the pieces land, keyed by ImageRef beside the document; renameLayer takes readWords so pressing Return on an untouched row is still not a rename; the find field says 'Still reading the words' rather than 'No layer says that' while a pass is in flight. Flag next-a-separated-row-says-its-words, on by default in Next."
+    },
+    {
+      "t": "2026-09-17T01:43:27.762Z",
+      "note": "MEASURED, release build, on their own: the dense page's 142 runs read for words in 1650 ms one after another (11 ms each), against 3643 ms to read them whole; the settings pane's 9 in 276 ms against 358 ms whole. Spread a dozen at a time over the cores that is a few hundred milliseconds behind a command that is itself untouched. 143 of the dense page's 173 rows end up saying words. Commands: PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparatedRowsSayTheirWords and --filter RunWordsForARow. Timing tests are study-gated: inside the full suite the same nine runs took 195 s, because several hundred Vision passes are fighting over the cores."
+    },
+    {
+      "t": "2026-09-17T01:43:27.808Z",
+      "note": "NOT VERIFIED IN THE APP: the Mac's screen was locked for the whole task (every probe launch said 'screen locked'), so no walk could run and no screenshot exists. The new walk Scripts/playtest/separated-rows-say-their-words-walk.json is written and unexecuted, a sweep is requested, and the finding is folded into an-audit-gets-a-real-picture-of-the-app-again. Everything claimed was verified headlessly over the same fixtures the walk uses."
+    },
+    {
+      "t": "2026-09-17T01:43:27.854Z",
+      "note": "left rough (no task earned): a piece with nothing readable in it keeps Text 57 with nothing saying why, which may be the right answer for an icon and is a question the audit asks the user; the reading is not saved, so opening a document that already holds separated runs reads them again in the background; a page of prose gives rows that say sentence fragments (keeps, row for, that you), which is honestly what is in each piece."
+    },
+    {
+      "t": "2026-09-17T01:43:41.589Z",
+      "note": "Separated runs now say the words read off their pictures: TextReader.words (characters only, no face), Layer.displayName(readWords:) threaded through the list and the find field, EditorState+RunWords reading a dozen pieces at a time over the cores after the command lands, nothing written into the document. Flag next-a-separated-row-says-its-words, on by default in Next. Verified headlessly on the same two capture fixtures (Scripts/test.sh green, 7931 tests); release timings in the log and the audit 2026-09-16-separated-row-says-its-words. The new walk could not run because the Mac's screen was locked all task, so a sweep is requested. Commit fb590e16."
     }
-  ]
+  ],
+  "started": "2026-09-17T01:12:23.704Z",
+  "completed": "2026-09-17T01:43:41.590Z"
 }

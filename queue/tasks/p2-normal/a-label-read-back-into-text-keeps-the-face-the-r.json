@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2770,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T16:18:40.343Z",
-  "updated": "2026-09-16T16:18:40.346Z",
+  "updated": "2026-09-17T02:41:39.217Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-16 while running the queue task find-out-whether-separating-should-hand-you-text.\n\nCommand:\n  PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests\n\nOutput (app-window-2x, 40 runs, release build):\n  read 31/40 (78%)  an answer 23  a fallback 8\n  families SF Pro 27, Helvetica Neue 4\n  off the page's own family: 4, of which the app called 4 an answer rather than a fallback\n     Text 9   \"Corner Radius\" Helvetica Neue Bold 0.78 matched\n     Text 12  \"Border 1\"      Helvetica Neue Bold 0.81 matched\n     Text 21  \"Offset\"        Helvetica Neue Bold 0.72 matched\n     Text 30  \"Width\"         Helvetica Neue Bold 0.74 matched\nThe same capture reads \"Width\" correctly at Text 19 (SF Pro Medium 0.74) and \"Border 2\" correctly at Text 23 (SF Pro Medium 0.66), so it is the same word in the same panel answered two ways.\n\nThe dense page is worse: 13 of the 82 that read come back off the page's family (Georgia 5, Helvetica Neue 5, Times New Roman 2, SF Mono 1), 10 of them called an answer.\n\nPictures: queue/audits/2026-09-16-separate-reads-text-wrong-face.png (the four, against the ink they were meant to match), and -shape-a.png / -shape-b.png (the same corner of the panel before and after).\n\nWHY NO THRESHOLD FIXES IT: all four are provenance .matched, and their agreement (0.72 to 0.81) sits in the upper half of the correct readings' range (0.56 to 0.87). Filtering to matched keeps all four and drops eight correct ones. Raising TextReading.agreementBar until all four drop means 0.82, which keeps three of the thirty-one.\n\nTHE SHAPE THAT WAS MEASURED TO WORK: let the page vote. Take the family that won the most runs of the capture, then set each run in its own best weight of that family and accept it where it still clears agreementBar. Strays go to zero by construction, costing 1 reading of 31 on app-window and 8 of 82 on the dense page (measured, same test). The catch is the last acceptance item: Turn into Text today sees ONE run, so a vote needs either a whole-picture reading pass or a family remembered on the source picture's ImageRef from a previous read. See docs/design/separate-reads-the-words.md.\n\nThis does NOT fix the weight wobble (Corner Radius reads Semibold while Border 1 reads Medium, both section labels of one style); that is recorded in queue/audits/2026-09-13-turn-into-text.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-16T16:18:40.345Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T01:44:16.706Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T01:57:17.959Z",
+      "note": "Reproduced the bug exactly on the release study run: app-window-2x, 31/40 read, 4 off the page's family (Corner Radius, Border 1, Offset, Width), all 4 provenance .matched. Instrumented the study to print each stray's best score PER FAMILY, which is the number the notes were missing: Corner Radius HN Bold 0.774 vs SF Pro Semibold 0.723; Border 1 HN Bold 0.778 vs SF Pro Medium 0.715; Offset HN Bold 0.729 vs SF Pro 0.660; Width HN Bold 0.726 vs SF Pro 0.578. So a distinctMargin bump would have to be 0.15 to catch all four, and Width's SF Pro is below agreementBar anyway. That rules out the cheap fix and confirms the page vote is the shape."
+    },
+    {
+      "t": "2026-09-17T02:41:35.348Z",
+      "note": "MEASURED AFTER (PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests, release build, same machine):\n  settings-pane-2x  read 9 -> 9    off the page's family 0 -> 0\n  app-window-2x     read 31 -> 30  off the page's family 4 -> 0   (Text 9/12/21 -> SF Pro Semibold/Medium/Regular, Text 30 'Width' -> a picture, SF Pro scores 0.578 which is under agreementBar)\n  dense-page-1x     read 82 -> 77  off the page's family 13 -> 0\nBetter than the notes predicted on the dense page (8 losses expected, 5 actual). The study now prints both columns and asserts strays == 0 and that no capture loses more than a tenth of its readings.\n\nShape as built: TextReading.pageFamily (pure, the plurality family, ties to the system font) + TextReading.decide(preferring:) + TextReader.read(preferring:) + TextReader.readPage + TextReader.family(in:). The app does NOT need a whole-page read: EditorState.turnIntoText asks a dozen of the runs lying beside this one what family they are (TextReader.family, spread over the cores, ~0.1s), remembers the answer per separation in EditorState.familyTheRunsAreSetIn, and passes it as preferring:. With no page to ask (a dragged-in picture, a whole screenshot, a lone run) nothing votes and the run decides for itself exactly as before.\n\nA note for whoever touches these tests: the full suite DEADLOCKED the first time. Every test in ReadRunAsTextFixtureTests waits on one lazily read capture, and with the four new tests a dozen of them block in _dispatch_once_wait holding a cooperative thread each while the reading itself needs threads to finish (sample of the hung pid confirmed it). Marking the suite .serialized, as the row-naming suite next door already was, fixes it: 7944 tests in 635 suites pass in 121s."
+    },
+    {
+      "t": "2026-09-17T02:41:39.216Z",
+      "note": "Adversarial review before building: the mock here is the study's own recommendation, and the part of it worth arguing with was the claim that per-run Turn into Text 'can never do this, because it only ever sees one run'. It can: a vote needs a dozen runs asked what family they are, not a whole page read and set. That is the difference between the fix being a background pass nobody asked for and it being free at the point of use. Also rejected before building: a family prior (make a non-system family beat SF Pro by a margin), because the measured gaps are 0.05 to 0.15 and the margin would have to be 0.15, which would drag half the correct answers with it.\n\nAdversarial review before calling it ready: the honest weak point is that a page that GENUINELY mixes families now loses the odd one out rather than setting it. Checked, and it fails safe: a run the page's family cannot account for is refused (noFaceMatches) and stays the picture it was, never set in the wrong face. Pinned by a test on the settings-pane fixture (aRunToldItsPageIsSomethingItIsNotStaysAPicture).\n\nLeft rough, not filed: two screenshots separated into one document and both left loose on the canvas share one vote, because nothing on a separated run records which picture it came from. Nobody has hit it, and the failure mode is a refusal rather than a wrong face, so it is recorded here and in the audit rather than becoming a task."
     }
-  ]
+  ],
+  "started": "2026-09-17T01:44:16.705Z"
 }

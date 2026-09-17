@@ -4699,3 +4699,17 @@
 {"t":"2026-09-17T01:11:30.678Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
 {"t":"2026-09-17T01:11:31.886Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
 {"t":"2026-09-17T01:11:45.241Z","ev":"task_done","id":"two-shapes-joined-into-one-stop-calling-themselv","from":"in_progress","note":"All four combines now leave the surviving row reading Path when nobody named it by hand, in the same undo step as the combine (PhotonzCore/PathCombining.swift). Seven new tests in PathCombineDocumentTests; full suite green, 7911 tests. Audit at queue/audits/2026-09-16-combined-shape-says-path.json. Not driven in the app: the screen was locked all task, so the walk reported locked and no window could be photographed; the pending sweep runs combine-shapes-walk once it is unlocked. Pushed as 183eaa45."}
+{"t":"2026-09-17T01:12:23.599Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T01:12:23.707Z","ev":"task_started","id":"a-separated-run-of-text-says-the-words-in-it-wit","title":"A separated run of text says the words in it, without being turned into text first","priority":"p2-normal"}
+{"t":"2026-09-17T01:43:20.659Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T01:43:27.673Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-17T01:43:27.718Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-17T01:43:27.764Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-17T01:43:27.810Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-17T01:43:27.856Z","ev":"task_note","id":"a-separated-run-of-text-says-the-words-in-it-wit"}
+{"t":"2026-09-17T01:43:41.592Z","ev":"task_done","id":"a-separated-run-of-text-says-the-words-in-it-wit","from":"in_progress","note":"Separated runs now say the words read off their pictures: TextReader.words (characters only, no face), Layer.displayName(readWords:) threaded through the list and the find field, EditorState+RunWords reading a dozen pieces at a time over the cores after the command lands, nothing written into the document. Flag next-a-separated-row-says-its-words, on by default in Next. Verified headlessly on the same two capture fixtures (Scripts/test.sh green, 7931 tests); release timings in the log and the audit 2026-09-16-separated-row-says-its-words. The new walk could not run because the Mac's screen was locked all task, so a sweep is requested. Commit fb590e16."}
+{"t":"2026-09-17T01:44:16.602Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T01:44:16.708Z","ev":"task_started","id":"a-label-read-back-into-text-keeps-the-face-the-r","title":"A label read back into text keeps the face the rest of the panel is in","priority":"p2-normal"}
+{"t":"2026-09-17T01:57:17.961Z","ev":"task_note","id":"a-label-read-back-into-text-keeps-the-face-the-r"}
+{"t":"2026-09-17T02:41:35.350Z","ev":"task_note","id":"a-label-read-back-into-text-keeps-the-face-the-r"}
+{"t":"2026-09-17T02:41:39.218Z","ev":"task_note","id":"a-label-read-back-into-text-keeps-the-face-the-r"}

@@ -1,0 +1,28 @@
+{
+  "feature": "Turn into Text keeps the face the rest of the page is in",
+  "epic": "ui-building",
+  "summary": "Turning a separated label into text used to let that one label decide its own typeface, and on this app's own window four labels of thirty-one came back in a face the window does not contain: Border 1 arrived heavier than the identical Border 2 below it. Now the runs lying beside it vote on what family the page is, and the label comes back in that.",
+  "setup": "Photonz Dev, Experiments window, release Next. Separate into Layers and Turn into Text are on by default. Open a screenshot of a Mac app or of Photonz itself.",
+  "try": [
+    { "do": "Open a screenshot with a lot of small labels in it." },
+    { "do": "Right click the picture and choose Separate into Layers." },
+    { "do": "Right click a small label that sits directly above or below an identical one, and choose Turn into Text." },
+    { "do": "Do the same to the label beside it." },
+    { "do": "Look at the two side by side at 100%: they should be the same weight and the same shape, because they are in the screenshot." },
+    { "do": "Turn a third and fourth label into text and watch how long each takes: the first pays for the vote, the rest do not." },
+    { "do": "Press Command Z once after any of them and check the picture comes straight back." }
+  ],
+  "evaluate": [
+    "Do two identical labels turned into text separately still look identical?",
+    "Did the first Turn into Text feel slower than the others, or did they all feel instant?",
+    "When a label refuses and stays a picture, does the line at the bottom of the canvas tell you enough to know why?",
+    "Is losing a reading now and then a fair price for never getting a wrong typeface?"
+  ],
+  "rough": [
+    "There are no pictures with this audit and no walk was run against it. The Mac's screen was locked for the whole task, which takes the name off every control, so every run of the separate and turn-into-text walks came back status locked with nought steps. A sweep has been requested so the loop runs them once the screen is unlocked.",
+    "The app side is therefore measured but not watched: the reader is pinned by the study test and by the fixture suite, and the wiring in the editor compiles and reads correctly but has not been driven by hand.",
+    "One reading of thirty-one is lost on this app's window and five of eighty-two on a dense web page: those are runs whose ink the page's own family cannot account for closely enough, so they stay pictures. That is the trade and it is deliberate, but it is a real loss.",
+    "Two different screenshots separated into the same document, both left loose on the canvas, share one vote. If they are set in different families the second one's labels will mostly refuse rather than come back wrong. Nobody has hit this and it fails safe, so it is recorded rather than filed.",
+    "The weight wobble is untouched: Corner Radius still reads Semibold while Border 1 reads Medium, both section labels of one style. Already recorded in queue/audits/2026-09-13-turn-into-text."
+  ]
+}

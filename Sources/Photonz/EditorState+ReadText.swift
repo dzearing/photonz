@@ -1,5 +1,6 @@
 import AppKit
 import CoreGraphics
+import Dispatch
 import PhotonzCore
 import PhotonzRender
 
@@ -60,6 +61,15 @@ extension EditorState {
         turnIntoText(id: id)
     }
 
+    /// How many of a page's runs are asked before its family is settled.
+    ///
+    /// A vote does not need a census. The window this was measured on reads
+    /// thirty-one runs and twenty-seven of them are the system font, so a dozen
+    /// asked at random name the family with room to spare, and a dozen is about
+    /// a tenth of a second of work spread over the cores — paid once, on the
+    /// first label anybody turns into text, and never again for that page.
+    private static let votersOnTheFamily = 12
+
     /// Reads the words in a picture and puts them back as text.
     ///
     /// Off the main thread like the sweep, and for the same reason: it reads
@@ -67,6 +77,18 @@ extension EditorState {
     /// over to find the face. It lands in about forty milliseconds on a run in
     /// a release build, so nothing is shown while it works — a spinner that
     /// flashes is worse than no spinner.
+    ///
+    /// It also settles what family the page is set in before it chooses a face,
+    /// because a run cannot tell by looking at itself that it is the odd one
+    /// out: on this app's own window four labels of thirty-one came back in a
+    /// family the window does not contain, confidently, so "Border 1" arrived
+    /// heavier than the identical "Border 2" below it. A dozen of the runs
+    /// lying beside this one are asked what family they are, the answer is
+    /// remembered for the rest of that separation, and this run is then set in
+    /// the family that won. Where there is no page to ask, nothing votes and
+    /// the run decides for itself exactly as it did
+    /// (`docs/design/separate-into-layers.md`, "The page it came from settles
+    /// the family").
     func turnIntoText(id: UUID) {
         guard canTurnIntoText(id: id), let document,
               let layer = document.layer(id: id), let ref = layer.imageRef,
@@ -84,14 +106,69 @@ extension EditorState {
         let captureScale = max(1, document.pixelScale)
         let pixels = ref.pixelSize
         let layerScale = layer.frame.width > 0 ? pixels.width / layer.frame.width : 1
+        // And the family the rest of the page is in, which is the one thing
+        // this run cannot work out by looking at itself.
+        let page = document.parentID(of: id)
+        let asked = familyTheRunsAreSetIn.index(forKey: page) != nil
+        let settled = familyTheRunsAreSetIn[page] ?? nil
+        let voters = asked ? [] : runsVotingOnTheFamily(with: id)
         Task.detached(priority: .userInitiated) { [weak self] in
+            let family = asked ? settled
+                : Self.familyTheseRunsVoteFor(voters, captureScale: captureScale)
             let read = TextReader.read(image, captureScale: captureScale,
-                                       layerScale: layerScale)
+                                       layerScale: layerScale, preferring: family)
             await MainActor.run {
                 self?.separationsInFlight.remove(id)
+                // Asked once per page and then remembered, including when the
+                // answer was that nothing could be read: a vote nobody can cast
+                // is still an answer, and re-counting it on every label would
+                // pay for it over and over.
+                if !asked, !voters.isEmpty { self?.familyTheRunsAreSetIn[page] = family }
                 self?.applyTextReading(id: id, read: read)
             }
         }
+    }
+
+    /// The runs whose vote settles what family this page is set in: the ones
+    /// lying beside this one, this one included, spread across them rather than
+    /// taken off the top so a sample is not one panel's worth.
+    ///
+    /// "Beside" is the group the separation put them in, or the canvas itself
+    /// when it left them loose. Empty for anything that is not a separated run,
+    /// which is how Turn into Text on a whole screenshot, or on a picture
+    /// somebody dragged in, goes on deciding exactly as it did.
+    private func runsVotingOnTheFamily(with id: UUID) -> [CGImage] {
+        guard let document, document.layer(id: id)?.isARunOfText == true else { return [] }
+        let beside = document.parentID(of: id)
+            .flatMap { document.layer(id: $0)?.children } ?? document.layers
+        let runs = beside.filter { $0.isARunOfText == true && $0.imageRef != nil }
+        guard !runs.isEmpty else { return [] }
+        let step = max(1, runs.count / Self.votersOnTheFamily)
+        var picked = stride(from: 0, to: runs.count, by: step).prefix(Self.votersOnTheFamily)
+            .map { runs[$0] }
+        if !picked.contains(where: { $0.id == id }), let mine = runs.first(where: { $0.id == id }) {
+            picked[0] = mine
+        }
+        return picked.compactMap { $0.imageRef }.compactMap { store.image(for: $0) }
+    }
+
+    /// What a handful of runs say the family is, counted off the main thread
+    /// and across the cores.
+    ///
+    /// Nil where none of them could be read, which leaves the run deciding for
+    /// itself exactly as it did before — a page with no vote overrules nobody.
+    private nonisolated static func familyTheseRunsVoteFor(
+        _ images: [CGImage], captureScale: CGFloat
+    ) -> String? {
+        guard !images.isEmpty else { return nil }
+        var families = [String?](repeating: nil, count: images.count)
+        families.withUnsafeMutableBufferPointer { buffer in
+            guard let raw = buffer.baseAddress else { return }
+            DispatchQueue.concurrentPerform(iterations: images.count) { i in
+                (raw + i).pointee = TextReader.family(in: images[i], captureScale: captureScale)
+            }
+        }
+        return TextReading.pageFamily(ofFamilies: families.compactMap { $0 })
     }
 
     /// Lands what was read: the picture becomes a text layer in the same slot,

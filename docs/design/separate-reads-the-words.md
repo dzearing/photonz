@@ -132,8 +132,17 @@ three differences that all favour it:
   that is worth: make every run take the family that won the page, and accept it
   where that family still clears the bar, and the strays go to zero by
   construction, at a cost of **one** reading of thirty-one on `app-window-2x`
-  and eight of eighty-two on the dense page. Per-run Turn into Text can never do
-  this, because it only ever sees one run.
+  and five of eighty-two on the dense page.
+
+  **Landed 2026-09-17** behind the queue task
+  `a-label-read-back-into-text-keeps-the-face-the-r`, and it turned out Turn into
+  Text can have it too. The vote does not need the whole page READ — it needs a
+  dozen runs asked what family they are, which is a tenth of a second spread over
+  the cores, paid once per separation. So one label turned into text on its own
+  now comes back in the face the rest of its page is in, and where there is no
+  page to ask it decides for itself exactly as it did. See
+  `docs/design/separate-into-layers.md`, "The page it came from settles the
+  family".
 
 ### The rows say their words, even though the canvas does not
 
@@ -171,11 +180,17 @@ that had already opened.
 | Read every confident run inside the command | 4 of 31 wrong on this app's own window, 13 of 82 on the dashboard, silently, and three to thirty-four times slower |
 | Read only where the app says `matched` | Keeps every one of the four errors and drops eight correct readings; confidence does not correlate with correctness here |
 | Raise the agreement bar until the errors drop | The bar would be 0.82, which keeps three readings of thirty-one |
-| Let the page vote on one family, then read automatically | The vote is a real improvement and should happen, but it makes the reader better, not the automation safer. It does not touch the speed, and it does not fix the weight wobble (Border 1 reads Medium while Corner Radius reads Semibold, both section labels of one style) |
+| Let the page vote on one family, then read automatically | The vote is a real improvement and HAS happened (2026-09-17), but it makes the reader better, not the automation safer. It does not touch the speed, and it does not fix the weight wobble (Border 1 reads Medium while Corner Radius reads Semibold, both section labels of one style) |
 | Do nothing at all | The discovery problem is real: the second command is a menu row under the first and nothing on the row or the pill points at it |
 
 ## Rough edges the study turned up
 
+- **The family is settled as of 2026-09-17.** The last column of the table above
+  is no longer the state of the app: the runs of a capture vote on their family
+  and every run is set in it, so `app-window-2x` reads 30 of 40 with none off the
+  page's family and `dense-page-1x` reads 77 of 142 with none off it. The counts
+  in this document are what reading each run ON ITS OWN gave, which is what the
+  study was about.
 - **The weight wobble is the remaining inconsistency even with the family
   settled.** Six row labels of one settings pane come back four Regular and two
   Medium; two section labels of one panel come back Medium and Semibold. At 13

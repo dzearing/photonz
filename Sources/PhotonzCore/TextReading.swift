@@ -340,13 +340,59 @@ public enum TextReading {
         }
     }
 
+    /// The family a whole capture is set in: the one the most of its runs came
+    /// back in.
+    ///
+    /// This is the thing a single run cannot know and the page plainly does.
+    /// Every screenshot anybody takes apart is set in one family, and the
+    /// measurement says so — three real captures, one family each — so where
+    /// one run of thirty-one disagrees with the other thirty, the run is wrong
+    /// and the page is right. Asked per run, the app has no way to tell those
+    /// apart: on this app's own window the four runs that came back in a family
+    /// the window does not contain were its CONFIDENT verdict, scoring 0.72 to
+    /// 0.81 while correct readings go down to 0.56.
+    ///
+    /// A tie goes to `fallbackFamily`, for the reason that constant exists: on
+    /// a Mac screenshot the system font is the one to reach for when the
+    /// picture does not say. Failing that the first by name, so a page read
+    /// twice answers the same way twice.
+    ///
+    /// Nil when nothing read, which is a page with no vote to cast rather than
+    /// a page set in nothing.
+    public static func pageFamily(of readings: [Reading]) -> String? {
+        pageFamily(ofFamilies: readings.map(\.face.fontName))
+    }
+
+    /// The same vote, counted off the families alone — for a caller that asked
+    /// a handful of runs what family they are and nothing else about them.
+    public static func pageFamily(ofFamilies families: [String]) -> String? {
+        guard !families.isEmpty else { return nil }
+        var counts: [String: Int] = [:]
+        for family in families { counts[family, default: 0] += 1 }
+        guard let most = counts.values.max() else { return nil }
+        let leaders = counts.filter { $0.value == most }.keys.sorted()
+        return leaders.contains(fallbackFamily) ? fallbackFamily : leaders.first
+    }
+
     /// The verdict: the best face, whether it is an answer or a fallback, and
     /// whether it clears the bar at all.
-    public static func decide(string: String, scores: [Scored], color: RGBA?) -> Outcome {
+    ///
+    /// `family` is the family the run's own PAGE is set in, where that is
+    /// known (`pageFamily`). Given one, the choice is made inside it and
+    /// nowhere else: the words come back in the face the rest of the page is
+    /// in, or — where that family cannot account for this run's ink at all —
+    /// they do not come back and the run stays a picture. Both of those are
+    /// better than a label set heavier than the identical label beside it,
+    /// which is what a run deciding on its own produces on about one in eight
+    /// of them. Nil is one run on its own, with no page to ask, and is
+    /// unchanged.
+    public static func decide(string: String, scores: [Scored], color: RGBA?,
+                              preferring family: String? = nil) -> Outcome {
         let string = string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !string.isEmpty else { return .refused(.noWords) }
         guard let color else { return .refused(.tooFaint) }
-        guard let best = scores.max(by: { $0.agreement < $1.agreement }),
+        let pool = family.map { name in scores.filter { $0.face.fontName == name } } ?? scores
+        guard let best = pool.max(by: { $0.agreement < $1.agreement }),
               best.agreement >= agreementBar
         else { return .refused(.noFaceMatches) }
         // Between FAMILIES, not between weights: SF Pro Medium beating SF Pro
@@ -354,10 +400,18 @@ public enum TextReading {
         // tying. A tie between families is the case where the picture does not
         // say which it is, and saying so — and then reaching for the system
         // font — is the honest thing.
-        let tied = scores.filter { best.agreement - $0.agreement < distinctMargin }
+        let tied = pool.filter { best.agreement - $0.agreement < distinctMargin }
         let families = Set(tied.map(\.face.fontName))
-        let provenance: Provenance = families.count > 1 ? .fallback : .matched
-        let chosen = provenance == .fallback
+        var provenance: Provenance = families.count > 1 ? .fallback : .matched
+        // A run set in the page's family when its own ink said something else
+        // is the PAGE answering rather than the run, which is exactly what a
+        // stated fallback means. Saying it out loud keeps the audit able to
+        // count how often the vote had to overrule a run.
+        if let family, scores.max(by: { $0.agreement < $1.agreement })?
+            .face.fontName != family {
+            provenance = .fallback
+        }
+        let chosen = families.count > 1
             ? (tied.filter { $0.face.fontName == fallbackFamily }
                    .max { $0.agreement < $1.agreement } ?? best)
             : best

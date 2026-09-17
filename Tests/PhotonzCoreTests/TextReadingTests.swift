@@ -184,6 +184,94 @@ struct TextReadingTests {
                                    color: RGBA(r: 0, g: 0, b: 0)).refusal == .noFaceMatches)
     }
 
+    // MARK: - The family the page is set in
+
+    private let sfMedium = TextReading.Face(fontName: "SF Pro", weight: .medium)
+    private let helvetica = TextReading.Face(fontName: "Helvetica Neue", weight: .bold)
+
+    private func reading(_ face: TextReading.Face) -> TextReading.Reading {
+        TextReading.Reading(string: "Border 1", face: face, fontSize: 13,
+                            colorHex: "#000000", agreement: 0.7, provenance: .matched)
+    }
+
+    @Test func thePageIsSetInTheFamilyMostOfItsRunsCameBackIn() throws {
+        let readings = [reading(sfSemibold), reading(sfMedium), reading(helvetica)]
+        #expect(TextReading.pageFamily(of: readings) == "SF Pro")
+    }
+
+    @Test func aPageNobodyReadHasNoFamily() throws {
+        #expect(TextReading.pageFamily(of: []) == nil)
+    }
+
+    @Test func aPageThatIsGenuinelySomethingElseSaysSo() throws {
+        let readings = [reading(helvetica), reading(helvetica), reading(sfMedium)]
+        #expect(TextReading.pageFamily(of: readings) == "Helvetica Neue")
+    }
+
+    @Test func aTieGoesToTheSystemFont() throws {
+        // Two runs, one each, and nothing to tell them apart. The same reason
+        // `fallbackFamily` exists: on a Mac screenshot the system font is the
+        // one to reach for when the picture does not say.
+        let readings = [reading(helvetica), reading(sfMedium)]
+        #expect(TextReading.pageFamily(of: readings) == "SF Pro")
+    }
+
+    // MARK: - Setting a run in the family the page voted for
+
+    @Test func theRunTakesThePagesFamilyEvenWhenAnotherScoredHigher() throws {
+        // The measured bug: "Border 1" alone says Helvetica Neue 0.78 against
+        // SF Pro's 0.72, on a window with no Helvetica Neue in it.
+        let outcome = TextReading.decide(
+            string: "Border 1",
+            scores: [TextReading.Scored(face: helvetica, fontSize: 13, agreement: 0.78),
+                     TextReading.Scored(face: sfMedium, fontSize: 13, agreement: 0.72)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro")
+        let reading = try #require(outcome.reading)
+        #expect(reading.face == sfMedium)
+        // The page answered, not the run, and the audit is told which.
+        #expect(reading.provenance == .fallback)
+    }
+
+    @Test func aRunThePagesFamilyCannotAccountForStaysAPicture() throws {
+        // "Width" on this app's own window: SF Pro's best is 0.578, under the
+        // bar. Losing the reading is the right outcome — a picture is honest
+        // and a wrong face is not.
+        let outcome = TextReading.decide(
+            string: "Width",
+            scores: [TextReading.Scored(face: helvetica, fontSize: 13, agreement: 0.73),
+                     TextReading.Scored(face: sfMedium, fontSize: 13, agreement: 0.58)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro")
+        #expect(outcome.refusal == .noFaceMatches)
+    }
+
+    @Test func aRunThatAlreadyAgreedWithThePageIsStillAnAnswer() throws {
+        let outcome = TextReading.decide(
+            string: "Border 2",
+            scores: [TextReading.Scored(face: sfMedium, fontSize: 13, agreement: 0.72),
+                     TextReading.Scored(face: helvetica, fontSize: 13, agreement: 0.50)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "SF Pro")
+        #expect(outcome.reading?.face == sfMedium)
+        #expect(outcome.reading?.provenance == .matched)
+    }
+
+    @Test func noFamilyPreferredIsTheAnswerTheRunGivesOnItsOwn() throws {
+        // Turn into Text on one label, with no page to vote: unchanged.
+        let scores = [TextReading.Scored(face: helvetica, fontSize: 13, agreement: 0.78),
+                      TextReading.Scored(face: sfMedium, fontSize: 13, agreement: 0.72)]
+        let outcome = TextReading.decide(string: "Border 1", scores: scores,
+                                         color: RGBA(r: 0, g: 0, b: 0), preferring: nil)
+        #expect(outcome.reading?.face == helvetica)
+        #expect(outcome.reading?.provenance == .matched)
+    }
+
+    @Test func aPreferredFamilyNoFaceWasTriedInStaysAPicture() throws {
+        let outcome = TextReading.decide(
+            string: "Border 1",
+            scores: [TextReading.Scored(face: helvetica, fontSize: 13, agreement: 0.78)],
+            color: RGBA(r: 0, g: 0, b: 0), preferring: "Georgia")
+        #expect(outcome.refusal == .noFaceMatches)
+    }
+
     // MARK: - The name
 
     @Test func theNewLayerIsCalledTheWords() throws {

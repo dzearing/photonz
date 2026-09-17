@@ -19,7 +19,12 @@ import Testing
 /// | light on dark | 8, "Save Changes", WHITE on a solid blue button |
 ///
 /// Full design: `docs/design/separate-into-layers.md`.
-@Suite("Reading a separated run back into words, on a real capture")
+/// Serialized, like the row-naming suite next door and for the same reason:
+/// every test here waits on ONE lazily read capture, and a dozen of them
+/// blocking on that at once holds a cooperative thread each while the reading
+/// itself needs threads to finish. Run one at a time the whole suite is fifteen
+/// seconds; run at once the suite deadlocked the full test run.
+@Suite("Reading a separated run back into words, on a real capture", .serialized)
 struct ReadRunAsTextFixtureTests {
 
     private static let capture: CGImage? = {
@@ -35,13 +40,17 @@ struct ReadRunAsTextFixtureTests {
                                            luma: EdgeMapAnalyzer.analyzeFully(capture).luma)
     }()
 
-    /// Every separated run, read back. The capture is 2x, so the type in it was
-    /// set at half the pixel size, which is the size the face is identified at.
-    private static let reads: [TextReader.Read] = {
-        guard let separated else { return [] }
-        return separated.runs.compactMap { $0.image }
-            .map { TextReader.read($0, captureScale: 2) }
-    }()
+    private static let runImages: [CGImage] = separated?.runs.compactMap { $0.image } ?? []
+
+    /// Every separated run, read back as a PAGE: the family the runs vote for
+    /// is settled first, and then each of them is set in it. What the app does,
+    /// and the only shape in which a label cannot come back heavier than the
+    /// identical label beside it.
+    ///
+    /// The capture is 2x, so the type in it was set at half the pixel size,
+    /// which is the size the face is identified at.
+    private static let reads: [TextReader.Read] = TextReader.readPage(runImages,
+                                                                      captureScale: 2)
 
     private func reading(_ index: Int) throws -> TextReading.Reading {
         let refusal = Self.reads[index].outcome.refusal?.rawValue ?? "?"
@@ -78,6 +87,36 @@ struct ReadRunAsTextFixtureTests {
         // something else is worse than all nine being wrong the same way.
         let families = Set(try (0..<9).map { try reading($0).face.fontName })
         #expect(families == ["SF Pro"])
+    }
+
+    @Test func theRunsOfThisCaptureVoteForTheSystemFont() throws {
+        let readings = Self.reads.compactMap(\.outcome.reading)
+        #expect(TextReading.pageFamily(of: readings) == "SF Pro")
+    }
+
+    @Test func aRunToldItsPageIsSomethingItIsNotStaysAPicture() throws {
+        // The safety net under the vote. Told this label is Georgia when it is
+        // plainly not, the app does not set it in Georgia: it refuses, and the
+        // run stays the picture it was. So a page that genuinely mixes families
+        // loses a reading rather than gaining a wrong face.
+        let read = TextReader.read(try #require(Self.runImages.first), captureScale: 2,
+                                   preferring: "Georgia")
+        #expect(read.outcome.refusal == .noFaceMatches)
+    }
+
+    @Test func aRunToldItsOwnFamilyIsUnchangedByBeingTold() throws {
+        let image = try #require(Self.runImages.first)
+        let free = TextReader.read(image, captureScale: 2)
+        let told = TextReader.read(image, captureScale: 2, preferring: "SF Pro")
+        #expect(free.outcome.reading?.face == told.outcome.reading?.face)
+        #expect(told.outcome.reading?.provenance == .matched)
+    }
+
+    @Test func oneRunOnItsOwnStillReadsWithNoPageToAsk() throws {
+        // The whole point of keeping the per-run path: Turn into Text on a
+        // single label, before anything has told the app what the page is.
+        let read = TextReader.read(try #require(Self.runImages.first), captureScale: 2)
+        #expect(read.outcome.reading?.string == "General")
     }
 
     @Test func mostOfThemAreAnAnswerRatherThanAFallback() throws {

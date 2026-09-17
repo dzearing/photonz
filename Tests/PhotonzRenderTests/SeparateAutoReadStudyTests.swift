@@ -128,7 +128,62 @@ struct SeparateAutoReadStudyTests {
                     print(String(format: "   Text %-3d %-26@ refused: %@", i + 1, "" as NSString,
                                  (read.outcome.refusal?.rawValue ?? "?") as NSString))
                 }
+                // How far the page's own family was behind, for the runs that
+                // came back in one the page does not contain.
+                if let r = read.outcome.reading, r.face.fontName != majority {
+                    var bestPerFamily: [String: TextReading.Scored] = [:]
+                    for s in read.scores where (bestPerFamily[s.face.fontName]?.agreement ?? -1) < s.agreement {
+                        bestPerFamily[s.face.fontName] = s
+                    }
+                    print("      families: " + bestPerFamily.values
+                        .sorted { $0.agreement > $1.agreement }
+                        .map { String(format: "%@ %.3f", $0.face.displayName, $0.agreement) }
+                        .joined(separator: " | "))
+                }
             }
+
+            // And the same runs read as a PAGE: the family they vote for
+            // settled first, and then every run set in it, with a run that
+            // family cannot account for left as the picture it was. This is
+            // what the app does now; the table above is what reading each run
+            // on its own used to give.
+            t0 = Date()
+            let settled = TextReader.readPage(images, captureScale: capture.scale)
+            let settledMS = Date().timeIntervalSince(t0) * 1000
+            var settledFamilies: [String: Int] = [:]
+            for read in settled {
+                if let r = read.outcome.reading { settledFamilies[r.face.fontName, default: 0] += 1 }
+            }
+            let settledRead = settledFamilies.values.reduce(0, +)
+            let settledMajority = TextReading
+                .pageFamily(of: settled.compactMap(\.outcome.reading)) ?? "?"
+            let settledStrays = settledRead - (settledFamilies[settledMajority] ?? 0)
+            print("""
+            ---- the same runs, with the page's own family settled first
+            the page votes \(settledMajority) · \(Int(settledMS)) ms, one after another
+            read \(readCount) before, \(settledRead) after
+            off the page's own family: \(strays) before, \(settledStrays) after
+            families \(settledFamilies.sorted { $0.value > $1.value }
+                .map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+            """)
+            for (i, pair) in zip(reads, settled).enumerated()
+            where pair.0.outcome.reading?.face.fontName != pair.1.outcome.reading?.face.fontName
+                || (pair.0.outcome.reading == nil) != (pair.1.outcome.reading == nil) {
+                func say(_ read: TextReader.Read) -> String {
+                    read.outcome.reading.map { $0.face.displayName }
+                        ?? "a picture (\(read.outcome.refusal?.rawValue ?? "?"))"
+                }
+                print("   Text \(i + 1) \(say(pair.0)) → \(say(pair.1))")
+            }
+            // Every run that reads comes back in ONE family, because the
+            // capture only contains one. That is the whole fix.
+            let stillStray = "\(capture.name) still has \(settledStrays) runs in a family "
+                + "the page does not contain"
+            #expect(settledStrays == 0, "\(stillStray)")
+            // And the page does not go quiet to get there.
+            let wentQuiet = "\(capture.name) dropped from \(readCount) readings "
+                + "to \(settledRead)"
+            #expect(settledRead >= readCount - max(1, readCount / 10), "\(wentQuiet)")
 
             // The page, both ways. Text only, so the one thing that differs
             // between the two pictures is the words.

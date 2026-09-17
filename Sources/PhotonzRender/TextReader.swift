@@ -117,8 +117,16 @@ public enum TextReader {
     /// which is what turns the size that was identified into the size the layer
     /// has to be SET at to cover the same space. A screenshot opened whole is
     /// 1; the same picture shown at half size on the canvas is 2.
+    ///
+    /// `family` is the family the picture this run was cut out of is set in,
+    /// where the caller knows it (`pageFamily`). Given one, the face is chosen
+    /// inside that family and nowhere else, which is the only thing measured to
+    /// fix a label coming back heavier than the identical label beside it.
+    /// Nil is one run on its own, deciding for itself, which is what Turn into
+    /// Text does before anything has told it what the page is.
     public static func read(_ image: CGImage, captureScale: CGFloat = 1,
-                            layerScale: CGFloat = 1) -> Read {
+                            layerScale: CGFloat = 1,
+                            preferring family: String? = nil) -> Read {
         let captureScale = max(captureScale, 0.01), layerScale = max(layerScale, 0.01)
         guard let ink = ink(image), let inkRect = ink.mask.inkBounds() else {
             return Read(outcome: .refused(.tooFaint), inkRect: nil, scores: [])
@@ -135,7 +143,8 @@ public enum TextReader {
         }
         let scores = score(string, against: ink.mask, inkHeight: inkRect.height,
                            scale: captureScale)
-        let identified = TextReading.decide(string: string, scores: scores, color: color)
+        let identified = TextReading.decide(string: string, scores: scores, color: color,
+                                            preferring: family)
         guard let reading = identified.reading else {
             return Read(outcome: identified, inkRect: inkRect, scores: scores)
         }
@@ -154,6 +163,61 @@ public enum TextReader {
             string: reading.string, face: reading.face, fontSize: landed.fontSize,
             colorHex: reading.colorHex, agreement: landed.agreement,
             provenance: reading.provenance)), inkRect: inkRect, scores: scores)
+    }
+
+    /// Every run cut out of ONE picture, read, with the picture's own family
+    /// settled first.
+    ///
+    /// The whole point of reading a page rather than a run: every screenshot
+    /// anybody takes apart is set in one family, and the runs can only be
+    /// compared with each other. Read one at a time, about one run in eight of
+    /// this app's own window comes back in a family the window does not contain
+    /// — and comes back CONFIDENT, scoring higher than plenty of correct
+    /// readings, so no bar and no provenance filter can tell the two apart.
+    /// Read together they vote, every run is set in the family that won, and a
+    /// run the winner cannot account for stays a picture instead.
+    ///
+    /// Measured on the three study captures: the strays go to nought, at a cost
+    /// of one reading of thirty-one on this app's window and eight of
+    /// eighty-two on a dense web page. See
+    /// `docs/design/separate-reads-the-words.md`.
+    ///
+    /// Serial, because the caller is the one that knows whether it may take the
+    /// cores: the background pass behind the layers list spreads it, a test
+    /// does not.
+    public static func readPage(_ images: [CGImage], captureScale: CGFloat = 1,
+                                layerScale: CGFloat = 1) -> [Read] {
+        let first = images.map {
+            read($0, captureScale: captureScale, layerScale: layerScale)
+        }
+        guard let family = TextReading.pageFamily(of: first.compactMap(\.outcome.reading))
+        else { return first }
+        return zip(images, first).map { image, read in
+            guard let reading = read.outcome.reading,
+                  reading.face.fontName != family else { return read }
+            return self.read(image, captureScale: captureScale, layerScale: layerScale,
+                             preferring: family)
+        }
+    }
+
+    /// Which family ONE run says it is, and nothing else about it.
+    ///
+    /// What a vote is counted from. It stops before the size the layer would
+    /// have to be set at, because a vote never lands anything on the canvas —
+    /// it only has to name a family — and that last step is a face set nine
+    /// more times over.
+    ///
+    /// Nil where the run could not be read at all, which is a run with no vote
+    /// to cast rather than a vote for nothing.
+    public static func family(in image: CGImage, captureScale: CGFloat = 1) -> String? {
+        guard let ink = ink(image), let inkRect = ink.mask.inkBounds(),
+              let color = TextReading.inkColor(ink.samples),
+              case .success(let string) = recognize(ink.mask, inkHeight: inkRect.height)
+        else { return nil }
+        let scores = score(string, against: ink.mask, inkHeight: inkRect.height,
+                           scale: captureScale)
+        return TextReading.decide(string: string, scores: scores,
+                                  color: color).reading?.face.fontName
     }
 
     /// Just the WORDS in a picture of a run of text, for something that wants
