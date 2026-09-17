@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/delete-key-drops-a-piece-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "b" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "key", "key": "b" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "pieces": 3, "picked": 2, "keeps": 3, "seconds": 8 },
+    { "do": "describe", "stage": "1-three-pieces-handles-closed", "note": "an eight second recording cut in three with B, the trim handles never opened, and the playhead sitting in the middle piece: that block is lit and the trash button is on the row beside the cut, its tooltip naming Delete" },
+    { "do": "snapshot", "name": "1-three-pieces-handles-closed" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 2, "keeps": 2, "seconds": 4 },
+    { "do": "describe", "stage": "2-delete-dropped-the-middle-piece", "note": "one press of the Delete key, with the handles still closed, took the middle piece out: two blocks left, four seconds, and the last piece has slid up to meet the first" },
+    { "do": "snapshot", "name": "2-delete-dropped-the-middle-piece" },
+
+    { "do": "action", "action": "videoUndoEdit" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 3, "keeps": 3, "seconds": 8 },
+    { "do": "describe", "stage": "3-undo-brings-it-back", "note": "undo puts the piece back: three blocks and eight seconds again" },
+
+    { "do": "shortcut", "key": "delete", "menuItem": "Delete This Piece" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 2, "keeps": 2, "seconds": 4 },
+    { "do": "describe", "stage": "4-the-menu-carries-the-same-key", "note": "the Video menu item called Delete This Piece really carries plain Delete, the key its own row shows and the trash tooltip promises, so the button, the menu and the key are three ways to the one command" },
+    { "do": "snapshot", "name": "4-the-menu-carries-the-same-key" }
+  ]
+}

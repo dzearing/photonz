@@ -48,5 +48,10 @@ public enum PlaytestMenuStandIn {
         Chord(key: "=", modifiers: [.command]): .zoomIn,
         Chord(key: "-", modifiers: [.command]): .zoomOut,
         Chord(key: "0", modifiers: [.command]): .zoomToFit,
+        // Video ▸ Delete This Piece. Plain ⌫, and the only plain-key chord
+        // here: the rest of the Video menu is live-built letters a walk can
+        // press for real, but this one sits on a window-scoped item like undo.
+        Chord(key: "delete", modifiers: []): .videoDeletePiece,
+        Chord(key: "backspace", modifiers: []): .videoDeletePiece,
     ]
 }

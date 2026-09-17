@@ -40,6 +40,16 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("0"), modifiers: [.command]) == .zoomToFit)
     }
 
+    @Test("Delete on its own means dropping the piece of a recording")
+    func deletePiece() {
+        // Video ▸ Delete This Piece is window-scoped, so it is dimmed for the
+        // whole of a walk like undo is. Both spellings of the key reach it.
+        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: []) == .videoDeletePiece)
+        #expect(PlaytestMenuStandIn.action(for: key("backspace"), modifiers: []) == .videoDeletePiece)
+        // With a modifier it is a different chord: ⌘⌫ is Delete Layer.
+        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.command]) == nil)
+    }
+
     @Test("A chord with no stand-in says so rather than guessing")
     func unknown() {
         // Nothing should quietly stand in for a chord nobody wrote down: a

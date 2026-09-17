@@ -53,6 +53,12 @@ public enum PlaytestLockSafety {
     ///   three times over ("3 pieces, piece 2 picked, window 8.00s, trim
     ///   open"). That un-refuses the video walks whose only blocked step was
     ///   this one.
+    /// - `delete-key-drops-a-piece-walk`, 27 steps forced under a lock on
+    ///   2026-09-17: shortcut. It reads the menu bar in the app's own process
+    ///   and compares key equivalents, which are the app's own data and not an
+    ///   accessibility name, so it named its item correctly ("delete is Video
+    ///   ▸ Delete This Piece") and ran the chord's stand-in. It never opens a
+    ///   menu, so the thing a lock really stops does not arise.
     /// - `tool-tips`, `segment-tooltips-walk`, `history-tooltips-walk`,
     ///   `panel-toggle-titlebar-walk`, `path-points-under-the-pen-walk` and
     ///   `marquee-answers-to-m-walk`, all green on a Mac locked since
@@ -70,7 +76,8 @@ public enum PlaytestLockSafety {
         "expectMeasures", "expectNotice",
         "expectPath", "expectPicked", "expectRecording", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
-        "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "snapshot",
+        "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
+        "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
 

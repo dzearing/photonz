@@ -1,0 +1,31 @@
+{
+  "feature": "The Delete key drops a piece of a recording",
+  "epic": "video-cutting",
+  "summary": "The Delete key now drops the piece of a recording the playhead is sitting in, which is what the trash button's tooltip and the Video menu have been promising all along and what neither of them could deliver. It works with the trim handles open and with them closed, and Video > Delete This Piece really carries the key its row shows.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Cut a recording into pieces and drop the one you do not want\" (on by default in Next). Open a recording.",
+  "try": [
+    { "do": "Press B twice at two different moments to cut the recording into three pieces." },
+    { "do": "Click into the middle block so the playhead sits in it: that block lights up and the readout says 3 pieces.",
+      "shot": "2026-09-17-delete-a-piece-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Rest the pointer on the trash button and read the key it names, then press that key instead of clicking it.",
+      "shot": "2026-09-17-delete-a-piece-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command Z to bring the piece back, then open the Video menu and check the row Delete This Piece shows the same key." },
+    { "do": "Click the scissors to open the trim handles, drag the start handle in a little, then press Delete again: the piece goes and the window comes with it.",
+      "shot": "2026-09-17-delete-a-piece-3.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Delete with the playhead in the only piece left: nothing happens, because there would be nothing to keep." }
+  ],
+  "evaluate": [
+    "The key drops the piece under the playhead with no confirmation, the same as the trash button. Is that the right amount of ceremony for something one undo puts back?",
+    "After a piece goes, the playhead lands on the join and the piece AFTER the one you dropped becomes the picked one. Press Delete twice in a row and you take two pieces. Is that what your hand expects, or should the pick move back to the piece before?",
+    "Delete and Command Z are now the whole loop for trying a cut out. Does cutting a recording feel quick enough to do carelessly, which is what it wants to be?",
+    "Nothing else in the recording window answers to Delete. Is there anything you would rather it did there?"
+  ],
+  "rough": [
+    "Three menu shortcuts in the app were built the same wrong way and this task only fixed the one in its scope. Layer > Delete Layer shows Command Delete and Edit > Fill with Foreground shows Option Delete, and neither key runs anything today. Both are in the shared code that Current also uses, so they are filed separately as delete-layer-and-fill-with-foreground-answer-the rather than changed here.",
+    "The screen was locked for this whole task, so nothing was seen by eye. Every claim comes from walks and from real window captures taken under the lock, including the three pictures above.",
+    "A walk cannot press a window-scoped menu chord at all, because the probe never comes to the front and SwiftUI leaves its menu bar frozen. So the menu route is proved only as far as \"the item carries the key\"; that the item then runs is proved through its stand-in command, not through the press."
+  ]
+}

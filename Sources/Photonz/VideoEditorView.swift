@@ -199,6 +199,17 @@ struct VideoEditorView: View {
     /// playing. Crop mode hands keys back (Esc/Return drive the crop sheet).
     private func handleKey(_ press: KeyPress) -> KeyPress.Result {
         guard state.isReady, !state.isCropping else { return .ignored }
+        // Delete is matched on the character rather than on SwiftUI's own
+        // `.delete`, which holds U+0008 and so never equals the U+007F a real ⌫
+        // arrives as. Written as a switch case it silently matched nothing, and
+        // the trash button's tooltip advertised a key that did nothing at all.
+        if DeleteKeyCharacters.means(deleteKey: press.key.character) {
+            guard cuttingAvailable, press.phase == .down, state.canDeleteSelectedPiece else {
+                return .ignored
+            }
+            state.deleteSelectedPiece()
+            return .handled
+        }
         switch press.key {
         case .space:
             if press.phase == .down { state.togglePlayPause() }
@@ -208,12 +219,6 @@ struct VideoEditorView: View {
             return .handled
         case .rightArrow:
             state.stepForward()
-            return .handled
-        case .delete, .deleteForward:
-            guard cuttingAvailable, press.phase == .down, state.canDeleteSelectedPiece else {
-                return .ignored
-            }
-            state.deleteSelectedPiece()
             return .handled
         default:
             // B puts a cut where the playhead is, the key every editor uses for

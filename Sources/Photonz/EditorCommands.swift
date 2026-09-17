@@ -285,7 +285,11 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("b", modifiers: [])
                     .disabled(!(video?.canCutAtPlayhead ?? false))
                 Button("Delete This Piece") { video?.deleteSelectedPiece() }
-                    .keyboardShortcut(.delete, modifiers: [])
+                    // Not `.delete`: SwiftUI's is U+0008, and AppKit only
+                    // matches a ⌫ press against U+007F, so `.delete` registers
+                    // a chord the keyboard cannot type. See
+                    // `DeleteKeyCharacters`.
+                    .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: [])
                     .disabled(!(video?.canDeleteSelectedPiece ?? false))
                 Divider()
             }
