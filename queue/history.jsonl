@@ -4833,3 +4833,9 @@
 {"t":"2026-09-17T07:23:50.523Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
 {"t":"2026-09-17T07:23:50.633Z","ev":"task_started","id":"room-on-one-side-can-be-a-knob","title":"A copy keeps following the original on the sides of its room it did not touch","priority":"p3-low"}
 {"t":"2026-09-17T07:25:28.007Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.199Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.244Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.289Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.336Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.380Z","ev":"task_note","id":"room-on-one-side-can-be-a-knob"}
+{"t":"2026-09-17T07:37:55.428Z","ev":"task_done","id":"room-on-one-side-can-be-a-knob","from":"in_progress","note":"A copy now keeps following the original on every side of its room it did not type in. Core in PhotonzCore (ComponentRoomAnswer, merge on resolve, per-side set and per-side way back), panel in FourSidedPopout/PanelNumberField/ComponentPanel (own sides in ordinary ink with their own arrow, following sides one step quieter). 18 new tests, whole suite green at 8053. Committed d89c539b and pushed. NOT seen running: the Mac was locked all task, so no walk could run and the audit carries no pictures; a sweep is requested. Audit: queue/audits/2026-09-17-room-follows-side-by-side.json"}

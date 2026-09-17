@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-17T07:25:28.006Z",
+  "updated": "2026-09-17T07:37:55.427Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten 2026-09-08 after the original premise expired. The old notes said the padding slot returns nil when the sides disagree; that has not been true since 19b75988 (2026-09-06), which gave ComponentPropertyValue a .room(GroupPadding) case so the knob carries all four sides. Four separate side knobs are explicitly NOT wanted (Add menu bloat, 264pt panel). What is left is partial following: ComponentPropertyValue.room holds a whole GroupPadding, so setInstanceRoom reads the original's four sides, writes one and stores all four as the copy's answer. Doing this means the stored answer has to record WHICH sides were answered (an optional per side, or an answered-side set beside the room) and the resolve path in ComponentProperties has to merge answered sides over the original's rather than replacing. Panel work is in ComponentPanel.sides(of:): per-side ink and a per-side revert. Blocked on the decision room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi. Was titled 'Room on one side can be a knob'.",
@@ -83,7 +83,32 @@
     {
       "t": "2026-09-17T07:25:28.005Z",
       "note": "Adversarial review before building, second pass (the first pass ended in the decision card, now answered 'Untouched sides keep following'). Walked it as a person: I open a copy's Padding chevron, type 56 into Left, and the other three boxes go on showing the original's numbers. Nothing on screen would tell me those three are still the original's rather than mine, and that is the whole difference the answer buys, so it has to be visible or the change is invisible. Two places it can be seen without new chrome: the four boxes in the popout (my own side in ordinary ink, the three still following one step quieter), and a way back per side, which is the same uturn arrow the knob's row already wears."
+    },
+    {
+      "t": "2026-09-17T07:37:55.197Z",
+      "note": "Built it. Core: ComponentPropertyValue.room now carries a ComponentRoomAnswer (four optionals) instead of a whole GroupPadding, so a side nobody typed in is ABSENT rather than frozen. instanceValue resolves the copy's own sides over the original's, GroupLayout.setKnobValue merges rather than replaces (the one place following actually happens, and it works for both a knob on a piece inside and one on the copy's own edges because the original's room is already in the layout by the time the answer is written), setInstanceRoom adds one side to the copy's own answer, and a new clearInstanceRoomSide takes one back. An answer that owns no side is stored as no answer at all, so the row's way back goes away with the last side. Every older shape still opens owning all four: one number from before room had sides, and four numbers from before sides could follow separately."
+    },
+    {
+      "t": "2026-09-17T07:37:55.242Z",
+      "note": "Panel: FourSidedPopout.Number gained isOwn and handBack, both defaulted so the canvas Padding and Corner Radius popouts are byte for byte the popouts they were. A side the copy owns reads in ordinary ink with an uturn arrow beside it (named 'Follow again Left' and so on for walks); a side still following reads at the Mixed strength, via a new isFollowing on PanelNumberField. The arrow column is reserved whenever the popout offers any way back, so the little cross does not jump sideways the moment somebody types in it. The knob's row tooltip names which sides are the copy's own and which still follow."
+    },
+    {
+      "t": "2026-09-17T07:37:55.287Z",
+      "note": "Verified: 18 new tests in ComponentRoomFollowingTests, and the whole suite green at 8053 tests in 642 suites. swift build clean. Acceptance 1, 3 and 4 are covered by tests (theSidesNobodyTypedGoOnFollowingTheOriginal, theCopysOwnEdgesFollowSideBySideToo, twoCopiesEachKeepFollowingWhereTheyDidNotType; the Add menu is untouched so a group whose sides agree still gets exactly one Padding row). Acceptance 2 is built but NOT seen: see the next line."
+    },
+    {
+      "t": "2026-09-17T07:37:55.334Z",
+      "note": "Not seen running, and that is the honest state of it. The Mac was locked for this whole task (CGSSessionScreenIsLocked true, checked twice), so Scripts/playtest.sh refused every walk with status locked and exit 3, and there are no fresh offscreen renders either. I updated component-uneven-room-walk.json for the new behaviour (its old stage 5 note claimed the copy keeps all four of its own, which this change makes untrue) and added a stage that hands one side back, but I could not run it once. Asked for a sweep with that reason; the loop runs it when the screen is unlocked."
+    },
+    {
+      "t": "2026-09-17T07:37:55.378Z",
+      "note": "left rough (none cleared the follow-up bar, all four are audit lines the user can react to): the closed Padding field cannot show two kinds of number at once, so it says which sides are the copy's own only in its tooltip; typing one number over the closed field still takes all four sides, which is the canvas idiom the decision kept but is a bigger action than it used to be now that one side inside the popout takes only one; a side is drawn as the copies' own while ANY of several picked copies owns it, and the popout cannot say it speaks for only one of them; and no pictures at all with the audit, which the sweep request covers."
+    },
+    {
+      "t": "2026-09-17T07:37:55.425Z",
+      "note": "A copy now keeps following the original on every side of its room it did not type in. Core in PhotonzCore (ComponentRoomAnswer, merge on resolve, per-side set and per-side way back), panel in FourSidedPopout/PanelNumberField/ComponentPanel (own sides in ordinary ink with their own arrow, following sides one step quieter). 18 new tests, whole suite green at 8053. Committed d89c539b and pushed. NOT seen running: the Mac was locked all task, so no walk could run and the audit carries no pictures; a sweep is requested. Audit: queue/audits/2026-09-17-room-follows-side-by-side.json"
     }
   ],
-  "started": "2026-09-17T07:23:50.630Z"
+  "started": "2026-09-17T07:23:50.630Z",
+  "completed": "2026-09-17T07:37:55.426Z"
 }
