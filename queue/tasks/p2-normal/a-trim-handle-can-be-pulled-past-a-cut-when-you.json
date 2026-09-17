@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:37.063Z",
-  "updated": "2026-09-17T19:00:30.117Z",
+  "updated": "2026-09-17T19:00:38.687Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-video-cutting-trim-catch.json, which names both the problem and this fix: while the magnet is on you cannot park a handle inside eight points of a cut, those positions are unreachable by dragging, and a modifier key to free the magnet mid-drag, the way the canvas uses Command, was left out as the shortest thing that delivers the value and is the obvious next move if that band turns out to matter.\n\nNo card: this is the canvas idiom already in the app, applied to a control the user already has, not a new gesture invented here. Find what the canvas actually uses and match it rather than picking a key.\n\nThe audit also says the precise way in already exists, which is parking the playhead and pressing I or O, and neither of those snaps. That is the argument for calling this p2 rather than p1: there is a way to land in the band, it is just not the way your hand is already on.\n\nFiles: Sources/Photonz/TrimTimeline.swift and the magnet in the trim drag path; the canvas magnet defeat key is the thing to copy. Not reproduced by hand: the Mac has been locked since 2026-09-15 so no walk runs; the audit measured it by test.",
@@ -51,11 +51,16 @@
     {
       "t": "2026-09-17T19:00:30.116Z",
       "note": "left rough (each is a line of queue/audits/2026-09-17-video-cutting-trim-free.json that the user can react to, which files a task by their hand; none clears the follow-up bar on its own): (a) the row has nowhere to put a permanent hint because the transport is centred over the status labels -- not filed, because nothing SHIPPED collides there and an unreproduced crowding problem is not a bug; (b) the ⌘ read itself is the one link no test covers, because a SwiftUI drag carries no modifiers so the app reads NSEvent.modifierFlags at event time, and a walk has no hand on the keyboard; (c) the tell for the freed state is subtractive -- the lit slot simply stops being drawn -- so pressing the key away from any cut says nothing; (d) the slot lingers one frame past the key going down, since the key is read per drag event and a stationary press moves nothing; (e) three points short of a cut looks identical to being on it, and what tells you is the timecode gaining hundredths and the piece count going 2 of 3 to 3 of 3; (f) the magnet runs outside the cutting flag -- an uncut recording's two ends catch too -- which was true before this change and is untouched by it."
+    },
+    {
+      "t": "2026-09-17T19:00:38.685Z",
+      "note": "⌘ frees a trim handle from the cuts, mid-drag, and letting it go cannot yank the handle back. Magnet memory moved into VideoCutSnapHold (PhotonzCore, 14 new tests, 8236 green); ⌘ read per drag event in TrimTimeline so pressing it part way through works; handle tooltip names the key, and its anchor now tracks the handle (it was stuck at the window edge because offset moves what is drawn, not what is laid out). Verified: full suite green, trim-handle-freed-from-a-cut-walk passes with six real window captures, all 6 runnable trim walks + cut-a-recording still pass. Audit: queue/audits/2026-09-17-video-cutting-trim-free.json. Pushed as 681a9d73."
     }
   ],
   "started": "2026-09-17T18:35:23.026Z",
   "walks": [
     "trim-handle-freed-from-a-cut-walk",
     "trim-catches-on-a-cut-walk"
-  ]
+  ],
+  "completed": "2026-09-17T19:00:38.686Z"
 }
