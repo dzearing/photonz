@@ -338,6 +338,10 @@
      its own width and sat next to the sentence it illustrates */
   #dashboard .db-abody img{flex:0 0 100%;width:100%;max-width:460px;margin-top:var(--s2);
     border:1px solid var(--line);border-radius:var(--r3)}
+  /* what is true of this particular picture and not of the app: a capture taken
+     while the Mac was locked is the real window with its colours dimmed, and
+     a reader who is not told that files the dimming as a bug */
+  #dashboard .db-ashotnote{max-width:460px;margin-top:4px;font-size:10.5px;line-height:1.5;color:var(--faint)}
   #dashboard .db-acomposer{grid-column:1/-1;margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s2)}
   #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
   #dashboard .db-afiled{grid-column:1/-1;display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--good);margin-top:2px}
@@ -1572,6 +1576,12 @@
       a.try.forEach(function (st, i) {
         var inner = '<div class="db-arow"><span class="db-anum">' + (i + 1) + '</span><span class="db-ado">' + esc(st.do || '') + '</span></div>';
         if (st.shot) inner += '<img src="/api/audit-shot/' + encodeURIComponent(st.shot) + '" alt="" loading="lazy">';
+        // A caption for the picture itself. It exists for the one thing a
+        // reader cannot see in the picture: a capture taken while the Mac was
+        // locked is the real window, with colours that can read dimmed and no
+        // tutorial card, and saying so under it is what stops that being read
+        // as the app misbehaving.
+        if (st.shot && st.shotNote) inner += '<div class="db-ashotnote">' + esc(st.shotNote) + '</div>';
         h += auditLine('step', 'try-' + i, st.do || '', inner);
       });
       h += '</div>';

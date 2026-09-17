@@ -17719,3 +17719,45 @@ number they claim is right before a sweep runs them. A sweep is requested.
 Next: the sweep, and then the colour question on the audit
 (`queue/audits/2026-09-17-video-cutting-trim-pick.json`) — whether a white
 hairline is loud enough next to two accent handles.
+
+## 2026-09-17 — A walk that never asks for a name runs on a locked Mac
+
+Almost every audit written this week opened by apologising that there was no
+picture of the app, because the Mac was locked. The apology was wrong. A lock
+takes the NAME off every control, which is how a scripted walk finds one; it
+does not stop the app being drawn, animated, driven or photographed.
+
+Measured it rather than argued about it: nine walks forced under the lock, seven
+passed end to end and wrote real `-sc.png` pictures of the window (redline 70
+steps and fourteen pictures, layers-list-follows-pick 103 steps). The two that
+failed named the rows and tiles they could see, so the names were arriving; they
+fail on content, not on the lock.
+
+So the walk set is now sorted rather than stopped.
+`Sources/PhotonzCore/PlaytestLockSafety.swift` (pure, 7 tests written first)
+holds the 35 step kinds watched working under a lock and the 46 a lock stops,
+with the reason for each; a kind earns its place by being watched, and anything
+unproven is refused rather than trusted. 224 of the 510 walks are made only of
+the first kind, and those now RUN with the screen locked, with nothing to set:
+`status` is the real verdict, `lockSafe: true` says why it counted, and every
+picture carries a label saying it was taken under a lock and what that costs
+(colours can read dimmed; a tutorial card does not draw). A walk that does look
+a control up by name is still refused, and the refusal now names the step and
+says how many of its pictures forcing it would still get.
+
+`Scripts/playtest.sh` prints the label to paste into an audit's `shotNote`, the
+dashboard renders that line under the picture, and `Scripts/playtest-all.sh`
+carries on past a refused walk to the rest of the walks you named. The whole
+sweep still files nothing while locked: half a set is not the state of the walk
+set. `queue/bin/runner-prompt.md`, `CLAUDE.md`, `docs/design/playtest-harness.md`
+and the probe's `Grants:` line all say the same thing now, where the prompt used
+to tell every runner that a lock meant no picture at all.
+
+Audit: `queue/audits/2026-09-17-a-picture-under-a-lock.json`, with a photograph
+of the real window taken on a Mac locked since 2026-09-14.
+
+Next: the overnight-lock decision card still governs whether a sweep may run the
+half of the set that works under a lock. Two walks fail for real on content
+(dock-picked-first-walk wants a layer called "Zoom" and the list says "Magnify";
+name-chip-reads-anywhere-walk wants a "Badge" component tile); folded into
+walks-that-fail-in-the-full-sweep.

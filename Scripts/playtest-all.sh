@@ -107,6 +107,8 @@ FAILED=()
 # Walks that DID NOT RUN, because the screen was locked. Never counted as
 # failures: see Sources/Photonz/Playtest/PlaytestScreenState.swift.
 LOCKED=0
+# ...and how many of them, so a run of a handful says what it could not reach.
+COULD_NOT_RUN=0
 # How long the run took, and how long each walk in it took, because "the full
 # run takes about four hours" was a guess nobody could check. Every walk prints
 # its own seconds and the run prints its total, so a walk that has started
@@ -129,12 +131,17 @@ for walk in Scripts/playtest/*.json; do
     verdict="ok"
     PASSED=$((PASSED + 1))
   elif (( code == 3 )); then
-    # The screen is locked, so this walk did not run and neither will any of
-    # the ones after it. Stop rather than spend eleven minutes writing "could
-    # not run" three hundred times.
+    # The screen is locked and THIS walk looks a control up by name, so it did
+    # not run. Others still can: half the walk set never asks for a name, and
+    # those run and photograph the app normally (PlaytestLockSafety). So a
+    # handful of walks named on the command line carries on to the rest of
+    # them, while the whole sweep stops here rather than spend twenty minutes
+    # on an answer it is going to throw away for being half a set.
     LOCKED=1
-    printf '%4ds  COULD NOT RUN  the screen is locked\n' $((SECONDS - WALK_BEGAN))
-    break
+    COULD_NOT_RUN=$((COULD_NOT_RUN + 1))
+    printf '%4ds  COULD NOT RUN  it needs a control by name and the screen is locked\n' $((SECONDS - WALK_BEGAN))
+    if (( ${#PATTERNS[@]} == 0 )); then break; fi
+    continue
   else
     reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
     verdict="FAILED  ${reason:-no done.json}"
@@ -151,18 +158,20 @@ echo
 # A run stopped by the lock is NOT a verdict on the walk set. Say so first and
 # on its own line, so nothing downstream reads the counts underneath as one.
 if (( LOCKED )); then
-  echo "==> COULD NOT RUN: the Mac's screen is locked."
-  echo "    The app keeps drawing, animating and taking the walk's clicks, and it can still"
-  echo "    be photographed. What a locked screen takes away is the NAME on every control,"
-  echo "    which is how a walk finds one, so every walk from that point reports controls"
-  echo "    missing that are on screen at the right size with the right tooltip. This run is"
-  echo "    not a pass and not a failure for any walk it did not reach."
+  echo "==> $COULD_NOT_RUN walk(s) COULD NOT RUN: the Mac's screen is locked."
+  echo "    The app keeps drawing, animating, taking the walk's clicks and being photographed."
+  echo "    What a locked screen takes away is the NAME on every control, so a walk that looks"
+  echo "    one up reports it missing while it is on screen at the right size with the right"
+  echo "    tooltip. Those walks are not a pass and not a failure: they did not run."
   if (( RAN )); then
-    echo "    It got through $RAN walk(s) before the lock; those counts are real."
-    echo "==> $PASSED passed, ${#FAILED[@]} failed, then stopped"
+    echo "    The other $RAN walk(s) never ask for a name, so they ran for real and their"
+    echo "    counts are real, pictures of the window included."
+    echo "==> $PASSED passed, ${#FAILED[@]} failed, $COULD_NOT_RUN could not run"
     (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
   fi
-  echo "    Unlock the screen and run it again."
+  echo "    Unlock the screen to run the rest."
+  # Exit 3 still means THE SET WAS NOT COVERED, which is what the sweep reads to
+  # know it may claim nothing and file nothing.
   exit 3
 fi
 echo "==> $PASSED passed, ${#FAILED[@]} failed"

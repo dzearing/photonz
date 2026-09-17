@@ -80,8 +80,8 @@ status)
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
       const took = r.seconds >= 60 ? `${Math.round(r.seconds / 60)}m` : `${r.seconds}s`;
       if (r.screenLocked) {
-        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so no control carried a name and no walk could find anything.`);
-        console.log("Nothing was filed from it and nothing is known about the walk set. It runs again once the screen is unlocked.");
+        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so every walk that looks a control up by name was refused.`);
+        console.log("Half the set would have run and photographed the app, but half a set is not the state of the walk set, so nothing was filed. It runs again once the screen is unlocked.");
       } else if (r.complete === false) {
         // Never let a cut-short run read as a clean bill of health: it only
         // reached part of the set, so silence about the rest means nothing.
@@ -187,15 +187,17 @@ run)
 
   took=$(( SECONDS - began_s ))
 
-  # Exit 3 from playtest-all means the sweep DID NOT RUN: the Mac's screen was
-  # locked, so no control in the window carried a name and no walk's answer is
-  # about the app (Sources/Photonz/Playtest/PlaytestScreenState.swift). A sweep in
-  # that state files nothing and claims nothing. The request goes back on the
+  # Exit 3 from playtest-all means the sweep DID NOT COVER THE SET: the Mac's
+  # screen was locked, so every walk that looks a control up by name was refused
+  # (PlaytestLockSafety). The walks that never ask for a name do run and their
+  # answers are real, but half a set is not the state of the walk set, so a
+  # sweep in that state files nothing and claims nothing. The request goes back on the
   # pile so the loop runs a real one once the screen is unlocked, which is the
   # difference between losing an hour and filing a hundred bugs that are not
   # there.
   if (( SWEEP_CODE == 3 )); then
-    echo "!! The walk sweep could not run: the Mac's screen is locked. Nothing filed."
+    echo "!! The walk sweep could not run: the Mac's screen is locked, so every walk that looks"
+    echo "   a control up by name was refused. Nothing filed."
     echo "   The request stays pending; the loop runs it again once the screen is unlocked."
     node -e '
       const fs = require("fs");
@@ -214,7 +216,7 @@ run)
       }, null, 2) + "\n");
     ' "$LATEST" "$CLAIMED" "$REQ" "$began" "$(now)" "$took" "queue/sweep/$stamp.log"
     rm -f "$CLAIMED"
-    Q note "the walk sweep could not run: the Mac's screen is locked, so no control carries a name and no walk can find anything. Nothing filed; the request is still pending." >/dev/null 2>&1
+    Q note "the walk sweep could not run: the Mac's screen is locked, so every walk that looks a control up by name was refused. Nothing filed; the request is still pending." >/dev/null 2>&1
     exit 3
   fi
 

@@ -39,27 +39,36 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
 
-### A walk needs the screen unlocked
+### A locked screen stops names, not the app
 
 A scripted walk finds every control BY NAME, and a locked screen takes that name
 away. With the login window up, each control is still on screen at the right
 size and still carries its tooltip, and the name SwiftUI hands to AppKit comes
 back empty, so step after step reports a control missing that is plainly there.
 
-Nothing else about the app stops. A run forced past the refusal on a locked Mac
-still drags, still lays out, still animates, and a snapshot step still
-photographs the window for real. That is worth knowing because the old wording
-here said the window was never drawn and that layout and animations stop, and
-four different runners each spent part of a turn re-running walks by hand to
-show that was not so. The app is fine; the walk simply cannot find anything.
+Nothing else about the app stops. On a locked Mac the app still drags, still
+lays out, still animates, and a snapshot step still photographs the window for
+real. So a walk that never looks a control up by name RUNS on a locked screen
+and its answer counts: about half the set does nothing but click points, drag,
+press keys, photograph the window and reach panel controls through the app's own
+register of them. `redline-walk` ran all 70 of its steps and wrote fourteen real
+pictures of the window on a Mac that had been locked for three days. Those runs
+report `lockSafe: true` and every picture they leave carries a label saying it
+was taken under a lock, because two things about it are not what a person at the
+machine would see: colours can read dimmed, and a tutorial card does not draw at
+all. Which step kinds survive and which do not is
+`Sources/PhotonzCore/PlaytestLockSafety.swift`, one list, unit tested.
 
-So a walk run on a locked screen **does not pass and does not fail**. It reports
-`status: "locked"`, `Scripts/playtest.sh` exits 3, `Scripts/playtest-all.sh`
-stops and says "COULD NOT RUN", and `queue/bin/sweep.sh` files nothing and keeps
-the request pending until the screen is unlocked. Every launch prints the state
-on its `Grants:` line (`· screen locked`). Nothing tries to unlock the Mac; a
-run that starts unlocked is held awake for its length so it cannot be locked out
-half way.
+A walk that DOES look a control up by name is a different matter: it **does not
+pass and does not fail**. It reports `status: "locked"`, naming the step that
+needs a name and how many of its pictures forcing it would still get,
+`Scripts/playtest.sh` exits 3, and `queue/bin/sweep.sh` files nothing and keeps
+the request pending until the screen is unlocked (a sweep covering half the set
+is not the state of the walk set).  `Scripts/playtest-all.sh` carries on to the
+rest of the walks you named and counts the refusals separately. Every launch
+prints the state on its `Grants:` line (`· screen locked`). Nothing tries to
+unlock the Mac; a run that starts unlocked is held awake for its length so it
+cannot be locked out half way.
 
 This is not theoretical. The Mac locked at 2026-09-14 20:46:47 and the sweep at
 00:09 reported 115 of 400 walks broken, including all 31 tutorial walks, on

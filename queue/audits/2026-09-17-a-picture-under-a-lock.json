@@ -1,0 +1,26 @@
+{
+  "feature": "A picture of the app in every audit, even with the Mac locked",
+  "epic": "unmanned-loop",
+  "summary": "Almost every audit you read this week opened by apologising that there was no picture of the app, because the Mac was locked. That was never true: a lock takes the NAME off every control, which is how a scripted walk finds one, but the app keeps drawing, animating, taking clicks and being photographed. Half the walk set never asks for a name, and those walks now run on a locked Mac and photograph the real window, with nothing to switch on.",
+  "setup": "Nothing to install. This Mac has been locked since 2026-09-14 20:46; everything below was run on it in that state.",
+  "try": [
+    { "do": "Look at the picture under this step. It is the real window, photographed on this Mac while it was locked, not a drawing of it.", "shot": "2026-09-17-locked-picture.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Leave the screen locked and run a walk: Scripts/playtest.sh Scripts/playtest/redline-walk.json --no-build" },
+    { "do": "Read its last lines: 70 steps, ok, and fourteen real pictures of the window." },
+    { "do": "Read the line under them that says the walk ran with the screen locked and hands you the label to put under any picture you ship." },
+    { "do": "Now run one that cannot: Scripts/playtest.sh Scripts/playtest/angle-field-walk.json --no-build" },
+    { "do": "Read its refusal: it names step 18 (focus) as the step that needs a control's name, and says forcing it would still photograph 2 of its 7 pictures." },
+    { "do": "Open any audit on the dashboard that shows a picture taken under a lock, and read the grey line under the picture." }
+  ],
+  "evaluate": [
+    "Does a picture taken under a lock look like the app to you, or can you tell the difference?",
+    "Is the label under the picture enough to stop you reading a dimmed colour as a bug, or does it need to be louder?",
+    "When a walk is refused, does the message tell you what you would actually do next?",
+    "Half the walk set can run locked and half cannot. Is that worth the two kinds of result, or would you rather everything just waited for an unlock?"
+  ],
+  "rough": [
+    "A step kind only counts as lock-safe once a walk has been watched using it under a lock, so the list starts at 35 of the 81 kinds and everything else is refused rather than trusted. That is deliberate, but it means some walks are refused that would have been fine.",
+    "The whole walk sweep still files nothing while the Mac is locked, even though about 224 of the 510 walks would now run. Half a set is not the state of the walk set, and that call belongs with the overnight-lock decision already on the dashboard, not here.",
+    "Colours in a locked capture were reported reading dimmed in an earlier audit (a white canvas came out grey). Nothing in this picture looks dimmed to me, so the label says colours CAN read dimmed rather than always do."
+  ]
+}

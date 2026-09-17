@@ -128,6 +128,12 @@ private final class Run {
     /// therefore whether this run has a picture an audit may ship. The rule it
     /// is judged by lives in `PlaytestCaptureLedger`, where it is unit tested.
     private var captures = PlaytestCaptureLedger()
+    /// True when this walk went ahead with the screen LOCKED because nothing in
+    /// it looks a control up through accessibility, which is the half of the
+    /// walk set a lock cannot touch (`PlaytestLockSafety`). Such a run is a
+    /// real answer about the app, and the pictures it takes are the real
+    /// window; it is only labelled, not withheld.
+    private var ranLockSafe = false
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -159,12 +165,26 @@ private final class Run {
         // not about the app (`PlaytestScreenState`). Stop here rather than
         // spend five seconds producing an answer nobody may use.
         if PlaytestScreenState.isLocked {
-            guard PlaytestScreenState.isAllowedAnyway else {
-                finish(status: PlaytestScreenState.lockedStatus, steps: 0,
-                       error: PlaytestScreenState.lockedExplanation)
-                return
+            // ...unless this walk never asks for a name. Half the walk set
+            // clicks points, drags, presses keys, photographs the window and
+            // finds panel controls through the app's own register of them, and
+            // a lock touches none of that. Those walks run, so a task that
+            // lands while the Mac is locked still has a picture of the app to
+            // show for itself (`PlaytestLockSafety`).
+            if PlaytestLockSafety.canRunLocked(script.steps) {
+                ranLockSafe = true
+                note(0, "start", "the screen is LOCKED, and nothing in this walk looks a control "
+                    + "up by name, so it runs: the app is drawn, driven and photographed normally. "
+                    + PlaytestLockSafety.pictureLabel)
+            } else {
+                guard PlaytestScreenState.isAllowedAnyway else {
+                    finish(status: PlaytestScreenState.lockedStatus, steps: 0,
+                           error: PlaytestLockSafety.refusal(for: script.steps)
+                               ?? PlaytestScreenState.lockedExplanation)
+                    return
+                }
+                note(0, "start", PlaytestScreenState.allowedAnywayNote)
             }
-            note(0, "start", PlaytestScreenState.allowedAnywayNote)
         }
         // Watching the main thread from step ZERO. A `wait` judges the editor
         // finished from two signals, and one of them is this meter; it used to
@@ -322,7 +342,7 @@ private final class Run {
         // VERDICT is withheld, and only when nobody asked for this run on
         // purpose (`PlaytestScreenState.isAllowedAnyway`).
         let locked = status == PlaytestScreenState.lockedStatus || PlaytestScreenState.isLocked
-        if locked, !PlaytestScreenState.isAllowedAnyway,
+        if locked, !PlaytestScreenState.isAllowedAnyway, !ranLockSafe,
            status != PlaytestScreenState.lockedStatus {
             status = PlaytestScreenState.lockedStatus
             error = PlaytestScreenState.lockedExplanation
@@ -367,7 +387,17 @@ private final class Run {
         // it in words, so whoever writes the audit can see at a glance whether
         // there is a real picture of the app to ship or only a drawing of one.
         done["captures"] = captures.written
-        done["capturesSaid"] = captures.report(granted: granted)
+        // A picture taken under a lock is a real picture of the window and says
+        // so with the label that also says what it costs, so nothing shows a
+        // dimmed colour or a missing tutorial card as if it were the app on an
+        // ordinary day.
+        var said = captures.report(granted: granted)
+        if locked, !captures.written.isEmpty {
+            said += " " + PlaytestLockSafety.pictureLabel
+            done["pictureLabel"] = PlaytestLockSafety.pictureLabel
+        }
+        done["capturesSaid"] = said
+        if locked { done["lockSafe"] = ranLockSafe }
         if !captures.refusals.isEmpty { done["capturesRefused"] = captures.refusals }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
         write(json: done, to: "done.json")

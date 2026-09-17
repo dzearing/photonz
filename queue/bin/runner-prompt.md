@@ -49,12 +49,28 @@ The machine you run on is the user's. Anything you start, you finish.
 
   Without the grant there are no real screenshots at all, only offscreen renders, and the audit must say so in `rough` in plain words. Never write "verified live" when the line said denied. Neither grant ever prompts you: the probe raises the system dialog at most once per launch and only while the grant is undetermined, so if one is missing, print the fix and move on rather than trying to force it.
 
-  **`screen locked` means you get no picture, because the walk will not run at all.** The app itself keeps drawing, animating and photographing under a lock; what a lock takes away is the NAME on every control, which is how a walk finds one, so the harness refuses the run rather than reporting failures that are about the lock. Nothing can unlock the Mac, so do not try. Say it in `rough` in one plain sentence and ship the offscreen renders.
+  **`screen locked` does NOT mean you get no picture.** A lock takes the NAME off every control, which is how a walk finds one; it does not stop the app being drawn, animated, driven or photographed. About half the walk set never asks for a name — it clicks points, drags, presses keys, photographs the window and reaches panel controls through the app's own register of them — and those walks RUN on a locked Mac and take real pictures, with nothing for you to set:
+  ```
+  ==> This walk ran with the screen LOCKED, and that is fine: nothing in it looks
+      a control up by name, so the app was drawn, driven and photographed for real.
+  ```
+  A walk that does look a control up by name is refused, and the refusal names the step and what forcing it would still get:
+  ```
+  !! This walk could not run: the Mac's screen is locked.
+     ...step 18 (focus) finds what it needs by asking accessibility for a name...
+     Forcing it with PHOTONZ_ALLOW_LOCKED_WALK=1 still photographs 2 of its 7
+     pictures before it stops there, and those pictures are the real window.
+  ```
+  So when your walk is refused and you still need a picture, **force it and take the pictures it can take** (`PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh …`). A forced run is not a verdict on the app — its later failures are about the lock — but its pictures are the real window, and an audit with a picture in it beats an apology every time. Nothing can unlock the Mac, so do not try.
 
-  You do not have to work any of this out yourself. Every walk now ends with one line saying what it photographed:
+  These survive a lock: `snapshot`, `render`, `click`, `drag`, `move`, `key`, `appKey`, `type`, `wait`, `waitFor`, `open`, `blank`, `press`, `panel`, `selectRow`, `expect`, `tool`, `action`, `describe`, `scrollPanel`, `reveal`, and the other kinds listed in `PlaytestLockSafety.stepsThatSurviveALock`. These do not: `focus` and `expectField` (they ask accessibility for a name), `panelMenu`, `menuShot`, `rightClick`, `menus` (an open menu is a window the app can neither drive nor photograph then), and anything tutorial (`startGuide`, `expectTutorialStep`, a `waitFor` on a tutorial step: a card is not drawn while the login window is over the app). Everything not yet watched running under a lock is refused rather than trusted; if you force one and it works, say so in your log and add it to that list.
+
+  **A picture taken under a lock is labelled as such where it is shown.** The walk hands you the exact line; put it in the audit step's `shotNote` beside the `shot`. It carries the two known costs, so nobody reads them as bugs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it.
+
+  You do not have to work any of this out yourself. Every walk ends with one line saying what it photographed:
   ```
   ==> Window captures: 2 real pictures of the window: 1-narrow-sc.png, 2-narrow-shape-tool-sc.png
-  ==> Window captures: none. The screen was locked, so macOS refuses every one.
+  ==> Window captures: none. This walk never asked for one.
   ```
   Read it before you write the audit. A capture that could have been taken and was not now FAILS the walk, so a green walk with pictures in that line really did photograph the app.
 
@@ -254,7 +270,7 @@ A feature is not done when it compiles. It is done when the user can try it and 
   "summary": "One or two plain sentences: what you can now do that you could not before.",
   "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default.",
   "try": [
-    { "do": "One short imperative step. Name the exact key, menu item or gesture.", "shot": "2026-08-23-measure-1.png" },
+    { "do": "One short imperative step. Name the exact key, menu item or gesture.", "shot": "2026-08-23-measure-1.png", "shotNote": "Only when the picture was taken under a lock: the line the walk handed you." },
     { "do": "The next step. Aim for five to eight steps total, not twenty." }
   ],
   "evaluate": [
@@ -270,7 +286,7 @@ Rules that keep it usable:
 
 - **`try` is five to eight steps.** If it needs more, the feature is too big to playtest in one sitting: audit the slice that is ready.
 - **Every step is one action.** No paragraphs, no background, no justification.
-- **Ship a real screenshot when the loop is allowed to take one.** If the walk's `Window captures:` line named real pictures, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. If that line said none — the grant was denied, or the screen was locked — say which in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.
+- **Ship a real screenshot.** If the walk's `Window captures:` line named real pictures, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. A locked screen is not an excuse: run a walk that survives a lock, or force one and take the pictures it reaches, and put the label the walk hands you in that step's `shotNote` so the picture says it was taken under a lock. The one case with no picture at all is a missing Screen Recording grant; say that in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.
 - **`evaluate` asks real questions**, three to five. "Does the readout land where your eye already is?" not "evaluate the readout".
 - **`rough` is honest.** This is where you admit what you could not fix, and where the mock was wrong. Writing it here is not the same as filing it: each rough item either clears the follow-up bar and becomes a task, or gets folded into the task that already covers it, or stays in your task's log. Say which in your log.
 

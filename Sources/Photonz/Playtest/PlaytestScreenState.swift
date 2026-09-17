@@ -37,8 +37,16 @@
 // 31 tutorial walks, on source that had passed all 31 eight hours earlier.
 // Runners were then sent to hunt bugs that were not there.
 //
-// So a walk run under a locked screen does not pass and does not fail. It did
-// not run, and it says so.
+// So a walk that looks a control up by name does not pass and does not fail
+// under a lock. It did not run, and it says so.
+//
+// A walk that never looks one up is a different matter, and it is half the
+// set: it clicks points, drags, presses keys, photographs the window and
+// reaches panel controls through the app's own register of them, none of which
+// a lock can touch. Those RUN, and their answers count. Which steps are which
+// is `PlaytestLockSafety` in PhotonzCore, one list, unit tested, where a step
+// kind earns its place by being watched working under a lock rather than by
+// looking safe.
 #if PHOTONZ_PLAYTEST
 import CoreGraphics
 import Foundation

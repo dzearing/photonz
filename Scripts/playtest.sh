@@ -67,10 +67,11 @@ if [[ -f "$OUT/done.json" ]]; then
   if grep -q '"status" : "locked"' "$OUT/done.json"; then
     STATUS=3
     echo "!! This walk could not run: the Mac's screen is locked."
-    echo "   The app is fine and keeps drawing, animating and taking clicks. What a locked"
-    echo "   screen takes away is the NAME on every control, which is how a walk finds one,"
-    echo "   so steps report controls missing that are plainly on screen. Unlock the screen"
-    echo "   and run it again."
+    echo "   The app is fine and keeps drawing, animating, taking clicks and being"
+    echo "   photographed. What a locked screen takes away is the NAME on every control,"
+    echo "   which is how a walk finds one, so steps report controls missing that are"
+    echo "   plainly on screen. The error above names the step that needs a name and says"
+    echo "   what forcing the walk would still photograph."
   fi
 else
   echo "!! No done.json after ${TIMEOUT}s. The probe may still be running; its log so far:" >&2
@@ -83,6 +84,17 @@ if [[ -f "$OUT/done.json" ]]; then
   node -e '
     const d = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
     if (d.capturesSaid) console.log(`==> Window captures: ${d.capturesSaid}`);
+    // A walk that ran with the screen LOCKED because nothing in it looks a
+    // control up by name. Its verdict is real and its pictures are the real
+    // window; they carry a label saying what a lock costs them, and that label
+    // belongs under the picture wherever it is shown, which in an audit is the
+    // step\x27s "shotNote".
+    if (d.lockSafe) {
+      console.log("==> This walk ran with the screen LOCKED, and that is fine: nothing in it looks");
+      console.log("    a control up by name, so the app was drawn, driven and photographed for");
+      console.log("    real. Put this line under any picture of it you ship:");
+      if (d.pictureLabel) console.log("    " + d.pictureLabel);
+    }
   ' "$OUT/done.json"
 fi
 if [[ -f "$OUT/log.json" ]]; then

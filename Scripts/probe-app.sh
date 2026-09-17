@@ -168,10 +168,11 @@ echo "$LINE"
 # identity), so this is asked once per machine, not once per run.
 if [[ "$LOCKED" == "locked" ]]; then
   echo "    THE SCREEN IS LOCKED. The app still draws, animates, takes clicks and can be"
-  echo "    photographed, but no control carries a NAME, and a name is how a walk finds one."
-  echo "    So every walk refuses to run rather than report failures that are in the lock and"
-  echo "    not in the app, and nothing a forced run says here is a fact about the app."
-  echo "    Unlock the screen. (What this cost on 2026-09-14: Sources/Photonz/Playtest/PlaytestScreenState.swift)"
+  echo "    photographed, so a walk that never looks a control up by name runs normally and"
+  echo "    its pictures are the real window (they carry a label saying they were taken under"
+  echo "    a lock). A walk that does look one up is refused, because a name comes back empty"
+  echo "    now and its failures would be about the lock rather than about the app."
+  echo "    Which steps are which: Sources/PhotonzCore/PlaytestLockSafety.swift"
 fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"

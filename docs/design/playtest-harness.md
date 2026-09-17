@@ -100,37 +100,52 @@ typo comes back in a second rather than as a timeout on an empty folder:
   bar as a tree for a program, and the same reading as indented text you can
   `cat` when you want to quote a menu item.
 - `done.json`: `status` (`ok`, `failed`, or `locked`), how many steps completed,
-  and the error when one failed. The run stops at the first failing step; the
+  and the error when one failed. A run with the screen locked adds
+  `screenLocked`, `lockSafe` and, when it photographed anything, `pictureLabel`. The run stops at the first failing step; the
   log keeps everything before it.
 
-## A locked screen means the walk did not run
+## A locked screen takes the names, and only the names
 
-Everything above is found BY NAME: the button called "Add Effect", the row
-called "Background". That name is the accessibility label SwiftUI hands to
-AppKit, and it is the one thing a locked Mac takes away. With the login window
-up, every control is still laid out at the right place and the right size and
-still carries its tooltip, and its name comes back empty, so a walk reports
-control after control missing while they are on screen.
+Much of the above is found BY NAME: the button called "Add Effect", the row
+called "Background". Some of those names are the app's own register of its
+controls, which a lock cannot touch, and some are the accessibility label
+SwiftUI hands to AppKit, which is the one thing a locked Mac takes away. With
+the login window up, such a control is still laid out at the right place and the
+right size and still carries its tooltip, and its name comes back empty, so a
+walk reports it missing while it is on screen.
 
-The rest of the app carries on. Forced past the refusal with
-`PHOTONZ_ALLOW_LOCKED_WALK=1` on a locked Mac, a walk still dragged out a
-rectangle and moved things (`changed 7 ... last 608.0/448.0`), still had
-animations running (`5 restless (animating CAShapeLayer transition)`), and a
-two-snapshot walk still wrote `before-sc.png` and `after-sc.png`, different
-pictures, the second showing the rectangle it had just drawn. So layout,
-animation and screen capture all keep working; only the names go. A locked run
-that photographed nothing had died at a name lookup before reaching its
-snapshot step.
+The rest of the app carries on. On a locked Mac a walk still drags out a
+rectangle and moves things (`changed 7 ... last 608.0/448.0`), still has
+animations running (`5 restless (animating CAShapeLayer transition)`), and still
+photographs the window: on 2026-09-17, on a Mac locked since the 14th,
+`redline-walk` ran all 70 steps and wrote fourteen real `-sc.png` pictures, and
+`layers-list-follows-pick-walk` ran 103. So layout, animation, driving and
+screen capture all keep working; only the accessibility names go.
 
-So a locked screen is refused rather than waited out:
+So the walk set is sorted rather than stopped. `PlaytestLockSafety`
+(PhotonzCore, unit tested) holds one list of the step kinds watched working
+under a lock and one of the kinds a lock stops, with the reason each. A walk
+made only of the first runs, with nothing to set:
 
-| Layer | What it does |
-| --- | --- |
-| The harness | Checks before step one and again at the end. Either one locked and the run is `status: "locked"` with `screenLocked: true`, whichever way it was heading. |
-| `Scripts/playtest.sh` | Exits **3**, and says the screen is locked. Not 1. |
-| `Scripts/playtest-all.sh` | Stops at the first locked walk (every walk after it would be locked too), prints `COULD NOT RUN`, exits 3. Counts from walks it reached before the lock are still real and still printed. |
-| `queue/bin/sweep.sh` | Files nothing, records `screenLocked: true`, and hands the request back so the loop runs a real sweep once the screen is unlocked. |
-| `Scripts/probe-app.sh` | Says `· screen locked` on its `Grants:` line, with the cost spelled out. |
+| Layer | With a walk that survives a lock | With a walk that does not |
+| --- | --- | --- |
+| The harness | Runs it. `status` is the real verdict, with `screenLocked: true` and `lockSafe: true`, and `pictureLabel` says what the pictures cost. | `status: "locked"`, naming the step that needs a name and how many pictures forcing it would still get. |
+| `Scripts/playtest.sh` | Exits 0 or 1 as usual, and prints the label to put under any picture that is shipped. | Exits **3**, not 1. |
+| `Scripts/playtest-all.sh` | Counts it as a pass or a failure like any other. | Prints `COULD NOT RUN`, carries on to the rest of the walks named, and exits 3 at the end. A whole sweep (`PHOTONZ_SWEEP=1`) stops at the first one instead. |
+| `queue/bin/sweep.sh` | — | Files nothing, records `screenLocked: true`, and hands the request back: half the set covered is not the state of the walk set. |
+| `Scripts/probe-app.sh` | Says `· screen locked` on its `Grants:` line, with the cost spelled out. | Same. |
+
+A step kind joins the survives-a-lock list by being WATCHED working under one,
+never by looking safe; anything unproven is refused rather than trusted. Force a
+refused walk with `PHOTONZ_ALLOW_LOCKED_WALK=1` when you need the pictures it
+can reach before its first name lookup: those pictures are the real window, even
+though the run's later steps are a fact about the lock rather than about the app.
+
+Every picture taken under a lock carries a label saying so, because two things
+about it are not what a person at the machine would see: colours can read
+dimmed, and a tutorial card does not draw at all with the login window over it.
+In an audit that label is the step's `shotNote`, and the dashboard prints it
+under the picture.
 
 The lock is NOT an excuse for a missing picture. `PlaytestCaptureLedger` used to
 withhold a capture failure and report "macOS refuses every one" whenever the
