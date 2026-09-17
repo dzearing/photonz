@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 25,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:55:51.971Z",
-  "updated": "2026-09-17T11:33:38.001Z",
+  "updated": "2026-09-17T11:35:59.068Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-17 10:52Z. queue/bin/sweep.sh writes screenLocked: true into queue/sweep/latest.json and sweep.sh status prints COULD NOT RUN correctly, and history.jsonl sweep_pass events carry screenLocked too. But `node queue/bin/queue.mjs state` returns sweep.last as {ended, seconds, walks:0, passed:0, failed:0, complete:false} with no screenLocked, so the field is dropped in queue-lib.mjs where the state object is built. docs/design/mocks/pages/dashboard.html:808 sweepLine() then renders \"walk sweep cut short at 0 walks 5 minutes ago · 83 more asked for\", which is the wording for a sweep that ran out of time. Measured at the same moment: queue/sweep/requested.json holds 83 pending requests, oldest 2026-09-15T15:59:49Z, and ioreg -n Root -d1 -a reports CGSSessionScreenIsLocked true. Related but separate: the card on a-hundred-and-fifteen-walks-fail-on-code-that-pa asks whether the loop should keep the Mac awake. This task is true under every answer to that card, including the one where the loop is told to leave the Mac alone, so it is not blocked on it.",
@@ -50,8 +50,25 @@
     {
       "t": "2026-09-17T11:33:38.000Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-17T11:35:58.931Z",
+      "note": "Verified each acceptance item. (1) curl http://127.0.0.1:8791/api/state now returns sweep.last.screenLocked true and sweep.blindSince 2026-09-15T10:05:49.140Z. (2)+(4) Opened the dashboard in a browser at 1280x900: the corner line reads 'no walk sweep for 2 days: the screen is locked · 83 waiting' in red and the strip under the hero carries the whole explanation; the picture is queue/audits/2026-09-17-dashboard-blind-loop-1.png. (3) The unlocked wordings are asserted exact in the drill ('walk sweep 319/322 2h ago · 3 failing', 'walk sweep cut short at 140 walks 1h ago · 4 more asked for', 'walk sweep: 2 asked for since 1d ago, none run yet'). (5) queue/bin/sweep-line-drill.mjs, 33 checks, green. (6) queue/audits/2026-09-17-dashboard-blind-loop.json. Also green: state-poll-drill, sweep-notes-drill, audit-index-drill, and Scripts/test.sh (8086 tests in 643 suites, exit 0)."
+    },
+    {
+      "t": "2026-09-17T11:35:58.976Z",
+      "note": "left rough: the page can only report what the last sweep ATTEMPT found, so with nothing waiting an unlocked Mac would keep the strip up until something asked for a sweep. Bounded rather than fixed: the strip names when the last try was, and with requests pending the loop retries between every task so the claim is minutes old at worst. Did not file; nobody hits it while 83 requests are waiting, and a person would not notice it in any state we are in."
+    },
+    {
+      "t": "2026-09-17T11:35:59.021Z",
+      "note": "left rough: 'blind for 2 days' counts from the first sweep that FOUND the screen locked, not from when the Mac locked, because nothing records the latter. It understates by up to one gap between sweeps (about two hours on 2026-09-15). Did not file: making it exact would mean recording lock transitions, which is a bigger change than the number is worth, and understating is the safe direction."
+    },
+    {
+      "t": "2026-09-17T11:35:59.066Z",
+      "note": "queue-lib sweepState carries screenLocked and a blindSince taken from the unbroken run of locked sweeps (handed the history aggregateState already read); dashboard.html says 'no walk sweep for 2 days: the screen is locked · 83 waiting' in the hero corner over the amber strip that says what to do, and reads exactly as before when a sweep actually ran. Drill queue/bin/sweep-line-drill.mjs covers both states from the real page functions; verified live in a browser against the real queue (queue/audits/2026-09-17-dashboard-blind-loop-1.png), Scripts/test.sh green, committed 3619a09b and pushed."
     }
   ],
   "started": "2026-09-17T11:30:54.398Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-17T11:35:59.067Z"
 }

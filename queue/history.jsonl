@@ -4954,3 +4954,7 @@
 {"t":"2026-09-17T11:33:37.901Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
 {"t":"2026-09-17T11:33:37.952Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
 {"t":"2026-09-17T11:33:38.002Z","ev":"task_walks","id":"the-dashboard-says-when-the-loop-has-gone-blind","walks":[]}
+{"t":"2026-09-17T11:35:58.933Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:35:58.978Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:35:59.023Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:35:59.069Z","ev":"task_done","id":"the-dashboard-says-when-the-loop-has-gone-blind","from":"in_progress","note":"queue-lib sweepState carries screenLocked and a blindSince taken from the unbroken run of locked sweeps (handed the history aggregateState already read); dashboard.html says 'no walk sweep for 2 days: the screen is locked · 83 waiting' in the hero corner over the amber strip that says what to do, and reads exactly as before when a sweep actually ran. Drill queue/bin/sweep-line-drill.mjs covers both states from the real page functions; verified live in a browser against the real queue (queue/audits/2026-09-17-dashboard-blind-loop-1.png), Scripts/test.sh green, committed 3619a09b and pushed."}
