@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-picked-first",
-  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. Two of them have no section of their own any more: a plain rectangle lost its one row to the parts list, and an arrow's caption, head and thickness followed on 2026-09-09, so what those two claim is that the section their settings DID move into, Appearance, is whole on screen. A measurement claims the whole section like everything else, and then opens the Details fold to prove the numbers that fold away are one click from where they were.",
+  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a magnifier in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. Two of them have no section of their own any more: a plain rectangle lost its one row to the parts list, and an arrow's caption, head and thickness followed on 2026-09-09, so what those two claim is that the section their settings DID move into, Appearance, is whole on screen. A measurement claims the whole section like everything else, and then opens the Details fold to prove the numbers that fold away are one click from where they were.",
   "setup": { "forget": ["panel", "tools", "shapes", "text", "measure", "color"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1200, "height": 720 },
@@ -46,7 +46,7 @@
 
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "0-document", "note": "the document every claim below is read off: a screenshot with a measurement, four rectangles, a label and a zoom callout on it, so the layers list is at its full height." },
+    { "do": "describe", "stage": "0-document", "note": "the document every claim below is read off: a screenshot with a measurement, four rectangles, a label and a magnifier on it, so the layers list is at its full height." },
 
     { "do": "selectRow", "row": "Rectangle 4" },
     { "do": "wait", "seconds": 0.8 },
@@ -79,10 +79,10 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "waitFor", "condition": "sectionInView", "value": "Measurement", "timeout": 4 },
 
-    { "do": "selectRow", "row": "Zoom" },
+    { "do": "selectRow", "row": "Magnify" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "waitFor", "condition": "sectionInView", "value": "Zoom Callout", "timeout": 4 },
-    { "do": "describe", "stage": "4-callout", "note": "the same for a zoom callout: both its rows, Magnification and the shape picker." },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Lens", "timeout": 4 },
+    { "do": "describe", "stage": "4-callout", "note": "the same for a magnifier: the Lens tool took the zoom callout's place, so the layer is called Magnify and its rows are in the Lens section." },
     { "do": "panel", "stage": "4-callout" },
     { "do": "snapshot", "name": "dock-picked-first-4-callout" },
 

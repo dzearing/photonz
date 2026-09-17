@@ -518,7 +518,7 @@ private final class Run {
             // the editor instead did nothing at all, so a walk could raise a
             // question, "answer" it, and carry on reporting passes over a
             // document that never changed. Found on 2026-09-08.
-            let window = try keyTarget()
+            let window = try keyTarget(key)
             // Look the item up BEFORE the press: after it, an item that has
             // just been ticked or unticked reports its new state and the log
             // describes the wrong thing.
@@ -620,7 +620,7 @@ private final class Run {
             // application-wide event monitor is the only thing that sees a
             // press this way — and that is what takes the history overlay down
             // on Esc or on a click outside it.
-            let window = try requireWindow()
+            let window = try appKeyTarget()
             let flags = eventFlags(modifiers)
             for down in [true, false] {
                 guard let event = keyEvent(key, flags: flags, down: down, in: window) else { continue }
@@ -3198,7 +3198,7 @@ private final class Run {
     /// is watching, then dispatched. A key handed straight to a window skips
     /// the watching part, which is exactly the part a cancel has to prove.
     private func postEscapeThroughTheApp() async throws {
-        let window = try keyTarget()
+        let window = try keyTarget(.escape)
         guard let down = keyEvent(.escape, flags: [], down: true, in: window),
               let up = keyEvent(.escape, flags: [], down: false, in: window) else {
             throw Failure(description: "could not build an Escape press")
@@ -7456,6 +7456,37 @@ private final class Run {
         return editor
     }
 
+    /// The window an app-wide press is stamped with.
+    ///
+    /// An event carries a window number whatever it is sent through, so this is
+    /// only about building one — the press itself goes to `NSApp`, where an
+    /// application-wide monitor sees it whichever window it names. The editor
+    /// when there is one, and otherwise whatever the app has on screen: the
+    /// walks that stand on a first run have no document open at all, and
+    /// never-granting could not press Escape at the capture strip because the
+    /// step asked for an editor window that this person never opened
+    /// (2026-09-17).
+    private func appKeyTarget() throws -> NSWindow {
+        if let window { return window }
+        if let key = NSApp.keyWindow { return key }
+        // Whatever else the app has up — the capture strip on a first run, say.
+        // Asked of `windows` rather than `orderedWindows`, which is front to
+        // back and would be the better answer: an app that is not the active
+        // one has no ordered windows at all, and the probe is never active, so
+        // that list came back empty with the strip plainly on screen. The
+        // menu-bar item has a window of its own and is never what a press of
+        // this kind is about.
+        if let shown = NSApp.windows.first(where: {
+            $0.isVisible && !String(describing: type(of: $0)).contains("StatusBar")
+        }) {
+            return shown
+        }
+        let seen = NSApp.windows.map {
+            "\(type(of: $0)) \"\($0.title)\" visible=\($0.isVisible)"
+        }.joined(separator: ", ")
+        throw Failure(description: "the app has no window on screen to press a key at; it has: \(seen)")
+    }
+
     private func requireWindow() throws -> NSWindow {
         guard let window else { throw Failure(description: "no editor window is open; add an \"open\" step first") }
         return window
@@ -7463,9 +7494,24 @@ private final class Run {
 
     /// The window a plain key press belongs to: the sheet on the editor when
     /// one is up, the editor itself otherwise. See the `.key` case for why.
-    private func keyTarget() throws -> NSWindow {
+    private func keyTarget(_ key: PlaytestKey) throws -> NSWindow {
         let editor = try requireWindow()
         if let sheet = editor.attachedSheet { return sheet }
+        // ⎋ belongs to the thing standing over the panel, whether or not
+        // anything in it is being typed in. A popover is a window in front of
+        // the editor and the way a person puts one away is Escape, which AppKit
+        // delivers to the popover because the popover is key. Aimed at the
+        // editor instead, the press went to a window with no popover in it and
+        // the popout stayed open: corner-drag-rounds pressed ⎋, then pressed
+        // the chevron again to reopen a popout that had never shut, and so shut
+        // it — reading the four corner numbers off a panel that no longer had
+        // them (2026-09-17).
+        if key == .escape,
+           let popover = try panelWindows().first(where: {
+               $0 !== editor && $0.parent === editor && Self.isPopover($0)
+           }) {
+            return popover
+        }
         // A POPOVER is a window of its own too, and it takes the keyboard for
         // itself: the Position and Size numbers live in one now, so a walk that
         // sent Return or an arrow key to the editor after focusing a field in
@@ -7716,6 +7762,25 @@ private final class Run {
                 takenBy = "window"
             } else if NSApp.mainMenu?.performKeyEquivalent(with: matcher) == true {
                 takenBy = "menu"
+            } else if flags.isEmpty, key.characters == "\u{1B}", !window.isKeyWindow,
+                      window.parent != nil, !window.isSheet, Self.isPopover(window) {
+                // A popover over the panel is put away with Escape, and AppKit
+                // does that for the KEY window: it is `cancelOperation:` walking
+                // the key window's responder chain. The probe is hardly ever the
+                // active app, and on a locked Mac it cannot be one at all, so
+                // there is no key window and the press reached the popover's
+                // responder chain with nothing there to answer it — the popout
+                // stayed open. corner-drag-rounds then pressed the chevron to
+                // reopen a popout that had never shut, so it SHUT it, and read
+                // the four corner numbers off a panel that no longer had them
+                // (2026-09-17).
+                //
+                // So do here what AppKit does for a key window, and only when
+                // it will not. The popover's own close is what runs, so SwiftUI
+                // sees the dismissal and the chevron that opened it goes back
+                // to shut, exactly as it does under a hand.
+                window.performClose(nil)
+                takenBy = "the popover it was over"
             } else if flags.isEmpty, key.characters == "\r", window.isSheet, !window.isKeyWindow,
                       let button = window.defaultButtonCell, button.isEnabled {
                 // The default button of a question sheet carries NO key
@@ -7757,6 +7822,16 @@ private final class Run {
             }
         }
         return takenBy
+    }
+
+    /// Whether this window is the one AppKit puts a popover in.
+    ///
+    /// By class, because the class is the only honest answer: a popover's
+    /// window is a private AppKit type with no public marker on it, and every
+    /// other test — being a child, having no title — is true of things that are
+    /// not popovers.
+    private static func isPopover(_ window: NSWindow) -> Bool {
+        String(describing: type(of: window)).contains("Popover")
     }
 
     /// Whether this press is somebody typing rather than a shortcut, by the

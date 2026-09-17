@@ -18073,3 +18073,49 @@ Next: the window is mostly empty below its one row, which is honest for today an
 is where the rest of the app's settings will go. Worth asking the user whether an
 almost empty Settings reads as reassurance or as unfinished. Current still has
 the one way door and gets the way back when Next is promoted.
+
+## 2026-09-17 — The six walks the sweep reported broken
+
+The 21:36Z sweep named ten failing walks; four belonged to another open task, and
+these are the other six. Two were the harness driving the app wrong and four were
+walks still asking for something the app has moved past.
+
+The harness, both of them the same shape as the sheet default-button fix of
+2026-09-16 — AppKit does a thing for the KEY window, and the probe never has one:
+
+- **⎋ now puts away an open popover.** A `key` step aimed Escape at the editor,
+  so the Corner Radius popout stayed up; `corner-drag-rounds` then pressed the
+  chevron to "reopen" it and SHUT it, and read the four corner numbers off a
+  panel that no longer had them. The press now goes to the popover, and where
+  AppKit would only close it for the key window the popover's own close runs.
+- **`appKey` no longer needs a document open.** It asked for the editor window
+  just to stamp an event with a window number. `never-granting-walk`, written
+  2026-09-16 and never once executed, opens no document at all, so it failed at
+  its first Escape. The press is stamped with whatever window the app has on
+  screen. Read off `NSApp.windows`: an app that is not active has no
+  `orderedWindows` at all.
+
+The walks:
+
+- `dock-picked-first` asked for a row called Zoom in a Zoom Callout section. The
+  Lens tool took the zoom callout's place, so it is a Magnify layer in a Lens
+  section.
+- `icon-stroke-weight` read a box's and an oval's edge. A shape has arrived with
+  NO edge since 7fc1ab4f (2026-09-14, the user's own decision card), so those two
+  stages are one arrow stage now, and the Desktop-frame stage reads a Pen path at
+  4 points rather than a box at 4.
+- `switch-says-mixed` needed three boxes disagreeing about a border, which cannot
+  happen at birth any more. It draws three closed paths instead: a closed path
+  arrives with a fill ON and an outline OFF, so both switches the walk is about
+  are there with no menu to open, which is also what keeps it running on a locked
+  Mac.
+- `what-a-separation-left-behind` expected the picture's row to be in the panel
+  after separating a small pane. The list only builds the rows you can see, so
+  the walk clicks the row first and its note no longer says it is in plain sight.
+
+All six pass twice in a row, on a Mac locked since the 14th. `Scripts/test.sh`
+green (8250 tests). Audit: `queue/audits/2026-09-17-walks-that-fail-2.json`.
+
+Next: a full sweep on an unlocked Mac is the only thing that can speak for the
+277 walks a lock refuses, including a dozen that press Escape over a popout and
+so exercise the harness change from the other side.

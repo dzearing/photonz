@@ -51,9 +51,11 @@
     { "do": "selectRow", "row": "Background" },
     { "do": "action", "action": "separateIntoLayers" },
     { "do": "wait", "seconds": 5 },
-    { "do": "describe", "stage": "5-a-capture-with-nothing-more-to-give", "note": "THE LAST TEST: a small pane gives up everything one run can take, so there is no offer under the list to press. The picture's own row carries the whole answer here, because a list this short leaves it in plain sight" },
+    { "do": "describe", "stage": "5-a-capture-with-nothing-more-to-give", "note": "THE LAST TEST: a small pane gives up everything one run can take, so there is no offer under the list to press. The picture's own row is where the whole answer is, and it says nothing left" },
     { "do": "panel", "stage": "5-no-offer" },
     { "do": "expect", "control": "Separate again", "present": false },
+    { "comment": "Even a small pane fills the list past its own fold, so the picture's row is reached the way a person reaches it: by clicking it. The list only builds the rows you can see, so a row nobody has scrolled to is not in the panel to read.", "do": "selectRow", "row": "Background" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "row": "Background", "present": true },
     { "do": "snapshot", "name": "left-5-nothing-more-to-give" }
   ]

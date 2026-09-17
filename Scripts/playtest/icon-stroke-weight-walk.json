@@ -107,7 +107,7 @@
     },
     {
       "do": "tool",
-      "tool": "rectangle"
+      "tool": "arrow"
     },
     {
       "do": "drag",
@@ -130,58 +130,17 @@
     },
     {
       "do": "describe",
-      "stage": "3-rectangle",
-      "note": "a box on the same frame: its edge arrives at the same 2 points"
+      "stage": "3-arrow",
+      "note": "an arrow on the same frame: every tool that draws a line of its own takes the frame's weight, not just the Pen. A box and an oval have no line to take it: since 2026-09-14 they arrive as their fill and nothing else, and the border you put on one is an effect you add."
     },
     {
       "do": "expect",
-      "field": "Width",
-      "reads": "2 px"
+      "field": "Thickness",
+      "reads": "2"
     },
     {
       "do": "snapshot",
-      "name": "icon-stroke-3-rectangle"
-    },
-    {
-      "do": "action",
-      "action": "undo"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
-      "do": "tool",
-      "tool": "ellipse"
-    },
-    {
-      "do": "drag",
-      "from": [
-        792,
-        542
-      ],
-      "to": [
-        806,
-        556
-      ]
-    },
-    {
-      "do": "tool",
-      "tool": "select"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.8
-    },
-    {
-      "do": "describe",
-      "stage": "4-ellipse",
-      "note": "an oval too: every shape takes the frame's weight, not just the Pen"
-    },
-    {
-      "do": "expect",
-      "field": "Width",
-      "reads": "2 px"
+      "name": "icon-stroke-3-arrow"
     },
     {
       "do": "action",
@@ -316,22 +275,32 @@
     },
     {
       "do": "tool",
-      "tool": "rectangle"
+      "tool": "pen"
     },
     {
-      "do": "drag",
-      "from": [
-        400,
-        300
-      ],
-      "to": [
-        900,
-        700
+      "do": "click",
+      "at": [
+        500,
+        400
       ]
     },
     {
-      "do": "tool",
-      "tool": "select"
+      "do": "click",
+      "at": [
+        640,
+        400
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        570,
+        520
+      ]
+    },
+    {
+      "do": "key",
+      "key": "return"
     },
     {
       "do": "wait",
@@ -340,12 +309,13 @@
     {
       "do": "describe",
       "stage": "8-screen",
-      "note": "a box on a Desktop frame still starts at the four points every shape in the app has always started at"
+      "note": "the same three corners with the same Pen, on a Desktop frame: four points, the weight every line in this app has always started at. The rule rescues an icon, it does not thin everything."
     },
     {
-      "do": "expect",
-      "field": "Width",
-      "reads": "4 px"
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": false,
+      "width": 4
     },
     {
       "do": "snapshot",

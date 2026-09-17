@@ -1,0 +1,41 @@
+{
+  "feature": "The walks that were failing in the sweep",
+  "epic": "unmanned-loop",
+  "summary": "Six scripted walks the last sweep reported broken pass again. Two were the app driving itself wrong (Escape did not put a popover away, and a key aimed at the whole app needed a document open), and four were walks still asking for things the app moved on from.",
+  "setup": "Nothing to turn on. These are the app's own scripted walks, run against the probe build: Scripts/playtest.sh Scripts/playtest/<name>.json --no-build, about ten seconds each. The Mac's screen was locked for all of this, so every picture here is the real window taken under a lock.",
+  "try": [
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/corner-drag-rounds-walk.json --no-build and watch it go green.",
+      "shot": "2026-09-17-corner-drag-rounds-3.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "In the app, pick a box, open the four corner numbers with the chevron beside Corner Radius, and press Escape. The popout goes away."
+    },
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/switch-says-mixed-walk.json --no-build.",
+      "shot": "2026-09-17-switch-says-mixed-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Read the Outline row in that picture: Mixed, and under it one plain line saying 1 of the 3 selected layers has an outline."
+    },
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/icon-stroke-weight-walk.json --no-build: a line drawn on a 24 pixel icon frame arrives 2 points thick, and the same line on a Desktop frame arrives at 4."
+    },
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/never-granting-walk.json --no-build, the first run of a walk written on 2026-09-16 that had never once been executed."
+    }
+  ],
+  "evaluate": [
+    "Pressing Escape over an open popout: does it put the popout away for you every time, or is there a case where it takes the whole selection with it?",
+    "switch-says-mixed now asks its question of three closed paths rather than three boxes, because a box arrives with no line any more. Is a path still a fair stand-in for what you would actually be doing?",
+    "A box drawn on a 24 pixel icon frame arrives with no edge at all, so there is no weight for the frame to decide. Is arriving bare still what you want on an icon, where a line is usually the whole drawing?",
+    "Is a walk that reads the picture's row after clicking it still proving what you wanted proved, or does the row needing a click say something is wrong with where that count lives?"
+  ],
+  "rough": [
+    "A border ADDED from the plus arrives at 2 points whatever the frame is. On a 24 pixel icon that is exactly the weight a drawn line gets, so it looks right; on a 16 pixel one a drawn line would be 1 and the added border is 2. Too small to file, and written into the task log instead.",
+    "switch-says-mixed lost the case it was written for: three boxes disagreeing about a border. That case now needs the plus menu, and a menu cannot be opened while the screen is locked, so the walk would have stopped running altogether. Paths keep it running and test the same rule.",
+    "Twelve of the walks that press Escape over a popout could not be re-run at all: they look a control up by name and the screen is locked. They will be covered by the next full sweep on an unlocked Mac."
+  ]
+}
