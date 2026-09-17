@@ -2,6 +2,46 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-17 — an icon exported as a picture can leave its canvas out
+
+Export's **Include the background** checkbox now works for **PNG and WebP**, not
+just SVG. An icon drawn on a blank canvas used to come out with the white canvas
+baked into every pixel behind it, with nothing on the sheet to say otherwise, so
+handed over as a PNG it could not sit on a coloured page or a dark theme. It goes
+out see-through now, and the row is the same control in the same place SVG has
+it, with the same swatch and the same line of plain words.
+
+A picture cannot leave a layer out the way the SVG writer can, because it is
+rendered rather than written: `PhotonzDocument.drawn(with:flatImages:)` (new,
+PhotonzCore) hands the renderer the document with the canvas layer hidden and
+everything else exactly where it was. `ExportSizer` does that once per render and
+keys its kept render on the answer, so the number the sheet shows and the file
+that lands are the same picture.
+
+**Two guards worth knowing.** JPEG and HEIC hold no transparency, so the row is
+not offered for them AND `ExportSizer` forces the canvas back in whatever it is
+asked for, rather than trusting the sheet to be the only caller. And the canvas
+is only ever found by `SVGExport.backdrop`, which needs the bottom visible layer
+to be one flat colour reaching every edge, so a screenshot or a captured screen
+never sees the question and exports as it always did.
+
+Playtest gained the other half of the proof: `writePicture` takes the same
+`background` answer `writeSVG` does, and a new `behind` claim (`empty` /
+`painted`) reads the four corners of the file that landed and FAILS the walk when
+they disagree. A white box round an icon is invisible in a screenshot of a white
+sheet, so printing the corners was never going to be enough. New walk:
+`png-export-background-walk`.
+
+Verified with the Mac's screen locked, so the walk had to be forced
+(`PHOTONZ_ALLOW_LOCKED_WALK=1`); it passed all 41 steps and macOS took real
+window captures anyway. The file reads `rgba [0,0,0,0]` in the corner the bug
+report read `[255,255,255,255]`.
+
+**Next**: copying the picture (`⇧⌘C`) still carries the white canvas, so the icon
+you save and the icon you paste now disagree. Filed as
+`copying-an-icon-carries-the-white-canvas-the-exp`. The open question there is
+whether a copy should ask at all, or simply always leave a flat canvas out.
+
 ## 2026-09-15 — a strip across the bottom shows every moving part on one cycle
 
 Slice 3 of icon-animate, Next only, behind `next-motion-strip` (which needs
