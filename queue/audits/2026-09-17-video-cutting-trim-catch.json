@@ -1,0 +1,29 @@
+{
+  "feature": "A trim handle catches on a cut",
+  "epic": "video-cutting",
+  "summary": "Dragging a trim handle near a cut now lands it exactly on the cut instead of near it, with the cut lit up behind the handle so you can see it caught. Keep dragging and it lets go.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Cut a recording into pieces and drop the one you do not want\" on. Open any recording from capture history.",
+  "try": [
+    { "do": "Press space to pause somewhere with dead air." },
+    { "do": "Press B to cut the recording where the useless bit starts." },
+    { "do": "Press Trim to open the handles." },
+    { "do": "Drag the left handle slowly towards the cut and stop just short of it." },
+    { "do": "Wobble the hand a little without meaning to move." },
+    { "do": "Now drag deliberately well past the cut, then back onto it." },
+    { "do": "Drag the right handle onto a second cut the same way, then press Done." }
+  ],
+  "evaluate": [
+    "When the handle jumps onto the cut, does it feel like it clicked into place, or like it slipped?",
+    "Does the lit slot behind the handle read as the cut being caught, or does it just look like a bigger handle?",
+    "Is eight points the right reach: does it take the handle before you wanted it to, or do you still have to aim?",
+    "When you meant to go past the cut, did you get past it without fighting it?",
+    "Is not being able to park a handle a hair short of a cut ever a problem in real trimming?"
+  ],
+  "rough": [
+    "There are no pictures in this audit at all, not even offscreen renders. The Mac's screen has been locked since 2026-09-15, so the walk refuses to run rather than report failures that are about the lock, and nothing was photographed. Everything below was verified by test rather than by eye.",
+    "Nobody has felt this. The reach (8 points) and the hold (16 points) are copied from the canvas magnets, where they are known to feel right on a two dimensional canvas with a pointer. A timeline handle travels on one axis and may want a different number, and only a hand can say.",
+    "While the magnet is on you cannot park a handle inside eight points of a cut: those positions are unreachable by dragging. That is deliberate rather than overlooked. The app already has the precise way in, which is to park the playhead and press I or O, and neither of those snaps. A modifier key to free the magnet mid-drag, the way the canvas uses Command, was left out as the shortest thing that delivers the value, and is the obvious next move if that band turns out to matter.",
+    "The tell is a lit slot behind the handle plus a white hairline on the handle, not the join gap lighting up. The gap at a cut is four points wide and the handle is fourteen points of solid accent parked exactly on top of it, so anything drawn at the cut is hidden by the thing that caught. Worth judging whether the slot reads at a glance or whether the handle just looks fatter.",
+    "The recording's two ends catch as well as the cuts in the middle. That is untried by hand too, and it changes what dragging a handle back against the start of a recording feels like even when there is no cut in it at all."
+  ]
+}

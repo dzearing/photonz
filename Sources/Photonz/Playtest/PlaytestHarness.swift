@@ -1407,10 +1407,11 @@ private final class Run {
             note(number, step.name, try checkWindows(titled: titled, count: count),
                  state: describe())
 
-        case .expectRecording(let pieces, let picked, let keeps, let seconds):
+        case .expectRecording(let pieces, let picked, let keeps, let seconds,
+                              let starts, let caught):
             note(number, step.name,
                  try checkRecording(pieces: pieces, picked: picked, keeps: keeps,
-                                    seconds: seconds),
+                                    seconds: seconds, starts: starts, caught: caught),
                  state: describe())
 
         case .expectFeet(let layerName, let start, let end, let reads, let within):
@@ -1992,6 +1993,11 @@ private final class Run {
             case .videoUndoEdit: video.undoLastEdit()
             case .videoPlay: video.play()
             case .videoPause: video.pause()
+            case .videoDragTrimNearCut: try dragTrimHandle(video, .start, pointsFromCut: 5)
+            case .videoDragTrimJustPastCut: try dragTrimHandle(video, .start, pointsFromCut: 12)
+            case .videoDragTrimClearOfCut: try dragTrimHandle(video, .start, pointsFromCut: 24)
+            case .videoDragTrimEndNearCut: try dragTrimHandle(video, .end, pointsFromCut: 5)
+            case .videoDragTrimRelease: video.endTrimHandleDrag()
             default: break
             }
             // Cutting re-points the player at a composition of the kept
@@ -2663,6 +2669,8 @@ private final class Run {
                  .videoCopyGIF,
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
+                 .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
+                 .videoDragTrimEndNearCut, .videoDragTrimRelease,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
             }
@@ -6545,7 +6553,8 @@ private final class Run {
     /// scripts, which means a run on a Mac that cannot photograph anything
     /// proves nothing at all; this is the step that fails.
     private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,
-                                seconds: Double?) throws -> String {
+                                seconds: Double?, starts: Double? = nil,
+                                caught: Bool? = nil) throws -> String {
         let video = try requireRecording()
         let counted = video.trimmedPieceCount
         // 1-based on the way in and on the way out, because "piece 2" is what
@@ -6556,6 +6565,9 @@ private final class Run {
             + ", \(picking == 0 ? "none picked" : "piece \(picking) picked")"
             + ", \(counted.kept) of \(counted.total) kept"
             + ", window \(String(format: "%.2f", window))s"
+            + ", starts at \(String(format: "%.2f", video.trim.inPoint))s"
+            + (video.caughtCut.map { ", caught on the cut at \(String(format: "%.2f", $0))s" }
+                ?? ", caught on nothing")
             + (video.isTrimming ? ", trim open" : ", trim closed")
 
         var wrong: [String] = []
@@ -6574,11 +6586,59 @@ private final class Run {
             wrong.append("the window is \(String(format: "%.2f", window))s long, not "
                 + "\(String(format: "%.2f", seconds))s")
         }
+        // Tighter than the window's own tolerance on purpose: a handle that
+        // caught on a cut is ON it, and landing a twentieth of a second away
+        // is exactly the miss this claim exists to catch.
+        if let starts, abs(starts - video.trim.inPoint) > 0.005 {
+            wrong.append("the start handle is at \(String(format: "%.3f", video.trim.inPoint))s, "
+                + "not \(String(format: "%.3f", starts))s")
+        }
+        if let caught, caught != (video.caughtCut != nil) {
+            wrong.append(caught
+                ? "no handle is caught on a cut"
+                : "a handle is caught on the cut at "
+                    + "\(String(format: "%.2f", video.caughtCut ?? 0))s")
+        }
         guard wrong.isEmpty else {
             throw Failure(description: wrong.joined(separator: "; ") + " (the recording reads: "
                 + saying + ")")
         }
         return "the recording reads \(saying), as claimed"
+    }
+
+    private enum TrimHandle { case start, end }
+
+    /// Drag a trim handle to a spot a given number of POINTS ON SCREEN away
+    /// from the cut it is approaching, through exactly the call a pointer
+    /// makes. The start handle comes up on the FIRST cut from the left, the end
+    /// handle on the LAST one from the right, which is the direction each of
+    /// them is actually travelling.
+    ///
+    /// Points rather than seconds because points are what the magnet measures,
+    /// and read off the live track width because that is what a hand would be
+    /// looking at. A walk therefore never has to know how long the sample
+    /// recording is or how wide the window came up.
+    private func dragTrimHandle(_ video: VideoEditorState, _ handle: TrimHandle,
+                                pointsFromCut points: CGFloat) throws {
+        guard video.isTrimming else {
+            throw Failure(description: "the trim handles are not open, so there is no handle to "
+                + "drag; add a \"videoBeginTrim\" step first")
+        }
+        let cuts = VideoCutSnapping.candidates(in: video.cuts)
+            .filter { $0 > 1e-6 && $0 < video.duration - 1e-6 }
+        guard let target = handle == .start ? cuts.first : cuts.last else {
+            throw Failure(description: "the recording has no cut in it to drag a handle towards; "
+                + "add a \"videoCut\" step first")
+        }
+        guard video.trimTrackWidth > 0, video.duration > 0 else {
+            throw Failure(description: "the trim track has no width on screen yet, so a distance "
+                + "in points is not a distance in time; give the window a moment to lay out")
+        }
+        let away = TimeInterval(points / (video.trimTrackWidth / CGFloat(video.duration)))
+        switch handle {
+        case .start: video.dragTrimIn(toTimeline: target - away)
+        case .end: video.dragTrimOut(toTimeline: target + away)
+        }
     }
 
     private func requireRecording() throws -> VideoEditorState {

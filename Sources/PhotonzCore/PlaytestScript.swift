@@ -610,6 +610,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case videoCut, videoDeletePiece, videoUndoEdit
     /// Playback, driven the way space does.
     case videoPlay, videoPause
+    /// The start handle dragged by hand towards the first cut in the
+    /// recording, stopped at the three distances that decide whether a magnet
+    /// is a snap or a stutter: well inside the reach, where it must catch;
+    /// just outside it, where a cut already caught must keep holding; and
+    /// clearly past it, where it must let go and follow the hand again. The
+    /// distances are points on screen off the real track, so this is the same
+    /// path a pointer takes rather than a number poked into the trim.
+    case videoDragTrimNearCut, videoDragTrimJustPastCut, videoDragTrimClearOfCut
+    /// The end handle dragged the other way onto the last cut, so a walk shows
+    /// both ends of the window catching rather than assuming the second one
+    /// does because the first one did.
+    case videoDragTrimEndNearCut
+    /// Let go of the handle being dragged.
+    case videoDragTrimRelease
 
     /// Whether this action drives the GUIDE rather than a window: pressing the
     /// callout's own button. A guide can be running over a recording's window,
@@ -630,7 +644,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
              .videoCopyGIF,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
-             .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause: true
+             .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
+             .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
+             .videoDragTrimEndNearCut, .videoDragTrimRelease: true
         default: false
         }
     }
@@ -1894,7 +1910,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// is in, which one is picked (1-based, 0 for none), how many of them the
     /// live trim window keeps, and how long that window is. Every claim is
     /// optional; the step has to make at least one.
-    case expectRecording(pieces: Int?, picked: Int?, keeps: Int?, seconds: Double?)
+    case expectRecording(pieces: Int?, picked: Int?, keeps: Int?, seconds: Double?,
+                         starts: Double?, caught: Bool?)
     /// Which tutorial shelves must be on offer right now, and which must not,
     /// by the name a person reads ("Redlining").
     ///
@@ -2833,13 +2850,19 @@ public enum PlaytestStep: Sendable, Equatable {
             let picked = try whole("picked")
             let keeps = try whole("keeps")
             let seconds = fields["seconds"] != nil ? try f.number("seconds") : nil
-            guard pieces != nil || picked != nil || keeps != nil || seconds != nil else {
+            let starts = fields["starts"] != nil ? try f.number("starts") : nil
+            let caught = try f.optionalFlag("caught")
+            guard pieces != nil || picked != nil || keeps != nil || seconds != nil
+                || starts != nil || caught != nil else {
                 throw f.invalid("pieces", "expectRecording has to claim something about the "
                     + "recording: \"pieces\" for how many pieces it is in, \"picked\" for which "
                     + "one is picked (1-based, 0 for none), \"keeps\" for how many of them the "
-                    + "trim window keeps, or \"seconds\" for how long the window is")
+                    + "trim window keeps, \"seconds\" for how long the window is, \"starts\" for "
+                    + "where the start handle sits, or \"caught\" for whether a handle is "
+                    + "standing on a cut")
             }
-            self = .expectRecording(pieces: pieces, picked: picked, keeps: keeps, seconds: seconds)
+            self = .expectRecording(pieces: pieces, picked: picked, keeps: keeps, seconds: seconds,
+                                    starts: starts, caught: caught)
         case "expectTutorialTracks":
             let with = try f.optionalStrings("with")
             let without = try f.optionalStrings("without")

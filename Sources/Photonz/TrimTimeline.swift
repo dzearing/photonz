@@ -19,6 +19,9 @@ struct TrimTimeline: View {
     /// between two of them — the same reading as the strip the trim replaced.
     private let blockHeight: CGFloat = 26
     private let joinGap: CGFloat = 4
+    /// How far the lit slot at a caught cut shows past each side of the handle
+    /// sitting in it.
+    private let caughtRim: CGFloat = 5
     /// Breathing room at each end so a handle pinned to a clip extreme isn't
     /// clipped and stays easy to grab.
     private let inset: CGFloat = 18
@@ -92,15 +95,27 @@ struct TrimTimeline: View {
                     .offset(x: playX - 1.5)
                     .allowsHitTesting(false)
 
-                // In/out handles last so they sit above the mask + scrub area.
-                handle(.left, at: inX) { x in
-                    state.setTrimIn(timeFor(x, trackW: trackW, duration: duration))
+                // The cut a handle has caught on, lit behind the handle that
+                // caught it. Drawn before the handles so it reads as a slot the
+                // handle has clicked into rather than a mark on top of one.
+                if let caught = state.caughtCut {
+                    caughtMark(at: xFor(caught, trackW: trackW, duration: duration))
                 }
-                handle(.right, at: outX) { x in
-                    state.setTrimOut(timeFor(x, trackW: trackW, duration: duration))
+
+                // In/out handles last so they sit above the mask + scrub area.
+                handle(.left, at: inX, isCaught: isCaught(state.trim.inPoint)) { x in
+                    state.dragTrimIn(toTimeline: timeFor(x, trackW: trackW, duration: duration))
+                }
+                handle(.right, at: outX, isCaught: isCaught(state.trim.outPoint)) { x in
+                    state.dragTrimOut(toTimeline: timeFor(x, trackW: trackW, duration: duration))
                 }
             }
             .coordinateSpace(.named(Self.space))
+            .onGeometryChange(for: CGFloat.self) { _ in trackW } action: { width in
+                // The magnet reaches a fixed distance on screen, so the state
+                // needs to know how much of the track a second takes up.
+                state.trimTrackWidth = width
+            }
         }
         .frame(height: trackHeight)
         .accessibilityElement(children: .combine)
@@ -117,7 +132,8 @@ struct TrimTimeline: View {
         guard showsPieces else { return window }
         let counted = state.trimmedPieceCount
         let picked = state.selectedPieceIndex.map { "piece \($0 + 1) picked" } ?? "no piece picked"
-        return "\(window), \(counted.kept) of \(counted.total) pieces kept, \(picked)"
+        let caught = state.caughtCut.map { ", caught on the cut at \(VideoTimecode.label($0))" } ?? ""
+        return "\(window), \(counted.kept) of \(counted.total) pieces kept, \(picked)\(caught)"
     }
 
     /// Whether there are pieces worth drawing: cutting has to be available in
@@ -184,7 +200,12 @@ struct TrimTimeline: View {
 
     /// A handle centered on `xPos` with a wide invisible grab area so it's easy to
     /// hit. Drags map `location.x` (in the "trim" space) straight to a time.
-    private func handle(_ side: HandleSide, at xPos: CGFloat,
+    ///
+    /// A handle that has caught on a cut wears a white hairline, the same mark
+    /// the picked piece wears, because it is saying the same kind of thing: not
+    /// "this stretch is kept" (the accent already says that three times over)
+    /// but "this is locked onto something".
+    private func handle(_ side: HandleSide, at xPos: CGFloat, isCaught: Bool,
                         onDrag: @escaping (CGFloat) -> Void) -> some View {
         ZStack {
             Color.clear
@@ -198,6 +219,13 @@ struct TrimTimeline: View {
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(.white)
                 }
+                .overlay {
+                    if isCaught {
+                        RoundedRectangle(cornerRadius: 5)
+                            .strokeBorder(.white, lineWidth: 1.5)
+                            .frame(width: handleWidth, height: trackHeight)
+                    }
+                }
                 .shadow(radius: 2)
         }
         .frame(width: handleHit, height: trackHeight)
@@ -205,7 +233,34 @@ struct TrimTimeline: View {
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                 .onChanged { v in onDrag(v.location.x) }
+                .onEnded { _ in state.endTrimHandleDrag() }
         )
+    }
+
+    /// Whether this handle is the one standing on a cut.
+    private func isCaught(_ seconds: TimeInterval) -> Bool {
+        guard let caught = state.caughtCut else { return false }
+        return abs(caught - seconds) <= 1e-6
+    }
+
+    /// The cut a handle has caught on, drawn as a lit slot a little wider and
+    /// taller than the handle that is sitting in it.
+    ///
+    /// It has to read AROUND the handle, which is the whole reason it is not
+    /// simply the join gap lighting up: the gap at a cut is four points wide
+    /// and the handle is fourteen points of solid accent parked exactly on top
+    /// of it, so a mark drawn at the cut is hidden by the thing that caught.
+    private func caughtMark(at xPos: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: 7)
+            .fill(Color.accentColor.opacity(0.45))
+            .frame(width: handleWidth + caughtRim * 2, height: trackHeight)
+            .overlay {
+                RoundedRectangle(cornerRadius: 7)
+                    .strokeBorder(.white.opacity(0.9), lineWidth: 1)
+                    .frame(width: handleWidth + caughtRim * 2, height: trackHeight)
+            }
+            .offset(x: xPos - (handleWidth / 2 + caughtRim))
+            .allowsHitTesting(false)
     }
 
     private func xFor(_ seconds: TimeInterval, trackW: CGFloat, duration: TimeInterval) -> CGFloat {

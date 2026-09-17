@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/trim-catches-on-a-cut-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "action", "action": "videoCut" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectRecording", "pieces": 3, "keeps": 3, "seconds": 8, "starts": 0, "caught": false },
+    { "do": "describe", "stage": "1-handles-open", "note": "an eight second recording cut in three, handles open across the whole of it and nothing caught on anything yet" },
+    { "do": "snapshot", "name": "1-handles-open" },
+
+    { "do": "action", "action": "videoDragTrimNearCut" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "starts": 2, "caught": true, "keeps": 2, "seconds": 6 },
+    { "do": "describe", "stage": "2-caught-on-the-cut", "note": "the start handle was dragged to five points short of the cut at two seconds and landed exactly on it: the cut is lit as a slot behind the handle, the handle wears a white hairline, and the first piece has gone dark because it is now wholly outside the window" },
+    { "do": "snapshot", "name": "2-caught-on-the-cut" },
+
+    { "do": "action", "action": "videoDragTrimJustPastCut" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "starts": 2, "caught": true, "keeps": 2 },
+    { "do": "describe", "stage": "3-a-wobble-does-not-lose-it", "note": "the hand has drifted to twelve points short of the cut, half again as far as it took to catch, and the handle is still standing on it: this is the wobble that would otherwise flicker a magnet on and off" },
+    { "do": "snapshot", "name": "3-a-wobble-does-not-lose-it" },
+
+    { "do": "action", "action": "videoDragTrimClearOfCut" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "caught": false, "keeps": 3 },
+    { "do": "describe", "stage": "4-slid-past-it", "note": "twenty four points short, which is a deliberate move rather than a wobble, and the handle has let go: the slot is gone, the hairline is gone, and the first piece is partly kept again" },
+    { "do": "snapshot", "name": "4-slid-past-it" },
+
+    { "do": "action", "action": "videoDragTrimRelease" },
+    { "do": "action", "action": "videoDragTrimNearCut" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "starts": 2, "caught": true },
+
+    { "do": "action", "action": "videoDragTrimEndNearCut" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "starts": 2, "caught": true, "keeps": 1, "seconds": 4 },
+    { "do": "describe", "stage": "5-both-ends-catch", "note": "the end handle catches the same way coming the other way, so the window is exactly the middle piece: two handles, two cuts, four seconds on the nose" },
+    { "do": "snapshot", "name": "5-both-ends-catch" },
+
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 1, "seconds": 4, "caught": false },
+    { "do": "describe", "stage": "6-done-keeps-exactly-that", "note": "Done keeps what the handles caught: one piece, four seconds, with no sliver of either neighbour left over" },
+    { "do": "snapshot", "name": "6-done-keeps-exactly-that" }
+  ]
+}
