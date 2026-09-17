@@ -1,0 +1,36 @@
+{
+  "id": "a-picture-too-wide-for-the-box-it-sits-in-says-s",
+  "title": "A picture too wide for the box it sits in says so, the way a row of chips does",
+  "goal": "A stack can be told the widest it may get, and the words inside it now wrap to fit that. A picture or a drawn shape inside the same stack does not: it hangs out over the edge at its own size, and as far as anyone has checked nothing says a word about it. A card with a screenshot in it is one of the most ordinary things somebody builds here, so the first time they cap a card's width the picture breaks out of it with no explanation. Either it is fitted, or the group says it has run past its edge the way it already does for a row of chips.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:25.885Z",
+  "updated": "2026-09-17T10:56:31.378Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-17-nested-ceiling-wrap.json, written by the runner who had just made a ceiling reach the words inside a nested box: \"A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows.\" The \"no sign\" half is worth checking before anything is built, because docs/design/ui-building.md \"Landed: a group says when its contents run past its edge\" (next-auto-layout, 2026-09-08) says an arranging group already prints one line naming the edge and the width it would need, modelled in GroupOverflow and Layer.contentsOverflow and printed by ArrangementInspector. If that line already fires here the whole task is a walk plus a note; if it does not, the gap is in the flow that feeds GroupOverflow. Shrink-to-fit does not exist anywhere in the app, so introducing it is a bigger decision than reporting: prefer the report unless the flow makes fitting obvious, and if fitting turns out to be the right answer open a card rather than shipping a new sizing rule on the loop's own judgment.",
+  "acceptance": [
+    "Find out first whether the overflow line already fires for this shape, and say so in the task log either way: a group that arranges already reports pieces running past its edge, and this may be a case it misses rather than a case nobody handles",
+    "A picture or shape wider than the ceiling its container was given either fits inside it or is reported, and never sticks out silently",
+    "Whatever the answer, the number offered is measured rather than guessed, the way the existing overflow line names the width the box would need",
+    "A box sitting on a Free group is untouched: a badge hanging off a corner there is a drawing, not a fault",
+    "Try it: Next release, turn on Groups that arrange their own contents (next-auto-layout), put a picture in a stack, give the stack a Largest width smaller than the picture, and the app either fits it or says it has run past",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:25.887Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:31.377Z",
+      "note": "seq 2930 -> 90"
+    }
+  ]
+}

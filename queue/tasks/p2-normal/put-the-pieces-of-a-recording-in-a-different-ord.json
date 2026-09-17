@@ -1,0 +1,40 @@
+{
+  "id": "put-the-pieces-of-a-recording-in-a-different-ord",
+  "title": "Put the pieces of a recording in a different order",
+  "goal": "You can cut a recording into pieces and throw one away, and that is where it stops: the pieces play in the order they were recorded and there is no way to change it. Showing the result before the setup, or moving a good take in front of a bad one, means recording again. The epic this belongs to is called cutting and arranging, and only the cutting half exists. Let somebody pick up a piece on the strip and drop it somewhere else in the order.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 120,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:38.608Z",
+  "updated": "2026-09-17T10:56:52.441Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Objective gap rather than a bug. The video-cutting epic is titled \"Cutting and arranging: blade, trim, and place clips with confidence\" and it has had exactly two tasks since the user answered \"Start video now\" on 2026-09-15: cutting into pieces, and keeping the pieces visible while trimming. Arranging is not built anywhere. Sources/PhotonzCore/VideoCuts.swift holds VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), and no way to move a piece; the pieces array is in play order and timeline time is derived from it, so a move is a reorder of that array and everything downstream already reads through it. Sources/Photonz/TrimTimeline.swift draws the blocks. Filed with a card because dragging a piece to a new place is a new gesture on the strip that the user has not asked for by name, and the card also asks whether this is where video should go next at all.",
+  "acceptance": [
+    "A piece can be picked up on the strip and dropped into a different place in the order, and the strip shows where it is going to land while you drag",
+    "What plays, what the playhead reads, and what comes out of an export all agree with the new order straight away",
+    "It is one undo step, and undo puts the piece back where it was",
+    "Nothing about a recording that was never reordered changes, including a saved file",
+    "Try it: Next release, turn on Cut a recording into pieces and drop the one you do not want (next-cut-a-recording), open a recording, press B twice to make three pieces, drag the last one to the front, and it plays first",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:38.610Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:44.799Z",
+      "note": "seq 2940 -> 120"
+    },
+    {
+      "t": "2026-09-17T10:56:52.439Z",
+      "note": "waiting on the card asking whether the order of a recording's pieces should be changeable, and whether video is where the next stretch of work goes"
+    }
+  ]
+}

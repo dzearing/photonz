@@ -1,0 +1,36 @@
+{
+  "id": "a-trim-handle-catches-on-a-cut-as-it-passes",
+  "title": "A trim handle catches on a cut as it passes",
+  "goal": "You cut a recording where the useless bit starts, then drag a trim handle to that exact spot. Nothing helps you: the handle slides straight over the cut and landing on it is a steady hand and a lot of zooming. Every cut in the recording is a place somebody has already said is meaningful, so a handle should catch there as it goes past, the way the rest of the app snaps to edges and centres. Make it catch, visibly, and make it easy to slide past when that is not what you meant.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:06.635Z",
+  "updated": "2026-09-17T10:56:12.266Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json: \"A handle does not catch on a cut as it passes. Trimming exactly to a join is therefore a steady hand, not a snap. I left it out deliberately: it changes what a drag does rather than what it draws, and whether handles should be magnetic is a feel question worth answering by trying this first.\" That trial has not happened, because the Mac has been locked since 2026-09-15 and nobody has driven the video editor by hand, so build it behind the existing flag and let the audit be where it is judged. The cut positions are VideoCutList.pieces boundaries in timeline seconds (Sources/PhotonzCore/VideoCuts.swift), the handle drag is in Sources/Photonz/TrimTimeline.swift (timeFor/xFor convert points to seconds, so the catch distance converts the other way), and the existing minimum piece floor is VideoCutList.minPieceDuration. The app already has snapping idioms to copy the feel from: next-measure-center-snap and next-measure-layer-snap.",
+  "acceptance": [
+    "Dragging a trim handle near a cut lands exactly on the cut, and the strip shows it caught rather than leaving you to guess",
+    "The catch is small enough that a deliberate drag past a cut still gets past it, and the distance is in points on screen so it does not change with the length of the recording",
+    "The two ends of the recording catch the same way",
+    "The number the readout shows while you drag is the number you land on, with no drift between the caught position and what is kept",
+    "Try it: Next release, turn on Cut a recording into pieces and drop the one you do not want (next-cut-a-recording), open a recording, press B in the middle, press Trim, and drag the left handle towards the cut. It catches on it",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:06.637Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:12.265Z",
+      "note": "seq 2930 -> 60"
+    }
+  ]
+}

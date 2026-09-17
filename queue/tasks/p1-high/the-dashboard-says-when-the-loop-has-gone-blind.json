@@ -1,0 +1,35 @@
+{
+  "id": "the-dashboard-says-when-the-loop-has-gone-blind",
+  "title": "The dashboard says when the loop has gone blind",
+  "goal": "The scripted walks are the only thing that tells the loop whether what it just built broke the app, and they cannot run at all while the Mac's screen is locked. It has been locked since 2026-09-15 and 83 sweeps have been asked for and never served, so two days of work has shipped with no whole-app check behind it. Every part of the system says this honestly except the one surface a person actually looks at: the dashboard reads the sweep as cut short at 0 walks, which looks like a sweep that broke rather than a machine that needs unlocking. Make the dashboard say the real reason, and say how long it has been true.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:55:51.971Z",
+  "updated": "2026-09-17T10:55:54.962Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-17 10:52Z. queue/bin/sweep.sh writes screenLocked: true into queue/sweep/latest.json and sweep.sh status prints COULD NOT RUN correctly, and history.jsonl sweep_pass events carry screenLocked too. But `node queue/bin/queue.mjs state` returns sweep.last as {ended, seconds, walks:0, passed:0, failed:0, complete:false} with no screenLocked, so the field is dropped in queue-lib.mjs where the state object is built. docs/design/mocks/pages/dashboard.html:808 sweepLine() then renders \"walk sweep cut short at 0 walks 5 minutes ago · 83 more asked for\", which is the wording for a sweep that ran out of time. Measured at the same moment: queue/sweep/requested.json holds 83 pending requests, oldest 2026-09-15T15:59:49Z, and ioreg -n Root -d1 -a reports CGSSessionScreenIsLocked true. Related but separate: the card on a-hundred-and-fifteen-walks-fail-on-code-that-pa asks whether the loop should keep the Mac awake. This task is true under every answer to that card, including the one where the loop is told to leave the Mac alone, so it is not blocked on it.",
+  "acceptance": [
+    "queue.mjs state carries screenLocked through from the recorded sweep instead of dropping it",
+    "With the screen locked the dashboard hero says the walk sweep could not run because the screen is locked, how many sweeps are waiting, and since when, in one line somebody can act on",
+    "With the screen unlocked the line is exactly what it says today: passes, failures and age",
+    "Try it: with the Mac locked, open http://127.0.0.1:8791 and read the line under the heartbeat. It names the lock and the waiting count",
+    "A drill under queue/bin covers both states, the way the other dashboard claims are drilled",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:55:51.973Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:55:54.961Z",
+      "note": "seq 310 -> 25"
+    }
+  ]
+}

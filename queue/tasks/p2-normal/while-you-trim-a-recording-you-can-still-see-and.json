@@ -1,0 +1,35 @@
+{
+  "id": "while-you-trim-a-recording-you-can-still-see-and",
+  "title": "While you trim a recording you can still see and delete the piece you picked",
+  "goal": "Outside trim mode the strip shows every piece a recording has been cut into and says which one is picked, and Delete throws that piece away. Go into trim mode and both of those go away: the track is about the window and nothing else, so there is no sign of which piece you were working on and Delete does nothing. Somebody who cut a recording into four pieces, picked the third one and then reached for the trim handles has lost their place. Carry the pick and the Delete key into trim mode.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:00.657Z",
+  "updated": "2026-09-17T10:56:06.591Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json, written by the runner who built trim mode: \"Trim mode does not show which piece is selected, the way the strip does outside it. There is no Delete while trimming, and an accent block would compete with the accent handles and the accent window border, so the track stays about the window and nothing else.\" That colour argument is the thing to solve rather than to repeat: the pick probably wants a quieter mark than the accent block used outside trim mode. Code: Sources/Photonz/TrimTimeline.swift draws the blocks and the handles, Sources/Photonz/VideoEditorState.swift holds the pieces (cuts, VideoCutList) and deleteSelectedPiece() at line 540, Sources/Photonz/VideoEditorView.swift:212 is where the Delete key is gated on cuttingAvailable and canDeleteSelectedPiece. Nothing about this has been seen on a screen: the whole video track was built while the Mac was locked, and that audit says so at the top in capitals.",
+  "acceptance": [
+    "Entering trim mode keeps the piece that was picked picked, and the strip says which one it is in a way that does not fight the trim handles or the window border for attention",
+    "Delete removes the picked piece while trimming, the same one undo step it is outside trim mode",
+    "Leaving trim mode, by Done or by Cancel, leaves the pick where a person would expect it",
+    "Try it: Next release, turn on Cut a recording into pieces and drop the one you do not want (next-cut-a-recording), open a recording, press B twice to make three pieces, click the middle one, press Trim, and the middle piece is still the one named and Delete still takes it",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:00.659Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:06.590Z",
+      "note": "seq 2930 -> 50"
+    }
+  ]
+}

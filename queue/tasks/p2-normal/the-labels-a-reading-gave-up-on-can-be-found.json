@@ -1,0 +1,37 @@
+{
+  "id": "the-labels-a-reading-gave-up-on-can-be-found",
+  "title": "The labels a reading gave up on can be found",
+  "goal": "Read every label in a separated screenshot and a line tells you how it went: so many came back as text, three stayed pictures. Those three are the ones you have to deal with by hand, and the app will not tell you which they are. The only way to find them is to scroll the layers list looking for rows still called Text and guess. Make the count the way to them: press it and those are what you have picked.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:17.467Z",
+  "updated": "2026-09-17T10:56:19.433Z",
+  "deps": [
+    "a-notice-at-the-foot-of-the-canvas-stops-swallow"
+  ],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-17-read-every-label.json: \"A label that stayed a picture is counted and not pointed at. The line says 3 stayed pictures and there is no way to jump to them, so finding them means looking at the layers list for rows that are still called Text.\" Its next rough line explains why nothing is selected after the batch, and that reasoning still holds: moving the selection onto one of forty labels nobody asked about would be the app pointing at the wrong thing. This is the opposite case, where the person has asked. The pill is the shared canvas notice (Sources/Photonz/EditorView.swift canvasNoticeChip, subject .turnedIntoTextInBatch in Sources/PhotonzCore/CopyConfirmation.swift) and it already knows how to carry a pressable action, so this is an action on the existing notice rather than new chrome. It depends on a-notice-at-the-foot-of-the-canvas-stops-swallow being done first, because that one changes which part of the pill takes the pointer.",
+  "acceptance": [
+    "The part of the line that counts what stayed a picture can be pressed, and pressing it picks exactly those layers and brings them into view",
+    "It looks pressable before you press it and reads as one sentence, not as a control bolted onto a report",
+    "Nothing is picked or scrolled when the reading did what it was asked and nothing stayed a picture: the line stays a plain report",
+    "Try it: Next release, turn on Read every label in a separated screenshot at once (next-read-every-label), separate a dense screenshot, read every label, and press the count of what stayed a picture. Those layers are picked",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:17.469Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:19.432Z",
+      "note": "seq 2930 -> 80"
+    }
+  ]
+}

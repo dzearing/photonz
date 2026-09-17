@@ -1,0 +1,36 @@
+{
+  "id": "a-label-read-back-into-text-comes-back-in-the-we",
+  "title": "A label read back into text comes back in the weight it was in, not just the face",
+  "goal": "Reading the labels of a screenshot back into real text now settles the typeface for the whole page by a vote, so forty labels come back in one family instead of forty guesses. The weight is not settled that way: the same pane can come back with four of its row labels Regular and two Medium, and they were all the same on screen. It is more obvious than it used to be, because you now see forty labels at once instead of one. Settle the weight the same way the family is settled, so a page reads as one page.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:56:12.312Z",
+  "updated": "2026-09-17T10:56:17.421Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Named twice in audit rough lists as the remainder of a-label-read-back-into-text-keeps-the-face-the-r, which settled the FAMILY and is done. queue/audits/2026-09-17-read-every-label.json: \"The vote settles the FAMILY for the page and nothing settles the weight, so six row labels of one pane can still come back four Regular and two Medium. That is the remaining inconsistency the study named and it is more visible now than it was, because you see forty labels at once instead of one.\" And queue/audits/2026-09-17-turn-into-text-page-family.json: \"The weight wobble is untouched: Corner Radius still reads Semibold while Border 1 reads Medium, both section labels of one style. Already recorded in queue/audits/2026-09-13-turn-into-text.\" So there is a named, reproduced example to build the test on. The reader lives in PhotonzRender and is pinned by the study test plus the fixture suite; start from whatever the family vote does and ask whether weight wants the same vote or a vote per run of labels that share a size, since a heading must not be dragged down to its rows.",
+  "acceptance": [
+    "Labels that look the same weight on the picture come back the same weight, decided across the page rather than per label",
+    "A label that really is bolder than the ones around it, a heading over its rows, still comes back bolder: the rule settles wobble, it does not flatten a page to one weight",
+    "A label whose ink the page cannot account for still refuses and stays a picture, exactly as it does now",
+    "Try it: Next release, turn on Read every label in a separated screenshot at once (next-read-every-label), open the settings pane fixture or any dense screenshot, separate it, press the read-every-label command, and the row labels of one section all come back at one weight",
+    "Covered by the fixture tests that already read a real 2x settings pane capture, with the weight asserted the way the family is",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:56:12.314Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:56:17.420Z",
+      "note": "seq 2930 -> 70"
+    }
+  ]
+}

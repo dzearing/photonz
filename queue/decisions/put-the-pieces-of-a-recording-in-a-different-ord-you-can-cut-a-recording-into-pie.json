@@ -1,0 +1,52 @@
+{
+  "id": "put-the-pieces-of-a-recording-in-a-different-ord-you-can-cut-a-recording-into-pie",
+  "taskId": "put-the-pieces-of-a-recording-in-a-different-ord",
+  "question": "You can cut a recording into pieces and drop one. Should you be able to put the pieces in a different order?",
+  "context": "The video editor can cut a recording at the playhead with B, throw a piece away with Delete, and trim the ends. The pieces always play in the order they were recorded. Nothing about the order can be changed today. Worth knowing before you answer: every piece of video work so far has been built and shipped without anybody being able to see it running, because this Mac has been locked since 2026-09-15 and the app cannot be driven or photographed while it is.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Drag a piece to move it",
+      "summary": "A piece on the strip can be picked up and dropped somewhere else in the order. The strip shows where it will land while you drag, and everything after it slides along. Undo puts it back.",
+      "pros": [
+        "The strip already shows the pieces, so nothing new appears on screen until you drag one",
+        "Showing the result before the setup stops meaning recording it again",
+        "It is the gesture every other editor uses, so nobody has to learn it"
+      ],
+      "cons": [
+        "A drag on the strip currently does nothing, so a hand that slips while reaching for a trim handle can now change the order"
+      ],
+      "mitigation": "A piece has to be picked up deliberately, with the same short hold the rest of the app asks for before a drag counts, and the move is one undo away from gone."
+    },
+    {
+      "id": "b",
+      "label": "Finish what cutting does first",
+      "summary": "Leave the order alone and spend the next video work on the pieces you can already make: catching a trim handle on a cut, seeing which piece you picked while you trim, telling somebody what is about to be thrown away.",
+      "pros": [
+        "The cutting you can do today is not finished, and half-finished things are what make an app feel thin",
+        "No new gesture on a strip nobody has used yet in anger"
+      ],
+      "cons": [
+        "Rearranging is half the name of the job, and without it a recording can only be shortened, never rewritten"
+      ],
+      "mitigation": "Nothing is closed off: the pieces are already a list in play order, so the order can be opened up later without redoing anything."
+    },
+    {
+      "id": "c",
+      "label": "Somewhere else entirely",
+      "summary": "Video is not where the next stretch of work should go. Say what should have it instead and the loop moves, leaving cutting where it is.",
+      "pros": [
+        "Two days of video work have gone by with nobody able to look at any of it, because the Mac has been locked",
+        "Icons, redlining and building UI all have open ground too"
+      ],
+      "cons": [
+        "Video stalls with one finished feature in it"
+      ],
+      "mitigation": "What is built stays built and behind its own switch, so picking this up again later costs nothing.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-17T10:56:44.833Z"
+}

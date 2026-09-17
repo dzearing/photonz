@@ -1,0 +1,35 @@
+{
+  "id": "a-notice-at-the-foot-of-the-canvas-stops-swallow",
+  "title": "A notice at the foot of the canvas stops swallowing clicks",
+  "goal": "After separating a screenshot, after combining shapes, after a refusal, a pill appears at the bottom of the canvas with a button on it. For as long as it is up, the whole pill takes the pointer: the words, the padding and the glass all the way out to its edges, not just the button. A click meant for a layer underneath it does nothing, and nothing on screen explains why. Separating a picture is one of the most common things anybody does here, so this is a dead patch across the middle bottom of the canvas for six seconds every time. Make only the button take the pointer.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T10:55:46.119Z",
+  "updated": "2026-09-17T10:55:51.927Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by reading the code rather than by clicking, because the Mac has been locked since 2026-09-15 and no walk can run. Sources/Photonz/EditorView.swift:521 puts .allowsHitTesting(action != nil) on the WHOLE canvasNoticeChip HStack, so every pill carrying a CanvasNoticeAction is a hit target across its full capsule. Lifetime is 6 seconds for any pill with an action (Sources/PhotonzCore/CopyConfirmation.swift:165 actionLifetime) and 30 seconds for .readingTheWords (workingLifetime, line 187). The pill sits bottom-centre, above the tool bar (EditorChromeLayout.aboveToolBar), which is over the picture in most windows. The likely fix is moving allowsHitTesting off the HStack and onto the Button alone, keeping .onHover on the pill so resting on it still holds the clock (holdCanvasNotice, EditorState+Measure.swift:307). Watch that the hover hold still works when the pointer is over the words, since that is where the hover currently comes from. Source: rough line in queue/audits/2026-09-17-read-every-label.json, which says a click meant for a piece under the line is swallowed for six seconds after a separation and notes it has shipped that way since the pill learned to carry a button.",
+  "acceptance": [
+    "With a pill up that carries a button, a click on the pill's words or its padding reaches whatever is underneath and picks it, exactly as if the pill were not there",
+    "A click on the button itself still performs the action, and resting on the button still stops the pill's clock",
+    "A pill with no button is unchanged: it never takes the pointer",
+    "Try it: Next release, turn on Separate a screenshot into layers (next-separate-into-layers), open a screenshot, press Separate, and while the pill is up click a piece of the picture sitting behind the pill. It gets picked",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T10:55:46.121Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T10:55:51.926Z",
+      "note": "seq 310 -> 15"
+    }
+  ]
+}

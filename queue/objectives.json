@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-15T08:43:22.148Z",
+  "updated": "2026-09-17T10:57:00.843Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -98,8 +98,8 @@
     {
       "id": "design-system",
       "title": "One design system, zero drift",
-      "note": "Every page reads as one product: canonical controls, one icon library, control metrics, both themes.",
-      "stage": "next",
+      "note": "Every page reads as one product: canonical controls, one icon library, control metrics, both themes. Promoted to now on 2026-09-17 by the manager pass: it has held two open tasks while staged next for three passes running, which the staging rule forbids, and neither task is worth demoting the focus for. It goes back to next the moment they are done.",
+      "stage": "now",
       "children": [
         {
           "id": "control-metrics",
