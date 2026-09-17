@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-sections",
-  "seed": "The list is closed again by pressing the Sections row a second time rather than with Escape: a walk posts a key at the EDITOR window and this list lives in a window of its own, so Escape reaches the canvas and clears the selection instead. Whether Escape closes it for a person at the keyboard is an open question this walk cannot settle. THE CLAIM: the right hand panel shows the sections that matter, and you can say which. A plain box in a plain document brings Layers, Appearance, Effects and Motion, and none of the job sections: no Measurements, no Layout, no Component, no shelf, because this document is doing none of those jobs. The Sections row at the foot of the panel says nothing while everything is showing, and says how many are out the moment one is. Turning Motion off there takes it away for good, in every document, and the dock is shorter by exactly what Motion cost; Use Automatic For All hands it back in one press and the dock is the height it was, to the point. Then the two things the rule DOES let through: a piece of text, which brings its own section and no more, and a copy of a component in a document that now holds one, which brings Component and the shelf you asked for. Read dockSections back at every stage rather than trusting a picture: the heights are the whole point, and stage 1 against stage 3 is the before and after this walk exists for.",
+  "seed": "The list is closed again with Escape, and the rectangle stays picked while it goes: that is what the sections either side of this walk's Motion check depend on. THE CLAIM: the right hand panel shows the sections that matter, and you can say which. A plain box in a plain document brings Layers, Appearance, Effects and Motion, and none of the job sections: no Measurements, no Layout, no Component, no shelf, because this document is doing none of those jobs. The Sections row at the foot of the panel says nothing while everything is showing, and says how many are out the moment one is. Turning Motion off there takes it away for good, in every document, and the dock is shorter by exactly what Motion cost; Use Automatic For All hands it back in one press and the dock is the height it was, to the point. Then the two things the rule DOES let through: a piece of text, which brings its own section and no more, and a copy of a component in a document that now holds one, which brings Component and the shelf you asked for. Read dockSections back at every stage rather than trusting a picture: the heights are the whole point, and stage 1 against stage 3 is the before and after this walk exists for.",
   "setup": {
     "forget": ["panel", "tools", "shapes", "text", "color", "measure", "groups"]
   },
@@ -38,10 +38,10 @@
 
     { "do": "press", "control": "Motion section switch" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Sections" },
+    { "do": "appKey", "key": "escape" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "3-motion-off",
-      "note": "AFTER. Somebody who never animates has turned Motion off, once. THE CLAIM: the Motion section is gone, the dock is shorter than stage 1 by exactly what Motion cost, and the Sections row now reads Sections and 1 hidden, which is the only cue that anything is missing and the reason the count is not always printed." },
+      "note": "AFTER. Somebody who never animates has turned Motion off, once. THE CLAIM: Escape put the list away and left the rectangle picked, the Motion section is gone, the dock is shorter than stage 1 by exactly what Motion cost, and the Sections row now reads Sections and 1 hidden, which is the only cue that anything is missing and the reason the count is not always printed." },
     { "do": "expect", "control": "Motion section", "present": false },
     { "do": "panel", "stage": "3-motion-off" },
     { "do": "snapshot", "name": "panel-sections-3-motion-off" },
@@ -50,7 +50,7 @@
     { "do": "wait", "seconds": 0.7 },
     { "do": "press", "control": "Use Automatic For All" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Sections" },
+    { "do": "appKey", "key": "escape" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-back-to-automatic",
       "note": "One press hands the lot back. THE CLAIM: Motion is here again and the dock is the height it was at stage 1, to the point. Nothing is lost by turning something off." },

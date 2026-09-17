@@ -1,0 +1,26 @@
+{
+  "feature": "Escape closes the panel's Sections list",
+  "epic": "ui-building",
+  "summary": "The list of panel sections now closes when you press Escape, and what you have picked on the canvas stays picked. Before, Escape left the list on screen and cleared the selection behind it instead.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag next-panel-sections on (it is on by default).",
+  "try": [
+    { "do": "Open a new document and draw a rectangle with the shape tool." },
+    { "do": "Click the rectangle with the arrow tool so the right hand panel fills in." },
+    { "do": "Click the Sections row at the very foot of the right hand panel.", "shot": "2026-09-17-panel-sections-list-open-sc.png" },
+    { "do": "Press Escape.", "shot": "2026-09-17-panel-sections-escape-closed-sc.png" },
+    { "do": "Check the rectangle is still picked: its handles are still on it and Appearance, Effects and Motion are still in the panel." },
+    { "do": "Click the Sections row again and check the list comes back." },
+    { "do": "Open the list once more and this time click out on the canvas instead, to check that still closes it too." }
+  ],
+  "evaluate": [
+    "Does Escape feel like the obvious way to put this list away, or did you reach for the row again?",
+    "Losing your selection to an Escape you meant for the list: was that costing you anything in practice, or had you not noticed?",
+    "When the list closes, does anything else feel like it should have closed with it?",
+    "The Sections row is at the very bottom of the panel. Is that where your hand goes when you want it?"
+  ],
+  "rough": [
+    "This was settled in the loop's probe and not by a person at the keyboard, because this Mac's screen has been locked since 2026-09-15 and nobody could drive the app by hand. The pictures here are real captures of the window, not offscreen renders. What the probe cannot tell you is whether macOS would have closed the list on Escape anyway for somebody with the app in front of them: the probe is never the frontmost app, so the list never takes the keyboard there. The app now closes it itself either way, and swallows the press so it cannot reach the canvas, which is the half that was definitely wrong.",
+    "The words on the row are wrong in a fresh document: it reads \"Sections · 5 hidden\" when nobody has hidden anything, because it counts the sections the automatic rule left out as well as the ones you turned off. Filed separately as the-sections-row-cries-5-hidden-in-a-document-th.",
+    "The walk drives this Escape through the application rather than through the window, because the app watches for the key rather than owning the keyboard while the list is up. That is the same way the history overlay is driven, so it is not new, but a walk author reaching for a plain key step will still find it does nothing here."
+  ]
+}

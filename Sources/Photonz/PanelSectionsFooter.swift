@@ -24,6 +24,7 @@ struct PanelSectionsFooter: View {
 
     @State private var isOpen = false
     @State private var store = PanelSectionVisibilityStore.shared
+    @State private var escapeWatch = PanelSectionsEscapeWatch()
 
     /// The lines of the list, in the panel's own order.
     private var rows: [PanelSectionVisibility.Row] {
@@ -68,12 +69,59 @@ struct PanelSectionsFooter: View {
             .popover(isPresented: $isOpen, arrowEdge: .bottom) {
                 PanelSectionsList(offered: offered, situation: situation, store: store)
             }
+            // Escape takes the list down, the way Escape takes down anything
+            // that pops up, and it does NOT go on to the canvas behind it.
+            .onChange(of: isOpen) { _, open in
+                if open { escapeWatch.start { isOpen = false } } else { escapeWatch.stop() }
+            }
+            .onDisappear { escapeWatch.stop() }
         }
     }
 
     /// How tall the row is. The dock has to know, because every point here is a
     /// point the sections above do not get.
     static let rowHeight: CGFloat = 26
+}
+
+/// Escape, for as long as the Sections list is up.
+///
+/// A key WATCH rather than a key binding or `.onExitCommand`, for the reason
+/// the dock's carried section and the timing strip's dragged bar both have one:
+/// nothing in this list holds the keyboard, so there is no responder for a key
+/// binding to hang off. The list is a popover, which is a WINDOW of its own,
+/// and a window nothing has focused inside.
+///
+/// That is measured, not assumed. A probe run on 2026-09-17 printed the windows
+/// standing over the editor with the list open:
+///
+///     SwiftUI.AppKitWindow|canKey=true|child=false|fr=Photonz.CanvasNSView
+///     _NSPopoverWindow    |canKey=true|child=true |fr=Photonz.CanvasNSView
+///
+/// The popover window is there and could take the keyboard, and the first
+/// responder is the CANVAS either way. So an Escape went to the canvas, which
+/// cleared the selection, and the list stayed on screen: the press did the one
+/// thing nobody wanted and none of the thing they asked for. Watching for the
+/// key and swallowing it makes the press mean "close this list" and nothing
+/// else, whoever happens to hold the keyboard.
+@MainActor final class PanelSectionsEscapeWatch {
+    private var monitor: Any?
+
+    func start(_ close: @escaping () -> Void) {
+        guard monitor == nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.keyCode == 53 else { return event }
+            close()
+            // Swallowed: the press closed the list and must not go on to clear
+            // the selection behind it.
+            return nil
+        }
+    }
+
+    func stop() {
+        guard let monitor else { return }
+        NSEvent.removeMonitor(monitor)
+        self.monitor = nil
+    }
 }
 
 /// The list the Sections row opens: every section you are allowed to say no to,
