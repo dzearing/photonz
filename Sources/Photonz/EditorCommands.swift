@@ -64,6 +64,14 @@ struct EditorCommands: Commands {
     /// before the main menu, and the field editor claims both a plain letter
     /// and ⌥⌫ for itself, so a focused field keeps them either way (measured
     /// both ways on 2026-09-08 against a control case that fired the menu).
+    /// The ⌥⌫ half of that was re-measured on 2026-09-17, since until then the
+    /// row carried a chord no keyboard could type and so could not have won
+    /// anything: a window with a text field in it, the field holding the
+    /// keyboard, and a real ⌫ press with ⌥ handed to `NSApplication.sendEvent`
+    /// deleted a word and left the menu item alone, while the same press with
+    /// nothing focused ran the item. ⌘⌫ goes the other way — the menu takes it
+    /// even mid-rename — which is the ordinary Mac split and why Delete Layer
+    /// keeps it.
     /// The reason is plainer: an unmodified letter in the menu bar is not a
     /// Mac idiom, and X is already taught on the bucket's swap button, which
     /// wears it as a tooltip. X itself lives on an invisible stand-in in the
@@ -75,7 +83,10 @@ struct EditorCommands: Commands {
         } label: {
             Label { Text("Fill with Foreground") } icon: { Self.swatch(editor?.foregroundFillHex) }
         }
-        .keyboardShortcut(.delete, modifiers: .option)
+        // Not `.delete`: SwiftUI's is U+0008 and AppKit only matches a ⌫ press
+        // against U+007F, so `.delete` puts a chord on the row that no
+        // keyboard can type. See `DeleteKeyCharacters`.
+        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: .option)
         .disabled(!(editor?.canFillWithFillColors ?? false))
         Button {
             editor?.fillSelectedLayer(useBackground: true)
@@ -749,7 +760,10 @@ struct EditorCommands: Commands {
             // menu keeps out loud, so the row says no before the press rather
             // than the layer disappearing under one.
             Button("Delete Layer") { editor?.deleteSelectedLayers() }
-                .keyboardShortcut(.delete, modifiers: .command)
+                // U+007F rather than SwiftUI's `.delete`, which is the
+                // backspace control character no keyboard sends. See
+                // `DeleteKeyCharacters`.
+                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: .command)
                 .disabled(!(editor?.canDeleteSelectedLayers ?? false))
         }
 

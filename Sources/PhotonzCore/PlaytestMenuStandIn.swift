@@ -53,5 +53,12 @@ public enum PlaytestMenuStandIn {
         // press for real, but this one sits on a window-scoped item like undo.
         Chord(key: "delete", modifiers: []): .videoDeletePiece,
         Chord(key: "backspace", modifiers: []): .videoDeletePiece,
+        // Layer ▸ Delete Layer and Edit ▸ Fill with Foreground. Both hang off
+        // the editor the way undo does, so both are dimmed for the whole of a
+        // walk and neither press can run its own row.
+        Chord(key: "delete", modifiers: [.command]): .deleteLayer,
+        Chord(key: "backspace", modifiers: [.command]): .deleteLayer,
+        Chord(key: "delete", modifiers: [.option]): .fillWithForeground,
+        Chord(key: "backspace", modifiers: [.option]): .fillWithForeground,
     ]
 }

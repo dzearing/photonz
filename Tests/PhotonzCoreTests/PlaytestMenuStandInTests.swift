@@ -46,8 +46,19 @@ struct PlaytestMenuStandInTests {
         // whole of a walk like undo is. Both spellings of the key reach it.
         #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: []) == .videoDeletePiece)
         #expect(PlaytestMenuStandIn.action(for: key("backspace"), modifiers: []) == .videoDeletePiece)
-        // With a modifier it is a different chord: ⌘⌫ is Delete Layer.
-        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.command]) == nil)
+    }
+
+    @Test("Delete with a modifier is a different command each time")
+    func deleteChords() {
+        // ⌘⌫ drops the picked layer and ⌥⌫ floods it with the foreground
+        // colour. Both rows are window-scoped, so both are dimmed for the whole
+        // of a walk, and neither may borrow the other's meaning.
+        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.command]) == .deleteLayer)
+        #expect(PlaytestMenuStandIn.action(for: key("backspace"), modifiers: [.command]) == .deleteLayer)
+        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.option]) == .fillWithForeground)
+        #expect(PlaytestMenuStandIn.action(for: key("backspace"), modifiers: [.option]) == .fillWithForeground)
+        // Both modifiers at once is a chord nobody hung a command on.
+        #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.command, .option]) == nil)
     }
 
     @Test("A chord with no stand-in says so rather than guessing")

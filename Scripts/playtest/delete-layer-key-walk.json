@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/delete-layer-key",
+  "seed": "Two menu rows advertise a key: Layer > Delete Layer shows Command Delete and Edit > Fill with Foreground shows Option Delete. Both chords were dead, because SwiftUI's own .delete is a character no Mac keyboard sends. This asks the menu bar which item really carries each chord, and runs what the press means.",
+  "setup": { "forget": ["shapes", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [220, 180], "to": [560, 420] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "1-rectangle-picked", "note": "a drawn rectangle over the background, picked on its own: two layers, and Layer > Delete Layer shows Command Delete beside it" },
+    { "do": "snapshot", "name": "1-rectangle-picked" },
+
+    { "do": "shortcut", "key": "delete", "modifiers": ["command"], "menuItem": "Delete Layer" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expect", "row": "Rectangle", "present": false },
+    { "do": "describe", "stage": "2-command-delete-is-delete-layer", "note": "THE FIRST TEST: the chord Layer > Delete Layer shows is really on that row, so Command Delete means dropping the picked layer and nothing else. The rectangle is gone and one layer is left" },
+    { "do": "snapshot", "name": "2-command-delete-is-delete-layer" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "3-undo-brings-it-back", "note": "undo puts the rectangle back, so nothing the chord did is one way" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "newLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [700, 250], "to": [980, 520] },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "4-marquee-on-an-empty-layer", "note": "an empty new layer with a marquee drawn on it, and Edit > Fill with Foreground showing Option Delete beside it" },
+    { "do": "snapshot", "name": "4-marquee-on-an-empty-layer" },
+
+    { "do": "shortcut", "key": "delete", "modifiers": ["option"], "menuItem": "Fill with Foreground" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-option-delete-is-fill-with-foreground", "note": "THE SECOND TEST: Option Delete is really Edit > Fill with Foreground, so the marquee comes back flooded with the foreground colour rather than nothing happening at all" },
+    { "do": "snapshot", "name": "5-option-delete-is-fill-with-foreground" },
+    { "do": "render", "name": "5-option-delete-filled-doc" }
+  ]
+}

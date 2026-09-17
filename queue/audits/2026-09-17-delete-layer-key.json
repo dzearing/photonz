@@ -1,0 +1,27 @@
+{
+  "feature": "Delete Layer and Fill with Foreground answer their keys",
+  "epic": "ui-building",
+  "summary": "Layer > Delete Layer showed Command Delete beside it and Edit > Fill with Foreground showed Option Delete, and neither key ran the command unless you had clicked on the canvas first. Both rows now carry the key they advertise, so the press works wherever you are: a layer row, a panel, a window you have not clicked into yet.",
+  "setup": "Photonz Dev, any picture open. This is in the shipping release, so there is nothing to turn on.",
+  "try": [
+    { "do": "Pick the Rectangle tool in the toolbar and drag a box on the canvas." },
+    { "do": "Click the new Rectangle row in the Layers panel, so the list holds the keyboard rather than the canvas." },
+    { "do": "Press Command Delete. The rectangle goes.", "shot": "2026-09-17-delete-layer-key-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command Z to put it back." },
+    { "do": "Choose Layer > New Layer, pick the marquee tool and drag a box on the canvas." },
+    { "do": "Click the new layer's row in the Layers panel, then press Option Delete. The box floods with the foreground colour.", "shot": "2026-09-17-delete-layer-key-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Open the Layer menu and the Edit menu and check the two rows still show the same keys they just answered to." }
+  ],
+  "evaluate": [
+    "Do both keys work now from wherever the keyboard happens to be, or is there still a place in the window where they go dead?",
+    "Start renaming a layer and press Command Delete: the layer is deleted rather than the name being cleared back to its start. Is that what you expect on a Mac, or should a rename hold the key?",
+    "With a marquee up, Command Delete now drops the whole layer instead of rubbing out the marquee's pixels, which is what the menu row has always said it does. Is that the right call?",
+    "Does Option Delete paint with the colour you were expecting, and is the foreground colour easy enough to see before you press it?",
+    "Is Command Delete the right key for dropping a layer at all, or would you rather it matched something you already use elsewhere?"
+  ],
+  "rough": [
+    "Nobody has watched either key work by hand. The Mac has been locked throughout, and a scripted walk cannot press a window-scoped menu chord at all, so the claim rests on two measurements: the app's own menu bar now reports the right item for each chord, and a standalone window given a real Delete press fires an item carrying that character and ignores one carrying SwiftUI's. Worth thirty seconds of confirming by hand.",
+    "Command Delete now beats a text field that is being typed into, so renaming a layer and pressing it deletes the layer rather than clearing the line. Option Delete does not: a field keeps that one for deleting a word. Both were measured rather than guessed, and the split is the ordinary Mac one, but the rename case is a place someone could lose a layer they were only renaming. Undo brings it back.",
+    "Two things Command Delete used to do on the canvas, only because the canvas key handler never looked at the modifier, now go to the menu row instead: with path points picked it used to take the points out, and with a marquee up it used to rub out the pixels. Both of those are what plain Delete does and still does. The keys on the menu rows are unchanged; what changed is that they are now answered."
+  ]
+}
