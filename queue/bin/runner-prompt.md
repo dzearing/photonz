@@ -49,7 +49,7 @@ The machine you run on is the user's. Anything you start, you finish.
 
   Without the grant there are no real screenshots at all, only offscreen renders, and the audit must say so in `rough` in plain words. Never write "verified live" when the line said denied. Neither grant ever prompts you: the probe raises the system dialog at most once per launch and only while the grant is undetermined, so if one is missing, print the fix and move on rather than trying to force it.
 
-  **`screen locked` means no picture is possible, grant or not**, because macOS stops drawing the app entirely; a walk will not even run. Nothing can unlock the Mac, so do not try. Say it in `rough` in one plain sentence and ship the offscreen renders.
+  **`screen locked` means you get no picture, because the walk will not run at all.** The app itself keeps drawing, animating and photographing under a lock; what a lock takes away is the NAME on every control, which is how a walk finds one, so the harness refuses the run rather than reporting failures that are about the lock. Nothing can unlock the Mac, so do not try. Say it in `rough` in one plain sentence and ship the offscreen renders.
 
   You do not have to work any of this out yourself. Every walk now ends with one line saying what it photographed:
   ```

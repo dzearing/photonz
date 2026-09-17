@@ -6432,11 +6432,12 @@ private final class Run {
         }
         _ = try? await poll("reveal", within: 2) { window.alphaValue >= 1 }
         // Hidden for the rest of the walk, like any other window a walk drives.
-        // One thing does not survive it: a SCREEN capture of this window comes
-        // back holding only the guide's own panels on a blank rectangle, where
-        // a window with a document in it photographs properly. Letting it
-        // composite first does not fix it, so the offscreen render is the
-        // picture for an empty window, and an audit says so.
+        // Unlike the others, nothing ever reveals this one again — opening a
+        // document is what does that, and nothing is open — so it is still at
+        // zero alpha when a picture is asked for, and the compositor has
+        // nothing to hand over for a window at zero alpha. `screenCapture`
+        // shows it for the length of the one photograph and puts it back, so a
+        // picture of the empty window is a real photograph like any other.
         window.alphaValue = 0
         window.makeKey()
         await sleep(0.5)
@@ -7723,21 +7724,29 @@ private final class Run {
                 captureFailed(name, "window \(window.windowNumber) not in shareable content")
                 return
             }
-            let scale = window.backingScaleFactor
-            // A window is photographed WITH anything hanging off it, which is
-            // the only way a tooltip — a window of its own, hung on the one it
-            // labels — is in the picture at all. So the frame to ask for is the
-            // rectangle the family fills, not the parent's: ask for the
-            // parent's and the capture is squeezed to fit it.
-            let family = ([window] + (window.childWindows ?? [])).filter { $0.isVisible && $0.alphaValue > 0 }
-            let bounds = family.dropFirst().reduce(window.frame) { $0.union($1.frame) }
-            let config = SCStreamConfiguration()
-            config.width = Int((bounds.width * scale).rounded())
-            config.height = Int((bounds.height * scale).rounded())
-            config.showsCursor = false
-            config.captureResolution = .best
-            let filter = SCContentFilter(desktopIndependentWindow: scWindow)
-            let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+            // A window at alpha 0 CANNOT be photographed: the compositor
+            // holds nothing for it and the picture comes back a blank
+            // rectangle. That is not about whether the window ever drew —
+            // showing it, drawing it and hiding it again still photographs
+            // blank — it is about what it is worth right now.
+            //
+            // Nearly every window a walk drives is at alpha 1 by the time a
+            // picture is asked for, because opening a document reveals it
+            // again after the walk hid it, so nearly every picture is taken
+            // exactly as before. The one that is not is the empty editor —
+            // the only window a guide about getting a picture IN can point
+            // at — which is hidden before anything ever reveals it, and
+            // which is why its picture used to be blank. So a window that is
+            // still invisible is shown for the length of one photograph and
+            // put straight back.
+            let hidden = window.alphaValue == 0
+            if hidden {
+                window.alphaValue = 1
+                window.display()
+                await sleep(0.25)
+            }
+            let image = try await photograph(window, as: scWindow)
+            if hidden { window.alphaValue = 0 }
             let rep = NSBitmapImageRep(cgImage: image)
             guard let png = rep.representation(using: .png, properties: [:]) else {
                 captureFailed(name, "the window came back but would not encode as a PNG")
@@ -7745,12 +7754,40 @@ private final class Run {
             }
             try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
             captures.photographed(name)
-            let hung = family.count - 1
+            let hung = Self.hungWindows(on: window).count
             note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
-                + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : ""))
+                + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : "")
+                + (hidden ? "; the window was still invisible, so it was shown for the one shot" : ""))
         } catch {
             captureFailed(name, "\(error)")
         }
+    }
+
+    /// One photograph of this window, at the size of everything hanging off it.
+    private func photograph(_ window: NSWindow, as scWindow: SCWindow) async throws -> CGImage {
+        let scale = window.backingScaleFactor
+        // A window is photographed WITH anything hanging off it, which is
+        // the only way a tooltip — a window of its own, hung on the one it
+        // labels — is in the picture at all. So the frame to ask for is the
+        // rectangle the family fills, not the parent's: ask for the
+        // parent's and the capture is squeezed to fit it.
+        let bounds = Self.hungWindows(on: window).reduce(window.frame) { $0.union($1.frame) }
+        let config = SCStreamConfiguration()
+        config.width = Int((bounds.width * scale).rounded())
+        config.height = Int((bounds.height * scale).rounded())
+        config.showsCursor = false
+        config.captureResolution = .best
+        let filter = SCContentFilter(desktopIndependentWindow: scWindow)
+        return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+    }
+
+    /// The windows hung on this one that a person would actually see: a
+    /// tooltip, a toast, a guide's card. The parent is never in this list, so
+    /// whether the parent happens to be invisible cannot drop the first hung
+    /// window out of the frame and the count, which is what the older reading
+    /// of the same list did.
+    private static func hungWindows(on window: NSWindow) -> [NSWindow] {
+        (window.childWindows ?? []).filter { $0.isVisible && $0.alphaValue > 0 }
     }
 
     /// A picture that was asked for and not taken, recorded and — this is the

@@ -1187,6 +1187,19 @@ selection latency (numbers from 2026-09-03 in its commit).
   grant, which only a person can give. A refusal also DELETES any `<name>-sc.png`
   an earlier run left, because the output folder is overwritten rather than
   emptied and a stale photograph is worse than none.
+- **A window nobody can see cannot be photographed, so it is shown for the
+  shot.** A walk holds its window at zero alpha so a person at the machine sees
+  nothing, and the compositor keeps nothing for a window at zero alpha: asked
+  for one, ScreenCaptureKit hands back a blank rectangle. Nearly every walk is
+  unaffected, because opening a document reveals the window again after the
+  walk hid it and it is at alpha 1 by the time any picture is asked for. The
+  one that was not is the EMPTY editor — the only window a guide about getting
+  a picture in can point at — which is hidden before anything reveals it, and
+  whose `-sc.png` was a blank rectangle until 2026-09-17. Showing it, drawing
+  it and hiding it again does not help; what is photographed is what the window
+  is worth right now. So `screenCapture` shows a still-invisible window for the
+  length of one photograph and puts it straight back, and says so on its log
+  line ("the window was still invisible, so it was shown for the one shot").
 - **`done.json` says what got photographed.** `captures` lists the `-sc.png`
   files by name and `capturesSaid` puts it in one sentence, which is what
   `Scripts/playtest.sh` prints as its `Window captures:` line. Read that line
