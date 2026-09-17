@@ -1,0 +1,33 @@
+{
+  "id": "a-walk-can-prove-what-resting-the-pointer-on-som",
+  "title": "A walk can prove what resting the pointer on something does",
+  "goal": "The app changes plenty of things when the pointer simply rests on them: a line at the foot of the canvas stays up while you reach for its button, a history tile reveals its actions, a control shows its tip. A scripted walk cannot check any of that today. Its move step puts the pointer somewhere and the app never notices, so a walk written to prove a hover works reports nothing at all, and a hover that breaks would go unnoticed by the whole walk set.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T11:28:16.144Z",
+  "updated": "2026-09-17T11:28:17.935Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-17 while fixing the notice pill. The harness move step sends a synthesized mouseMoved through window.sendEvent and then delivers mouseEntered/mouseExited BY HAND, but only to its own HintTooltipController anchor views (PlaytestHarness, case .move). SwiftUI .onHover never fires. Reproduction, with EditorState.canvasNoticeHeld newly exposed in the describe state as noticeHeld: /tmp/nw/hover.json separates a screenshot, then moves to window (687, 806) which is the middle of the pill button, then to (500, 806) which is its words, then back. Every describe reports noticeHeld=false: \"1-on-the-button held= False, 2-on-the-words held= False, 3-back-on-the-button held= False\". Run again with the pill fix stashed and the probe rebuilt, so that .onHover sits on the whole capsule as it shipped, the answer is the same three falses, so this is the harness and not the app and it has always been so. Likely fix: after sending the move, tell AppKit the pointer moved for real (NSWindow tracking updates read the actual mouse location), or drive the hosting view's tracking areas the way the tooltip anchors are driven. Worth checking whether a walk can instead ask the app what it thinks is hovered, which would be cheaper and is how expectCue already works.",
+  "acceptance": [
+    "A walk can move the pointer onto a control and the app reacts exactly as it does for a hand: the thing under the pointer knows the pointer is there",
+    "The notice pill walk proves the half it cannot prove today, that resting on the pill button holds the pill open past its six seconds and moving away lets it go",
+    "A walk that moves the pointer away proves the reaction is taken back",
+    "The harness doc says which of the pointer steps drive a real hover and which do not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T11:28:16.146Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T11:28:17.934Z",
+      "note": "walks a-notice-lets-a-click-through-walk -> none"
+    }
+  ],
+  "walks": []
+}

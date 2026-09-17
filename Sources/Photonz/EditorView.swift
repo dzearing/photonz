@@ -452,24 +452,37 @@ struct EditorView: View {
     /// mode hint, the "Copied" confirmation): an optional lead in its own
     /// weight, then one line.
     ///
-    /// Inert by default, as the vocabulary says it must be
-    /// (`shared/UX-PATTERNS.md` §3): it turns up unprompted, so it never takes
-    /// the keyboard and never swallows a click meant for the canvas underneath
-    /// it. The one exception is a refusal that knows its own way out
-    /// (`CanvasNoticeAction`), which carries that way out as a single button.
-    /// Only then does the pill take the pointer, and only for its own few
-    /// seconds. It still fades on its own and still has no close control.
+    /// Inert, as the vocabulary says it must be (`shared/UX-PATTERNS.md` §3):
+    /// it turns up unprompted, so it never takes the keyboard and never
+    /// swallows a click meant for the canvas underneath it. The one thing in it
+    /// that takes the pointer is the BUTTON a refusal carries when it knows its
+    /// own way out (`CanvasNoticeAction`) — the words beside it, the hairline,
+    /// the padding and the glass all let a click straight through, so the only
+    /// dead patch over the picture is the button itself.
+    ///
+    /// It used to be the whole capsule for as long as a pill with a button was
+    /// up, which is six seconds of a bar across the middle bottom of the canvas
+    /// after every separation, with nothing on screen to say why the click that
+    /// was meant to pick a piece did nothing.
     private func canvasNoticeChip(title: String?, detail: String,
                                   action: CanvasNoticeAction? = nil) -> some View {
         HStack(spacing: 8) {
-            if let title {
-                Text(title).fontWeight(.semibold)
+            // The sentence is read, never pressed. SwiftUI hands a click to
+            // whatever claims the point, and a `Text` claims its own, so the
+            // words say out loud that they do not want it.
+            HStack(spacing: 8) {
+                if let title {
+                    Text(title).fontWeight(.semibold)
+                }
+                Text(detail)
+                if action != nil {
+                    // A hairline between the sentence and the answer, so the
+                    // words do not read as running into the button.
+                    Divider().frame(height: 16)
+                }
             }
-            Text(detail)
+            .allowsHitTesting(false)
             if let action {
-                // A hairline between the sentence and the answer, so the words
-                // do not read as running into the button.
-                Divider().frame(height: 16)
                 Button {
                     editorState.performCanvasNoticeAction()
                 } label: {
@@ -497,6 +510,15 @@ struct EditorView: View {
                 .focusable(false)
                 .accessibilityLabel(action.label)
                 .playtestControl(action.label, detail: "Canvas notice")
+                // Resting on the button stops its clock. Six seconds is enough
+                // to read a refusal and not enough to read it, decide and reach
+                // for the answer, and a control that leaves while you are
+                // travelling to it is worse than no control at all. On the
+                // button and not on the whole pill, because the rest of the
+                // pill no longer takes the pointer at all: hovering is the same
+                // hit test as clicking, so a pill that noticed the pointer over
+                // its words would be a pill that swallowed clicks there.
+                .onHover { editorState.holdCanvasNotice($0) }
             }
         }
             .font(.callout)
@@ -510,12 +532,6 @@ struct EditorView: View {
             // — the tool that owns this hint — it always is.
             .padding(.bottom, EditorChromeLayout.aboveToolBar(
                 toolSettingsHeight: editorState.toolSettingsSize.height))
-            .allowsHitTesting(action != nil)
-            // Resting on the button stops its clock. Three seconds is enough to
-            // read a refusal and not enough to read it, decide and reach for
-            // the answer, and a control that leaves while you are travelling to
-            // it is worse than no control at all.
-            .onHover { editorState.holdCanvasNotice($0) }
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

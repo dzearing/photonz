@@ -1450,6 +1450,9 @@ private final class Run {
         case .expectCue(let says):
             note(number, step.name, try checkCue(says: says), state: describe())
 
+        case .expectClickReaches(let at, let what):
+            note(number, step.name, try checkClickReaches(at, what: what), state: describe())
+
         case .expectNotice(let says, let absent):
             note(number, step.name, try checkNotice(says: says, absent: absent), state: describe())
 
@@ -4241,6 +4244,45 @@ private final class Run {
                 + "not \"\(says)\"")
         }
         return "the canvas says a press here would be \"\(reading)\", as claimed"
+    }
+
+    /// Who a real click at a point would go to: the picture, or chrome
+    /// floating over it.
+    ///
+    /// A walk's own `click` step hands the press to the canvas view itself, so
+    /// it lands whether or not anything covers the spot. That is right for
+    /// driving the picture and blind to the thing asked here, so this question
+    /// goes to the WINDOW and is hit tested exactly as AppKit does it for a
+    /// pointer. What comes back is what a hand would get.
+    private func checkClickReaches(_ at: PlaytestPoint,
+                                   what: PlaytestClickTaker) throws -> String {
+        let canvas = try requireCanvas()
+        let window = try requireWindow()
+        // The frame view, whose coordinates ARE the window's base coordinates,
+        // so a point converted out of the canvas can be handed straight to it.
+        guard let root = window.contentView?.superview ?? window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let inWindow = try windowPoint(at)
+        let hit = root.hitTest(inWindow)
+        let reaches = hit === canvas || (hit?.isDescendant(of: canvas) ?? false)
+        let took = hit.map { String(describing: type(of: $0)) } ?? "nothing at all"
+        let where_ = "at \(short(at.point)) \(at.space.rawValue)"
+        switch what {
+        case .canvas:
+            guard reaches else {
+                throw Failure(description: "a click \(where_) never reaches the picture: "
+                    + "\(took) takes it. Chrome over the canvas has to let a click through "
+                    + "everywhere but on its own controls")
+            }
+            return "a click \(where_) reaches the picture"
+        case .chrome:
+            guard !reaches else {
+                throw Failure(description: "a click \(where_) goes straight to the picture; "
+                    + "nothing over the canvas takes it")
+            }
+            return "a click \(where_) is taken by \(took), over the picture"
+        }
     }
 
     /// What the notice pill under the canvas is saying right now.
@@ -8072,6 +8114,12 @@ private final class Run {
             // words rather than squinting at a capture.
             "hint": hintReport,
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
+            // Whether the pointer resting on the pill's button is holding its
+            // clock open. Only a pill with a button holds, and only its BUTTON
+            // notices the pointer, because the rest of the pill lets clicks
+            // through to the picture and hovering is the same hit test as
+            // clicking (`EditorView.canvasNoticeChip`).
+            "noticeHeld": editor.canvasNoticeHeld,
             "layers": layers.count,
             // Composites that have reached the canvas since the window opened.
             // Read it either side of a drag and divide by the time between the

@@ -1882,6 +1882,48 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectCue"))
     }
 
+    /// A pill under the canvas took every click across its whole capsule for
+    /// six seconds after every separation, and a walk could not tell: a walk's
+    /// click is handed to the canvas view directly, so it lands whether or not
+    /// anything is covering the spot. This claims what a REAL click would find
+    /// there, which is the only way a walk can hold the app to chrome that
+    /// lets the picture through.
+    @Test("An expectClickReaches step claims who a real click at a point goes to")
+    func expectClickReachesClaimsWhoTakesTheClick() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClickReaches", "at": [500, 774], "space": "view" } ] }
+        """)
+        guard case .expectClickReaches(let at, let taker) = script.steps[0] else {
+            Issue.record("expectClickReaches"); return
+        }
+        #expect(at.point == CGPoint(x: 500, y: 774))
+        #expect(at.space == .view)
+        // Left off, the claim is the one nearly every walk wants: the picture
+        // gets the click.
+        #expect(taker == .canvas)
+        #expect(script.steps[0].name == "expectClickReaches")
+        #expect(PlaytestStep.names.contains("expectClickReaches"))
+    }
+
+    @Test func expectClickReachesAlsoClaimsAControlTakesIt() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClickReaches", "at": [687, 774], "space": "view",
+                       "what": "chrome" } ] }
+        """)
+        guard case .expectClickReaches(_, let taker) = script.steps[0] else {
+            Issue.record("expectClickReaches"); return
+        }
+        #expect(taker == .chrome)
+    }
+
+    @Test func expectClickReachesRefusesSomewhereThereIsNoSuchPlace() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectClickReaches", "at": [1, 2], "what": "the moon" } ] }
+            """)
+        }
+    }
+
     @Test func expectCueTakesEveryAnswerTheCanvasGives() throws {
         for name in PlaytestScript.pointerCueNames {
             let script = try decode("""

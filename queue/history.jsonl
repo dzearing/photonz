@@ -4936,3 +4936,15 @@
 {"t":"2026-09-17T10:57:00.822Z","ev":"task_resequenced","id":"a-png-says-what-it-will-weigh-before-you-save-it","from":2930,"to":110}
 {"t":"2026-09-17T10:57:00.870Z","ev":"objectives_updated","by":"manager","change":"design-system next -> now: it has held two open p3 tasks for three passes while staged next, which the staging rule forbids. Back to next when they are done."}
 {"t":"2026-09-17T10:57:23.534Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-17-0357.md"}
+{"t":"2026-09-17T10:57:37.526Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-17T10:57:37.573Z","ev":"task_started","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow","title":"A notice at the foot of the canvas stops swallowing clicks","priority":"p1-high"}
+{"t":"2026-09-17T11:07:57.518Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
+{"t":"2026-09-17T11:13:28.066Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T11:20:54.591Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T11:25:10.317Z","ev":"task_walks","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow","walks":["a-notice-lets-a-click-through-walk"]}
+{"t":"2026-09-17T11:28:16.148Z","ev":"task_created","id":"a-walk-can-prove-what-resting-the-pointer-on-som","priority":"p2-normal","title":"A walk can prove what resting the pointer on something does"}
+{"t":"2026-09-17T11:28:17.936Z","ev":"task_walks","id":"a-walk-can-prove-what-resting-the-pointer-on-som","walks":[]}
+{"t":"2026-09-17T11:30:01.544Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
+{"t":"2026-09-17T11:30:01.591Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
+{"t":"2026-09-17T11:30:01.635Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
+{"t":"2026-09-17T11:30:07.226Z","ev":"task_done","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow","from":"in_progress","note":"Only the button on the canvas notice takes the pointer now: the words, the hairline, the padding and the glass all let a click through to the picture (Sources/Photonz/EditorView.swift canvasNoticeChip). Verified in the running app, not from the source: the harness learned to ask the window who a real click at a point goes to (new expectClickReaches step, PhotonzCore + PlaytestHarness, parse tests included), and Scripts/playtest/a-notice-lets-a-click-through-walk.json fails on the old code at the first such check and passes on the new. Pill layout is pixel-identical either way. Scripts/test.sh green (8086). Audit: queue/audits/2026-09-17-notice-pill-click-through.json with two real window captures."}

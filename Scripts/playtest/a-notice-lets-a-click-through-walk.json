@@ -1,0 +1,90 @@
+{
+  "out": "/tmp/photonz-playtest/a-notice-lets-a-click-through",
+  "seed": "THE PILL IS NOT A WALL. Separating a screenshot puts a line at the foot of the canvas carrying a button, and for six seconds the whole capsule used to take the pointer: a click on its words, or on the glass beside them, did nothing at all and nothing on screen said why. The walk separates a settings pane, then asks the window who a real click would go to at four points across the pill: the words, the glass under them, and the far end of the sentence all reach the picture, and only the button takes one. Then it presses the button, and checks the working line the press raises is no wall either.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 1.6 },
+    {
+      "do": "describe",
+      "stage": "1-the-pill-is-up",
+      "note": "the separation's line is up with its button on it, over a picture zoomed in far enough that there are pieces behind it"
+    },
+    { "do": "expectNotice", "says": "Separated" },
+    { "do": "snapshot", "name": "notice-1-the-pill" },
+    {
+      "do": "describe",
+      "stage": "2-the-words-are-not-a-wall",
+      "note": "THE FIRST TEST: a real click on the pill's own words goes to the picture underneath, not to the pill. This is the click somebody makes to pick the piece they just separated, and it was swallowed for six seconds after every separation."
+    },
+    { "do": "expectClickReaches", "at": [420, 774], "space": "view" },
+    { "do": "expectClickReaches", "at": [500, 774], "space": "view" },
+    { "do": "expectClickReaches", "at": [600, 774], "space": "view" },
+    {
+      "do": "describe",
+      "stage": "3-nor-is-the-glass-around-them",
+      "note": "THE SECOND TEST: the pill's padding and the glass out to its edge are not a wall either, so the dead patch is not simply smaller than it was."
+    },
+    { "do": "expectClickReaches", "at": [500, 788], "space": "view" },
+    { "do": "expectClickReaches", "at": [390, 774], "space": "view" },
+    {
+      "do": "describe",
+      "stage": "4-the-button-does-take-it",
+      "note": "THE THIRD TEST: the one thing on the pill that is meant to be pressed still takes the pointer. Without this the walk would pass just as well against a pill that was not there at all."
+    },
+    { "do": "expectClickReaches", "at": [687, 774], "space": "view", "what": "chrome" },
+    {
+      "do": "describe",
+      "stage": "5-a-click-through-it-picks-the-piece",
+      "note": "THE FOURTH TEST: the click lands on the piece under the pill and picks it, and the pill stays up rather than being dismissed by a click that was never meant for it."
+    },
+    { "do": "click", "at": [500, 774], "space": "view" },
+    { "do": "expectPicked", "layers": ["Box 2"] },
+    { "do": "expectNotice", "says": "Separated" },
+    { "do": "snapshot", "name": "notice-2-picked-through-the-pill" },
+    {
+      "do": "describe",
+      "stage": "6-the-button-still-works",
+      "note": "THE FIFTH TEST: pressing the button still reads every label, which is the whole reason the pill is allowed to take the pointer anywhere at all."
+    },
+    { "do": "press", "control": "Read the Words" },
+    { "do": "wait", "seconds": 4 },
+    { "do": "expect", "row": "Reset", "present": true },
+    { "do": "snapshot", "name": "notice-3-words-read" },
+    {
+      "do": "describe",
+      "stage": "7-and-a-line-with-no-button-is-no-wall-either",
+      "note": "THE SIXTH TEST: running the command again finds nothing left to take, so the line that says so carries no button at all. A pill with nothing to press has never any business taking a click, and this is the case that has always been right and must stay right."
+    },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectNotice", "says": "Nothing to separate" },
+    { "do": "expectClickReaches", "at": [567, 774], "space": "view" },
+    { "do": "expectClickReaches", "at": [567, 788], "space": "view" }
+  ],
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true,
+      "next-a-separated-row-says-its-words": false,
+      "next-a-separation-arrives-shut": false
+    }
+  }
+}

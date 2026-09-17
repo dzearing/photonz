@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T10:46:20.158Z",
+  "updated": "2026-09-17T11:20:54.590Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -299,6 +299,14 @@
     {
       "t": "2026-09-17T10:46:20.157Z",
       "note": "The ownership lines in the sweep block now say whether the other task claimed the walk or was guessed at, and a task can claim its walks with queue.mjs walks. Updated the hand-written note under the block to match."
+    },
+    {
+      "t": "2026-09-17T11:13:28.064Z",
+      "note": "2026-09-17: eight of the nine separate-* walks fail on main today and it is PRE-EXISTING, not the notice-pill fix: stashing that task's only source change and rebuilding gives byte-identical failures. PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh --no-build separate -> 1 passed, 8 failed, both with and without the change: separate-boxes, separate-dark-window, separate-hierarchy, separate-reads-text-study, separate-shadow, separate-turn-into-text, separate-whole-screenshot, separated-rows-say-their-words. The failures are all about what a separation now PRODUCES, not about chrome: 'no row called Text 9 is in the panel; the ones that are: General, Box 4, Save Changes, Fill, Box 3, Reset...' (the runs have already been read into words), 'no row called Box 2; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3', and separate-whole-screenshot sees 173 layers where it claims at most 151. Reads like the read-every-label work of 2026-09-16/17 changed the shape of a separation and its walks were never brought along; the sweep has not run since 2026-09-15 because the screen is locked, so nothing has reported it."
+    },
+    {
+      "t": "2026-09-17T11:20:54.589Z",
+      "note": "2026-09-17, same check on the other families a notice-pill change could touch, all PRE-EXISTING (identical failures with the change stashed and the probe rebuilt): PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh label -> 8 passed, 4 failed (label-border-follows, label-fills-a-row, read-every-label at 'no row called Text 5 is in the panel', wrapped-label-width at 'no editable field labelled Largest width is on screen'); the same for combine-shapes-walk, which fails at step 11 before it combines anything ('3 layers in the document, more than the 2 claimed: Background, Ellipse, Ellipse 2'). Clean in both runs: all 6 caliper-* walks and notice-carries-the-way-out-walk."
     }
   ]
 }

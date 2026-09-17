@@ -1,0 +1,44 @@
+{
+  "feature": "The line at the foot of the canvas stops swallowing clicks",
+  "epic": "ui-building",
+  "summary": "While the line that reports a separation is up, you can click straight through its words and its glass to pick the piece underneath, exactly as if it were not there. Only the button on it takes a click now, instead of the whole capsule for six seconds after every separation.",
+  "setup": "Photonz Dev, any release. Open a screenshot and make sure Separate a screenshot into layers is on in the Experiments window.",
+  "try": [
+    {
+      "do": "Open a screenshot and zoom in until the picture fills the window bottom to top."
+    },
+    {
+      "do": "Pick the picture's row in Layers and press Separate into Layers in the Layer menu.",
+      "shot": "2026-09-17-notice-pill.png"
+    },
+    {
+      "do": "While the line is up, click a piece of the picture that is sitting behind its words. It gets picked.",
+      "shot": "2026-09-17-notice-pill-click-through.png"
+    },
+    {
+      "do": "Separate again and this time click the glass at the very end of the line, past the last word. That gets picked too."
+    },
+    {
+      "do": "Separate again and press Read the Words on the line. It still reads every label."
+    },
+    {
+      "do": "Separate again and rest the pointer on the button without pressing, and watch whether the line still stays up past its six seconds."
+    },
+    {
+      "do": "Rest the pointer on the line's WORDS instead. The line no longer holds there, so it leaves on its own clock."
+    }
+  ],
+  "evaluate": [
+    "Clicking through the line to pick a piece: does it feel like the line is not there, or do you still hesitate over it?",
+    "Holding the line up by resting on the button alone: is that enough, or do you expect the words to hold it too while you read them?",
+    "Six seconds with a button on it: long enough to notice the button and reach it, now that the line is no longer in the way of anything else?",
+    "The line sits over the picture at the bottom middle. Is that still the right place for it once you know clicks go through it?"
+  ],
+  "rough": [
+    "Resting on the words no longer holds the line up, only resting on the button does. That is a deliberate trade and not a miss: in SwiftUI noticing the pointer and taking the click are the same hit test, so a line that could feel the pointer over its words would be a line that swallowed clicks there. The button holds the clock from the moment you arrive on it.",
+    "The half of this a walk still cannot prove is the hold: resting on the button keeps the line up past its six seconds. A walk's move step does not make the app notice the pointer at all, which is true of the code as it shipped as well, so nothing about the hold got worse. It is filed as its own task (A walk can prove what resting the pointer on something does). The hold itself is unchanged code, moved from the whole capsule onto the button, which is now the only part of the pill that can notice a pointer.",
+    "The Mac's screen has been locked since 2026-09-15, so the walk that guards this was forced past the harness's refusal with PHOTONZ_ALLOW_LOCKED_WALK=1. Every step it uses works under a lock (it finds rows and controls by the app's own markers, not by accessibility names), and the two pictures here are real window captures taken during that run, not offscreen renders. It still deserves one clean run on an unlocked screen, which the pending sweep will give it.",
+    "A walk could not have caught this before today: a walk's own click is handed straight to the canvas view, so it lands whether or not chrome covers the spot. The harness learned a new step for it (expectClickReaches), which asks the window who a real click at a point would go to. Any other piece of canvas chrome that quietly swallows clicks can now be caught the same way.",
+    "Eight of the nine separate-* walks and four label walks fail on main today for reasons that have nothing to do with this change, verified by stashing the change and rebuilding. They are folded into the open task Walks that fail in the full sweep."
+  ]
+}

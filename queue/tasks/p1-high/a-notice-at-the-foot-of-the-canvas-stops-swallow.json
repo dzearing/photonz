@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:55:46.119Z",
-  "updated": "2026-09-17T10:55:51.927Z",
+  "updated": "2026-09-17T11:30:07.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by reading the code rather than by clicking, because the Mac has been locked since 2026-09-15 and no walk can run. Sources/Photonz/EditorView.swift:521 puts .allowsHitTesting(action != nil) on the WHOLE canvasNoticeChip HStack, so every pill carrying a CanvasNoticeAction is a hit target across its full capsule. Lifetime is 6 seconds for any pill with an action (Sources/PhotonzCore/CopyConfirmation.swift:165 actionLifetime) and 30 seconds for .readingTheWords (workingLifetime, line 187). The pill sits bottom-centre, above the tool bar (EditorChromeLayout.aboveToolBar), which is over the picture in most windows. The likely fix is moving allowsHitTesting off the HStack and onto the Button alone, keeping .onHover on the pill so resting on it still holds the clock (holdCanvasNotice, EditorState+Measure.swift:307). Watch that the hover hold still works when the pointer is over the words, since that is where the hover currently comes from. Source: rough line in queue/audits/2026-09-17-read-every-label.json, which says a click meant for a piece under the line is swallowed for six seconds after a separation and notes it has shipped that way since the pill learned to carry a button.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-17T10:55:51.926Z",
       "note": "seq 310 -> 15"
+    },
+    {
+      "t": "2026-09-17T10:57:37.571Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T11:07:57.516Z",
+      "note": "Reproduced in the real app, not just in the source. A walk's own click step hands the press straight to the canvas view, so it lands whether or not chrome covers the spot: the first reproduction attempt picked a layer through the pill and proved nothing. So the harness learned to ask the WINDOW who a click at a point goes to (new expectClickReaches step, hit tested exactly as AppKit does it for a pointer). On the old code that answers AppKitWindowHostingView for a point on the pill's words: the canvas never sees the click. Fix: the words, the lead and the hairline are .allowsHitTesting(false) and the glass was never hit testable anyway, so only the Button is left taking the pointer."
+    },
+    {
+      "t": "2026-09-17T11:25:10.315Z",
+      "note": "owns these walks: a-notice-lets-a-click-through-walk"
+    },
+    {
+      "t": "2026-09-17T11:30:01.542Z",
+      "note": "Adversarial review before building: the task suggested keeping .onHover on the whole pill so resting on the words still holds the clock. That cannot be had. In SwiftUI noticing the pointer and taking the click are ONE hit test, so a pill that can feel the pointer over its words is a pill that swallows clicks there. The alternatives were an AppKit tracking-area sensor that reports hover and returns nil from hitTest (about sixty lines of new machinery) or letting the button alone hold the clock (two lines). Took the second: the hold exists so the button cannot leave while you reach for it, and it engages the moment you arrive on the button. It also narrows the accidental case the heldLifetime ceiling was invented for, a pill pinned up by a hand parked over the bottom of the canvas."
+    },
+    {
+      "t": "2026-09-17T11:30:01.589Z",
+      "note": "Verified: the walk fails on the old code (step 18: 'a click at (420, 774) view never reaches the picture: AppKitWindowHostingView takes it') and passes on the new, and the pill's layout is pixel-identical either way (glass 383.5..751.5, button 637.5..737.0 in the real window capture, both builds). Scripts/test.sh green, 8086 tests. The file is shared, not forked by Next, so one change serves both releases and there is nothing to port."
+    },
+    {
+      "t": "2026-09-17T11:30:01.633Z",
+      "note": "left rough: the harness's click step still logs a click that landed on chrome as 'landed on the open text field', wording from when a text field was the only thing that could take one. Only a runner reading a log sees it, so it did not earn a task."
+    },
+    {
+      "t": "2026-09-17T11:30:07.223Z",
+      "note": "Only the button on the canvas notice takes the pointer now: the words, the hairline, the padding and the glass all let a click through to the picture (Sources/Photonz/EditorView.swift canvasNoticeChip). Verified in the running app, not from the source: the harness learned to ask the window who a real click at a point goes to (new expectClickReaches step, PhotonzCore + PlaytestHarness, parse tests included), and Scripts/playtest/a-notice-lets-a-click-through-walk.json fails on the old code at the first such check and passes on the new. Pill layout is pixel-identical either way. Scripts/test.sh green (8086). Audit: queue/audits/2026-09-17-notice-pill-click-through.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-17T10:57:37.570Z",
+  "walks": [
+    "a-notice-lets-a-click-through-walk"
+  ],
+  "completed": "2026-09-17T11:30:07.224Z"
 }

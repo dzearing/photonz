@@ -449,6 +449,17 @@ public struct PlaytestPoint: Hashable, Sendable {
     }
 }
 
+/// Who a click at a point ends up with, for `expectClickReaches`.
+public enum PlaytestClickTaker: String, Hashable, Sendable {
+    /// The picture. Anything the app floats over the canvas is letting the
+    /// click through, which is what almost every piece of canvas chrome owes
+    /// the person underneath it.
+    case canvas
+    /// Something floating over the picture: a button on a notice pill, the
+    /// tool bar, a popover. The click stops there and the canvas never sees it.
+    case chrome
+}
+
 /// Where one point of a path has to have ended up, which is how a walk claims
 /// that reshaping it actually reshaped it.
 ///
@@ -1935,6 +1946,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// it exact and repeatable; the real OS cursor is somewhere else entirely
     /// during a walk and comes back in the log as corroboration only.
     case expectCue(says: String)
+    /// Who a REAL click at a point would go to: the picture, or a piece of
+    /// chrome floating over it.
+    ///
+    /// A walk's own click is handed to the canvas view directly, so it lands
+    /// whether or not anything is covering the spot. That is right for driving
+    /// the picture and useless for the question this asks, which is whether
+    /// chrome the app floats over the canvas is LETTING THE PICTURE THROUGH.
+    /// The notice pill under the canvas took every click across its whole
+    /// capsule for six seconds after each separation and no walk could see it.
+    ///
+    /// The answer comes from the window, hit testing the point exactly as
+    /// AppKit does for a pointer, so what it reports is what a hand would get.
+    case expectClickReaches(PlaytestPoint, what: PlaytestClickTaker)
     /// What the NOTICE PILL under the canvas is saying, or that there is none.
     ///
     /// The pill and the tool chip share the slot under the canvas and the pill
@@ -2262,7 +2286,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2327,6 +2351,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
         case .expectCue: "expectCue"
+        case .expectClickReaches: "expectClickReaches"
         case .expectNotice: "expectNotice"
         case .expectLayers: "expectLayers"
         case .expectBox: "expectBox"
@@ -2886,6 +2911,16 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "; \"\(says)\" is none of them")
             }
             self = .expectCue(says: says)
+        case "expectClickReaches":
+            let at = try f.point("at")
+            let what = try f.optionalString("what") ?? PlaytestClickTaker.canvas.rawValue
+            guard let taker = PlaytestClickTaker(rawValue: what) else {
+                throw f.invalid("what", "a click reaches either the "
+                    + PlaytestClickTaker.canvas.rawValue + " or the "
+                    + PlaytestClickTaker.chrome.rawValue
+                    + " floating over it; \"\(what)\" is neither")
+            }
+            self = .expectClickReaches(at, what: taker)
         case "expectNotice":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent")
