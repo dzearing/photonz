@@ -1,0 +1,25 @@
+{
+  "feature": "A walk can click a row in the Measurements panel",
+  "epic": "unmanned-loop",
+  "summary": "A scripted walk can now pick a measurement by the name its row shows, and it reads the selection back, so the plainest thing anyone does with that list is finally something the loop can prove. The Redlining tutorial walk stops going through the Layers list to fake it.",
+  "setup": "Nothing to turn on. This is the playtest harness, so it shows up in walks rather than in the app.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/tutorial-measurements-panel-walk.json" },
+    { "do": "Open 2-picked-a-row-sc.png from the run and look at the Measurements list.", "shot": "2026-09-17-measurements-row-click.png" },
+    { "do": "Check the picture: the 104 px caliper is picked on the canvas, with its handles and dashed outline." },
+    { "do": "Read step 12 in log.json: it says which row was picked, out of which list, and how many layers are picked now." },
+    { "do": "Change that step's row to a name no row shows and run it again." },
+    { "do": "Read the failure: it names every row in the layers list and every row in the Measurements list." }
+  ],
+  "evaluate": [
+    "Is one selectRow step for both lists the right shape, or should a walk have to say which list it means?",
+    "When the real click cannot land, the step falls back to the row's own handler and says so in the log. Is saying it enough, or should a walk be able to demand the real click?",
+    "The failure message lists both lists in full. Is that the help you want when a row name is wrong?"
+  ],
+  "rough": [
+    "The click lands for real only while Photonz is the active app. A measurement row has nothing AppKit answers for under it (unlike a layer row, which can be picked up), so a synthesized click reaches the eye button on the row and never the row itself. Measured with a counter in the gesture: 20 clicks across the row fired it 0 times; adding an onDrag to the row made the first click fire it. So the step clicks first and calls the row's own handler when the click does not take, naming the reason in the log.",
+    "The Mac's screen has been locked since 2026-09-15, so this walk ran forced (PHOTONZ_ALLOW_LOCKED_WALK=1) and was never the active app. That means the fallback path is what every run here exercised, and the real-click path has not been watched on an unlocked Mac. A sweep is requested.",
+    "The picture above is a real window capture, taken while the screen was locked. macOS still photographs the window, so it shows the app as it was.",
+    "measure-row-menu-walk fails on unchanged HEAD at its first rightClick, because taking a measurement selects it, the Measurement and Appearance sections arrive, and the Measurements list drops below the fold: rightClick does not scroll to what it names the way press and selectRow do. Folded into the walks-that-fail-in-the-full-sweep task rather than filed on its own."
+  ]
+}

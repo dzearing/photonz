@@ -1291,14 +1291,18 @@ private final class Run {
         case .selectRow(let row, let modifiers):
             let editor = try requireEditor()
             let rows = editor.layerRows
-            guard let match = rows.first(where: { $0.name == row })
-                    ?? rows.first(where: { $0.name.caseInsensitiveCompare(row) == .orderedSame }) else {
-                let seen = rows.map(\.name).joined(separator: ", ")
-                throw Failure(description: "no row called \"\(row)\" is in the layers list; the ones that are: "
-                    + (seen.isEmpty ? "none" : seen))
-            }
             let click: RowClick = if modifiers.contains(.shift) { .extend }
                 else if modifiers.contains(.command) { .toggle } else { .plain }
+            // The layers list first, because that is the list most walks are
+            // crawling down. A name it does not know goes to the Measurements
+            // list, which holds the same layers in its own order and whose rows
+            // nothing could click at all before.
+            guard let match = rows.first(where: { $0.name == row })
+                    ?? rows.first(where: { $0.name.caseInsensitiveCompare(row) == .orderedSame }) else {
+                try await clickMeasurementRow(row, click: click, modifiers: modifiers,
+                                              layerNames: rows.map(\.name), number: number)
+                break
+            }
             // What picking a row costs, on the main thread, from the click to
             // the panel standing still. The same pair of meters a real press
             // carries, because this IS the press's handler: the walk that
@@ -2835,6 +2839,155 @@ private final class Run {
              state: describe())
     }
 
+    /// Clicks a row of the Measurements list by the name it shows, the way a
+    /// person does.
+    ///
+    /// `selectRow` looked only at the layers list, and a press looks only for
+    /// controls, so the Measurements rows were reachable for a right click and
+    /// for nothing else. The most ordinary thing anyone does with that list
+    /// went unproved, and the Redlining tutorial walk had to pick the same
+    /// measurement out of the Layers list and explain itself in a note
+    /// (tutorial-measurements-panel-walk, 2026-09-13).
+    ///
+    /// Real mouse events first, because a row covered by something, or
+    /// scrolled until the panel's edge cuts across it, should fail a walk the
+    /// way it fails a person. When the click does not take, the row's own
+    /// handler runs instead and the log says so, which is what the layers list
+    /// has always done. That second path is not a nicety:
+    ///
+    /// A synthesized click reaches a SwiftUI view only where something AppKit
+    /// answers for it. A layer row can be picked up, so `onDrag` puts a real
+    /// drag source under it and the click lands; a measurement row cannot be
+    /// picked up and has nothing under it but SwiftUI, so while the app is not
+    /// the active one the click reaches the row's buttons and never its
+    /// `onTapGesture`. Measured on 2026-09-17 with a counter in the gesture:
+    /// twenty clicks across the row fired it 0 times and fired the eye button
+    /// beside it every time, and adding an `onDrag` to the row made the very
+    /// first click fire it. So on a locked Mac — where nothing can be the
+    /// active app — an honest-only step would report this list broken on every
+    /// walk, which is the failure `PlaytestScreenState` exists to stop.
+    ///
+    /// Either way the selection is READ BACK afterwards, so a click that
+    /// changed nothing is a walk that stops rather than a walk reporting a
+    /// pass.
+    private func clickMeasurementRow(_ name: String, click: RowClick,
+                                     modifiers: [PlaytestModifier],
+                                     layerNames: [String], number: Int) async throws {
+        let editor = try requireEditor()
+        let measurements = editor.measurePanelLayers
+        func shown(_ layer: Layer) -> String { MeasureSpecList.displayName(for: layer) }
+        guard let layer = measurements.first(where: { shown($0) == name })
+                ?? measurements.first(where: {
+                    shown($0).caseInsensitiveCompare(name) == .orderedSame
+                }) else {
+            func list(_ names: [String]) -> String {
+                names.isEmpty ? "none" : names.joined(separator: ", ")
+            }
+            throw Failure(description: "no row called \"\(name)\" is in either list of rows. "
+                + "The layers list has: " + list(layerNames) + ". "
+                + "The Measurements list has: " + list(measurements.map(shown)) + ".")
+        }
+        let wanted = shown(layer)
+        // Waited for and scrolled to, exactly as a press is: the Measurements
+        // section sits low in the dock, so a walk that opened it and clicked
+        // straight away would be clicking the panel's edge.
+        var target = try await patiently { try self.measurementRowTarget(wanted) }
+        var effort = ""
+        if !Self.isInReach(target) {
+            let moved = try await bringIntoReach(wanted) { try self.measurementRowTarget(wanted) }
+            target = try measurementRowTarget(wanted)
+            if moved > 0.5 { effort = "scrolled \(Int(moved))pt to reach it" }
+        }
+        // ...and not clicked until the row has stopped moving, or the event
+        // lands on whatever slid into its place. A scroll down the dock is
+        // exactly the thing that keeps a row moving.
+        let steady = await settled(target, named: wanted) {
+            try self.measurementRowTarget(wanted)
+        }
+        target = steady.target
+        if !steady.effort.isEmpty { effort += (effort.isEmpty ? "" : ", ") + steady.effort }
+        guard let window = target.window, window.contentView != nil else {
+            throw Failure(description: "the row \"\(wanted)\" is in no window to click")
+        }
+        // A command click on a row already picked LETS IT GO, so what the
+        // click promised is not always "selected": it is that this row's place
+        // in the selection changed the way that click means.
+        let before = editor.actionableLayerIDs
+        let ends = click == .toggle ? !before.contains(layer.id) : true
+        func landed() -> Bool { editor.actionableLayerIDs.contains(layer.id) == ends }
+
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
+        ViewBuildMeter.shared.reset()
+        let flags = eventFlags(modifiers)
+        let stamp = ProcessInfo.processInfo.systemUptime
+        guard let down = NSEvent.mouseEvent(
+                with: .leftMouseDown, location: target.point, modifierFlags: flags, timestamp: stamp,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: 1, pressure: 1),
+              let up = NSEvent.mouseEvent(
+                with: .leftMouseUp, location: target.point, modifierFlags: flags,
+                timestamp: stamp + 0.05, windowNumber: window.windowNumber, context: nil,
+                eventNumber: 1, clickCount: 1, pressure: 0) else {
+            throw Failure(description: "could not make a mouse event for the row \"\(wanted)\"")
+        }
+        NSApp.postEvent(down, atStart: false)
+        NSApp.postEvent(up, atStart: false)
+        await sleep(0.35)
+        var how = "clicked at window \(short(target.point))"
+        if !landed() {
+            // Nothing under the row answered the click. Its own handler is what
+            // the tap would have called, over this list's order, so shift and
+            // command still mean here what they mean in the layers list.
+            editor.clickRow(layer.id, click, in: editor.measurePanelLayers.map(\.id))
+            await sleep(0.2)
+            how = "the click at window \(short(target.point)) did not land"
+                + (NSApp.isActive ? "" : " (Photonz is not the active app, so a row with nothing "
+                   + "AppKit answers for takes no synthesized click)")
+                + ", so the row's own handler ran instead"
+        }
+        try await patiently {
+            guard landed() else {
+                let now = editor.actionableLayerIDs
+                throw Failure(description: "the row \"\(wanted)\" was clicked at window "
+                    + "\(self.short(target.point)) and the selection did not move: it is still "
+                    + (now.isEmpty ? "empty" : "\(now.count) layer\(now.count == 1 ? "" : "s")")
+                    + ". Something is covering the row, or the panel slid under the click.")
+            }
+        }
+        let picked = editor.actionableLayerIDs
+        note(number, "selectRow",
+             "picked \"\(wanted)\" out of the Measurements list"
+                + (layer.isVisible ? "" : " (hidden)")
+                + " with a \(click) click; " + how
+                + (effort.isEmpty ? "" : "; " + effort)
+                + "; \(picked.count) layer\(picked.count == 1 ? "" : "s") picked now"
+                + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
+             state: describe())
+    }
+
+    /// One row of the Measurements list, as something a click can land on.
+    /// The marker behind the row is a position only, so this is the same
+    /// reading a press makes of a control's marker.
+    private func measurementRowTarget(_ name: String) throws -> PlaytestPressTarget {
+        let rows = try panelTargets().filter {
+            $0.kind == .row && $0.detail.hasPrefix("measurement")
+        }
+        guard let row = rows.first(where: { $0.name == name })
+                ?? rows.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            let seen = rows.map(\.name).joined(separator: ", ")
+            throw Failure(description: "the Measurements list is not showing a row called "
+                + "\"\(name)\"; it is showing: " + (seen.isEmpty ? "none" : seen)
+                + ". Is the panel open and the Measurements section unfolded?")
+        }
+        let frame = row.convert(row.bounds, to: nil)
+        return PlaytestPressTarget(name: row.name, detail: row.detail,
+                                   point: CGPoint(x: frame.midX, y: frame.midY),
+                                   box: frame,
+                                   visible: row.convert(row.visibleRect, to: nil),
+                                   isEnabled: true, window: row.window)
+    }
+
     /// Carries a dock section up or down the column, the way a person does:
     /// take hold of its header, move until the pointer has passed the middle
     /// of another section, and let go — or press Escape instead, which puts it
@@ -3306,7 +3459,18 @@ private final class Run {
     /// the next time the dock grows a section (`pressControl`).
     @discardableResult
     private func bringIntoReach(_ name: String, in row: String?) async throws -> Double {
-        let target = try pressTarget(name, in: row)
+        try await bringIntoReach(name) { try self.pressTarget(name, in: row) }
+    }
+
+    /// The same, for anything a walk can point at. `look` reads where the
+    /// thing is RIGHT NOW, because each turn of a scroll moves it and a lazily
+    /// built list hands back a different view every time. A row of the
+    /// Measurements list is found its own way and scrolls to exactly like a
+    /// control (`clickMeasurementRow`).
+    @discardableResult
+    private func bringIntoReach(_ name: String,
+                                look: () throws -> PlaytestPressTarget) async throws -> Double {
+        let target = try look()
         guard !Self.isInReach(target) else { return 0 }
         guard let window = target.window, let content = window.contentView else {
             throw Failure(description: "the control \"\(name)\" is in no window to scroll")
@@ -3317,7 +3481,7 @@ private final class Run {
         // the rounds after the first are for the row heights that changed
         // under it. A dock that has not arrived in six is not going to.
         for _ in 0..<6 {
-            let current = try pressTarget(name, in: row)
+            let current = try look()
             if Self.isInReach(current) { break }
             // Each scrolling area around the control, innermost first, paired
             // with the strip of window it could actually park the control in.
@@ -3356,7 +3520,7 @@ private final class Run {
             }
             await sleep(0.35)
         }
-        let landed = try pressTarget(name, in: row)
+        let landed = try look()
         guard Self.isInReach(landed) else {
             throw Failure(description: "scrolled \(Int(moved))pt and \"\(name)\" is still not "
                 + "where a person could press it"
@@ -6668,6 +6832,15 @@ private final class Run {
     /// broken walk.
     private func settled(_ target: PlaytestPressTarget, named name: String, in row: String?)
         async -> (target: PlaytestPressTarget, effort: String) {
+        await settled(target, named: name) { try self.pressTarget(name, in: row) }
+    }
+
+    /// The same, for anything a walk can point at: a row of the Measurements
+    /// list settles exactly like a control, and for the same reason
+    /// (`clickMeasurementRow`).
+    private func settled(_ target: PlaytestPressTarget, named name: String,
+                         look: () throws -> PlaytestPressTarget)
+        async -> (target: PlaytestPressTarget, effort: String) {
         var last = target
         let deadline = CACurrentMediaTime() + Self.panelPatience
         var looks = 0
@@ -6685,7 +6858,7 @@ private final class Run {
             // harness's other looking is taken off.
             let began = CACurrentMediaTime()
             let restless = isRestless()
-            let now = try? pressTarget(name, in: row)
+            let now = try? look()
             MainThreadMeter.shared.exclude(CACurrentMediaTime() - began)
             let quiet = passes > 0 && busy <= pace.busyBudget && restless == nil
             guard let now else { continue }
