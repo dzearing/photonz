@@ -260,7 +260,8 @@ extension EditorState {
                                skipped: result.skipped, crowded: result.crowded)
             raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
                                                    skipped: result.skipped,
-                                                   crowded: result.crowded))
+                                                   crowded: result.crowded),
+                              action: offerToReadTheWords(in: made))
             return
         }
         // Every group this made is left OPEN. The command has just invented
@@ -298,7 +299,33 @@ extension EditorState {
         // the next run reaches the ones behind them.
         raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
                                                skipped: result.skipped,
-                                               crowded: result.crowded))
+                                               crowded: result.crowded),
+                          action: offerToReadTheWords(in: made))
+    }
+
+    /// The offer the separation's own line carries: read the words in every run
+    /// that just came out (`next-read-every-label`).
+    ///
+    /// This is the half of the study that fixes DISCOVERY. Turn into Text is a
+    /// menu row under a menu row and nothing points at it, so the words in a
+    /// screenshot were a feature you had to already know about. The line that
+    /// says what came out is where a person is looking the instant it matters,
+    /// and it is a choice about a result they can already see rather than
+    /// something that happened to their screenshot
+    /// (`docs/design/separate-reads-the-words.md`).
+    ///
+    /// The runs are captured HERE, not read off the selection when the button
+    /// is pressed: a click on the canvas in between would otherwise change what
+    /// the button means. Nothing to read, no offer, so a picture that came apart
+    /// into boxes alone carries the plain line it always did.
+    private func offerToReadTheWords(in made: [UUID]) -> CanvasNoticeAction? {
+        guard Experiments.shared.readEveryLabelEnabled, let document else { return nil }
+        let runs = made.compactMap { document.layer(id: $0) }
+            .flatMap(\.selfAndDescendants)
+            .filter(\.holdsWordsToRead)
+            .map(\.id)
+        guard !runs.isEmpty else { return nil }
+        return .readTheWords(runs: runs)
     }
 
     /// The one picture the foot of the layers list is speaking for: the last

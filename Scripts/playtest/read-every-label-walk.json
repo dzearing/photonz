@@ -1,0 +1,102 @@
+{
+  "out": "/tmp/photonz-playtest/read-every-label",
+  "seed": "ONE PRESS FOR THE WHOLE SCREENSHOT. Turning a separated label into words was a menu row under a menu row, and nothing pointed at it: you had to already know it existed, and then run it once per label. The walk separates a settings pane, presses the offer the line at the bottom of the canvas now carries, and every label in the pane becomes words you can retype in one go. One undo press takes the whole lot back. Then it picks two labels at once and asks the row menu for the words, which used to hand back only the row you right clicked.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "the capture as it opens: one locked Background picture and nothing else"
+    },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 1.6 },
+    {
+      "do": "describe",
+      "stage": "1-the-line-offers-the-words",
+      "note": "THE FIRST TEST, and the whole point of the task: the line that says what came out now carries a button that reads the words in every run it found. It is the only thing on screen that points at the feature at all, and it turns up exactly where a person is looking the instant after the pieces land."
+    },
+    { "do": "expect", "row": "Text 9", "present": true },
+    { "do": "snapshot", "name": "label-1-the-offer" },
+    { "do": "press", "control": "Read the Words" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "describe",
+      "stage": "2-it-says-it-is-reading",
+      "note": "THE SECOND TEST: reading a dense page is a second or two and the press takes the offer off screen, so the line says what it is doing and how many labels it is working through. Without it the press looks like it did nothing at all."
+    },
+    { "do": "snapshot", "name": "label-2-reading" },
+    { "do": "wait", "seconds": 4 },
+    {
+      "do": "describe",
+      "stage": "3-every-label-is-words",
+      "note": "THE THIRD TEST: every label in the pane is real text now, from the heading down to the white label on the blue button, and the line says how many landed, what family they were all held to, and how many stayed pictures. The canvas is identical, because the words went back exactly where they were."
+    },
+    { "do": "expect", "row": "Save Changes", "present": true },
+    { "do": "expect", "row": "General", "present": true },
+    { "do": "expect", "row": "Text 9", "present": false },
+    { "do": "expect", "row": "Text 1", "present": false },
+    { "do": "snapshot", "name": "label-3-all-read" },
+    { "do": "render", "name": "label-3-all-read-doc" },
+    { "do": "panel", "stage": "3-rows" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "4-one-press-takes-the-lot-back",
+      "note": "THE FOURTH TEST: nine readings landed in ONE step, so one undo press puts every label back to being a picture. Reading everything at once would not be worth having if getting out of it cost nine presses."
+    },
+    { "do": "expect", "row": "Text 9", "present": true },
+    { "do": "expect", "row": "Save Changes", "present": false },
+    { "do": "snapshot", "name": "label-4-undone" },
+    { "do": "selectRow", "row": "Text 1" },
+    { "do": "selectRow", "row": "Text 9", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "rightClick",
+      "on": "Text 9",
+      "shot": "label-5-row-menu",
+      "choose": "Turn into Text"
+    },
+    { "do": "wait", "seconds": 3 },
+    {
+      "do": "describe",
+      "stage": "5-the-row-menu-takes-the-whole-pick",
+      "note": "THE FIFTH TEST: two labels were picked and the row menu was asked for the words on one of them. BOTH came back, the way Duplicate, Delete, Group and Turn Into Picture all already behave. It used to read only the row you right clicked."
+    },
+    { "do": "expect", "row": "General", "present": true },
+    { "do": "expect", "row": "Save Changes", "present": true },
+    { "do": "expect", "row": "Text 5", "present": true },
+    { "do": "snapshot", "name": "label-6-two-of-nine" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "6-and-that-is-one-step-too",
+      "note": "THE SIXTH TEST: the pair landed in one step as well, so one press puts both back."
+    },
+    { "do": "expect", "row": "Text 1", "present": true },
+    { "do": "expect", "row": "Text 9", "present": true },
+    { "do": "snapshot", "name": "label-7-pair-undone" }
+  ],
+  "setup": {
+    "forget": ["groups"],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true,
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": false,
+      "next-a-separation-arrives-shut": false
+    }
+  }
+}

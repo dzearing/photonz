@@ -477,9 +477,12 @@ struct EditorView: View {
                         Text(action.label)
                         // The key that does the same thing, so the pill is also
                         // where you learn it. It keeps working after the pill
-                        // has gone, which the button cannot.
-                        Text(action.shortcutHint)
-                            .foregroundStyle(.secondary)
+                        // has gone, which the button cannot. Absent where the
+                        // command has no key: a face showing one that does not
+                        // exist teaches something false.
+                        if let hint = action.shortcutHint {
+                            Text(hint).foregroundStyle(.secondary)
+                        }
                     }
                 }
                 // A real button, not a coloured word: the whole point of the

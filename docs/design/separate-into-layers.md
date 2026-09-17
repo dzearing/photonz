@@ -858,6 +858,58 @@ Walks: `Scripts/playtest/read-a-label-by-double-click-walk.json` for the reading
 `Scripts/playtest/double-click-a-label-walk.json` for the plain case of a label
 that is already words and lives inside a group.
 
+### The line offers to read every label at once
+
+Flag: `next-read-every-label`, on by default in Next. Landed 2026-09-17.
+
+Turn into Text was a menu row under a menu row, and nothing on screen pointed at
+it. So the words in a screenshot were a feature you had to already know about,
+and then run once per label. The line the separation raises now carries a
+button, **Read the Words**, and one press turns every run it found into real
+text in ONE undo step.
+
+This is the half of the study `docs/design/separate-reads-the-words.md`
+recommended and the reason it could say no to reading inside the command:
+
+- It happens **after** the person has seen what came out, so it is a choice
+  about a result they are looking at rather than something that happened to
+  their screenshot.
+- Separate into Layers stays exactly as fast as it was.
+- **The page can vote.** Read together, the runs are compared with each other:
+  they vote on the family the screenshot is set in, every run is held to the
+  winner, and a run the winner cannot account for stays a picture instead of
+  coming back a weight heavier than the identical label beside it. Measured,
+  that takes the strays to nought, at a cost of one reading of thirty-one on
+  this app's own window. Reading one label at a time can never do this, because
+  it only ever sees one label.
+
+The reading itself is `TextReader.readPage`, which is where the vote and the
+second look at the strays live, spread over the cores for this caller and serial
+for a test. `EditorState.turnIntoTextForLayers` is the command: it collects the
+runs, raises a line saying how many it is reading, and lands every reading that
+came back in a single `perform`.
+
+**What the line says afterwards** is `TextReading.Batch`: how many labels are
+words, the family they were all held to, named once for the page rather than
+once per label, and how many stayed pictures. That last count is the half nobody
+would otherwise find out about, since a label that could not be read looks
+exactly like one that was.
+
+**While it works it says so.** A dense page is about two seconds and pressing
+the button takes the offer off screen, so the line becomes "Reading the words /
+142 labels" until the answer lands. This is the progress indicator the command
+has owed since it learnt to read boxes.
+
+**Three doors, not one.** The pill's button is a shortcut, never the only way
+in, so the same batch is on Layer ▸ Turn into Text and on a layer row's right
+click menu, both acting on everything picked (`rowMenuTargets`, the rule
+Duplicate, Delete, Group and Turn Into Picture already follow). Picking the
+group a big separation arrives in and choosing Turn into Text reads the whole
+screenshot. One target is never a batch: it falls through to the single reading,
+so the pill still names the words and the face, and a refusal still says why.
+
+Walk: `Scripts/playtest/read-every-label-walk.json`.
+
 ### A separated row says the words in its picture
 
 Flag: `next-a-separated-row-says-its-words`, on by default in Next. Landed

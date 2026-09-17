@@ -152,6 +152,8 @@ public enum FeatureCatalog {
 
     public static let doubleClickReadsALabelFlag = "next-double-click-reads-a-label"
 
+    public static let readEveryLabelFlag = "next-read-every-label"
+
     public static let newLayerViaCutFlag = "next-new-layer-via-cut"
 
     public static let copyALookFlag = "next-copy-a-look"
@@ -507,6 +509,15 @@ public enum FeatureCatalog {
                     name: doubleClickReadsALabelFlag,
                     title: "Double click a label in a separated screenshot to retype it",
                     description: "After Separate into Layers, double clicking the words on a button or a row reads them and puts the caret in them, so changing a label is one gesture instead of finding Turn into Text in a menu first. Double clicking already means \"I want to change these words\" everywhere else in the app, and this makes it mean the same thing on a label that is still a picture. The reading is the same one Turn into Text does, on the one label you pointed at, and it lands in its own step: one undo takes the reading back, a second takes back what you typed. Where no face the app can set is close enough to the one in the picture, nothing opens and a line at the bottom of the canvas says why, exactly as the menu row does. Off means a double click on a label that has not been read yet picks it and nothing more, and Turn into Text is the only way to the words.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: readEveryLabelFlag,
+                    title: "Read every label in a separated screenshot at once",
+                    description: "After Separate into Layers, the line at the bottom of the canvas offers to read the words in every label it found. One press turns them all into real text you can retype, and one undo press takes the whole lot back. Reading them together is also the only way the app can tell which typeface the screenshot is set in: the labels vote, every one of them is held to the family that won, and a label that family cannot account for stays a picture instead of coming back a weight heavier than the identical label beside it. The line then says how many labels are words and how many stayed pictures, so nothing goes missing quietly. The same batch is on the Layer menu and on a layer row's right click menu, so picking five labels and choosing Turn into Text reads all five rather than only the row you clicked, and picking the group a big separation arrives in reads the whole screenshot. Off means the offer is absent from the line and Turn into Text reads one label at a time.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

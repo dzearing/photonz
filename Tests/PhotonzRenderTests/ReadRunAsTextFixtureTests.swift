@@ -89,6 +89,71 @@ struct ReadRunAsTextFixtureTests {
         #expect(families == ["SF Pro"])
     }
 
+    // MARK: - Every label at once (`next-read-every-label`)
+
+    /// The same nine runs read the way the app reads them when somebody presses
+    /// Read the Words: across the cores, because there are forty of these on a
+    /// window capture and a hundred and forty on a page.
+    private static let spread: [TextReader.Read] = TextReader.readPage(
+        runImages, captureScale: 2, spreadingOverTheCores: true)
+
+    @Test func readingThePageAcrossTheCoresAnswersExactlyAsOneAtATime() throws {
+        // Spreading the work is a speed decision and must not be a correctness
+        // one. Nine runs, same words, same faces, same sizes, whichever way
+        // round they were read.
+        #expect(Self.spread.count == Self.reads.count)
+        for index in Self.reads.indices {
+            #expect(Self.spread[index].outcome.reading?.string
+                == Self.reads[index].outcome.reading?.string, "run \(index)")
+            #expect(Self.spread[index].outcome.reading?.face
+                == Self.reads[index].outcome.reading?.face, "run \(index)")
+            #expect(Self.spread[index].outcome.reading?.fontSize
+                == Self.reads[index].outcome.reading?.fontSize, "run \(index)")
+        }
+    }
+
+    @Test func everyLabelOfOnePageComesBackInOneFamily() throws {
+        // The thing reading the whole picture at once can do that reading one
+        // label at a time never can: the labels are compared with each other,
+        // so no label comes back in a family the page does not contain.
+        let families = Set(Self.spread.compactMap(\.outcome.reading?.face.fontName))
+        #expect(families == ["SF Pro"])
+    }
+
+    @Test func aPageWhoseFamilyIsAlreadySettledIsNotAskedAgain() throws {
+        // A screenshot read in a batch and then one more label read on its own
+        // must not end up with two answers. Told the family, every run is held
+        // to it and nothing votes.
+        let told = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "SF Pro")
+        let families = Set(told.compactMap(\.outcome.reading?.face.fontName))
+        #expect(families == ["SF Pro"])
+        #expect(told.compactMap(\.outcome.reading).count
+            == Self.reads.compactMap(\.outcome.reading).count)
+    }
+
+    @Test func aPageHeldToAFamilyItIsNotInLosesReadingsRatherThanGainingWrongOnes() throws {
+        // The safety net under the batch, the same one a single reading has:
+        // held to a family this capture is plainly not set in, the labels stay
+        // pictures. A page that genuinely mixes families gives up readings
+        // rather than handing back labels in the wrong face.
+        let wrong = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "Georgia")
+        #expect(!wrong.contains { $0.outcome.reading?.face.fontName == "SF Pro" })
+        #expect(wrong.compactMap(\.outcome.reading).count < Self.reads.compactMap(\.outcome.reading).count)
+    }
+
+    @Test func aRunDrawnSmallerOnTheCanvasIsSetSmaller() throws {
+        // Each run carries its own scale, because a label somebody resized
+        // after separating has to cover the space it covers NOW. Read as a page
+        // at half the size, the words come back at half the point size.
+        let runs = Self.runImages.prefix(3).map { TextReader.PageRun(image: $0, layerScale: 2) }
+        let smaller = TextReader.readPage(Array(runs), captureScale: 2)
+        for index in runs.indices {
+            guard let half = smaller[index].outcome.reading,
+                  let whole = Self.reads[index].outcome.reading else { continue }
+            #expect(half.fontSize < whole.fontSize, "run \(index)")
+        }
+    }
+
     @Test func theRunsOfThisCaptureVoteForTheSystemFont() throws {
         let readings = Self.reads.compactMap(\.outcome.reading)
         #expect(TextReading.pageFamily(of: readings) == "SF Pro")

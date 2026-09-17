@@ -118,6 +118,10 @@ automation. Two things fix it, and neither of them guesses on anybody's behalf.
 
 ### The pill offers to read the words, once you have seen what came out
 
+**Landed 2026-09-17** behind `next-read-every-label`, on by default in Next. See
+`docs/design/separate-into-layers.md`, "The line offers to read every label at
+once".
+
 The separation already raises a pill saying what it found. It should offer
 reading as an action there: one press, for the whole picture, landing in one
 undo step. That is the same single press automatic reading would have cost, with

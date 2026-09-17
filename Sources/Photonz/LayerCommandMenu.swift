@@ -90,7 +90,10 @@ enum LayerCommandList {
             // Directly under it, because it is the next thing you want on the
             // layers Separate just made: the run is on its own layer, and now
             // the words in it become words you can retype.
-            rows.append(.command("Turn into Text") { editorState.turnIntoText(id: id) })
+            // On the whole selection when the row you right clicked is part of
+            // it, like every other row of this menu (`rowMenuTargets`): picking
+            // five labels and asking for the words must not hand back one.
+            rows.append(.command("Turn into Text") { editorState.turnIntoTextForRow(id: id) })
         }
         rows.append(.separator)
         // Group and Ungroup, on Photoshop's keys, directly above the arrange

@@ -312,6 +312,14 @@ extension Experiments {
         separateIntoLayersEnabled && isEnabled(FeatureCatalog.doubleClickReadsALabelFlag)
     }
 
+    /// `next-read-every-label`: whether the line a separation raises offers to
+    /// read the words in every run it found, and whether Turn into Text acts on
+    /// everything picked instead of one row. Needs the separation itself to be
+    /// on, since there are no runs without it.
+    var readEveryLabelEnabled: Bool {
+        separateIntoLayersEnabled && isEnabled(FeatureCatalog.readEveryLabelFlag)
+    }
+
     /// `next-what-a-separation-left-behind`: whether the picture's own row in
     /// the layers list keeps the count the notice pill faded away with, and
     /// offers the next batch beside it (`SeparationLeftover`). Session chrome

@@ -1,0 +1,30 @@
+{
+  "feature": "Read every label in a separated screenshot",
+  "epic": "ui-building",
+  "summary": "After taking a screenshot apart, the line at the bottom of the canvas offers to read the words in every label it found. One press turns them all into real text you can retype, held to the one typeface the page is set in, and one undo press takes the whole lot back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Separate a screenshot into layers and Read every label in a separated screenshot at once are both on by default.",
+  "try": [
+    { "do": "Open a screenshot of an interface, a settings pane or an app window." },
+    { "do": "Right click the picture's row in the layers list and choose Separate into Layers." },
+    { "do": "Look at the line that appears at the bottom of the canvas: it now ends with a Read the Words button." },
+    { "do": "Press Read the Words." },
+    { "do": "Read the line it leaves behind: how many labels are words, the typeface they were all set in, and how many stayed pictures." },
+    { "do": "Double click one of those labels on the canvas and retype it." },
+    { "do": "Press Command Z once and watch every label go back to being a picture in that one press." },
+    { "do": "Pick two labels in the layers list, right click one of them, and choose Turn into Text: both come back, not just the row you clicked." }
+  ],
+  "evaluate": [
+    "Does the button catch your eye before the line fades, or did you only find it because this note said it was there?",
+    "Is Read the Words the right name on that button, or would you expect the menu's own words, Turn into Text?",
+    "After the reading, does the line tell you enough about what stayed a picture that you would go and look for it?",
+    "Are the labels all set at the same weight, or can you see one label heavier than the identical label beside it?",
+    "On a dense page the reading takes a second or two and the line says Reading the words while it works. Is that enough, or does it want something more than a line?"
+  ],
+  "rough": [
+    "There are no pictures with this audit, real or offscreen. The Mac's screen was locked for the whole task, so every walk refused to run and reported status locked, which is the app being unphotographable rather than broken. Everything claimed here comes from the unit tests and from the fixture tests that read a real 2x settings pane capture, not from watching the running app. A sweep is requested and the new walk, read-every-label-walk.json, runs with it once the screen is unlocked.",
+    "The vote settles the FAMILY for the page and nothing settles the weight, so six row labels of one pane can still come back four Regular and two Medium. That is the remaining inconsistency the study named and it is more visible now than it was, because you see forty labels at once instead of one.",
+    "For six seconds after a separation the line at the bottom of the canvas takes the pointer, so a click meant for a piece under it is swallowed. It is the same arrangement the refusal pill has shipped with since it learned to carry a button, but a separation happens far more often than a refusal.",
+    "A label that stayed a picture is counted and not pointed at. The line says 3 stayed pictures and there is no way to jump to them, so finding them means looking at the layers list for rows that are still called Text.",
+    "Nothing is selected or scrolled to after the batch. That is deliberate, since moving the selection onto one of forty labels would be the app pointing at a label nobody asked about, but it does mean the only sign anything happened is the line and the layers list."
+  ]
+}

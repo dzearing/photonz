@@ -32,7 +32,7 @@ struct CanvasNoticeActionTests {
         // turn the layer the refusal was ABOUT, never whatever is picked now.
         let other = UUID()
         let action = CanvasNoticeAction.turnIntoPicture(layer: layerID)
-        #expect(action.layerID == layerID)
+        #expect(action.layerIDs == [layerID])
         #expect(action != .turnIntoPicture(layer: other))
     }
 

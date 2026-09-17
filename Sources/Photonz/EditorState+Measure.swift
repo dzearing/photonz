@@ -357,6 +357,10 @@ extension EditorState {
             // The one layer the marquee hit, never the selection around it:
             // the pill named that layer, so the button may not change others.
             case .turnIntoPicture(let id): self.rasterizeLayers(ids: [id])
+            // The runs the separation MADE, never the selection around them:
+            // the pill counted those pieces, so the button may not reach past
+            // them (`next-read-every-label`).
+            case .readTheWords(let runs): self.turnIntoTextForLayers(ids: Set(runs))
             }
         }
     }

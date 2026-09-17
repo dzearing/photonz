@@ -517,10 +517,10 @@ struct EditorCommands: Commands {
                 // The step after it, in the same two places, under the same
                 // name: a picture of a run of text becomes words you can
                 // retype.
-                Button("Turn into Text") {
-                    if let selectedID { editor?.turnIntoText(id: selectedID) }
-                }
-                .disabled(!(selectedID.map { editor?.canTurnIntoText(id: $0) ?? false } ?? false))
+                // Over everything picked, like Turn Into Picture above it, and
+                // over the whole group a big separation arrives in.
+                Button("Turn into Text") { editor?.turnIntoTextForSelection() }
+                .disabled(!(editor?.canTurnIntoTextSelection ?? false))
             }
             Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
                 .disabled(!(editor?.canArrangeCollage ?? false))

@@ -106,6 +106,17 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// stays a picture has to say WHY, and every reason here is a sentence
         /// they can do something about.
         case turnedIntoText(TextReading.Outcome)
+        /// EVERY run in a separated picture was read in one press
+        /// (`TextReading.Batch`, `next-read-every-label`). The singular line
+        /// above names one label and the face it came out in, which says
+        /// nothing useful about forty of them and would be forty pills raised
+        /// over each other. This one counts them, names the family the page was
+        /// held to once, and says how many stayed pictures.
+        case turnedIntoTextInBatch(TextReading.Batch)
+        /// The same reading, while it is still going. Reading a dense page is
+        /// about two seconds and the press takes the pill that started it off
+        /// screen, so without this the button looks like it did nothing at all.
+        case readingTheWords(labels: Int)
         /// ⇧⌘J: a piece is now on a layer of its own and the space it came
         /// from has been filled in.
         ///
@@ -165,6 +176,16 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// than enough for anyone actually reading it.
     public static let heldLifetime: TimeInterval = 12.0
 
+    /// How long a notice that is reporting WORK IN PROGRESS stays up.
+    ///
+    /// Not a glance and not an offer: it is the app saying it is busy, and it
+    /// has to still be there when the answer lands, however dense the picture
+    /// was. The reading that raises it is two seconds on the densest capture
+    /// measured, so thirty is far more room than it can need — and it is a
+    /// ceiling rather than no clock at all, because nothing on screen may live
+    /// forever if the work it is describing never comes back.
+    public static let workingLifetime: TimeInterval = 30.0
+
     public var subject: Subject
     public var shownAt: Date
     /// The one thing this notice offers you to press, when it has one. Nil for
@@ -190,8 +211,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
-             .separatedIntoLayers, .turnedIntoText, .lookPasted,
-             .shapesCombined: return Self.breakLifetime
+             .separatedIntoLayers, .turnedIntoText, .turnedIntoTextInBatch,
+             .lookPasted, .shapesCombined: return Self.breakLifetime
+        // Still working: it waits for its own answer (see `workingLifetime`).
+        case .readingTheWords: return Self.workingLifetime
         default: return Self.lifetime
         }
     }
@@ -231,6 +254,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return runs + boxes == 0 ? "Nothing to separate" : "Separated"
         case .turnedIntoText(let outcome):
             return outcome.reading == nil ? "Still a picture" : "Turned into text"
+        case .turnedIntoTextInBatch(let batch): return batch.title
+        case .readingTheWords: return TextReading.Batch.workingTitle
         case .cutToOwnLayer:
             return "Cut to its own layer"
         case .lookCopied: return "Copied"
@@ -331,6 +356,10 @@ public struct CopyConfirmation: Hashable, Sendable {
             case .refused(let why):
                 return why.sentence
             }
+        case .turnedIntoTextInBatch(let batch):
+            return batch.detail
+        case .readingTheWords(let labels):
+            return TextReading.Batch.working(labels: labels)
         case .cutToOwnLayer(let heal):
             switch heal {
             case .matched:
