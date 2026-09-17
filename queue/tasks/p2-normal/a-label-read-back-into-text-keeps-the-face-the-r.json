@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2770,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T16:18:40.343Z",
-  "updated": "2026-09-17T02:41:39.217Z",
+  "updated": "2026-09-17T02:41:53.265Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-16 while running the queue task find-out-whether-separating-should-hand-you-text.\n\nCommand:\n  PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests\n\nOutput (app-window-2x, 40 runs, release build):\n  read 31/40 (78%)  an answer 23  a fallback 8\n  families SF Pro 27, Helvetica Neue 4\n  off the page's own family: 4, of which the app called 4 an answer rather than a fallback\n     Text 9   \"Corner Radius\" Helvetica Neue Bold 0.78 matched\n     Text 12  \"Border 1\"      Helvetica Neue Bold 0.81 matched\n     Text 21  \"Offset\"        Helvetica Neue Bold 0.72 matched\n     Text 30  \"Width\"         Helvetica Neue Bold 0.74 matched\nThe same capture reads \"Width\" correctly at Text 19 (SF Pro Medium 0.74) and \"Border 2\" correctly at Text 23 (SF Pro Medium 0.66), so it is the same word in the same panel answered two ways.\n\nThe dense page is worse: 13 of the 82 that read come back off the page's family (Georgia 5, Helvetica Neue 5, Times New Roman 2, SF Mono 1), 10 of them called an answer.\n\nPictures: queue/audits/2026-09-16-separate-reads-text-wrong-face.png (the four, against the ink they were meant to match), and -shape-a.png / -shape-b.png (the same corner of the panel before and after).\n\nWHY NO THRESHOLD FIXES IT: all four are provenance .matched, and their agreement (0.72 to 0.81) sits in the upper half of the correct readings' range (0.56 to 0.87). Filtering to matched keeps all four and drops eight correct ones. Raising TextReading.agreementBar until all four drop means 0.82, which keeps three of the thirty-one.\n\nTHE SHAPE THAT WAS MEASURED TO WORK: let the page vote. Take the family that won the most runs of the capture, then set each run in its own best weight of that family and accept it where it still clears agreementBar. Strays go to zero by construction, costing 1 reading of 31 on app-window and 8 of 82 on the dense page (measured, same test). The catch is the last acceptance item: Turn into Text today sees ONE run, so a vote needs either a whole-picture reading pass or a family remembered on the source picture's ImageRef from a previous read. See docs/design/separate-reads-the-words.md.\n\nThis does NOT fix the weight wobble (Corner Radius reads Semibold while Border 1 reads Medium, both section labels of one style); that is recorded in queue/audits/2026-09-13-turn-into-text.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-17T02:41:39.216Z",
       "note": "Adversarial review before building: the mock here is the study's own recommendation, and the part of it worth arguing with was the claim that per-run Turn into Text 'can never do this, because it only ever sees one run'. It can: a vote needs a dozen runs asked what family they are, not a whole page read and set. That is the difference between the fix being a background pass nobody asked for and it being free at the point of use. Also rejected before building: a family prior (make a non-system family beat SF Pro by a margin), because the measured gaps are 0.05 to 0.15 and the margin would have to be 0.15, which would drag half the correct answers with it.\n\nAdversarial review before calling it ready: the honest weak point is that a page that GENUINELY mixes families now loses the odd one out rather than setting it. Checked, and it fails safe: a run the page's family cannot account for is refused (noFaceMatches) and stays the picture it was, never set in the wrong face. Pinned by a test on the settings-pane fixture (aRunToldItsPageIsSomethingItIsNotStaysAPicture).\n\nLeft rough, not filed: two screenshots separated into one document and both left loose on the canvas share one vote, because nothing on a separated run records which picture it came from. Nobody has hit it, and the failure mode is a refusal rather than a wrong face, so it is recorded here and in the audit rather than becoming a task."
+    },
+    {
+      "t": "2026-09-17T02:41:53.263Z",
+      "note": "A separated label turned into text now comes back in the family the rest of its page is in. The runs of a capture vote (TextReading.pageFamily), each run is set in its own best weight of the winner (TextReading.decide(preferring:), TextReader.read(preferring:)/readPage), and a run the winner cannot account for stays a picture. Turn into Text needs no page read: it asks a dozen runs beside it what family they are (TextReader.family, ~0.1s spread over the cores) and remembers the answer per separation. Measured in release with the study test: app-window 4 strays -> 0 at a cost of 1 reading of 31, dense page 13 -> 0 at a cost of 5 of 82, settings pane unchanged at 9 of 9. Study prints before and after and now fails on a surviving stray. Full suite green, 7944 tests in 635 suites (needed ReadRunAsTextFixtureTests .serialized to stop it deadlocking). NOT watched in the app: the screen was locked all task so every walk came back locked with 0 steps; a sweep is requested. Audit: queue/audits/2026-09-17-turn-into-text-page-family.json. Commit 1515d9e3, pushed."
     }
   ],
-  "started": "2026-09-17T01:44:16.705Z"
+  "started": "2026-09-17T01:44:16.705Z",
+  "completed": "2026-09-17T02:41:53.264Z"
 }
