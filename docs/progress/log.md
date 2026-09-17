@@ -2,6 +2,43 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-17 — a wrapped label is as wide as the words that came out
+
+When a container broke a label onto more lines it used to keep the whole room
+the container had handed it, so the selection outline ran past the last letter
+and W read a number the words never reached. Answering the decision "When words
+are wrapped to fit the box around them, should the label be as wide as the words
+that came out, or as wide as the room it was given?" ("Fit the words", answered
+2026-09-09), `Layer.textWrapped(inRoom:)` now measures the lines it produced and
+takes their width, floored at the widest single word so a word too long for the
+room still hangs out at its own width instead of being cut off.
+
+The other half is the ripple. `GroupFlow.placed` measures the group again across
+after the wrap, but only where the width was a LIMIT on an axis that hugs, so a
+stack held at a Largest width of 140 whose words come out 89 settles at 121
+rather than standing at its ceiling with a strip of nothing down one side. A
+width somebody typed is a size they chose and never moves; a floor still holds
+the group open. Breaking at the widest line cannot move where the lines break,
+so this settles in one pass, which was checked with the real CoreText
+measurement over three passes rather than only with the test estimate.
+
+Six new tests and six existing ones brought to the decided behaviour; whole
+suite green at 8059 tests in 642 suites (one unrelated hover-timing test missed
+its absolute budget under full-suite load and passed alone, noted on the task
+that hardened it).
+
+Next: none of it was seen in the app. The Mac was locked for the whole task, so
+`wrapped-label-width-walk.json` reported `locked` and exit 3 and photographed
+nothing. The walk was rewritten to describe and look for the new behaviour and
+needs an unlocked screen. The audit ships an offscreen render from the app's own
+renderer instead, drawn with three boxes so the room, the stack and the label's
+box can be read at once, and says plainly that it is a render.
+
+Open question found on the way: a ceiling on a stack still does not reach a
+label inside a stack inside it, so those words stay on one line and hang out of
+everything around them. Reproduced in a test and filed as
+`words-inside-a-stack-inside-a-capped-stack-hang`.
+
 ## 2026-09-17 — an icon exported as a picture can leave its canvas out
 
 Export's **Include the background** checkbox now works for **PNG and WebP**, not
