@@ -199,6 +199,25 @@ public enum PanelSectionVisibility {
         }
     }
 
+    /// What the row at the foot of the panel reads.
+    ///
+    /// It counts the sections somebody TURNED OFF, and nothing else. The ones
+    /// automatic left out are not missing: a document that holds no measurement
+    /// has no Measurements list to show, and the section arrives on its own the
+    /// moment the first measurement is made. Counting those made a brand new
+    /// document open saying "Sections · 5 hidden", which is an alarm about
+    /// settings the document never had, and the exact opposite of what the row
+    /// is for.
+    ///
+    /// So it says nothing but "Sections" until a person has actually hidden
+    /// something, because a number that is there whatever you do is noise; and
+    /// it says how many the moment one is off, because "where did Measurements
+    /// go" is the whole risk of hiding anything.
+    public static func footerLabel(for rows: [Row]) -> String {
+        let hidden = rows.filter { $0.reason == .turnedOff }.count
+        return hidden == 0 ? "Sections" : "Sections · \(hidden) hidden"
+    }
+
     // MARK: What you chose, and how it is written down
 
     /// Your answers, one section at a time. A section this does not mention is

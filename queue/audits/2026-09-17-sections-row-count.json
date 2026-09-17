@@ -1,0 +1,24 @@
+{
+  "feature": "The Sections row at the foot of the panel",
+  "epic": "ui-building",
+  "summary": "A brand new document used to open with the panel's footer reading \"Sections · 5 hidden\", as if settings had gone missing. It now reads just \"Sections\" until you actually turn a section off, and the count only ever counts the ones you turned off yourself.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change: the Sections row is on wherever the panel is.",
+  "try": [
+    { "do": "Make a new document and draw a rectangle with the rectangle tool.", "shot": "2026-09-17-sections-row-quiet-sc.png" },
+    { "do": "Click the rectangle with the select tool and look at the row at the very bottom of the right hand panel. It should read just \"Sections\"." },
+    { "do": "Press that row to open the list, and read the words under Measurements, Layout and Component: they say the document has no job for them yet, which is why they are not counted." },
+    { "do": "Turn Motion off with its switch, then press Escape.", "shot": "2026-09-17-sections-row-one-hidden-sc.png" },
+    { "do": "Read the row again: \"Sections · 1 hidden\", and the Motion section is gone from the panel." },
+    { "do": "Press the row, press Use Automatic For All, press Escape, and read the row once more: back to just \"Sections\"." }
+  ],
+  "evaluate": [
+    "In a fresh document, does the quiet row now read as ordinary furniture rather than a warning?",
+    "When you do hide Motion, is \"Sections · 1 hidden\" enough of a cue to find your way back, or does it need to be louder?",
+    "Reading the list, is \"Automatic, not needed in this document yet\" clear enough that a waiting section does not feel lost?",
+    "Would you ever want the row to tell you how many sections are waiting on the document, separately from how many you hid?"
+  ],
+  "rough": [
+    "There is one honest oddity left: if you turn a section ON that the document had no job for and then turn it OFF again, the row counts it as hidden even though nothing visibly disappeared from the panel the second time. It is truthful, since that section will now stay away even once the document earns it, but it can look like a count out of nowhere.",
+    "The Mac's screen was locked for these runs. The walk was run with the harness override, so the two pictures above are real window captures and not offscreen renders; the lock only means a person was not sitting in front of it."
+  ]
+}

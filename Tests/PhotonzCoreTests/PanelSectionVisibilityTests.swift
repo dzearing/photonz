@@ -228,6 +228,74 @@ import Testing
         #expect(rows[0].reason == .automaticallyIn)
     }
 
+    // MARK: What the row at the foot of the panel says
+
+    /// The panel's own list of optional sections, as the app offers it: the
+    /// shelf's picked-tile section is never a row of its own.
+    private var offeredSections: [String] {
+        PanelSectionVisibility.optionalSections.filter { $0 != "libraryItem" }
+    }
+
+    /// The row is an alarm, and an alarm that rings in a brand new document is
+    /// not an alarm. A document that has never held a measurement, a component
+    /// or a frame leaves five of these sections out automatically, and NONE of
+    /// them is something a person hid: they arrive on their own the moment the
+    /// document does the thing they are for.
+    @Test func aDocumentWhereNobodyHidAnythingSaysNothing() {
+        let rows = PanelSectionVisibility.rows(for: offeredSections,
+                                               choices: PanelSectionVisibility.Choices(),
+                                               in: emptyHanded)
+        #expect(rows.contains { $0.reason == .automaticallyOut },
+                "this situation must actually leave sections out, or the test proves nothing")
+        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections")
+    }
+
+    /// Turn one off and the count is one, however many the document is holding
+    /// back of its own accord.
+    @Test func turningOneSectionOffCountsExactlyOne() {
+        var choices = PanelSectionVisibility.Choices()
+        choices.set("motion", shown: false)
+        let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                               in: emptyHanded)
+        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections · 1 hidden")
+    }
+
+    @Test func turningTwoSectionsOffCountsTwo() {
+        var choices = PanelSectionVisibility.Choices()
+        choices.set("motion", shown: false)
+        choices.set("arrange", shown: false)
+        let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                               in: emptyHanded)
+        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections · 2 hidden")
+    }
+
+    /// Both ways back go quiet again: the switch, and Use Automatic For All.
+    @Test func turningItBackOnOrHandingItBackGoesQuietAgain() {
+        var choices = PanelSectionVisibility.Choices()
+        choices.set("motion", shown: false)
+        choices.set("motion", shown: true)
+        #expect(PanelSectionVisibility.footerLabel(
+            for: PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                             in: emptyHanded)) == "Sections")
+
+        var handedBack = PanelSectionVisibility.Choices()
+        handedBack.set("motion", shown: false)
+        handedBack.useAutomaticForAll()
+        #expect(PanelSectionVisibility.footerLabel(
+            for: PanelSectionVisibility.rows(for: offeredSections, choices: handedBack,
+                                             in: emptyHanded)) == "Sections")
+    }
+
+    /// A section you turned ON that automatic would have left out is not
+    /// hidden, so it is not counted either.
+    @Test func aSectionPinnedOnIsNotCounted() {
+        var choices = PanelSectionVisibility.Choices()
+        choices.set("measurements", shown: true)
+        let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                               in: emptyHanded)
+        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections")
+    }
+
     // MARK: Remembering it
 
     @Test func theChoiceSurvivesBeingWrittenDownAndReadBack() {

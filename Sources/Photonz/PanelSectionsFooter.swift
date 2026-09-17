@@ -10,10 +10,11 @@ import SwiftUI
 /// it is the way back to anything automatic has left out, and a way back you
 /// have to scroll to find is not a way back.
 ///
-/// It says nothing at all when the panel is showing everything it could, which
-/// is the common case for somebody who never changes any of this. The moment a
-/// section is out, it says how many, because "where did Measurements go" is the
-/// whole risk of hiding anything.
+/// It says nothing but "Sections" until somebody has actually turned one off,
+/// which is the common case for somebody who never changes any of this. The
+/// moment a person hides one, it says how many, because "where did Measurements
+/// go" is the whole risk of HIDING anything. A section the document simply has
+/// nothing for yet is not hidden and is not counted.
 struct PanelSectionsFooter: View {
     /// The sections the panel could be showing, as the release has them: the
     /// optional list with the ones this release does not build at all left out.
@@ -32,15 +33,9 @@ struct PanelSectionsFooter: View {
                                     choices: store.choices, in: situation)
     }
 
-    private var hiddenCount: Int { rows.filter { !$0.isShown }.count }
-
-    /// What the row reads. "Sections" alone while everything is on screen,
-    /// because a number that is always zero is noise; the count as soon as
-    /// there is one, because that is the only cue that anything is missing.
-    private var label: String {
-        hiddenCount == 0 ? "Sections"
-            : "Sections · \(hiddenCount) hidden"
-    }
+    /// What the row reads. "Sections" alone until somebody has turned one off,
+    /// and then how many they turned off (`PanelSectionVisibility.footerLabel`).
+    private var label: String { PanelSectionVisibility.footerLabel(for: rows) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,7 +60,13 @@ struct PanelSectionsFooter: View {
             }
             .buttonStyle(.plain)
             .panelHelp("Choose which sections the panel shows")
-            .playtestControl("Sections", detail: "the panel's section list")
+            // The marker carries the WORDS on the row rather than a description
+            // of what the row is for, so a walk can claim what it says. Every
+            // step of the sections walk checked the control's NAME, which is
+            // the fixed string "Sections", so the walk passed for a week while
+            // the row on screen read "Sections · 5 hidden" in a document where
+            // nobody had hidden a thing.
+            .playtestControl("Sections", detail: label)
             .popover(isPresented: $isOpen, arrowEdge: .bottom) {
                 PanelSectionsList(offered: offered, situation: situation, store: store)
             }

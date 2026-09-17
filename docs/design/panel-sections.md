@@ -104,9 +104,14 @@ scrolled to. That placement is load bearing rather than tidy — the row is the
 way back to anything automatic has left out, and a way back you have to scroll
 to find is not a way back.
 
-It reads `Sections` while the panel is showing everything it could, and
-`Sections · 3 hidden` the moment any are out. A count that is always zero is
-noise; a count that appears is the only cue that something is missing.
+It reads `Sections` until somebody has actually **turned a section off**, and
+`Sections · 3 hidden` from then on. The count is of sections a PERSON hid, and
+nothing else: a section automatic left out because the document has no job for it
+yet is waiting, not missing, and counting those made a brand new document open
+saying `Sections · 5 hidden` about settings it never had. A count that is there
+whatever you do is noise; a count that appears is the only cue that something is
+missing. `PanelSectionVisibility.footerLabel` is the whole rule, and the walk
+reads the words off the row rather than only finding the row.
 
 Pressing it opens the list: every optional section this release actually builds,
 each with a switch and a word underneath saying **why it is where it is** —
