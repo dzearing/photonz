@@ -98,7 +98,7 @@ extension GroupLayout {
     func knobValue(for slot: ComponentNumberSlot) -> ComponentPropertyValue? {
         switch slot {
         case .gap: return kind == nil ? nil : .number(usedGap)
-        case .padding: return .room(usedPadding)
+        case .padding: return .room(ComponentRoomAnswer(usedPadding))
         case .cornerRadius, .thickness: return nil
         }
     }
@@ -116,10 +116,14 @@ extension GroupLayout {
             // number is typed into the inspector.
             spreadsGap = false
         case .padding:
-            // One number over the closed field still means the same room all
-            // round, which is what `asRoom` reads it as.
-            guard let room = value.asRoom else { return }
-            padding = room.used
+            // The one place a copy's own sides meet the ones it is still
+            // following: what is written is the answer's own sides over the
+            // room already here, which by the time this runs is the original's
+            // (`applyRootOverrides`). One number over the closed field still
+            // means the same room all round, which is what `asRoomAnswer`
+            // reads it as.
+            guard let answer = value.asRoomAnswer else { return }
+            padding = answer.resolved(over: padding).used
         case .cornerRadius, .thickness:
             return
         }

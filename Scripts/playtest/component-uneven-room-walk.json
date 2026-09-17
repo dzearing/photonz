@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/component-uneven-room-walk",
   "setup": { "forget": ["all"] },
-  "seed": "Room that differs side to side, offered as a knob. A card is given 10 of room above and below and 24 beside, the shape almost every real control has. Until now that took the room knob off the menu entirely, because four numbers are not one number. Now the knob is offered, a copy meets it in the same control the canvas uses, and opening it lets that copy be roomier on one side while the other three stay where the original put them.",
+  "seed": "Room that differs side to side, offered as a knob, and followed side by side. A card is given 10 of room above and below and 24 beside, the shape almost every real control has. A copy meets that room in the same control the canvas uses, and opening it lets the copy be roomier on one side. The side it types becomes its own; the three it did not touch are still the original's and go on moving when the card does.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },
     { "do": "tool", "tool": "rectangle" },
@@ -75,9 +75,17 @@
     { "do": "type", "text": "56" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "4-roomier-on-one-side", "note": "this copy alone is roomier on the left. Above and below it still keeps the original's 10, so it still reads as one of the family, and the revert arrow appeared on the knob's row" },
+    { "do": "describe", "stage": "4-roomier-on-one-side", "note": "this copy alone is roomier on the left. Left reads in ordinary ink with its own way back beside it; top, right and bottom read one step quieter because they are still the original's. The revert arrow appeared on the knob's row too" },
     { "do": "snapshot", "name": "component-uneven-room-4-roomier" },
     { "do": "render", "name": "component-uneven-room-4-roomier-doc" },
+    { "do": "press", "control": "Follow again Left" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-one-side-handed-back", "note": "the left side alone was handed back: it reads the original's 24 again, one step quieter, and its arrow is gone. Nothing else about the copy moved" },
+    { "do": "snapshot", "name": "component-uneven-room-5-handed-back" },
+    { "do": "focus", "field": "Left" },
+    { "do": "type", "text": "56" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "selectComponentOriginal" },
@@ -86,8 +94,8 @@
     { "do": "type", "text": "6" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "5-original-levelled", "note": "typing one number over the original's row levels all four of ITS sides to 6. The copy that answered keeps every one of its own four" },
-    { "do": "snapshot", "name": "component-uneven-room-5-original-levelled" },
-    { "do": "render", "name": "component-uneven-room-5-original-levelled-doc" }
+    { "do": "describe", "stage": "6-original-levelled", "note": "typing one number over the ORIGINAL's row levels all four of its sides to 6, and it reaches the copy everywhere the copy did not type: the copy is now 6 above, below and right, and still the 56 it asked for on the left" },
+    { "do": "snapshot", "name": "component-uneven-room-6-original-levelled" },
+    { "do": "render", "name": "component-uneven-room-6-original-levelled-doc" }
   ]
 }

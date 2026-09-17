@@ -50,6 +50,15 @@ struct FourSidedPopout: View {
         /// The number, or nil where the things picked do not agree on one.
         let value: CGFloat?
         let commit: (CGFloat) -> Void
+        /// Whether this number is the thing's OWN, or one it is still taking
+        /// from somewhere else. Only a copy of a component has the second kind:
+        /// a side it never typed in goes on following the original, and it says
+        /// so by reading one step quieter than the sides it owns.
+        var isOwn = true
+        /// Puts this one number back to where it was following, for the rows
+        /// where one number can be handed back on its own. Nil everywhere else,
+        /// and the popout then shows no way back at all.
+        var handBack: (() -> Void)?
 
         var id: String { title }
     }
@@ -58,17 +67,33 @@ struct FourSidedPopout: View {
     /// the dock uses, so the four here are not a second size of field.
     private static let boxWidth: CGFloat = 62
 
-    /// How wide the SLOT one number sits in, which is the box plus whatever its
-    /// own word needs beside it. "Bottom Right" is 63 points at this size and
-    /// the box is 62, so the corners get a slot a little wider than their boxes
-    /// and the two words along the bottom keep a gap between them; the sides
-    /// are all short words and sit in the box's own width.
+    /// How wide the SLOT one number sits in: the box, plus whatever its own
+    /// word needs beside it, plus the way back where there is one.
+    ///
+    /// "Bottom Right" is 63 points at this size and the box is 62, so the
+    /// corners get a slot a little wider than their boxes and the two words
+    /// along the bottom keep a gap between them; the sides are all short words
+    /// and sit in the box's own width.
     private var slotWidth: CGFloat {
-        switch shape {
+        let box = switch shape {
         case .sides: Self.boxWidth
-        case .corners: 70
+        case .corners: CGFloat(70)
         }
+        // The way back lives beside the number it puts back, so the slot has to
+        // hold it. The room is kept whether or not this particular side has
+        // anything to hand back, so the little cross does not jump sideways the
+        // moment somebody types in it.
+        return box + (offersAWayBack ? Self.wayBackWidth : 0)
     }
+
+    /// Whether ANY of the four can be handed back on its own, which is what
+    /// puts the arrow column in the picture at all. A row whose four numbers
+    /// are simply its own — the canvas Padding row, Corner Radius — shows none
+    /// of it and is exactly the popout it always was.
+    private var offersAWayBack: Bool { numbers.contains { $0.handBack != nil } }
+
+    /// How much room the way back takes beside a number.
+    private static let wayBackWidth: CGFloat = 20
     /// The narrowest the popout is allowed to get. It otherwise takes the width
     /// its own four boxes need, rather than a number written down here that a
     /// change of field width could quietly start clipping; the floor is only so
@@ -126,18 +151,22 @@ struct FourSidedPopout: View {
         if numbers.indices.contains(index) {
             let number = numbers[index]
             VStack(spacing: 1) {
-                PanelNumberField(
-                    showing: NumberBox.showing(
-                        number.value,
-                        standingIn: FourSidedNumber.standIn(uniform: number.value)),
-                    label: number.title,
-                    width: .fitting(least: 62, most: 148),
-                    floor: 0,
-                    wholeNumbers: true,
-                    help: number.help,
-                    land: { number.commit($0); return nil }
-                )
-                .playtestField(number.title)
+                HStack(spacing: 2) {
+                    PanelNumberField(
+                        showing: NumberBox.showing(
+                            number.value,
+                            standingIn: FourSidedNumber.standIn(uniform: number.value)),
+                        label: number.title,
+                        width: .fitting(least: 62, most: 148),
+                        floor: 0,
+                        wholeNumbers: true,
+                        help: number.help,
+                        isFollowing: !number.isOwn,
+                        land: { number.commit($0); return nil }
+                    )
+                    .playtestField(number.title)
+                    if offersAWayBack { wayBack(number) }
+                }
                 Text(number.title)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
@@ -146,6 +175,37 @@ struct FourSidedPopout: View {
                     .accessibilityHidden(true)
             }
             .frame(width: slotWidth)
+        }
+    }
+
+    /// The way back for ONE number: the same arrow the knob's own row wears,
+    /// put beside the number it puts back.
+    ///
+    /// It only exists for a number that has something to hand back, so it is
+    /// kept in the layout and drawn away rather than removed: a cross that
+    /// re-centred itself every time somebody typed in it would be a cross that
+    /// moved under the pointer.
+    @ViewBuilder private func wayBack(_ number: Number) -> some View {
+        let offered = number.handBack != nil && number.isOwn
+        let arrow = Button { number.handBack?() } label: {
+            Image(systemName: "arrow.uturn.backward")
+                .font(.caption2.weight(.semibold))
+                .frame(width: 18, height: 20)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .opacity(offered ? 1 : 0)
+        .disabled(!offered)
+        .panelHelp("Follow the original again for the \(number.title.lowercased()) side")
+        // Named only while it is there to press, so a walk claiming it is not
+        // there yet is claiming what a person sees rather than finding an
+        // invisible button that is always in the tree.
+        if offered {
+            arrow.playtestControl("Follow again \(number.title)",
+                                  detail: "one side of a copy's room")
+        } else {
+            arrow
         }
     }
 }

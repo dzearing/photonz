@@ -70,6 +70,14 @@ struct PanelNumberField: View {
     /// and a scale do not.
     var wholeNumbers = false
     var help: String?
+    /// Whether the number in this box is one the thing is still TAKING from
+    /// somewhere else rather than one it holds itself.
+    ///
+    /// Only a copy of a component has the second kind, and only on its room: a
+    /// side it never typed in goes on following the original, so it is drawn
+    /// the quieter strength the word Mixed is drawn at. Every other box in the
+    /// dock shows a number its own thing holds, and leaves this alone.
+    var isFollowing = false
     /// What a walk calls this box, and where it says it lives. Left out on the
     /// panels that name the whole ROW instead (`playtestField`).
     var playtest: (name: String, detail: String)?
@@ -144,7 +152,8 @@ struct PanelNumberField: View {
             .monospacedDigit()
             // Mixed is a word among numbers, so it reads as the quieter thing
             // it is rather than as a value someone typed.
-            .foregroundStyle(MixedLook.style(showing.isMixed, otherwise: .primary))
+            .foregroundStyle(MixedLook.style(showing.isMixed || isFollowing,
+                                             otherwise: .primary))
             .modifier(BoxWidth(width: width, showing: showing))
             .focused($isFocused)
             .accessibilityLabel(label)

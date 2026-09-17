@@ -149,6 +149,155 @@ public struct ComponentColorAnswer: Hashable, Codable, Sendable {
     public var colorHex: String { paint.hex }
 }
 
+/// A copy's answer to a room knob: the sides it has typed for itself, and
+/// nothing at all about the sides it has not.
+///
+/// Every other knob is one fact, so answering it is all or nothing: a copy
+/// either says its own words or says the original's. Room is four facts behind
+/// one knob, and answering it all or nothing turned out to be a decision nobody
+/// made on purpose. Typing 40 into Left froze top, right and bottom at whatever
+/// the original happened to be that afternoon, so making the component roomier
+/// above later skipped every copy anybody had ever nudged, and nothing on
+/// screen said why.
+///
+/// So a side is the copy's own only once somebody types in it, and a side that
+/// is absent goes on following the original for as long as nobody does. The
+/// user picked that on 2026-09-13, over leaving it and over a per-side way out
+/// of the freeze: "Untouched sides keep following".
+///
+/// Typing one number over the CLOSED field is unchanged and still means all
+/// four of them are this, which is what `init(_:)` stores: that is a person
+/// saying something about the whole room, not about one edge of it.
+public struct ComponentRoomAnswer: Hashable, Codable, Sendable {
+    /// What the copy keeps at the top, or nil while the top still follows the
+    /// original. The same for the other three.
+    public var top: CGFloat?
+    public var right: CGFloat?
+    public var bottom: CGFloat?
+    public var left: CGFloat?
+
+    public init(top: CGFloat? = nil, right: CGFloat? = nil,
+                bottom: CGFloat? = nil, left: CGFloat? = nil) {
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+        self.left = left
+    }
+
+    /// All four sides at once: what one number typed over the closed field
+    /// means, and what every answer written before sides could follow
+    /// separately comes back as.
+    public init(_ room: GroupPadding) {
+        self.init(top: room.top, right: room.right, bottom: room.bottom, left: room.left)
+    }
+
+    public subscript(side: GroupPadding.Side) -> CGFloat? {
+        get {
+            switch side {
+            case .top: top
+            case .right: right
+            case .bottom: bottom
+            case .left: left
+            }
+        }
+        set {
+            switch side {
+            case .top: top = newValue
+            case .right: right = newValue
+            case .bottom: bottom = newValue
+            case .left: left = newValue
+            }
+        }
+    }
+
+    /// The sides this copy owns, clockwise from the top. What puts a way back
+    /// on a side in the popout, and what is left is what is still following.
+    public var answeredSides: [GroupPadding.Side] {
+        GroupPadding.Side.allCases.filter { self[$0] != nil }
+    }
+
+    /// Nothing typed at all, which is the same thing as no answer: a copy in
+    /// that state is following whole and wears no way back.
+    public var isEmpty: Bool { answeredSides.isEmpty }
+
+    /// The four sides as one room, or nil while any of them is still the
+    /// original's. Only an answer that owns all four IS a room on its own.
+    public var whole: GroupPadding? {
+        guard let top, let right, let bottom, let left else { return nil }
+        return GroupPadding(top: top, right: right, bottom: bottom, left: left)
+    }
+
+    /// What the copy actually keeps: its own sides, and the original's
+    /// everywhere it has not typed. The one place following happens.
+    public func resolved(over original: GroupPadding) -> GroupPadding {
+        var room = original
+        for side in GroupPadding.Side.allCases {
+            guard let mine = self[side] else { continue }
+            room[side] = mine
+        }
+        return room
+    }
+
+    /// The room actually kept, side by side. Negative room is not a thing
+    /// anybody means; a side nobody typed stays untyped rather than being
+    /// settled into existence.
+    var used: ComponentRoomAnswer {
+        var out = self
+        for side in GroupPadding.Side.allCases {
+            guard let value = out[side] else { continue }
+            out[side] = value.isFinite ? max(0, value) : 0
+        }
+        return out
+    }
+
+    /// The same answer measured in a unit `scale` times smaller. Only the sides
+    /// the copy owns move: the ones it is following are the original's, and the
+    /// original is being scaled too.
+    func magnified(by scale: CGFloat) -> ComponentRoomAnswer {
+        var out = self
+        for side in GroupPadding.Side.allCases {
+            guard let value = out[side] else { continue }
+            out[side] = value * scale
+        }
+        return out
+    }
+
+    private enum CodingKeys: String, CodingKey { case top, right, bottom, left }
+
+    /// Read every shape an answer has ever been written in: one number from
+    /// before room carried four sides, four numbers from before sides could
+    /// follow separately, and the sides a copy owns today. The first two both
+    /// mean the copy owns all four, so nothing anybody already made changes
+    /// shape the first time they open it.
+    public init(from decoder: Decoder) throws {
+        if let single = try? decoder.singleValueContainer().decode(CGFloat.self) {
+            self.init(GroupPadding(single))
+            return
+        }
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(top: try c.decodeIfPresent(CGFloat.self, forKey: .top),
+                  right: try c.decodeIfPresent(CGFloat.self, forKey: .right),
+                  bottom: try c.decodeIfPresent(CGFloat.self, forKey: .bottom),
+                  left: try c.decodeIfPresent(CGFloat.self, forKey: .left))
+    }
+
+    /// Written as one number while the copy owns all four and they agree, so a
+    /// document that never asked for uneven room is byte for byte the file it
+    /// always was.
+    public func encode(to encoder: Encoder) throws {
+        if let uniform = whole?.uniform {
+            var c = encoder.singleValueContainer()
+            try c.encode(uniform)
+            return
+        }
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(top, forKey: .top)
+        try c.encodeIfPresent(right, forKey: .right)
+        try c.encodeIfPresent(bottom, forKey: .bottom)
+        try c.encodeIfPresent(left, forKey: .left)
+    }
+}
+
 /// A copy's answer to one knob.
 public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     case text(String)
@@ -161,8 +310,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     case color(ComponentColorAnswer)
     /// What one of the copy's numbers is set to.
     case number(CGFloat)
-    /// The room one of the copy's groups keeps inside its edges, all four
-    /// sides of it.
+    /// The room one of the copy's groups keeps inside its edges, side by side.
     ///
     /// It is a `.number` answer like any other, because the knob a person
     /// added is the Padding knob and there is one of it. Four sides rather
@@ -171,7 +319,19 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
     /// could only write one number would turn every roomier copy of it into a
     /// square. Typing one number over the closed field still levels all four,
     /// exactly as it does on the canvas.
-    case room(GroupPadding)
+    ///
+    /// Side by side rather than four numbers together, because a side the copy
+    /// never typed in goes on following the original
+    /// (`ComponentRoomAnswer`). Stored on a copy this holds only what that
+    /// copy owns; read back off `instanceValue` it holds all four, because
+    /// that is what the copy is actually keeping.
+    case room(ComponentRoomAnswer)
+
+    /// All four sides at once, which is what typing one number over the closed
+    /// field means and what the original itself always answers with.
+    public static func room(_ room: GroupPadding) -> ComponentPropertyValue {
+        .room(ComponentRoomAnswer(room))
+    }
 
     /// The kind of knob this answer fits, so an answer can never land on a
     /// knob it makes no sense for.
@@ -192,11 +352,11 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         switch self {
         case .number(let value):
             return .number(value.isFinite ? max(0, value) : 0)
-        case .room(let room):
+        case .room(let answer):
             // `used` is the same floor the canvas holds room to, so a side
             // typed down past nought settles the same way whether it was typed
             // on a copy or on the group itself.
-            return .room(room.used)
+            return .room(answer.used)
         default:
             return self
         }
@@ -227,22 +387,36 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         return nil
     }
 
-    /// The four sides they keep. Nil for every answer that is not room.
+    /// The four sides they keep. Nil for every answer that is not room, and
+    /// nil for an answer that is still following on one of its sides, because
+    /// three numbers and a gap are not a room.
     public var roomValue: GroupPadding? {
-        if case .room(let room) = self { return room }
+        if case .room(let answer) = self { return answer.whole }
         return nil
     }
 
-    /// This answer as room, whatever shape it was stored in. An answer written
-    /// before room carried four sides is one number, and one number means the
-    /// same room all round, so it opens as that rather than as nothing.
-    var asRoom: GroupPadding? {
+    /// The sides a copy has typed for itself, which is the shape room is
+    /// STORED in. Nil for every answer that is not room.
+    public var roomAnswer: ComponentRoomAnswer? {
+        if case .room(let answer) = self { return answer }
+        return nil
+    }
+
+    /// This answer as the sides a copy owns, whatever shape it was stored in.
+    /// An answer written before room carried four sides is one number, and one
+    /// number means the same room all round, so it opens as all four rather
+    /// than as nothing.
+    var asRoomAnswer: ComponentRoomAnswer? {
         switch self {
-        case .room(let room): return room
-        case .number(let value): return GroupPadding(value)
+        case .room(let answer): return answer
+        case .number(let value): return ComponentRoomAnswer(GroupPadding(value))
         default: return nil
         }
     }
+
+    /// This answer as one whole room, for the callers reading a value that has
+    /// already been resolved against the original and so has all four sides.
+    var asRoom: GroupPadding? { asRoomAnswer?.whole }
 
     private enum CodingKeys: String, CodingKey {
         case kind, text, visible, variant, color, number, room
@@ -257,7 +431,7 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
         case .variant(let id): try c.encode(id, forKey: .variant)
         case .color(let answer): try c.encode(answer, forKey: .color)
         case .number(let value): try c.encode(value, forKey: .number)
-        case .room(let room): try c.encode(room, forKey: .room)
+        case .room(let answer): try c.encode(answer, forKey: .room)
         }
     }
 
@@ -273,8 +447,8 @@ public enum ComponentPropertyValue: Hashable, Codable, Sendable {
             // which of the two payloads is on the file. A document written
             // before room carried four sides holds the number and opens as it
             // always did.
-            if let room = try c.decodeIfPresent(GroupPadding.self, forKey: .room) {
-                self = .room(room)
+            if let answer = try c.decodeIfPresent(ComponentRoomAnswer.self, forKey: .room) {
+                self = .room(answer)
             } else {
                 self = .number(try c.decode(CGFloat.self, forKey: .number))
             }
@@ -878,21 +1052,32 @@ extension PhotonzDocument {
     /// What a copy shows for a knob: its own answer, or the original's.
     public func instanceValue(instance: UUID, property propertyID: UUID) -> ComponentPropertyValue? {
         guard let copy = layer(id: instance), let componentID = copy.instanceOf else { return nil }
-        if let own = copy.componentOverrides.first(where: { $0.property == propertyID }) {
-            // An answer stored before room carried four sides is one number,
-            // and one number has always meant the same room all round, so it
-            // is read as that rather than as an answer of the wrong shape.
-            if let slot = componentProperty(componentID: componentID,
-                                            version: instanceVersion(of: instance),
-                                            propertyID: propertyID)?.numberSlot,
-               slot.isFourSided, let room = own.value.asRoom {
-                return .room(room)
-            }
-            return own.value
+        let version = instanceVersion(of: instance)
+        let original = componentDefaultValue(componentID: componentID, version: version,
+                                             propertyID: propertyID)
+        guard let own = copy.componentOverrides.first(where: { $0.property == propertyID })
+        else { return original }
+        // Room is the one knob a copy can answer PART of. What it shows is its
+        // own sides over the original's, so a side nobody typed in goes on
+        // moving when the component does. An answer stored before room carried
+        // four sides is one number, and one number has always meant the same
+        // room all round, so it is read as all four rather than as an answer of
+        // the wrong shape.
+        if let slot = componentProperty(componentID: componentID, version: version,
+                                        propertyID: propertyID)?.numberSlot,
+           slot.isFourSided, let answer = own.value.asRoomAnswer {
+            return .room(answer.resolved(over: original?.asRoom ?? .none))
         }
-        return componentDefaultValue(componentID: componentID,
-                                     version: instanceVersion(of: instance),
-                                     propertyID: propertyID)
+        return own.value
+    }
+
+    /// The sides of a room knob this copy has typed for ITSELF, as opposed to
+    /// what it is showing. Nil where it is following the knob whole, which is
+    /// what leaves every side of it without a way back.
+    public func instanceRoomAnswer(instance: UUID,
+                                   property propertyID: UUID) -> ComponentRoomAnswer? {
+        layer(id: instance)?.componentOverrides
+            .first { $0.property == propertyID }?.value.asRoomAnswer
     }
 
     /// Whether an answer is one this knob will take. A choice may only land on
@@ -922,7 +1107,7 @@ extension PhotonzDocument {
             // Four sides may only land on a knob that has four sides to put
             // them in: a gap handed a room has nowhere to write three of the
             // numbers, so the answer is refused rather than half stored.
-            guard property.numberSlot?.isFourSided == true || value.roomValue == nil
+            guard property.numberSlot?.isFourSided == true || value.roomAnswer == nil
             else { return false }
             // A number the original no longer has is nothing to override: the
             // knob's own slot reads nothing, so setting it here would give the
@@ -948,6 +1133,13 @@ extension PhotonzDocument {
         let value = value.settled
         guard canSetInstanceOverride(instance: instance, property: propertyID, value: value)
         else { return false }
+        // A room answer that owns no side at all says exactly what no answer
+        // says, so it is not stored as one: a copy that has handed its last
+        // side back follows the knob whole and wears no way back.
+        if value.roomAnswer?.isEmpty == true {
+            clearInstanceOverride(instance: instance, property: propertyID)
+            return true
+        }
         updateLayer(id: instance) { layer in
             guard var group = layer.group else { return }
             if let index = group.overrides.firstIndex(where: { $0.property == propertyID }) {

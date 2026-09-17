@@ -697,6 +697,25 @@ extension EditorState {
         }
     }
 
+    /// Whether ONE side of a room knob is the picked copies' own, as opposed to
+    /// still following the original. What decides whether that side reads in
+    /// ordinary ink and wears a way back.
+    func componentRoomSideIsOwn(instances: [UUID], property: UUID,
+                                side: GroupPadding.Side) -> Bool {
+        guard componentsEnabled, let document else { return false }
+        return document.componentRoomSideIsOwn(instances: instances, property: property,
+                                               side: side)
+    }
+
+    /// Puts ONE side of a room knob back to following the original on every
+    /// picked copy, in one undo step, leaving the sides beside it alone.
+    func clearInstanceRoomSide(instances: [UUID], property: UUID, side: GroupPadding.Side) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform(announcing: false) {
+            _ = $0.clearInstanceRoomSide(instances: instances, property: property, side: side)
+        }
+    }
+
     // MARK: - A colour knob on a copy
 
     /// What one colour knob row shows: the same `ColorStyleSelection` a colour

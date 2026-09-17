@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-16T12:23:35.125Z",
+  "updated": "2026-09-17T07:25:28.006Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten 2026-09-08 after the original premise expired. The old notes said the padding slot returns nil when the sides disagree; that has not been true since 19b75988 (2026-09-06), which gave ComponentPropertyValue a .room(GroupPadding) case so the knob carries all four sides. Four separate side knobs are explicitly NOT wanted (Add menu bloat, 264pt panel). What is left is partial following: ComponentPropertyValue.room holds a whole GroupPadding, so setInstanceRoom reads the original's four sides, writes one and stores all four as the copy's answer. Doing this means the stored answer has to record WHICH sides were answered (an optional per side, or an answered-side set beside the room) and the resolve path in ComponentProperties has to merge answered sides over the original's rather than replacing. Panel work is in ComponentPanel.sides(of:): per-side ink and a per-side revert. Blocked on the decision room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi. Was titled 'Room on one side can be a knob'.",
@@ -75,7 +75,15 @@
     {
       "t": "2026-09-16T12:23:35.124Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-17T07:23:50.631Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T07:25:28.005Z",
+      "note": "Adversarial review before building, second pass (the first pass ended in the decision card, now answered 'Untouched sides keep following'). Walked it as a person: I open a copy's Padding chevron, type 56 into Left, and the other three boxes go on showing the original's numbers. Nothing on screen would tell me those three are still the original's rather than mine, and that is the whole difference the answer buys, so it has to be visible or the change is invisible. Two places it can be seen without new chrome: the four boxes in the popout (my own side in ordinary ink, the three still following one step quieter), and a way back per side, which is the same uturn arrow the knob's row already wears."
     }
   ],
-  "started": "2026-09-08T18:36:36.855Z"
+  "started": "2026-09-17T07:23:50.630Z"
 }

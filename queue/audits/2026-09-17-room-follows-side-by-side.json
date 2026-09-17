@@ -1,0 +1,29 @@
+{
+  "feature": "A copy follows the original on the sides of its room it did not touch",
+  "epic": "ui-components",
+  "summary": "Giving a copy of a component more room on one side used to quietly hand it all four, so the other three froze at whatever the original happened to be that day. Now only the side you type in becomes the copy's own, and the other three go on following the original, so making the component roomier later still reaches every copy anybody ever nudged.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. You need a component whose room differs side to side: draw two things, stack them, open the Padding row's chevron and set 10 above and below and 24 beside, then Make Component and expose its Padding as a knob.",
+  "try": [
+    { "do": "Drop a copy of the component on the canvas and pick it." },
+    { "do": "Press the chevron beside Padding on the copy's panel to open its four sides." },
+    { "do": "Type 56 into Left and press Return." },
+    { "do": "Look at the other three boxes: they read one step quieter than Left, and only Left has a way-back arrow beside it." },
+    { "do": "Press the way-back arrow beside Left. It goes back to 24 and reads quiet again." },
+    { "do": "Type 56 into Left again, close the popout with Escape, and pick the ORIGINAL." },
+    { "do": "Type 6 over the original's Padding field and press Return." },
+    { "do": "Pick the copy again: it is 6 above, below and to the right, and still the 56 you asked for on the left." }
+  ],
+  "evaluate": [
+    "When you type one side, is it clear enough that the other three are still the original's rather than numbers you now own?",
+    "Is a quieter grey the right way to say 'this one is still following', or does it read as switched off?",
+    "Is the way-back arrow beside a single side findable, or too small to be worth aiming at?",
+    "Typing one number over the CLOSED Padding field still takes all four sides. Is that what you expect, given one side typed inside the popout takes only one?",
+    "The closed row says which sides are yours only in its tooltip. Is that enough, or should the row itself show it?"
+  ],
+  "rough": [
+    "No pictures with this audit, and none of it was seen running. The Mac was locked for the whole task, so Scripts/playtest.sh refused every walk (status locked, exit 3) and there are no fresh renders either. The model is covered by 18 new tests and the whole suite is green (8053 tests), but the panel side of it has not been looked at once. A sweep has been asked for so component-uneven-room-walk runs as soon as the screen is unlocked.",
+    "The closed Padding field cannot show two kinds of number at once, so it shows what the copy KEEPS and says which sides are its own only in the tooltip. If that turns out to be too quiet, the row needs its own mark.",
+    "Typing one number over the closed field is unchanged: it still means all four of them are this, and so it stops all four from following. That is the canvas idiom and the decision kept it, but it is a bigger action than it used to be.",
+    "A side is drawn as the copies' own while ANY of the picked copies owns it, so two copies where only one was nudged show the arrow and pressing it puts that one back. There is no way to tell from the popout that it speaks for only one of them."
+  ]
+}

@@ -135,8 +135,9 @@ extension ComponentOverride {
         switch value {
         case .number(let number):
             return ComponentOverride(property: property, value: .number(number * scale))
-        case .room(let room):
-            return ComponentOverride(property: property, value: .room(room.magnified(by: scale)))
+        case .room(let answer):
+            return ComponentOverride(property: property,
+                                     value: .room(answer.magnified(by: scale)))
         case .text, .visible, .variant, .color:
             return self
         }

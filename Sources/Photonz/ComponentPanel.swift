@@ -1816,16 +1816,31 @@ private struct InstanceRoomKnob: View {
     /// Typing one of them leaves each copy's other three sides where they were,
     /// which is the whole reason room is one knob and not four: a copy of a
     /// button gets roomier beside without turning into a square.
+    ///
+    /// A side nobody has typed in is not just left alone, it is still the
+    /// ORIGINAL's, and goes on moving when the component does. So it reads one
+    /// step quieter than the sides this copy owns, and only the ones it owns
+    /// wear a way back.
     private var sides: [FourSidedPopout.Number] {
         GroupPadding.Side.allCases.map { side in
-            FourSidedPopout.Number(
+            let isOwn = editorState.componentRoomSideIsOwn(
+                instances: instances, property: property.id, side: side)
+            return FourSidedPopout.Number(
                 title: side.title,
-                help: "The room kept clear inside the \(side.title.lowercased()) edge.",
+                help: isOwn
+                    ? "The room this copy keeps inside its \(side.title.lowercased()) edge."
+                    : "The room kept clear inside the \(side.title.lowercased()) edge, "
+                        + "still following the original.",
                 value: editorState.componentRoomSide(instances: instances,
                                                      property: property.id, side: side),
                 commit: { value in
                     editorState.setInstanceRoom(instances: instances, property: property.id,
                                                 side: side, to: value)
+                },
+                isOwn: isOwn,
+                handBack: {
+                    editorState.clearInstanceRoomSide(instances: instances,
+                                                      property: property.id, side: side)
                 })
         }
     }
@@ -1843,9 +1858,39 @@ private struct InstanceRoomKnob: View {
             return "These copies keep different room inside their edges. "
                 + "Type one number to give every side of every one of them the same."
         }
-        return room.isUniform
+        let numbers = room.isUniform
             ? "The room kept clear inside the edges, on all four sides."
             : "\(room.inWords). " + FourSidedNumber.levelUp(part: "side")
+        return numbers + following
+    }
+
+    /// The sentence that says which sides are this copy's own, added to the
+    /// row's own tooltip so the closed field can be asked without opening it.
+    ///
+    /// The four numbers in the field are what the copy KEEPS, and some of them
+    /// may still be the original's, so a row that only printed them would be
+    /// hiding the one fact that decides whether the next edit to the component
+    /// reaches this copy.
+    private var following: String {
+        let own = GroupPadding.Side.allCases.filter {
+            editorState.componentRoomSideIsOwn(instances: instances,
+                                               property: property.id, side: $0)
+        }
+        guard !own.isEmpty else { return "" }
+        let rest = GroupPadding.Side.allCases.filter { !own.contains($0) }
+        let mine = " The \(list(own)) \(own.count == 1 ? "side is" : "sides are") "
+            + (instances.count == 1 ? "this copy's own." : "these copies' own.")
+        guard !rest.isEmpty else { return mine }
+        return mine + " The \(list(rest)) still "
+            + (rest.count == 1 ? "follows" : "follow") + " the original."
+    }
+
+    /// "top", "top and left", "top, right and left": the way a person says a
+    /// list out loud.
+    private func list(_ sides: [GroupPadding.Side]) -> String {
+        let words = sides.map(\.rawValue)
+        guard words.count > 1 else { return words.first ?? "" }
+        return words.dropLast().joined(separator: ", ") + " and " + words[words.count - 1]
     }
 }
 

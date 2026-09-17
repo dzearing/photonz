@@ -266,15 +266,28 @@ extension PhotonzDocument {
         return shared
     }
 
-    /// Sets ONE side of a room knob on every copy given, leaving each copy's
-    /// other three sides where they were.
+    /// Whether ONE side of a room knob is the copies' own, as opposed to still
+    /// following the original.
     ///
-    /// It reads each copy's own room first rather than writing one room over
-    /// all of them, so a row speaking for two copies that keep different room
-    /// can still say "40 on the left" without flattening the rest of them
-    /// together. A copy that has not answered at all reads the original's
-    /// four sides, so typing one side is what makes it a copy with room of
-    /// its own and the other three arrive from the original.
+    /// True while ANY copy the row speaks for owns it, which is the same rule
+    /// the knob's own row uses to decide whether to wear a way back at all: the
+    /// arrow is offered wherever there is something to put back.
+    public func componentRoomSideIsOwn(instances: [UUID], property propertyID: UUID,
+                                       side: GroupPadding.Side) -> Bool {
+        instances.contains {
+            instanceRoomAnswer(instance: $0, property: propertyID)?[side] != nil
+        }
+    }
+
+    /// Sets ONE side of a room knob on every copy given, leaving each copy's
+    /// other three sides exactly as they were: its own where it typed them, and
+    /// still following the original everywhere else.
+    ///
+    /// It adds the side to each copy's OWN answer rather than writing one room
+    /// over all of them, so a row speaking for two copies that keep different
+    /// room can say "40 on the left" without flattening the rest of them
+    /// together, and so the sides nobody has typed in stay absent and go on
+    /// moving when the component does.
     ///
     /// Returns how many took it.
     @discardableResult
@@ -282,10 +295,33 @@ extension PhotonzDocument {
                                          side: GroupPadding.Side, to value: CGFloat) -> Int {
         var count = 0
         for id in instances {
-            guard var room = instanceValue(instance: id, property: propertyID)?.asRoom
-            else { continue }
-            room[side] = value
-            if setInstanceOverride(instance: id, property: propertyID, value: .room(room)) {
+            var answer = instanceRoomAnswer(instance: id, property: propertyID)
+                ?? ComponentRoomAnswer()
+            answer[side] = value
+            if setInstanceOverride(instance: id, property: propertyID, value: .room(answer)) {
+                count += 1
+            }
+        }
+        return count
+    }
+
+    /// Puts ONE side of a room knob back to following the original on every
+    /// copy given, leaving the sides beside it alone.
+    ///
+    /// A copy that hands back the last side it owned is left following the knob
+    /// whole, with nothing stored, so the row's own way back goes away with the
+    /// last one.
+    ///
+    /// Returns how many had that side to put back.
+    @discardableResult
+    public mutating func clearInstanceRoomSide(instances: [UUID], property propertyID: UUID,
+                                               side: GroupPadding.Side) -> Int {
+        var count = 0
+        for id in instances {
+            guard var answer = instanceRoomAnswer(instance: id, property: propertyID),
+                  answer[side] != nil else { continue }
+            answer[side] = nil
+            if setInstanceOverride(instance: id, property: propertyID, value: .room(answer)) {
                 count += 1
             }
         }
