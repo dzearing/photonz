@@ -73,9 +73,9 @@ struct DocumentHasNoKindTests {
         // And the starting weight of a line follows the same rule: two points
         // inside the glyph's frame, the tool's own four on the screen.
         let armed = AnnotationContent.defaultStrokeWidth
-        #expect(IconStrokeWeight.startingWidth(armed: armed,
+        #expect(IconStrokeWeight.startingWidth(armed: armed, chosen: false,
                                                onFrameSized: CGSize(width: 24, height: 24)) == 2)
-        #expect(IconStrokeWeight.startingWidth(armed: armed,
+        #expect(IconStrokeWeight.startingWidth(armed: armed, chosen: false,
                                                onFrameSized: CGSize(width: 1440, height: 1024)) == armed)
     }
 }

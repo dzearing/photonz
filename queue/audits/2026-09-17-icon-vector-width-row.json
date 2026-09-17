@@ -1,0 +1,27 @@
+{
+  "feature": "The Width row reads the weight the line will land at",
+  "epic": "icon-vector",
+  "summary": "On an icon frame, the Width row on the tool bar now shows the weight a line drawn there would really come out at, and a weight you type is the weight you get, including the 4 the app ships with, which used to be the one number you could not ask for.",
+  "setup": "Photonz Dev, Experiments window, release Next, with \"Make a frame the size of an icon\" on. It is on by default in Next.",
+  "try": [
+    { "do": "File > New Frame, press 24 under Icons, press Add Frame." },
+    { "do": "Press P for the Pen." },
+    { "do": "Click the colour swatch on the tool bar and read the Width row. It says 2." },
+    { "do": "Press escape, click three points inside the little frame, press return." },
+    { "do": "Press V, then read the path's Thickness row in the panel. It says 2, the number you read before you drew." },
+    { "do": "Press P, open the swatch again, type 4 into Width and press return." },
+    { "do": "Press escape and draw a second path in the same frame. It comes out at 4." },
+    { "do": "Make a Desktop frame, take the Line tool, open the swatch: Width is back to 4." }
+  ],
+  "evaluate": [
+    "When you open the row on a 24 pixel frame and it says 2, does that read as the app telling you something useful, or as the app having changed your setting behind your back?",
+    "The number changes when you pick the icon frame and changes back when you pick something on a screen. Is that helpful, or does the row feel unsteady?",
+    "Typing 4 on an icon frame now gives you a 4 point line, which is a sixth of the whole icon. Is that what you want asking for it to mean?",
+    "The icon previews strip and this row now talk about the same frame. Does that connection come across on screen, or does it need saying?"
+  ],
+  "rough": [
+    "No pictures in this audit. The Mac's screen was locked for the whole task, so no walk could run and macOS refuses every capture; the walk for this is written and filed (Scripts/playtest/icon-width-row-reads-true-walk.json) and the loop's sweep will run it once the screen is unlocked.",
+    "The row only knows which icon it is speaking for while something in that frame is picked, which is the same rule the icon previews strip uses. Pick nothing at all, then draw straight into an icon frame, and the row says 4 while the line still lands at 2. Closing that would mean the row following the pointer or the camera, which would make it move while you are reading it, so it was left alone.",
+    "A weight counts as chosen the moment anything writes one, including restyling a shape you already drew. So thin a line on a screenshot to 3, go to an icon frame, and the next shape there arrives at 3 rather than 2. That is the existing rule about a weight you picked being yours, but it now also fires for a weight you picked somewhere else."
+  ]
+}

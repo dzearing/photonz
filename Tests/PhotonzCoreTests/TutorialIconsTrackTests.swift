@@ -330,7 +330,7 @@ struct TutorialIconsTrackTests {
         // Two points on a 24 point frame, and the line a 24 point frame gives a
         // freshly drawn shape, so the sample looks like something just drawn.
         #expect(path.strokeWidth == IconStrokeWeight.startingWidth(
-            armed: AnnotationContent.defaultStrokeWidth,
+            armed: AnnotationContent.defaultStrokeWidth, chosen: false,
             onFrameSized: CGSize(width: 24, height: 24)))
     }
 

@@ -95,6 +95,7 @@ extension CanvasNSView {
         // from the same point — the middle of the box being dragged, which is
         // what decides the frame the shape joins — so nothing jumps on release.
         let started = startingOutline(content, style: annotationStyle,
+                                      chosen: armedStrokeWidthIsChosen,
                                       drawnAt: CGPoint(x: (drag.anchor.x + end.x) / 2,
                                                        y: (drag.anchor.y + end.y) / 2),
                                       in: document)

@@ -183,6 +183,12 @@ struct CanvasView: NSViewRepresentable {
     /// reason as the ink: the draft under your hand is the weight that lands
     /// (`EditorState.armedPenStrokeWidth`).
     var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+    /// Whether the weight the tool in hand is armed with is one somebody asked
+    /// for, echoed from EditorState. A weight nobody chose is the one an icon
+    /// frame is allowed to thin (`IconStrokeWeight`), and the draft under your
+    /// hand has to be decided the same way the landing shape will be, or it
+    /// jumps on release.
+    var armedStrokeWidthIsChosen: Bool = false
     /// A path finished with the Pen (Next, `next-pen`), in document
     /// coordinates: one layer, one undo step.
     let onPathCommit: (PathContent) -> Void
@@ -335,6 +341,7 @@ struct CanvasView: NSViewRepresentable {
     private func update(_ view: CanvasNSView) {
         view.penPaint = penPaint
         view.penStrokeWidth = penStrokeWidth
+        view.armedStrokeWidthIsChosen = armedStrokeWidthIsChosen
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
@@ -1035,6 +1042,9 @@ final class CanvasNSView: NSView {
     /// How thick, echoed the same way and read at the same moment; see
     /// `PenSession.startingStrokeWidth`.
     var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+    /// Whether that weight is one somebody asked for, echoed the same way. Only
+    /// a weight nobody chose is an icon frame's to thin (`IconStrokeWeight`).
+    var armedStrokeWidthIsChosen: Bool = false
 
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.

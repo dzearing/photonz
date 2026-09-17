@@ -194,14 +194,15 @@ extension CanvasNSView {
         penSession.grid = canvasNudgeGrid
         // The weight the whole path comes out at: the weight the Pen is armed
         // with, which is whatever a path's Thickness row was last set to, and
-        // then only if that is still the stock four does the frame the FIRST
-        // anchor lands on get its say — four points of line is a sixth of a 24
-        // pixel icon frame (`IconStrokeWeight`). Read once, because the press
+        // then only if NOBODY HAS CHOSEN one does the frame the FIRST anchor
+        // lands on get its say — four points of line is a sixth of a 24 pixel
+        // icon frame (`IconStrokeWeight`). Read once, because the press
         // below lets go of what was picked, and because a path is one line
         // rather than one line per click.
         if startingAPath {
             penSession.startingStrokeWidth = startingPathStrokeWidth(
-                armed: penStrokeWidth, drawnAt: p, in: document)
+                armed: penStrokeWidth, chosen: armedStrokeWidthIsChosen,
+                drawnAt: p, in: document)
             // ...and the ink, from the swatch on the tool bar, for the same
             // reason and at the same moment: one path is one colour, so the
             // whole drawing wears what the Pen was armed with when it started.

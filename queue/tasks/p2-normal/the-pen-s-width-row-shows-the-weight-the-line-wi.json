@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 2810,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T20:15:34.058Z",
-  "updated": "2026-09-16T20:15:34.061Z",
+  "updated": "2026-09-17T04:36:06.774Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced at the model level while shipping choose-how-thick-the-pen-draws-before-you-draw. Both halves are asserted side by side in one passing test, IconStrokeWeightTests.aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt:\n\n  Scripts/test.sh --filter aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt\n  -> Test \"A weight set on the bar is the weight the Pen draws with\" passed\n\nThe two lines that are the bug:\n  #expect(styles.strokeWidth(for: .pen) == stock)                       // the row shows 4\n  #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),\n                                       drawnAt: onTheIcon) == 2)        // the line lands at 2\n\nNOT confirmed in the running app: the Mac was locked for that whole task, so no walk could run. Filed p2 for that reason.\n\nCause: IconStrokeWeight.startingWidth thins only a line whose armed width is still AnnotationContent.defaultStrokeWidth (4), because that is the app's single signal for \"nobody has chosen\". The store cannot tell a stock 4 from a deliberately typed 4, so the rule cannot step aside for a real choice of 4 either. This predates the Pen's Width row; it has been true of every shape tool's Width since the icon rule landed (a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei). The row just made it visible.\n\nLikely shape of a fix: record that a weight was CHOSEN rather than inferring it from the value (a flag beside penStrokeWidth and each shape bucket in AnnotationStyles), and have EditorView.editedStrokeWidth show the started weight for the frame under the canvas rather than the raw armed one. Both halves are needed: one without the other trades a wrong number for a different wrong number.",
@@ -24,6 +24,27 @@
     {
       "t": "2026-09-16T20:15:34.060Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T04:26:14.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T04:35:56.773Z",
+      "note": "Adversarial review before building. The notes proposed two halves and both were needed, but the second one ('show the started weight for the frame under the canvas') had no frame to name: with the popover open the pointer is on the popover, not on the canvas, so there is no hover to read. Considered three answers. (a) Follow the pointer: the row would flicker as you moved and would be stale exactly when you looked at it. (b) Follow the camera: the row would change on every pan, and reading it into the toolbar body would invalidate the editor's body on every pan frame, which is the jank the repo rules forbid. (c) Follow the frame you are working IN, which is what the icon previews strip already uses (PhotonzDocument.iconFrameID(containing: selectedLayerID)). Took (c): it is stable, it costs nothing, and it means the number in the row and the pictures beside it are about one icon. Rejected the alternative of arming the tool at the icon weight on entering a frame instead of thinning at commit: it would leave a line drawn in a frame you never selected back at 4, undoing the whole point of the original rule."
+    },
+    {
+      "t": "2026-09-17T04:35:59.830Z",
+      "note": "What landed. Core: AnnotationStyles keeps a chosenWidths set (shape keys plus a pen key), written by the one low-level setStrokeWidth on each side, so every route a weight can arrive by marks it; Codable writes the key only when non-empty and, for prefs written before it, infers chosen from 'not the weight this tool ships with', which is exactly what the old rule guessed, so nobody's settings move under them. IconStrokeWeight.startingWidth takes chosen: Bool instead of comparing armed against the stock four. PhotonzDocument gains iconFrameSize(containing:) and startingStrokeWidth(armed:chosen:drawingInside:) so the row asks the same rule the drawing asks. App: EditorState.startedStrokeWidth is what EditorView.editedStrokeWidth now reads; armedStrokeWidthIsChosen is echoed to CanvasView so the draft under the hand is decided the same way the commit will be. All gated on next-icon-frames, which is Next only, so Current draws exactly what it drew. Nothing in Releases/ forks any of this, so the porting rule is satisfied by the files being shared."
+    },
+    {
+      "t": "2026-09-17T04:36:02.280Z",
+      "note": "Verification. Scripts/test.sh: 7969 tests in 636 suites passed. Four new core tests carry the acceptance: 'The Width row reads the weight the line will really land at', 'Typing the weight the row was already showing gets you that weight', 'A four somebody typed is a four, not the four the tool shipped with', and \"A box's and a line's Width rows read the same way the Pen's does\". NOT verified in the running app: the Mac's screen was locked for this whole task, so every walk reports status locked and takes no picture. Scripts/playtest/icon-width-row-reads-true-walk.json is written and parses (the run got to setup and reported '82 steps; release next'), and a sweep was requested naming the change, so the loop runs it and every icon walk the moment the screen is unlocked."
+    },
+    {
+      "t": "2026-09-17T04:36:06.773Z",
+      "note": "left rough, no task filed: (1) with NOTHING picked the row falls back to the armed weight, so drawing straight into an icon frame you never selected still reads 4 and lands at 2. Closing it means the row following the pointer or the camera, which makes it move while you read it and costs an editor body invalidation per pan frame. (2) a weight counts as chosen the moment anything writes one, restyling a shape you already drew included, so a 3 picked on a screenshot is carried onto the next icon frame. Both are UX judgments rather than defects, so they are in the audit's rough list (queue/audits/2026-09-17-icon-vector-width-row.json) where the user can react and turn either into a task; searching the queue found nothing already covering them."
     }
-  ]
+  ],
+  "started": "2026-09-17T04:26:14.411Z"
 }

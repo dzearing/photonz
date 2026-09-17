@@ -2110,9 +2110,16 @@ struct EditorView: View {
         return shape == .rectangle || shape == .ellipse
     }
 
+    /// The number the Width row shows: a picked shape's own weight, or the
+    /// weight the tool in hand would really draw at where it is being held.
+    ///
+    /// On a 24 pixel icon frame a line nobody has given a weight lands at 2 so
+    /// it survives the icon (`IconStrokeWeight`), and this row used to go on
+    /// saying 4 — a box you can type into saying one number and delivering
+    /// another. It reads `startedStrokeWidth` now, which asks the same question
+    /// the drawing asks.
     private var editedStrokeWidth: CGFloat {
-        selectedAnnotation?.strokeWidth
-            ?? editorState.annotationStyles.strokeWidth(for: editorState.activeTool)
+        selectedAnnotation?.strokeWidth ?? editorState.startedStrokeWidth
     }
 
     /// The arrowhead-size row applies to arrows only.

@@ -24,10 +24,18 @@ import Foundation
 /// for its canvas; a 512 point app icon would otherwise be handed 32 points of
 /// stroke nobody asked for.
 ///
-/// **It stops the moment you choose.** It applies only while the tool is still
-/// holding the width every tool ships with. Pick any other weight and that is
-/// the weight you get, on an icon frame or anywhere else, because a starting
-/// value that reimposed itself after every change would be a lock.
+/// **It stops the moment you choose.** It applies only while NOBODY HAS CHOSEN
+/// a weight. Pick one and that is the weight you get, on an icon frame or
+/// anywhere else, because a starting value that reimposed itself after every
+/// change would be a lock.
+///
+/// Whether somebody has chosen is something the app remembers
+/// (`AnnotationStyles.strokeWidthWasChosen(for:)`) rather than something it
+/// guesses from the number. It used to guess, by comparing the armed weight
+/// against the four every tool ships with, and that cost two things at once: a
+/// Width row reading 4 over a frame where the line would land at 2, and no way
+/// to ask for a 4 on an icon frame at all, since asking looked exactly like not
+/// having asked.
 public enum IconStrokeWeight {
 
     /// How many lines of the starting weight lie across an icon. Sixteen is
@@ -36,10 +44,13 @@ public enum IconStrokeWeight {
 
     /// The weight a freshly drawn line takes on a frame this size. `nil` is a
     /// shape landing on bare canvas, which is nobody's icon.
-    public static func startingWidth(armed: CGFloat, onFrameSized size: CGSize?) -> CGFloat {
-        // A weight somebody picked is theirs. Only the one every tool ships
-        // with is the app's to change.
-        guard armed == AnnotationContent.defaultStrokeWidth else { return armed }
+    ///
+    /// `chosen` is whether the weight in `armed` is one somebody asked for. A
+    /// weight somebody picked is theirs, whatever number it happens to be; only
+    /// a weight nobody has picked is the app's to decide.
+    public static func startingWidth(armed: CGFloat, chosen: Bool,
+                                     onFrameSized size: CGSize?) -> CGFloat {
+        guard !chosen else { return armed }
         guard let size, IconPreviews.isIconSize(size) else { return armed }
         return min(armed, max(1, (size.width / linesAcrossAnIcon).rounded()))
     }
@@ -59,9 +70,37 @@ extension PhotonzDocument {
         return frame.frame.size
     }
 
+    /// The size of the icon frame this layer is being drawn INSIDE, or nil when
+    /// it is on a screen, on bare canvas, or is itself a screen.
+    ///
+    /// The frame itself when the frame is what is picked, and the frame above
+    /// whatever is picked while a shape inside it is — which is the same
+    /// question the icon previews strip asks to decide which icon it is
+    /// showing (`IconPreviews.iconFrameID(containing:)`). So the Width row, the
+    /// previews strip and the drawing all mean the same icon.
+    public func iconFrameSize(containing id: UUID) -> CGSize? {
+        guard let frameID = iconFrameID(containing: id),
+              let frame = layer(id: frameID) else { return nil }
+        return frame.frame.size
+    }
+
     /// The weight a freshly drawn line takes, landing centred on this point.
-    public func startingStrokeWidth(armed: CGFloat, drawnAt point: CGPoint) -> CGFloat {
-        IconStrokeWeight.startingWidth(armed: armed, onFrameSized: iconFrameSize(under: point))
+    public func startingStrokeWidth(armed: CGFloat, chosen: Bool,
+                                    drawnAt point: CGPoint) -> CGFloat {
+        IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
+                                       onFrameSized: iconFrameSize(under: point))
+    }
+
+    /// The weight a freshly drawn line takes in the frame this layer is in.
+    ///
+    /// What the Width row on the tool bar reads while an icon is what you are
+    /// working in. It is the same rule the drawing itself goes through, asked
+    /// of the frame rather than of a point, because a row is read before there
+    /// is any point to ask about.
+    public func startingStrokeWidth(armed: CGFloat, chosen: Bool,
+                                    drawingInside id: UUID) -> CGFloat {
+        IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
+                                       onFrameSized: iconFrameSize(containing: id))
     }
 
     /// A freshly drawn shape's line, started at the weight the canvas under
@@ -76,12 +115,12 @@ extension PhotonzDocument {
     ///
     /// A highlight is a wash rather than a line, so it is left alone.
     public func startingOutline(content: AnnotationContent, style: LayerStyle?,
-                                drawnAt point: CGPoint)
+                                chosen: Bool, drawnAt point: CGPoint)
         -> (content: AnnotationContent, style: LayerStyle?) {
         guard content.shape != .highlight else { return (content, style) }
         let border = style?.borderWidth ?? 0
         let armed = max(content.strokeWidth, border)
-        let started = startingStrokeWidth(armed: armed, drawnAt: point)
+        let started = startingStrokeWidth(armed: armed, chosen: chosen, drawnAt: point)
         guard started != armed else { return (content, style) }
         var content = content
         var style = style

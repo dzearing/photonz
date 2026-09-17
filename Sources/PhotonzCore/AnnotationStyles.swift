@@ -39,6 +39,21 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// `AnnotationShape`, so it has no bucket of its own to keep it in.
     private var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
 
+    /// Which tools have had a weight CHOSEN: shape keys, plus `penWidthKey` for
+    /// the Pen.
+    ///
+    /// A line drawn on an icon frame starts thinner than the tool is armed
+    /// with, and that rule stands aside the moment somebody picks a weight of
+    /// their own (`IconStrokeWeight`). Until this was written down the only way
+    /// to tell "nobody has chosen" from "chose the four it ships with" was to
+    /// compare the number against that four, so a Width row could read 4 over a
+    /// frame where the line would land at 2, and typing 4 could not get you a 4.
+    private var chosenWidths: Set<String> = []
+
+    /// What the Pen's chosen weight is filed under. A path is not an
+    /// `AnnotationShape`, so it has no shape key to use.
+    private static let penWidthKey = "pen"
+
     public init() {
         var shapes: [String: ShapeDefaults] = [:]
         for shape in AnnotationShape.allCases {
@@ -52,6 +67,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         case heldColorStyleNames
         case penPaint
         case penStrokeWidth
+        case chosenStrokeWidths
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
     }
@@ -90,6 +106,22 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
             }
             self.shapes = shapes
         }
+        if let chosen = try c.decodeIfPresent(Set<String>.self, forKey: .chosenStrokeWidths) {
+            chosenWidths = chosen
+        } else {
+            // Prefs written before the app kept this. A weight that is not the
+            // one the tool ships with is a weight somebody set, which is
+            // exactly what the old rule inferred, so nobody's settings change
+            // under them. A saved four is unknowable either way and stays
+            // unchosen, which is what it meant yesterday.
+            if penStrokeWidth != PathContent.defaultStrokeWidth {
+                chosenWidths.insert(AnnotationStyles.penWidthKey)
+            }
+            for shape in AnnotationShape.allCases
+            where defaults(forShape: shape).strokeWidth != ShapeDefaults.standard(for: shape).strokeWidth {
+                chosenWidths.insert(shape.rawValue)
+            }
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -107,6 +139,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         }
         if penStrokeWidth != PathContent.defaultStrokeWidth {
             try c.encode(penStrokeWidth, forKey: .penStrokeWidth)
+        }
+        // Nothing at all until a weight has been chosen, so prefs that have
+        // never had one write exactly what they always wrote.
+        if !chosenWidths.isEmpty {
+            try c.encode(chosenWidths, forKey: .chosenStrokeWidths)
         }
     }
 
@@ -278,6 +315,24 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setStrokeWidth(_ width: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].strokeWidth = width
+        // Every route a weight can arrive by — the Width row, a slider drag, a
+        // weight lifted off a shape that was just restyled — comes through
+        // here, so this one line is what "somebody chose" means.
+        chosenWidths.insert(shape.rawValue)
+    }
+
+    /// Whether this shape's weight is one somebody asked for, rather than the
+    /// one it ships with. What `IconStrokeWeight` stands aside for.
+    public func strokeWidthWasChosen(forShape shape: AnnotationShape) -> Bool {
+        chosenWidths.contains(shape.rawValue)
+    }
+
+    /// The same, for the tool in hand: the Pen keeps its weight beside the
+    /// shapes rather than in one of their buckets.
+    public func strokeWidthWasChosen(for tool: Tool) -> Bool {
+        if tool == .pen { return chosenWidths.contains(AnnotationStyles.penWidthKey) }
+        guard let shape = tool.annotationShape, tool.usesStrokeWidth else { return false }
+        return strokeWidthWasChosen(forShape: shape)
     }
 
     /// The Width the USER just asked this tool for, which is the same as
@@ -421,6 +476,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     public mutating func setStrokeWidth(_ width: CGFloat, for tool: Tool) {
         if tool == .pen {
             penStrokeWidth = width
+            chosenWidths.insert(AnnotationStyles.penWidthKey)
             return
         }
         guard let shape = tool.annotationShape, tool.usesStrokeWidth else { return }

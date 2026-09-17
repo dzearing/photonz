@@ -104,6 +104,7 @@ struct EditorCanvasSurface: View {
                    onLensCreate: { editorState.addLensDrag(from: $0, to: $1) },
                    penPaint: editorState.armedPenPaint,
                    penStrokeWidth: editorState.armedPenStrokeWidth,
+                   armedStrokeWidthIsChosen: editorState.armedStrokeWidthIsChosen,
                    onPathCommit: { editorState.addPath($0) },
                    onPenHintChange: { editorState.penHint = $0 },
                    onPathPreview: { editorState.previewPath($0, $1) },
