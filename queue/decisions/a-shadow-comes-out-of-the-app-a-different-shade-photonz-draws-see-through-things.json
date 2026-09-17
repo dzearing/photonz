@@ -1,0 +1,55 @@
+{
+  "id": "a-shadow-comes-out-of-the-app-a-different-shade-photonz-draws-see-through-things",
+  "taskId": "a-shadow-comes-out-of-the-app-a-different-shade",
+  "question": "Photonz draws see-through things lighter than a browser does. Should it match?",
+  "context": "A shadow exported from the app comes out noticeably darker than the one on screen. Chasing it found something wider: the app mixes every see-through thing more lightly than the rest of the world does. A 50% black over white reads 188 on the canvas where a browser draws 128. Two pictures of the same little scene, drawn both ways, are in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Match the web",
+      "summary": "Shadows, the opacity slider and every see-through fill draw the way a browser, Figma and the exported file draw them. A soft shadow reads as a real lift instead of a faint smudge, and a 25% blue stays blue instead of drifting grey-lavender. Drawings you already have look deeper and stronger when you open them.",
+      "pros": [
+        "What you see on the canvas is what lands in the exported file, and what a visitor sees in a browser",
+        "A quarter-strength colour keeps its own hue instead of washing out toward grey",
+        "A shadow stops looking weaker in Photonz than in the design it came from"
+      ],
+      "cons": [
+        "Every drawing you already have changes shade: shadows get deeper, washes get stronger",
+        "A shadow you nudged by eye until it looked right will now look heavier than you set it"
+      ],
+      "mitigation": "It lands in the Next release only, so Photonz as you have it today is untouched and you can open the same drawing in both and compare before it goes any further."
+    },
+    {
+      "id": "b",
+      "label": "Keep todays look, send shadows out as a picture",
+      "summary": "The canvas stays exactly as it is, and the exported file stops trying to draw a shadow out of shapes: any layer wearing one goes out as a flat picture instead, so the file finally matches the screen.",
+      "pros": [
+        "Nothing you already have changes shade at all",
+        "The exported file matches what you were looking at"
+      ],
+      "cons": [
+        "A handed-over icon is no longer clean shapes, so nobody downstream can recolour it or scale it without it going fuzzy",
+        "The canvas still disagrees with every browser and with Figma, so a UI mocked here still will not match the real thing",
+        "Files get much bigger"
+      ],
+      "mitigation": "Only the layers actually wearing a shadow turn into pictures; everything else stays shapes."
+    },
+    {
+      "id": "c",
+      "label": "Leave it alone",
+      "summary": "Photonz keeps drawing see-through things its own way, an exported shadow keeps coming out darker than the one you approved, and the difference gets written down so anybody handing an icon over knows to expect it.",
+      "pros": [
+        "Nothing changes and nothing can break"
+      ],
+      "cons": [
+        "An approved icon and the file you hand over are not the same picture",
+        "A UI built in Photonz never quite matches the browser it was built for"
+      ],
+      "mitigation": "The difference goes into the export notes, so at least it stops being a surprise.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-17T07:11:26.169Z"
+}
