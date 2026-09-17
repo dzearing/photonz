@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2840,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T22:45:05.939Z",
-  "updated": "2026-09-16T22:45:05.942Z",
+  "updated": "2026-09-17T05:36:37.853Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-16 on main at c158cc07 plus the background work. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/svg-export-background-walk.json ; the sheet render is /tmp/photonz-playtest/svg-export-background-walk/svg-export-background-4-sheet.png and the window capture is the matching -sc.png, both showing Fo/r/m/at stacked. Not caused by the background row, which sits below it: the cause is the segmented Picker in ExportDialog.swift having five segments (PNG JPEG HEIC WebP SVG, WebP added 2026-09-15) inside .frame(width: 320), so SwiftUI gives the leading label almost no room. Either widen the sheet, drop to .labelsHidden() on that Picker (the segments say what they are), or move the label above the row.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-16T22:45:05.941Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T05:14:12.078Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T05:36:33.750Z",
+      "note": "Reproduced first: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/svg-export-background-walk.json on current main photographed the sheet with Fo/r/m/at stacked three lines tall, in the real window capture as well as the offscreen render."
+    },
+    {
+      "t": "2026-09-17T05:36:33.798Z",
+      "note": "Cause confirmed by experiment, not by reading: a segmented Picker gives its own label whatever width is left after the segments. At 320pt the five formats needed about 240pt of the 280pt of content, so the label got two characters. Holding the label at its natural width alone was not enough: the row then overflowed the fixed 320pt frame, the sheet bled past both edges and the walk failed with 'Include the background is out of reach'. The sheet had to grow."
+    },
+    {
+      "t": "2026-09-17T05:36:33.842Z",
+      "note": "Shipped: ExportDialog.swift gets a labelledRow helper (label held at natural width in a 56pt column, control beside it, picker .labelsHidden()) used by Export, Where it is going, Format, Scale and Quality, and the sheet widened 320 to 380. Format now reads on one line with all five buttons, and the short-labelled rows line up as a column."
+    },
+    {
+      "t": "2026-09-17T05:36:37.757Z",
+      "note": "Verified with pictures, not assumptions. Walks re-run after the change: svg-export-background, svg-export, svg-export-redline, export-quality, export-webp, tutorial-export-an-animated-svg, tutorial-export-a-recording, frames. All pass and all photograph the sheet with Format on one line and PNG JPEG HEIC WebP SVG unclipped. Scripts/test.sh green, 8000 tests. Shots in queue/audits/2026-09-16-export-format-row-sc.png and -svg-sc.png are real window captures."
+    },
+    {
+      "t": "2026-09-17T05:36:37.806Z",
+      "note": "Left rough, not filed: the sheet heading says Export and, with frames, the first row label says Export too, so it reads Export / Export: Frame. Pre-existing wording, in the audit for the user to react to. Also the Where it is going row is the one that does not join the label column, because its name is nearly twice as long as the others."
+    },
+    {
+      "t": "2026-09-17T05:36:37.852Z",
+      "note": "The Mac's screen was locked for this whole task, so every walk ran with PHOTONZ_ALLOW_LOCKED_WALK=1. Three export walks fail under that: icon-export-animated (step 9, a panel menu is nameless), tutorial-save-export-copy and tutorial-export-a-spec-list (both step 14, waiting on a tutorial step behind a copy chord). I checked each against the unchanged file by stashing and re-running: identical failures without my change, so they are the lock and not this work. Folded into walks-that-fail-in-the-full-sweep rather than filed."
     }
-  ]
+  ],
+  "started": "2026-09-17T05:14:12.077Z"
 }

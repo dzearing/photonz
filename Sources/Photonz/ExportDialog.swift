@@ -333,48 +333,66 @@ struct ExportDialog: View {
             Text("Export")
                 .font(.headline)
             if !frames.isEmpty {
-                Picker("Export", selection: $frameID) {
-                    Text("Whole canvas").tag(UUID?.none)
-                    ForEach(frames) { frame in
-                        Text(frame.name).tag(UUID?.some(frame.id))
+                labelledRow("Export") {
+                    Picker("Export", selection: $frameID) {
+                        Text("Whole canvas").tag(UUID?.none)
+                        ForEach(frames) { frame in
+                            Text(frame.name).tag(UUID?.some(frame.id))
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                 }
-                .pickerStyle(.menu)
             }
             // What is asked FIRST, because the destination is what decides
             // whether the motion survives, and because most people know where
             // the file is going and do not know their formats.
             if asksWhereItIsGoing {
-                Picker("Where it is going", selection: $destination) {
-                    ForEach(SVGHandoff.Destination.allCases, id: \.self) { where_ in
-                        Text(where_.title).tag(where_)
+                labelledRow("Where it is going") {
+                    Picker("Where it is going", selection: $destination) {
+                        ForEach(SVGHandoff.Destination.allCases, id: \.self) { where_ in
+                            Text(where_.title).tag(where_)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+            }
+            // The label is written out rather than left to the Picker: a
+            // segmented Picker hands its own label whatever width is left over,
+            // and with five formats in the row that was two characters, so
+            // "Format" came out stacked Fo/r/m/at. Held at its natural width
+            // the label cannot break, and a format added later makes the
+            // segments narrower instead of breaking the word beside them.
+            labelledRow("Format") {
+                Picker("Format", selection: $choice) {
+                    Text("PNG").tag(ExportChoice.picture(.png))
+                    Text("JPEG").tag(ExportChoice.picture(.jpeg))
+                    Text("HEIC").tag(ExportChoice.picture(.heic))
+                    if offersWebP {
+                        Text("WebP").tag(ExportChoice.picture(.webp))
+                    }
+                    if offersSVG {
+                        Text("SVG").tag(ExportChoice.svg)
                     }
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
-            Picker("Format", selection: $choice) {
-                Text("PNG").tag(ExportChoice.picture(.png))
-                Text("JPEG").tag(ExportChoice.picture(.jpeg))
-                Text("HEIC").tag(ExportChoice.picture(.heic))
-                if offersWebP {
-                    Text("WebP").tag(ExportChoice.picture(.webp))
-                }
-                if offersSVG {
-                    Text("SVG").tag(ExportChoice.svg)
-                }
-            }
-            .pickerStyle(.segmented)
             if asksWhereItIsGoing {
                 handoffNote
             }
             if choice.isVector {
                 vectorNote
             } else {
-                Picker("Scale", selection: $scale) {
-                    Text("1×").tag(CGFloat(1))
-                    Text("2×").tag(CGFloat(2))
+                labelledRow("Scale") {
+                    Picker("Scale", selection: $scale) {
+                        Text("1×").tag(CGFloat(1))
+                        Text("2×").tag(CGFloat(2))
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 }
-                .pickerStyle(.segmented)
                 if let size = exportedSize {
                     Text("\(Int(size.width * scale)) × \(Int(size.height * scale)) px")
                         .font(.caption)
@@ -412,7 +430,11 @@ struct ExportDialog: View {
             }
         }
         .padding(20)
-        .frame(width: 320)
+        // Wide enough for the format row to hold its name and five buttons on
+        // one line. At 320 the segments took every point there was and the word
+        // beside them came out stacked two letters a line; the rest of the
+        // sheet, the hand-off lines especially, reads better with the room too.
+        .frame(width: 380)
         // The last card of the SVG guide points at this sheet, so it sits
         // beside the sheet rather than over the row it is talking about.
         .tutorialAnchor(.dialog(.export))
@@ -466,6 +488,25 @@ struct ExportDialog: View {
         .onChange(of: qualityPercent) { refreshPictureSize() }
     }
 
+    /// One row of the sheet: what it is called on the left, and the control it
+    /// names beside it.
+    ///
+    /// The label is never allowed to wrap, and it holds a column wide enough
+    /// for the short names, so Export, Format, Scale and Quality read down the
+    /// sheet with their controls starting in the same place. A name longer than
+    /// the column — "Where it is going" — widens its own row rather than
+    /// breaking, and rather than pushing every other control across.
+    @ViewBuilder
+    private func labelledRow<Control: View>(_ name: String,
+                                            @ViewBuilder control: () -> Control) -> some View {
+        HStack(spacing: 10) {
+            Text(name)
+                .fixedSize()
+                .frame(minWidth: 56, alignment: .leading)
+            control()
+        }
+    }
+
     /// The quality to write at, and what the file weighs there.
     ///
     /// Two lines rather than one: the slider answers how much of the picture to
@@ -474,8 +515,7 @@ struct ExportDialog: View {
     /// under the thing that changes it rather than in the corner of the sheet.
     @ViewBuilder private var qualityRow: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 10) {
-                Text("Quality")
+            labelledRow("Quality") {
                 Slider(value: qualityBinding,
                        in: Double(ExportQuality.lowest)...Double(ExportQuality.highest),
                        step: Double(ExportQuality.step))

@@ -1,0 +1,25 @@
+{
+  "feature": "The Export sheet reads as a row of questions",
+  "epic": "icon-export",
+  "summary": "The word Format beside the format buttons used to come out stacked Fo/r/m/at, three lines tall, because five formats took every point the row had. It now sits on one line, and Export, Format, Scale and Quality line up as a column with their controls starting in the same place.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: the sheet is what ⌘E opens.",
+  "try": [
+    { "do": "Open any picture, or draw a shape with the Pen." },
+    { "do": "Press ⌘E.", "shot": "2026-09-16-export-format-row-sc.png" },
+    { "do": "Read the format row: Format, then PNG, JPEG, HEIC, WebP, SVG." },
+    { "do": "Click JPEG and watch the Scale and Quality rows appear under it." },
+    { "do": "Click SVG and watch those rows give way to what the file will be.", "shot": "2026-09-16-export-format-row-svg-sc.png" },
+    { "do": "Press Escape." }
+  ],
+  "evaluate": [
+    "Does the format row read as one question with five answers, rather than as a word that broke?",
+    "Is the sheet the right width now, or does 380 points feel wide for exporting a PNG?",
+    "Do Format, Scale and Quality reading down a column help, or would you rather each control hugged its own label?",
+    "The heading says Export and with frames the first row says Export as well. Does that read as a repeat?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so every walk was forced past the refusal. The pictures here are real window captures, not offscreen renders, and the walks themselves passed, but no one was at the machine to use the sheet by hand.",
+    "The one row that does not join the column is Where it is going, which only appears when the drawing moves: its name is long enough to push its menu well to the right of the others.",
+    "The sheet went from 320 to 380 points wide. That was not free: at 320 there is no width where six letters and five format buttons both fit, so the label had to go or the sheet had to grow."
+  ]
+}

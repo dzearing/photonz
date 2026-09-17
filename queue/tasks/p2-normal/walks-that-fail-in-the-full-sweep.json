@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T03:35:56.688Z",
+  "updated": "2026-09-17T05:36:40.030Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -279,6 +279,10 @@
     {
       "t": "2026-09-17T03:35:56.687Z",
       "note": "dock-picked-first-walk still fails on main today (2026-09-17), run by hand with Scripts/playtest.sh: step 66 (selectRow) says no row called \"Zoom\" is in the layers list, and names the ones that are: Magnify, Label, Arrow, Rectangle 4 ... A zoom callout is now the Lens set to Magnify (commit 16204c85), so the walk is naming a layer by a word the app stopped using. The walk is what moved on here, not the app."
+    },
+    {
+      "t": "2026-09-17T05:36:40.029Z",
+      "note": "2026-09-16, from the Export sheet task: icon-export-animated-walk, tutorial-save-export-copy-walk and tutorial-export-a-spec-list-walk each fail the same way with and without an unrelated ExportDialog change (verified by stashing the change and re-running). All three were run with PHOTONZ_ALLOW_LOCKED_WALK=1 on a locked screen, and all three fail on a name lookup: a panel menu with no name, and two tutorial steps that never arrive after a copy chord. Worth re-running them unlocked before anyone treats them as app bugs."
     }
   ]
 }
