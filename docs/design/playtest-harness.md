@@ -339,7 +339,7 @@ by a value an earlier step of the same walk chose.
 | `blank` | optional `canvasWidth` `canvasHeight`, optional `width` `height`, optional `card`, optional `pixelScale` | Opens a NEW EMPTY WINDOW and hands it a blank white canvas, the way the empty window's Blank canvas row does once a size is chosen. Defaults to the offered size (`BlankCanvas.defaultPreset`). `width`/`height` set the window frame, as in `open`. `card` names a snapshot taken of the empty window first, which is the only way to photograph the onboarding card — it stops existing the moment a document arrives. This is how a walk starts from nothing instead of from a screenshot. `pixelScale` is how many of the document's numbers make one point: leave it out and the document counts one to one, the way a blank canvas always has; say `2` and it counts in twos, the way one opened from a Retina capture does. It is the only way a walk can put two documents that count differently side by side, which is what proves a shared component crosses between them at the size it should be (`shared-component-scale-walk.json`). |
 | `open` | `file`, optional `width` `height` | Opens the file in an editor window (path relative to the script or absolute), waits until it can be driven, hides it, sizes it. Every later step targets this editor. |
 | `wait` | `seconds` | Gives the editor up to `seconds` to finish what the step before it started, and carries on the moment it has. Never returns sooner than one run loop turn, never later than `seconds`, so nothing waits longer than it used to. Prefer `waitFor` when there is a condition to name. See "What a wait waits for" below. |
-| `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and then, if neither claimed them as a shortcut, sent to the window as an ordinary press (which is what ⇧↑ in a number field is). The log says who took them: `window`, `menu` or `responder chain`. |
+| `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and then, if neither claimed them as a shortcut, sent to the window as an ordinary press (which is what ⇧↑ in a number field is). The log says who took them: `window`, `menu`, `responder chain`, `the field being typed in`, or `the default button "..."` when the press answered a question sheet. **A question sheet is answered by its name.** ⏎ at a sheet presses its default button and ⎋ presses Cancel, and a walk fails at the step if the sheet is still standing afterwards, with the `press` step to use instead. See "Answering a question the app asks" below. |
 | `appKey` | `key`, optional `modifiers` | Presses and releases a key by handing it to the APPLICATION instead of posting it into the window. `key` goes straight to the window, which is right for typing and for menu shortcuts but invisible to anything watching the app as a whole — and an application-wide event monitor is what takes the history overlay down on Esc and on a click outside it. Use this when the thing you are driving listens to the app rather than to a window; use `key` for everything else. |
 | `shortcut` | `key`, optional `modifiers` `menuItem` `checked` | Presses a chord and REQUIRES it to reach a menu item that actually runs. Fails, loudly and with the reason, when no menu item carries the chord, when the item is not the one `menuItem` names, when something else takes the press, or when the item has nothing behind it. `checked` is for a SETTING's item: one that is simply on or off keeps ONE name and says its state with a checkmark, so `checked` names the tick the item must be wearing BEFORE the press and the walk fails when the checkmark lies. Use it for app-level shortcuts (Capture, New Window, Open); a window-scoped one fails by design and tells you to use `action` instead. See "Which shortcuts a walk can press" below. |
 | `move` | `at`, optional `modifiers` | Moves the pointer over the canvas without pressing anything (hover previews, snap dots, and what the pointer SAYS a press would do). `modifiers` are held while it rests there, which is how a walk reads a cue that only ⌥ brings up: the copy badge over a layer, and on a screen's own surface, where ⌥ means one thing on a picked screen and nothing at all on one that is not. |
@@ -859,6 +859,64 @@ Looking again only works if the relayout ever finishes, and on a locked screen
 it does not: nothing is reconciled because nothing is drawn, so the plus stays
 nameless for as long as the walk is willing to wait. That is why a locked screen
 is now refused outright rather than waited out — see below.
+
+## Answering a question the app asks
+
+The app stops and asks before it does something it cannot take back: *Turn
+“Rectangle” into a path?*, *Turn “Rectangle” into a picture?* A walk answers
+with ⏎, the way a person does:
+
+```json
+{ "do": "key", "key": "return" }
+```
+
+For a year that press did nothing at all, and said nothing about it. The reason
+is small and worth writing down, because nothing about it is visible from the
+walk. **A question sheet's default button carries no key equivalent of its
+own.** Cancel gets a real Escape, but Return is wired through
+`NSWindow.defaultButtonCell`, and AppKit presses that only for the KEY window.
+The probe is hardly ever the active app: it runs with its window offscreen, and
+on a locked Mac it cannot be active at all. No key window, no match, and the
+press evaporated.
+
+Printing the sheet's buttons mid-walk on 2026-09-16 settled it:
+
+```
+Turn Into Path|ke="" ; Cancel|ke="␛" ; DEFAULTCELL=Turn Into Path|ke=""
+key=false appActive=false
+```
+
+The sweeps agree about when it started. `turn-into-a-path-walk` came back `ok`
+on every run up to 2026-09-14 16:19 and FAILED at 00:09 the next morning — the
+first sweep after the Mac locked at 20:46. Nothing in the app changed. The app
+stopped being frontmost.
+
+Two things come out of that:
+
+- **⏎ now presses the default button itself** when AppKit will not, so a walk's
+  answer means the same thing whether or not anyone is looking at the screen.
+  The log names what took it: `return taken by the default button "Turn Into
+  Path"`.
+- **A ⏎ or ⎋ that leaves the sheet standing FAILS the step.** Silence here was
+  worse than a failure: `turn-into-a-picture-walk` answered its question with
+  ⏎, the sheet stayed up, every `describe` after it was false, two renders
+  taken either side of the "turn" came back byte-identical, and the walk went
+  green. The step now says so and names the button to press instead:
+
+  ```
+  return did not answer the sheet: it is still up, so nothing after this step
+  is evidence about the app. The press was taken by window; the sheet's default
+  button is "Turn Into Path" and it is live. Press the button by name instead —
+  { "do": "press", "control": "Turn Into Path", "in": "Sheet" }
+  ```
+
+Pressing the button by name still works and is the right thing when the walk
+means to prove the button's WORDING, or to choose the button that is not the
+default:
+
+```json
+{ "do": "press", "control": "Turn Into Path", "in": "Sheet" }
+```
 
 ## Where a walk starts from
 

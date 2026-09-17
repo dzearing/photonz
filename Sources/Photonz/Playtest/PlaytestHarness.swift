@@ -427,8 +427,15 @@ private final class Run {
             let destination = modifiers.isEmpty ? nil : Self.menuItem(carrying: key, modifiers: modifiers)
             let takenBy = press(key, modifiers: modifiers, in: window)
             await sleep(0.05)
+            try await requireAnsweredSheet(key, modifiers: modifiers, aimedAt: window, takenBy: takenBy)
             let chord = "\(modifiers.map(\.rawValue).joined(separator: "+"))\(modifiers.isEmpty ? "" : "+")\(key.name)"
-            var detail = modifiers.isEmpty ? chord : "\(chord) taken by \(takenBy)"
+            // A plain press usually just goes to the window, and saying so
+            // adds nothing. When something else took it — the field being
+            // typed in, or a sheet's default button — the walk's log has to
+            // say which, or a press that answered a question reads exactly
+            // like one that went nowhere.
+            var detail = modifiers.isEmpty && takenBy == "window"
+                ? chord : "\(chord) taken by \(takenBy)"
             // "taken by menu" on its own has read like a pass for chords that
             // did nothing at all, which is how ⌘Z came to look checked when it
             // was not. Name the item and say when there is nothing behind it.
@@ -6721,6 +6728,42 @@ private final class Run {
         return editor
     }
 
+    /// Refuse to carry on when ⏎ or ⎋ was pressed at a question sheet and the
+    /// sheet is still standing.
+    ///
+    /// A press that reaches nothing used to be silent, and silence here is
+    /// worse than a failure: turn-into-a-picture-walk answered "Turn
+    /// “Rectangle” into a picture?" with ⏎, the sheet stayed up, and every
+    /// step after it described a document that had never changed — two
+    /// renders taken either side of the "turn" came back byte-identical and
+    /// the walk still went green (2026-09-16). A walk that proves nothing
+    /// while reporting a pass is the one thing the sweep must never do.
+    ///
+    /// Only for a press with nothing held down that a sheet is meant to
+    /// answer. Typing into a field inside a sheet is a different thing and is
+    /// left alone.
+    private func requireAnsweredSheet(_ key: PlaytestKey, modifiers: [PlaytestModifier],
+                                      aimedAt window: NSWindow, takenBy: String) async throws {
+        guard modifiers.isEmpty, key.characters == "\r" || key.characters == "\u{1B}" else { return }
+        // A sheet leaves on an animation, so give it time to go before calling
+        // it stuck. Half a second is far longer than the slide takes and costs
+        // nothing at all on the answered path, which is every walk that works.
+        for _ in 0..<10 {
+            guard (try? requireWindow())?.attachedSheet === window else { return }
+            await sleep(0.05)
+        }
+        guard (try? requireWindow())?.attachedSheet === window else { return }
+        let button = (window.defaultButtonCell?.title as String?).flatMap { $0.isEmpty ? nil : $0 }
+        let named = button.map { "\"\($0)\"" } ?? "its buttons"
+        throw Failure(description:
+            "\(key.name) did not answer the sheet: it is still up, so nothing after this step is"
+            + " evidence about the app. The press was taken by \(takenBy); the sheet's default"
+            + " button is \(named) and it is"
+            + " \(window.defaultButtonCell?.isEnabled == true ? "live" : "not live"). Press the"
+            + " button by name instead —"
+            + " { \"do\": \"press\", \"control\": \(named), \"in\": \"Sheet\" }")
+    }
+
     /// One of the app's own windows, by title. Exact first, then a prefix, so
     /// "Untitled 1" finds "Untitled 1 (Next)".
     private func requireWindow(titled title: String) throws -> NSWindow {
@@ -6879,6 +6922,35 @@ private final class Run {
                 takenBy = "window"
             } else if NSApp.mainMenu?.performKeyEquivalent(with: matcher) == true {
                 takenBy = "menu"
+            } else if flags.isEmpty, key.characters == "\r", window.isSheet, !window.isKeyWindow,
+                      let button = window.defaultButtonCell, button.isEnabled {
+                // The default button of a question sheet carries NO key
+                // equivalent of its own. Cancel gets a real "\u{1B}", but
+                // Return is wired through `NSWindow.defaultButtonCell`, and
+                // AppKit only presses that for the KEY window. The probe is
+                // hardly ever the active app — it runs with its window
+                // offscreen, and on a locked Mac it cannot be active at all —
+                // so there is no key window, the press matched nothing, and a
+                // walk that answered "Turn “Rectangle” into a path?" with ⏎
+                // was answering nothing.
+                //
+                // That is not a guess. Printing the sheet's buttons mid-walk
+                // on 2026-09-16 gave: Turn Into Path|ke="" ; Cancel|ke="␛" ;
+                // DEFAULTCELL=Turn Into Path|ke="" ; key=false appActive=false.
+                // And the sweeps agree about when it started: the walk was
+                // "ok" every run up to 2026-09-14 16:19 and FAILED at 00:09
+                // the next morning, the first sweep after the Mac locked at
+                // 20:46. Nothing in the app changed; the app stopped being
+                // frontmost.
+                //
+                // So do here what AppKit does for a key window, and only when
+                // it will not: press the default button. A walk's ⏎ then
+                // means the same thing whether or not anyone is looking at
+                // the screen. Sheets only, on purpose: an ordinary window can
+                // carry a default button cell too, and 279 walks press ⏎ at
+                // the editor expecting it to go to a field.
+                button.performClick(nil)
+                takenBy = "the default button \"\((button.title as String?) ?? "")\""
             } else {
                 // Nothing claimed it as a shortcut, so it is ordinary typing,
                 // or a press that happens to carry a modifier: ⇧↑ stepping a
