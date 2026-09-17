@@ -17492,3 +17492,37 @@ turn-into-text walk came back `locked` with nought steps. A sweep is requested.
 
 Next: run those walks once the screen is unlocked, and the weight wobble (Corner
 Radius reads Semibold while Border 1 reads Medium) is still open.
+
+## 2026-09-17 — a fix landing in the loop no longer makes it forget it is stuck
+
+A fix usually lands in `queue/bin/go-loop.sh` BECAUSE the loop is failing, so the
+restart that fix triggers falls in the middle of a failure streak. That restart
+called `queue.mjs reset-health`, which is right for a fresh start and wrong for a
+reload: same pid, same queue, same run, pass count carried in the environment,
+and health the one thing left behind. The loop came back believing it had never
+failed. The consecutive count went to zero, so the growing retry wait started
+again at the shortest step; the streak that blames the environment rather than
+any one task went with it, so failures across tasks read as the task's fault
+again; and a task parked earlier in that same streak was never handed back.
+
+The reload now carries health across and says so in the window (`carrying health
+across the restart (pass N)`); a genuine start still clears an unhealthy flag
+from a previous run, which is the whole point of doing it on a start.
+
+New `failure-drill.sh` scenario 7 is scenario 1 with a restart dropped into the
+middle: the always-failing runner appends a line to the loop's own script on its
+third call, against a stand-in repo of symlinks so nothing real is written to.
+Six of its eleven checks fail on the old code with exactly the shape reported
+(2 counted against 5 failures, environment flags 00000, drill-task-seven left
+parked, waits 1s 2s 3s 1s 2s) and all eleven pass on the fix (5 against 5,
+00011, unparked, waits 1s 2s 3s 4s 5s). All seven scenarios green in 2m44.
+
+Two smaller things in the drill itself. `PHOTONZ_LOOP_RELOAD=1`, set by scenario
+4, was staying on for scenarios 5 and 6, which run the REAL repo script: an edit
+landing mid-drill would have restarted them mid-scenario, the very flake this
+drill was filed for. Both now turn it off explicitly. And the drill takes a
+scenario number (`failure-drill.sh 7`, about 25s against about 3 minutes for the
+whole set), so checking a change to failure handling is not a coffee break.
+
+Next: nothing open on this. The loop's own script is the only file that can go
+stale, and it now carries everything it knew across the restart.

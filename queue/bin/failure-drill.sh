@@ -1,7 +1,12 @@
 #!/bin/zsh
 # Runner-failure drill: prove the go loop reacts to a runner that cannot work.
 #
-#   queue/bin/failure-drill.sh
+#   queue/bin/failure-drill.sh        every scenario
+#   queue/bin/failure-drill.sh 7      just scenario 7 (several numbers are fine)
+#
+# Each scenario stands alone, so naming one is how you check a change to the
+# loop in seconds instead of minutes. A scenario nobody asked for is counted
+# as passed, so the summary line still reads.
 #
 # Two scenarios, each in a throwaway queue with a fake `claude` on PATH, each
 # running the REAL go loop and then asserting what the dashboard would show.
@@ -54,6 +59,15 @@
 #  23. the limit clearing sends nothing, and leaves nothing on status.json that
 #      would make the next stall silent
 #
+# Scenario 7, a fix landing while the loop is stuck (2026-09-16):
+#
+#  24. a loop that restarts onto an edited copy of its own script keeps its
+#      health, its consecutive failure count and its failure streak
+#  25. the retry wait goes on growing across the restart instead of starting
+#      again at the shortest step
+#  26. a task parked before the restart is still handed back after it
+#  27. a genuine start still clears an unhealthy flag left by a previous run
+#
 # Scenario 5, a runner that works ON the spend limit (2026-09-12 12:04):
 #
 #  17. a runner that finishes its work while quoting a refusal in its tool
@@ -68,6 +82,9 @@ set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
 Q() { node queue/bin/queue.mjs "$@"; }
+WANTED=("$@")
+want() { (( ${#WANTED} == 0 )) && return 0; [[ " ${WANTED[*]} " == *" $1 "* ]]; }
+S1=0; S2=0; S3=0; S4=0; S5=0; S6=0; S7=0
 
 # ---- scenario 1: a runner that always dies ----------------------------------
 SANDBOX=$(mktemp -d -t photonz-drill)
@@ -76,8 +93,9 @@ SANDBOX3=$(mktemp -d -t photonz-drill-spend)
 SANDBOX4=$(mktemp -d -t photonz-drill-reload)
 SANDBOX5=$(mktemp -d -t photonz-drill-talk)
 SANDBOX6=$(mktemp -d -t photonz-drill-reach)
+SANDBOX7=$(mktemp -d -t photonz-drill-carry)
 SHARED_BIN=$(mktemp -d -t photonz-drill-bin)
-trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5" "$SANDBOX6" "$SHARED_BIN"' EXIT
+trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5" "$SANDBOX6" "$SANDBOX7" "$SHARED_BIN"' EXIT
 
 # Nothing a drill does may reach the user's real Notification Center. The loop
 # now raises a notification the moment it stalls on a refusal only a person can
@@ -108,10 +126,11 @@ export PATH="$SHARED_BIN:$PATH"
 # left parked, waits 1s 2s 3s 1s 2s). Without the edit, scenario 1 passed 18
 # runs in a row, so nothing here is flaky on its own.
 #
-# Nothing but scenario 4 is about the reload, so it is off everywhere else and
-# this drill no longer depends on the repo holding still while it runs.
-# Scenario 4 turns it back on, against a writable copy of its own.
+# Only scenarios 4 and 7 are about the reload, and each owns a writable copy of
+# the script it edits. Everywhere else it is off, so this drill no longer
+# depends on the repo holding still while it runs.
 export PHOTONZ_LOOP_RELOAD=0
+if want 1; then
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -202,7 +221,9 @@ console.log(failed ? "\n[drill] scenario 1: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S1=$?
+fi
 
+if want 2; then
 # ---- scenario 2: a login that expires, then is restored ---------------------
 QDIR2="$SANDBOX2/queue"
 BIN2="$SANDBOX2/bin"
@@ -343,7 +364,9 @@ console.log(failed ? "\n[drill] scenario 2: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S2=$?
+fi
 
+if want 3; then
 # ---- scenario 3: the spend limit refuses the digest run, then clears --------
 QDIR3="$SANDBOX3/queue"
 BIN3="$SANDBOX3/bin"
@@ -467,7 +490,9 @@ console.log(failed ? "\n[drill] scenario 3: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S3=$?
+fi
 
+if want 4; then
 # ---- scenario 4: a fix to the loop that never reaches the loop --------------
 # The loop ran unbroken from 5 September. The walk sweep landed in go-loop.sh
 # on the 8th. By the 9th, seven runners had asked for a sweep that the running
@@ -611,8 +636,14 @@ console.log(failed ? "\n[drill] scenario 4: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S4=$?
+fi
 
+if want 5; then
 # ---- scenario 5: a runner that WORKS ON the spend limit ---------------------
+# Back off the reload scenario 4 turned on: from here the loop runs the REAL
+# repo script again, and an edit landing in it mid-drill would restart the
+# loop mid-scenario. That is the flake this drill was filed for.
+export PHOTONZ_LOOP_RELOAD=0
 # 2026-09-12 12:04: the daily digest ran, filed a task called "A loop stalled on
 # the spend limit reaches the person", wrote its digest and exited 0. The loop
 # read its own runner's tool calls, found the words "spend limit" in one, and
@@ -756,8 +787,11 @@ console.log(failed ? "\n[drill] scenario 5: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S5=$?
+fi
 
+if want 6; then
 # ---- scenario 6: a stall that has to reach a person -------------------------
+export PHOTONZ_LOOP_RELOAD=0        # the real repo script again; see scenario 5
 # 2026-09-09T17:37Z to 2026-09-12T08:26Z: the loop hit the spend limit and did
 # everything right except leave the room. It banners its own Ghoztty window,
 # retitles it, marks the dashboard unhealthy and backs off to thirty minutes,
@@ -924,11 +958,183 @@ console.log(failed ? "\n[drill] scenario 6: " + failed + " check(s) failed" : "\
 process.exit(failed ? 1 : 0);
 '
 S6=$?
+fi
 
-if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 && S6 == 0 )); then
+if want 7; then
+# ---- scenario 7: a fix landing while the loop is stuck ----------------------
+# The loop is failing every task, somebody lands a fix to the loop's own
+# script, and the loop restarts onto it. Until 2026-09-17 that restart called
+# `queue.mjs reset-health`, which is the right thing for a fresh start and the
+# wrong thing here: the same pid, the same queue and the same run carried on
+# with its failure count back at zero. So the growing retry wait started again
+# at the shortest step, the streak that blames the environment rather than the
+# task was forgotten, and a task parked earlier in that same streak was never
+# handed back. It forgot it was stuck at the exact moment somebody was fixing
+# it BECAUSE it was stuck.
+#
+# Part A is scenario 1 with a reload dropped into the middle of it: same
+# always-failing runner, same backoff steps, and the runner appends a line to
+# the loop's script on its third call. Like scenario 4 it runs against a
+# stand-in repo of symlinks with a writable copy of go-loop.sh, so nothing
+# real is written to.
+QDIR7="$SANDBOX7/queue"
+BIN7="$SANDBOX7/bin"
+STATE7="$SANDBOX7/state"
+FAKEREPO7="$SANDBOX7/repo"
+mkdir -p "$QDIR7/digests" "$BIN7" "$STATE7" "$FAKEREPO7/queue/bin"
+for e in "$REPO"/*(N) "$REPO"/.[^.]*(N); do
+  [[ "${e:t}" == queue ]] && continue
+  ln -s "$e" "$FAKEREPO7/${e:t}"
+done
+for f in "$REPO"/queue/bin/*(N); do
+  [[ "${f:t}" == go-loop.sh ]] && continue
+  ln -s "$f" "$FAKEREPO7/queue/bin/${f:t}"
+done
+cp "$REPO/queue/bin/go-loop.sh" "$FAKEREPO7/queue/bin/go-loop.sh"
+chmod +x "$FAKEREPO7/queue/bin/go-loop.sh"
+
+# Dies instantly every time, exactly like scenario 1, and lands a one-line fix
+# in the loop's script on the third attempt: the loop adopts it at the top of
+# the next pass, in the middle of the failure streak.
+cat > "$BIN7/claude" <<'FAKE'
+#!/bin/zsh
+stamp="$DRILL_STATE/task.calls"
+n=$(( $(cat "$stamp" 2>/dev/null || echo 0) + 1 )); echo $n > "$stamp"
+(( n == 3 )) && printf '\n# a fix a runner landed in the loop while it was stuck\n' >> "$DRILL_SCRIPT"
+echo 'Credit balance is too low: this organization has hit its monthly spend limit.' >&2
+exit 1
+FAKE
+chmod +x "$BIN7/claude"
+
+export PATH="$BIN7:$PATH"
+export PHOTONZ_QUEUE_DIR="$QDIR7"
+export DRILL_STATE="$STATE7"
+export DRILL_SCRIPT="$FAKEREPO7/queue/bin/go-loop.sh"
+export PHOTONZ_LOOP_RELOAD=1        # this scenario IS the reload, and it owns the script it edits
+export PHOTONZ_BACKOFF_STEPS="1,2,3,4,5"
+export PHOTONZ_MAX_ITERS=6
+unset PHOTONZ_DIGEST_HOUR
+: > "$QDIR7/digests/$(date +%F).md"  # this scenario is about the failure streak, not the digest
+
+Q add "Drill task seven" p1-high "drill" >/dev/null
+Q add "Drill task eight" p1-high "drill" >/dev/null
+
+echo "[drill] scenario 7: a fix lands in the loop's own script while every task is failing..."
+"$FAKEREPO7/queue/bin/go-loop.sh" > "$SANDBOX7/drill-a.log" 2>&1
+
+# Part B: the other half of the same rule. A GENUINE start is still a fresh
+# claim about health, so an unhealthy flag left on the queue by a previous run
+# must not colour a loop that has not tried anything yet. Same fake repo, a new
+# queue seeded unhealthy, and a runner that finishes its task and photographs
+# status.json on the way past.
+QDIR7B="$SANDBOX7/queue-b"
+mkdir -p "$QDIR7B/digests"
+: > "$QDIR7B/digests/$(date +%F).md"
+PHOTONZ_QUEUE_DIR="$QDIR7B" Q add "Drill task nine" p1-high "drill" >/dev/null
+cat > "$QDIR7B/status.json" <<'JSON'
+{"health":"unhealthy","consecutiveFailures":4,"lastError":{"at":"2026-01-01T00:00:00.000Z","kind":"task","exit":1,"message":"a stall from a previous run"},"failureStreak":{"taskIds":["gone-one","gone-two"],"parked":[]}}
+JSON
+cat > "$BIN7/claude" <<'FAKE'
+#!/bin/zsh
+prompt="${@[-1]}"
+[[ "$prompt" == *"TASK FILE: "* ]] || { echo '{"type":"result","subtype":"success","result":"no task"}'; exit 0; }
+cp "$PHOTONZ_QUEUE_DIR/status.json" "$DRILL_STATE/status-during-fresh-start.json" 2>/dev/null
+file="${prompt##*TASK FILE: }"
+id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+node queue/bin/queue.mjs status "$id" done "drill: finished" >/dev/null
+echo '{"type":"result","subtype":"success","result":"done"}'
+exit 0
+FAKE
+chmod +x "$BIN7/claude"
+
+echo "[drill] scenario 7: a genuine start should still clear an old unhealthy flag..."
+PHOTONZ_QUEUE_DIR="$QDIR7B" PHOTONZ_MAX_ITERS=1 PHOTONZ_LOOP_RELOAD=0 \
+  "$FAKEREPO7/queue/bin/go-loop.sh" > "$SANDBOX7/drill-b.log" 2>&1
+
+export DRILL_LOG="$SANDBOX7/drill-a.log"
+export DRILL_QUEUE_B="$QDIR7B"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const q = process.env.PHOTONZ_QUEUE_DIR;
+const st = process.env.DRILL_STATE;
+const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
+const status = read(q + "/status.json", {});
+const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
+const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+  const d = q + "/tasks/" + p;
+  return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+});
+const log = fs.readFileSync(process.env.DRILL_LOG, "utf8");
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const fails   = history.filter((e) => e.ev === "runner_failed");
+const unparks = history.filter((e) => e.ev === "task_unparked");
+const parks   = history.filter((e) => e.ev === "task_parked");
+const reloadAt = history.findIndex((e) => e.ev === "loop_reloaded");
+const failsBefore = history.slice(0, reloadAt < 0 ? history.length : reloadAt).filter((e) => e.ev === "runner_failed").length;
+const failsAfter  = reloadAt < 0 ? 0 : history.slice(reloadAt).filter((e) => e.ev === "runner_failed").length;
+
+// If the restart never happened, or happened outside the streak, every check
+// below would pass for the wrong reason. So this one comes first.
+check("the loop restarted onto the fix, in the MIDDLE of the failure streak",
+  reloadAt >= 0 && failsBefore >= 1 && failsAfter >= 1,
+  failsBefore + " failure(s) before the restart, " + failsAfter + " after");
+check("the consecutive failure count carried across the restart",
+  status.consecutiveFailures === fails.length,
+  status.consecutiveFailures + " counted vs " + fails.length + " failures");
+check("the loop still knows it is unhealthy", status.health === "unhealthy", "health=" + status.health);
+check("the failure streak carried across, so failures are still blamed on the environment",
+  fails.some((e) => e.environment === true),
+  "environment flags: " + fails.map((e) => e.environment ? 1 : 0).join(""));
+check("a task parked before the restart is still handed back after it",
+  parks.length >= 1 && unparks.length >= 1 && tasks.every((t) => !t.parked),
+  parks.length + " parked, " + unparks.length + " unparked; still parked: " +
+    (tasks.filter((t) => t.parked).map((t) => t.id).join(", ") || "none"));
+
+// The tell for a forgotten streak: the waits drop back to the first step.
+const waits = [...log.matchAll(/(?:waiting|retrying in) (\d+)s/g)].map((m) => +m[1]);
+check("the retry wait goes on growing across the restart",
+  waits.length >= 4 && waits.every((w, i) => i === 0 || w >= waits[i - 1]),
+  "waits: " + waits.join("s, ") + "s");
+// The window is where a person reads the streak, so it has to say the carried
+// number, not a number that started again from one.
+const attempts = [...log.matchAll(/\((\d+) attempt\(s\)\)/g)].map((m) => +m[1]);
+check("...and the window said the carried count out loud",
+  attempts.length >= 1 && Math.max(...attempts) === fails.length,
+  "the window counted " + attempts.join(", ") + " against " + fails.length + " failures");
+check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+check("the restart said what it was carrying, once per restart",
+  (log.match(/carrying health across the restart/g) || []).length === 1,
+  (log.match(/carrying health[^\n]*/) || ["no such line"])[0]);
+
+// Part B: a genuine start is still a fresh claim about health.
+const fresh = read(st + "/status-during-fresh-start.json", null);
+check("a genuine start still clears an unhealthy flag left by a previous run",
+  !!fresh && fresh.health === "ok" && fresh.consecutiveFailures === 0 && !fresh.lastError && !fresh.failureStreak,
+  fresh ? "health=" + fresh.health + " failures=" + fresh.consecutiveFailures +
+    " lastError=" + JSON.stringify(fresh.lastError || null) +
+    " streak=" + JSON.stringify(fresh.failureStreak || null)
+        : "the runner never saw status.json");
+const logB = fs.readFileSync(process.env.DRILL_LOG.replace("drill-a.log", "drill-b.log"), "utf8");
+check("...and it did not claim to be carrying anything",
+  !/carrying health across the restart/.test(logB), "");
+
+console.log(failed ? "\n[drill] scenario 7: " + failed + " check(s) failed" : "\n[drill] scenario 7: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S7=$?
+fi
+
+if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 && S6 == 0 && S7 == 0 )); then
   echo "[drill] all checks passed"
   exit 0
 fi
-echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5, scenario 6 exit $S6)"
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5, scenario 6 exit $S6, scenario 7 exit $S7)"
 exit 1
 

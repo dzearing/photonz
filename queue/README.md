@@ -34,7 +34,7 @@ a task says otherwise.
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
 | `bin/leftovers.mjs` | What the loop does about a working tree a runner walked out on. `snapshot` before a runner, `settle` after: everything that became dirty during that runner's turn is named in the log, stashed under a message carrying the task id, and recorded in `leftovers/`. The queue's own files are never touched (no task owns them, every runner writes them) and neither is anything that was already dirty before the runner started (that is the user editing their own repo). |
 | `bin/leftovers-drill.sh` | Ends a task part way ON PURPOSE against a throwaway git repo and a throwaway queue, and asserts what the next task starts from: the files are named with their task, stashed under its id, gone from the tree the next runner is handed, given back to the owning task with the restore command when it is claimed again, restorable byte for byte, and never the queue's own files or the user's own edits. A second scenario makes git refuse the stash and asserts that case is louder, not quieter. Run it after touching `leftovers.mjs` or the loop's exit path. |
-| `bin/failure-drill.sh` | Runs the real loop in throwaway queues against fake runners (one that always exits non-zero, one whose login has expired and is later restored, one refused by the spend limit, one that merely talks about it, and one stall that has to reach a person) and asserts what the dashboard would show and who gets told. Run it after touching failure handling. |
+| `bin/failure-drill.sh` | Runs the real loop in throwaway queues against fake runners (one that always exits non-zero, one whose login has expired and is later restored, one refused by the spend limit, one that merely talks about it, one stall that has to reach a person, and one fix landing while the loop is stuck) and asserts what the dashboard would show and who gets told. Run it after touching failure handling. Name a scenario (`failure-drill.sh 7`) to run just that one. |
 | `bin/manager-due-drill.sh` | Drives the real `manager_due`/`manager_pass` (sourced out of `go-loop.sh`) in a throwaway queue and asserts the manager pass cannot wake itself up: a pass that restages an epic is not a reason to run another one, an edit by anyone else still is, a rewrite that changes nothing is not, and a pass whose runner died leaves the edit that called it still pending. Replays the two recorded passes of 2026-09-13. Run it after touching the manager trigger. |
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
 | `bin/audit-index-drill.mjs` | Asserts the Ready to try index: the day comes from the file name, newest first, an unreadable report is skipped rather than taking the page down, a report with nothing in it still draws a card, and the cache notices a report arriving. Run it after touching audits in `queue-lib.mjs`. |
@@ -156,17 +156,37 @@ hashes the file at read time to say plainly when the loop is behind it; a live
 loop that never recorded one is stale by definition, since only a loop from
 before this landed can be silent about it.
 
+That restart carries the whole run across, health included. A fix usually lands
+in the loop's script BECAUSE the loop is failing, so the restart it triggers
+falls in the middle of a failure streak, and until 2026-09-17 it wiped what the
+loop knew about being stuck: the consecutive failure count went back to zero, so
+the growing retry wait started again at the shortest step; the streak that
+blames the environment rather than any one task went with it; and a task parked
+earlier in that same streak was never handed back. A genuine start still clears
+an unhealthy flag from a previous run, which is what makes it a fresh claim
+about health; a reload is the same run continuing and says so in the window
+(`carrying health across the restart`).
+
 `queue/bin/failure-drill.sh` proves all of the above against the real loop:
 one scenario for a runner that always dies, one for a login that expires and
 is later restored, one for a spend limit that refuses the digest run and later
 clears, one for a fix landed in the loop's own script (which builds a
 stand-in repo of symlinks so the real one is never written to), one for a
 runner that finishes its work while quoting a refusal in every place the loop
-reads, and one for a stall that has to reach a person (four refusals in a row
+reads, one for a stall that has to reach a person (four refusals in a row
 raise exactly one notification, the same stall a day later raises a second
 saying how long it has been, and raising the limit sends nothing and leaves no
-stall record behind). Every scenario runs with a stand-in `osascript` on PATH,
-so a drill can never reach the real Notification Center.
+stall record behind), and one for a fix that lands while the loop is stuck
+(scenario 1 with a restart dropped into the middle of it, which must not reset
+the count, the streak, the growing wait or a parked task). Every scenario runs
+with a stand-in `osascript` on PATH, so a drill can never reach the real
+Notification Center.
+
+Naming a scenario runs just that one: `queue/bin/failure-drill.sh 7` takes
+about twenty five seconds where the whole set takes about three minutes, which
+is the difference between checking a change to failure handling and putting it
+off. Several numbers are fine (`failure-drill.sh 1 7`), and the ones you did
+not ask for are reported as passed so the summary line still reads.
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,

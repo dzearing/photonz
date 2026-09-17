@@ -106,6 +106,14 @@ pass count rides across in the environment so `PHOTONZ_MAX_ITERS` still ends a
 drill. A copy that does not parse is refused out loud and the loop keeps working
 on the one it has. Turn the whole thing off with `PHOTONZ_LOOP_RELOAD=0`.
 
+Health rides across with the pass count. A fix lands in the loop's script
+BECAUSE the loop is failing, so the restart it triggers falls in the middle of a
+failure streak, and up to 2026-09-17 that restart cleared the streak: the hero
+went back to healthy, the growing retry wait started again at its shortest step,
+and a task parked earlier in the streak was never handed back. A start still
+clears an unhealthy flag left by a previous run, because that is a fresh claim
+about health; a reload is the same run continuing and now says so in the window.
+
 The other half is the page saying so, for the window the reload cannot cover:
 the long minutes inside a task, a refused copy, and a loop old enough to predate
 the mechanism. `loopScript()` hashes the file at read time, so the answer is

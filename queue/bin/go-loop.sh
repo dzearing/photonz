@@ -39,6 +39,11 @@ SCRIPT="${0:A}"
 QDIR="${PHOTONZ_QUEUE_DIR:-$REPO/queue}"
 SANDBOX=0; [[ -n "${PHOTONZ_QUEUE_DIR:-}" ]] && SANDBOX=1
 MAX_ITERS="${PHOTONZ_MAX_ITERS:-0}"
+# Whether this process is a RELOAD of a loop that was already running, rather
+# than a fresh start. Read here, before anything can unset it, and used by the
+# startup block below to decide whether health is a fresh claim or a carried
+# one. See the reset-health call for why that matters.
+RESUMED=0; [[ -n "${PHOTONZ_LOOP_ITERS:-}" ]] && RESUMED=1
 Q() { node queue/bin/queue.mjs "$@"; }
 LOG="$QDIR/loop.log"
 mkdir -p "$QDIR/digests" "$QDIR/leftovers"
@@ -358,7 +363,21 @@ Q event loop_started "{\"pid\":$$}"
 # the window this reload check cannot: the twenty minutes the loop spends
 # inside a task, and any copy it has refused.
 Q script "$LOOP_SCRIPT_HASH" running "$SCRIPT"
-Q reset-health
+# A START is a fresh claim about health; a RELOAD is not. The loop exec's itself
+# onto an edited copy of this script between tasks, same pid, same queue, same
+# run, and the pass count rides across in PHOTONZ_LOOP_ITERS. Health has to ride
+# across with it. It did not until 2026-09-17, so a fix landing while the loop
+# was stuck made it forget it was stuck: the consecutive failure count went back
+# to zero (so the growing retry wait started again at the shortest step), the
+# failure streak across tasks went with it (so the next failures were no longer
+# blamed on the environment), and a task parked earlier in that same streak was
+# never handed back. Exactly the wrong moment to forget: somebody is landing
+# fixes precisely because the loop is failing.
+if (( RESUMED )); then
+  echo "[go-loop] carrying health across the restart (pass $PHOTONZ_LOOP_ITERS)" | tee -a "$LOG"
+else
+  Q reset-health
+fi
 Q busy "starting up"
 
 # Wait out a runner failure. $1 = seconds, $2 = consecutive failures, $3 = last
