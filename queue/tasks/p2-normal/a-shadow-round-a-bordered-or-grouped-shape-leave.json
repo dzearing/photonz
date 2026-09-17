@@ -5,14 +5,14 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2830,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T22:25:34.502Z",
-  "updated": "2026-09-16T22:25:34.505Z",
+  "updated": "2026-09-17T05:11:28.143Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The blocker is not SVG, it is Apple CoreSVG (what NSImage, Preview, Quick Look and Xcode use), measured in the task log of a-shadow-survives-the-trip-out-to-svg: it ignores a filter on a <g> outright, and it draws a filtered element one extra step along for every transform standing above it. Hence the two restrictions in SVGExport.effects(of:carried:) and drawsAsOnePiece. Two leads, both probed: (1) CoreSVG DOES honour a filter on a nested <svg> element, so the pieces of a multi-element layer could be wrapped in <svg x y width height viewBox> carrying the filter, which also fixes the transform problem since a nested viewport places itself; (2) writing the drawing in absolute canvas coordinates instead of a translate would leave no transform above it at all. Probe scripts are throwaway but the numbers are in the task log.",
+  "notes": "Shipped. The answer to both halves is the one element SVG already has for moving something without a transform: a nested <svg> with x, y, width, height and viewBox. CoreSVG honours a filter on one, and a viewport is not a transform. Two forms, and the difference is load-bearing: a viewport that CARRIES the filter has viewBox equal to its own x/y/width/height, because CoreSVG draws a filtered element twice over when its coordinates are shifted from where it is placed; a viewport standing in for a group's transform has viewBox shifted by the frame origin, since that is what does the placing, and it is safe because that one carries no filter. Both are sized from Layer.renderBounds rather than the frame, because CoreSVG clips a nested viewport and ignores overflow=visible. Code: SVGExport.holdsAFilter / placesByViewport decide, Writer.viewportElement writes, docs/design/svg-export.md has the section 'A viewport where a transform would not do'. Still falling back: a turned shape, a turned group, and in the ANIMATED file a moving group, all because a turn has to be a transform and nothing else says one.",
   "acceptance": [
     "A shape with both a border and a drop shadow exports as shapes, not as an embedded picture, and the Export sheet stops naming it",
     "A shape wearing a shadow inside a frame that sits anywhere but the canvas corner does the same",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-16T22:25:34.504Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T04:49:35.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T04:52:47.920Z",
+      "note": "Adversarial review first, by probing CoreSVG through NSImage the way the render-back tests do (/tmp/svgprobe). Numbers: (1) a filter on a <g> is still ignored outright (0.000 against the same file with no filter at all); (2) a filter on a NESTED <svg> is honoured and draws what the filter on the shape draws (0.005 apart); (3) a drawing in TWO pieces inside that nested <svg> comes back identical to the one-piece form (0.000), which is the border case; (4) a nested <svg> UNDER a <g transform> is drawn TWICE, once unfiltered in the right place and once filtered a step along, so a viewport alone does not fix the group case; (5) placing the GROUP with a nested <svg> instead of a <g transform> makes the filtered child inside it exactly right (0.000 against the shape drawn at absolute coordinates); (6) CoreSVG IGNORES overflow=visible and clips a nested viewport, so the viewport has to be sized from Layer.renderBounds rather than from the frame; (7) opacity on a nested <svg> draws the same as opacity on a <g> round it (0.000). So: a multi-piece filtered layer goes in a nested <svg> carrying the filter, and a group holding anything filtered places itself with a viewport instead of a transform."
+    },
+    {
+      "t": "2026-09-17T05:09:05.120Z",
+      "note": "Built. A layer drawn in more than one piece (a ring round it, an inside or outside line, a filled box with a line round it) now puts its pieces inside a nested <svg> that carries the filter, instead of keeping its picture; and a group holding anything filtered places what is in it with a viewport of its own rather than a <g transform>, so a shadow inside a frame that sits anywhere but the canvas corner survives too. The two viewports are stated differently on purpose and the difference is load-bearing: the one carrying the FILTER has viewBox equal to its own x/y/width/height (CoreSVG draws a filtered element twice over if its coordinates are shifted from where it is placed, which is what the first attempt hit at 22.66 off), and the one standing in for a group's transform has viewBox shifted by the frame origin so the contents keep the coordinates the layers list gave them. Both are sized from Layer.renderBounds rather than the frame, because CoreSVG clips a nested viewport and ignores overflow=visible. Also fixed while in there: a layer that MOVES was not carrying its contents, so a shadow inside an animated group was written under the animating transforms and drawn a step along; it now falls back in the moving file only, and SVGExport.fallbacks/embeddedPictures take isMoving so the Export sheet says the same thing about the same file. SVGExport.drawsAsOnePiece and the Writer.Drawing rollback are gone: nothing found while drawing can change the answer any more, so the wind-back had become dead code."
+    },
+    {
+      "t": "2026-09-17T05:09:10.067Z",
+      "note": "Verified. Six new render-back tests in SVGExportRenderTests draw the file through the system's own SVG reader and compare it with the app's render: a ringed shadowed shape 0.106 off, a filled box with a line round it 0.407, a shadowed shape in a group that moves it 0.007, in a white frame 2.275, two groups deep 1.961, each also checked against the same document with its effects stripped so a file that quietly lost the shadow cannot pass. Four new core tests cover the writing itself: the viewport is bought only where there is a filter inside to save (an ordinary group is still <g transform=translate(40 40)>), a turned group still costs its contents their picture, and an animated group does too but only in the moving file. Full suite green at 8001. Acceptance 4 (Preview and Quick Look, not just a browser) checked outside the suite by running qlmanage -t on the written files, which IS Quick Look: the ring and the shadow both draw right, one shape, no double-draw. Pictures at queue/audits/2026-09-17-ringed-shadow-in-quick-look.png and -framed-shadow-in-quick-look.png."
+    },
+    {
+      "t": "2026-09-17T05:09:10.162Z",
+      "note": "Could not run a walk: the Mac's screen was locked for the whole task, so Scripts/playtest.sh svg-export-walk.json reported status locked and exited 3 without running a step. The walk gained a step that puts a ring on the shadowed shape and checks the Export sheet still names nothing (stage 7-a-ring-as-well, the old stage 7 renamed to 8), and it needs one unlocked run. Not asking for a full sweep: one walk changed and it is named here."
+    },
+    {
+      "t": "2026-09-17T05:09:10.253Z",
+      "note": "left rough: computing whether a group places itself by viewport walks its subtree, and it is asked once per group on every export and on every change to the Export sheet. Documents are tens to hundreds of layers, so it is not worth caching yet; it would be if a document ever ran to thousands."
+    },
+    {
+      "t": "2026-09-17T05:09:13.569Z",
+      "note": "Filed a follow-up, reproduced with numbers: a-shadow-comes-out-of-the-app-a-different-shade. A shadow comes back a different SHADE from the one on the canvas wherever it is see-through, because the canvas mixes into what is under it in linear light and every SVG reader mixes in sRGB. Measured with no group, no ring and no frame in it, so it is the shipped shadow path and not this change: a 55% black shadow over a white canvas is 2.36 off with a peak of 63/255, and in the middle of the shadow well clear of the shape the canvas draws 192,192,192 where the file comes back 134,134,134. A coloured shadow over a transparent canvas diverges the same way. It is why the two framed cases here are checked at 2.5 rather than 1, with the reason written into the test."
+    },
+    {
+      "t": "2026-09-17T05:11:28.142Z",
+      "note": "Correction to the count above: the full suite is green at 8000 tests, not 8001."
     }
-  ]
+  ],
+  "started": "2026-09-17T04:49:35.254Z"
 }

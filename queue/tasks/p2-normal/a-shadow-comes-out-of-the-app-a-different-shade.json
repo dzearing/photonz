@@ -1,0 +1,28 @@
+{
+  "id": "a-shadow-comes-out-of-the-app-a-different-shade",
+  "title": "A shadow comes out of the app a different shade from the one on screen",
+  "goal": "Put a soft shadow on a card sitting on a white page, export the drawing, and the shadow in the file is noticeably darker than the one you were looking at. It happens to every shadow that is partly see-through, which is every shadow, so a handed-over icon does not match the one that was approved.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2890,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T05:02:37.826Z",
+  "updated": "2026-09-17T05:02:37.829Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced while building a-shadow-round-a-bordered-or-grouped-shape-leave, with no group, no ring and no frame in it, so it is the shipped shadow path and not that change. Run: a temporary test drawing a shadowed shape (radius 5, offset 4/8, #000000 at 0.55) over a white SolidImage canvas, compared with Scripts/test.sh the way every other case in Tests/PhotonzRenderTests/SVGExportRenderTests.swift is. Printed: SVGDIFF probe-over-white: 2.359390625, peak 63/255. Sampled in the middle of the shadow, well clear of the shape edge: the canvas draws 192,192,192 where the file comes back 134,134,134. Same case with a COLOURED shadow (#0A2540 at 0.85) over a transparent canvas: at alpha 95 the canvas draws premultiplied 19,37,48 and the file 4,14,24, which unpremultiplied is the shadow colour exactly (11,38,64) in the file against a washed-out 51,99,129 on the canvas. Cause: the canvas mixes a shadow into what is under it in LINEAR light (Core Image working space) and every SVG reader mixes it in sRGB. color-interpolation-filters=sRGB already forces the filter internals to sRGB; what is left is the composite of the filter OUTPUT over the backdrop, which the file cannot ask a reader to do in linear light. So the fix is most likely at the canvas end (composite shadows in sRGB, which is what Figma and CSS do), and that changes the look of every existing document, so it wants a decision card before anybody writes it.",
+  "acceptance": [
+    "A 55% black shadow on a shape over a white background comes back within one part in 255 of what the canvas draws, measured by rendering the exported file back the way SVGExportRenderTests already does",
+    "A coloured shadow over a transparent canvas does the same",
+    "Whichever way it is settled, the app and the file agree, and the reason is written down in docs/design/svg-export.md",
+    "Nothing else about an existing drawing changes shade"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T05:02:37.828Z",
+      "note": "created (manual)"
+    }
+  ]
+}

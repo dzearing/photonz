@@ -311,7 +311,8 @@ struct ExportDialog: View {
     /// could not say them in shapes.
     private var unwritable: [SVGExport.Fallback] {
         guard choice.isVector, let target else { return [] }
-        return SVGExport.fallbacks(in: target, flatImages: flatImages)
+        return SVGExport.fallbacks(in: target, flatImages: flatImages,
+                                   isMoving: carriesTheMotion)
     }
 
     /// The pictures that are simply pictures: a photograph was never shapes,
@@ -320,7 +321,8 @@ struct ExportDialog: View {
     private var photographs: [String] {
         guard choice.isVector, let target else { return [] }
         let problems = Set(unwritable.map(\.layerName))
-        return SVGExport.embeddedPictures(in: target, flatImages: flatImages)
+        return SVGExport.embeddedPictures(in: target, flatImages: flatImages,
+                                          isMoving: carriesTheMotion)
             .map(\.layerName)
             .filter { !problems.contains($0) }
     }

@@ -53,8 +53,10 @@ struct SVGExportTests {
 
     static func write(_ document: PhotonzDocument,
                       picture: SVGExport.PictureMaker? = stubPicture,
-                      outlineText: SVGExport.TextOutliner? = stubOutliner) -> SVGExport.Result {
-        SVGExport.write(document, picture: picture, outlineText: outlineText)
+                      outlineText: SVGExport.TextOutliner? = stubOutliner,
+                      animation: SVGExport.Animation = .still) -> SVGExport.Result {
+        SVGExport.write(document, animation: animation, picture: picture,
+                        outlineText: outlineText)
     }
 
     // MARK: - The file itself
@@ -538,7 +540,11 @@ struct SVGExportTests {
         #expect(result.fallbacks.first?.reason.contains("faded") == true)
     }
 
-    @Test func aShapeInsideAGroupThatMovesItKeepsItsPicture() {
+    /// A group that draws its contents away from the canvas corner places them
+    /// with a VIEWPORT of its own rather than a transform, because Apple's SVG
+    /// reader draws a filtered element a step along for every transform
+    /// standing above it (`docs/design/svg-export.md`).
+    @Test func aShapeInsideAGroupThatMovesItKeepsItsShadow() {
         var layer = Self.pathLayer(at: CGPoint(x: 0, y: 0))
         layer.name = "Inside"
         layer.style.effects = [.shadow(ShadowStyle())]
@@ -546,11 +552,67 @@ struct SVGExportTests {
                           frame: CGRect(x: 40, y: 40, width: 0, height: 0))
         let document = Self.document([group])
         let result = Self.write(document)
+        #expect(!result.text.contains("<image "))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.text.contains("<filter "))
+        #expect(!result.text.contains("<g transform=\"translate(40 40)\">"))
+        // ...and the sheet says so too, before anything is written.
+        #expect(SVGExport.fallbacks(in: document).isEmpty)
+    }
+
+    /// A group holding nothing filtered is still written as a plain group with
+    /// a transform: the viewport is only bought where it is needed.
+    @Test func aGroupHoldingNothingFilteredKeepsItsTransform() {
+        let group = Layer(name: "Holder",
+                          content: .group(GroupContent(children: [Self.pathLayer(at: .zero)])),
+                          frame: CGRect(x: 40, y: 40, width: 0, height: 0))
+        #expect(Self.write(Self.document([group])).text
+            .contains("<g transform=\"translate(40 40)\">"))
+    }
+
+    /// A group that is TURNED cannot place itself with a viewport, so what is
+    /// inside it keeps its picture and the sheet says why.
+    @Test func aShapeInsideATurnedGroupStillKeepsItsPicture() {
+        var layer = Self.pathLayer(at: CGPoint(x: 0, y: 0))
+        layer.name = "Inside"
+        layer.style.effects = [.shadow(ShadowStyle())]
+        var group = Layer(name: "Holder", content: .group(GroupContent(children: [layer])),
+                          frame: CGRect(x: 40, y: 40, width: 60, height: 60))
+        group.transform.rotation = 0.3
+        let document = Self.document([group])
+        let result = Self.write(document)
         #expect(result.text.contains("<image "))
         #expect(result.fallbacks.first?.layerName == "Inside")
         #expect(result.fallbacks.first?.reason.contains("moves it") == true)
-        // ...and the sheet says the same thing before anything is written.
         #expect(SVGExport.fallbacks(in: document).map(\.layerName) == ["Inside"])
+    }
+
+    /// A group that MOVES is written as groups that slide and turn it, and a
+    /// filter under a transform is drawn a step along by Apple's SVG reader.
+    /// So a shadow inside one keeps its picture in the file that plays, and
+    /// keeps its shadow in the file that stands still.
+    @Test func aShapeInsideAGroupThatMovesOverTimeKeepsItsPictureInTheMovingFile() {
+        var layer = Self.pathLayer(at: CGPoint(x: 0, y: 0))
+        layer.name = "Inside"
+        layer.style.effects = [.shadow(ShadowStyle())]
+        var group = Layer(name: "Holder", content: .group(GroupContent(children: [layer])),
+                          frame: CGRect(x: 40, y: 40, width: 60, height: 60))
+        group.motions = [LayerMotion(property: .position,
+                                     from: .point(CGPoint(x: 40, y: 40)),
+                                     to: .point(CGPoint(x: 90, y: 40)),
+                                     timing: MotionTiming(startMS: 0, durationMS: 600),
+                                     curve: .linear, repeats: .forever)]
+        var document = Self.document([group])
+        document.motionCycleMS = 1200
+        let moving = Self.write(document, animation: .moving(cycleMS: 1200))
+        #expect(moving.text.contains("<image "))
+        #expect(moving.fallbacks.first?.layerName == "Inside")
+        // ...and the sheet says the same thing about the same file, rather
+        // than promising shapes and writing a picture.
+        #expect(SVGExport.fallbacks(in: document, isMoving: true).map(\.layerName) == ["Inside"])
+        // The still file has no groups moving it, so the shadow survives there.
+        #expect(Self.write(document).fallbacks.isEmpty)
+        #expect(SVGExport.fallbacks(in: document).isEmpty)
     }
 
     @Test func aShapeInsideAGroupThatSitsStillKeepsItsShadow() {
@@ -617,16 +679,20 @@ struct SVGExportTests {
         #expect(result.fallbacks.first?.reason.contains("turned") == true)
     }
 
-    @Test func aShapeDrawnInMoreThanOnePieceKeepsItsPicture() {
+    /// A ring makes the drawing two elements, and a filter on the `<g>` holding
+    /// them is ignored by Apple's SVG reader. So the two go inside a viewport
+    /// of their own and the filter rides that instead.
+    @Test func aShapeDrawnInMoreThanOnePieceGoesInsideAViewportOfItsOwn() {
         var layer = Self.pathLayer()
         layer.style.effects = [.shadow(ShadowStyle()),
                                .border(BorderEffect(width: 3, colorHex: "#000000"))]
         let result = Self.write(Self.document([layer]))
-        #expect(result.text.contains("<image "))
-        #expect(result.fallbacks.first?.reason.contains("more than one piece") == true)
-        // ...and nothing it wrote on the way is left in the file with nothing
-        // pointing at it.
-        #expect(!result.text.contains("<filter "))
+        #expect(!result.text.contains("<image "))
+        #expect(result.fallbacks.isEmpty)
+        #expect(result.text.contains("<filter "))
+        // The filter rides a nested <svg>, never the <g> round the pieces.
+        #expect(result.text.contains("<svg x="))
+        #expect(!result.text.contains("<g filter="))
     }
 
     @Test func whatEndsUpAsAPictureIncludesThePhotographs() {

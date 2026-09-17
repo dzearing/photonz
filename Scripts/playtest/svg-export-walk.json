@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/svg-export-walk",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
     {
       "do": "blank",
@@ -223,6 +227,43 @@
     },
     {
       "do": "action",
+      "action": "borderLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "writeSVG",
+      "name": "svg-export-7-ringed-and-shadowed"
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-a-ring-as-well",
+      "note": "a ring put round the same shadowed shape, which used to cost it its vectors because a ring is a second piece of drawing. The sheet still names nothing, and the writeSVG line above says every layer went out as shapes"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-7-a-ring-as-well"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
       "action": "fadeLayer"
     },
     {
@@ -239,12 +280,12 @@
     },
     {
       "do": "describe",
-      "stage": "7-fallback-named",
-      "note": "the same shape faded as well as shadowed: THAT the file cannot say, so the sheet names the shape and says why, BEFORE anything is saved"
+      "stage": "8-fallback-named",
+      "note": "the same shape faded as well as shadowed and ringed: THAT the file cannot say, so the sheet names the shape and says why, BEFORE anything is saved"
     },
     {
       "do": "snapshot",
-      "name": "svg-export-7-fallback-named"
+      "name": "svg-export-8-fallback-named"
     },
     {
       "do": "key",

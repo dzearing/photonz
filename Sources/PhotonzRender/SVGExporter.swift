@@ -69,17 +69,19 @@ public enum SVGExporter {
     /// Everything in `document` that would go out as an embedded picture, with
     /// the flat ones taken out: a blank canvas's white background is a
     /// rectangle in the file, so nothing should warn about a photograph in it.
-    public static func embeddedPictures(in document: PhotonzDocument,
-                                        store: ImageStore) -> [SVGExport.Fallback] {
+    public static func embeddedPictures(in document: PhotonzDocument, store: ImageStore,
+                                        isMoving: Bool = false) -> [SVGExport.Fallback] {
         SVGExport.embeddedPictures(in: document,
-                                   flatImages: FlatBitmap.colors(in: document, store: store))
+                                   flatImages: FlatBitmap.colors(in: document, store: store),
+                                   isMoving: isMoving)
     }
 
     /// Everything the file could not say in shapes at all, read the same way.
-    public static func fallbacks(in document: PhotonzDocument,
-                                 store: ImageStore) -> [SVGExport.Fallback] {
+    public static func fallbacks(in document: PhotonzDocument, store: ImageStore,
+                                 isMoving: Bool = false) -> [SVGExport.Fallback] {
         SVGExport.fallbacks(in: document,
-                            flatImages: FlatBitmap.colors(in: document, store: store))
+                            flatImages: FlatBitmap.colors(in: document, store: store),
+                            isMoving: isMoving)
     }
 
     /// The document as SVG bytes, ready to be written to a file.

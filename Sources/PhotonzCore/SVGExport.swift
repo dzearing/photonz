@@ -198,8 +198,14 @@ public enum SVGExport {
     /// What WOULD go out as a picture, asked before anything is written, so
     /// the export dialog can say so before you save rather than after you
     /// open the file.
+    ///
+    /// `isMoving` is whether the file being written is the one that PLAYS: a
+    /// layer that moves is written as groups that slide and turn it, and those
+    /// are transforms standing above everything inside it, which costs what is
+    /// inside a filter (`Writer.write(_:groupOffset:level:)`).
     public static func fallbacks(in document: PhotonzDocument,
-                                 flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
+                                 flatImages: [UUID: RGBA] = [:],
+                                 isMoving: Bool = false) -> [Fallback] {
         var found: [Fallback] = []
         func walk(_ layers: [Layer], carried: Bool) {
             for layer in layers where layer.isVisible {
@@ -211,7 +217,8 @@ public enum SVGExport {
                     break
                 case .vector:
                     if case .group(let group) = layer.content {
-                        walk(group.children, carried: carried || carries(layer))
+                        walk(group.children, carried: carried || moves(layer, isMoving)
+                            || (carries(layer) && !placesByViewport(layer)))
                     }
                 }
             }
@@ -227,7 +234,8 @@ public enum SVGExport {
     /// to hand an SVG to somebody else still wants to know there is a bitmap
     /// inside it, so the Export sheet asks this rather than `fallbacks(in:)`.
     public static func embeddedPictures(in document: PhotonzDocument,
-                                        flatImages: [UUID: RGBA] = [:]) -> [Fallback] {
+                                        flatImages: [UUID: RGBA] = [:],
+                                        isMoving: Bool = false) -> [Fallback] {
         var found: [Fallback] = []
         func walk(_ layers: [Layer], carried: Bool) {
             for layer in layers where layer.isVisible {
@@ -238,7 +246,8 @@ public enum SVGExport {
                                           reason: reason ?? "it is a picture rather than shapes"))
                 case .vector:
                     if case .group(let group) = layer.content {
-                        walk(group.children, carried: carried || carries(layer))
+                        walk(group.children, carried: carried || moves(layer, isMoving)
+                            || (carries(layer) && !placesByViewport(layer)))
                     }
                 }
             }
@@ -456,6 +465,12 @@ public enum SVGExport {
         case beyondSVG(String)
     }
 
+    /// Whether this layer's own motion is written as groups that move it,
+    /// which puts a transform above everything inside it.
+    static func moves(_ layer: Layer, _ isMoving: Bool) -> Bool {
+        isMoving && layer.motions?.contains(where: \.isOn) == true
+    }
+
     /// Whether a group draws what is inside it anywhere but where their own
     /// coordinates put them, which is what `carried` means below.
     static func carries(_ group: Layer) -> Bool {
@@ -524,53 +539,38 @@ public enum SVGExport {
                 ? "it wears a blur, and something round it moves it"
                 : "it wears a shadow, and something round it moves it")
         }
-        // The filter has to ride the drawing itself rather than a group round
-        // it, so a layer drawn in more than one piece keeps its picture.
-        guard drawsAsOnePiece(layer) else {
-            return .beyondSVG(filter.shadows.isEmpty
-                ? "it wears a blur, and it is drawn in more than one piece"
-                : "it wears a shadow, and it is drawn in more than one piece")
-        }
         return .filter(filter)
     }
 
-    /// Whether the layer's drawing comes out as ONE element in the file.
+    /// Whether anything inside this group wears a filter, which is what buys
+    /// the group a viewport of its own instead of a transform
+    /// (`Writer.drawing(of:…)`).
     ///
-    /// A filter can only ride a shape: every SVG reader honours one there, and
-    /// Apple's own reader ignores a filter on a `<g>` outright, which would
-    /// lose the shadow in Preview, Quick Look and Xcode while a browser still
-    /// drew it. So a layer that draws a fill and a line as two elements, or
-    /// that wears a ring, goes out as a picture instead of half a shadow.
-    static func drawsAsOnePiece(_ layer: Layer) -> Bool {
-        let ringed = layer.style.effects.contains { effect in
-            guard case .border(let border) = effect else { return false }
-            return border.isOn && border.width > 0
+    /// Asked of the contents as if nothing moved them, because the answer is
+    /// what decides whether anything does. A child that is turned carries its
+    /// own contents whatever this group does, so the search stops there.
+    static func holdsAFilter(_ layer: Layer) -> Bool {
+        guard case .group(let group) = layer.content else { return false }
+        return group.children.contains { child in
+            guard child.isVisible else { return false }
+            if case .filter = effects(of: child, carried: false) { return true }
+            return child.transform.isIdentity && holdsAFilter(child)
         }
-        guard !ringed else { return false }
-        switch layer.content {
-        case .path(let path):
-            guard path.anchors.count >= 2 else { return false }
-            // An inside or an outside line is drawn double width and half of
-            // it cut away, which is two elements (`Writer.path`).
-            return path.strokeWidth <= 0 || path.effectiveStrokePosition == .center
-        case .annotation(let annotation):
-            switch annotation.shape {
-            case .line:
-                return annotation.strokeWidth > 0
-            case .rectangle, .ellipse:
-                // A filled shape with a line round it is a fill and a stroke,
-                // drawn one after the other (`Writer.annotation`).
-                return (annotation.fill == nil) != (annotation.strokeWidth <= 0)
-            case .highlight:
-                // One rectangle, however it is mixed with what is under it.
-                return true
-            case .arrow:
-                // A shaft, a head, and often a label on a plate.
-                return false
-            }
-        default:
-            return false
-        }
+    }
+
+    /// Whether this group puts what is in it in its place with a VIEWPORT of
+    /// its own rather than with a transform.
+    ///
+    /// Apple's SVG reader draws a filtered element a second step along for
+    /// every transform standing above it, so a shadow inside a group that
+    /// draws away from the canvas corner would land somewhere else in Preview
+    /// and Quick Look than in a browser. A nested viewport moves what is in it
+    /// without a transform, and the reader gets that right. It costs an
+    /// element that reads less plainly than a `<g>`, so it is only bought
+    /// where there is a filter inside to save.
+    static func placesByViewport(_ layer: Layer) -> Bool {
+        guard layer.isGroup, layer.transform.isIdentity, carries(layer) else { return false }
+        return holdsAFilter(layer)
     }
 
     private static func sweepReason(_ paint: Paint?) -> String? {
@@ -701,6 +701,13 @@ private struct Writer {
         } ?? MotionSVG.Wrap()
         unmoved.append(contentsOf: wrap.dropped)
         let inner = level + wrap.levels
+        // The groups that do the animating are transforms standing above
+        // everything inside this layer, and a filter under a transform is
+        // drawn a step along by Apple's SVG reader. So a layer that moves
+        // carries whatever it holds (`SVGExport.effects(of:carried:)`).
+        let outerCarried = carried
+        if !wrap.isEmpty { carried = true }
+        defer { carried = outerCarried }
 
         let body: [String]
         switch answer {
@@ -712,23 +719,8 @@ private struct Writer {
             body = picture(of: layer, canvasOrigin: canvasOrigin,
                            groupOffset: groupOffset, level: inner, wrap: wrap)
         case .vector:
-            // Everything before this point is decided by looking at the layer;
-            // one thing is only known once it is drawn, which is how many
-            // pieces it came out as. Where that costs the layer its shadow the
-            // writer is wound back to where it started, so no ramp or cut it
-            // wrote on the way is left in the file with nothing pointing at it.
-            let before = self
-            switch drawing(of: layer, canvasOrigin: canvasOrigin,
-                           groupOffset: groupOffset, level: inner, wrap: wrap) {
-            case .shapes(let lines):
-                body = lines
-            case .picture(let reason):
-                self = before
-                fallbacks.append(SVGExport.Fallback(layerName: layer.name, reason: reason))
-                if animation.cycleMS != nil { reportMotionsBaked(into: layer) }
-                body = picture(of: layer, canvasOrigin: canvasOrigin,
-                               groupOffset: groupOffset, level: inner, wrap: wrap)
-            }
+            body = drawing(of: layer, canvasOrigin: canvasOrigin,
+                           groupOffset: groupOffset, level: inner, wrap: wrap)
         }
         // A layer that drew nothing needs no groups round the nothing.
         guard !body.isEmpty else { return [] }
@@ -776,21 +768,27 @@ private struct Writer {
             + " href=\"data:image/png;base64,\(data)\"/>"]
     }
 
-    /// A layer as the shapes it is made of, or the reason it has to be a
-    /// picture after all.
-    enum Drawing {
-        case shapes([String])
-        case picture(String)
-    }
-
     /// A layer as the shapes it is made of.
+    ///
+    /// Whether a layer can be shapes at all is decided by looking at it
+    /// (`SVGExport.answer(for:…)`), before this is called. Nothing found while
+    /// drawing can change that answer, so this never hands a picture back.
     mutating func drawing(of layer: Layer, canvasOrigin: CGPoint,
                           groupOffset: CGPoint, level: Int,
-                          wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> Drawing {
+                          wrap: MotionSVG.Wrap = MotionSVG.Wrap()) -> [String] {
         // Everything inside is written in the layer's OWN coordinates and the
         // layer is put in its place once, on the way in.
         var inside: [String] = []
         let inner = level + 1
+        // A group holding anything filtered puts its contents in their place
+        // with a viewport of its own rather than with a transform
+        // (`SVGExport.placesByViewport`), and then nothing inside it is
+        // carried.
+        // The box the layer's drawing can touch, which both a viewport and a
+        // filter's region are stated from. Read once: on a group it is the
+        // union of everything inside.
+        let reach = layer.renderBounds
+        let viewport = reach.width > 0 && reach.height > 0 && SVGExport.placesByViewport(layer)
 
         if case .group(let group) = layer.content {
             // A frame is a window: what hangs off its edge is not in the file.
@@ -803,7 +801,7 @@ private struct Writer {
             let held = cut == nil ? inner : inner + 1
             var body = surface(of: layer, group: group, level: held)
             let outside = carried
-            carried = outside || SVGExport.carries(layer)
+            carried = outside || (SVGExport.carries(layer) && !viewport)
             body.append(contentsOf: write(group.children,
                                           groupOffset: CGPoint(x: canvasOrigin.x,
                                                                y: canvasOrigin.y),
@@ -831,7 +829,7 @@ private struct Writer {
         inside.append(contentsOf: rings(of: layer, level: inner))
         // A group with nothing left in it is nothing at all, rather than an
         // empty pair of tags for somebody to wonder about.
-        guard !inside.isEmpty else { return .shapes([]) }
+        guard !inside.isEmpty else { return [] }
 
         let place = placement(of: layer, withoutTurn: wrap.ownsTheTurn)
         let fade = attribute("opacity", wrap.omitsOpacity ? nil : opacity(layer.style.opacity))
@@ -839,43 +837,96 @@ private struct Writer {
         // stays outside the filter, because the canvas fades the layer and its
         // shadow together once the shadow has been cast.
         if case .filter(let effects) = SVGExport.effects(of: layer, carried: carried) {
-            guard inside.count == 1 else {
-                return .picture(effects.shadows.isEmpty
-                    ? "it wears a blur, and it is drawn in more than one piece"
-                    : "it wears a shadow, and it is drawn in more than one piece")
-            }
-            // The filter rides the SAME element that is placed, never a group
-            // round it: Apple's SVG reader draws a filtered shape a second
-            // step along for every transform standing above it, and one on
-            // the shape itself is the one it gets right.
-            //
-            // Which leaves where the region is read. This file says it in
-            // plain user units, and the readers disagree about whose units
-            // those are: the shape's own, or the ones it is placed in. So the
-            // region covers the drawing's whole reach in BOTH, which is a
-            // bigger rectangle than either needs and right whichever is meant.
-            let inPlace = layer.renderBounds
+            // Where the region is read is the one thing the readers disagree
+            // about. This file says it in plain user units, and a browser
+            // reads them in the shape's own space where CoreSVG reads them in
+            // the space the shape is placed in. So the region covers the
+            // drawing's whole reach in BOTH: a bigger rectangle than either
+            // needs, and right whichever is meant.
+            let inPlace = reach
             let itsOwn = inPlace.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
             let mark = " filter=\"url(#\(defineFilter(effects, reach: inPlace.union(itsOwn))))\""
+            // The filter rides the drawing itself, never a plain group round
+            // it: Apple's SVG reader ignores a filter on a `<g>` outright.
+            // Where the drawing came out as ONE element that is the element
+            // itself, placed and filtered together, which is both the smallest
+            // thing to write and the one every reader gets right.
+            //
+            // More than one element — a ring round the shape, or an inside or
+            // an outside line — goes inside a viewport of its own, a nested
+            // `<svg>`, which the same reader DOES honour a filter on. The
+            // viewport is the drawing's whole reach, because CoreSVG clips a
+            // nested viewport whatever `overflow` says, and it is stated so
+            // that the space inside it is the space outside it: the pieces
+            // keep their own coordinates and one group puts them in place,
+            // below the filter rather than above it.
+            let body: [String]
+            if inside.count == 1 {
+                body = [fold(mark + place, into: inside[0], level: level + (fade.isEmpty ? 0 : 1))]
+            } else {
+                body = viewportElement(mark, box: inPlace, seenAs: inPlace, holding: inside,
+                                       placedBy: place,
+                                       level: level + (fade.isEmpty ? 0 : 1))
+            }
             // A fade belongs OUTSIDE the filter, since the canvas fades the
             // layer and the shadow it has already cast together. On the same
             // element, one reader fades the drawing before it casts anything
             // and the shadow shows through it.
-            guard !fade.isEmpty else {
-                return .shapes([fold(mark + place, into: inside[0], level: level)])
-            }
-            return .shapes([indent(level) + "<g\(fade)>",
-                            fold(mark + place, into: inside[0], level: level + 1),
-                            indent(level) + "</g>"])
+            guard !fade.isEmpty else { return body }
+            return [indent(level) + "<g\(fade)>"] + body + [indent(level) + "</g>"]
+        }
+        // A group that holds something filtered is placed by a viewport rather
+        // than by a transform, so the filter inside it is not carried.
+        if viewport {
+            return viewportElement("", box: reach,
+                                   seenAs: reach.offsetBy(dx: -layer.frame.minX,
+                                                          dy: -layer.frame.minY),
+                                   holding: inside, fade: fade, level: level)
         }
         // A group stays a group, so the file has the nesting the layers list
         // shows. A layer that turned out to be one shape carries its own
         // placing instead of sitting alone inside a wrapper.
         if !layer.isGroup, inside.count == 1 {
-            return .shapes([fold(place + fade, into: inside[0], level: level)])
+            return [fold(place + fade, into: inside[0], level: level)]
         }
-        return .shapes([indent(level) + "<g\(place)\(fade)>"] + inside
-            + [indent(level) + "</g>"])
+        return [indent(level) + "<g\(place)\(fade)>"] + inside + [indent(level) + "</g>"]
+    }
+
+    /// A nested `<svg>` standing where a `<g transform>` would have stood.
+    ///
+    /// `box` is where the viewport goes, in the space the layer is PLACED in,
+    /// and `seenAs` is the same rectangle in whichever space the things inside
+    /// it were written in. The two are the same rectangle when the contents
+    /// already carry their own placing, and differ by the layer's frame origin
+    /// when the viewport is doing the placing itself.
+    ///
+    /// Which of the two to use is not a matter of taste. A viewport that
+    /// carries the FILTER has to be the first kind: CoreSVG draws a filtered
+    /// element twice over, once where it belongs and once a step along, if the
+    /// element's own coordinates are shifted from the ones it is placed in. A
+    /// viewport standing in for a group's transform has to be the second, so
+    /// that what is inside keeps the coordinates the layers list gave it.
+    ///
+    /// The box is the drawing's whole REACH rather than its frame, because
+    /// CoreSVG clips a nested viewport whatever `overflow` says, and a shadow
+    /// falls outside the box it is cast from.
+    func viewportElement(_ mark: String, box: CGRect, seenAs: CGRect, holding inside: [String],
+                         placedBy placement: String = "", fade: String = "",
+                         level: Int) -> [String] {
+        var lines = [indent(level) + "<svg x=\"\(n(box.minX))\" y=\"\(n(box.minY))\""
+            + " width=\"\(n(box.width))\" height=\"\(n(box.height))\""
+            + " viewBox=\"\(n(seenAs.minX)) \(n(seenAs.minY))"
+            + " \(n(seenAs.width)) \(n(seenAs.height))\""
+            + " overflow=\"visible\"\(mark)\(fade)>"]
+        if placement.isEmpty {
+            lines.append(contentsOf: inside)
+        } else {
+            lines.append(indent(level + 1) + "<g\(placement)>")
+            lines.append(contentsOf: inside.map { "  " + $0 })
+            lines.append(indent(level + 1) + "</g>")
+        }
+        lines.append(indent(level) + "</svg>")
+        return lines
     }
 
     /// The box a group cuts its contents at, in the group's OWN coordinates,

@@ -474,6 +474,126 @@ struct SVGExportRenderTests {
         try Self.expectTheSamePicture(of: document, name: "soft-and-shadowed")
     }
 
+    /// A ring round the shape is a SECOND element, so the shadow has to be
+    /// cast from both at once. It is: the drawing goes inside a viewport of
+    /// its own and the filter rides that.
+    @Test func aShapeWearingARingAndAShadowGoesOutAsShapes() throws {
+        var layer = Self.pathLayer(fill: "#FFD60A", stroke: "#1C1C1E", width: 4)
+        layer.style.effects = [
+            .border(BorderEffect(width: 3, colorHex: "#FF3B30", position: .outside)),
+            .shadow(ShadowStyle(radius: 6, offset: CGSize(width: 6, height: 10),
+                                colorHex: "#000000", opacity: 0.6))
+        ]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "ringed-shadow")
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "ringed-shadow")
+    }
+
+    /// A filled box with a line round it is a fill and a stroke, one after the
+    /// other, which is the commonest two-piece drawing there is.
+    @Test func aFilledBoxWithALineRoundItThrowsItsShadowAsShapes() throws {
+        var box = AnnotationContent(shape: .rectangle, strokeWidth: 4, colorHex: "#1C1C1E",
+                                    start: .zero, end: CGPoint(x: 90, y: 60),
+                                    cornerRadii: CornerRadii(10), fillColorHex: "#FFFFFF")
+        box.strokePosition = .center
+        var layer = Layer(name: "Card", content: .annotation(box),
+                          frame: CGRect(x: 40, y: 40, width: 90, height: 60))
+        layer.style.effects = [.shadow(ShadowStyle(radius: 10, offset: CGSize(width: 8, height: 14),
+                                                   colorHex: "#000000", opacity: 0.85))]
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [layer])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "card-shadow")
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "card-shadow")
+    }
+
+    /// The other half of the gap: a shadow on a shape drawn INSIDE a frame
+    /// that sits anywhere but the canvas corner.
+    @Test func aShadowedShapeInsideAFrameGoesOutAsShapes() throws {
+        var shape = Self.pathLayer(fill: "#2E6BFF", stroke: "#2E6BFF", width: 0,
+                                   at: CGPoint(x: 15, y: 10))
+        shape.name = "Inside"
+        shape.style.effects = [.shadow(ShadowStyle(radius: 5, offset: CGSize(width: 4, height: 8),
+                                                   colorHex: "#000000", opacity: 0.55))]
+        let frame = Layer(name: "Icon",
+                          content: .group(GroupContent(children: [shape], isFrame: true,
+                                                       backgroundHex: "#FFFFFF")),
+                          frame: CGRect(x: 25, y: 20, width: 150, height: 130))
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [frame])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        // The whole of the allowance is the SHADE of the shadow where it falls
+        // on the frame's opaque surface, and none of it is the placing: the
+        // canvas mixes a shadow into what is under it in linear light and
+        // every SVG reader mixes it in sRGB, so a 55% black over white comes
+        // back 134 where the canvas draws 192. It is not this case: the same
+        // shape with no frame at all, over a white canvas, is 2.36 off too,
+        // and a shape in a group with nothing under it is 0.002 off.
+        try Self.expectTheSamePicture(of: document, name: "framed-shadow", tolerance: 2.5)
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "framed-shadow")
+    }
+
+    /// The same thing with nothing under it, which is where the placing can be
+    /// judged to the last part in 255 rather than through the shade of a
+    /// shadow falling on an opaque surface.
+    @Test func aShadowedShapeInsideAGroupThatMovesItLandsExactlyWhereItShould() throws {
+        var shape = Self.pathLayer(fill: "#2E6BFF", stroke: "#2E6BFF", width: 0,
+                                   at: CGPoint(x: 15, y: 10))
+        shape.name = "Inside"
+        shape.style.effects = [.shadow(ShadowStyle(radius: 8, offset: CGSize(width: 10, height: 14),
+                                                   colorHex: "#000000", opacity: 0.8))]
+        let holder = Layer(name: "Holder", content: .group(GroupContent(children: [shape])),
+                           frame: CGRect(x: 25, y: 20, width: 0, height: 0))
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [holder])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        try Self.expectTheSamePicture(of: document, name: "grouped-shadow")
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "grouped-shadow")
+    }
+
+    /// Both gaps at once, two groups deep: a ringed shape wearing a shadow,
+    /// inside a group, inside a frame, none of them at the canvas corner.
+    @Test func aRingedShadowedShapeTwoGroupsDeepGoesOutAsShapes() throws {
+        var shape = Self.pathLayer(fill: "#FF9500", stroke: "#1C1C1E", width: 3,
+                                   at: CGPoint(x: 10, y: 5))
+        shape.name = "Inside"
+        shape.style.effects = [
+            .border(BorderEffect(width: 2, colorHex: "#34C759", position: .outside)),
+            .shadow(ShadowStyle(radius: 5, offset: CGSize(width: 3, height: 6),
+                                colorHex: "#000000", opacity: 0.5))
+        ]
+        let holder = Layer(name: "Holder", content: .group(GroupContent(children: [shape])),
+                           frame: CGRect(x: 12, y: 8, width: 0, height: 0))
+        let frame = Layer(name: "Icon",
+                          content: .group(GroupContent(children: [holder], isFrame: true,
+                                                       backgroundHex: "#FFFFFF")),
+                          frame: CGRect(x: 18, y: 14, width: 160, height: 130))
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [frame])
+        let result = SVGExporter.export(document, store: ImageStore())
+        #expect(result.fallbacks.isEmpty)
+        #expect(!result.text.contains("<image "))
+        // The whole of the allowance is the SHADE of the shadow where it falls
+        // on the frame's opaque surface, and none of it is the placing: the
+        // canvas mixes a shadow into what is under it in linear light and
+        // every SVG reader mixes it in sRGB, so a 55% black over white comes
+        // back 134 where the canvas draws 192. It is not this case: the same
+        // shape with no frame at all, over a white canvas, is 2.36 off too,
+        // and a shape in a group with nothing under it is 0.002 off.
+        try Self.expectTheSamePicture(of: document, name: "deep-shadow", tolerance: 2.5)
+        try Self.expectADifferentPicture(of: document, from: Self.withoutEffects(document),
+                                         name: "deep-shadow")
+    }
+
     @Test func aShadowSpreadWiderThanItsShapeStillGoesOutAsAPicture() throws {
         var layer = Self.pathLayer(fill: "#FFD60A", stroke: "#1C1C1E", width: 4)
         layer.style.effects = [.shadow(ShadowStyle(radius: 6,
@@ -591,12 +711,21 @@ struct SVGExportRenderTests {
     /// The same document with every blur, shadow and glow taken off it: what
     /// the file would look like if the effects had quietly gone missing.
     static func withoutEffects(_ document: PhotonzDocument) -> PhotonzDocument {
-        var bare = document
-        bare.layers = bare.layers.map { layer in
-            var stripped = layer
-            stripped.style.effects = stripped.style.effects.filter { $0.kind == .border }
-            return stripped
+        func strip(_ layers: [Layer]) -> [Layer] {
+            layers.map { layer in
+                var stripped = layer
+                stripped.style.effects = stripped.style.effects.filter { $0.kind == .border }
+                // A shadow inside a frame is still an effect that has to be in
+                // the file, so the stripping goes all the way down.
+                if case .group(var group) = stripped.content {
+                    group.children = strip(group.children)
+                    stripped.content = .group(group)
+                }
+                return stripped
+            }
         }
+        var bare = document
+        bare.layers = strip(bare.layers)
         return bare
     }
 

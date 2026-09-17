@@ -1,0 +1,29 @@
+{
+  "feature": "A shadow on a ringed or framed shape leaves as a shape too",
+  "epic": "icon-export",
+  "summary": "A shape with a shadow already left the app as a real shape, but only if it was drawn in one piece and sat on the canvas itself. Put a border round it, or draw it inside a frame, and it still left as a flat picture. Both now leave as shapes, and the Export sheet stops naming them.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press P and draw a closed shape, then press Escape to finish it." },
+    { "do": "In Appearance, add a Shadow and push its Softness and Distance up until it is obvious." },
+    { "do": "Add a Border to the same shape and give it a colour that stands out." },
+    { "do": "File, Export, pick SVG, and read the list of what the file will be. The shape should not be named there.", "shot": "2026-09-17-ringed-shadow-in-quick-look.png" },
+    { "do": "Save it, then press Space on the file in Finder and compare the ring and the shadow with the canvas." },
+    { "do": "Back in the app, put a frame round the shape (New Frame, then drag the shape into it) and move the frame away from the top left corner." },
+    { "do": "Export as SVG again: still nothing named, and the file still draws right in Preview.", "shot": "2026-09-17-framed-shadow-in-quick-look.png" },
+    { "do": "Now fade that shape with Opacity and export once more: the sheet names it and says why, which is the case that genuinely cannot be written." }
+  ],
+  "evaluate": [
+    "Side by side with the canvas, does the exported ring sit in the same place and the same width, or can you see it has moved?",
+    "Does the shadow under the framed shape land where the canvas puts it, or is it a step off?",
+    "The shadow's SHADE is knowingly off where it falls on anything solid, darker in the file than on the canvas. Is that difference small enough to hand over, or is it the first thing you notice?",
+    "Two things still keep their picture where a shadow is involved: a shape that is turned, and a shape inside a group that is turned. Is that a pair you would hit?",
+    "The file now has a nested <svg> in it where a <g> used to be. Open it in a text editor: is it still a file you would be happy handing to a developer?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole task, so no walk could run and there is no photograph of the app window. Neither picture here is one: both are Quick Look's own thumbnail of the EXPORTED FILE, made with qlmanage, which is the half of this that the change is about. Scripts/playtest/svg-export-walk.json gained a step that puts a ring on the shadowed shape and checks the sheet still names nothing, and it needs one unlocked run.",
+    "A shadow comes back a different SHADE from the one on the canvas wherever it is see-through: a 55% black shadow on a white frame comes back 134 where the canvas draws 192, and a coloured shadow over nothing comes back its own colour where the canvas draws a washed-out one. It is the canvas mixing in linear light and every SVG reader mixing in sRGB, nothing in the file can ask for the first, and it predates this change. Filed as its own task because the honest fix is probably to change the canvas, which would change the look of every existing drawing.",
+    "A TURNED shape, and anything inside a turned group, still keeps its picture. A turn has to be a transform and a filter under a transform is drawn a step along by Apple's reader, so there is no viewport trick for it.",
+    "The file is a little less plain to read than it was: where a group used to be one <g transform>, a group holding a shadow is now a nested <svg> with a viewBox. It is only bought where there is a shadow inside to save, so an ordinary group is untouched, but somebody reading the file will meet it."
+  ]
+}

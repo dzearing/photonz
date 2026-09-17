@@ -225,6 +225,37 @@ this app just wrote. Every one of these was measured rather than assumed
   the canvas corner lands in the wrong place. A transform on the element itself
   it gets right.
 
+### A viewport where a transform would not do
+
+Two shapes people draw all the time could not wear a shadow under those rules:
+one with a **ring** round it, because a ring is a second element and a filter on
+the `<g>` holding the two is ignored outright; and one drawn **inside a frame**,
+because the frame's own `transform` is a transform standing above it.
+
+Both are answered by the one element SVG already has for moving something
+without a transform: a nested `<svg>` with an `x`, a `y`, a `width`, a `height`
+and a `viewBox`. CoreSVG honours a filter on one of those, and a viewport is not
+a transform, so nothing above the shape is one either.
+
+* **A drawing in more than one piece** goes inside a viewport that carries the
+  filter. Its `viewBox` is the SAME rectangle as its `x`/`y`/`width`/`height`,
+  so the space inside it is the space it sits in, and one `<g transform>` below
+  the filter puts the pieces in place. This matters: give a filtered viewport a
+  `viewBox` shifted from where it is placed and CoreSVG draws the whole thing
+  twice, once where it belongs and once a step along.
+* **A group holding anything filtered** places what is in it with a viewport
+  instead of a `<g transform>`. Here the `viewBox` IS shifted — by the group's
+  frame origin — because that is what does the placing, and it is safe because
+  this viewport carries no filter. It is bought only where there is a filter
+  inside to save (`SVGExport.placesByViewport`), so an ordinary group is still
+  the plain `<g transform>` the layers list reads as.
+* **The viewport is the drawing's whole reach, `Layer.renderBounds`, never its
+  frame.** CoreSVG clips a nested viewport whatever `overflow` says, and a
+  shadow falls outside the box it is cast from. `overflow="visible"` is written
+  anyway, for the readers that do honour it.
+* **A turned group cannot do this**, since a turn is a transform and nothing
+  else says one. What is inside it keeps its picture, and the sheet says why.
+
 ### The region, and whose units it is in
 
 A filter clips whatever falls outside its region, and the region a file gets for
@@ -248,8 +279,8 @@ necessary costs a bigger buffer and nothing else.
 | A shadow with spread | Same: spread is the grow. |
 | A fade, with any filter at all | CoreSVG applies a fade twice to anything filtered, once to the drawing going in and once to what comes out, so a half-faded shape comes back a quarter of itself. |
 | A turn | The canvas turns the shape and throws the shadow afterwards, so the shadow falls the same way whatever the angle. A filter turns with the thing it is on. |
-| Anything that moves it | A group that draws it away from the canvas corner, or its own motion, which is written as groups that slide and turn it. See the transform note above. |
-| More than one piece of drawing | A ring round the shape, or an inside or outside line, is a second element, and the shadow has to be cast from both at once. A filter on the `<g>` holding them is ignored outright by CoreSVG. |
+| A turn standing over it | A group that is TURNED. A turn has to be a transform and no viewport says one, so what is inside keeps its picture. A group that only MOVES it is fine: see the viewport note above. |
+| Motion standing over it, in the file that PLAYS | A layer's motion is written as groups that slide and turn it, so anything inside is under a transform. Only in the animated file: the still one has no such groups and the shadow survives. |
 
 Each of these is named on the Export sheet in plain words before you save, the
 same as every other fallback.
@@ -311,8 +342,9 @@ By **rendering the file back**, never by reading the text
 (`Tests/PhotonzRenderTests/SVGExportRenderTests.swift`). macOS can rasterize an
 SVG through `NSImage`, so every case — a path, a rounded box, an oval, a line, a
 group, an inside line, an outside line, a hole, a linear ramp, a radial ramp,
-outlined words, a shadowed shape, a photograph, an arrow, its endings, its
-caption, a highlight, a caliper, a moved readout, an alignment check — is drawn
+outlined words, a shadowed shape, a ringed shadowed shape, a shadowed shape in a
+group, one in a frame, one two groups deep, a photograph, an arrow, its endings,
+its caption, a highlight, a caliper, a moved readout, an alignment check — is drawn
 twice, once by the app
 and once by the system's own SVG reader, and the two pictures must agree to
 within one part in 255 averaged over the canvas. `Tests/PhotonzCoreTests/SVGExportTests.swift`
@@ -326,9 +358,17 @@ covers the writing itself.
   only by browsers. Both are above: the reasons are Apple's SVG reader, and both
   are the least-bad answer rather than an oversight.
 * **A glow, an inner shadow and a spread shadow still cost a shape its
-  vectors**, and so does a shadow on a shape that is faded, turned, moved by a
-  group, or drawn in more than one piece. See "A shadow and a blur" above for
-  the table and the reasons. A plain drop shadow and a blur go out as shapes.
+  vectors**, and so does a shadow on a shape that is faded, turned, or held by
+  a group that is turned. See "A shadow and a blur" above for the table and the
+  reasons. A plain drop shadow and a blur go out as shapes, ring or no ring,
+  frame or no frame.
+* **A shadow comes back a different SHADE wherever it is see-through.** The
+  canvas mixes a shadow into what is under it in linear light and every SVG
+  reader mixes it in sRGB, so a 55% black shadow over a white frame comes back
+  134 where the canvas draws 192, and a coloured shadow over nothing at all
+  comes back its own colour where the canvas draws a washed-out one. Nothing in
+  the file can ask a reader to mix in linear light. The placing is exact: the
+  same shape over nothing is 0.002 off.
 * **A sweeping gradient falls back.** A conic ramp can be approximated with
   wedges, at the cost of a big file.
 * **A shape whose LAYER box is rounded off falls back** (as opposed to the

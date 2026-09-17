@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 2820,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T21:10:01.166Z",
-  "updated": "2026-09-16T21:10:01.169Z",
+  "updated": "2026-09-17T04:47:20.669Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-16 finishing two-paths-you-drew-with-the-pen-can-be-joined-in. Half of this already exists by accident: PathJoin.Run.changedAnything is true for a single run that closed on itself, so PhotonzDocument.turningLayersIntoPath can hand back a plan with takes 1 and converted 0, and TurnIntoPathQuestion now words that case as \"Close this path?\" with a \"Close Path\" button (Sources/PhotonzCore/PathJoining.swift). It is unreachable on purpose: EditorState.canTurnLayersIntoPath requires TWO open sibling paths via PhotonzDocument.openPathsThatCouldJoin, so a single path picked on its own offers nothing, and even picked with another it only closes when its own two ends are already within PathJoin.tolerance (2 pt). What is missing is a real Close Path over one selected open outline that joins the ends however far apart they are. Note the Pen already refuses to close a run that encloses no area; the same refusal applies here.",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-16T21:10:01.168Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T04:36:56.069Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T04:38:17.935Z",
+      "note": "Adversarial review before building. (1) The shortest version that delivers the value is NOT a new command: the Layer menu and the layer row menu already carry ONE row that retitles itself (Turn Into Path… / Join Paths…), so a third title Close Path… when the only thing picked is an open outline keeps one row, one sheet, one undo step and one place to learn it. (2) A first-time user's route is real: draw with the Pen, Return, Escape to Select, click the outline or its row, Layer menu — today that row is dimmed and says Turn Into Path, which is a dead end for exactly the person the Pen is for. (3) No keyboard shortcut. Illustrator's Join is Cmd J and Photoshop's Cmd J is Duplicate Layer; adding one would break shortcut parity for a command you use once per outline. (4) Cut from scope: dragging one end onto the other on canvas. That is a second feature (a direct-manipulation weld) and it is not what the task asks for. (5) The tolerance must NOT be widened. PathJoin's 2 pt is a stated promise and two lines welding across a 40 pt gap by surprise is worse than not welding. Close Path is a different operation: it acts on ONE outline's own two ends, asked for by name, so the gap can be any size. (6) Nothing moves. The closing run is straight and both end points stay exactly where they are, so the picture only gains the run you asked for. (7) The Pen's refusal carries across word for word: an outline whose points are in a line has no inside, and the chip says so rather than leaving a layer painting no pixels."
+    },
+    {
+      "t": "2026-09-17T04:47:04.096Z",
+      "note": "Built. PhotonzCore: new Sources/PhotonzCore/PathClosing.swift with PathContent.closingTheOutline() (sets isClosed, clears ONLY the first anchor's handleIn and the last's handleOut so the closing run is straight — both are invisible on an open path — merges the two ends into one anchor when they already sit on the same spot, and returns nil when the ring would enclose no area), PathContent.gapBetweenEnds, ClosePathPlan, ClosePathQuestion, PathClose.menuItem, and PhotonzDocument.openPathsThatCouldClose(ids:) / closingPaths(ids:) / closePaths(ids:). PathEditHint gained justClosed(paths:) and nothingClosed(); the refusal is PenSession.flatCloseReason's sentence word for word. App: EditorState+LayerOps now has one PathRowAction enum (turn > join > close) driving the gate, the row title and the action, so the SAME row reads Turn Into Path… / Join Paths… / Close Path…; closeOpenPaths asks the sheet (sharing the existing Don't ask again) and applyClosePaths writes it in one History step. Also: Sources/PhotonzCore/FeatureCatalog.swift description, docs/design/vector-paths.md 'One outline you already finished, shut', and Scripts/playtest/close-an-open-path-walk.json. Deliberately NOT done: the 2 pt PathJoin tolerance is untouched — closing is a different operation on ONE outline's own ends, asked for by name, so it crosses any gap; and closing does not add a fill, it makes the Fill row appear, which is the same bargain Join Paths already strikes."
+    },
+    {
+      "t": "2026-09-17T04:47:07.477Z",
+      "note": "Verification, honestly. Scripts/test.sh is green: 7992 tests in 637 suites, including 23 new ones in 'Closing an outline you already finished'. Acceptance 1 (closed, fillable, one undo step), 3 (a flat outline is refused with the Pen's own line) and 4 (a straight run, neither end moved) are each covered by tests. Acceptance 2 (the row is on the same two menus and says what it will do) is NOT verified on the running app: the Mac's screen has been locked all through this task, so Scripts/playtest.sh returns status locked and exits 3 for every walk, including the new one, and nothing can unlock it. The walk parses (76 steps) and a sweep has been requested so the loop runs it on an unlocked screen."
+    },
+    {
+      "t": "2026-09-17T04:47:07.523Z",
+      "note": "left rough: the audit's rough list is five items and none of them earned a task. The missing screenshots and the undriven app layer are the locked screen, which the requested sweep answers. The shared Don't ask again is a deliberate call (one row, one promise), written up in the audit for the user to disagree with. The lack of a canvas preview of the run about to appear, and the odd reachability of the several-outlines case, are both below the bar: nobody is stopped by either, and the common case is the one that was designed."
+    },
+    {
+      "t": "2026-09-17T04:47:20.667Z",
+      "note": "Close Path ships. Pick one open outline and the path row on the Layer menu and the layer row menu reads 'Close Path…'; it asks a question naming the gap in points, then lays a straight run between the outline's own two ends without moving either, in one undo step, keeping the colour and line and making the Fill row appear. A flat outline is refused with the Pen's own sentence under the canvas. New Sources/PhotonzCore/PathClosing.swift plus two PathEditHint lines and one PathRowAction enum in EditorState+LayerOps; docs/design/vector-paths.md and the feature catalog say it. Verified by 23 new tests and a green Scripts/test.sh (7992 tests, 637 suites). NOT verified on the running app: the screen was locked all task, so the new walk close-an-open-path-walk.json (parses, 76 steps) could not run and a sweep is requested. Audit: queue/audits/2026-09-16-close-an-open-path.json. Commit 6fe2b3bd, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-17T04:36:56.068Z",
+  "completed": "2026-09-17T04:47:20.668Z"
 }
