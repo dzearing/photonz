@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2910,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T06:07:07.128Z",
-  "updated": "2026-09-17T06:07:07.131Z",
+  "updated": "2026-09-17T07:23:16.383Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-17 with PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json (walk status ok). Its stage 1 capture /tmp/photonz-playtest/panel-sections/panel-sections-1-shape-automatic-sc.png shows the footer reading \"Sections · 5 hidden\" on a blank 1200x800 document with one rectangle picked and the panel settings forgotten. The same reading is in /tmp/photonz-playtest/reopen-test/reopen-2-closed-sc.png.\n\nThe walk that passes says the opposite in its own seed: \"The Sections row at the foot reads just Sections, because nothing is hidden.\" It passes anyway because every step checks the CONTROL name, which is the literal string \"Sections\" from playtestControl, and never the words on screen.\n\nCause is in Sources/Photonz/PanelSectionsFooter.swift: hiddenCount counts every row with isShown == false, which includes the ones the automatic rule left out for this document (Measurements, Layout, Component, Library and one more) as well as the ones a person turned off. The doc comment right above it says the count exists because \"where did Measurements go\" is the risk of HIDING something, so the count wants rows whose reason is .turnedOff, not rows that are merely automatically out. Feature landed under the-panel-shows-the-panes-that-matter-and-you-ca.",
@@ -23,6 +23,28 @@
     {
       "t": "2026-09-17T06:07:07.130Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T07:15:17.419Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T07:23:06.965Z",
+      "note": "Reproduced first: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json photographed the footer reading \"Sections · 5 hidden\" on a blank document. Fix: PanelSectionVisibility.footerLabel(for:) in PhotonzCore counts rows whose reason is .turnedOff and nothing else; PanelSectionsFooter calls it. Five new core tests written before the change (they failed on a missing footerLabel, then passed). The walk now claims the WORDS at stages 1, 3 and 4 and photographs all three; proved the claim bites by running a copy claiming \"Sections · 5 hidden\" at stage 1, which failed at step 17."
+    },
+    {
+      "t": "2026-09-17T07:23:07.011Z",
+      "note": "The playtestControl marker on the row now carries the label text rather than the fixed string \"the panel's section list\", which is what made the old walk pass while the row said something else. That is the same idiom MotionListInspector and LayersRow already use for a control's state."
+    },
+    {
+      "t": "2026-09-17T07:23:07.058Z",
+      "note": "left rough: turning a section ON that automatic had left out and then OFF again counts as 1 hidden while nothing visibly leaves the panel that second time. It is truthful (the section will now stay away even once the document earns it) and needs a person to go out of their way to reach, so it did not earn a task; it is in the audit's rough list where the user can disagree."
+    },
+    {
+      "t": "2026-09-17T07:23:16.381Z",
+      "note": "The panel footer reads just \"Sections\" until a person turns one off. PanelSectionVisibility.footerLabel(for:) in PhotonzCore counts only rows whose reason is .turnedOff, with five tests written before the fix; PanelSectionsFooter calls it and its playtest marker now carries the words on screen so a walk can read them. Verified by panel-sections-walk, which claims and photographs all three states (just Sections, Sections · 1 hidden, just Sections again) and fails when the claim is wrong. Full suite green: 8035 tests. Audit at queue/audits/2026-09-17-sections-row-count.json. Committed 090dac33 and pushed."
     }
-  ]
+  ],
+  "started": "2026-09-17T07:15:17.418Z",
+  "completed": "2026-09-17T07:23:16.382Z"
 }

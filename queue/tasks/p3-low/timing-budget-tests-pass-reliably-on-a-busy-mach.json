@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T08:44:12.445Z",
-  "updated": "2026-09-02T13:01:40.775Z",
+  "updated": "2026-09-17T07:56:38.510Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tests/PhotonzCoreTests/ElementBoundsTests.swift:268 (50 ms budget over 20 runs, saw 55.9 ms) and :535 (30 ms budget, saw 30.6 ms). Options: take the best of several batches instead of one mean, run them serialized (.serialized trait) so parallel suites do not compete, or widen the budgets with a comment. Serves measure-redline only indirectly (keeps its commits unblocked); filed under the arrow-caption epic because that is where it bit.",
@@ -53,6 +53,10 @@
     {
       "t": "2026-09-02T13:01:40.774Z",
       "note": "ElementBoundsTests: the two probe-count timing tests now assert a ratio against their own probe detects on the same thread (guard 1.3; doubled probes read 2.0), the detect test keeps an absolute budget widened to 20 ms. Verified: 3 consecutive full Scripts/test.sh runs green under a looping swift build plus six CPU burners, doubled and 1.5x probe counts fail."
+    },
+    {
+      "t": "2026-09-17T07:56:38.509Z",
+      "note": "flaked again 2026-09-17 00:5x during a full Scripts/test.sh: detectionStaysWellInsideTheMouseMoveBudget failed at ElementBoundsTests.swift:222 with perCall 0.026064375s against the .milliseconds(20) budget (30% over, not the sub-millisecond miss this task fixed). It passed on its own seconds later (Scripts/test.sh --filter detectionStaysWellInsideTheMouseMoveBudget, 2.7s) and the machine had nothing above 50% CPU. So the absolute budget this task deliberately kept on the detect test is still the one that misses under full-suite parallel load. Noted rather than refiled; if it shows up a third time it has earned its own task."
     }
   ],
   "started": "2026-09-02T12:47:10.260Z",

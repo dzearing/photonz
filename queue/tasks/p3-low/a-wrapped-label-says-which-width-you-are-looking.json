@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:19:41.071Z",
-  "updated": "2026-09-16T12:23:35.168Z",
+  "updated": "2026-09-17T07:57:03.033Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of a-stretched-piece-stops-offering-a-size-you-cann (2026-09-06), which was asked to make this a readout and found the premise false. Evidence, verified with a test: a label with natural width 166 inside a 100-wide free group flows to 104 with wrappedByItsContainer = true. Typing 60 or 140 CLEARS the flag in Layer.resized and sticks; only 400 (wider than the words) snaps back to 104, because textHugsItsWords is then true again and GroupFlow.wrapping re-wraps it. So the W field is a live control, not a decided number, and it must NOT become a GeometryReadout: that would remove the keyboard way to set a paragraph width while the canvas drag keeps it. The real complaint is the audit line 2026-09-05-words-that-wrap rough3: two numbers that look like they disagree. Likely answers are a word in the Layout section rather than a change to the W field. Ask the user before building: this is a visual-direction call.",
@@ -65,7 +65,36 @@
       "note": "seq 20 -> 20",
       "since": "2026-09-12T12:02:46.207Z",
       "count": 2
+    },
+    {
+      "t": "2026-09-17T07:40:26.611Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T07:56:41.178Z",
+      "note": "Adversarial review before building: the decision was already answered (Fit the words), so the question was whether it is safe. Two things could have broken it. (1) Would re-wrapping at the longest line move the breaks? No: every line already fits that width, and the word that would not fit the wider room does not fit the narrower one either, so the breaks are identical and the flow settles in one pass. (2) Does the REAL CoreText measurement return the ink width or the width you asked for? Ink: CTFramesetterSuggestFrameSizeWithConstraints returns the longest line. Checked with a throwaway test that installed TextRasterizer.naturalSize into TextMeasurement, the way the app does at launch: Save all the changes at 24pt is 216 natural; in a column stack capped at 140 the label came out 122 (content 118) and the stack settled at 118, identical on passes two and three."
+    },
+    {
+      "t": "2026-09-17T07:56:43.419Z",
+      "note": "Shipped in 6bf24960. Layer.textWrapped(inRoom:) takes the measured width of the lines it produced, floored at the widest single word so an unbreakable word still overhangs at its own width. GroupFlow.placed measures the group again across after the wrap, but ONLY where the width was a limit on an axis that hugs, so a typed width and a floor are both untouched. Six new tests in GroupTextWrapTests (wrapped label hugs its words, hugging group settles, floor still holds, typed group width kept, typed label width sticks through a pass, nested stack settles in one pass) and six existing ones updated to the decided behaviour. Full Scripts/test.sh: 8059 tests green apart from one unrelated timing flake (logged on timing-budget-tests-pass-reliably-on-a-busy-mach)."
+    },
+    {
+      "t": "2026-09-17T07:56:44.802Z",
+      "note": "Acceptance item 4 (a screenshot beside the number) could NOT be met: the Mac's screen was locked for the whole task, so Scripts/playtest.sh wrapped-label-width-walk.json reported status locked, exit 3, 0 steps, and no walk can run or photograph anything. What shipped instead is an offscreen render from the app's own renderer (queue/audits/2026-09-17-wrapped-label-width.png), drawn with three boxes so the room the ceiling allowed (140), the stack that settled (121) and the label's box (89) are all visible at once, and the audit says in rough that it is a render and not a photograph of the window. The walk itself was rewritten to describe and look for the new behaviour; it needs an unlocked screen to run."
+    },
+    {
+      "t": "2026-09-17T07:56:46.698Z",
+      "note": "left rough: a centred label inside a wrapped box now centres its lines in the narrower box rather than the room, so an existing canvas can move by a couple of points. Looked right in every render and in the tests, so it did not earn a task. Also left rough: the stack's own W and its Largest width now show different numbers a row apart, which is the answered decision working, but it is the one place two numbers could still be read as disagreeing. The nested-stack overhang found while testing DID clear the bar and is filed as words-inside-a-stack-inside-a-capped-stack-hang."
+    },
+    {
+      "t": "2026-09-17T07:57:02.984Z",
+      "note": "Asked for a full sweep: this change touches every group that has a width and a label in it, so any walk with a capped stack or a typed group width could shift by a few points, and the rewritten wrapped-label-width walk has never run. Not waited on."
+    },
+    {
+      "t": "2026-09-17T07:57:03.031Z",
+      "note": "A wrapped label now takes the width of the lines it produced, not the room it was allowed (Layer.textWrapped), and a group whose width was a LIMIT measures itself again after the wrap so it settles around the wrapped words (GroupFlow.placed). Shipped in 6bf24960 with 6 new and 6 updated tests; full Scripts/test.sh green at 8059 tests bar one unrelated timing flake. Verified with the real CoreText measurement as well as the test estimate: 216 natural at 24pt, 118 wrapped in a stack capped at 140, identical over three passes. Not seen in the running app: the screen was locked all task, so no walk could run and the audit ships an offscreen render and says so."
     }
   ],
-  "started": "2026-09-08T18:42:30.003Z"
+  "started": "2026-09-17T07:40:26.610Z",
+  "completed": "2026-09-17T07:57:03.032Z"
 }

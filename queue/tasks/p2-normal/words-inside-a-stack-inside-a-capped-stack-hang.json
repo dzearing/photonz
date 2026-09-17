@@ -1,0 +1,70 @@
+{
+  "id": "words-inside-a-stack-inside-a-capped-stack-hang",
+  "title": "Words inside a stack inside a capped stack hang out of it",
+  "goal": "A ceiling on a stack only reaches the words directly inside it. Put those words in a box of their own inside that stack, which is how a card or a row gets built, and the ceiling stops working: the line of text stays on one line and runs out past the edge of everything around it.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 2920,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T07:56:35.568Z",
+  "updated": "2026-09-17T08:14:32.548Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-17 while finishing a-wrapped-label-says-which-width-you-are-looking. Test (throwaway, in GroupTextWrapTests style): outer column stack, padding 10, maxWidth 120, holding an inner column stack, padding 10, holding the words \"Save all the changes\" (natural 108 at 10pt in the estimate). Printed: NESTED outer (0,0,120,52) inner (10,10,0,0) label (10,10,108,16) wrapped nil. The label is on ONE line, 108 wide, starting at absolute x 20, so its ink ends at 124 against an outer box of 120 and a padding edge of 110. Cause: GroupFlow.wrapRooms only considers children that ARE text (children[$0].text != nil), so a ceiling never travels through a nested group; the inner group hugs, so nothing narrows it either. Likely fix is to hand a group narrowed by a limit its own inner bounds when it is flowed, rather than letting it hug: see GroupFlow.placed and Bounds.of. Not part of the wrapped-width change, which only decided what a wrapped label measures.",
+  "acceptance": [
+    "A label inside a group inside a stack with a Largest width wraps to the room that ceiling leaves, exactly as it does when it sits in the capped stack itself",
+    "Nothing hangs out past the capped stack: every line of the label ends inside its padding",
+    "A label that fits is untouched, and a paragraph somebody narrowed by hand keeps its width",
+    "The same picture two passes in a row: the layout settles rather than flipping"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T07:56:35.570Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T07:57:40.299Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Reproduced first, exactly as filed. New test in GroupTextWrapTests: outer column stack padding 10 maxWidth 120, inner column stack padding 10, words \"Save all the changes\". Before: label 108x16 on one line, ink ending at 124 against a padding edge of 110 (rightmostInk 124 <= 110 failed). Confirms the cause in the notes: GroupFlow.wrapRooms only looked at children that ARE text."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Adversarial review before building: the repro in the task uses a stack inside a stack, but Command G (Document.swift:725) makes a group with layout nil, and that is how anybody actually puts words in a box. Built the stack-in-stack fix first, wrote a test for the plain grouped box, and it still overhung (ink 114 against 110). Widened the fix to cover it, which is the case that actually matters."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Fix: a box inside a group is now handed the room as a CEILING OF ITS OWN rather than as a width (GroupFlow.narrowed), so the existing wrap-then-rehug path runs inside it and the box comes back the size of the lines that came out, never held open at the ceiling. That keeps the box's reported size and its drawn size the same, which handing it a width would not. Returns nil unless something inside actually wrapped, so a box too wide because of a picture is untouched and overhangs as before. GroupFlow.wrapping now reports whether anything moved (Narrowing), which is what the outer re-hug keys off instead of looking for a wrapped direct child."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "New Layer.narrowsToItsContainer (text not pinned to one line, or a group that hugs, layout or no layout, not a screen) and Layer.holdsWrappedWords (recursive). GroupFlow.flowing now unwraps container-wrapped text inside a layout-nil group, so every pass starts from the words and raising the ceiling gives the line back."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Verified: 39 tests in the wrap suite, full run 8070 tests green. Covers all four acceptance items plus a card of a pill and a label (surface still fills the pill, nothing overhangs), a floor inside a capped stack (floor wins, box overhangs, words never wrapped), and a ceiling reaching two boxes down."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Walks could not run: the Mac's screen was locked for the whole task, so Scripts/playtest.sh reported status \"locked\" and nothing could be photographed. A sweep was already pending from 07:57 for the same reason, so no new request was filed."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "left rough: a box too wide because of a picture or a shape still overhangs a ceiling at its own size, with no shrink-to-fit anywhere. Same shape as the accepted \"one long word hangs out rather than being broken\" rule and documented in docs/design/ui-building.md, so it did not earn its own task. It is in the audit's rough list where the user can disagree."
+    },
+    {
+      "t": "2026-09-17T09:00:00.000Z",
+      "note": "Audit: queue/audits/2026-09-17-nested-ceiling-wrap.json. Design doc updated: docs/design/ui-building.md, \"A ceiling reaches the words inside a BOX inside the stack\"."
+    },
+    {
+      "t": "2026-09-17T08:14:32.546Z",
+      "note": "A ceiling now reaches the words inside a box inside the stack, to any depth, including a plain grouped box (Command G), which is the shape the original repro missed. GroupFlow.narrowed hands a nested box the room as a ceiling of its own so it wraps and then closes around the lines that came out. Verified by 39 tests in the wrap suite and the full 8070-test run; walks could not run at all because the screen was locked. Audit: queue/audits/2026-09-17-nested-ceiling-wrap.json. Committed 27d19832."
+    }
+  ],
+  "started": "2026-09-17T07:57:40.298Z",
+  "completed": "2026-09-17T08:14:32.547Z"
+}
