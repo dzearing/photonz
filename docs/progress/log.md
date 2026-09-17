@@ -17657,3 +17657,23 @@ read out of the live page.
 Next: no sweep has run since 2026-09-15 because the Mac's screen is locked, so
 the new block has not been written by a real sweep yet. It will be the first
 thing the next sweep writes.
+
+## 2026-09-17 — The dashboard says a locked Mac, not a sweep that broke
+
+The walk sweep cannot run while the Mac's screen is locked, and `sweep.sh` has
+always recorded that as `screenLocked`. `queue-lib` dropped the flag on the way
+to the page, so two days of a locked Mac read as "walk sweep cut short at 0
+walks": a sweep that broke rather than a machine that needs unlocking.
+`sweepState` now carries the flag plus `blindSince` (the first of the unbroken
+run of locked sweeps, a floor rather than the lock time), and the Summary hero
+says "no walk sweep for 2 days: the screen is locked · 83 waiting" over the amber
+strip that says why it matters and that unlocking the Mac is the fix. A sweep
+that ran, one that ran out of time and one that never happened read word for word
+as they did. Drill: `queue/bin/sweep-line-drill.mjs`, both states, running the
+real functions out of `dashboard.html`. Audit:
+`queue/audits/2026-09-17-dashboard-blind-loop.json`.
+
+Next: the Mac is still locked, so the 83 waiting sweeps and every audit's missing
+picture are still waiting on that. Open question is the one already on the card
+for `a-hundred-and-fifteen-walks-fail-on-code-that-pa`: whether the loop should
+keep the Mac awake at all.
