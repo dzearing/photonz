@@ -86,9 +86,16 @@ struct ExportDialog: View {
     @State private var scale: CGFloat = 1
     @State private var frameID: UUID?
     @State private var destination: SVGHandoff.Destination = .webPage
-    /// How big the file would be, worked out only for a drawing made of
-    /// shapes. Nil while there is nothing worth saying.
+    /// How big the SVG would be, worked out only for a drawing made of
+    /// shapes. Nil when the drawing carries a photograph, which cannot be
+    /// weighed without rendering it, and nil while the answer is not SVG.
     @State private var byteCount: Int?
+    /// Whether the SVG has been weighed at all since the last change. It is
+    /// worked out where it is asked for rather than off in a task — writing an
+    /// icon out as text is a few milliseconds, not a render and an encode — so
+    /// this only ever separates "there is no number for this drawing" from
+    /// "nobody has asked yet".
+    @State private var vectorWeighed = false
     /// Parts of the motion the FILE itself cannot carry, whatever the
     /// destination: a turn on a layer that is also flipped, say.
     @State private var unmoved: [SVGExport.Fallback] = []
@@ -215,12 +222,22 @@ struct ExportDialog: View {
         }
     }
 
+    /// Weighs the SVG, for every SVG and not only the moving ones.
+    ///
+    /// The gate used to be the hand-off question, so a still icon — the thing
+    /// this app exports as SVG more than anything else — was the one answer on
+    /// the sheet that never said what the file would weigh. Weighing it means
+    /// writing it, which for a drawing made of shapes is a few milliseconds of
+    /// text (`SVGPreflightSizeTests`), so it happens here rather than in a task
+    /// and the number is on the sheet the moment it opens.
     private func refreshVectorSize() {
-        guard asksWhereItIsGoing, choice.isVector else {
+        guard choice.isVector else {
             byteCount = nil
             unmoved = []
+            vectorWeighed = false
             return
         }
+        vectorWeighed = true
         let preflight = editorState.svgPreflight(frameID: frameID, animated: carriesTheMotion,
                                                  background: background)
         byteCount = preflight?.bytes
@@ -283,9 +300,27 @@ struct ExportDialog: View {
     /// One line for every picture format, from one place, so PNG and JPEG can
     /// never drift into saying the size two different ways.
     private var sizeLine: String {
-        ExportQuality.note(forFormat: weighedFormat?.rawValue ?? "", percent: qualityPercent,
-                           bytes: pictureBytes, weighed: weighed)
+        if choice.isVector {
+            return ExportQuality.note(forName: vectorName, bytes: byteCount,
+                                      weighed: vectorWeighed)
+        }
+        return ExportQuality.note(forFormat: weighedFormat?.rawValue ?? "", percent: qualityPercent,
+                                  bytes: pictureBytes, weighed: weighed)
     }
+
+    /// What the vector file is called on its own line: the hand-off answer
+    /// where one has been chosen, so a file carrying its motion says so, and
+    /// plain SVG otherwise.
+    private var vectorName: String {
+        (handoffFormat?.isVector == true ? handoffFormat : nil)?.title
+            ?? SVGHandoff.Format.stillSVG.title
+    }
+
+    /// Whether the SVG line has a number behind it. A drawing with a photograph
+    /// in it cannot be weighed without rendering the photograph, and the sheet
+    /// says nothing rather than a guess: the line naming the picture that rides
+    /// along is directly underneath, so the absence is already explained.
+    private var saysWhatTheVectorWeighs: Bool { byteCount != nil }
 
     /// Encodes the picture to find out what it really weighs.
     ///
@@ -446,7 +481,7 @@ struct ExportDialog: View {
                     // is nothing to choose with. PNG is the format an icon is
                     // saved in, so "what will this weigh" is asked here more
                     // than anywhere else on the sheet.
-                    sizeNote
+                    sizeNote()
                 }
                 // Last in the block, exactly where it sits for SVG: an icon
                 // drawn on a blank canvas can go out as a PNG with nothing
@@ -582,17 +617,29 @@ struct ExportDialog: View {
                     .monospacedDigit()
                     .frame(width: 38, alignment: .trailing)
             }
-            sizeNote
+            sizeNote()
         }
     }
 
-    /// What the file will weigh, said once for every picture format.
+    /// What the file will weigh, said once for every answer on the sheet.
     ///
     /// Under the slider where there is one, and in exactly that place where
     /// there is not, so the eye looking for the size finds it in the same spot
     /// whichever format is picked.
-    @ViewBuilder private var sizeNote: some View {
-        Text(sizeLine)
+    ///
+    /// `icon` is what the vector block passes: everything it says wears a
+    /// symbol, and a line with none in the middle of that list hangs out to the
+    /// left of the lines above and below it. The words and the place are the
+    /// same either way, which is the part that has to match.
+    @ViewBuilder private func sizeNote(icon: String? = nil) -> some View {
+        Group {
+            if let icon {
+                Label(sizeLine, systemImage: icon)
+                    .labelStyle(.titleAndIcon)
+            } else {
+                Text(sizeLine)
+            }
+        }
             .font(.caption)
             .foregroundStyle(.secondary)
             // A number being replaced fades rather than blanking, so the
@@ -600,6 +647,7 @@ struct ExportDialog: View {
             .opacity(weighing ? 0.45 : 1)
             .animation(.easeOut(duration: 0.12), value: weighing)
             .animation(.easeOut(duration: 0.12), value: pictureBytes)
+            .animation(.easeOut(duration: 0.12), value: byteCount)
             .playtestControl(Self.sizeLabel, detail: sizeLine)
     }
 
@@ -640,11 +688,6 @@ struct ExportDialog: View {
                         .foregroundStyle(.secondary)
                         .labelStyle(.titleAndIcon)
                 }
-                if let format = handoffFormat {
-                    Text(sizeNote(format))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
             .fixedSize(horizontal: false, vertical: true)
         }
@@ -661,14 +704,6 @@ struct ExportDialog: View {
         return "\(names) each have a change the file cannot carry."
     }
 
-    /// What the file is, and how big it turned out to be.
-    private func sizeNote(_ format: SVGHandoff.Format) -> String {
-        guard choice.isVector, let byteCount else { return format.title }
-        if byteCount < 1024 { return "\(format.title) · \(byteCount) bytes" }
-        let kilobytes = Double(byteCount) / 1024
-        return String(format: "%@ · %.1f KB", format.title, kilobytes)
-    }
-
     /// What a vector file gets instead of a scale: what it is, and what could
     /// not be said in shapes.
     @ViewBuilder private var vectorNote: some View {
@@ -679,6 +714,13 @@ struct ExportDialog: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .labelStyle(.titleAndIcon)
+            }
+            // Directly under how big it was drawn, which is where a picture
+            // format's size sits under its pixel size. The eye looking for
+            // "what will this cost me" finds it in the same place whichever
+            // of the five answers is picked.
+            if saysWhatTheVectorWeighs {
+                sizeNote(icon: "scalemass")
             }
             if let note = photographNote {
                 Label(note, systemImage: "photo")

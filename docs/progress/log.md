@@ -17930,3 +17930,52 @@ was (13 points of screen type comes back as a 28 point layer on a 2x capture
 where 26 is the truth). Every label is wrong by the same amount now, which is
 what this task was about, but a redline taken off the Size menu reads high. Open
 question: is that worth its own study, or does anybody read the number?
+
+## 2026-09-17 — An SVG says what it will weigh too
+
+**SVG was the one answer on the Export sheet that never said its size.** Every
+picture format has said what the file will weigh for a while now; SVG said it
+only when the drawing moved, because `refreshVectorSize()` was gated on
+`asksWhereItIsGoing` and the only place the number could be printed was inside
+`handoffNote`, which is gated on the same thing. So the format you hand to
+somebody else was the one you could not size up first.
+
+Now the weighing happens whenever SVG is picked, and the number is shown through
+the very view the picture formats use. Three pieces:
+
+- `ExportQuality.note(forName:bytes:weighed:)` in PhotonzCore is the words. The
+  existing `note(forFormat:percent:bytes:weighed:)` now goes through it, so the
+  size on the end of a line is said in one place for shapes and pixels alike.
+  That also kills a private formatter in `ExportDialog` that printed
+  `%.1f KB` and so would have read "1536.0 KB" for a heavy drawing.
+- `ExportDialog.sizeNote` became `sizeNote(icon:)` and appears in the vector
+  block directly under "Shapes, sharp at any size. Drawn at 900 × 700." — which
+  is exactly where the picture branch puts it, under the pixel size. It carries
+  the block's own leading symbol there, because everything else in that block
+  has one and a bare caption hangs out to the left of its neighbours. On PNG it
+  stays plain.
+- `handoffNote` no longer prints the size itself. It is said once, in one place,
+  for every answer. That also removes a stray line reading just "PNG" when a
+  destination chose a picture.
+
+**A drawing carrying a photograph is still not weighed**, because that means
+rendering the photograph while somebody is choosing a format. The line naming
+the picture that rides along sits where the size would have been, so the absence
+is explained rather than blank.
+
+Weighing an SVG means writing it, so it is on the main actor while the sheet
+opens: 3.4ms for a hundred shapes, far past any real icon, gated in
+`SVGPreflightSizeTests.weighingAnIconIsFastEnoughToDoWhileTheSheetOpens`.
+
+`Scripts/playtest/svg-export-size-walk.json` is the new walk: it draws an icon,
+reads "SVG · 251 bytes", ticks the background on for 313 bytes and back off for
+251, then reads the same line on PNG. Three real pictures of the window. All
+five export walks that can run under a lock pass; the eight that open a panel
+menu or ask for a control by name could not run, so a sweep is requested. Full
+suite 8205 green.
+
+Audit: `queue/audits/2026-09-17-svg-export-size.json`.
+
+Next: an SVG of an icon is a few hundred bytes, so the line reads in bytes where
+PNG reads in KB. That is the honest number, but it is the first thing to ask the
+user about.

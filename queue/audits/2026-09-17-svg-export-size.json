@@ -1,0 +1,48 @@
+{
+  "feature": "An SVG says what it will weigh",
+  "epic": "icon-export",
+  "summary": "Pick SVG on the Export sheet and it now says how big the file will be, in the same place and the same words the picture formats use. Until today SVG was the only answer on the sheet that never said, which made the one format you hand to somebody else the one you could not size up first.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs next-export-svg (which needs the Pen); no new flag and no new control.",
+  "try": [
+    {
+      "do": "Make a new canvas, press P for the Pen and draw a closed shape on it."
+    },
+    {
+      "do": "Choose File, Export…, and pick SVG in the Format row."
+    },
+    {
+      "do": "Read the line under \"Shapes, sharp at any size\": it says SVG and the size, for example SVG · 251 bytes.",
+      "shot": "2026-09-17-svg-export-size-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Tick Include the background and watch the number go up, because the canvas goes into the file as a rectangle.",
+      "shot": "2026-09-17-svg-export-size-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Untick it and watch the number go straight back down. Nothing else on the sheet moves."
+    },
+    {
+      "do": "Press Cancel, open Export again and pick PNG: the size sits on its own line in the same spot, said the same way.",
+      "shot": "2026-09-17-svg-export-size-3.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Open a screenshot instead of a drawing and pick SVG: there is no size line, and the line saying the picture rides along is where it would have been."
+    }
+  ],
+  "evaluate": [
+    "An icon SVG is a few hundred bytes, so the line reads \"251 bytes\" while PNG reads \"21 KB\". Is the honest small number useful, or would you rather everything read in KB?",
+    "The line names the format before the size (SVG · 251 bytes) while PNG names its quality (Lossless · 21 KB). Since the SVG button is already lit right above it, does the word SVG earn its place?",
+    "Does the size land where your eye already is, directly under how big the drawing was made?",
+    "When the drawing carries a photograph the size line is simply gone, and the line above says the picture rides along. Does its absence read as an answer, or as something that failed to load?",
+    "Does the sheet still open instantly on SVG? It weighs the file by writing it, on the spot."
+  ],
+  "rough": [
+    "The word SVG on the line is mildly redundant with the format picker directly above it. It is kept because that is the wording the animated case already shipped with (Animated SVG · 3.4 KB), where the word does carry news. Left in this task's log rather than filed.",
+    "A drawing carrying a photograph still cannot say what it will weigh, because measuring it means rendering the photograph. The picture formats do exactly that, off the main thread with a short delay, so the same could be done for SVG later. Not filed: nobody is stopped by it and the line above already says a picture is inside.",
+    "The size line is the only line in the SVG block that is not about what the file can and cannot say, so it was given the block's own leading symbol to stop it hanging out to the left of the lines around it. On PNG it stays a plain line, matching everything else there.",
+    "Verified on a locked Mac. The pictures are the real window and the numbers in them are real, but colours read dimmed. The animated-SVG walks could not run at all under the lock (they open a panel menu), so the animated wording was checked by reading the code, not by running it; a sweep is requested."
+  ]
+}

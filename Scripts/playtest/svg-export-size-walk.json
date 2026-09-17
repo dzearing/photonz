@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/svg-export-size-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [220, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [440, 200], "to": [560, 210], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [223, 523] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "describe",
+      "stage": "1-icon-drawn",
+      "note": "an icon drawn with the Pen on a blank canvas: shapes all the way through, which is the drawing anybody would hand over as an SVG"
+    },
+    { "do": "action", "action": "exportDialogAsSVG" },
+    { "do": "wait", "seconds": 1 },
+    {
+      "do": "describe",
+      "stage": "2-svg-weighs-itself",
+      "note": "Export on SVG. Under how big the drawing was made there is now a line saying what the file will weigh, in the same place and the same words the picture formats use. It said nothing at all here until today, which made SVG the one format you could not size up before handing it to somebody"
+    },
+    { "do": "snapshot", "name": "svg-export-size-1-svg" },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "2-svg-weighs-itself" },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "3-canvas-back-in",
+      "note": "the background ticked back on, so the canvas goes into the file as a rectangle behind the drawing. The weight line answers with a bigger number, and nothing else on the sheet moves"
+    },
+    { "do": "snapshot", "name": "svg-export-size-2-svg-with-canvas" },
+    { "do": "panel", "stage": "3-canvas-back-in" },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "4-canvas-out-again",
+      "note": "untick it and the number goes straight back down to what it was. An SVG of an icon is a few hundred bytes, so the line reads in bytes rather than kilobytes: that is the honest number, not a rounded one"
+    },
+    { "do": "panel", "stage": "4-canvas-out-again" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "exportDialogAsPNG" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "5-the-same-line-on-png",
+      "note": "the same sheet on PNG, for the comparison the whole change is about: the size sits on its own caption line in the same spot, said the same way. Switching between the two formats no longer moves the number or takes it away"
+    },
+    { "do": "snapshot", "name": "svg-export-size-3-png" },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "5-the-same-line-on-png" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

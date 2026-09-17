@@ -141,4 +141,39 @@ struct ExportQualityTests {
         #expect(ExportQuality.note(forFormat: "png", percent: 90, bytes: nil, weighed: true)
                 == "Lossless")
     }
+
+    // MARK: - The same line for a file made of shapes
+
+    /// An SVG weighs something too, and until now it was the one format on the
+    /// sheet that never said so. It says it through this, so the format that
+    /// gets handed to somebody else answers "how big is it" in the same words
+    /// as the ones that do not.
+    @Test func aFileMadeOfShapesSaysWhatItWeighsInTheSameWords() {
+        #expect(ExportQuality.note(forName: "SVG", bytes: 21_504, weighed: true) == "SVG · 21 KB")
+        #expect(ExportQuality.note(forName: "Animated SVG", bytes: 3400, weighed: true)
+                == "Animated SVG · 3.3 KB")
+        // Through the one place that knows how to say a size, so a heavy
+        // drawing can never come out as "1536.0 KB" on the line under the
+        // format and "1.5 MB" everywhere else.
+        #expect(ExportQuality.note(forName: "SVG", bytes: 1_572_864, weighed: true)
+                == "SVG · 1.5 MB")
+    }
+
+    /// Shapes and pixels reach the same line from opposite ends: one is named
+    /// by what it is, the other by the quality it is written at. What they
+    /// weigh is said identically.
+    @Test func shapesAndPixelsSayTheirSizeTheSameWay() {
+        #expect(ExportQuality.note(forName: "SVG", bytes: 86_016, weighed: true)
+                .hasSuffix(" · 84 KB"))
+        #expect(ExportQuality.note(forFormat: "png", percent: 90, bytes: 86_016, weighed: true)
+                .hasSuffix(" · 84 KB"))
+    }
+
+    /// The same two states the picture formats have: a number still coming, and
+    /// a number that is never coming.
+    @Test func aNameWithNoNumberBehindItSaysWhichKindOfNothingItIs() {
+        #expect(ExportQuality.note(forName: "SVG", bytes: nil, weighed: false)
+                == "SVG · working out the size")
+        #expect(ExportQuality.note(forName: "SVG", bytes: nil, weighed: true) == "SVG")
+    }
 }

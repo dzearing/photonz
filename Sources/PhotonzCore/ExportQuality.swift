@@ -122,6 +122,19 @@ public enum ExportQuality {
     public static func note(forFormat id: String, percent: Int,
                             bytes: Int?, weighed: Bool) -> String {
         let name = applies(toFormat: id) ? word(for: percent, format: id) : losslessWord
+        return note(forName: name, bytes: bytes, weighed: weighed)
+    }
+
+    /// The same line for something named by what it is rather than by a
+    /// quality: a file made of shapes.
+    ///
+    /// SVG has no quality to choose and no pixels to throw away, so nothing on
+    /// the left of the line comes from a percentage — it is simply what the
+    /// file is, "SVG" or "Animated SVG". Everything on the right is the same,
+    /// which is the point: the one format people hand to somebody else answers
+    /// "how big is it" in the same words and the same place as the ones that
+    /// are only ever looked at.
+    public static func note(forName name: String, bytes: Int?, weighed: Bool) -> String {
         if let bytes { return "\(name) · \(fileSize(bytes: bytes))" }
         return weighed ? name : "\(name) · working out the size"
     }
