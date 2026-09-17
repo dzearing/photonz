@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-17T12:13:56.661Z",
+  "updated": "2026-09-17T23:08:25.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -18,7 +18,8 @@
     "The same is true of Effects",
     "The rule is written down where the next section to be added will be read against it, so this does not get walked back again by the next feature that wants room",
     "The panel's asked-for height and the height it is given are both measured and reported, before and after, at a window size named in the audit",
-    "It is checked with an arrow picked as well as with text, because those two ask for different sections"
+    "It is checked with an arrow picked as well as with text, because those two ask for different sections",
+    "Section 3 of docs/design/mocks/shared/UX-PATTERNS.md gains the rule this answer settles: which sections a panel column may push below the fold, what it owes the one it pushes, and what a new section has to prove before it may join the column, citing this task and the 2026-09-16 and 2026-09-17 crowding cases"
   ],
   "log": [
     {
@@ -64,6 +65,10 @@
     {
       "t": "2026-09-17T12:13:56.660Z",
       "note": "seq 100 -> 50"
+    },
+    {
+      "t": "2026-09-17T23:08:25.392Z",
+      "note": "Folded in from the UX-PATTERNS scrub (two-rules-in-ux-patterns-get-scrubbed-a-callout, 2026-09-17). The shared patterns document has no rule for what a panel column owes when its sections want more height than the window can give: which sections it may push below the fold, what it owes the one it pushes, and what a new section has to prove before it may join the column. Section 3's height rule stops at 'when it still does not fit, the dock scrolls and nothing is thrown away', which says what must not happen and not who loses. The answer to the card on this task settles it, so the rule is written by whoever does this task, not before. Cases to cite when writing it: this task, the Sections row added on 2026-09-17 partly to manage the same crowding, and Motion moving under Effects (queue/audits/2026-09-16-motion-under-effects.json), which is one more section in the same column."
     }
   ],
   "started": "2026-09-16T16:42:58.097Z"

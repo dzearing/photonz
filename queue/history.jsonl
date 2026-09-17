@@ -5235,3 +5235,11 @@
 {"t":"2026-09-17T23:00:26.846Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-17T23:00:26.898Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-3"}
 {"t":"2026-09-17T23:03:41.482Z","ev":"task_dropped","id":"walks-that-fail-in-the-full-sweep-3","from":"in_progress","note":"Duplicate of the standing task walks-that-fail-in-the-full-sweep, which is open and owns all four failing walks. This task existed only because sweep-report.mjs found its standing task by title and triage had renamed it; that lookup is now a mark that survives a rename (commit 2014c575), the 22:58 sweep result has been merged back onto the real task, and the drill covers the rename."}
+{"t":"2026-09-17T23:03:59.772Z","ev":"task_started","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","title":"Scrub the UX-PATTERNS rules that shipped work has bent","priority":"p3-low"}
+{"t":"2026-09-17T23:08:09.351Z","ev":"task_created","id":"an-icon-frame-s-guides-stop-looking-like-a-secon","priority":"p3-low","title":"An icon frame's guides stop looking like a second selection"}
+{"t":"2026-09-17T23:08:14.719Z","ev":"task_created","id":"a-turning-layer-says-where-its-pivot-is-twice","priority":"p3-low","title":"A turning layer says where its pivot is twice"}
+{"t":"2026-09-17T23:08:25.394Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-17T23:09:04.457Z","ev":"task_walks","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","walks":[]}
+{"t":"2026-09-17T23:09:04.506Z","ev":"task_note","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout"}
+{"t":"2026-09-17T23:09:18.620Z","ev":"task_note","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout"}
+{"t":"2026-09-17T23:09:18.672Z","ev":"task_note","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout"}

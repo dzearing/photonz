@@ -1,0 +1,31 @@
+{
+  "id": "an-icon-frame-s-guides-stop-looking-like-a-secon",
+  "title": "An icon frame's guides stop looking like a second selection",
+  "goal": "Draw an icon and the app shows you the margin the icon should stay inside, as a dashed violet rectangle. A shape or frame you have picked is also drawn as a dashed rectangle, a few points away. The first thing anybody sees on a new icon frame is two dashed rectangles side by side that mean completely different things, and the only thing telling them apart is the colour and how long the dashes are. The guide should be drawn as a guide so nobody has to work out which rectangle their next click will act on.",
+  "epic": "icon-grid",
+  "priority": "p3-low",
+  "seq": 1340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T23:08:09.347Z",
+  "updated": "2026-09-17T23:08:09.350Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe on 2026-09-17, not read off code.\n\nCommand: Scripts/playtest.sh Scripts/playtest/icon-keylines-walk.json\nResult: status ok, lockSafe true, 6 real window captures. The picture is queue/audits/2026-09-17-keyline-vs-selection.png (copied out of /tmp/photonz-playtest/icon-keylines-walk/icon-keylines-2-drawn-sc.png). It shows an ellipse selected inside a 24 point icon frame at 3200%: a violet dashed rectangle with a rounded violet dashed squircle inside it (the keyline margin) and, concentric with them, a blue dashed rectangle with square grips (the selection). Same kind of mark, different colour and dash rhythm. Photographed while the Mac was locked, so colours can read dimmed; the shapes are unaffected.\n\nThe audit that shipped it said the same thing (queue/audits/2026-09-14-icon-keylines.json rough three) and its evaluate item two asks the user outright: \"Does the margin read as a guide at a glance, or does it read as part of the selection sitting next to it?\"\n\nThe rule this now breaks is D16 rule 3 in docs/design/mocks/shared/UX-PATTERNS.md, scrubbed on 2026-09-17 by two-rules-in-ux-patterns-get-scrubbed-a-callout: two guides that can be on at once differ in KIND, and so does a guide against anything on the canvas that is not a guide. The selection outline owns the traced border.",
+  "acceptance": [
+    "With a shape selected inside an icon frame, the keyline margin is not a traced dashed border: it is a wash over the area outside it, or hairlines running to the edges of the frame",
+    "The selection outline is the only dashed traced rectangle on the canvas, and it keeps its grips",
+    "A real window capture of a selected shape in an icon frame shows one obvious selection, and icon-keylines-walk still passes",
+    "The margin still reads at 3200% and still disappears under 24 points on screen, as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T23:08:09.349Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "icon-keylines-walk"
+  ]
+}

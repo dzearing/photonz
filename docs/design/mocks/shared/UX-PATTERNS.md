@@ -218,7 +218,7 @@ chat at ⌘K)*.
 
 This is the complete list. **A feature that needs chrome outside this list is a
 signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req.
-6). Learn these ten and you can read every surface in the app.
+6). Learn these twelve and you can read every surface in the app.
 
 - **Dock** (`.pdock`) — ONE persistent column on the right holding stacked panel
   groups. Resizable by a `.splitter.v`, collapsible to a `.drail`. There is no
@@ -398,6 +398,13 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   or a copy. Full rule and the reasoning in **D16**. Not an annotation: a guide
   helps you PLACE something, while an arrow, a caliper or a gap label EXPLAINS
   something in the picture and is governed by D14 instead.
+- **Canvas furniture** — chrome that floats OVER the canvas and is about the
+  app rather than about the picture: the floating tool bar, the tool settings
+  capsule, the zoom bar, the icon previews strip, a layer's name chip, and the
+  canvas notice below. It is the third kind of canvas chrome, told from the
+  other two by what it is for: it helps you place nothing (not a guide) and it
+  explains nothing in the picture (not an annotation). Full rule, including
+  what gives way when two pieces of it want the same corner, in **D16**.
 - **Canvas notice** (`.cnv-hint`, bottom centre) — the one transient pill on
   the canvas, shared by the Measure tool's mode hint ("**Gap** Click the space
   between two elements") and the "Copied" confirmation after ⌘C. Its slot
@@ -434,6 +441,37 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   toast** is the global one: it belongs to the menu-bar agent, sits bottom
   right of the screen, and carries its own Edit row (AGENTS.md, GLOBAL
   surfaces).
+  - **A notice that fades may only carry a result you are FINISHED with**
+    (added 2026-09-17, because this bullet filed every result under "transient
+    confirmation" and one of them was not one). The test is asked after the
+    pill has gone: **is there anything left for you to do about what it said?**
+    "Saved", "Copied" and "42 instances updated" pass — it happened, the
+    document shows it, you are done. "142 pieces out, 580 left in the picture,
+    run it again for more" fails. That is not a confirmation, it is a standing
+    count with an action attached, and three seconds later the app knew a number
+    nobody could reach. Four audits on 2026-09-13 each put that to the user in
+    their own words (`2026-09-13-separate-into-layers`, `-separate-boxes`,
+    `-separate-hierarchy`, and `-separate-whole-screenshot`, whose evaluate item
+    three is "The pill ends with 'run it again for more' rather than offering a
+    button to press. Is a sentence enough, or do you want the button?").
+  - **What a command does instead, when the result is something you are
+    expected to act on later.** It owes both of these, and the fading pill is
+    neither (built 2026-09-17 as
+    `what-separate-left-behind-is-still-there-after-t`):
+    1. **A lasting readout on the thing the result is ABOUT.** The separation's
+       count sits on the picture's own row in the layers list for as long as it
+       is true, held against that picture rather than against the command, so an
+       undo takes the count away with the separation it describes. Attach it to
+       the command and it outlives what it is talking about.
+    2. **The action one press away, somewhere nothing can scroll it off.** A
+       readout on a row is not enough on its own: separating a dense page leaves
+       a 173 row list with the picture's row about thirty screens below the
+       panel, so the count was kept and still nobody could see it. The press
+       lives under the whole list, where there is a row's width for a real
+       label, it speaks for the last thing acted on, and it goes quiet rather
+       than sitting there reading zero.
+    The pill may still say it first, because it is the fastest way to tell
+    somebody what just happened. It is the headline, never the record.
   - **The question you can silence** (added 2026-09-08, from the first one the
     app shipped: `RasterizePrompt` and `EditorState+LayerOps`, commit
     `3c59faa6`, audit `2026-09-08-turn-into-a-picture`). A command that stops
@@ -490,6 +528,70 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
     you. **No release may grow a second silenceable question without the way
     back being reachable in it.**
 
+### One setting, two doors
+
+Added 2026-09-17, because there was no rule at all and three slices in one day
+each needed one. On 2026-09-15 the loop speed shipped on the previews card AND
+on the timing strip header (`2026-09-15-motion-loop-preview`, evaluate item
+five); Start and Over shipped as numbers in the side column AND as bars you drag
+on the strip (`2026-09-15-motion-timing-strip`, evaluate item six); and the
+pivot's Around menu shipped directly above an At row saying the same two numbers
+(`2026-09-15-motion-pivot`, rough item six). Three authors reasoned it out from
+scratch, and all three ended up asking the user rather than citing anything. So:
+
+**A second home for a setting has to pass one of these two tests. It is a
+duplicate otherwise.**
+
+1. **The first door is not reachable from where the work is.** Loop speed passes
+   on this. The previews card only exists inside an icon frame, and motion is on
+   every layer, so a shape animating on a phone frame has no card to reach for.
+   A door you cannot get to is not a door. **A door earned this way still has to
+   answer for the case where both are present**: inside an icon frame the card
+   and the strip are on screen together, each showing the same rate, and that is
+   what `2026-09-15-motion-loop-preview` puts to the user in evaluate item five.
+   Until they answer, both stay: two rate controls reading the same number are a
+   smaller cost than a control that is missing wherever you happen to be
+   working.
+2. **The second door answers a question the first cannot.** Start and Over pass
+   on this. A number box sets a value exactly; a bar on a shared ruler says
+   whether this part starts before that one, which no column of numbers can
+   show. Same value, two different questions.
+
+**A second door that passes neither test is a duplicate**, however reasonable
+each half looked on its own: two controls on screen at once, next to each other,
+of the same kind, answering the same question, are one control drawn twice.
+
+**And passing a test is not the end of it, because two doors can still say the
+same thing twice.** The pivot is the case that shows the difference. Around (a
+menu of named spots) and At (two number boxes) pass test 2 honestly — a menu
+cannot set 142, and boxes cannot say "its centre". But the menu has no name for
+a pivot dragged somewhere of its own, so it falls back to printing the two
+numbers, and the At row directly beneath it prints the same two numbers
+(`2026-09-15-motion-pivot`, rough item six; both rows are drawn unconditionally
+in `MotionListInspector.settings`). **Only one door is the readout.** The other
+offers its choices, and where it has nothing to offer for the current value it
+says so in its own terms rather than repeating the reading from the row below.
+The shipped pivot rows disagree with that and are filed as
+`a-turning-layer-says-where-its-pivot-is-twice`.
+
+**What two doors owe each other.**
+
+- **One value, moving together, live.** Change either and the other has changed
+  before the gesture ends. No commit step, and never a door that only catches up
+  when you leave it.
+- **One name, one spelling, one set of stops.** A menu of rates behind one door
+  and a free number behind the other are two settings that people will believe
+  are two settings.
+- **One undo step, with one description.** Which door you used is not part of
+  what you did.
+- **One of them is the home**, and it is the one the menus and the keyboard
+  reach. The other is a shortcut to the same setting and is never the only way
+  in, for the same reason a button inside a canvas notice is never the only way
+  to a command.
+- **The audit says which test it passed.** A second door is a real cost paid on
+  purpose, so the slice that ships one names the test in its audit rather than
+  leaving the next reader to work out whether it was deliberate.
+
 ### What a surface looks like while something is held over it
 
 Added 2026-09-04 (audit `2026-09-04-panel-shows-landing`). Every surface that
@@ -514,6 +616,65 @@ to change.
   its line at the top of the stack even while the pointer is halfway down.
 - **The edge is not the answer on its own.** A surface that can say where must
   say where. The edge says the surface is live; the line says what happens.
+
+#### And it says a sentence, in words, when the drawing cannot say it
+
+Added 2026-09-17 (merged from `the-drop-rules-say-what-a-surface-says-while-som`).
+The three rules above are about what a surface DRAWS. There is a third question
+they do not cover and the app has been answering ad hoc in three different
+places: **what would letting go actually DO?** An accent edge says the surface
+is live and an insertion line says where, and neither of them can say "sets this
+text in Heading" or "Rectangle is not text".
+
+**When a sentence is owed.** A drop that MOVES something says everything in the
+drawing: the line is the slot, and words would be a caption on a picture that is
+already clear. A drop that CHANGES something does not: the outline says which
+things are about to change and nothing says into what. So **a drop that changes
+rather than moves says what it changes, in one sentence, on screen.** A sentence
+the app works out and does not draw is the failure this rule exists to stop: the
+colour drop computed its sentence for three days and put it only in a tooltip
+and an accessibility value, so the swatch lit up and said nothing, which nobody
+chose (`2026-09-12-both-of-them-drop-line`, rough three).
+
+**Where the sentence sits**, in this order, first one that fits:
+
+1. **Under the pointer**, when what it is about is what the pointer is over and
+   there is nothing underneath worth reading. The canvas: carrying a text style
+   over words puts the sentence right where you are looking.
+2. **Beside the target, level with it and clear of the surface it sits in**,
+   when under the pointer would cover a neighbour that is part of the judgment.
+   A column of colour rows is the case: the row below the one you are aiming at
+   is usually the row you are comparing against, so the words stand off the
+   whole panel and line up with the swatch instead
+   (`2026-09-15-colour-drop-says-what-it-will-do`, rough four, which changed
+   this away from the task as filed).
+3. **At one end of the list, the end the aimed row is not near**, when the
+   target is a row too narrow to hold a sentence and has no clear side. It
+   covers a row at the far end while it is up, and that is the price of the
+   third case rather than a defect (`2026-09-09-text-style-row-drop`, rough
+   three).
+
+It never lives only in a tooltip, only in an accessibility value, or nowhere.
+
+**What it says when the surface will refuse.** A refusal speaks in the same
+place a yes would have, and it says WHY, and it names the one thing to do
+instead when there is one. Three shapes cover everything shipped so far:
+nothing here can take it, so say where it does go ("Drop this on a piece of text
+to set it in Heading"); this is the wrong kind of thing, so name the thing and
+the kind ("Rectangle is not text, so it cannot wear Heading"); this is already
+true ("This text is already Heading"). A surface that refuses by going quiet is
+the thing every one of these replaced.
+
+**One spelling for the whole family.** It is what letting go DOES, in the
+present tense, not what you are doing: "Sets this text in Heading". It names the
+PART it will change and not the layer, where the outline already says which
+layer — a made-up layer name says less than the drawing does. Counting stops at
+two: "both of them", then "all 3 of them"
+(`2026-09-12-both-of-them-drop-line`). And the picture and the sentence must
+agree about the same drop: every box the drop would reach is outlined, and the
+sentence counts exactly what is outlined, which is the bug that shipped first
+and was caught in review — one outline under the pointer beside words reading
+"all 2 of them".
 
 Audit failing examples: a component catalog rendered as a bespoke centered card
 with no dock and no open/close affordance; a panel that grows the window instead
@@ -1786,6 +1947,37 @@ that height can be dragged, it has to be stored. No second collapse idiom was
 invented for it: the × on the surface's own header, one visible control back,
 same as the dock above.
 
+**What a bottom dock owes that a side dock does not** (added 2026-09-17, after
+the strip shipped closing to nothing at all and had to be fixed:
+`closing-the-timing-strip-leaves-no-way-back-on-t`). The side dock's spelling
+was accepted above on the grounds that "a rail earns its keep when there are
+several groups you want to jump straight back into". That is a reason about
+CONTENT, and it was read straight across to a dock on a different edge of the
+window, where it decides nothing: the timing strip holds one thing, so by that
+reasoning it owed no row, and what shipped closed to nothing with the View menu
+as the only way back. The reason was never the number of groups.
+
+1. **The way back lives on the edge the dock went away from.** The side dock's
+   toggle is in the title bar, which shares a corner of the window with the dock
+   it restores, so the eye finds the way back an inch from where the thing
+   vanished. A bottom dock's way back in the title bar is the whole height of
+   the window away from the surface it restores, and somebody who has just
+   watched a strip drop off the bottom of the screen looks DOWN. That, and not
+   the group count, is why a bottom dock owes a row across the bottom while the
+   side dock does not owe a rail. **A menu item and a keyboard shortcut are
+   never the way back**, in either direction; they are extra doors to it.
+2. **A dock over something that is still happening keeps saying what is
+   happening.** The canvas goes on moving while the timing strip is away, so the
+   row is not only a way back: it is the only thing on screen saying what is
+   moving and how long a lap is. A side dock pushed away costs you a control; a
+   bottom dock pushed away can cost you a reading. So anything in the row that
+   can become untrue while the dock is away is kept true in the row. A position
+   is not a reading and is not owed — the strip's row shipped without a playhead
+   on purpose.
+3. **Height is the scarce axis**, which is both why the bottom dock is the one
+   people push away most and why its collapsed state has to earn its 30 points.
+   It earns them by stating what you are still editing, never by naming itself.
+
 ---
 
 ### D10 — A property list shows what CAN be animated, not what is
@@ -1813,6 +2005,48 @@ undo the thing that created it is a trapdoor.
 
 The catalogue is per kind: a visual clip offers Opacity/Position/Scale/Rotation/
 Blur, an audio clip offers Volume/Pan. Canonical page: `pages/video.html`.
+
+**Which surfaces print the catalogue, and which show only what is** (added
+2026-09-17; the app now answers this both ways, and both are right). D10 was
+written for a video clip inspector and then read as though it governed every
+surface where something can be animated. It does not. Next's Motion section
+lists only the properties that ARE moving, and the catalogue of what could move
+lives behind the plus on its header — one item per thing the layer in front of
+you actually has, each showing the value it is wearing now
+(`MotionProperty.offered(for:)`). That is not a slip: it is the answered model
+(decision `say-where-animating-an-icon-and-editing-a-video`, answered b with the
+user's correction that motion is a property applied like an effect and that
+there is no canned list of motions).
+
+Two questions decide which spelling a surface gets, and on every surface so far
+they agree:
+
+- **Is time the surface's whole job?** The inspector beside a timeline has
+  nothing else to say about a clip, so five dormant rows cost nothing and buy
+  the answer to "how do I animate this" for free. A layer's panel column is
+  shared with Appearance, Effects, Arrange and the rest, where room is the
+  binding constraint (section 3's height rule), and a permanent catalogue there
+  is a second inspector stacked on the first.
+- **Is the animatable set fixed by KIND?** Every visual clip offers the same
+  five properties, so a catalogue can be printed once and be true. A layer's set
+  is decided by the layer in front of you: a photograph has no colour to
+  animate, and a rectangle has no stroke width now that a box's edge is a Border
+  in the Effects list. A list that has to be built from the thing you picked is
+  built when it is asked for.
+
+**What both spellings owe, which is the part D10 exists to protect.** "How do I
+animate this?" has ONE answer on a surface, and that answer is on screen before
+anything is animated: the diamond on every row where the catalogue is printed,
+the plus on the Motion header where it is not, and a section that says in words
+that nothing moves yet rather than being empty. A surface that shows only what
+is moving and offers no visible door to what COULD is the failure D10 names, and
+the plus is what keeps Next out of it. The second obligation carries too: losing
+the last of something must not be a trapdoor. On a printed catalogue the row
+retires to dormant instead of vanishing; where there is no catalogue, whatever
+leaves the list is back in the plus's menu and one undo press away.
+
+`pages/video.html` remains canonical for the printed catalogue. It is the CLIP
+spelling, and nothing on it should be copied into a document layer's panel.
 
 ---
 
@@ -2060,6 +2294,29 @@ verdict, caliper value chips, gap labels, hover outlines and the role legend.
 2. **Prefer the empty side.** Put the callout in whitespace: outside the span of
    the checked elements, beyond the end of a guide, or on the side of a caliper
    where nothing is drawn. Whitespace is where a label costs nothing.
+
+   **When there is no empty side** (added 2026-09-17, from audit
+   `2026-09-13-tutorials-building-ui-track` rough one; behaviour built as
+   `a-tutorial-card-about-the-picture-stops-covering`,
+   `TutorialCalloutLayout.place(busy:)`). A canvas with work on it often has no
+   margin to put a label in, and rule 2 as first written then had no answer at
+   all: a tutorial step about the whole picture drew its card across the top of
+   the picture, so "the two left closed up on their own" was read out from over
+   the two that were left. **The callout is what moves, and it moves itself.**
+   It looks for the band BETWEEN two things as well as the space around them, it
+   takes the smallest move from its usual home that gets it clear, and only when
+   the picture fills every inch does it cover anything at all — and then the
+   least it can, and never its own subject. It reads what is in its way ONCE,
+   when it arrives, so it settles rather than chasing a drag.
+
+   **The answer is never something the content is authored around.** Both
+   workarounds tried before this one were the wrong shape: every tutorial sample
+   was composed 120 points down the page to leave a strip free for a card, and
+   the guide about lining things up swept from the LEFT because a callout was
+   going to be on the right. A guide that knows where a callout will be is
+   backwards, and the arrangement is gone the moment a person makes a document
+   of their own. If a callout can only be placed by everything else agreeing to
+   stay out of its way, it is not placed.
 3. **Stay attached.** A callout that has moved must still read as belonging to
    its subject: a leader line, a tick, or simple adjacency. Moving it is not
    permission to orphan it.
@@ -2072,6 +2329,13 @@ verdict, caliper value chips, gap labels, hover outlines and the role legend.
 
 The test for any annotation: cover the callout with your thumb, and the picture
 should still show everything the callout is claiming.
+
+**A tutorial guide's card is an annotation, not a guide** (settled 2026-09-17,
+because it had been treated as neither, and so was governed by nothing). It
+explains something in the picture, which is D16's own test for the difference,
+so every rule above applies to it. How it is DRAWN is not in question: it is an
+opaque card because it is read rather than looked through. Where it is allowed
+to sit is this rule.
 
 ---
 
@@ -2192,6 +2456,12 @@ something and says nothing about the picture, while an annotation EXPLAINS
 something in the picture (an arrow, a caliper, a gap label, an alignment
 verdict) and D14 governs where it is allowed to sit.
 
+**A tutorial guide's card is an annotation** (settled 2026-09-17, because it was
+being treated as neither and so was governed by nothing). It is the app talking
+about the picture, which is the test above, so its placement is D14's business
+and not this rule's. The word "guide" in "tutorial guide" is about the lesson,
+not about the chrome.
+
 Two features on 2026-09-05 were each asked for a guide drawn behind the work,
 each decided on its own that behind was wrong, and each shipped it in front:
 the canvas grid (audit `2026-09-05-canvas-grid`) and a screen's columns (audit
@@ -2227,9 +2497,32 @@ avoids it the same five ways:
 - **Ink sunk out of the way.** The canvas grid is the accent colour mixed most
   of the way into grey; the columns are a soft warm wash. Nothing saturated,
   nothing a layer would plausibly be painted.
-- **Two guides that can be on at once differ in KIND, not only in colour.** Fine
-  cool lines against soft warm bands. Two things that read alike read as one
+- **Two guides that can be on at once differ in KIND, not only in colour** —
+  **and so does a guide against anything on the canvas that is not a guide.**
+  Fine cool lines against soft warm bands. Two things that read alike read as one
   broken thing.
+
+  The case that forced the second half (added 2026-09-17, audit
+  `2026-09-14-icon-keylines` rough three; its own evaluate item two puts the
+  same question to the user): an icon frame's keyline margin ships as a violet
+  dashed rectangle, and a frame you have just made arrives SELECTED, so the
+  first thing anybody sees is two dashed rectangles a few points apart meaning
+  completely different things. They were told apart by making the guide's dashes
+  longer than the selection's, which is a difference of degree. At a glance, and
+  at any distance, it still reads as one selection drawn wrong.
+
+  **The selection outline owns the traced border.** It is the one piece of
+  canvas chrome that draws a hard line round the exact edge of a thing, with
+  grips on it, because that is how you know what the next gesture will act on.
+  So a guide may not draw a hard line round the edge of anything. Where a guide
+  has to mark out an area it marks it the way a guide marks everything else: a
+  wash over the part that is outside it, or hairlines running out to the edges
+  of the frame. The test is asked of a picture rather than of a stylesheet:
+  with the frame selected, point at the selection. If a person has to look
+  twice, the guide is wearing the selection's clothes. The shipped keyline
+  margin disagrees with this and is filed as
+  `an-icon-frame-s-guides-stop-looking-like-a-secon`, with the picture, rather
+  than being re-described here as though it were fine.
 - **Judged against the surface it lies on, not against the app's theme.** A
   white screen in a dark app is still white, so the columns strengthen on a dark
   screen and fade on a light one.
@@ -2249,6 +2542,44 @@ bands in it. If a guide is tempting to draw in the renderer, the answer is no.
 off and a guide dropped onto it stays, and things go on catching it. Something a
 person placed on purpose is not chrome that comes and goes with a view switch,
 even though it is drawn like one.
+
+**A third kind of canvas chrome: furniture** (added 2026-09-17, audit
+`2026-09-14-icon-previews` rough one). A guide helps you PLACE something; an
+annotation EXPLAINS something in the picture. The icon previews strip does
+neither, and neither do the floating tool bar, the tool settings capsule, the
+zoom bar, the canvas notice or a layer's name chip. They are **furniture**:
+chrome that floats over the canvas and is about the APP rather than about the
+picture. Nothing said where furniture may live, so the previews strip was put in
+the top left corner of the canvas by eye, and its audit had to argue the corner
+from scratch and then ask the user whether it was right. It also reported the
+strip lying over the ruler this rule names as a guide; the app has no ruler yet
+and neither does `pages/icon-draw-wt.html`, so rule 4 below is written before
+that collision rather than after it, and the shipped strip does not break it
+(re-checked 2026-09-17 on the probe with `icon-keylines-walk`: the strip abuts
+the frame's name chip and covers nothing).
+
+Four rules, and they are furniture's own rather than the guide rules above:
+
+1. **Furniture is opaque and it floats.** That is the opposite of a guide, on
+   purpose: glass with an edge and a shadow, plainly sitting above the work
+   rather than in it. Something you can read through that also takes clicks is a
+   trap, because the only way to find out whether a click lands on it or on the
+   picture is to try.
+2. **It is pinned to the canvas VIEW**, so it does not scroll, zoom or rotate
+   with the document, and the guides' fourth rule above applies to it word for
+   word: it never reaches an export, a copy or a composited render.
+3. **It keeps out of the picture's way.** D14's test, applied to the whole
+   canvas rather than to one subject: of the places it could sit, it takes the
+   one the document is least in.
+4. **When two pieces of canvas chrome want the same place, the one whose
+   position carries MEANING stays, and the other moves.** A ruler runs along the
+   edge it measures, a grid is where the grid is, a callout is attached to its
+   subject: move any of those and they stop being true. A tool bar, a previews
+   strip or a zoom bar could sit in any corner and only habit says which, so
+   they are the ones that move — along their own edge, or to the next corner.
+   If neither can move, then the one that is gone in seconds may lie over the
+   one that is always there, and nothing else may: a notice that fades may cross
+   a ruler, a strip that stays up may not.
 
 **Drawing a new guide in a mock:** stack it above the artwork, at an alpha low
 enough to read straight through, as a wash or a hairline; give it a different

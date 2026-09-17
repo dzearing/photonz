@@ -18152,3 +18152,64 @@ green (8250 tests). Audit: `queue/audits/2026-09-17-walks-that-fail-2.json`.
 Next: a full sweep on an unlocked Mac is the only thing that can speak for the
 277 walks a lock refuses, including a dozen that press Escape over a popout and
 so exercise the harness change from the other side.
+
+## 2026-09-17 — The shared pattern rules answer the cases that bent them
+
+Nine written rules in `docs/design/mocks/shared/UX-PATTERNS.md` had been bent by
+things that shipped, each time because reality asked a question the rule did not
+answer, and each time the author reasoned it out alone and wrote the answer
+nowhere. This is the rule half of that work: the behaviour halves all landed
+earlier and are cited in place.
+
+- **D14** now says what a callout does when there is NO empty side: it moves
+  itself, looks for the band between two things as well as the space around
+  them, takes the smallest move that gets clear, and covers the least it can
+  when the picture fills every inch. And the answer is never something the
+  content is authored around, which is what killed the 120 point skirt every
+  tutorial sample used to start below and the guide that swept from the left
+  because a callout was coming.
+- **D14 and D16** both say a tutorial guide's card is an ANNOTATION. It had been
+  treated as neither, so it was governed by nothing.
+- **D16 rule 3** extends to a guide against anything on the canvas that is not
+  a guide. The selection outline owns the traced border; a guide marking an area
+  marks it as a wash or as hairlines. The shipped icon keyline margin breaks
+  this and is filed with a picture, not re-described.
+- **D16** gains canvas FURNITURE, the third kind of canvas chrome, with four
+  rules of its own and the one that decides a corner fight: the piece whose
+  position carries meaning stays, the piece that could sit anywhere moves.
+- **D9** says what a bottom dock owes that a side dock does not, which turns out
+  never to have been about how many groups: the way back lives on the edge the
+  dock went away from, and a dock over something still happening keeps saying
+  what is happening.
+- **D10** says which surfaces print the catalogue of what can be animated and
+  which show only what is: whether time is the surface's whole job, and whether
+  the animatable set is fixed by kind. A clip and a layer answer it in opposite
+  directions and both are right.
+- **Section 3, Modal and toast** says a fading notice may only carry a result
+  you are FINISHED with, and what a command owes instead when you are expected
+  to act on the result later: a lasting readout on the thing it is about, and
+  the action one press away somewhere nothing can scroll it off.
+- **New: One setting, two doors.** Three slices on 2026-09-15 each shipped one
+  and all three ended up asking the user rather than citing anything. Two tests
+  for whether a second door is allowed, and five things two doors owe each other.
+- **New: what a surface SAYS while something is held over it.** The drop rules
+  covered what a surface draws and nothing about the sentence, which had grown
+  up three different ways. When one is owed, where it sits in order of
+  preference, what a refusal says, and one spelling for the family.
+
+Two findings were cut back rather than written as filed, after checking the app:
+the previews strip lying over a ruler could not be reproduced (there is no ruler
+in the app or on `pages/icon-draw-wt.html`), so the furniture rule is written
+before that collision rather than after it; and the pivot's Around and At rows
+pass the two-doors test honestly, so the rule says the narrower true thing, that
+only one door is the readout.
+
+Filed: `an-icon-frame-s-guides-stop-looking-like-a-secon` (reproduced on the
+probe, picture at `queue/audits/2026-09-17-keyline-vs-selection.png`) and
+`a-turning-layer-says-where-its-pivot-is-twice` (confirmed in source; the walk
+refuses under a locked screen and forcing it photographs nothing).
+`Scripts/test.sh` green at 8250 tests; no code changed.
+
+Next: the panel-column over-subscription rule is deliberately unwritten. It is
+folded into `appearance-is-below-the-fold-again-because-the-p` as an acceptance
+item, because the user's card on that task settles what the rule should say.

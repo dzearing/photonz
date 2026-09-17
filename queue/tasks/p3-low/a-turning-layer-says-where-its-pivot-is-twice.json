@@ -1,0 +1,28 @@
+{
+  "id": "a-turning-layer-says-where-its-pivot-is-twice",
+  "title": "A turning layer says where its pivot is twice",
+  "goal": "When a layer turns, its Motion row has an Around control naming the point it turns about, and an At row under it holding the same point as two numbers. Drag the pivot somewhere of its own and Around has no name for it, so it prints the two numbers, and the row directly beneath prints the same two numbers again. One value is stated twice, an inch apart, and neither reading tells you anything the other does not.",
+  "epic": "icon-animate",
+  "priority": "p3-low",
+  "seq": 1350,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T23:08:14.715Z",
+  "updated": "2026-09-17T23:08:14.718Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Confirmed in source on 2026-09-17, NOT photographed, and the honest reason is below.\n\nSources/Photonz/MotionListInspector.swift:193-196 draws both rows unconditionally for a rotation:\n    if motion.property == .rotation {\n        MotionPivotSetting(motion: motion, isNumbers: false)   // Around\n        MotionPivotSetting(motion: motion, isNumbers: true)    // At\n    }\nThe if/else at line 435 is per instance, not a choice between the two. MotionPivotSetting.reading (line 429) returns the named spot title when there is one and \"x, y\" otherwise, which is exactly the pair the At boxes at line 436 already show.\n\nCould not photograph it: Scripts/playtest.sh Scripts/playtest/motion-pivot-walk.json --no-build returned status locked, 0 of 55 steps, \"step 9 (panelMenu) opens a real menu, and an open menu is a window of its own that the app can neither drive nor photograph while the login window is up. Forcing it with PHOTONZ_ALLOW_LOCKED_WALK=1 gets none of its 6 pictures: the first one comes after that step.\" So whoever picks this up takes the picture.\n\nThe audit that shipped it says the same (queue/audits/2026-09-15-motion-pivot.json rough item six). The rule is the new One setting, two doors section in docs/design/mocks/shared/UX-PATTERNS.md (added 2026-09-17): these two doors pass the test honestly, because a menu cannot set 142 and boxes cannot say \"its centre\", but only one door may be the readout.",
+  "acceptance": [
+    "With the pivot dragged somewhere of its own, only one of the two rows reads back the position",
+    "The Around control still offers the named spots and still says which one is in use when one is",
+    "The At boxes still set an exact point and still carry the pivot when the layer is moved or resized",
+    "A real window capture shows the Motion row for a rotation with a custom pivot, with the position stated once"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T23:08:14.717Z",
+      "note": "created (manual)"
+    }
+  ]
+}

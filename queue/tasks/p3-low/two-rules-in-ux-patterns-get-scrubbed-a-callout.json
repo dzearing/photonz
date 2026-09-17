@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-17T12:13:57.122Z",
+  "updated": "2026-09-17T23:09:18.671Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -71,6 +71,28 @@
     {
       "t": "2026-09-17T12:13:57.121Z",
       "note": "seq 100 -> 20"
+    },
+    {
+      "t": "2026-09-17T23:03:59.770Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T23:09:04.455Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-17T23:09:04.504Z",
+      "note": "Adversarial review BEFORE writing. The risk in this task is not getting a rule wrong, it is adding 300 lines to a 2300 line document nobody then reads. So each scrub is one block, it says the case that forced it in its first sentence, and it lives beside the rule it fixes rather than in a new section. Two rules the task asked for were cut back after checking the app rather than written as filed: the previews-strip-over-the-ruler collision could not be reproduced (the app has no ruler, and neither does pages/icon-draw-wt.html), so the furniture rule is written as the rule for when that collision arrives rather than as a description of a broken thing; and the pivot's Around/At pair turned out to pass the two-doors test honestly, so the rule says the narrower true thing (only one door is the readout) instead of calling the pair a duplicate."
+    },
+    {
+      "t": "2026-09-17T23:09:18.618Z",
+      "note": "left rough, none of it filed: (1) the separation pill still ends 'run it again for more' beside a button reading 'Separate again', which is one instruction more than needed; the new toast rule does not forbid it and the shipping task already put it in its own audit rough where the user can react. (2) The drop pills are split between 'colour' in prose and 'color' in row labels, which is a whole-app copy sweep already logged on dropping-a-colour-on-a-swatch-says-nothing-back and deliberately left alone. (3) The layers list drop sentence covers a row at the far end while it is up; that is written into the new rule as the accepted price of the third placement rather than as a defect. (4) Loop speed's two doors are BOTH on screen inside an icon frame, which is exactly what 2026-09-15-motion-loop-preview evaluate item five asks the user; the rule records it as the open question and keeps both until they answer, rather than deciding it here. (5) The pivot duplication could not be photographed: motion-pivot-walk returns status locked at step 9 (panelMenu) and forcing it gets 0 of its 6 pictures, so the filed task carries the source lines and says whoever picks it up takes the picture."
+    },
+    {
+      "t": "2026-09-17T23:09:18.670Z",
+      "note": "The last acceptance-shaped item in the 2026-09-17 design review note (a rule for a panel column that is over-subscribed) is NOT written here, on that note's own instruction: it says do not write it until the user's card is answered, and queue/decisions/appearance-is-below-the-fold-again-because-the-p-... is still pending. It is folded into that task instead, as a new acceptance item and a log entry naming the cases to cite, so whoever acts on the answer writes the rule in the same sitting."
     }
-  ]
+  ],
+  "started": "2026-09-17T23:03:59.769Z",
+  "walks": []
 }
