@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 2810,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T20:15:34.058Z",
-  "updated": "2026-09-17T04:36:06.774Z",
+  "updated": "2026-09-17T04:36:18.712Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced at the model level while shipping choose-how-thick-the-pen-draws-before-you-draw. Both halves are asserted side by side in one passing test, IconStrokeWeightTests.aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt:\n\n  Scripts/test.sh --filter aWidthChosenOnTheBarIsWhatTheNextPathComesOutAt\n  -> Test \"A weight set on the bar is the weight the Pen draws with\" passed\n\nThe two lines that are the bug:\n  #expect(styles.strokeWidth(for: .pen) == stock)                       // the row shows 4\n  #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),\n                                       drawnAt: onTheIcon) == 2)        // the line lands at 2\n\nNOT confirmed in the running app: the Mac was locked for that whole task, so no walk could run. Filed p2 for that reason.\n\nCause: IconStrokeWeight.startingWidth thins only a line whose armed width is still AnnotationContent.defaultStrokeWidth (4), because that is the app's single signal for \"nobody has chosen\". The store cannot tell a stock 4 from a deliberately typed 4, so the rule cannot step aside for a real choice of 4 either. This predates the Pen's Width row; it has been true of every shape tool's Width since the icon rule landed (a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei). The row just made it visible.\n\nLikely shape of a fix: record that a weight was CHOSEN rather than inferring it from the value (a flag beside penStrokeWidth and each shape bucket in AnnotationStyles), and have EditorView.editedStrokeWidth show the started weight for the frame under the canvas rather than the raw armed one. Both halves are needed: one without the other trades a wrong number for a different wrong number.",
@@ -44,7 +44,12 @@
     {
       "t": "2026-09-17T04:36:06.773Z",
       "note": "left rough, no task filed: (1) with NOTHING picked the row falls back to the armed weight, so drawing straight into an icon frame you never selected still reads 4 and lands at 2. Closing it means the row following the pointer or the camera, which makes it move while you read it and costs an editor body invalidation per pan frame. (2) a weight counts as chosen the moment anything writes one, restyling a shape you already drew included, so a 3 picked on a screenshot is carried onto the next icon frame. Both are UX judgments rather than defects, so they are in the audit's rough list (queue/audits/2026-09-17-icon-vector-width-row.json) where the user can react and turn either into a task; searching the queue found nothing already covering them."
+    },
+    {
+      "t": "2026-09-17T04:36:18.710Z",
+      "note": "The Width row now reads the weight the line will really land at on an icon frame, and a weight you type is the weight you get, including the 4 the app ships with. AnnotationStyles records that a weight was CHOSEN instead of guessing from the number (IconStrokeWeight then stands aside for any chosen weight); EditorState.startedStrokeWidth runs the armed weight through the same rule for the frame being worked in, and the canvas is told too so the draft matches the landing. Next only, behind next-icon-frames. Verified by Scripts/test.sh: 7969 tests in 636 suites passed, four new ones carrying the acceptance. NOT verified in the running app: the screen was locked all task, so no walk could run; icon-width-row-reads-true-walk.json is written and a sweep is requested. Audit: queue/audits/2026-09-17-icon-vector-width-row.json. Commit 058c8bab, pushed."
     }
   ],
-  "started": "2026-09-17T04:26:14.411Z"
+  "started": "2026-09-17T04:26:14.411Z",
+  "completed": "2026-09-17T04:36:18.711Z"
 }
