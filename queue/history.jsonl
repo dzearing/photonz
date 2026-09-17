@@ -5060,3 +5060,17 @@
 {"t":"2026-09-17T15:00:38.845Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
 {"t":"2026-09-17T15:00:38.893Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
 {"t":"2026-09-17T15:00:38.940Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T15:01:09.671Z","ev":"task_done","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s","from":"in_progress","note":"The overflow line already fired for a picture and a drawn shape, so nothing in Sources changed and the task is the proof: 9 tests in GroupOverflowTests, picture-past-the-ceiling-walk (36 steps, 5 real window pictures, passes with the screen locked), a fixture document of four cards, a paragraph in docs/design/ui-building.md, and queue/audits/2026-09-17-picture-past-the-ceiling.json. Full suite 8164 green; committed daa4aa76 and pushed."}
+{"t":"2026-09-17T15:02:30.499Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T15:02:30.609Z","ev":"task_started","id":"a-png-says-what-it-will-weigh-before-you-save-it","title":"A PNG says what it will weigh before you save it","priority":"p2-normal"}
+{"t":"2026-09-17T15:20:33.363Z","ev":"task_created","id":"an-svg-says-what-it-will-weigh-too","priority":"p2-normal","title":"An SVG says what it will weigh too"}
+{"t":"2026-09-17T15:20:44.487Z","ev":"task_walks","id":"a-png-says-what-it-will-weigh-before-you-save-it","walks":["png-export-size-walk","png-export-background-walk"]}
+{"t":"2026-09-17T15:20:44.535Z","ev":"task_walks","id":"an-svg-says-what-it-will-weigh-too","walks":[]}
+{"t":"2026-09-17T15:20:52.305Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.351Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.397Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.442Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.489Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.535Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:20:52.580Z","ev":"task_note","id":"a-png-says-what-it-will-weigh-before-you-save-it"}
+{"t":"2026-09-17T15:21:00.332Z","ev":"task_done","id":"a-png-says-what-it-will-weigh-before-you-save-it","from":"in_progress","note":"The Export sheet weighs a PNG, on the same line and in the same words as the lossy formats, and the number follows the canvas box, the scale and the frame. Shipped in Sources/Photonz/ExportDialog.swift with the wording in PhotonzCore ExportQuality.note(); also fixed the weight ignoring the background checkbox, which was live and wrong for WebP. Verified by Scripts/test.sh (8172 green, new tests in ExportQualityTests and ExportSizerTests) and Scripts/playtest/png-export-size-walk.json, which passed with four real pictures of the window. Audit: queue/audits/2026-09-17-png-export-size.json. Cost: 112 ms to weigh a 12 MP PNG, off the main actor."}

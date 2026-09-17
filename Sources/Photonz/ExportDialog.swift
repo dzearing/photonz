@@ -263,12 +263,28 @@ struct ExportDialog: View {
                 })
     }
 
-    /// What the chosen quality is called, and what it costs, on one line.
-    private var qualityNote: String {
-        let word = ExportQuality.word(for: qualityPercent,
-                                      format: lossyFormat?.rawValue ?? "")
-        if let pictureBytes { return "\(word) · \(ExportQuality.fileSize(bytes: pictureBytes))" }
-        return weighed ? word : "\(word) · working out the size"
+    /// The picture format being weighed, which is every picture format and not
+    /// only the lossy ones.
+    ///
+    /// The difference from `lossyFormat` is PNG. It has no quality to choose,
+    /// which is why it has no slider, but it still weighs something and that
+    /// something still moves: a bigger scale, a different frame, and above all
+    /// the canvas being left out, which is the whole reason an icon is
+    /// exported as a PNG in the first place. Gated on the same flag as the
+    /// rest of the weighing, so a build without it writes and says exactly
+    /// what it always did.
+    private var weighedFormat: ImageCodec.Format? {
+        guard offersQuality, case .picture(let format) = choice else { return nil }
+        return format
+    }
+
+    /// What the chosen answer is called, and what it costs, on one line.
+    ///
+    /// One line for every picture format, from one place, so PNG and JPEG can
+    /// never drift into saying the size two different ways.
+    private var sizeLine: String {
+        ExportQuality.note(forFormat: weighedFormat?.rawValue ?? "", percent: qualityPercent,
+                           bytes: pictureBytes, weighed: weighed)
     }
 
     /// Encodes the picture to find out what it really weighs.
@@ -282,7 +298,7 @@ struct ExportDialog: View {
     /// until a newer one is ready.
     private func refreshPictureSize() {
         weighTask?.cancel()
-        guard let lossyFormat, let document = editorState.document else {
+        guard let weighedFormat, let document = editorState.document else {
             weighTask = nil
             pictureBytes = nil
             weighing = false
@@ -295,12 +311,20 @@ struct ExportDialog: View {
         let quality = ExportQuality.fraction(qualityPercent)
         let scale = scale
         let frameID = frameID
+        // The very answer Export will be given, so the number on the sheet and
+        // the file on disk can never be two different pictures. Without this
+        // the weight ignored the background checkbox entirely, which nobody
+        // could see while only the lossy formats were weighed -- three of the
+        // four cannot hold transparency at all -- and which is the one thing
+        // somebody ticking that box on a PNG is watching for.
+        let background = background
         weighing = true
         weighTask = Task {
             try? await Task.sleep(for: .milliseconds(140))
             guard !Task.isCancelled else { return }
             let bytes = await sizer.byteCount(of: document, frameID: frameID, scale: scale,
-                                              format: lossyFormat, quality: quality)
+                                              format: weighedFormat, quality: quality,
+                                              background: background)
             guard !Task.isCancelled else { return }
             pictureBytes = bytes
             weighed = true
@@ -417,6 +441,12 @@ struct ExportDialog: View {
                 }
                 if lossyFormat != nil {
                     qualityRow
+                } else if weighedFormat != nil {
+                    // The same line in the same place, minus the slider there
+                    // is nothing to choose with. PNG is the format an icon is
+                    // saved in, so "what will this weigh" is asked here more
+                    // than anywhere else on the sheet.
+                    sizeNote
                 }
                 // Last in the block, exactly where it sits for SVG: an icon
                 // drawn on a blank canvas can go out as a PNG with nothing
@@ -552,16 +582,31 @@ struct ExportDialog: View {
                     .monospacedDigit()
                     .frame(width: 38, alignment: .trailing)
             }
-            Text(qualityNote)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                // A number being replaced fades rather than blanking, so the
-                // line never jumps about under a hand that is still moving.
-                .opacity(weighing ? 0.45 : 1)
-                .animation(.easeOut(duration: 0.12), value: weighing)
-                .animation(.easeOut(duration: 0.12), value: pictureBytes)
+            sizeNote
         }
     }
+
+    /// What the file will weigh, said once for every picture format.
+    ///
+    /// Under the slider where there is one, and in exactly that place where
+    /// there is not, so the eye looking for the size finds it in the same spot
+    /// whichever format is picked.
+    @ViewBuilder private var sizeNote: some View {
+        Text(sizeLine)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            // A number being replaced fades rather than blanking, so the
+            // line never jumps about under a hand that is still moving.
+            .opacity(weighing ? 0.45 : 1)
+            .animation(.easeOut(duration: 0.12), value: weighing)
+            .animation(.easeOut(duration: 0.12), value: pictureBytes)
+            .playtestControl(Self.sizeLabel, detail: sizeLine)
+    }
+
+    /// The name a walk finds the size line by. Steady, because the words on
+    /// the line are the thing under test and change with every format, every
+    /// scale and every tick of the background box.
+    static let sizeLabel = "What it will weigh"
 
     /// What survives the trip to the chosen destination, and what does not.
     ///

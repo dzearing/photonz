@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:31.422Z",
-  "updated": "2026-09-17T12:13:56.754Z",
+  "updated": "2026-09-17T15:21:00.331Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-icon-export.json: \"PNG shows no file size on the sheet, so you cannot see the file get smaller when the canvas goes. Only the lossy formats weigh themselves.\" The sheet is the destination-first export sheet; the weighing lives with the quality control shipped under next-export-quality. PNG is lossless so there is no slider to move, which is presumably why it was never weighed, but the weight still changes with the picture and with the canvas going. Watch the cost: weighing a PNG means encoding it, and the lossy path presumably already has somewhere to hang that work off. The same audit's next rough line, the transparency swatch sitting hard right of the checkbox it explains, is a layout nit that did not earn a task and is left in that audit.",
@@ -34,6 +34,52 @@
     {
       "t": "2026-09-17T12:13:56.753Z",
       "note": "seq 110 -> 70"
+    },
+    {
+      "t": "2026-09-17T15:02:30.607Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T15:20:44.485Z",
+      "note": "owns these walks: png-export-size-walk, png-export-background-walk"
+    },
+    {
+      "t": "2026-09-17T15:20:52.303Z",
+      "note": "Adversarial review before building. The task asks for 'watch the file get smaller when you tick the canvas out', and the first thing worth checking was whether that story is even true of a PNG: a field of one flat colour compresses to nearly nothing, so leaving it out may save almost nothing. It does not save much, measured at the end: 22069 bytes with the canvas against 21396 without, on the walk's icon. Built it anyway, because the number is the answer to a question people actually ask ('will this be small enough to send') and because a true small drop is more useful than a promise of a big one: it tells somebody the reason to untick that box is transparency, not size. Shortest version that delivers the value: weigh every picture format rather than only the lossy ones, and reuse the line that already exists rather than invent a second place for a size."
+    },
+    {
+      "t": "2026-09-17T15:20:52.349Z",
+      "note": "Built. PhotonzCore ExportQuality.note(forFormat:percent:bytes:weighed:) is the one place the line is worded, so PNG and JPEG cannot drift; a format with no quality is named Lossless, which is also what makes the missing slider read as an answer rather than a control that failed to arrive. ExportDialog gained weighedFormat (every picture format, same next-export-quality flag) beside lossyFormat (the slider), and one sizeNote view used by both branches."
+    },
+    {
+      "t": "2026-09-17T15:20:52.395Z",
+      "note": "Bug found and fixed on the way: refreshPictureSize never passed the background through to ExportSizer, so the weight ignored the Include the background checkbox. Invisible while only the lossy formats were weighed, since three of the four cannot hold transparency, but it was live and wrong for WebP. Covered by a new ExportSizer test that a JPEG's weight does NOT move when the canvas is dropped, and one that a PNG's does."
+    },
+    {
+      "t": "2026-09-17T15:20:52.440Z",
+      "note": "writePicture moved onto PlaytestLockSafety.stepsThatSurviveALock. It renders and encodes offscreen exactly as writeSVG does and needs no name from accessibility; it was refused only because nobody had watched it. Watched under a three-day lock today: png-export-size-walk wrote both PNGs and weighed them. Side effect worth having, png-export-background-walk now runs under a lock too, so this area has two walks that answer instead of one."
+    },
+    {
+      "t": "2026-09-17T15:20:52.487Z",
+      "note": "Verified: Scripts/test.sh green, 8172 tests. Scripts/playtest-all.sh export ran the five lock-safe export walks, 4 passed 0 failed (svg-export-walk, svg-export-background-walk, png-export-background-walk, png-export-size-walk); the other 8 could not run because the screen is locked and they ask for a control by name. Cost measured: 112 ms to weigh a 12 MP document as a PNG, off the main actor behind the existing 140 ms settle. The walk's readings: Lossless 21 KB, 22 KB with the canvas, 63 KB at 2x, and High 20 KB on JPEG."
+    },
+    {
+      "t": "2026-09-17T15:20:52.533Z",
+      "note": "left rough: the two caption lines under the Scale row, the pixel size and the weight, sit one above the other with nothing between them. It reads fine in the capture and did not earn a task."
+    },
+    {
+      "t": "2026-09-17T15:20:52.578Z",
+      "note": "Follow-up filed: an-svg-says-what-it-will-weigh-too. SVG is now the only format on the sheet that does not weigh itself unless the drawing moves, reproduced from svg-export-walk's svg-export-5-svg-picked-sc.png. The two other rough lines in the audit (the small drop, the WebP background bug) are answered here rather than filed."
+    },
+    {
+      "t": "2026-09-17T15:21:00.329Z",
+      "note": "The Export sheet weighs a PNG, on the same line and in the same words as the lossy formats, and the number follows the canvas box, the scale and the frame. Shipped in Sources/Photonz/ExportDialog.swift with the wording in PhotonzCore ExportQuality.note(); also fixed the weight ignoring the background checkbox, which was live and wrong for WebP. Verified by Scripts/test.sh (8172 green, new tests in ExportQualityTests and ExportSizerTests) and Scripts/playtest/png-export-size-walk.json, which passed with four real pictures of the window. Audit: queue/audits/2026-09-17-png-export-size.json. Cost: 112 ms to weigh a 12 MP PNG, off the main actor."
     }
-  ]
+  ],
+  "started": "2026-09-17T15:02:30.606Z",
+  "walks": [
+    "png-export-size-walk",
+    "png-export-background-walk"
+  ],
+  "completed": "2026-09-17T15:21:00.330Z"
 }

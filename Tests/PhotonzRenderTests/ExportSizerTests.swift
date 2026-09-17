@@ -201,4 +201,90 @@ struct ExportSizerTests {
                                                            format: .webp, quality: 0.8))
         #expect(afterForgetting == webp)
     }
+
+    // MARK: - What a PNG weighs
+
+    /// The number the Export sheet shows for a PNG is the size of the PNG it
+    /// is about to write. Same claim as the lossy formats, checked the same
+    /// way: by saving the file and looking.
+    @Test func thePNGNumberIsTheSizeOfThePNGThatGetsSaved() async throws {
+        let document = busyDocument(width: 500, height: 400)
+        let sizer = sizer()
+        let shown = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                      format: .png, quality: 0.9))
+        let data = try #require(await sizer.data(of: document, frameID: nil, scale: 1,
+                                                format: .png, quality: 0.9))
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("export-sizer-png-\(UUID().uuidString).png")
+        try data.write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let onDisk = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int
+        #expect(onDisk == shown)
+    }
+
+    /// The case the whole thing comes from: an icon drawn on a blank canvas,
+    /// exported with nothing behind it. Every pixel of the canvas stops being
+    /// in the file, so the file gets smaller, and that drop is what the sheet
+    /// now shows somebody the moment they tick the box.
+    @Test func leavingTheCanvasOutMakesThePNGSmaller() async throws {
+        var document = busyDocument(width: 500, height: 400)
+        let store = ImageStore()
+        let canvas = try #require(SolidImage.make(size: CGSize(width: 500, height: 400),
+                                                  hex: "#FFFFFF"))
+        let ref = store.register(canvas)
+        document.layers.insert(Layer(name: "Canvas", content: .image(ref),
+                                     frame: CGRect(x: 0, y: 0, width: 500, height: 400)),
+                               at: 0)
+        let sizer = ExportSizer(renderer: DocumentRenderer(), store: store)
+        let withCanvas = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                           format: .png, quality: 0.9,
+                                                           background: .keep))
+        let without = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                        format: .png, quality: 0.9,
+                                                        background: .drop))
+        #expect(without < withCanvas)
+    }
+
+    /// A JPEG cannot hold see-through pixels, so asking for the canvas to go
+    /// changes nothing about the file and must not change the number either. A
+    /// weight that dropped and a file that did not would be the sheet lying.
+    @Test func leavingTheCanvasOutDoesNotMoveAFormatThatCannotHoldIt() async throws {
+        var document = busyDocument(width: 400, height: 300)
+        let store = ImageStore()
+        let canvas = try #require(SolidImage.make(size: CGSize(width: 400, height: 300),
+                                                  hex: "#FFFFFF"))
+        let ref = store.register(canvas)
+        document.layers.insert(Layer(name: "Canvas", content: .image(ref),
+                                     frame: CGRect(x: 0, y: 0, width: 400, height: 300)),
+                               at: 0)
+        let sizer = ExportSizer(renderer: DocumentRenderer(), store: store)
+        let kept = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                     format: .jpeg, quality: 0.9,
+                                                     background: .keep))
+        let dropped = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                        format: .jpeg, quality: 0.9,
+                                                        background: .drop))
+        #expect(kept == dropped)
+    }
+
+    /// What weighing a PNG costs, for the audit. Printed rather than asserted,
+    /// so a loaded machine cannot fail the suite on a millisecond count. Two
+    /// numbers, because they are the two a person meets: opening the sheet on
+    /// PNG, and then asking for 2x, which is a whole new render.
+    @Test func weighingAPNGIsPrintedForTheAudit() async throws {
+        let document = busyDocument(width: 4000, height: 3000)
+        let sizer = sizer()
+        let firstStart = Date()
+        let first = try #require(await sizer.byteCount(of: document, frameID: nil, scale: 1,
+                                                      format: .png, quality: 0.9))
+        let firstMS = Date().timeIntervalSince(firstStart) * 1000
+        let againStart = Date()
+        _ = await sizer.byteCount(of: document, frameID: nil, scale: 2, format: .png, quality: 0.9)
+        let againMS = Date().timeIntervalSince(againStart) * 1000
+        print("""
+            [png-size] 12 MP (4000x3000): first weigh \(Int(firstMS)) ms (render + PNG encode), \
+            the same picture at 2x \(Int(againMS)) ms. PNG is \(ExportQuality.fileSize(bytes: first)).
+            """)
+        #expect(first > 0)
+    }
 }

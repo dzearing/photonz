@@ -1,0 +1,33 @@
+{
+  "id": "an-svg-says-what-it-will-weigh-too",
+  "title": "An SVG says what it will weigh too",
+  "goal": "Now that every picture format on the Export sheet says what the file will weigh before you save it, SVG is the only one left that does not, unless the drawing happens to move. Pick SVG on a still icon and the sheet says what it is and how big it was drawn, but never how big the file is, so the one format people hand over to somebody else is the one you cannot size up first.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2940,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T15:20:33.359Z",
+  "updated": "2026-09-17T15:20:44.534Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-17 from Scripts/playtest/svg-export-walk.json, snapshot svg-export-5-svg-picked-sc.png: with SVG picked the sheet reads \"Shapes, sharp at any size. Drawn at 900 x 700.\" and nothing else, while the same sheet on PNG now reads \"Lossless - 21 KB\" and on JPEG \"High - 20 KB\". The cause is in Sources/Photonz/ExportDialog.swift: refreshVectorSize() bails unless asksWhereItIsGoing (animatedSVGExportEnabled AND the target has motion), and the line that would print the size, sizeNote(_:), is only built inside handoffNote, which is itself only shown when asksWhereItIsGoing. So a still drawing never asks for the byte count and has nowhere to show it. The fix is to weigh the SVG whenever SVG is picked (editorState.svgPreflight already returns bytes and is cheap, no encoder involved) and to show the same sizeNote view the picture formats use, which is already factored out in ExportDialog.",
+  "acceptance": [
+    "Choosing SVG on a still drawing shows the file size on the sheet, in the same place and the same words the picture formats use",
+    "The number changes when something that changes the file changes, leaving the canvas out being the case to check",
+    "Opening the sheet on SVG is no slower to appear than it is today",
+    "A walk covers it and is named on the task with queue.mjs walks"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T15:20:33.361Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T15:20:44.533Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}

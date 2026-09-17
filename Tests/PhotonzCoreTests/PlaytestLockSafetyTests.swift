@@ -97,4 +97,17 @@ struct PlaytestLockSafetyTests {
         #expect(label.lowercased().contains("colour") || label.lowercased().contains("color"))
         #expect(label.contains("tutorial"))
     }
+
+    /// Writing a file is not looking at the screen. `writePicture` renders the
+    /// document offscreen and encodes it, exactly as `writeSVG` does, and it
+    /// was refused only because nobody had watched it. Watched on 2026-09-17
+    /// under a three-day lock: `png-export-size-walk` wrote both PNGs and
+    /// weighed them, 21396 bytes with nothing behind the drawing and 22069
+    /// with the canvas in. That un-refuses `png-export-background-walk` too,
+    /// which is a walk about the very same box.
+    @Test("Writing a picture to disk needs no name, so a lock cannot stop it")
+    func writingAPictureRunsUnderALock() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("writePicture"))
+        #expect(!PlaytestLockSafety.stepsALockStops.contains("writePicture"))
+    }
 }

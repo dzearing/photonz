@@ -103,6 +103,29 @@ public enum ExportQuality {
         "export.quality.\(id)"
     }
 
+    /// The word for a format with no quality to choose because it throws
+    /// nothing away. PNG is the case this exists for: no slider, so the line
+    /// under the format has to say what the missing slider would have meant,
+    /// or the absence reads as a control that failed to arrive.
+    public static let losslessWord = "Lossless"
+
+    /// The one line under the format: what the answer is called, and what the
+    /// file weighs there.
+    ///
+    /// Every picture format says it, in the same place and the same words, so
+    /// PNG and JPEG answer "how big will this be" the same way. A format with
+    /// a quality is named by its quality; one without is named lossless.
+    ///
+    /// `bytes` is nil until the first weigh lands, and `weighed` is what tells
+    /// "not yet" from "never": a picture that cannot be encoded at all must
+    /// stop promising a number rather than say it is working on one forever.
+    public static func note(forFormat id: String, percent: Int,
+                            bytes: Int?, weighed: Bool) -> String {
+        let name = applies(toFormat: id) ? word(for: percent, format: id) : losslessWord
+        if let bytes { return "\(name) · \(fileSize(bytes: bytes))" }
+        return weighed ? name : "\(name) · working out the size"
+    }
+
     /// What a file of this many bytes weighs, said the way a person would say
     /// it: never more than three significant figures, and a decimal only where
     /// dropping it would lose something.

@@ -1,0 +1,94 @@
+{
+  "out": "/tmp/photonz-playtest/png-export-size-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [220, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [440, 200], "to": [560, 210], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [223, 523] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "describe",
+      "stage": "1-icon-drawn",
+      "note": "an icon drawn with the Pen on a blank white canvas. The white is a real full size bitmap under the shape, so a PNG of this either carries it in every pixel or does not"
+    },
+    { "do": "action", "action": "exportDialogAsPNG" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "2-png-weighs-itself",
+      "note": "Export on PNG. Under the pixel size there is now a line saying what the file will weigh, in the same place and the same words the lossy formats use, with Lossless where they name a quality"
+    },
+    { "do": "snapshot", "name": "png-export-size-1-png" },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "2-png-weighs-itself" },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "3-canvas-back-in",
+      "note": "the background ticked back on, so the white canvas goes into the file. The weight line answers: this is the number the box was hiding, and the drop between this reading and the one before it is the whole point of the change"
+    },
+    { "do": "snapshot", "name": "png-export-size-2-png-with-canvas" },
+    { "do": "panel", "stage": "3-canvas-back-in" },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "4-canvas-out-again",
+      "note": "untick it and the number goes back down. Nothing about the sheet moves except the size, so the eye stays where it was"
+    },
+    { "do": "panel", "stage": "4-canvas-out-again" },
+    { "do": "press", "control": "2\u00d7" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "5-twice-the-size",
+      "note": "2x asked for: four times the pixels, so a much bigger file, and the line says how much bigger before anybody saves it. This is the same number the lossy formats have always moved with the scale row"
+    },
+    { "do": "snapshot", "name": "png-export-size-3-png-2x" },
+    { "do": "panel", "stage": "5-twice-the-size" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "exportDialogAsJPEG" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "6-same-line-on-jpeg",
+      "note": "the same sheet on JPEG: the size sits on the same line, under the quality slider that only a lossy format has. Same name, same place, so switching format never moves the number somewhere else"
+    },
+    { "do": "snapshot", "name": "png-export-size-4-jpeg" },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "6-same-line-on-jpeg" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "writePicture",
+      "name": "png-export-size-file-nothing-behind",
+      "format": "png",
+      "behind": "empty"
+    },
+    {
+      "do": "writePicture",
+      "name": "png-export-size-file-with-canvas",
+      "format": "png",
+      "background": "keep",
+      "behind": "painted"
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-files-themselves",
+      "note": "the same two files really written, so the two numbers the sheet showed can be weighed on disk. A flat canvas costs a PNG very little, which is itself worth knowing before you save: leaving it out buys you transparency, not a much smaller file"
+    }
+  ]
+}

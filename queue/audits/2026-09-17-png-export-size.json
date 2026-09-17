@@ -1,0 +1,28 @@
+{
+  "feature": "A PNG says what it will weigh",
+  "epic": "icon-export",
+  "summary": "Export now says what a PNG will weigh before you save it, on the same line and in the same words the lossy formats use. Pick PNG, tick the canvas in or out, switch to 2x, and the number follows.",
+  "setup": "Photonz Dev, Experiments window, release Next. Choose the quality of an export and see what it will weigh (next-export-quality) and Export what you drew as SVG (next-export-svg) are on by default.",
+  "try": [
+    { "do": "Draw an icon with the Pen (P) on a blank canvas, then press Escape to finish the shape.", "shot": "2026-09-17-png-size-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command-E and leave the format on PNG. Read the line under the pixel size: it says Lossless and what the file will weigh." },
+    { "do": "Tick Include the background and watch the number." },
+    { "do": "Untick it again." },
+    { "do": "Click 2x and watch the number.", "shot": "2026-09-17-png-size-2x.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Click JPEG and find the same line, this time under the quality slider.", "shot": "2026-09-17-png-size-jpeg.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Export and save it. The file on disk is the number you just read." }
+  ],
+  "evaluate": [
+    "Does Lossless read as an answer, or does it read like a quality slider that failed to load?",
+    "The size sits under the pixel size on PNG and under the slider on JPEG, one row apart. Does your eye find it in both, or does switching format move it somewhere you have to hunt for?",
+    "Ticking the canvas in and out moved this icon by 673 bytes, 21 KB either way. Is a number that barely moves still worth showing, or does it make the box look like it does nothing?",
+    "The number arrives about a fifth of a second after the sheet opens. Did you notice it appear, or was it just there?",
+    "Is what a file will weigh the thing you wanted to know at this moment, or would you rather the sheet told you something else about the PNG?"
+  ],
+  "rough": [
+    "The drop when you leave the canvas out is small: 21396 bytes against 22069 on the icon in the walk. That is PNG doing its job, since a field of one flat colour compresses to almost nothing either way. So the honest story for that checkbox is transparency, not a smaller file, and the number now says so out loud rather than letting anybody assume otherwise. Left as it is: the number is true, and a true small number beats a promise.",
+    "SVG is now the only format on the sheet that does not say what it will weigh, unless the drawing happens to move. Filed as its own task, an-svg-says-what-it-will-weigh-too.",
+    "The weight for WebP ignored the Include the background checkbox before this change, because the sheet never passed the background through to the weigher. Nobody could see it while only the lossy formats were weighed, since three of the four cannot hold transparency at all. Fixed here as part of the same path.",
+    "Weighing a twelve megapixel document as a PNG measured 112 ms, off the main actor and behind the same 140 ms settle the slider uses, so the sheet still opens instantly and the number lands after it. The saving that follows is free: pressing Export hands over the very bytes that were weighed."
+  ]
+}

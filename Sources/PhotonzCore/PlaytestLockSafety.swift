@@ -53,7 +53,7 @@ public enum PlaytestLockSafety {
         "expectMeasures", "expectNotice",
         "expectPath", "expectPicked", "key", "measureMode", "move", "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "snapshot",
-        "tool", "toolBar", "type", "wait", "waitFor", "writeSVG",
+        "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:17.467Z",
-  "updated": "2026-09-17T14:49:05.876Z",
+  "updated": "2026-09-17T14:49:31.226Z",
   "deps": [
     "a-notice-at-the-foot-of-the-canvas-stops-swallow"
   ],
@@ -68,10 +68,15 @@
     {
       "t": "2026-09-17T14:49:05.875Z",
       "note": "left rough: the layers list can only show one of the three at a time on this capture (they are six rows apart, the list holds five). The canvas covers for it by outlining all three. Changing revealInLayersList's policy would reach every caller of it, which is out of scope here; in the audit's rough list."
+    },
+    {
+      "t": "2026-09-17T14:49:31.224Z",
+      "note": "The count of what stayed a picture is pressable and picks exactly those labels. Line splits in PhotonzCore (TextReading.Batch.detailLead/stillPicturesTail, CanvasNoticeAction.findStillPictures + Presentation, CopyConfirmation.line); the pill draws the tail as an underlined accent-coloured run, the only words in any notice that take the pointer, and EditorState.showStillPictureLabels picks them and brings them into view. Verified in the running app, not from source: Scripts/playtest/find-what-stayed-a-picture-walk.json separates effects-panel-2x, reads every label, asserts the exact line (12 labels, set in SF Pro. 3 stayed pictures), scrolls the layers list away from them, presses the count and asserts the selection is exactly Text 3, Text 5, Text 8 and the list scrolled back to them. 30 steps, lockSafe, two real window captures. a-notice-lets-a-click-through-walk still passes so the rest of the pill is still click-through. Scripts/test.sh green, 8156 tests. Audit: queue/audits/2026-09-17-find-what-stayed-a-picture.json. Committed 47dd7ba3 and pushed."
     }
   ],
   "started": "2026-09-17T14:16:04.752Z",
   "walks": [
     "find-what-stayed-a-picture-walk"
-  ]
+  ],
+  "completed": "2026-09-17T14:49:31.225Z"
 }

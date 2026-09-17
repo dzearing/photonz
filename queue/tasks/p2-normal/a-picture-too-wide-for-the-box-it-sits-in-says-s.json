@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:25.885Z",
-  "updated": "2026-09-17T15:00:38.939Z",
+  "updated": "2026-09-17T15:01:09.670Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-nested-ceiling-wrap.json, written by the runner who had just made a ceiling reach the words inside a nested box: \"A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows.\" The \"no sign\" half is worth checking before anything is built, because docs/design/ui-building.md \"Landed: a group says when its contents run past its edge\" (next-auto-layout, 2026-09-08) says an arranging group already prints one line naming the edge and the width it would need, modelled in GroupOverflow and Layer.contentsOverflow and printed by ArrangementInspector. If that line already fires here the whole task is a walk plus a note; if it does not, the gap is in the flow that feeds GroupOverflow. Shrink-to-fit does not exist anywhere in the app, so introducing it is a bigger decision than reporting: prefer the report unless the flow makes fitting obvious, and if fitting turns out to be the right answer open a card rather than shipping a new sizing rule on the loop's own judgment.",
@@ -67,10 +67,15 @@
     {
       "t": "2026-09-17T15:00:38.938Z",
       "note": "left rough, not filed: (1) there is still no shrink-to-fit anywhere, so the only fixes offered for a wide picture are raise the ceiling or resize the picture by hand. That is a product direction question rather than a defect, and it is the third evaluate line of the audit for the user to answer. (2) The line lives only in the Layout section of the inspector, so with the inspector shut or that section scrolled away a capped card with a picture spilling out says nothing. That silence is the deliberate 2026-09-08 decision (no colour, no warning badge, no new idiom on the panel), so filing its near-twin would be the reflex the follow-up bar exists to stop; it is in the audit's rough list and its second evaluate line instead."
+    },
+    {
+      "t": "2026-09-17T15:01:09.668Z",
+      "note": "The overflow line already fired for a picture and a drawn shape, so nothing in Sources changed and the task is the proof: 9 tests in GroupOverflowTests, picture-past-the-ceiling-walk (36 steps, 5 real window pictures, passes with the screen locked), a fixture document of four cards, a paragraph in docs/design/ui-building.md, and queue/audits/2026-09-17-picture-past-the-ceiling.json. Full suite 8164 green; committed daa4aa76 and pushed."
     }
   ],
   "started": "2026-09-17T14:50:06.552Z",
   "walks": [
     "picture-past-the-ceiling-walk"
-  ]
+  ],
+  "completed": "2026-09-17T15:01:09.669Z"
 }

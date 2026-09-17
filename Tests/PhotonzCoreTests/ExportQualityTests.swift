@@ -104,4 +104,41 @@ struct ExportQualityTests {
     @Test func aSizeBelowNothingReadsAsNothing() {
         #expect(ExportQuality.fileSize(bytes: -12) == "0 bytes")
     }
+
+    // MARK: - The line under the format
+
+    /// The whole point of the line: what the answer is called, and what the
+    /// file weighs there, in one sentence for every picture format.
+    @Test func theLineSaysWhatItIsCalledAndWhatItWeighs() {
+        #expect(ExportQuality.note(forFormat: "jpeg", percent: 90, bytes: 421_888, weighed: true)
+                == "High · 412 KB")
+        #expect(ExportQuality.note(forFormat: "webp", percent: 100, bytes: 4300, weighed: true)
+                == "Lossless · 4.2 KB")
+    }
+
+    /// PNG throws nothing away, so there is no quality to name and the line
+    /// says the thing that is true of it instead. Same words, same place, same
+    /// size on the end: the absence of a slider reads as an answer rather than
+    /// as a control that failed to arrive.
+    @Test func aFormatWithNoQualityStillSaysWhatItWeighs() {
+        #expect(ExportQuality.note(forFormat: "png", percent: 90, bytes: 86_016, weighed: true)
+                == "Lossless · 84 KB")
+        // Whatever percentage is lying around from the last lossy format, PNG
+        // is not that quality and must never say so.
+        #expect(ExportQuality.note(forFormat: "png", percent: 30, bytes: 86_016, weighed: true)
+                == "Lossless · 84 KB")
+    }
+
+    /// The first number costs a render and an encode, so the line has to say
+    /// something before it lands, and something else if it never does.
+    @Test func theLineSaysSoWhileTheNumberIsBeingWorkedOut() {
+        #expect(ExportQuality.note(forFormat: "png", percent: 90, bytes: nil, weighed: false)
+                == "Lossless · working out the size")
+        #expect(ExportQuality.note(forFormat: "jpeg", percent: 60, bytes: nil, weighed: false)
+                == "Good · working out the size")
+        // Weighed and still nothing: this picture cannot be encoded at all, so
+        // the line stops promising a number that is never coming.
+        #expect(ExportQuality.note(forFormat: "png", percent: 90, bytes: nil, weighed: true)
+                == "Lossless")
+    }
 }
