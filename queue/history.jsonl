@@ -4948,3 +4948,9 @@
 {"t":"2026-09-17T11:30:01.591Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
 {"t":"2026-09-17T11:30:01.635Z","ev":"task_note","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow"}
 {"t":"2026-09-17T11:30:07.226Z","ev":"task_done","id":"a-notice-at-the-foot-of-the-canvas-stops-swallow","from":"in_progress","note":"Only the button on the canvas notice takes the pointer now: the words, the hairline, the padding and the glass all let a click through to the picture (Sources/Photonz/EditorView.swift canvasNoticeChip). Verified in the running app, not from the source: the harness learned to ask the window who a real click at a point goes to (new expectClickReaches step, PhotonzCore + PlaytestHarness, parse tests included), and Scripts/playtest/a-notice-lets-a-click-through-walk.json fails on the old code at the first such check and passes on the new. Pill layout is pixel-identical either way. Scripts/test.sh green (8086). Audit: queue/audits/2026-09-17-notice-pill-click-through.json with two real window captures."}
+{"t":"2026-09-17T11:30:54.291Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T11:30:54.401Z","ev":"task_started","id":"the-dashboard-says-when-the-loop-has-gone-blind","title":"The dashboard says when the loop has gone blind","priority":"p1-high"}
+{"t":"2026-09-17T11:33:37.850Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:33:37.901Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:33:37.952Z","ev":"task_note","id":"the-dashboard-says-when-the-loop-has-gone-blind"}
+{"t":"2026-09-17T11:33:38.002Z","ev":"task_walks","id":"the-dashboard-says-when-the-loop-has-gone-blind","walks":[]}

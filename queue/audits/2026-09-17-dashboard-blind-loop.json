@@ -1,0 +1,27 @@
+{
+  "feature": "The dashboard says when the loop has gone blind",
+  "epic": "unmanned-loop",
+  "summary": "The Summary hero now says a locked Mac is why no walk sweep has run, how long that has been true and how many sweeps are waiting, instead of reading it as a sweep that broke at 0 walks.",
+  "setup": "The dashboard at http://127.0.0.1:8791, Project section, Summary. Nothing to turn on. The Mac is locked right now, so the page is showing the locked state as you open it.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791 and stay on Summary.", "shot": "2026-09-17-dashboard-blind-loop-1.png" },
+    { "do": "Read the red line in the top right, under the heartbeat. It should say no walk sweep for 2 days, the screen is locked, 83 waiting." },
+    { "do": "Read the amber strip straight under the hero: why that matters, how many are waiting, when the last try was, and that unlocking the Mac is the fix." },
+    { "do": "Hover the red line. The tooltip says the same fix in one sentence." },
+    { "do": "Unlock the Mac and leave the loop to finish the task it is on." },
+    { "do": "Come back to Summary. The strip is gone and the line reads passes, age and failures again." },
+    { "do": "Optional, to see both states side by side without waiting: run `node queue/bin/sweep-line-drill.mjs` in the repo." }
+  ],
+  "evaluate": [
+    "Reading only the red line in the corner, do you know what to go and do?",
+    "Is the amber strip the right weight for this, or should a loop that has not been checked in two days be louder than the stale-script warning it copies?",
+    "Is 'no walk sweep for 2 days' the number you want, given it counts from the first sweep the lock stopped rather than from the moment the Mac locked?",
+    "Does saying it twice, once in the corner and once in the strip, feel like emphasis or like repetition?",
+    "When the Mac is unlocked again, does the line going back to passes and age feel like enough of an all clear?"
+  ],
+  "rough": [
+    "The page only knows what the last sweep ATTEMPT found. While sweeps are waiting the loop tries one between every task, so the claim is minutes old at worst, but with nothing waiting an unlocked Mac would keep the strip up until something asked for a sweep. The strip says when the last try was so the claim is bounded rather than open-ended, but it is still a claim about the past written in the present tense.",
+    "'2 days' is a floor, not the truth: nothing records when the Mac actually locked, so the count starts at the first sweep that found it locked. The real lock was about two hours earlier than the first sweep that noticed it.",
+    "The picture in this report is a real screenshot of the real page against the live queue, taken in a browser. It is not a playtest capture: this feature is the dashboard, not the app, and no walk can run while the screen is locked anyway."
+  ]
+}

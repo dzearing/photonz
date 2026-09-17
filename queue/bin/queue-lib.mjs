@@ -1064,10 +1064,19 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 // of them sat unserved for three days because the loop had no code to run
 // them. The dashboard shows this so a stalled sweep says so on its own.
 const SWEEP = join(QUEUE, 'sweep');
-export function sweepState() {
+// A sweep the LOCK stopped is not a sweep that broke. The walks find every
+// control by its name and a locked screen takes those names away, so the run
+// files nothing, claims nothing and hands its request back
+// (Sources/Photonz/Playtest/PlaytestScreenState.swift). sweep.sh records that as
+// screenLocked; this used to flatten it into complete:false, which is the shape
+// of a sweep that ran out of time, so the dashboard read two days of a locked
+// Mac as "cut short at 0 walks". Carry the flag, and with it how long the run
+// of locked sweeps has been going.
+export function sweepState(history = null) {
   const latest = readJSON(join(SWEEP, 'latest.json'), null);
   const req = readJSON(join(SWEEP, 'requested.json'), { requests: [] });
   const requests = Array.isArray(req.requests) ? req.requests : [];
+  const screenLocked = !!(latest && latest.screenLocked);
   return {
     pending: requests.length,
     oldestRequest: requests.length ? requests[0].t : null,
@@ -1076,8 +1085,27 @@ export function sweepState() {
       ended: latest.ended, seconds: latest.seconds, walks: latest.walks,
       passed: latest.passed, failed: (latest.failed || []).length,
       complete: latest.complete !== false,
+      screenLocked,
     } : null,
+    // When the app last had a whole-app check behind it: null unless the screen
+    // is locking sweeps out right now.
+    blindSince: screenLocked ? lockedRunBegan(latest, history) : null,
   };
+}
+
+// The start of the unbroken run of locked sweeps: walk the recorded sweeps back
+// from the newest while every one of them says the screen was locked. It is a
+// floor rather than the moment the Mac locked (nothing records that), so the
+// answer only ever understates how long the loop has been blind. With no
+// recorded sweeps to walk, the locked sweep itself is the floor.
+function lockedRunBegan(latest, history = null) {
+  const passes = (history || readHistory()).filter((e) => e.ev === 'sweep_pass');
+  let began = latest.began || latest.ended || null;
+  for (let i = passes.length - 1; i >= 0; i--) {
+    if (!passes[i].screenLocked) break;
+    began = passes[i].t;
+  }
+  return began;
 }
 
 // ---- leftovers: a dirty tree a runner walked away from ----------------------
@@ -1364,7 +1392,9 @@ export function aggregateState({ tasks: includeTasks = true } = {}) {
       lastError: status.lastError || null,
       script: loopScript(status, alive),
     },
-    sweep: sweepState(),
+    // history is already read whole above; hand it over rather than read it
+    // again on every four-second poll
+    sweep: sweepState(history),
     leftovers: leftoversState(),
     // list rows only, see taskRow: the poll used to carry every task's whole
     // log and was three megabytes fifteen times a minute

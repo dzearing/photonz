@@ -56,6 +56,8 @@
     background:color-mix(in srgb,var(--warn) 8%,transparent)}
   #dashboard .db-herr.warn .ic{color:var(--warn)}
   #dashboard .db-beat .db-sweep.waiting{color:var(--warn)}
+  /* a locked Mac is not a slow sweep: nothing is being checked at all */
+  #dashboard .db-beat .db-sweep.blind{color:var(--crit)}
   #dashboard .db-beat .db-left{color:var(--warn)}
   #dashboard .db-beat .db-left.stuck{color:var(--crit)}
   #dashboard .db-hero .db-what{min-width:0;flex:1}
@@ -444,6 +446,15 @@
     if (s < 86400) return Math.round(s / 3600) + 'h ago';
     return Math.round(s / 86400) + 'd ago';
   }
+  // How long something has been going on, as a length rather than a moment:
+  // "2 days", not "2d ago". Used where the point is the duration itself.
+  function span(iso) {
+    if (!iso) return 'a while';
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 5400) { var m = Math.max(1, Math.round(s / 60)); return m + (m === 1 ? ' minute' : ' minutes'); }
+    if (s < 86400) { var h = Math.round(s / 3600); return h + (h === 1 ? ' hour' : ' hours'); }
+    var d = Math.round(s / 86400); return d + (d === 1 ? ' day' : ' days');
+  }
   function dayLabel(d) { return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
   // The poll carries one line of a task's history, not the history. The whole
   // log is in the detail dialog, which fetches the task itself.
@@ -813,11 +824,42 @@
         ? 'walk sweep: ' + W.pending + ' asked for since ' + rel(W.oldestRequest) + ', none run yet'
         : 'no walk sweep run yet') + '</span>';
     }
+    // A locked Mac and a sweep that ran out of time both end with no walks run,
+    // and they need opposite things from a person: one needs the Mac unlocked,
+    // the other needs looking into. Say which.
+    if (W.last.screenLocked) {
+      var b = 'no walk sweep for ' + span(W.blindSince || W.last.ended) + ': the screen is locked';
+      if (W.pending) b += ' · ' + W.pending + ' waiting';
+      return '<span class="db-sweep blind" title="Unlock the Mac and the loop runs one between tasks.">' + esc(b) + '</span>';
+    }
     var t = 'walk sweep ' + W.last.passed + '/' + W.last.walks + ' ' + rel(W.last.ended);
     if (!W.last.complete) t = 'walk sweep cut short at ' + W.last.walks + ' walks ' + rel(W.last.ended);
     else if (W.last.failed) t += ' · ' + W.last.failed + ' failing';
     if (W.pending) t += ' · ' + W.pending + ' more asked for';
     return '<span class="' + cls + '">' + t + '</span>';
+  }
+
+  // The walks are the only check that says whether what the loop just built
+  // broke the app, and a locked screen stops every one of them. That is worth
+  // more than a grey line in the corner: on 2026-09-15 the Mac locked and two
+  // days of work shipped with no whole-app check behind it while the page read
+  // "cut short at 0 walks". Same strip the stale-script warning uses.
+  function blindStrip() {
+    var W = S.sweep;
+    if (!W || !W.last || !W.last.screenLocked) return '';
+    var h = '<div class="db-herr warn"><i class="ic ic-warning"></i><div>';
+    h += '<b>No walk sweep has run for ' + esc(span(W.blindSince || W.last.ended)) + ': the Mac’s screen is locked</b>';
+    h += '<p>The scripted walks find every control by its name, and a locked screen takes those names away, so the whole-app check cannot run and nothing built since has been checked against it. ';
+    if (W.pending) {
+      h += W.pending + (W.pending === 1 ? ' sweep is' : ' sweeps are') + ' waiting'
+        + (W.oldestRequest ? ', the oldest asked for ' + rel(W.oldestRequest) : '') + '. ';
+    }
+    // Bound the claim: this is what the last ATTEMPT found. Without it a Mac
+    // unlocked with nothing waiting would leave the page saying "locked" for
+    // as long as nobody asked for another sweep.
+    h += 'The last try was ' + rel(W.last.ended) + '. Unlock the Mac and the loop runs one between tasks.</p>';
+    h += '</div></div>';
+    return h;
   }
 
   // A runner that ran out of its turn left files changed in the repository. The
@@ -905,6 +947,7 @@
       h += '</div></div>';
     }
     h += scriptStrip(L);
+    h += blindStrip();
     h += '</div>';
 
     h += '<div class="db-sumgrid">';

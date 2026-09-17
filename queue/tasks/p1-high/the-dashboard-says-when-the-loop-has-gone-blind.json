@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:55:51.971Z",
-  "updated": "2026-09-17T10:55:54.962Z",
+  "updated": "2026-09-17T11:33:38.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-17 10:52Z. queue/bin/sweep.sh writes screenLocked: true into queue/sweep/latest.json and sweep.sh status prints COULD NOT RUN correctly, and history.jsonl sweep_pass events carry screenLocked too. But `node queue/bin/queue.mjs state` returns sweep.last as {ended, seconds, walks:0, passed:0, failed:0, complete:false} with no screenLocked, so the field is dropped in queue-lib.mjs where the state object is built. docs/design/mocks/pages/dashboard.html:808 sweepLine() then renders \"walk sweep cut short at 0 walks 5 minutes ago · 83 more asked for\", which is the wording for a sweep that ran out of time. Measured at the same moment: queue/sweep/requested.json holds 83 pending requests, oldest 2026-09-15T15:59:49Z, and ioreg -n Root -d1 -a reports CGSSessionScreenIsLocked true. Related but separate: the card on a-hundred-and-fifteen-walks-fail-on-code-that-pa asks whether the loop should keep the Mac awake. This task is true under every answer to that card, including the one where the loop is told to leave the Mac alone, so it is not blocked on it.",
@@ -30,6 +30,28 @@
     {
       "t": "2026-09-17T10:55:54.961Z",
       "note": "seq 310 -> 25"
+    },
+    {
+      "t": "2026-09-17T11:30:54.399Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T11:33:37.848Z",
+      "note": "Reproduced before changing anything: queue/sweep/latest.json carries screenLocked:true, and 'node queue/bin/queue.mjs state' returned sweep.last without it, so the page had nothing to tell a lock from a timeout. blindSince computed from history: the last sweep that actually ran ended 2026-09-15T08:15:34Z and the first locked one is 2026-09-15T10:05:49Z, so the loop has been blind for 2 days with 83 requests waiting (oldest 2026-09-15T15:59:49Z)."
+    },
+    {
+      "t": "2026-09-17T11:33:37.899Z",
+      "note": "Adversarial review before building. (1) Shortest version is two lines: carry the flag, change one string. I went past that on purpose for the 'one line somebody can act on' item: the sweep line is 10.5px right-aligned text in the corner of the hero, which nobody acts on, so the lock also raises the amber db-herr strip the stale-script warning already uses, saying why it matters and that unlocking the Mac is the whole fix. No new component. (2) Rejected: asking the OS for the lock state on the four-second poll (ioreg per poll, and the page should report what the SWEEP hit, not the current instant). (3) Rejected: putting the fix text in the corner line itself, which pushes it past 80 characters and squeezes the hero title beside it."
+    },
+    {
+      "t": "2026-09-17T11:33:37.950Z",
+      "note": "Built: queue-lib sweepState carries screenLocked plus blindSince (start of the unbroken run of locked sweep_pass events, a floor not the lock time); aggregateState hands it the history it already read rather than reading the file twice. dashboard.html gains span(), a locked branch in sweepLine() coloured with --crit, and blindStrip() beside scriptStrip(). Drill: queue/bin/sweep-line-drill.mjs, 33 checks, both states, pulling the real functions out of dashboard.html rather than copying them."
+    },
+    {
+      "t": "2026-09-17T11:33:38.000Z",
+      "note": "owns no walks; the ones it names are examples"
     }
-  ]
+  ],
+  "started": "2026-09-17T11:30:54.398Z",
+  "walks": []
 }

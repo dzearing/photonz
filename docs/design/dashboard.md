@@ -129,6 +129,20 @@ The sweep is on the hero too, under the heartbeat: the last run's pass count and
 age, or how many runs have been asked for and never served. It runs between
 tasks and nothing else on the page would ever have mentioned it.
 
+A sweep the LOCK stopped is its own case. The walks find every control by its
+name and a locked screen takes the names away, so the run files nothing and
+hands its request back. That used to reach the page as `complete: false`, which
+is the shape of a sweep that ran out of time, and the hero said "walk sweep cut
+short at 0 walks": a sweep that broke rather than a machine that needs
+unlocking. The Mac locked on 2026-09-15 and two days of work shipped with no
+whole-app check behind it while the page read as a slow sweep. So the state
+carries `screenLocked` through, and `blindSince` with it (the first of the
+unbroken run of locked sweeps, which understates rather than overstates), and
+the hero says "no walk sweep for 2 days: the screen is locked · 83 waiting" in
+red, over an amber strip that says why it matters, how many are waiting, when
+the last try was, and that unlocking the Mac is the whole fix. Drill:
+`queue/bin/sweep-line-drill.mjs`.
+
 ## When a task walks out on its changes
 
 A task that runs out of its turn stops without putting its work away. On
