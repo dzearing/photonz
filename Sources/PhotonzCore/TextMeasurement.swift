@@ -271,6 +271,31 @@ extension Layer {
         return textHugsItsWords
     }
 
+    /// Whether the container around this layer is allowed to hand it less room
+    /// across than it is asking for.
+    ///
+    /// Words are, unless they were told to stay on one line. A BOX is too, as
+    /// long as it is the size of what is inside it: a card holding a title and
+    /// a subtitle passes the room straight on to them and comes back the size
+    /// of the lines that came out. That includes a box with no layout at all,
+    /// which is what grouping makes and so what most boxes are. A box somebody
+    /// gave a width to is not, and neither is a screen, because both of those
+    /// are sizes somebody chose. A picture and a shape are not: there is
+    /// nothing inside them to re-flow, so squashing one would only make it lie
+    /// about its size.
+    var narrowsToItsContainer: Bool {
+        if text != nil { return !textStaysOnOneLine }
+        guard let group, !group.isFrame else { return false }
+        return group.layout?.usedWidth == nil
+    }
+
+    /// Whether anything in here is words a container wrapped, at any depth. It
+    /// is how a group knows a ceiling it passed down actually bit, so a
+    /// ceiling that changed nothing costs nothing.
+    var holdsWrappedWords: Bool {
+        wrappedByItsContainer == true || children.contains(where: \.holdsWrappedWords)
+    }
+
     /// Whether these are words that stay on one line whatever the container
     /// around them decides. A container hands one a width and nothing else:
     /// the box is one line tall before and after.

@@ -318,6 +318,178 @@ struct GroupTextWrapTests {
         #expect(thrice.localBounds == held.localBounds)
     }
 
+    // MARK: - A ceiling that has to travel through a box
+
+    /// The complaint this answers: "A ceiling on a stack only reaches the
+    /// words directly inside it. Put those words in a box of their own inside
+    /// that stack, which is how a card or a row gets built, and the ceiling
+    /// stops working." Every real card is a stack of stacks, so a ceiling that
+    /// only reaches its own children is a ceiling that does nothing.
+
+    /// The far edge of the ink in this tree, in the outermost group's space,
+    /// so "nothing hangs out" can be asked of every level at once.
+    private func rightmostInk(_ layer: Layer, at x: CGFloat = 0) -> CGFloat {
+        let here = x + layer.frame.standardized.minX
+        guard layer.group != nil else { return here + layer.contentBounds.width }
+        return layer.children.map { rightmostInk($0, at: here) }.max() ?? here
+    }
+
+    /// A column stack with the ceiling on it, holding one box, holding the
+    /// words: the shape of every card in the app.
+    private func cappedCard(saying string: String, ceiling: CGFloat) -> Layer {
+        let inner = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = ceiling
+        return group([group([words(string, at: 0, 0)], layout: inner)], layout: outer)
+    }
+
+    @Test("A ceiling reaches words inside a box inside the stack")
+    func aCeilingReachesThroughANestedBox() {
+        let held = GroupFlow.flowing(cappedCard(saying: "Save all the changes", ceiling: 120))
+        // The ceiling of 120 leaves 100 inside the outer stack, the inner box
+        // keeps 10 either side of that, so the words are given 80 across and
+        // have to break.
+        let label = held.children[0].children[0]
+        #expect(label.wrappedByItsContainer == true)
+        #expect(label.frame.standardized.height > oneLine)
+    }
+
+    @Test("A label inside a box wraps to exactly the room a bare one would get")
+    func aNestedLabelWrapsToTheSameRoom() {
+        let held = GroupFlow.flowing(cappedCard(saying: "Save all the changes", ceiling: 120))
+        var bare = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        bare.maxWidth = 100
+        let flat = GroupFlow.flowing(group([words("Save all the changes", at: 0, 0)],
+                                           layout: bare))
+        #expect(held.children[0].children[0].frame.standardized.size
+                == flat.children[0].frame.standardized.size)
+    }
+
+    @Test("Nothing inside a capped stack hangs out past its room")
+    func nothingHangsOutOfACappedStack() {
+        let held = GroupFlow.flowing(cappedCard(saying: "Save all the changes", ceiling: 120))
+        #expect(held.localBounds.width <= 120)
+        // 10 of room down the right edge of the outer stack, and every line of
+        // the words ends inside it.
+        #expect(rightmostInk(held) <= held.localBounds.width - 10)
+    }
+
+    @Test("A capped stack of boxes settles rather than flipping")
+    func aNestedWrapSettles() {
+        let held = GroupFlow.flowing(cappedCard(saying: "Save all the changes", ceiling: 120))
+        let twice = GroupFlow.flowing(held)
+        let thrice = GroupFlow.flowing(twice)
+        #expect(twice.localBounds == held.localBounds)
+        #expect(thrice.localBounds == held.localBounds)
+        #expect(twice.children[0].children[0].frame == held.children[0].children[0].frame)
+        #expect(thrice.children[0].children[0].frame == held.children[0].children[0].frame)
+    }
+
+    @Test("A label inside a box that fits is left exactly as it was")
+    func aNestedLabelThatFitsIsUntouched() {
+        let loose = GroupFlow.flowing(cappedCard(saying: "Save", ceiling: 120))
+        #expect(loose.children[0].children[0].wrappedByItsContainer == nil)
+        #expect(loose.children[0].children[0].frame.standardized.size
+                == words("Save").frame.standardized.size)
+    }
+
+    @Test("A paragraph narrowed by hand inside a box keeps the width it was given")
+    func aNestedParagraphKeepsItsOwnWidth() {
+        var paragraph = words("Save all the changes", at: 0, 0)
+        paragraph.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        let inner = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = 120
+        let held = GroupFlow.flowing(group([group([paragraph], layout: inner)], layout: outer))
+        #expect(held.children[0].children[0].frame.standardized.width == 40)
+        #expect(held.children[0].children[0].wrappedByItsContainer == nil)
+    }
+
+    @Test("A ceiling reaches words two boxes down")
+    func aCeilingReachesTwoBoxesDown() {
+        let deep = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        let mid = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = 140
+        let held = GroupFlow.flowing(
+            group([group([group([words("Save all the changes", at: 0, 0)], layout: deep)],
+                         layout: mid)], layout: outer))
+        #expect(held.children[0].children[0].children[0].wrappedByItsContainer == true)
+        #expect(rightmostInk(held) <= held.localBounds.width - 10)
+    }
+
+    @Test("A card of a pill and a label wraps inside the ceiling, surface and all")
+    func aNestedButtonWrapsInsideTheCeiling() {
+        let pill = GroupLayout.free(padding: room(10))
+        var card = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        card.maxWidth = 120
+        let held = GroupFlow.flowing(
+            group([button(saying: "Save all the changes", layout: pill)], layout: card))
+        let inner = held.children[0]
+        #expect(inner.children.first { $0.name == "Label" }?.wrappedByItsContainer == true)
+        // The surface behind the words is still the whole pill, and the pill
+        // is still inside the card's room.
+        #expect(piece(inner, "Background").size == inner.localBounds.size)
+        #expect(held.localBounds.width <= 120)
+        #expect(rightmostInk(held) <= held.localBounds.width - 10)
+    }
+
+    @Test("A floor inside a capped stack still wins, and the box overhangs")
+    func aFloorInsideACappedStackStillWins() {
+        var inner = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        inner.minWidth = 200
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = 120
+        let held = GroupFlow.flowing(
+            group([group([words("Save all the changes", at: 0, 0)], layout: inner)],
+                  layout: outer))
+        // A floor somebody set is a size they chose, so it is not the
+        // container's to take away: the box stays 200 and hangs out, and its
+        // words never wrapped because inside 200 they fit.
+        #expect(held.children[0].localBounds.width == 200)
+        #expect(held.children[0].children[0].wrappedByItsContainer == nil)
+    }
+
+    /// Command G makes a group with no layout at all, which is how anybody
+    /// actually puts words in a box. A ceiling above it has to reach them.
+    private func plainBox(_ children: [Layer]) -> Layer {
+        Layer(name: "Box", content: .group(GroupContent(children: children)),
+              frame: CGRect(origin: .zero, size: .zero))
+    }
+
+    @Test("A ceiling reaches words inside a plain grouped box")
+    func aCeilingReachesIntoAPlainGroup() {
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = 120
+        let held = GroupFlow.flowing(
+            group([plainBox([words("Save all the changes", at: 0, 0)])], layout: outer))
+        #expect(held.children[0].children[0].wrappedByItsContainer == true)
+        #expect(held.localBounds.width <= 120)
+        #expect(rightmostInk(held) <= held.localBounds.width - 10)
+    }
+
+    @Test("A plain box settles, and raising the ceiling gives the line back")
+    func aPlainBoxSettlesAndLetsGo() {
+        var outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        outer.maxWidth = 120
+        let card = group([plainBox([words("Save all the changes", at: 0, 0)])], layout: outer)
+        let held = GroupFlow.flowing(card)
+        let twice = GroupFlow.flowing(held)
+        #expect(twice.localBounds == held.localBounds)
+        #expect(twice.children[0].children[0].frame == held.children[0].children[0].frame)
+        // The ceiling comes off and the words take their one line back.
+        var uncapped = outer
+        uncapped.maxWidth = nil
+        var freed = twice
+        if var content = freed.group {
+            content.layout = uncapped
+            freed.content = .group(content)
+        }
+        let loose = GroupFlow.flowing(freed)
+        #expect(loose.children[0].children[0].wrappedByItsContainer == nil)
+        #expect(loose.children[0].children[0].frame.standardized.height == oneLine)
+    }
+
     @Test("A floor still holds the group open once its words have wrapped")
     func aFloorHoldsTheGroupOpenAfterTheWrap() {
         var layout = GroupLayout.free(padding: room(16))

@@ -662,6 +662,29 @@ itself whenever the two things that decide its shape change:
   The selection outline ran past the last letter, and a person redlining a
   wrapped label read a number the words never reached.
 
+  **A ceiling reaches the words inside a BOX inside the stack** (landed
+  2026-09-17). Nearly every card and every row in a real design is a stack of
+  stacks: a title grouped with its subtitle, a label grouped with its icon.
+  Until this, a ceiling only reached the words that were direct children of the
+  stack it was on, so the moment somebody grouped a title with anything the
+  ceiling stopped working and the line of text ran out past the edge of
+  everything around it.
+
+  Now a box inside the stack is handed the room as a CEILING OF ITS OWN rather
+  than as a width, and it passes it on to whatever is inside it, to any depth.
+  A box with no layout at all takes it too, which matters because that is what
+  Command G makes and so what most boxes in a document are.
+  That is the whole trick: a ceiling wraps the words and then lets the box
+  close around the lines that came out, so what comes back is the size of its
+  words and never a box standing open at the ceiling with empty room down its
+  edge, and the number the box reports and the picture it draws stay the same.
+
+  A box the room changes nothing for is left byte for byte as it was. A box
+  somebody gave a width to keeps it, a floor somebody set still wins and the
+  box hangs out rather than being squeezed under it, and a box too wide because
+  of a picture or a shape has nothing to give, so it overhangs at its own size
+  rather than being squashed into a box that lies about how big it is.
+
 ### Every gap is the gap you typed (landed 2026-09-06)
 
 A stack works out where everything goes from the sizes its pieces have GOING

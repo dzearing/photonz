@@ -1,0 +1,41 @@
+{
+  "feature": "A ceiling reaches the words inside a box inside the stack",
+  "epic": "ui-layout",
+  "summary": "A Largest width on a stack now wraps the words inside a box inside it, to any depth, instead of only the words sitting directly in the stack. That includes a plain grouped box, which is what Command G makes and so what most boxes are, so cards and rows stop overhanging.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags: this is the layout engine, on for everything.",
+  "try": [
+    {
+      "do": "Draw a long line of text, something like \"Save all the changes\"."
+    },
+    {
+      "do": "Select it and group it (Command G), so the words sit in a box of their own."
+    },
+    {
+      "do": "Select that box and group it again, so there is a box inside a box."
+    },
+    {
+      "do": "With the outer box selected, make it a column stack in the Layout section."
+    },
+    {
+      "do": "Type a Largest width smaller than the words, around 120."
+    },
+    {
+      "do": "Watch the words break onto a second line inside the box rather than running out past its right edge."
+    },
+    {
+      "do": "Raise the Largest width back up past the words and check they take their one line back."
+    }
+  ],
+  "evaluate": [
+    "Do the words break at the moment you would expect as you drag the Largest width down, or is there a lag where they overhang first?",
+    "Does the outer box settle at the width of the wrapped words, or does it stand at the ceiling with empty room down one side?",
+    "Is it obvious that the ceiling is what broke the words, or does it read as the app deciding something on its own?",
+    "Raising the ceiling again: does everything go back exactly where it was?",
+    "With a picture in the box instead of words, is it right that the box hangs out of the ceiling rather than being squashed?"
+  ],
+  "rough": [
+    "No screenshots at all: the Mac's screen was locked for this whole task, so every walk refused to run and nothing could be photographed. The change is verified by 39 tests in the wrap suite and the full 8070-test run, not by a picture of the app.",
+    "The first reproduction only covered a stack inside a capped stack. Grouping with Command G makes a box with no layout at all, which that fix did not reach, so the most common shape would still have overhung. It is covered now, but it is worth noticing that the reported repro and the real gesture were not the same shape.",
+    "A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows."
+  ]
+}

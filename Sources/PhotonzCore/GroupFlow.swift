@@ -82,7 +82,17 @@ enum GroupFlow {
         guard let group = layer.group else { return layer }
         var out = layer
         out.children = group.children.map(flowing)
-        guard let layout = group.layout else { return out }
+        guard let layout = group.layout else {
+            // A group nobody gave a layout arranges nothing, so there is
+            // nothing to work out — but a ceiling somewhere above it may have
+            // narrowed the words inside it last time, and every pass starts
+            // from the words. Put them back and the ceiling narrows them again
+            // in this same pass, or lets them go where it has been raised.
+            if out.children.contains(where: { $0.wrappedByItsContainer == true }) {
+                out.children = out.children.map(\.textUnwrapped)
+            }
+            return out
+        }
         let settled = placed(out.children, layout: layout,
                              contentPlacement: group.contentPlacement,
                              bounds: Bounds.of(layer, group, layout),
@@ -126,7 +136,8 @@ enum GroupFlow {
         // Words that outgrew that width wrap inside it instead of running out
         // past the edge, and the box grows downward the way it does everywhere
         // else a max width and a label meet.
-        let fitted = wrapping(children, rules: rules, layout: layout, bounds: bounds)
+        let narrowing = wrapping(children, rules: rules, layout: layout, bounds: bounds)
+        let fitted = narrowing.children
         // A ceiling that broke the words has done its job, and the group is
         // the size of its contents again: words allowed 68 that came out 63
         // leave a group of 95 rather than one held at 100 with five points of
@@ -135,7 +146,7 @@ enum GroupFlow {
         // stays whatever the words do. Measuring again cannot start another
         // wrap: the answer comes from the wrapped children themselves, so it
         // is never narrower than they are.
-        if bounds.limitedWidth, fitted.contains(where: { $0.wrappedByItsContainer == true }) {
+        if bounds.limitedWidth, narrowing.narrowed {
             var hugging = bounds
             hugging.width = nil
             hugging.limitedWidth = false
@@ -259,42 +270,100 @@ enum GroupFlow {
     // MARK: - Words that outgrow the room they are given
 
     /// Every label in this group re-wrapped to the room the group actually has
-    /// for it.
+    /// for it, and whether any of them actually moved.
     ///
     /// A label is as wide as its words until something narrows it, and a group
     /// with a width of its own — one somebody typed, or one a ceiling is
     /// holding in — is exactly that something. A group that is the size of its
     /// contents narrows nothing, because there is nothing there to outgrow.
+    ///
+    /// A ceiling reaches the words inside a BOX inside the group too. Nearly
+    /// every card and row in a real design is a stack of stacks, and a ceiling
+    /// that only reached its own children would be a ceiling that did nothing
+    /// the moment somebody grouped a title with its subtitle. The box in the
+    /// middle hugs what is in it, so it passes the room on and comes back the
+    /// size of the words that came out.
     private static func wrapping(_ children: [Layer], rules: [ResolvedPlacement],
-                                 layout: GroupLayout, bounds: Bounds) -> [Layer] {
-        guard let width = bounds.width else { return children }
+                                 layout: GroupLayout, bounds: Bounds) -> Narrowing {
+        guard let width = bounds.width else { return Narrowing(children: children) }
         let rooms = wrapRooms(children, rules, layout: layout, width: width)
-        guard !rooms.isEmpty else { return children }
-        var out = children
+        guard !rooms.isEmpty else { return Narrowing(children: children) }
+        var out = Narrowing(children: children)
         for (index, room) in rooms {
+            guard children[index].text != nil else {
+                guard let box = narrowed(children[index], toRoom: room) else { continue }
+                out.children[index] = box
+                out.narrowed = true
+                continue
+            }
             // The honest question — is this width the container's to decide,
             // or a paragraph width somebody chose — costs a text measurement,
             // so it is asked only about a label that does not fit. One that
             // does fit is left alone either way.
             guard children[index].wrapsToItsContainer else { continue }
-            out[index] = children[index].textWrapped(inRoom: room)
+            let wrapped = children[index].textWrapped(inRoom: room)
+            out.children[index] = wrapped
+            out.narrowed = out.narrowed || wrapped.wrappedByItsContainer == true
         }
         return out
     }
 
-    /// The labels that do not fit the room this group has across, and how much
+    /// This group's contents after a ceiling has had its say, and whether the
+    /// ceiling changed anything. Nothing changed means the group goes on
+    /// hugging exactly the layout it would have had before ceilings existed.
+    private struct Narrowing {
+        var children: [Layer]
+        var narrowed = false
+    }
+
+    /// A box inside this group, laid out again inside the room the group has
+    /// for it, or nil where the room changes nothing.
+    ///
+    /// The room is handed over as a CEILING on the box, not as a width, which
+    /// is the whole trick: a ceiling wraps the words inside and then lets the
+    /// box close around the lines that came out, so the box that comes back is
+    /// the size of its words and never a box held open at the ceiling with
+    /// empty room down its edge. That is what keeps the number the box reports
+    /// and the picture it draws the same.
+    ///
+    /// Nil where nothing inside wrapped: a box too wide because of a picture
+    /// or a shape has nothing to give, and it overhangs at its own size rather
+    /// than being squashed into a box that lies about how big it is.
+    private static func narrowed(_ layer: Layer, toRoom room: CGFloat) -> Layer? {
+        guard let group = layer.group, !group.isFrame else { return nil }
+        // A group nobody gave a layout arranges nothing and closes around what
+        // is in it, which is exactly what a free layout with no room at its
+        // edges does, so it takes the ceiling the same way. Command G makes
+        // one of those, so this is the box most people actually have. Its own
+        // layout is left exactly as it was: only the contents come back
+        // changed, and the corner they are measured from.
+        var layout = group.layout ?? .free()
+        guard layout.usedWidth == nil else { return nil }
+        layout.maxWidth = min(layout.usedMaxWidth ?? room, room)
+        let settled = placed(group.children, layout: layout,
+                             contentPlacement: group.contentPlacement,
+                             bounds: Bounds.of(layer, group, layout), onAScreen: false)
+        guard settled.children.contains(where: \.holdsWrappedWords) else { return nil }
+        var out = layer
+        out.children = settled.children
+        out.frame = out.frame.offsetBy(dx: -settled.grew.dx, dy: -settled.grew.dy)
+        return out
+    }
+
+    /// The pieces that do not fit the room this group has across, and how much
     /// room each of them gets.
     ///
-    /// Everything the container does not decide the width of is left out:
-    /// anything that is not text, the surface behind everything, a piece
-    /// already told to stretch (which is handed the room anyway, on its way to
-    /// the box), a label that stays on one line (a width is all a container
-    /// gets to say about one of those), and every label that already fits.
+    /// Everything the container does not decide the width of is left out: a
+    /// picture or a shape, a box with a width of its own, the surface behind
+    /// everything, a piece already told to stretch (which is handed the room
+    /// anyway, on its way to the box), a label that stays on one line (a width
+    /// is all a container gets to say about one of those), and everything that
+    /// already fits.
     private static func wrapRooms(_ children: [Layer], _ rules: [ResolvedPlacement],
                                   layout: GroupLayout, width: CGFloat) -> [(Int, CGFloat)] {
         let labels = children.indices.filter {
-            children[$0].text != nil && !rules[$0].stepsOutOfTheFlow(of: layout)
-                && rules[$0].horizontal != .stretch && !children[$0].textStaysOnOneLine
+            !rules[$0].stepsOutOfTheFlow(of: layout) && rules[$0].horizontal != .stretch
+                && children[$0].narrowsToItsContainer
         }
         guard !labels.isEmpty else { return [] }
         let padding = layout.usedPadding
