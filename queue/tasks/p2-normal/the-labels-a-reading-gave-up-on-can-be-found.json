@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:17.467Z",
-  "updated": "2026-09-17T12:13:56.571Z",
+  "updated": "2026-09-17T14:49:05.876Z",
   "deps": [
     "a-notice-at-the-foot-of-the-canvas-stops-swallow"
   ],
@@ -36,6 +36,42 @@
     {
       "t": "2026-09-17T12:13:56.570Z",
       "note": "seq 80 -> 30"
+    },
+    {
+      "t": "2026-09-17T14:16:04.753Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T14:48:58.888Z",
+      "note": "owns these walks: find-what-stayed-a-picture-walk"
+    },
+    {
+      "t": "2026-09-17T14:49:05.646Z",
+      "note": "Adversarial review BEFORE building: the task asked for the count in the line to be pressable, which fights the rule the dependency task had just enforced (only a BUTTON in the pill takes the pointer, everything else is click-through). Considered a capsule button on the end saying Select Them instead: rejected, because a report that counts three strays and then offers a separate control is two things to read where there is one thing to do, and it would have put another dead patch on the pill. Took the narrower version: the words that count are the way to them, in the accent colour under a line, and every other word in the pill stays click-through. Shortest version that delivers the value, and a-notice-lets-a-click-through-walk still passes unchanged."
+    },
+    {
+      "t": "2026-09-17T14:49:05.691Z",
+      "note": "Scoped out on purpose: a reading where NOTHING came back. Its line is 'None of the 12 labels could be read', one sentence about the whole ask with no count to pick out and nothing to pick them out from, so TextReading.Batch.stillPicturesTail is nil there and the pill offers nothing. Covered by the unit test aReadingThatLandedNothingHasNoTail. Noted in the audit's rough list."
+    },
+    {
+      "t": "2026-09-17T14:49:05.738Z",
+      "note": "Tried and reverted: a steady playtest name (@stayed-pictures) on the link, so a walk would not have to spell the count. press refuses a steady name on a CONTROL by design (PlaytestHarness.pressTarget: a steady name names the row a control sits on), and letting it through would have meant new harness plumbing for one walk. The walk names the words instead, and the expectNotice step right above it already pins the exact sentence, so it is no more fragile than the assertion beside it."
+    },
+    {
+      "t": "2026-09-17T14:49:05.783Z",
+      "note": "Proved two step kinds safe under a screen lock and added them to PlaytestLockSafety.stepsThatSurviveALock: expectNotice and expectInView. Both read the app rather than accessibility (the pill's own sentence; a control's geometry out of the register press already uses). Watched working in find-what-stayed-a-picture-walk, 30 steps, forced with PHOTONZ_ALLOW_LOCKED_WALK=1 on a Mac locked since 2026-09-14; the walk then ran unforced and reported lockSafe true, status ok."
+    },
+    {
+      "t": "2026-09-17T14:49:05.828Z",
+      "note": "left rough: pressing the count takes the pill away and nothing remembers which labels a reading gave up on, so there is no way back to the count once it has faded. It is in the audit's rough list for the user to react to; it did not earn its own task because the same six-second clock is how every notice in the app works and changing it is a question about notices, not about this line."
+    },
+    {
+      "t": "2026-09-17T14:49:05.875Z",
+      "note": "left rough: the layers list can only show one of the three at a time on this capture (they are six rows apart, the list holds five). The canvas covers for it by outlining all three. Changing revealInLayersList's policy would reach every caller of it, which is out of scope here; in the audit's rough list."
     }
+  ],
+  "started": "2026-09-17T14:16:04.752Z",
+  "walks": [
+    "find-what-stayed-a-picture-walk"
   ]
 }

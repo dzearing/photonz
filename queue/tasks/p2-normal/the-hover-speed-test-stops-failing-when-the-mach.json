@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T12:09:59.854Z",
-  "updated": "2026-09-17T12:13:57.211Z",
+  "updated": "2026-09-17T13:14:19.400Z",
   "deps": [],
   "blockedBy": [],
   "notes": "detectionStaysWellInsideTheMouseMoveBudget, Tests/PhotonzCoreTests/ElementBoundsTests.swift:222, asserts perCall < .milliseconds(20).\n\nReproduced 2026-09-17 04:5x on a full Scripts/test.sh (8112 tests, 647 suites, 147s): FAILED with perCall 0.028111333s against 0.02s. The suite printed: [perf] detect over 100 calls: cpu fastest 28.1 ms, slowest 33.4 ms; wall fastest 28.1 ms, slowest 33.4 ms.\n\nRe-run alone seconds later, Scripts/test.sh --filter ElementBoundsTests: [perf] detect over 100 calls: cpu fastest 4.9 ms, slowest 5.9 ms -> passed in 3.135s, 39 tests green. The very next full run was green too. So idle is 25 percent of budget and loaded is 140 percent of it: a factor of six, not a marginal miss.\n\nThis is the third recurrence. The done task timing-budget-tests-pass-reliably-on-a-busy-mach converted the two probe-count tests beside it to a RATIO against their own probe detects on the same thread (guard 1.3), which has held: both were green in the failing run. It left THIS test on an absolute budget, merely widened from 10 to 20 ms, with a note. An absolute wall or CPU budget cannot tell a busy machine or an efficiency core from a regression, which is exactly what that task already concluded. The fix is almost certainly to give this test the same ratio treatment its two neighbours got. See that task's log for the ratio helpers and for how the regression check was verified (doubled probes read 2.0).",
@@ -30,7 +30,61 @@
     {
       "t": "2026-09-17T12:13:57.210Z",
       "note": "TRIAGE, digest pass 2026-09-17: moved from the back of p2 (seq 2950) to the front (seq 10), ahead of focus work. Every task in the loop has to get a green Scripts/test.sh before it may commit, so one test that fails on load is a tax on every runner in the queue rather than a problem in one feature. It has now flaked three times in two days, twice on 2026-09-17 alone, and the last one missed its budget by 40 percent, which is enough for a runner to start treating red as noise. Small, self-contained, and the pattern to copy is already in the two tests beside it."
+    },
+    {
+      "t": "2026-09-17T12:31:35.315Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T13:14:08.576Z",
+      "note": "Reproduced the flake's mechanism before changing anything. The pick reads 5.1 ms idle and 22.0 ms during a full 648-suite run with eight spin loops on top, ON THE THREAD'S OWN CPU CLOCK, so the time is really burned and no clock can make an absolute budget honest here. The old 20 ms budget would have failed that run."
+    },
+    {
+      "t": "2026-09-17T13:14:08.623Z",
+      "note": "What the load actually steals was measured, not guessed: three candidate rulers timed beside the pick, idle then loaded. Pick 4.41 -> 16.68 ms (3.8x). A big buffer streamed 3.29 -> 3.65 (1.1x, tracks nothing). A pointer chase 4.37 -> 22.38 (5.1x, overshoots). Arrays made and dropped 2.19 -> 8.46 (3.9x, tracks). A pick spends its time asking the edge map for candidate arrays, so what six hundred suites take from it is the allocator."
+    },
+    {
+      "t": "2026-09-17T13:14:08.669Z",
+      "note": "Fix: Tests/PhotonzCoreTests/CPUYardstick.swift is a fixed allocation workload running no Photonz code, sized to the 4.5 ms one pick costs. detectionStaysWellInsideTheMouseMoveBudget now divides by it inside every round and asserts on the product, which is what the pick would have cost on the calibration machine: guard 12 ms against a 4.5 ms reading, replacing an absolute 20 ms."
+    },
+    {
+      "t": "2026-09-17T13:14:08.714Z",
+      "note": "Estimator matters as much as the ruler. Best-subject-over-best-reference drifts UP under load (whichever half is shorter finds a quiet gap more often); best-single-round drifts DOWN (over 20 rounds one is bound to catch the reference slow, it read 0.35 against a 1.3 guard). Both were measured on loaded full runs. Both costRatio here and PerfClock.Comparison.ratio now take the MEDIAN of per-round pairs."
+    },
+    {
+      "t": "2026-09-17T13:14:08.761Z",
+      "note": "Acceptance 1: three consecutive full Scripts/test.sh under eight spin loops, all green, pick reading 1.33, 1.26 and 1.18 times the ruler (6.0, 5.7, 5.3 ms normalized) against 12. Idle it reads 1.09 to 1.11. Idle full run green too (8119 tests, 648 suites, 150s)."
+    },
+    {
+      "t": "2026-09-17T13:14:08.806Z",
+      "note": "Acceptance 2: four times the edge-query work inside ElementBounds.sides makes it read 15.2 ms and FAIL; twice the work reads 7.8 ms and passes, which is the intended tolerance. Source reverted, git diff on Sources clean."
+    },
+    {
+      "t": "2026-09-17T13:14:08.853Z",
+      "note": "Acceptance 3, the audit. Every timing assertion in the suite was read and measured. Two had the same weakness and were fixed: CaptionCostTests took a wall-clock MEAN of 1000 calls against a 200us ceiling and swung 25.5 to 37.4us between two idle runs, now PerfClock.fastestCallMS on the thread clock (22-25us, steady); ElementDetectionFixtureTests' ratio drifted 1.84 idle to 3.40 loaded against a guard of 4, now paired-median, reads 2.35 to 2.79, guard widened to 5 with the numbers in the comment."
+    },
+    {
+      "t": "2026-09-17T13:14:08.898Z",
+      "note": "left rough: the two probe-count guards (subjects, neighbours) sit at 1.3 and read 0.98 to 1.08 across three loaded full runs, so about a fifth in hand at worst. They did not flake once in seven loaded runs and widening them would weaken a real check, so they are left alone and recorded here instead. WebPEncodeSpeedTests keeps an absolute 8 s ceiling and read 0.79 to 1.71 s loaded; it is a deliberate ten-times-worse tripwire, not a budget. DrawLandingCostTests' absolute microsecond ceilings have 8 to 15 times in hand and barely moved under load (6.5 to 8.0 us)."
+    },
+    {
+      "t": "2026-09-17T13:14:08.946Z",
+      "note": "CPUYardstick.baselineMS (4.5 ms) is recorded on this machine, so the normalized number is only as portable as the ruler is. That is the same bargain MachineSpeed already makes for the render budgets, and PHOTONZ_PERF_GATE=report still turns gating off for release runners."
+    },
+    {
+      "t": "2026-09-17T13:14:08.993Z",
+      "note": "No audit written: this is test infrastructure, nothing a person can try in the app. It serves unmanned-loop (staged now) by removing a test that could fail any runner's commit gate for reasons that had nothing to do with their change."
+    },
+    {
+      "t": "2026-09-17T13:14:09.039Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-09-17T13:14:19.398Z",
+      "note": "The hover pick check now divides by a fixed allocation ruler (Tests/PhotonzCoreTests/CPUYardstick.swift) and asserts what a pick would cost on the calibration machine: 12 ms against a 4.5 ms reading, replacing an absolute 20 ms. Both ratio helpers switched to the median of per-round pairs. CaptionCostTests and ElementDetectionFixtureTests had the same weakness and were fixed too. Verified: three consecutive full Scripts/test.sh under eight spin loops green (pick read 1.33, 1.26, 1.18 times the ruler), idle full run green, and four times the edge-query work makes it read 15.2 ms and fail. Commit c7c3e242."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-17T12:31:35.314Z",
+  "completed": "2026-09-17T13:14:19.399Z"
 }

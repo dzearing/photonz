@@ -1,0 +1,152 @@
+{
+  "out": "/tmp/photonz-playtest/find-what-stayed-a-picture",
+  "seed": "THE COUNT IS THE WAY TO THEM. Reading every label in a separated screenshot ends with a line saying how many came back and how many stayed pictures. The three that stayed look exactly like the twelve that did not: same position, same pixels, no outline. Until now the only way to find them was to scroll the layers list hunting for rows still called Text and guess. This walk reads a whole effects panel, then presses the count in that line, and the three labels the reading gave up on are picked, in the list and on the canvas.",
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true,
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": false,
+      "next-a-separation-arrives-shut": false
+    }
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "press",
+      "control": "Read the Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 8
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-line-counts-what-it-gave-up-on",
+      "note": "Twelve labels came back as words and three did not. The line says so, and the count of the three is the only part of the sentence a person can act on: those are the labels they now have to retype by hand."
+    },
+    {
+      "do": "expectNotice",
+      "says": "Turned into text \u00b7 12 labels, set in SF Pro. 3 stayed pictures"
+    },
+    {
+      "do": "expect",
+      "row": "Text 5",
+      "present": true
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Text 1"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "stayed-1-the-count-is-underlined"
+    },
+    {
+      "do": "scrollPanel",
+      "by": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "row": "Text 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Text 8",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-pressing-the-count-picks-them",
+      "note": "THE TEST: the words that count the strays are pressed, and the three labels the reading gave up on are the selection. Nothing else comes with them: not the twelve that came back, not the boxes, not the layer that was picked a moment ago."
+    },
+    {
+      "do": "press",
+      "control": "3 stayed pictures"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Text 3",
+        "Text 5",
+        "Text 8"
+      ]
+    },
+    {
+      "do": "expectNotice",
+      "absent": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stayed-2-the-three-are-picked"
+    },
+    {
+      "do": "panel",
+      "stage": "2-rows"
+    },
+    {
+      "do": "describe",
+      "stage": "3-they-are-in-view",
+      "note": "And the layers list moved to them rather than staying where it was left. It cannot show all three at once, because they are six rows apart and the list holds five, so it lands on the first of them and the other two are one turn of the wheel below."
+    },
+    {
+      "do": "expectInView",
+      "field": "Text 8"
+    },
+    {
+      "do": "render",
+      "name": "stayed-3-document"
+    }
+  ]
+}

@@ -5008,3 +5008,46 @@
 {"t":"2026-09-17T12:13:57.212Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
 {"t":"2026-09-17T12:14:06.910Z","ev":"triage","summary":"open 19 -> 20. Merged 0 (no duplicates found). Filed 1 (the Pen Width row corner case). Folded 4 findings into tasks that already covered them. Rewrote 1 p1 whose reproduction no longer reproduced, removed its dependency and kept it at p1 with the corrected diagnosis. Retitled 2 whose titles named a symptom or a disproved claim. Moved 1 flaky timing test from the back of p2 to the front because it taxes every runner. Reset 0, guard clean, no leftovers. Resequenced all 20 open tasks to steps of ten."}
 {"t":"2026-09-17T12:15:08.931Z","ev":"digest","file":"2026-09-17.md"}
+{"t":"2026-09-17T12:15:26.374Z","ev":"task_started","id":"an-audit-gets-a-real-picture-of-the-app-again","title":"An audit gets a photograph of the app even while the Mac is locked","priority":"p1-high"}
+{"t":"2026-09-17T12:29:42.296Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T12:29:48.892Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T12:29:48.939Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T12:29:54.401Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T12:29:54.447Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T12:29:57.765Z","ev":"task_walks","id":"an-audit-gets-a-real-picture-of-the-app-again","walks":[]}
+{"t":"2026-09-17T12:29:57.813Z","ev":"task_done","id":"an-audit-gets-a-real-picture-of-the-app-again","from":"in_progress","note":"A walk that never looks a control up by name now RUNS on a locked Mac and photographs the real window, with nothing to set: 224 of the 510 walks qualify. PlaytestLockSafety (PhotonzCore, pure, 7 tests first) sorts the 81 step kinds into the 35 watched working under a lock and the 46 a lock stops, with the reason each; anything unproven is refused rather than trusted. A refused walk now names the step that needs a name and says how many of its pictures forcing it would still get. Every picture taken under a lock carries a label saying so and what it costs, printed by Scripts/playtest.sh, carried in an audit step's shotNote and rendered under the picture on the dashboard. The runner prompt, CLAUDE.md, the harness doc, sweep.sh and the probe's Grants line all say this now, where the prompt used to tell every runner a lock meant no picture. Verified on the locked Mac: redline-walk 70 steps ok with 14 real captures and no override, angle-field-walk refused with the new message, playtest-all reporting '1 passed, 0 failed, 1 could not run', Scripts/test.sh green at 8119 tests. Committed 8fc88bf7 and pushed. Audit: queue/audits/2026-09-17-a-picture-under-a-lock.json, with a photograph of the real window."}
+{"t":"2026-09-17T12:31:35.207Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T12:31:35.317Z","ev":"task_started","id":"the-hover-speed-test-stops-failing-when-the-mach","title":"The hover speed test stops failing when the machine is busy","priority":"p2-normal"}
+{"t":"2026-09-17T13:14:08.578Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.625Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.671Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.716Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.763Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.808Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.855Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.900Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.948Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:08.995Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T13:14:09.041Z","ev":"task_walks","id":"the-hover-speed-test-stops-failing-when-the-mach","walks":[]}
+{"t":"2026-09-17T13:14:19.401Z","ev":"task_done","id":"the-hover-speed-test-stops-failing-when-the-mach","from":"in_progress","note":"The hover pick check now divides by a fixed allocation ruler (Tests/PhotonzCoreTests/CPUYardstick.swift) and asserts what a pick would cost on the calibration machine: 12 ms against a 4.5 ms reading, replacing an absolute 20 ms. Both ratio helpers switched to the median of per-round pairs. CaptionCostTests and ElementDetectionFixtureTests had the same weakness and were fixed too. Verified: three consecutive full Scripts/test.sh under eight spin loops green (pick read 1.33, 1.26, 1.18 times the ruler), idle full run green, and four times the edge-query work makes it read 15.2 ms and fail. Commit c7c3e242."}
+{"t":"2026-09-17T13:15:32.810Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":60,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T13:15:32.921Z","ev":"task_started","id":"a-label-read-back-into-text-comes-back-in-the-we","title":"A label read back into text comes back in the weight it was in, not just the face","priority":"p2-normal"}
+{"t":"2026-09-17T13:29:09.404Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-in-the-we"}
+{"t":"2026-09-17T13:29:14.138Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-in-the-we"}
+{"t":"2026-09-17T14:09:12.732Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T14:09:52.526Z","ev":"task_created","id":"a-label-read-back-into-text-comes-back-at-the-si","priority":"p2-normal","title":"A label read back into text comes back at the size its neighbours are, not its own"}
+{"t":"2026-09-17T14:09:54.957Z","ev":"task_walks","id":"a-label-read-back-into-text-comes-back-at-the-si","walks":[]}
+{"t":"2026-09-17T14:09:55.005Z","ev":"task_walks","id":"a-label-read-back-into-text-comes-back-in-the-we","walks":["label-weight-walk","read-every-label-walk"]}
+{"t":"2026-09-17T14:13:33.731Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-in-the-we"}
+{"t":"2026-09-17T14:13:33.777Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-in-the-we"}
+{"t":"2026-09-17T14:13:37.821Z","ev":"task_done","id":"a-label-read-back-into-text-comes-back-in-the-we","from":"in_progress","note":"The weight of a read-back label is settled per KIND of label, not per label and not per page. TextReading.WeightBallot / weightCohorts / pageWeight / pageWeights group a page's runs by the size the family's lightest weight fits their ink at and by the colour of that ink, then settle each group on the weight it agrees on best; TextReading.decide takes an 'at weight:' the way it takes 'preferring family:'; TextReader.readPage measures once and settles twice. Verified: six row labels of settings-pane-2x come back Regular instead of four Regular and two Medium, General stays Bold, and in the new effects-panel-2x fixture Corner Radius / Border 1 / Border 2 settle together and heavier than the Style / Color / Position / Width / Offset rows under them. Reading counts unchanged (9/9, 30/40, 74/142) and a whole page reads faster than before (1812 ms against 1966 ms on dense-page-1x). Full suite green, 8144 tests. label-weight-walk passes with six real window captures. Audit: queue/audits/2026-09-17-label-weight.json. Committed as c5c13167 and pushed."}
+{"t":"2026-09-17T14:16:04.646Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T14:16:04.755Z","ev":"task_started","id":"the-labels-a-reading-gave-up-on-can-be-found","title":"The labels a reading gave up on can be found","priority":"p2-normal"}
+{"t":"2026-09-17T14:48:51.267Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T14:48:58.890Z","ev":"task_walks","id":"the-labels-a-reading-gave-up-on-can-be-found","walks":["find-what-stayed-a-picture-walk"]}
+{"t":"2026-09-17T14:49:05.648Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:05.693Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:05.740Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:05.785Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:05.830Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:05.877Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}

@@ -380,14 +380,16 @@ extension EditorState {
     private func applyBatchReading(_ found: [(UUID, TextReader.Read)], family: String?) {
         guard let document else { return }
         var edits: [(id: UUID, text: TextContent, box: CGRect)] = []
-        var stayed = 0
+        // In the document's own order, because pressing the count picks them
+        // and a selection has to arrive in the order the layers list holds.
+        var stayed: [UUID] = []
         for (id, read) in found {
             // Gone from the document: undone, or deleted, while the reading was
             // still going. It is not a run that stayed a picture, it is a run
             // there is no longer anything to say about.
             guard let layer = document.layer(id: id) else { continue }
             guard let landed = wordsAndBox(for: read, on: layer) else {
-                stayed += 1
+                stayed.append(id)
                 continue
             }
             edits.append((id, landed.text, landed.box))
@@ -395,10 +397,13 @@ extension EditorState {
         // Somebody pressed undo while it read: the labels this was about are
         // pictures again and nothing happened. A line counting them would be
         // the app reporting on a state that no longer exists.
-        guard !edits.isEmpty || stayed > 0 else { return }
+        guard !edits.isEmpty || !stayed.isEmpty else { return }
         guard !edits.isEmpty else {
+            // Nothing landed, so the line is about the whole ask rather than a
+            // count inside a result, and there is nothing to pick these out
+            // FROM: every label is still a picture. No way onward to offer.
             raiseCanvasNotice(.turnedIntoTextInBatch(
-                TextReading.Batch(read: 0, stillPictures: stayed, family: family)))
+                TextReading.Batch(read: 0, stillPictures: stayed.count, family: family)))
             return
         }
         discardDragPreview()
@@ -411,7 +416,40 @@ extension EditorState {
                 document.makeTextEditable(id: edit.id, text: edit.text, frame: edit.box)
             }
         }
+        // The count of what stayed a picture is also the way to it. A label the
+        // reading gave up on looks identical to one that came back, so a line
+        // saying "3 stayed pictures" over forty labels is a true sentence
+        // nobody can act on: without this, finding them means scrolling the
+        // layers list for rows still called Text and guessing.
         raiseCanvasNotice(.turnedIntoTextInBatch(
-            TextReading.Batch(read: edits.count, stillPictures: stayed, family: family)))
+            TextReading.Batch(read: edits.count, stillPictures: stayed.count, family: family)),
+            action: stayed.isEmpty ? nil : .findStillPictures(labels: stayed))
+    }
+
+    /// Press the count: the labels the reading gave up on become the selection,
+    /// in the list and on the canvas.
+    ///
+    /// This is the one case where the batch DOES move the selection, and the
+    /// reason it may is that somebody asked. Landing a reading picks nothing,
+    /// on purpose — moving the selection onto one of forty labels nobody
+    /// pointed at would be the app pointing at the wrong thing — but pressing
+    /// the count is the person pointing, and the answer to "which three" is the
+    /// three of them picked.
+    ///
+    /// Labels that have since gone are dropped rather than refused: a reading
+    /// undone or a label deleted leaves fewer to show, and showing the rest
+    /// beats doing nothing. With none of them left it does nothing at all,
+    /// rather than clearing a selection somebody else made.
+    func showStillPictureLabels(ids: [UUID]) {
+        guard let document else { return }
+        let alive = ids.filter { document.layer(id: $0) != nil }
+        guard !alive.isEmpty else { return }
+        // The layers list follows the selection on its own (`selectLayers` ->
+        // `revealInLayersList`), opening every group above them and scrolling
+        // to them. The canvas does not, so it is asked here.
+        selectLayers(Set(alive))
+        let boxes = alive.compactMap { document.canvasBounds(of: $0) }
+        guard let first = boxes.first else { return }
+        bringIntoView(boxes.dropFirst().reduce(first) { $0.union($1) })
     }
 }

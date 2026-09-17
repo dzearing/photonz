@@ -19,7 +19,13 @@ import Foundation
 /// (`docs/design/separate-reads-the-words.md`). So the pill offers it, once,
 /// on the result they are already looking at.
 ///
-/// Deliberately two cases and not a framework: a notice carries at most ONE
+/// The third case is not an offer at all: it is the REPORT being reachable.
+/// A line that counts something a person cannot otherwise find — three labels
+/// that stayed pictures among forty that did not — is true and useless, so the
+/// count of them is also the way to them, pressed in the line rather than as a
+/// button on the end of it (`Presentation`).
+///
+/// Deliberately three cases and not a framework: a notice carries at most ONE
 /// action, it is always the obvious next move on the thing the notice is
 /// about, and it never replaces a permanent home for the same command. The
 /// button is a shortcut to the Layer menu row, never the only door to it.
@@ -39,11 +45,43 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     /// wrong labels.
     case readTheWords(runs: [UUID])
 
+    /// Pick the labels a reading gave up on (`TextReading.Batch`), so the count
+    /// of them is also the way to them.
+    ///
+    /// The third case, and the one that widens the exception in a different
+    /// direction: it is not an offer to run a command, it is the report itself
+    /// being reachable. A label that stayed a picture looks exactly like one
+    /// that came back, so "3 stayed pictures" over a screenshot of forty is a
+    /// true sentence a person cannot act on. Carries the labels counted at the
+    /// moment the reading landed, for the same reason as the two above.
+    case findStillPictures(labels: [UUID])
+
     /// The layers this action would act on.
     public var layerIDs: [UUID] {
         switch self {
         case .turnIntoPicture(let id): return [id]
         case .readTheWords(let runs): return runs
+        case .findStillPictures(let labels): return labels
+        }
+    }
+
+    /// Where in the pill the action is pressed.
+    public enum Presentation: Hashable, Sendable {
+        /// A capsule button at the end of the line, after a hairline. What an
+        /// OFFER looks like: the line reports, the button answers it.
+        case button
+        /// The words in the line itself. What a report that is its own way
+        /// onward looks like: bolting a button on the end would read as a
+        /// second thing to do, when there is only one thing here and the
+        /// sentence already names it.
+        case wordsInTheLine
+    }
+
+    /// See `Presentation`.
+    public var presentation: Presentation {
+        switch self {
+        case .turnIntoPicture, .readTheWords: return .button
+        case .findStillPictures: return .wordsInTheLine
         }
     }
 
@@ -59,6 +97,11 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         // promise about which forty is anybody's guess. This says what the
         // press gets you, in the words the study used for it.
         case .readTheWords: return "Read the Words"
+        // The count itself, in the words the line already uses for it. Built
+        // from `TextReading.Batch` so the sentence and the thing pressed can
+        // never say two different numbers (`Batch.stayedPictures`).
+        case .findStillPictures(let labels):
+            return TextReading.Batch.stayedPictures(labels.count)
         }
     }
 
@@ -73,7 +116,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     public var shortcutHint: String? {
         switch self {
         case .turnIntoPicture: return "\u{21E7}\u{2318}R"
-        case .readTheWords: return nil
+        case .readTheWords, .findStillPictures: return nil
         }
     }
 }

@@ -139,3 +139,130 @@ struct TextReadingBatchTests {
         #expect(notice.lifetime == CopyConfirmation.actionLifetime)
     }
 }
+
+@Suite("The count of what stayed a picture is the way to them")
+struct StillPicturesAreFindableTests {
+
+    private let t0 = Date(timeIntervalSinceReferenceDate: 4_000)
+
+    // MARK: - The line splits where the count starts
+
+    @Test func theLineHandsBackItsCountAsAPieceOfItsOwn() {
+        // The count is the only part of the sentence a person can be sent to,
+        // so the line has to say where it starts. The two halves put back
+        // together are the sentence that was always there.
+        let batch = TextReading.Batch(read: 7, stillPictures: 3, family: "SF Pro")
+        #expect(batch.detailLead == "7 labels, set in SF Pro.")
+        #expect(batch.stillPicturesTail == "3 stayed pictures")
+        #expect(batch.detail == "7 labels, set in SF Pro. 3 stayed pictures")
+    }
+
+    @Test func oneThatStayedSplitsInTheSingular() {
+        let batch = TextReading.Batch(read: 7, stillPictures: 1, family: "SF Pro")
+        #expect(batch.detailLead == "7 labels, set in SF Pro.")
+        #expect(batch.stillPicturesTail == "1 stayed a picture")
+    }
+
+    @Test func aReadingThatLeftNothingBehindHasNoTail() {
+        // Nothing stayed a picture, so there is nothing to be sent to and the
+        // line is a plain report.
+        let batch = TextReading.Batch(read: 9, stillPictures: 0, family: "SF Pro")
+        #expect(batch.stillPicturesTail == nil)
+        #expect(batch.detailLead == batch.detail)
+    }
+
+    @Test func aReadingThatLandedNothingHasNoTailEither() {
+        // "None of the 12 labels could be read" is one sentence about the whole
+        // ask, not a report with a count on the end of it. There is no fragment
+        // to pick out, and nothing to pick out FROM: every label is still a
+        // picture, so finding them is not the problem.
+        let batch = TextReading.Batch(read: 0, stillPictures: 12, family: nil)
+        #expect(batch.stillPicturesTail == nil)
+        #expect(batch.detailLead == "None of the 12 labels could be read")
+    }
+
+    // MARK: - The action wears the same words
+
+    @Test func theActionSaysExactlyWhatTheLineSays() {
+        // The words in the line and the thing that gets pressed are ONE thing.
+        // Built from one place so they cannot drift into saying two different
+        // numbers about the same labels.
+        let labels = [UUID(), UUID(), UUID()]
+        let action = CanvasNoticeAction.findStillPictures(labels: labels)
+        let batch = TextReading.Batch(read: 7, stillPictures: labels.count, family: "SF Pro")
+        #expect(action.label == batch.stillPicturesTail)
+        #expect(action.label == "3 stayed pictures")
+        #expect(CanvasNoticeAction.findStillPictures(labels: [UUID()]).label == "1 stayed a picture")
+    }
+
+    @Test func theActionRemembersTheLabelsItCounted() {
+        // Selection changes the instant anybody clicks the canvas. The press
+        // picks the labels the READING left behind, never whatever is picked
+        // now, for the same reason the offer beside it reads the runs the
+        // separation made.
+        let labels = [UUID(), UUID(), UUID()]
+        let action = CanvasNoticeAction.findStillPictures(labels: labels)
+        #expect(action.layerIDs == labels)
+        #expect(action != .findStillPictures(labels: Array(labels.dropLast())))
+    }
+
+    @Test func theCountHasNoKeyToTeach() {
+        #expect(CanvasNoticeAction.findStillPictures(labels: [UUID()]).shortcutHint == nil)
+    }
+
+    // MARK: - Where it sits in the pill
+
+    @Test func theCountIsPressedInTheLineAndNotAsAButtonOnTheEnd() {
+        // A button bolted on the end would read as a second thing to do. This
+        // one IS the report: the words that count them are the way to them.
+        #expect(CanvasNoticeAction.findStillPictures(labels: [UUID()]).presentation
+                == .wordsInTheLine)
+        #expect(CanvasNoticeAction.readTheWords(runs: [UUID()]).presentation == .button)
+        #expect(CanvasNoticeAction.turnIntoPicture(layer: UUID()).presentation == .button)
+    }
+
+    @Test func thePillSplitsItsLineWhereTheCountStarts() {
+        let labels = [UUID(), UUID(), UUID()]
+        let batch = TextReading.Batch(read: 7, stillPictures: 3, family: "SF Pro")
+        let notice = CopyConfirmation(subject: .turnedIntoTextInBatch(batch), shownAt: t0,
+                                      action: .findStillPictures(labels: labels))
+        #expect(notice.line.lead == "7 labels, set in SF Pro.")
+        #expect(notice.line.pressable == "3 stayed pictures")
+        // And the whole sentence is still one sentence, for anything that reads
+        // the line rather than drawing it.
+        #expect(notice.detail == "7 labels, set in SF Pro. 3 stayed pictures")
+    }
+
+    @Test func aPillWithNothingToPointAtIsAPlainReport() {
+        // Nothing stayed a picture: no action, nothing picked, nothing scrolled.
+        let batch = TextReading.Batch(read: 9, stillPictures: 0, family: "SF Pro")
+        let notice = CopyConfirmation(subject: .turnedIntoTextInBatch(batch), shownAt: t0)
+        #expect(notice.action == nil)
+        #expect(notice.line.lead == notice.detail)
+        #expect(notice.line.pressable == nil)
+    }
+
+    @Test func everyOtherPillKeepsItsWholeLineUnpressable() {
+        // The words of a notice are read, never pressed: that is what stops a
+        // pill turning up under a pointer and swallowing a click meant for the
+        // canvas. Only the one that counts something findable opts out.
+        let refusal = RegionSliceRefusal(action: .erase, reason: .canBecomeAPicture)
+        let withButton = CopyConfirmation(subject: .regionSliceRefused(refusal), shownAt: t0,
+                                          action: .turnIntoPicture(layer: UUID()))
+        #expect(withButton.line.pressable == nil)
+        #expect(withButton.line.lead == withButton.detail)
+
+        let copied = CopyConfirmation(subject: .specList(measurements: 3), shownAt: t0)
+        #expect(copied.line.pressable == nil)
+        #expect(copied.line.lead == copied.detail)
+    }
+
+    @Test func aPillYouAreMeantToPressStaysUpLongEnoughToReachIt() {
+        // Six seconds rather than three: reading a sentence, deciding the three
+        // strays matter, and travelling to the words does not fit in three.
+        let batch = TextReading.Batch(read: 7, stillPictures: 3, family: "SF Pro")
+        let notice = CopyConfirmation(subject: .turnedIntoTextInBatch(batch), shownAt: t0,
+                                      action: .findStillPictures(labels: [UUID(), UUID(), UUID()]))
+        #expect(notice.lifetime == CopyConfirmation.actionLifetime)
+    }
+}

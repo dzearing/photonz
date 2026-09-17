@@ -40,11 +40,17 @@ public enum PlaytestLockSafety {
     /// - `name-chip-reads-anywhere-walk`, 24 steps before it failed on a
     ///   missing component tile, which is a fact about the walk and not about
     ///   the lock: dropImage, pinch, appearance.
+    /// - `find-what-stayed-a-picture-walk`, 30 steps on a Mac locked since
+    ///   2026-09-14: expectNotice, expectInView. Both read the app rather than
+    ///   accessibility — the pill's own sentence, and a control's geometry out
+    ///   of the register `press` already uses — so a lock has nothing to take
+    ///   away from either.
     ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
-        "dragColor", "dragTile", "dropImage", "expect", "expectLayers", "expectMeasures",
+        "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
+        "expectMeasures", "expectNotice",
         "expectPath", "expectPicked", "key", "measureMode", "move", "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writeSVG",

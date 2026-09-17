@@ -1,0 +1,36 @@
+{
+  "id": "a-label-read-back-into-text-comes-back-at-the-si",
+  "title": "A label read back into text comes back at the size its neighbours are, not its own",
+  "goal": "Reading the labels of a screenshot back into real text now settles the typeface and the weight for the whole page, so six identical row labels come back as one. The point size is still decided label by label: those same six come back 27.6, 27.1, 28.5, 28.0, 28.5 and 28.4 points when every one of them is 13 points on screen, so picking them all shows Size reading Mixed. Anybody who then sets a size is tidying up after the app. Settle the size the way the weight is settled, for labels of one kind, without dragging a heading down to its rows.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T14:09:52.522Z",
+  "updated": "2026-09-17T14:09:54.956Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-17 finishing a-label-read-back-into-text-comes-back-in-the-we, which settled the WEIGHT and is done; see queue/audits/2026-09-17-label-weight.json and the screenshot beside it, where the Text section reads Font SF Pro, Weight Regular, Size Mixed for six labels picked together. The machinery to copy is already there and is pure: TextReading.WeightBallot groups the runs of a page into cohorts of one size and one ink colour (TextReading.weightCohorts) and TextReading.pageWeights settles each cohort. The size question is not identical though, and that is the interesting part: the weight is one of four values so a vote works, while the size is continuous, so the answer is probably the cohort s median fit rounded to something a person would type, and it has to stay inside the tolerance theRetypedWordsAreTheSizeTheOldOnesWere holds (3 px on the ink box). Careful with the two scales: the size a cohort is grouped BY is at captureScale, and the size a layer is SET at is at layerScale, and TextReader.settle is where the second one is worked out. Note the cohort sizes above are at 2x (13 points of type in a 2x capture opened whole is a 27ish point layer).",
+  "acceptance": [
+    "Labels that are the same size in the picture come back at the same size, decided across the page rather than per label",
+    "A heading over its rows, and a section label over the rows under it, still come back bigger where they are bigger: the rule settles wobble, it does not flatten a page to one size",
+    "The retyped words still cover the space the picture s ink covered, within the tolerance theRetypedWordsAreTheSizeTheOldOnesWere already holds the reader to",
+    "Try it: Next release, open the settings pane fixture, separate it, press Read the Words, pick all six row labels and the Size menu reads one number instead of Mixed",
+    "Covered by the fixture tests that read the real 2x settings pane and effects panel captures, with the size asserted the way the weight is",
+    "A walk covers it, and it is named on the task with queue.mjs walks",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T14:09:52.524Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T14:09:54.955Z",
+      "note": "walks label-weight-walk -> none"
+    }
+  ],
+  "walks": []
+}

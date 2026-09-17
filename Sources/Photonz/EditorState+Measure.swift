@@ -361,6 +361,10 @@ extension EditorState {
             // the pill counted those pieces, so the button may not reach past
             // them (`next-read-every-label`).
             case .readTheWords(let runs): self.turnIntoTextForLayers(ids: Set(runs))
+            // The labels the READING gave up on, never the selection around
+            // them: the line counted those, so pressing the count may not pick
+            // anything else (`next-read-every-label`).
+            case .findStillPictures(let labels): self.showStillPictureLabels(ids: labels)
             }
         }
     }

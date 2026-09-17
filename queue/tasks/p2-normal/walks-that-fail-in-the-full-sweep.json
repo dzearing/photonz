@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T12:13:57.029Z",
+  "updated": "2026-09-17T14:48:51.266Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -315,6 +315,18 @@
     {
       "t": "2026-09-17T12:13:57.028Z",
       "note": "seq 400 -> 130"
+    },
+    {
+      "t": "2026-09-17T12:29:42.294Z",
+      "note": "two walks fail for REAL content reasons, checked 2026-09-17 on a locked Mac with the new lock-safe runner (so these are not lock noise, and the names the harness listed prove control names were arriving): dock-picked-first-walk step 66 selectRow 'no row called \"Zoom\" is in either list of rows. The layers list has: Magnify, Label, Arrow, Rectangle 4...' — the app appears to have renamed that layer Magnify; name-chip-reads-anywhere-walk step 25 dragTile 'no tile called \"Badge\" is in the panel; the ones that are: Button / Components, Text Field / Components, Card / Components'. Also worth knowing: the 115-walk failure list in this task's notes came from a sweep run while the Mac was locked, and at least arrow-parts-walk in that list passes all 53 steps today."
+    },
+    {
+      "t": "2026-09-17T14:09:12.730Z",
+      "note": "Two more walks fail on today's main and neither is in the 2026-09-15 sweep list. Reproduced on a build with the current task's change STASHED, so they are not it: separate-whole-screenshot-walk fails at step 16 (expectLayers) with '173 layers in the document, more than the 151 claimed', and name-chip-reads-anywhere-walk fails at step 25 (dragTile) with 'no tile called \"Badge\" is in the panel; the ones that are: Button / Components, Text Field / Components, Card / Components'. Also worth knowing for whoever picks this up: separate-boxes-walk, separate-hierarchy-walk and separate-shadow-walk all fail the same way, on 'no row called \"Box 2\" is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3' — the layers list only realises about five rows at a time in a 1400x900 window, so every 'expect row' for a row further down the list reports it missing when it is simply not built. selectRow is unaffected (it goes through the editor's own row register), which is how label-weight-walk picks six labels it cannot 'expect'."
+    },
+    {
+      "t": "2026-09-17T14:48:51.265Z",
+      "note": "separate-boxes-walk fails on clean main (c5c13167), not on anything a runner changed: 'Scripts/playtest.sh Scripts/playtest/separate-boxes-walk.json' -> step 16 (expect): no row called \"Box 2\" is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3. Verified by stashing a runner's working tree and running it against HEAD, same failure both ways. separate-hierarchy-walk, separate-shadow-walk and separate-whole-screenshot-walk fail in the same batch (Scripts/playtest-all.sh --no-build separate: 0 passed, 4 failed, 5 could not run under the screen lock). The four all read the layers list after a separation, so it looks like one cause: the rows the panel builds after Separate into Layers are not the rows these walks were written against."
     }
   ]
 }

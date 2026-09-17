@@ -1,0 +1,33 @@
+{
+  "feature": "The count of what stayed a picture is the way to them",
+  "epic": "ui-building",
+  "summary": "Reading every label in a separated screenshot ends with a line saying how many came back and how many stayed pictures. That count is now the way to them: press it and exactly those labels are picked, in the layers list and on the canvas. Before, finding them meant scrolling the layers list hunting for rows still called Text and guessing.",
+  "setup": "Photonz Dev, Experiments window, release Next. Separate a screenshot into layers and Read every label in a separated screenshot at once are both on by default.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png." },
+    { "do": "Right click its row in the layers list and choose Separate into Layers." },
+    { "do": "Press Read the Words on the line at the bottom of the canvas." },
+    { "do": "Read the line it leaves: 12 labels, set in SF Pro. 3 stayed pictures. The last three words are blue and underlined.",
+      "shot": "2026-09-17-find-what-stayed-a-picture-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press 3 stayed pictures.",
+      "shot": "2026-09-17-find-what-stayed-a-picture-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Look at the canvas: the three labels the reading gave up on are outlined, and nothing else is." },
+    { "do": "Look at the layers list: it says 3 layers selected and has scrolled to the first of them." },
+    { "do": "Now do the same with Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, where every label reads: the line is a plain report with nothing to press." }
+  ],
+  "evaluate": [
+    "Does the underlined count read as part of the sentence, or as a control someone bolted onto a report?",
+    "Six seconds is how long the line waits before it fades. Is that long enough to read it, decide the strays matter, and reach the words?",
+    "Pressing it takes the line away. Is that right, or do you want the count to stay up so you can come back to it after clicking elsewhere?",
+    "The three outlines on the canvas are the answer you can actually see. Is the layers list pulling its weight at all here, or is the canvas doing the work?",
+    "Would you expect the same treatment anywhere else a line counts something you cannot see?"
+  ],
+  "rough": [
+    "The list cannot show all three at once. On this capture they are six rows apart and the layers list holds five rows, so it lands on the first of them and the other two are one turn of the wheel below. The canvas covers for it by outlining all three, but in a window with the panel scrolled elsewhere the list is only ever a partial answer.",
+    "Once the line fades there is no way back. Nothing remembers which labels a reading gave up on, so a person who reads the line, clicks the canvas and then changes their mind has to read the page again to get the count back.",
+    "The words take clicks for the six seconds they are up, over a strip in the middle bottom of the canvas. That is the same trade the Read the Words button already makes and it is the whole point here, but it is one more dead patch over the picture than there was yesterday.",
+    "A reading where NOTHING came back says \"None of the 12 labels could be read\" and offers nothing to press. That is deliberate, since every label is still a picture and there is nothing to pick them out from, but somebody who wants all twelve picked still has no button for it."
+  ]
+}

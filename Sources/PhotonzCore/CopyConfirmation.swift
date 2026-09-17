@@ -382,6 +382,35 @@ public struct CopyConfirmation: Hashable, Sendable {
         }
     }
 
+    /// The line as the pill DRAWS it: the part that is only read, and the part
+    /// of it that can also be pressed.
+    ///
+    /// Every notice in the app is inert by default, and that rule is what stops
+    /// a pill turning up unprompted and swallowing a click meant for the canvas
+    /// underneath it. One notice opts out: the one whose line counts something
+    /// a person cannot otherwise find (`CanvasNoticeAction.findStillPictures`).
+    /// There, the words that count are the way to what they count, so they take
+    /// the pointer and the rest of the sentence still does not.
+    ///
+    /// The pressable words are taken off the END of the line the notice already
+    /// says, and they have to be the action's own label, so a drawn pill and a
+    /// read one can never be two different sentences.
+    public var line: NoticeLine {
+        let whole = detail
+        guard let action, action.presentation == .wordsInTheLine else {
+            return NoticeLine(lead: whole, pressable: nil)
+        }
+        let words = action.label
+        // An action whose words are not the tail of its own line has nothing to
+        // press: the line stays a plain report rather than the pill inventing a
+        // control that does not match what it says.
+        guard whole.count > words.count, whole.hasSuffix(words) else {
+            return NoticeLine(lead: whole, pressable: nil)
+        }
+        let lead = String(whole.dropLast(words.count))
+        return NoticeLine(lead: lead.trimmingCharacters(in: .whitespaces), pressable: words)
+    }
+
     /// How many unreadable pieces are worth counting out loud when NOTHING
     /// came out of a picture.
     ///
@@ -401,5 +430,20 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// "1 measurement" / "N measurements".
     private static func measurementPhrase(_ count: Int) -> String {
         count == 1 ? "1 measurement" : "\(count) measurements"
+    }
+}
+
+/// A notice's line, split where a part of it can be pressed
+/// (`CopyConfirmation.line`). `pressable` is nil for every notice but the one
+/// that counts something findable, and then the whole sentence is `lead`.
+public struct NoticeLine: Hashable, Sendable {
+    /// The part that is only ever read.
+    public var lead: String
+    /// The words on the end of it that are also the way to what they count.
+    public var pressable: String?
+
+    public init(lead: String, pressable: String? = nil) {
+        self.lead = lead
+        self.pressable = pressable
     }
 }

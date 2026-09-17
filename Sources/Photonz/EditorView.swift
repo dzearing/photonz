@@ -321,7 +321,7 @@ struct EditorView: View {
                     // One slot: the "Copied" notice and the Measure mode hint
                     // never stack. The notice wins while it is up.
                     if let notice = editorState.copyConfirmation {
-                        canvasNoticeChip(title: notice.title, detail: notice.detail,
+                        canvasNoticeChip(title: notice.title, line: notice.line,
                                          action: notice.action)
                     } else if editorState.showsMeasureHint {
                         measureHintChip
@@ -466,23 +466,36 @@ struct EditorView: View {
     /// was meant to pick a piece did nothing.
     private func canvasNoticeChip(title: String?, detail: String,
                                   action: CanvasNoticeAction? = nil) -> some View {
-        HStack(spacing: 8) {
+        canvasNoticeChip(title: title, line: NoticeLine(lead: detail), action: action)
+    }
+
+    private func canvasNoticeChip(title: String?, line: NoticeLine,
+                                  action: CanvasNoticeAction? = nil) -> some View {
+        // A pill whose own words are the way onward puts nothing on the end of
+        // itself: the sentence IS the control (`CanvasNoticeAction`).
+        let wearsAButton = action != nil && action?.presentation != .wordsInTheLine
+        return HStack(spacing: 8) {
             // The sentence is read, never pressed. SwiftUI hands a click to
             // whatever claims the point, and a `Text` claims its own, so the
             // words say out loud that they do not want it.
             HStack(spacing: 8) {
                 if let title {
-                    Text(title).fontWeight(.semibold)
+                    Text(title).fontWeight(.semibold).allowsHitTesting(false)
                 }
-                Text(detail)
-                if action != nil {
+                Text(line.lead).allowsHitTesting(false)
+                // The one run of words in a pill that can be pressed, and it
+                // sits in the sentence at the sentence's own spacing: it is the
+                // end of the line, not a control after it.
+                if let pressable = line.pressable {
+                    stillPicturesLink(pressable)
+                }
+                if wearsAButton {
                     // A hairline between the sentence and the answer, so the
                     // words do not read as running into the button.
-                    Divider().frame(height: 16)
+                    Divider().frame(height: 16).allowsHitTesting(false)
                 }
             }
-            .allowsHitTesting(false)
-            if let action {
+            if let action, wearsAButton {
                 Button {
                     editorState.performCanvasNoticeAction()
                 } label: {
@@ -533,6 +546,41 @@ struct EditorView: View {
             .padding(.bottom, EditorChromeLayout.aboveToolBar(
                 toolSettingsHeight: editorState.toolSettingsSize.height))
             .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+
+    /// The words at the end of a notice's line that are also the way to what
+    /// they count (`CanvasNoticeAction.findStillPictures`).
+    ///
+    /// It reads as part of the sentence and not as a control bolted onto a
+    /// report, which is why it is not a capsule button: a report that counts
+    /// three strays and then offers a button called Select Them is two things
+    /// to read where there is one thing to do. So it is the count itself, in
+    /// the accent colour under a line, which is what a pressable run of words
+    /// looks like everywhere else on the Mac.
+    ///
+    /// The only part of the pill besides a button that takes the pointer. The
+    /// rest of the line stays click-through, so the dead patch over the picture
+    /// is these three words rather than the whole capsule.
+    private func stillPicturesLink(_ words: String) -> some View {
+        Button {
+            editorState.performCanvasNoticeAction()
+        } label: {
+            Text(words)
+                .underline()
+                .foregroundStyle(Color.accentColor)
+        }
+        .buttonStyle(.plain)
+        // The pill appears unprompted, so it must never pull the keyboard off
+        // the canvas mid-gesture.
+        .focusable(false)
+        .pointerStyle(.link)
+        .accessibilityLabel(words)
+        .accessibilityHint("Picks the labels that could not be read")
+        .playtestControl(words, detail: "Canvas notice")
+        // Resting on the words stops the pill's clock, the same as resting on a
+        // button does: six seconds is enough to read a sentence and not enough
+        // to read it, decide the strays matter, and travel to them.
+        .onHover { editorState.holdCanvasNotice($0) }
     }
 
     /// What the card an empty window shows can do for you.

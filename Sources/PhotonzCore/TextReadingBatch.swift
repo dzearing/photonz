@@ -49,6 +49,13 @@ extension TextReading {
 
         /// The line under it.
         public var detail: String {
+            guard let tail = stillPicturesTail else { return detailLead }
+            return "\(detailLead) \(tail)"
+        }
+
+        /// The part of the line that only reports: how many labels are words
+        /// now and what family the page was held to.
+        public var detailLead: String {
             guard landed else {
                 guard asked > 1 else { return "It could not be read" }
                 return "None of the \(asked) labels could be read"
@@ -60,9 +67,32 @@ extension TextReading {
             // page, not forty facts about labels.
             if let family, !family.isEmpty { line += ", set in \(family)" }
             guard stillPictures > 0 else { return line }
-            return stillPictures == 1
-                ? "\(line). 1 stayed a picture"
-                : "\(line). \(stillPictures) stayed pictures"
+            return line + "."
+        }
+
+        /// The end of the line: how many labels the reading gave up on.
+        ///
+        /// It is handed back on its own because it is the only part of the
+        /// sentence a person can be SENT to. Those labels look identical to
+        /// the ones that came back — same position, same pixels, no outline —
+        /// so a count with no way to them leaves somebody scrolling the layers
+        /// list guessing which rows are still called Text. The words that count
+        /// them are the way to them (`CanvasNoticeAction.findStillPictures`).
+        ///
+        /// Nil in the two cases where there is no fragment to pick out: nothing
+        /// stayed a picture, so the line is a plain report; or nothing was read
+        /// at all, and then the whole line is already about what stayed, with
+        /// nothing to pick them out FROM.
+        public var stillPicturesTail: String? {
+            guard landed, stillPictures > 0 else { return nil }
+            return Self.stayedPictures(stillPictures)
+        }
+
+        /// "3 stayed pictures", "1 stayed a picture". One place, because the
+        /// line and the thing that gets pressed are one thing and must never
+        /// say two different numbers about the same labels.
+        public static func stayedPictures(_ count: Int) -> String {
+            count == 1 ? "1 stayed a picture" : "\(count) stayed pictures"
         }
 
         /// What the pill says while the reading is still going, for a picture

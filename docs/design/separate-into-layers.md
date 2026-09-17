@@ -925,6 +925,24 @@ once per label, and how many stayed pictures. That last count is the half nobody
 would otherwise find out about, since a label that could not be read looks
 exactly like one that was.
 
+**And that count is the way to them.** "3 stayed pictures" over a screenshot of
+forty labels is a true sentence nobody can act on: the three look identical to
+the ones that came back, so finding them meant scrolling the layers list for
+rows still called Text and guessing. So the words that count them are pressed,
+and pressing them picks exactly those labels, in the list and on the canvas. It
+is the count itself in the line, underlined, rather than a button on the end of
+the pill: a report that counts three strays and then offers a separate control
+is two things to read where there is one thing to do
+(`CanvasNoticeAction.findStillPictures`, `Presentation.wordsInTheLine`). It is
+also the only run of words in any notice that takes the pointer; everything else
+in every pill still lets a click through to the picture.
+
+Landing a reading still picks NOTHING, for the reason it always did: moving the
+selection onto one of forty labels nobody pointed at would be the app pointing
+at the wrong thing. Pressing the count is the person pointing, which is the
+whole difference. Nothing stayed a picture, or nothing was read at all, and the
+line is a plain report with nothing to press.
+
 **While it works it says so.** A dense page is about two seconds and pressing
 the button takes the offer off screen, so the line becomes "Reading the words /
 142 labels" until the answer lands. This is the progress indicator the command
@@ -938,7 +956,8 @@ group a big separation arrives in and choosing Turn into Text reads the whole
 screenshot. One target is never a batch: it falls through to the single reading,
 so the pill still names the words and the face, and a refusal still says why.
 
-Walk: `Scripts/playtest/read-every-label-walk.json`.
+Walks: `Scripts/playtest/read-every-label-walk.json`,
+`Scripts/playtest/find-what-stayed-a-picture-walk.json`.
 
 ### A separated row says the words in its picture
 

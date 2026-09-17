@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:12.312Z",
-  "updated": "2026-09-17T12:13:56.526Z",
+  "updated": "2026-09-17T14:13:37.820Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named twice in audit rough lists as the remainder of a-label-read-back-into-text-keeps-the-face-the-r, which settled the FAMILY and is done. queue/audits/2026-09-17-read-every-label.json: \"The vote settles the FAMILY for the page and nothing settles the weight, so six row labels of one pane can still come back four Regular and two Medium. That is the remaining inconsistency the study named and it is more visible now than it was, because you see forty labels at once instead of one.\" And queue/audits/2026-09-17-turn-into-text-page-family.json: \"The weight wobble is untouched: Corner Radius still reads Semibold while Border 1 reads Medium, both section labels of one style. Already recorded in queue/audits/2026-09-13-turn-into-text.\" So there is a named, reproduced example to build the test on. The reader lives in PhotonzRender and is pinned by the study test plus the fixture suite; start from whatever the family vote does and ask whether weight wants the same vote or a vote per run of labels that share a size, since a heading must not be dragged down to its rows.",
@@ -39,6 +39,40 @@
     {
       "t": "2026-09-17T12:13:56.525Z",
       "note": "seq 70 -> 20"
+    },
+    {
+      "t": "2026-09-17T13:15:32.919Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T13:29:09.402Z",
+      "note": "Reproduced before building. PHOTONZ_WPROBE probe over the three study captures printed every run's chosen weight, its ink colour and the size the page family's REGULAR face fits it at. settings-pane-2x: the six row labels are visibly one weight in the picture (cropped and looked at it) and come back Launch at login MEDIUM 0.795, Show in menu bar MEDIUM 0.719, Play sound on capture REGULAR 0.903, Save captures to REGULAR, File name prefix REGULAR, Copy to clipboard REGULAR. app-window-2x: Corner Radius SEMIBOLD 0.723, Border 1 MEDIUM 0.715, Border 2 MEDIUM 0.732, and under them Style/Color REGULAR, Position/Width MEDIUM, 4 px/16 px SEMIBOLD, 2 px MEDIUM. So the wobble is real and it is confident: the wrong answer beats the right one by 0.06 to 0.08, which is well past distinctMargin, so no bar and no confidence filter can tell them apart. Only a page-level comparison can."
+    },
+    {
+      "t": "2026-09-17T13:29:14.136Z",
+      "note": "Adversarial review before building. The task's own hint is 'settle the weight the same way the family is settled', and that is the thing to break: a page has ONE family but it does NOT have one weight, so a page-wide weight vote would drag a heading down to its rows. That is a worse bug than the wobble it fixes, because a redline handed over with the heading in body weight is wrong in a way somebody acts on. So the vote has to be over a COHORT of labels a person would call the same kind of label, not over the page. What can the app actually know about 'same kind'? Only what it measured: the size the run fits at and the colour of its ink. Role is not knowable. Measured on app-window-2x this is exactly the discriminator that saves the heading case: Corner Radius / Border 1 / Border 2 are #EAEAEB while the Style / Color / Position rows under them are #7C7C7C, so colour separates the section labels from their rows and the vote never mixes them. Shortest version that delivers the value: no UI, no setting, no new pill wording, one pure rule in PhotonzCore and one extra pass in readPage. Risk kept and to be recorded in the audit: a label genuinely bolder than its neighbours at the SAME size and the SAME colour will be flattened. It does not happen on any of the three study captures, because emphasis in real UI nearly always moves the colour too."
+    },
+    {
+      "t": "2026-09-17T14:09:55.003Z",
+      "note": "owns these walks: label-weight-walk, read-every-label-walk"
+    },
+    {
+      "t": "2026-09-17T14:13:33.729Z",
+      "note": "Adversarial review of the BUILT thing, on the real app. Ran label-weight-walk against the probe: 59 steps, green, six real pictures of the window. Picking all six row labels of the settings pane the Text section now reads Font SF Pro, Weight Regular, where it used to read Weight Mixed; picking General alone still reads Bold; in the Effects panel the three section labels read one weight and the five rows under them read one lighter weight, and the panel still LOOKS like the panel. What still feels clumsy and is in the audit rough list: the SIZE menu still reads Mixed for the same six labels (filed as a-label-read-back-into-text-comes-back-at-the-si), and the three Effects section labels settle on Medium when they may be Semibold on screen (they agree, which was the task, but the answer is not certain). Left rough, not filed: two labels the same size AND the same ink colour that genuinely differ in weight get flattened; it happens on none of the three study captures and the below-the-bar escape catches the extreme case, so it is a trade to watch rather than a defect."
+    },
+    {
+      "t": "2026-09-17T14:13:33.775Z",
+      "note": "Also landed as part of this, because the weight pass would otherwise have paid for the recogniser twice: TextReader is split into measure (ink, characters, thirteen faces scored) and settle (choose among faces already scored, fit the winner at the layer's size). readPage now measures once and settles twice, instead of reading once and READING the strays again. Net effect is that a whole page reads faster than it did before this task: 1812 ms against the 1966 ms recorded for the family vote alone on dense-page-1x, spread over the cores. Nothing on the composite render path was touched."
+    },
+    {
+      "t": "2026-09-17T14:13:37.818Z",
+      "note": "The weight of a read-back label is settled per KIND of label, not per label and not per page. TextReading.WeightBallot / weightCohorts / pageWeight / pageWeights group a page's runs by the size the family's lightest weight fits their ink at and by the colour of that ink, then settle each group on the weight it agrees on best; TextReading.decide takes an 'at weight:' the way it takes 'preferring family:'; TextReader.readPage measures once and settles twice. Verified: six row labels of settings-pane-2x come back Regular instead of four Regular and two Medium, General stays Bold, and in the new effects-panel-2x fixture Corner Radius / Border 1 / Border 2 settle together and heavier than the Style / Color / Position / Width / Offset rows under them. Reading counts unchanged (9/9, 30/40, 74/142) and a whole page reads faster than before (1812 ms against 1966 ms on dense-page-1x). Full suite green, 8144 tests. label-weight-walk passes with six real window captures. Audit: queue/audits/2026-09-17-label-weight.json. Committed as c5c13167 and pushed."
     }
-  ]
+  ],
+  "started": "2026-09-17T13:15:32.918Z",
+  "walks": [
+    "label-weight-walk",
+    "read-every-label-walk"
+  ],
+  "completed": "2026-09-17T14:13:37.819Z"
 }
