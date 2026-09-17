@@ -5167,3 +5167,13 @@
 {"t":"2026-09-17T18:07:38.482Z","ev":"task_resequenced","id":"the-labels-a-reading-gave-up-on-can-still-be-fou","from":2970,"to":60}
 {"t":"2026-09-17T18:07:41.460Z","ev":"task_note","id":"delete-layer-and-fill-with-foreground-answer-the"}
 {"t":"2026-09-17T18:08:02.880Z","ev":"manager","filed":8,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-17-1107.md"}
+{"t":"2026-09-17T18:08:16.311Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-17T18:08:16.358Z","ev":"task_started","id":"a-sweep-on-a-locked-mac-files-the-half-it-could","title":"A sweep on a locked Mac files the half it could run","priority":"p1-high"}
+{"t":"2026-09-17T18:20:09.724Z","ev":"task_walks","id":"a-sweep-on-a-locked-mac-files-the-half-it-could","walks":[]}
+{"t":"2026-09-17T18:20:21.508Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:21.556Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:21.602Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:21.648Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:21.694Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:21.743Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
+{"t":"2026-09-17T18:20:31.226Z","ev":"task_done","id":"a-sweep-on-a-locked-mac-files-the-half-it-could","from":"in_progress","note":"A sweep on a locked Mac now runs the walks a lock cannot touch, records them as an explicitly partial result (counts, what was refused, the commit), files any that failed, and keeps the full sweep pending. Verified live on the locked Mac (10 ran, 15 refused, 87 requests handed back intact), dashboard photographed, new sweep-parse drill plus grown notes/line drills and Scripts/test.sh green. Audit: queue/audits/2026-09-17-partial-sweep-on-a-locked-mac.json"}

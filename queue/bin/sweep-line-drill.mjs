@@ -82,6 +82,20 @@ putHistory([]);
 check('with no recorded sweeps the locked run starts at the sweep itself',
   lib.sweepState().blindSince === ago(5 * 60 * 1000), lib.sweepState().blindSince);
 
+// A sweep that ran the part of the set a locked screen cannot touch. Its
+// counts are real and they are a PART: the state has to carry both, or the page
+// cannot tell a partial from a whole set.
+putHistory([pass(ago(3 * DAY)), lockedPass(ago(2 * DAY)), lockedPass(ago(5 * 60 * 1000))]);
+putLatest({ began: ago(5 * 60 * 1000), ended: ago(5 * 60 * 1000), seconds: 2400, walks: 224, passed: 222, failed: ['a-walk', 'b-walk'], couldNotRun: 297, total: 521, complete: false, timedOut: false, screenLocked: true, partial: true });
+W = lib.sweepState();
+check('a partial sweep says it is partial', W.last.partial === true, W.last);
+check('it carries what ran and what passed', W.last.walks === 224 && W.last.passed === 222, W.last);
+check('it carries what the lock refused and how big the set is',
+  W.last.couldNotRun === 297 && W.last.total === 521, W.last);
+check('it is still not complete', W.last.complete === false, W.last);
+check('the lock is still named', W.last.screenLocked === true, W.last);
+check('and the full set is still out of reach since the run began', W.blindSince === ago(2 * DAY), W.blindSince);
+
 console.log('what it says when the screen is not the problem');
 putHistory([pass(ago(2 * HOUR))]);
 putLatest({ began: ago(2 * HOUR), ended: ago(2 * HOUR), seconds: 2900, walks: 322, passed: 319, failed: ['a-walk', 'b-walk', 'c-walk'], complete: true, timedOut: false });
@@ -143,6 +157,30 @@ check('and the age reads in hours', /for 3 hours/.test(text(R.blindStrip())), te
 R = render({ pending: 0, oldestRequest: null, blindSince: ago(2 * DAY), last: { ended: ago(60000), walks: 0, passed: 0, failed: 0, complete: false, screenLocked: true } });
 check('with no requests waiting it still names the lock', /screen is locked/.test(text(R.sweepLine())), text(R.sweepLine()));
 check('and does not claim sweeps are waiting', !/waiting/.test(text(R.sweepLine())), text(R.sweepLine()));
+
+console.log('the line under the heartbeat, only the lock-safe part ran');
+R = render({ pending: 83, oldestRequest: ago(2 * DAY), blindSince: ago(2 * DAY), last: { ended: ago(5 * 60 * 1000), walks: 224, passed: 222, failed: 2, complete: false, screenLocked: true, partial: true, couldNotRun: 297, total: 521 } });
+line = text(R.sweepLine());
+check('it says how much of the part that ran passed', /222\/224/.test(line), line);
+check('it says out loud that this is part of the set', /part of the set/.test(line), line);
+check('it names the lock', /locked/.test(line), line);
+check('it says what failed in the part that ran', /2 failing/.test(line), line);
+check('it is one line, short enough for the corner it sits in', line.length < 80, line.length);
+check('it is still coloured as a problem: most of the set has not run', /db-sweep blind/.test(R.sweepLine()), R.sweepLine());
+
+strip = text(R.blindStrip());
+check('the strip says only part of the set has run', /[Oo]nly part of the walk set/.test(strip), strip);
+check('it counts what ran and what the lock refused', /224/.test(strip) && /297/.test(strip), strip);
+check('it says what the part that ran found', /222/.test(strip) && /2 fail/.test(strip), strip);
+check('it says how long and how many are waiting', /2 days/.test(strip) && /83 sweeps are waiting/.test(strip), strip);
+check('it says what to do about it', /[Uu]nlock the Mac/.test(strip), strip);
+check('it no longer claims nothing has been checked', !/nothing built since has been checked/.test(strip), strip);
+check('no em dash in any of it', !/—/.test(strip + line), strip + line);
+
+// A partial with nothing failing says so rather than trailing an empty count.
+R = render({ pending: 0, oldestRequest: null, blindSince: ago(HOUR), last: { ended: ago(60000), walks: 224, passed: 224, failed: 0, complete: false, screenLocked: true, partial: true, couldNotRun: 297, total: 521 } });
+check('a clean partial says nothing about failures', !/failing/.test(text(R.sweepLine())), text(R.sweepLine()));
+check('...and still says it is only part of the set', /part of the set/.test(text(R.sweepLine())), text(R.sweepLine()));
 
 console.log('the line under the heartbeat, screen unlocked');
 R = render({ pending: 0, oldestRequest: null, blindSince: null, last: { ended: ago(2 * HOUR), walks: 322, passed: 319, failed: 3, complete: true, screenLocked: false } });

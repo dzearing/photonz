@@ -269,9 +269,16 @@ settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 
 sweep_pass() {
   (( SANDBOX == 0 )) || return 0
   queue/bin/sweep.sh due || return 0
-  echo "[go-loop] $(date +%T) walk sweep requested; running it before the next task" | tee -a "$LOG"
-  Q busy "running the full walk sweep before the next task"
-  banner "**Go loop** running the full walk sweep (about 50 minutes). No task is claimed while it runs."
+  # With the screen locked only the walks that never ask for a control by name
+  # can run, which is about half the set and about forty minutes. Say which of
+  # the two is happening, because one of them leaves most of the set unchecked.
+  local what="the full walk sweep (about 50 minutes)"
+  if ioreg -n Root -d1 -a 2>/dev/null | grep -A1 CGSSessionScreenIsLocked | grep -q "<true/>"; then
+    what="the part of the walk sweep a locked screen cannot touch (about 40 minutes)"
+  fi
+  echo "[go-loop] $(date +%T) walk sweep requested; running $what before the next task" | tee -a "$LOG"
+  Q busy "running $what before the next task"
+  banner "**Go loop** running $what. No task is claimed while it runs."
   state busy
   queue/bin/sweep.sh run 2>&1 | tee -a "$LOG"
   Q event sweep_pass "$(queue/bin/sweep.sh summary 2>/dev/null || echo '{}')"

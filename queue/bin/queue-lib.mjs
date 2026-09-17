@@ -1086,6 +1086,12 @@ export function sweepState(history = null) {
       passed: latest.passed, failed: (latest.failed || []).length,
       complete: latest.complete !== false,
       screenLocked,
+      // A PARTIAL sweep ran the walks a locked screen cannot touch and was
+      // refused the rest. Its counts are real and they are a part, so the page
+      // needs both halves: what ran, and what is still out of reach.
+      partial: !!(latest && latest.partial),
+      couldNotRun: latest.couldNotRun || 0,
+      total: latest.total || 0,
     } : null,
     // When the app last had a whole-app check behind it: null unless the screen
     // is locking sweeps out right now.

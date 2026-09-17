@@ -61,11 +61,17 @@ all. Which step kinds survive and which do not is
 
 A walk that DOES look a control up by name is a different matter: it **does not
 pass and does not fail**. It reports `status: "locked"`, naming the step that
-needs a name and how many of its pictures forcing it would still get,
-`Scripts/playtest.sh` exits 3, and `queue/bin/sweep.sh` files nothing and keeps
-the request pending until the screen is unlocked (a sweep covering half the set
-is not the state of the walk set).  `Scripts/playtest-all.sh` carries on to the
-rest of the walks you named and counts the refusals separately. Every launch
+needs a name and how many of its pictures forcing it would still get, and
+`Scripts/playtest.sh` exits 3. `Scripts/playtest-all.sh` carries on to the rest
+of the walks and counts the refusals separately.
+
+So a sweep on a locked Mac is a **partial sweep**: it runs the walks a lock
+cannot touch, records what they found, files any walk that failed in them, and
+says in numbers how much of the set that was and how much was refused. It is
+never allowed to read as the state of the walk set, and the request for a full
+sweep stays pending until the screen is unlocked. While the screen stays locked
+the loop runs that partial at most once per commit, so it does not spend forty
+minutes between every pair of tasks re-checking code it has already covered. Every launch
 prints the state on its `Grants:` line (`· screen locked`). Nothing tries to
 unlock the Mac; a run that starts unlocked is held awake for its length so it
 cannot be locked out half way.

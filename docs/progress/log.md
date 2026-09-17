@@ -2,6 +2,53 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-17 — A sweep on a locked Mac reports the part it could run
+
+The Mac's screen has been locked since 2026-09-15 and the walk sweep filed
+nothing at all for three days, because a sweep would not report on a set it
+could only half run. That was the wrong trade: a lock takes the NAME off a
+control, and about half the walk set never asks for one, so those walks run and
+photograph the app for real. Silence hid a working check.
+
+So there is a third answer now, beside "it ran" and "it was stopped on the
+clock": a PARTIAL sweep. `Scripts/playtest-all.sh` carries on past a refused
+walk instead of stopping, and prints one summary shape for both states, `N
+passed, M failed[, K could not run]`, with the failing walk names under it and
+nothing else at that indent. `queue/bin/sweep-parse.mjs` is the one reading of
+that log and the one set of sentences said about it, so `sweep.sh status`, the
+standing failing-walks task and the dashboard cannot drift apart.
+`queue/bin/sweep-record.mjs` writes the record and hands the claimed requests
+straight back unless the set was actually covered, so a partial never retires
+the full sweep somebody asked for.
+
+Two things the task did not ask for and the work needed anyway. A partial that
+ran between every pair of tasks would cost forty minutes to re-check code it had
+already covered, so the record carries the commit it ran against and the loop
+repeats a partial only once new code has landed, never twice inside an hour.
+And a partial used to rewrite the standing task's failing list with only what it
+saw, which would have dropped 115 walks named by the last whole check and read
+as the app healing overnight; it now carries those across under their own
+heading saying they are unread, not fixed, and the next sweep reads both lists
+back.
+
+On the page the corner line says "walk sweep 10/10 just now, part of the set:
+locked" over a strip that counts both halves: how many walks a lock cannot run,
+how many did, and what they found. A locked Mac with nothing through at all
+still reads as it did.
+
+Verified on the locked Mac rather than in a fixture: a run narrowed to 25 walks
+ran 10 and was refused 15, the request file came back byte for byte identical
+with all 87 requests in it, and the dashboard was read in a browser and
+photographed. New drill `queue/bin/sweep-parse-drill.mjs`; `sweep-notes-drill`
+and `sweep-line-drill` grew the partial cases; `Scripts/test.sh` green at 8217
+tests.
+
+Audit: `queue/audits/2026-09-17-partial-sweep-on-a-locked-mac.json`.
+
+Next: this is a stopgap and says so. The card asking whether the loop may keep
+the Mac awake is still unanswered, and if the answer is yes then a full sweep
+runs every time and nobody reads a partial again.
+
 ## 2026-09-17 — a wrapped label is as wide as the words that came out
 
 When a container broke a label onto more lines it used to keep the whole room

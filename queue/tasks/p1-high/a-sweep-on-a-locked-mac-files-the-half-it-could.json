@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:01.186Z",
-  "updated": "2026-09-17T18:06:08.917Z",
+  "updated": "2026-09-17T18:20:31.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-17 at 18:0x local:\n\n  $ ioreg -n Root -d1 -a | grep -A1 CGSSessionScreenIsLocked\n    <key>CGSSessionScreenIsLocked</key>\n    <true/>\n  $ queue/bin/sweep.sh status\n    Last sweep 2026-09-17T18:03:11Z COULD NOT RUN: the screen was locked, so every walk that looks a control up by name was refused.\n    Half the set would have run and photographed the app, but half a set is not the state of the walk set, so nothing was filed. It runs again once the screen is unlocked.\n    A sweep is pending; the loop runs it between tasks.\n\nThe Mac has been locked since 2026-09-15 08:44. Every audit written since says in its own rough list that no walk ran and there is no picture of the app; several of them then FORCED a run with PHOTONZ_ALLOW_LOCKED_WALK=1 and got real window captures back, which is the proof the lock-safe half really does run.\n\nWhat exists already: Sources/PhotonzCore/PlaytestLockSafety.swift is the unit-tested list of which step kinds survive a lock; Scripts/playtest.sh exits 3 and reports status locked for a walk that needs a name; Scripts/playtest-all.sh already counts refusals separately. So the pieces are there and this task is about what sweep.sh does with them.\n\nThis is NOT the pending card your-mac-locks-at-night-and-whil, which asks whether the loop should keep the Mac awake. That question is about preventing the lock; this one is about what to do while it is locked, and the answer does not depend on it.\n\nFiles: queue/bin/sweep.sh, the sweep record in queue/history.jsonl and queue.mjs state (sweep.last), site/dashboard.html around the sweep strip. The strip already knows how to say a locked Mac (landed 2026-09-17 in the-dashboard-says-when-the-loop-has-gone-blind); this adds the numbers to it.",
@@ -35,6 +35,45 @@
     {
       "t": "2026-09-17T18:06:08.916Z",
       "note": "This is the stopgap for a-hundred-and-fifteen-walks-fail-on-code-that-pa, which is blocked on the card asking whether the loop should keep the Mac awake. That task is the real answer and would make this path a fallback nobody hits. This one is filed anyway because that card has been unanswered for two days while the sweep has filed nothing for three, and a partial answer that says it is partial beats silence."
+    },
+    {
+      "t": "2026-09-17T18:08:16.356Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T18:20:09.722Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-17T18:20:21.506Z",
+      "note": "Adversarial pass before building. The mock here is the task itself and it holds up, with one thing it does not say: a partial that repeats between EVERY pair of tasks would cost about forty minutes each time and tell nobody anything new, because the code it covers has not changed. So a partial repeats only once new code has landed (the record carries the commit it ran against) and never twice inside an hour (PHOTONZ_SWEEP_PARTIAL_FLOOR_MINUTES). That is an engineering call with no visible consequence, so it was decided here rather than asked about."
+    },
+    {
+      "t": "2026-09-17T18:20:21.554Z",
+      "note": "Second finding, fixed: a partial rewrote the standing failing-walks task's list with only the failures it saw, so 115 walks named by the last WHOLE check would have vanished and read as healed. A partial now carries across every walk it never ran that was failing before, under its own heading saying they are unread and not fixed, and the next sweep reads both lists back."
+    },
+    {
+      "t": "2026-09-17T18:20:21.600Z",
+      "note": "Built: Scripts/playtest-all.sh carries on past a refused walk instead of stopping the sweep, and prints one summary shape for both states ('N passed, M failed[, K could not run]') with the failing names under it and nothing else at that indent. queue/bin/sweep-parse.mjs is the one reading of that log plus the sentences said about it, shared by sweep.sh status, the standing task's notes and (in wording) the dashboard. queue/bin/sweep-record.mjs writes sweep/latest.json and hands the requests back unless the set was actually covered. sweep.sh records a partial with walks/passed/failed/couldNotRun/total/partial/head plus the names that ran and the names refused, files failures through sweep-report.mjs as always, and holds off another partial on the same commit. queue-lib sweepState carries partial/couldNotRun/total; dashboard.html says 'walk sweep 10/10 just now, part of the set: locked' over a strip that counts both halves."
+    },
+    {
+      "t": "2026-09-17T18:20:21.646Z",
+      "note": "Verified on the locked Mac, not assumed. queue/bin/sweep.sh run with PHOTONZ_SWEEP_ARGS=\"measure export\": 10 walks ran and passed, 15 were refused, exit 3, latest.json partial:true with ranWalks 10 / refusedWalks 15, requested.json still 87 requests byte for byte identical to the copy taken before the run, and sweep.sh status prints the three partial sentences plus the line saying why the loop is holding off. /api/state carries partial, couldNotRun and total; the dashboard was read in a browser and photographed (queue/audits/2026-09-17-partial-sweep-dashboard.png). Drills: sweep-parse-drill (new, 30 checks), sweep-notes-drill (57), sweep-line-drill (46), state-poll, audit-index, churn, all green, and Scripts/test.sh 8217 tests in 654 suites passed."
+    },
+    {
+      "t": "2026-09-17T18:20:21.692Z",
+      "note": "A failing walk in the lock-safe part is filed exactly as in a full sweep: proved end to end through the real sweep-report.mjs in a sandboxed queue (sweep-notes-drill), where a partial with two failures updates the standing task, names both, says the list came from part of the set, and claims nothing stopped failing."
+    },
+    {
+      "t": "2026-09-17T18:20:21.741Z",
+      "note": "left rough, none of it worth a task of its own: (1) a sweep's seconds include the probe build, so a short run says 'ran in 5m' for two minutes of walking, and always has; (2) while a sweep runs its live note sits on the dashboard's Running row, which reads oddly only when a person runs a sweep by hand, never in the loop where no task is claimed; (3) nothing on the page says when the next partial is due, only sweep.sh status in words; (4) the audit's picture is the dashboard rather than the app, because this feature has no app surface."
+    },
+    {
+      "t": "2026-09-17T18:20:31.223Z",
+      "note": "A sweep on a locked Mac now runs the walks a lock cannot touch, records them as an explicitly partial result (counts, what was refused, the commit), files any that failed, and keeps the full sweep pending. Verified live on the locked Mac (10 ran, 15 refused, 87 requests handed back intact), dashboard photographed, new sweep-parse drill plus grown notes/line drills and Scripts/test.sh green. Audit: queue/audits/2026-09-17-partial-sweep-on-a-locked-mac.json"
     }
-  ]
+  ],
+  "started": "2026-09-17T18:08:16.355Z",
+  "walks": [],
+  "completed": "2026-09-17T18:20:31.224Z"
 }

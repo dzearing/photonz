@@ -8,7 +8,10 @@
 #   Scripts/playtest-all.sh --no-build      reuse the built probe
 #   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh  all of them (see the gate below)
 #
-# Exits 0 when every walk passed. Never touches "dist/Photonz Dev.app".
+# Exits 0 when every walk passed, 1 when one failed, and 3 when the Mac's screen
+# was locked: then the walks that look a control up by name were refused and the
+# run covered only a part of the set, however many of the rest passed.
+# Never touches "dist/Photonz Dev.app".
 #
 # The whole set is now 322 walks, about 52 minutes, and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
@@ -133,14 +136,15 @@ for walk in Scripts/playtest/*.json; do
   elif (( code == 3 )); then
     # The screen is locked and THIS walk looks a control up by name, so it did
     # not run. Others still can: half the walk set never asks for a name, and
-    # those run and photograph the app normally (PlaytestLockSafety). So a
-    # handful of walks named on the command line carries on to the rest of
-    # them, while the whole sweep stops here rather than spend twenty minutes
-    # on an answer it is going to throw away for being half a set.
+    # those run and photograph the app normally (PlaytestLockSafety). So the run
+    # CARRIES ON either way and reports the part it managed. It used to stop
+    # here when nothing was named, on the grounds that half a set is not the
+    # state of the set; that was true and it cost three days of silence
+    # (2026-09-15 to 2026-09-17), because half a set that SAYS it is half a set
+    # still finds a regression on the day it lands.
     LOCKED=1
     COULD_NOT_RUN=$((COULD_NOT_RUN + 1))
     printf '%4ds  COULD NOT RUN  it needs a control by name and the screen is locked\n' $((SECONDS - WALK_BEGAN))
-    if (( ${#PATTERNS[@]} == 0 )); then break; fi
     continue
   else
     reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
@@ -166,18 +170,25 @@ if (( LOCKED )); then
   if (( RAN )); then
     echo "    The other $RAN walk(s) never ask for a name, so they ran for real and their"
     echo "    counts are real, pictures of the window included."
-    echo "==> $PASSED passed, ${#FAILED[@]} failed, $COULD_NOT_RUN could not run"
-    (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
   fi
   echo "    Unlock the screen to run the rest."
-  # Exit 3 still means THE SET WAS NOT COVERED, which is what the sweep reads to
-  # know it may claim nothing and file nothing.
-  exit 3
 fi
-echo "==> $PASSED passed, ${#FAILED[@]} failed"
+# The counts, in the one shape every reader of this log parses: the third number
+# is only there when a lock refused some, and the failing walks are the indented
+# lines under it and nothing else (queue/bin/sweep-parse.mjs).
+if (( LOCKED )); then
+  echo "==> $PASSED passed, ${#FAILED[@]} failed, $COULD_NOT_RUN could not run"
+else
+  echo "==> $PASSED passed, ${#FAILED[@]} failed"
+fi
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
 printf '==> %d walks in %dm %02ds' "$RAN" $((TOTAL / 60)) $((TOTAL % 60))
 (( RAN > 0 )) && printf ', %ds each on average' $((TOTAL / RAN))
 [[ -n "$SLOWEST" ]] && printf '; slowest %s at %ds' "$SLOWEST" "$SLOWEST_S"
 echo
+# Exit 3 means THE SET WAS NOT COVERED: some walks were refused for the lock, so
+# whatever ran is a part and never the state of the set. The sweep records it as
+# a partial, keeps its request pending, and still files any walk that FAILED in
+# the part that ran.
+(( LOCKED )) && exit 3
 exit $(( ${#FAILED[@]} == 0 ? 0 : 1 ))

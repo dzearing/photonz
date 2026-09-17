@@ -38,9 +38,15 @@ export function previousFailures(notes) {
   const text = String(notes || '');
   const end = text.indexOf(MACHINE_END);
   const machine = end === -1 ? text : text.slice(0, end);
-  const m = machine.match(/^Failing walks \(\d+\): (.+)$/m);
-  if (!m) return [];
-  return m[1].split(',').map((s) => s.trim()).filter(Boolean);
+  const names = [];
+  // Both lists a sweep can leave: what failed in the run, and what a locked
+  // screen never let run and was failing before it. The second one exists so a
+  // string of partial sweeps cannot quietly lose the list.
+  for (const re of [/^Failing walks \(\d+\): (.+)$/m, /^Not run this time and still failing from the last check \(\d+\): (.+)$/m]) {
+    const m = machine.match(re);
+    if (m) names.push(...m[1].split(',').map((s) => s.trim()).filter(Boolean));
+  }
+  return [...new Set(names)];
 }
 
 // owners: { "<walk-name>": { ids: ["<task id>", ...], declared: true|false } }
@@ -56,12 +62,36 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
   const lines = [
     MACHINE_BEGIN,
     ``,
-    result.complete === false
-      ? `Last sweep ${result.ended} DID NOT FINISH${result.timedOut ? ' (stopped on the clock)' : ''}: it reached ${result.walks} walks in ${minutes} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
-      : `Last sweep ${result.ended}: ${result.passed} of ${result.walks} walks passed in ${minutes} minutes.`,
+    // Three shapes a run can come back in, and a list of failures means a
+    // different thing under each. A PARTIAL ran only the walks a locked screen
+    // cannot touch, so its list is the failures in the part that ran and says so
+    // in the same breath: half a set read as a whole set is how a green sweep
+    // would come to mean nothing.
+    result.partial
+      ? `Last sweep ${result.ended} ran only the part of the walk set a locked screen cannot touch: ${result.walks} of ${result.total} walks ran in ${minutes} minutes, of which ${result.passed} passed. The other ${result.couldNotRun} were refused because the screen is locked, and those are unknown, not passing. This list is the failures in the part that ran, not the state of the walk set.`
+      : result.complete === false
+        ? `Last sweep ${result.ended} DID NOT FINISH${result.timedOut ? ' (stopped on the clock)' : ''}: it reached ${result.walks} walks in ${minutes} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
+        : `Last sweep ${result.ended}: ${result.passed} of ${result.walks} walks passed in ${minutes} minutes.`,
     ``,
     `Failing walks (${failed.length}): ${list}`,
   ];
+
+  // A partial sweep replaces a list that may have come from a whole check. The
+  // walks it never ran are not fixed and not failing: they are unread, and
+  // dropping them would read as the app having healed overnight. So they are
+  // carried across by name, under their own heading, and read back as
+  // previous failures by the sweep after this one.
+  if (result.partial) {
+    const ran = new Set(result.ranWalks || []);
+    const carried = previous.filter((w) => !failed.includes(w) && !ran.has(w));
+    if (carried.length) {
+      lines.push(
+        ``,
+        `Not run this time and still failing from the last check (${carried.length}): ${carried.join(', ')}`,
+        `Those walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.`,
+      );
+    }
+  }
 
   const ownedHere = failed.filter((w) => !owners[w]?.ids?.length);
   const ownedElsewhere = failed.filter((w) => owners[w]?.ids?.length);

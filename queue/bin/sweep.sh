@@ -38,6 +38,14 @@ mkdir -p "$SDIR"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 
+# Whether the Mac's screen is locked right now. The login window does not stop
+# the app being drawn, driven or photographed; what it takes away is the NAME on
+# every control, which is how about half the walks find one
+# (Sources/PhotonzCore/PlaytestLockSafety.swift).
+screen_locked() {
+  ioreg -n Root -d1 -a 2>/dev/null | grep -A1 CGSSessionScreenIsLocked | grep -q '<true/>'
+}
+
 case "${1:-}" in
 
 # ---------------------------------------------------------------- request ----
@@ -71,33 +79,50 @@ request)
 # Exit 0 when there is a sweep to run. The loop tests this between tasks.
 due)
   [[ -s "$REQ" ]] || exit 1
+  # While the screen is locked the loop can only ever run the part of the set a
+  # lock cannot touch, and that part takes about forty minutes. Running it again
+  # between every pair of tasks, on code it has already covered, would eat the
+  # loop and tell nobody anything new. So a partial repeats only once new code
+  # has landed, and never twice inside the floor below.
+  screen_locked || exit 0
+  node -e '
+    const fs = require("fs");
+    const [latest, head, floorMin] = process.argv.slice(1);
+    let r = null;
+    try { r = JSON.parse(fs.readFileSync(latest, "utf8")); } catch {}
+    if (!r || !r.screenLocked) process.exit(0);            // nothing locked to hold off
+    const age = (Date.now() - Date.parse(r.began || r.ended || 0)) / 60000;
+    const sameCode = r.head && head && r.head === head;
+    process.exit(sameCode || age < Number(floorMin) ? 1 : 0);
+  ' "$LATEST" "$(git rev-parse HEAD 2>/dev/null || echo '')" "${PHOTONZ_SWEEP_PARTIAL_FLOOR_MINUTES:-60}"
   ;;
 
 # ----------------------------------------------------------------- status ----
 status)
   if [[ -s "$LATEST" ]]; then
     node -e '
-      const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      const took = r.seconds >= 60 ? `${Math.round(r.seconds / 60)}m` : `${r.seconds}s`;
-      if (r.screenLocked) {
-        console.log(`Last sweep ${r.ended} COULD NOT RUN: the screen was locked, so every walk that looks a control up by name was refused.`);
-        console.log("Half the set would have run and photographed the app, but half a set is not the state of the walk set, so nothing was filed. It runs again once the screen is unlocked.");
-      } else if (r.complete === false) {
-        // Never let a cut-short run read as a clean bill of health: it only
-        // reached part of the set, so silence about the rest means nothing.
-        console.log(`Last sweep ${r.ended} DID NOT FINISH${r.timedOut ? " (stopped on the clock)" : ""}: it reached ${r.walks} walks in ${took}, of which ${r.passed} passed.`);
-        console.log("The walks it never reached are unknown, not passing. Ask for another sweep if you need the whole set.");
-      } else {
-        console.log(`Last sweep ${r.ended}: ${r.passed}/${r.walks} walks passed in ${took}.`);
-      }
-      if (r.failed.length) console.log(`Failing: ${r.failed.join(", ")}`);
-      else if (r.complete !== false) console.log("Nothing failing.");
-      if (r.log) console.log(`Full output: ${r.log}`);
+      const fs = require("fs");
+      import("./queue/bin/sweep-parse.mjs").then(({ sweepSentences }) => {
+        const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+        for (const line of sweepSentences(r)) console.log(line);
+        if (r.failed.length) console.log(`Failing: ${r.failed.join(", ")}`);
+        else if (r.complete !== false) console.log("Nothing failing.");
+        else if (r.partial) console.log("Nothing failing in the part that ran.");
+        if (r.log) console.log(`Full output: ${r.log}`);
+      });
     ' "$LATEST"
   else
     echo "No sweep has been recorded yet. Ask for one with: queue/bin/sweep.sh request \"<why>\""
   fi
-  [[ -s "$REQ" ]] && echo "A sweep is pending; the loop runs it between tasks."
+  if [[ -s "$REQ" ]]; then
+    echo "A sweep is pending; the loop runs it between tasks."
+    # Say why a pending sweep is not running right now, rather than letting it
+    # look stuck: while the screen stays locked the loop runs the lock-safe part
+    # once per commit, and holds off in between.
+    if screen_locked && ! queue/bin/sweep.sh due; then
+      echo "The screen is locked and the lock-safe part has already run against this commit, so the loop is holding off until new code lands or the screen is unlocked."
+    fi
+  fi
   exit 0
   ;;
 
@@ -107,7 +132,7 @@ summary)
   if [[ -s "$LATEST" ]]; then
     node -e '
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, ...(r.screenLocked ? { screenLocked: true } : {}) }));
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial, total: r.total || 0 } : {}) }));
     ' "$LATEST"
   else
     echo '{}'
@@ -132,7 +157,13 @@ run)
   began=$(now)
   TOTAL_WALKS=$(ls Scripts/playtest/*.json 2>/dev/null | wc -l | tr -d ' ')
   echo "==> Walk sweep started $began, logging to $RUNLOG"
-  Q note "running the full walk sweep (about 50 minutes); no task is claimed while it runs" >/dev/null 2>&1
+  # With the screen locked only the walks that never ask for a control by name
+  # can run. Say which of the two runs is happening, in the live note as well as
+  # here: one of them leaves most of the set unchecked and must not read as the
+  # whole sweep.
+  WHAT="the full walk sweep (about 50 minutes)"
+  screen_locked && WHAT="the part of the walk sweep a locked screen cannot touch (about 40 minutes)"
+  Q note "running $WHAT; no task is claimed while it runs" >/dev/null 2>&1
 
   # PHOTONZ_SWEEP=1 is the key that unlocks the full run in playtest-all.sh;
   # without it that script refuses, which is what keeps a runner from starting
@@ -189,78 +220,27 @@ run)
 
   # Exit 3 from playtest-all means the sweep DID NOT COVER THE SET: the Mac's
   # screen was locked, so every walk that looks a control up by name was refused
-  # (PlaytestLockSafety). The walks that never ask for a name do run and their
-  # answers are real, but half a set is not the state of the walk set, so a
-  # sweep in that state files nothing and claims nothing. The request goes back on the
-  # pile so the loop runs a real one once the screen is unlocked, which is the
-  # difference between losing an hour and filing a hundred bugs that are not
-  # there.
+  # (PlaytestLockSafety). The walks that never ask for a name DO run, and their
+  # answers and their pictures are real, so what comes back is a PARTIAL sweep:
+  # recorded with its numbers, marked partial, and never allowed to read as the
+  # state of the walk set. Until 2026-09-17 a run in this state filed nothing at
+  # all, which meant three days of silence while half the set was running fine.
+  #
+  # The request goes back on the pile either way: a full sweep is still owed.
+  HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
   if (( SWEEP_CODE == 3 )); then
-    echo "!! The walk sweep could not run: the Mac's screen is locked, so every walk that looks"
-    echo "   a control up by name was refused. Nothing filed."
-    echo "   The request stays pending; the loop runs it again once the screen is unlocked."
-    node -e '
-      const fs = require("fs");
-      const [latest, claimed, req, began, ended, took, runlogRel] = process.argv.slice(1);
-      let requests = [];
-      try { requests = (JSON.parse(fs.readFileSync(claimed, "utf8")).requests) || []; } catch {}
-      // Hand the request back rather than swallow it.
-      let pending = { requests: [] };
-      try { pending = JSON.parse(fs.readFileSync(req, "utf8")); } catch {}
-      if (!Array.isArray(pending.requests)) pending.requests = [];
-      pending.requests = requests.concat(pending.requests);
-      fs.writeFileSync(req, JSON.stringify(pending, null, 2) + "\n");
-      fs.writeFileSync(latest, JSON.stringify({
-        began, ended, seconds: Number(took), walks: 0, passed: 0, failed: [],
-        requests, log: runlogRel, complete: false, timedOut: false, screenLocked: true,
-      }, null, 2) + "\n");
-    ' "$LATEST" "$CLAIMED" "$REQ" "$began" "$(now)" "$took" "queue/sweep/$stamp.log"
-    rm -f "$CLAIMED"
-    Q note "the walk sweep could not run: the Mac's screen is locked, so every walk that looks a control up by name was refused. Nothing filed; the request is still pending." >/dev/null 2>&1
-    exit 3
+    echo "!! The Mac's screen is locked, so this sweep covered only the part of the set a lock"
+    echo "   cannot touch. What ran is real; what was refused is unknown, not passing."
+    echo "   The request stays pending; the loop runs a full one once the screen is unlocked."
   fi
+  # How big the set is, for "224 of 521 walks ran". A run narrowed with
+  # PHOTONZ_SWEEP_ARGS covers a handful on purpose, so it reports its own size
+  # rather than pretending the rest of the set was refused.
+  SET_SIZE=$TOTAL_WALKS
+  [[ -n "${PHOTONZ_SWEEP_ARGS:-}" ]] && SET_SIZE=0
+  queue/bin/sweep-record.mjs "$RUNLOG" "$LATEST" "$CLAIMED" "$REQ" \
+    "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT" "$SET_SIZE" "$HEAD_SHA"
 
-  node -e '
-    const fs = require("fs");
-    const [logFile, latest, claimed, began, ended, took, runlogRel, timedOut] = process.argv.slice(1);
-    const text = fs.readFileSync(logFile, "utf8");
-    const counts = text.match(/^==> (\d+) passed, (\d+) failed$/m);
-    const failed = [];
-    if (counts) {
-      // playtest-all lists each failing walk on its own indented line right
-      // after the count line.
-      const after = text.slice(text.indexOf(counts[0]) + counts[0].length).split("\n");
-      for (const l of after) {
-        const m = l.match(/^ {4}(\S+)$/);
-        if (!m) { if (l.trim().startsWith("==>")) break; else continue; }
-        failed.push(m[1]);
-      }
-    } else {
-      // No summary line, so the run was stopped part way. Read the per-walk
-      // lines it did print, because "it got to walk 58 and these two failed"
-      // is worth far more than a row of zeroes.
-      for (const l of text.split("\n")) {
-        const m = l.match(/^([a-z0-9-]+) +\d+s  (ok|FAILED)/);
-        if (m && m[2] === "FAILED") failed.push(m[1]);
-      }
-    }
-    const reached = (text.match(/^[a-z0-9-]+ +\d+s  (ok|FAILED)/gm) || []).length;
-    let requests = [];
-    try { requests = (JSON.parse(fs.readFileSync(claimed, "utf8")).requests) || []; } catch {}
-    const passed = counts ? Number(counts[1]) : reached - failed.length;
-    const result = {
-      began, ended, seconds: Number(took),
-      walks: counts ? Number(counts[1]) + Number(counts[2]) : reached,
-      passed, failed, requests, log: runlogRel,
-      // A sweep is complete when playtest-all printed its summary line. A run
-      // that was stopped on the clock did not, so nobody reads its counts as
-      // the state of the walk set.
-      complete: Boolean(counts) && timedOut !== "1",
-      timedOut: timedOut === "1",
-    };
-    fs.writeFileSync(latest, JSON.stringify(result, null, 2) + "\n");
-    if (!result.complete) console.log("!! The sweep did not finish cleanly; its counts are not the state of the walk set.");
-  ' "$RUNLOG" "$LATEST" "$CLAIMED" "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT"
   rm -f "$CLAIMED"
 
   # Keep the last ten run logs. One is ~30KB and a sweep can be asked for
@@ -269,6 +249,15 @@ run)
 
   FAILCOUNT=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).failed.length)' "$LATEST")
   echo "==> Walk sweep finished in $((took / 60))m $((took % 60))s, $FAILCOUNT failing"
+  # Leave the live note saying what the run found rather than what it set out to
+  # do: "running the full walk sweep" sat on the dashboard long after the run
+  # was over and read as a sweep still going.
+  Q note "$(node -e '
+    const fs = require("fs");
+    import("./queue/bin/sweep-parse.mjs").then(({ sweepSentences }) => {
+      console.log(sweepSentences(JSON.parse(fs.readFileSync(process.argv[1], "utf8")))[0]);
+    });
+  ' "$LATEST")" >/dev/null 2>&1
 
   # A failing sweep becomes one task, not one per sweep: if the standing task
   # is still open, the new result is appended to it instead of filing a
@@ -276,6 +265,9 @@ run)
   if [[ "$FAILCOUNT" != 0 ]]; then
     node queue/bin/sweep-report.mjs "$LATEST"
   fi
+
+  # Exit 3 still means the set was not covered, for anything that reads it.
+  (( SWEEP_CODE == 3 )) && exit 3
   ;;
 
 *)

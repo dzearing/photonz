@@ -832,6 +832,15 @@
     // and they need opposite things from a person: one needs the Mac unlocked,
     // the other needs looking into. Say which.
     if (W.last.screenLocked) {
+      // A locked Mac still runs the walks that never ask for a control by name,
+      // so there are two lockeds: one where a part of the set ran and has
+      // numbers, and one where nothing got through at all.
+      if (W.last.partial) {
+        var p = 'walk sweep ' + W.last.passed + '/' + W.last.walks + ' ' + rel(W.last.ended)
+          + ', part of the set: locked';
+        if (W.last.failed) p += ' · ' + W.last.failed + ' failing';
+        return '<span class="db-sweep blind" title="The screen is locked, so only the walks that never ask for a control by name could run.">' + esc(p) + '</span>';
+      }
       var b = 'no walk sweep for ' + span(W.blindSince || W.last.ended) + ': the screen is locked';
       if (W.pending) b += ' · ' + W.pending + ' waiting';
       return '<span class="db-sweep blind" title="Unlock the Mac and the loop runs one between tasks.">' + esc(b) + '</span>';
@@ -852,6 +861,24 @@
     var W = S.sweep;
     if (!W || !W.last || !W.last.screenLocked) return '';
     var h = '<div class="db-herr warn"><i class="ic ic-warning"></i><div>';
+    if (W.last.partial) {
+      // The honest version of a locked Mac: a part of the set ran, and saying
+      // which part is what stops it being read as either a clean bill of health
+      // or as silence.
+      h += '<b>Only part of the walk set has run for ' + esc(span(W.blindSince || W.last.ended)) + ': the Mac’s screen is locked</b>';
+      h += '<p>The scripted walks find every control by its name, and a locked screen takes those names away, so '
+        + W.last.couldNotRun + ' of the ' + W.last.total + ' walks cannot run at all. The other ' + W.last.walks
+        + ' never ask for a name, so they do run and photograph the app for real: the last sweep '
+        + rel(W.last.ended) + ' passed ' + W.last.passed + ' of them'
+        + (W.last.failed ? ' and ' + W.last.failed + ' failed' : '') + '. '
+        + 'What the refused walks check is unknown, not passing. ';
+      if (W.pending) {
+        h += W.pending + (W.pending === 1 ? ' sweep is' : ' sweeps are') + ' waiting'
+          + (W.oldestRequest ? ', the oldest asked for ' + rel(W.oldestRequest) : '') + '. ';
+      }
+      h += 'Unlock the Mac and the loop runs a full one between tasks.</p></div></div>';
+      return h;
+    }
     h += '<b>No walk sweep has run for ' + esc(span(W.blindSince || W.last.ended)) + ': the Mac’s screen is locked</b>';
     h += '<p>The scripted walks find every control by its name, and a locked screen takes those names away, so the whole-app check cannot run and nothing built since has been checked against it. ';
     if (W.pending) {

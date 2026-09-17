@@ -1,0 +1,28 @@
+{
+  "feature": "A sweep on a locked Mac reports the part it could run",
+  "epic": "unmanned-loop",
+  "summary": "With the Mac's screen locked the walk sweep now runs every walk a lock cannot touch, records what they found, files any of them that failed, and says in numbers how much of the set that was. Before today it filed nothing at all, which was three days of silence while about half the set was running fine.",
+  "setup": "Nothing to install. The Mac's screen has been locked since 2026-09-15, which is the state this is about. Everything below is the dashboard at http://127.0.0.1:8791 and two commands in the repo.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791 and read the red line in the top right of Summary: it should say a pass count, 'part of the set', and 'locked'.", "shot": "2026-09-17-partial-sweep-dashboard.png" },
+    { "do": "Read the amber strip under it: 'Only part of the walk set has run for 2 days: the Mac's screen is locked', with how many walks cannot run, how many did, and what they found." },
+    { "do": "Run `queue/bin/sweep.sh status` in the repo and read the three sentences it prints." },
+    { "do": "Check the last line it prints: it should say a full sweep is still pending and why the loop is not running another partial right now." },
+    { "do": "Run `queue/bin/sweep.sh run` yourself to watch one happen (narrow it to a minute with PHOTONZ_SWEEP_ARGS=\"measure export\")." },
+    { "do": "Unlock the Mac, then run `queue/bin/sweep.sh status` again: nothing about the wording should mention a lock once a full sweep has run." }
+  ],
+  "evaluate": [
+    "Reading only the red corner line, could you mistake this for a sweep that covered the whole set?",
+    "Does the amber strip tell you the one thing to do about it in its first sentence?",
+    "Is 'part of the set: locked' the right phrase for the corner, or would you rather see the two numbers (10 ran, 15 refused)?",
+    "A partial sweep costs about forty minutes and repeats only once new code has landed. Is once per commit the right cadence while the screen stays locked, or too often?",
+    "When the screen is locked for days, would you rather the loop kept the Mac awake instead (there is a separate card asking exactly that)?"
+  ],
+  "rough": [
+    "The picture in this report is the dashboard, taken through the browser's own capture, not a photograph of the app: this feature has no app surface. No walk was forced for it.",
+    "A partial sweep says 'ran in 5m' where the 5m includes the probe build, same as a full sweep always has. It overstates the walking time on a short run.",
+    "While a sweep runs, its live note sits on the task's own activity line on the dashboard, so the Running row reads about the sweep and not about the task in flight. It is accurate and it is in the wrong place.",
+    "The floor between two partials is an hour and is not shown anywhere except in the words of `sweep.sh status`. Nothing on the dashboard says when the next partial is due.",
+    "This is a stopgap by design. If the loop is allowed to keep the Mac awake, a full sweep runs every time and nobody ever reads a partial again."
+  ]
+}

@@ -95,6 +95,35 @@ console.log('walks that stopped failing');
   const cut = notes.mergeNotes(first, result({ failed: ['beta-walk'], complete: false }));
   check('a sweep that was cut short claims nothing stopped failing', !cut.includes('Stopped failing'));
   check('...and says it did not finish', cut.includes('DID NOT FINISH'));
+
+  // A sweep that ran only the walks a locked screen cannot touch. Its failures
+  // are real and get listed; everything it could not reach must not read as
+  // passing, and a walk missing from the list must not read as fixed.
+  // `first` was a whole sweep with alpha-walk and gamma-walk failing. The
+  // partial below runs beta-walk and gamma-walk and is refused alpha-walk.
+  const whole = notes.mergeNotes('', result({ failed: ['alpha-walk', 'gamma-walk'] }));
+  const part = notes.mergeNotes(whole, result({
+    failed: ['beta-walk'], complete: false, partial: true, screenLocked: true,
+    walks: 224, passed: 222, couldNotRun: 297, total: 521,
+    ranWalks: ['beta-walk', 'gamma-walk'],
+  }));
+  check('a partial sweep says it ran only the part a lock cannot touch',
+    /ran only the part of the walk set a locked screen cannot touch/.test(part), part);
+  check('...and says how much of the set that was', part.includes('224 of 521 walks ran'), part);
+  check('...and counts what the lock refused', part.includes('The other 297 were refused'), part);
+  check('...and says the list is not the state of the set',
+    part.includes('not the state of the walk set'), part);
+  check('...and still names the walk that failed in it', part.includes('Failing walks (1): beta-walk'), part);
+  check('...and claims nothing stopped failing', !part.includes('Stopped failing'), part);
+  // The list this replaces was the last WHOLE check. A partial that quietly
+  // drops the walks it never ran would read as the app healing overnight.
+  check('...and carries across a walk it never ran that was failing before',
+    /Not run this time and still failing from the last check \(1\): alpha-walk/.test(part), part);
+  check('...and a walk it DID run and passed is gone from both lists',
+    !part.includes('gamma-walk'), part);
+  check('a carried-over walk is still read back as a previous failure next time',
+    notes.previousFailures(part).sort().join() === 'alpha-walk,beta-walk', notes.previousFailures(part));
+  check('...with no em dash', !part.includes('\u2014'), part);
 }
 
 // ---- failures another task already owns -------------------------------------
@@ -205,6 +234,26 @@ console.log('two sweeps through sweep-report.mjs');
   check('...updates the walk list', task.notes.includes('gamma-walk') && !task.notes.includes('alpha-walk,'), task.notes);
   check('...names the walk that stopped failing', task.notes.includes('Stopped failing since the last sweep (1): alpha-walk'), task.notes);
   check('...and still logs the run', (task.log || []).some((e) => e.note.startsWith('sweep 2026-09-13T15:00:00Z')), task.log);
+
+  // A walk that fails in the part a locked screen CAN run is a real failure and
+  // has to be claimable, exactly as in a full sweep. This is the whole point of
+  // running the lock-safe part at all: before 2026-09-17 a locked Mac filed
+  // nothing, so a regression in one of those walks waited for whenever the
+  // screen was next unlocked.
+  const r3 = write('r3.json', result({
+    ended: '2026-09-17T18:00:00Z', failed: ['beta-walk', 'delta-walk'], log: 'queue/sweep/r3.log',
+    complete: false, partial: true, screenLocked: true,
+    walks: 224, passed: 222, couldNotRun: 297, total: 521,
+  }));
+  run(r3);
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('a partial sweep still names its failures on the standing task',
+    task.notes.includes('Failing walks (2): beta-walk, delta-walk'), task.notes);
+  check('...and says the list came from part of the set',
+    task.notes.includes('ran only the part of the walk set a locked screen cannot touch'), task.notes);
+  check('...and does not claim the walks it never ran stopped failing',
+    !task.notes.includes('Stopped failing'), task.notes);
+  check('...and logs the run like any other', (task.log || []).some((e) => e.note.startsWith('sweep 2026-09-17T18:00:00Z')), task.log);
 }
 
 rmSync(dir, { recursive: true, force: true });

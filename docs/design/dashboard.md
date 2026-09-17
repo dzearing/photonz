@@ -130,8 +130,9 @@ age, or how many runs have been asked for and never served. It runs between
 tasks and nothing else on the page would ever have mentioned it.
 
 A sweep the LOCK stopped is its own case. The walks find every control by its
-name and a locked screen takes the names away, so the run files nothing and
-hands its request back. That used to reach the page as `complete: false`, which
+name and a locked screen takes the names away, so the run covers only the part
+of the set that never asks for one and hands its request back. That used to
+reach the page as `complete: false`, which
 is the shape of a sweep that ran out of time, and the hero said "walk sweep cut
 short at 0 walks": a sweep that broke rather than a machine that needs
 unlocking. The Mac locked on 2026-09-15 and two days of work shipped with no
@@ -142,6 +143,16 @@ the hero says "no walk sweep for 2 days: the screen is locked · 83 waiting" in
 red, over an amber strip that says why it matters, how many are waiting, when
 the last try was, and that unlocking the Mac is the whole fix. Drill:
 `queue/bin/sweep-line-drill.mjs`.
+
+A sweep that ran the lock-safe part is a third state again, landed 2026-09-17.
+It has real counts for a real part of the set, so the hero says "walk sweep
+222/224 5m ago, part of the set: locked · 2 failing" and the strip under it
+reads "Only part of the walk set has run for 2 days: the Mac's screen is
+locked", with how many walks cannot run, how many did, and what they found. The
+state carries `partial`, `couldNotRun` and `total` beside `screenLocked` so the
+page can tell a part from a whole, and the same sentences are said by
+`queue/bin/sweep.sh status` and written onto the standing failing-walks task
+(`queue/bin/sweep-parse.mjs`, one voice for all three).
 
 ## When a task walks out on its changes
 
