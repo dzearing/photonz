@@ -17526,3 +17526,43 @@ whole set), so checking a change to failure handling is not a coffee break.
 
 Next: nothing open on this. The loop's own script is the only file that can go
 stale, and it now carries everything it knew across the restart.
+
+## 2026-09-17 — a copy follows the original on the sides of its room it did not touch
+
+Giving a copy of a component more room on one side used to hand it all four.
+Typing 56 into Left froze top, right and bottom at whatever the original
+happened to be that afternoon, so making the component roomier above later
+skipped every copy anybody had ever nudged, and nothing on screen said why. The
+knob's own audit asked about it on 2026-09-06 and the user answered on
+2026-09-13: untouched sides keep following.
+
+A room answer is now the sides a copy has typed and nothing at all about the
+ones it has not (`ComponentRoomAnswer`, four optionals). `instanceValue`
+resolves the copy's own sides over the original's, and `GroupLayout`'s room
+setter merges rather than replaces, which is the one place following actually
+happens: by the time a stored answer is written, the room already in the layout
+is the original's, so it works the same for a knob on a piece inside the
+component and for one on the copy's own edges. `setInstanceRoom` adds one side
+to the copy's own answer, `clearInstanceRoomSide` takes one back, and an answer
+that owns no side is stored as no answer at all, so the row's way back goes away
+with the last side. Every older shape opens owning all four: one number from
+before room had sides, four numbers from before sides could follow separately.
+
+On the panel the four boxes in the popout now say which is which. A side the
+copy owns reads in ordinary ink with its own uturn arrow beside it; a side still
+following reads at the Mixed strength, through a new `isFollowing` on
+`PanelNumberField`. The arrow column is reserved whenever a popout offers any
+way back, so the little cross does not jump sideways the moment somebody types
+in it, and the canvas Padding and Corner Radius popouts pass none and are
+exactly the popouts they were. The knob's row tooltip names which sides are the
+copy's own and which still follow.
+
+18 new tests in `ComponentRoomFollowingTests`; whole suite green at 8053 tests
+in 642 suites.
+
+Next: none of the panel side was seen running. The Mac was locked for the whole
+task, so every walk reported `locked` and exit 3, and there are no fresh renders
+either. `component-uneven-room-walk.json` was updated for the new behaviour (its
+old last stage claimed the copy keeps all four of its own, which is no longer
+true) and gained a stage that hands one side back, but it has not run once. A
+sweep is requested for when the screen is unlocked.
