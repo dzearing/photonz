@@ -5234,3 +5234,4 @@
 {"t":"2026-09-17T22:58:46.765Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-3","title":"Walks that fail in the full sweep","priority":"p2-normal"}
 {"t":"2026-09-17T23:00:26.846Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-17T23:00:26.898Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-3"}
+{"t":"2026-09-17T23:03:41.482Z","ev":"task_dropped","id":"walks-that-fail-in-the-full-sweep-3","from":"in_progress","note":"Duplicate of the standing task walks-that-fail-in-the-full-sweep, which is open and owns all four failing walks. This task existed only because sweep-report.mjs found its standing task by title and triage had renamed it; that lookup is now a mark that survives a rename (commit 2014c575), the 22:58 sweep result has been merged back onto the real task, and the drill covers the rename."}
