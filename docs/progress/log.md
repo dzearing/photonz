@@ -2,6 +2,39 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-17 — Renaming the failing-walks task no longer clones it
+
+The walk sweep keeps ONE standing task and updates it in place, and it found
+that task by matching its title exactly. The daily triage pass renames tasks so
+a title names an outcome, and on 2026-09-17 it renamed this one from "Walks that
+fail in the full sweep" to "Every walk in the sweep either passes or is
+corrected". The next sweep could not see it: it filed a second standing task,
+that one was worked and closed, and the sweep after it filed a third. Meanwhile
+the real task, with 82 log entries of triage and the four failing separate-*
+walks declared on it, sat unwritten-to, and the fresh tasks each started from an
+empty history, so the 115 walks the last WHOLE sweep had named dropped out of
+the notes entirely.
+
+`queue/bin/sweep-report.mjs` now finds its task by a mark the task carries,
+`standing: "walk-sweep"`, and stamps that mark on whatever it writes to. A mark
+survives a rename; a title does not. A task filed before the mark existed is
+adopted by title once and marked, so there is no migration to remember. With two
+marked tasks open it writes to the OLDER one, which is the one holding the
+history; the newer is the duplicate the rename already caused.
+
+Fixed on the real queue too: the renamed task is marked, the 22:58 partial sweep
+has been merged back onto it (4 failing, and 101 carried across as unread since
+the last whole check), and the duplicate it spawned is dropped.
+
+Verified by drill first: `queue/bin/sweep-notes-drill.mjs` grew four checks that
+failed against the old lookup (a sweep after a rename filed a second task file)
+and pass now, alongside the adopt-and-mark and the two-marked-tasks cases.
+
+Next: the four separate-* walks are still failing and still belong to the
+standing task, which is pending with them diagnosed. 90 sweep requests are
+queued behind a screen that has been locked since 2026-09-15, so the set has not
+been covered whole since then.
+
 ## 2026-09-17 — A sweep on a locked Mac reports the part it could run
 
 The Mac's screen has been locked since 2026-09-15 and the walk sweep filed

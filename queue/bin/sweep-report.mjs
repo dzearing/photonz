@@ -20,6 +20,16 @@ import { mergeNotes, previousFailures, ownersOfWalks } from './sweep-notes.mjs';
 
 const TITLE = 'Walks that fail in the full sweep';
 
+// The standing task is found by a MARK it carries, not by its title.
+//
+// It used to be found by title, and the daily triage pass renames tasks so a
+// title names an outcome: on 2026-09-17 it renamed this one to "Every walk in
+// the sweep either passes or is corrected". The sweep three hours later could
+// not see it, filed a second standing task beside it, and the triage of four
+// failing walks stayed on a task no sweep was writing to any more. A mark
+// survives a rename; a title does not.
+const STANDING = 'walk-sweep';
+
 const result = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 if (!result.failed?.length) {
   console.log('==> Nothing failing; no task filed.');
@@ -28,7 +38,14 @@ if (!result.failed?.length) {
 
 const list = result.failed.join(', ');
 const all = q.readAllTasks();
-const open = all.find((t) => t.title === TITLE && !['done', 'dropped'].includes(t.status));
+const live = all.filter((t) => !['done', 'dropped'].includes(t.status));
+// The oldest marked task wins: it is the one carrying the triage history, and
+// with two open at once the newer is the duplicate a rename already caused.
+const byAge = (a, b) => String(a.created || '').localeCompare(String(b.created || ''));
+const open = live.filter((t) => t.standing === STANDING).sort(byAge)[0]
+  // Nothing marked yet: adopt the task the old title-matching sweep would have
+  // found, and mark it below so the next rename cannot orphan it either.
+  || live.filter((t) => t.title === TITLE).sort(byAge)[0];
 
 // Which failures already belong to another open task, so the list itself says
 // which walks this task is actually meant to fix.
@@ -40,7 +57,7 @@ if (open) {
     : previousFailures(open.notes).filter((w) => !result.failed.includes(w));
   const tail = stopped.length ? `; stopped failing: ${stopped.join(', ')}` : '';
   q.appendLog(open, `sweep ${result.ended}: ${result.failed.length} failing (${list})${tail}`);
-  q.saveTask({ ...open, notes: mergeNotes(open.notes, result, owners) });
+  q.saveTask({ ...open, standing: STANDING, notes: mergeNotes(open.notes, result, owners) });
   console.log(`==> Updated the standing task ${open.id} with ${result.failed.length} failing walk(s).`);
 } else {
   const task = q.addTask({
@@ -61,5 +78,6 @@ if (open) {
     notes: mergeNotes('', result, owners),
     source: 'sweep',
   });
+  q.saveTask({ ...task, standing: STANDING });
   console.log(`==> Filed ${task.id} for ${result.failed.length} failing walk(s).`);
 }

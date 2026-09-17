@@ -9,7 +9,7 @@
 // over notes that named thirteen. Run this after touching either file.
 //
 //   node queue/bin/sweep-notes-drill.mjs
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -254,6 +254,68 @@ console.log('two sweeps through sweep-report.mjs');
   check('...and does not claim the walks it never ran stopped failing',
     !task.notes.includes('Stopped failing'), task.notes);
   check('...and logs the run like any other', (task.log || []).some((e) => e.note.startsWith('sweep 2026-09-17T18:00:00Z')), task.log);
+}
+
+// ---- the standing task survives being renamed -------------------------------
+// A sweep used to find its standing task by TITLE. The daily triage pass renames
+// tasks so a title names an outcome, and on 2026-09-17 it renamed this one to
+// "Every walk in the sweep either passes or is corrected". The next sweep could
+// no longer see it, filed a second standing task beside it, and the triage of
+// four failing walks sat on the task nothing was writing to any more.
+console.log('a renamed standing task is still the standing task');
+{
+  const dir2 = mkdtempSync(join(tmpdir(), 'photonz-sweep-renamed-'));
+  mkdirSync(join(dir2, 'tasks', 'p2-normal'), { recursive: true });
+  mkdirSync(join(dir2, 'sweep'), { recursive: true });
+  const write = (name, obj) => {
+    const p = join(dir2, 'sweep', name);
+    writeFileSync(p, JSON.stringify(obj));
+    return p;
+  };
+  const run = (file) => execFileSync('node', [join(REPO, 'queue/bin/sweep-report.mjs'), file],
+    { env: { ...process.env, PHOTONZ_QUEUE_DIR: dir2 }, encoding: 'utf8' });
+
+  run(write('r1.json', result()));
+  const file = join(dir2, 'tasks', 'p2-normal', 'walks-that-fail-in-the-full-sweep.json');
+  let task = JSON.parse(readFileSync(file, 'utf8'));
+  check('the task the sweep files is marked as the standing one', task.standing === 'walk-sweep', task.standing);
+
+  task.title = 'Every walk in the sweep either passes or is corrected';
+  writeFileSync(file, JSON.stringify(task, null, 2));
+
+  run(write('r2.json', result({ ended: '2026-09-13T15:00:00Z', failed: ['gamma-walk'], log: 'queue/sweep/r2.log' })));
+  const filed = readdirSync(join(dir2, 'tasks', 'p2-normal'));
+  check('a sweep after the rename files nothing new', filed.length === 1, filed);
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('...and writes its result to the renamed task', task.notes.includes('Failing walks (1): gamma-walk'), task.notes);
+  check('...keeping the title the triage gave it', task.title === 'Every walk in the sweep either passes or is corrected', task.title);
+
+  // The task that was filed before the marker existed is the one this had to
+  // rescue, so a sweep also adopts an unmarked open task with the old title.
+  rmSync(file);
+  const legacy = {
+    id: 'walks-that-fail-in-the-full-sweep', title: 'Walks that fail in the full sweep',
+    epic: 'unmanned-loop', priority: 'p2-normal', seq: 10, status: 'pending', release: 'next', area: 'queue',
+    created: '2026-09-12T17:04:44.529Z', updated: '2026-09-12T17:04:44.529Z', deps: [], blockedBy: [],
+    notes: 'Last sweep 2026-09-12T17:00:00Z: 9 of 10 walks passed in 60 minutes.', acceptance: [], log: [],
+  };
+  writeFileSync(file, JSON.stringify(legacy, null, 2));
+  run(write('r3.json', result({ ended: '2026-09-13T17:00:00Z', failed: ['delta-walk'], log: 'queue/sweep/r3.log' })));
+  check('an unmarked task with the old title is adopted, not duplicated',
+    readdirSync(join(dir2, 'tasks', 'p2-normal')).length === 1, readdirSync(join(dir2, 'tasks', 'p2-normal')));
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('...and is marked so the next rename cannot orphan it', task.standing === 'walk-sweep', task.standing);
+
+  // Two open tasks both marked: the sweep writes to the one with the history.
+  const younger = join(dir2, 'tasks', 'p2-normal', 'walks-that-fail-in-the-full-sweep-9.json');
+  writeFileSync(younger, JSON.stringify({ ...legacy, id: 'walks-that-fail-in-the-full-sweep-9', standing: 'walk-sweep',
+    created: '2026-09-17T22:58:46.604Z', notes: '' }, null, 2));
+  run(write('r4.json', result({ ended: '2026-09-13T19:00:00Z', failed: ['epsilon-walk'], log: 'queue/sweep/r4.log' })));
+  check('with two marked tasks open the sweep writes to the older one',
+    JSON.parse(readFileSync(file, 'utf8')).notes.includes('epsilon-walk')
+    && !JSON.parse(readFileSync(younger, 'utf8')).notes.includes('epsilon-walk'));
+
+  rmSync(dir2, { recursive: true, force: true });
 }
 
 rmSync(dir, { recursive: true, force: true });

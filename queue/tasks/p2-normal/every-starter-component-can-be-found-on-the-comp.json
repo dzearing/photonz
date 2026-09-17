@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:43.438Z",
-  "updated": "2026-09-17T19:12:23.287Z",
+  "updated": "2026-09-17T19:12:41.958Z",
   "deps": [],
   "blockedBy": [],
   "notes": "NOT REPRODUCED BY THE MANAGER, filed p2 as something to look into rather than p1: the screen has been locked since 2026-09-15 so no walk can run here, and the loop owns the build directory.\n\nThe report: the rough list of queue/audits/2026-09-17-label-size.json says words-down-the-box-walk fails on main for an unrelated reason, the components library has no Nav Bar tile any more, reproduced with that change stashed. Its step is Scripts/playtest/words-down-the-box-walk.json line 13, { do: dragTile, tile: Nav Bar }.\n\nWhat was checked here in the code, and what it rules out: StarterComponent in Sources/PhotonzCore/StarterComponents.swift still has all five cases including navBar, so the model has not lost it. Sources/Photonz/LibraryPanel.swift visibleComponents around line 204 is where tiles come from; maxTiles is 60 so truncation is not it. That leaves editorState.starterComponentsEnabled, the ordering of componentEntries, LibrarySearch.filter, or the tile no longer answering to the name the walk types. One of those, or the walk is looking in the wrong scope.\n\nFolded into walks-that-fail-in-the-full-sweep as well, but filed on its own because that task is blocked behind a decision card about the locked screen and this has nothing to do with the lock.",
@@ -54,11 +54,16 @@
     {
       "t": "2026-09-17T19:12:23.286Z",
       "note": "left rough: an `expect tile` step still only sees tiles that are built, unlike dragTile. Left that way on purpose -- an expect is a claim about what is on screen -- but noting it here in case a walk author is surprised by it."
+    },
+    {
+      "t": "2026-09-17T19:12:41.956Z",
+      "note": "Reproduced first: all five starters (Button, Text Field, Card, Nav Bar, Badge) are on the Components shelf of a fresh document, in two rows, with nothing typed. The walk was failing on reach, not on absence: the shelf's lazy grid does not build a tile below its own fold, and dropping one starter pushes the Library 300pt off the bottom of the panel and squeezes the shelf to one row of three. PlaytestHarness.tileTarget now scrolls the shelf to a named tile the way a person does; words-down-the-box-walk passes unchanged. The five are pinned by name in StarterComponentTests and by the new Scripts/playtest/starter-shelf-walk.json. Audit queue/audits/2026-09-17-starter-shelf.json with two real window pictures. The shelf vanishing after a drop is filed as the-components-shelf-is-still-there-after-you-ta. Verified: Scripts/test.sh green (8237), both owned walks pass, six more tile-drag walks pass; sweep requested for the other 35. Committed 2fe116e0, pushed."
     }
   ],
   "started": "2026-09-17T19:01:00.876Z",
   "walks": [
     "starter-shelf-walk",
     "words-down-the-box-walk"
-  ]
+  ],
+  "completed": "2026-09-17T19:12:41.957Z"
 }

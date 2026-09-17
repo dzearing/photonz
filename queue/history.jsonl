@@ -5229,3 +5229,8 @@
 {"t":"2026-09-17T22:00:48.475Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-2"}
 {"t":"2026-09-17T22:00:48.529Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-2"}
 {"t":"2026-09-17T22:08:03.652Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-2","from":"in_progress","note":"All six walks this task owns pass, twice each in a row, on a locked Mac (corner-drag-rounds, dock-picked-first, icon-stroke-weight, never-granting, switch-says-mixed, what-a-separation-left-behind). Two were the harness: Escape now puts away an open popover instead of going to the editor under it, and appKey no longer demands a document be open. Four were walks still asking for what the app moved past: the Lens replaced the zoom callout, a box arrives with no edge, and the layers list only builds the rows you can see. Verified by running each walk twice; Scripts/test.sh green (8250 tests). Commit 0cacf36d. Audit queue/audits/2026-09-17-walks-that-fail-2.json."}
+{"t":"2026-09-17T22:58:46.608Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-3","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-09-17T22:58:46.659Z","ev":"sweep_pass","walks":247,"passed":243,"failed":4,"seconds":3019,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":524}
+{"t":"2026-09-17T22:58:46.765Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-3","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-09-17T23:00:26.846Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T23:00:26.898Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-3"}

@@ -36,7 +36,9 @@ queue/bin/sweep.sh status                                   # what the last one 
 and the loop runs it between tasks, in its own shell, where there is no
 ceiling to hit and no task in flight. Any walk that fails comes back as the
 standing task "Walks that fail in the full sweep", updated in place each sweep
-rather than filed again.
+rather than filed again. That task is found by the `standing: "walk-sweep"`
+mark it carries, not by its title, so triage renaming it does not make the next
+sweep file a second one beside it.
 
 While you are building, run only the walks you touched. Each is about ten
 seconds:

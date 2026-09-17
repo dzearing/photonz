@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2970,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T19:11:47.607Z",
-  "updated": "2026-09-17T19:12:25.964Z",
+  "updated": "2026-09-17T20:46:01.709Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe, 2026-09-17, screen locked (the walk is lock safe, all steps ran and photographed for real).\n\n  Scripts/playtest.sh Scripts/playtest/starter-shelf-walk.json\n\nOn a fresh document the shelf draws all five tiles in two rows (panel-1-shelf.json lists Button, Text Field, Card, Nav Bar, Badge; picture starter-shelf-1-five-sc.png). Drag ONE out and the panel listing puts the Library section header at window y -204 and its tiles at y -315, i.e. 300 points below the bottom edge of a 900 point window, with only three of the five built:\n\n  [8 panel] shelf tiles: Badge (Components), Button (Components), Text Field (Components)\n\nThe cause is not a bug in the shelf: selecting the dropped layer opens Component, Appearance, Effects, Motion and Layout above the Library, and the dock ceiling then squeezes the shelf to LibraryShelfLayout.oneRowHeight. Two consequences, and the second is the one that misleads people: the shelf is off screen, and the one row it does draw gives no sign that there are more tiles below it. On 2026-09-17 an audit read that row and reported the app had lost its Nav Bar component; it had not.\n\nThe app already has the machinery for the first half: EditorState.pendingLibraryReveal, applied by InspectorDockLayout.requestLibrary(), scrolls the dock to the Library section and does nothing when it is already fully in view. Whether a drop from the shelf should ask for that (and so scroll away from the Component section for the layer just placed) is a real UX call, which is why this is filed rather than done.\n\nThe second half (a cut shelf that reads as complete) probably wants an affordance rather than more height: a sliver of the next row, or a count.",
@@ -27,9 +27,47 @@
     {
       "t": "2026-09-17T19:12:25.963Z",
       "note": "adjacent: a-copy-of-a-component-is-configured-not-authored would shrink the wall of sections a COPY opens, which is part of what pushes the shelf off the bottom. It does not cover this one: the shelf disappears when you place an ORIGINAL too, and the one-row shelf saying nothing about the rows under it is its own problem."
+    },
+    {
+      "t": "2026-09-17T20:23:26.345Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T20:45:36.746Z",
+      "note": "Reproduced first, on the probe: Scripts/playtest.sh Scripts/playtest/starter-shelf-walk.json. Before the drop the shelf draws all five tiles in two rows with empty glass under it; after one drop the Library header sits at window y -204 and its tiles at y -315, 300 points below the bottom of a 900 point window, and the shelf is squeezed to one row of three with nothing saying the other two exist."
+    },
+    {
+      "t": "2026-09-17T20:45:36.793Z",
+      "note": "Adversarial review before building. Rejected: moving Library up the section order (changes the panel for everyone, including people who never open it); a count in the section header (new copy, and it tells you the tiles exist without showing you any of them). The shortest version reuses two things the dock already has — the reveal that brings the Library into view, and the peek-plus-fade every other shortened body in the panel wears — and adds no new chrome and no new control."
+    },
+    {
+      "t": "2026-09-17T20:45:36.837Z",
+      "note": "The UX call the task flagged, decided rather than filed as a card, because the task's own acceptance had already decided it (item 1 says the shelf is visible after a drop) and because scoping takes the sting out of the trade: the panel only comes back to the shelf for a placement that came FROM the shelf. If you were looking at the shelf you still are; a component born any other way (a copy, a paste, an undo) leaves the dock exactly where you left it, and so does a fetch with the Library hidden or the dock closed. The cost is real and is in the audit to react to: the Component section for the thing just placed scrolls above the top of the panel."
+    },
+    {
+      "t": "2026-09-17T20:45:36.882Z",
+      "note": "What shipped. PhotonzCore: LibraryShelfLayout.squeezeFloor(peek:) = one whole row plus a sliver of the row below (100pt at the dock's own bodyPeek of 22, still under the 112 every other list floor gets, so it cannot starve the sections above). Tests first, in LibraryShelfLayoutTests. App: InspectorDockLayout.squeezeFloor uses it for .library; the edge fade came out of CollapsibleSection into a reusable .scrollEdgeFade(isShortened:) so the shelf's own scroller wears the same cue; EditorState.askForLibraryAfterFetching() raises pendingLibraryReveal a third of a second after a component lands, called from insertStarterComponent, insertComponentInstance and insertSharedComponent, which are the three ends of every fetch off the shelf."
+    },
+    {
+      "t": "2026-09-17T20:45:36.929Z",
+      "note": "Verified. Scripts/test.sh: 8250 tests in 657 suites, all passing. starter-shelf-walk rewritten to take THREE starters in a row with an expectInView on the Library after each: 32 steps, ok, 4 real pictures. The numbers in its panel dump land where the arithmetic says: row one of tiles centred at window y 124, the peeked row at y 48, 76 points apart (68 tile + 8 gap), 22 points of the second row showing. The dump now lists all five tiles where before it listed three."
+    },
+    {
+      "t": "2026-09-17T20:45:41.629Z",
+      "note": "Left rough, not filed. (1) Placing a screenshot from the MEDIA shelf still loses the shelf: a media tile is dragged as a plain file and the canvas cannot tell it from a Finder drop, so covering only the double click would make the same tile behave two ways. It needs the drop to carry a marker saying it came off the shelf. (2) The layers list bounds itself the same way the shelf does and still ends on a clean cut, so a squeezed layers list reads as the whole document; the .scrollEdgeFade modifier this task extracted is what it would use. (3) A shelf squeezed to one row offers no grab bar, correctly (there is no room to drag into), and nothing on screen says that collapsing a section is how to get the room. All three are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-17T20:45:41.677Z",
+      "note": "Regression check, on a locked Mac so partial. Ran for real and passed: library-reveal-walk (the one that proves a shelf already on screen does not twitch), colour-onto-the-library-walk, panel-sections-walk, panel-says-less-walk, selection-effects-walk, dock-fits-the-window-walk, dock-component-first-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, find-what-stayed-a-picture-walk, tutorial-text-styles-walk, tutorial-save-a-colour-as-a-style-walk, and 14 of the component walks. Forced under the lock and passed: library-walk, library-drag-walk, library-shelf-height-walk, tutorial-the-library-walk. Forced and failed, every one of them on a step a lock is known to stop (panelMenu, focus, type): effects-open-into-view-walk, effects-fit-one-open-walk, effects-room-for-the-one-you-opened-walk, appearance-effects-walk, shared-component-scale-walk, component-uneven-room-walk. dock-picked-first-walk failed and was already failing in the 20:23Z sweep before this change. component-whole-path-walk failed on a lock-safe expect over a word in the app's copy; folded into walks-that-fail-in-the-full-sweep-2."
+    },
+    {
+      "t": "2026-09-17T20:46:01.707Z",
+      "note": "A component fetched off the Library shelf brings the shelf back into view a third of a second later, so three starters in a row cost no panel scrolling; a shelf the dock has shortened now shows a faded sliver of the row below, so three tiles out of five read as three of five. PhotonzCore LibraryShelfLayout.squeezeFloor(peek:) with tests first, the edge fade pulled out of CollapsibleSection into a shared .scrollEdgeFade, and EditorState.askForLibraryAfterFetching on the three ends of a shelf fetch. Verified by Scripts/test.sh (8250 tests green) and starter-shelf-walk rewritten to take three in a row with expectInView after each: 32 steps, ok, 4 real pictures. Audit at queue/audits/2026-09-17-shelf-stays-put.json. Committed 3b4b3235 and pushed."
     }
   ],
   "walks": [
     "starter-shelf-walk"
-  ]
+  ],
+  "started": "2026-09-17T20:23:26.344Z",
+  "completed": "2026-09-17T20:46:01.708Z"
 }

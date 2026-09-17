@@ -366,7 +366,8 @@ queue/bin/sweep.sh status                                   # what the last swee
 
 The go loop runs the sweep between tasks, in its own shell, where nothing kills
 it and no task is in flight to fight it for the probe app. Any walk that fails
-comes back as the standing task "Walks that fail in the full sweep". Full
+comes back as the standing task first filed as "Walks that fail in the full
+sweep" (triage may rename it; the sweep finds it by its `standing` mark). Full
 detail: `queue/sweep/README.md`.
 
 Naming walks is never gated, and while you are building it is the check you
