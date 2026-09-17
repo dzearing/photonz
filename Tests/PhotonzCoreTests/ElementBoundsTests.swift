@@ -30,18 +30,25 @@ private func expectRect(_ rect: CGRect?, _ expected: CGRect, slack: CGFloat = 3,
 
 // MARK: Timing without the machine's mood in it
 //
-// Wall-clock budgets fail when the runner is busy: a build or the rest of the
-// (parallel) suite takes the core away, and on Apple silicon the scheduler then
-// parks the test thread on an efficiency core, where the very same code runs
-// close to twice as slow with nobody stealing time from it. No absolute budget
-// can tell a slow core from extra work. So each reading below is the FASTEST
-// of several calls (other work only ever slows a call down), timed on this
-// thread's own CPU clock (descheduling does not count), and the tests that
-// mean "this many probes" say so as a ratio against those probes run alone,
-// back to back on the same thread, so whatever core is doing the work cancels
-// out. A real regression (more probes, a scan back over whole rows) slows every
-// call on every clock, so the readings still move with it. Spreads are printed
-// so a flake, if one ever gets through, can be told from a regression.
+// Budgets fail when the runner is busy: a build or the rest of the (parallel)
+// suite takes the core away, and on Apple silicon the scheduler then parks the
+// test thread on an efficiency core, where the very same code runs close to
+// twice as slow with nobody stealing time from it. On top of that, what six
+// hundred suites running at once really take away is the allocator, and time
+// spent there IS charged to the thread, so not even the thread's own CPU clock
+// makes an absolute number honest. No absolute budget can tell any of that from
+// extra work, and the one that used to live here went red three times in two
+// days saying it could.
+//
+// So NOTHING below is an absolute number. Every timing check is a ratio,
+// measured on this thread's CPU clock against a second piece of work taken back
+// to back with it inside every round: the checks that mean "this many probes"
+// divide by those probes, and the one that has no probes of its own divides by
+// `CPUYardstick`, which is not this app's code at all. Whatever a round is
+// competing with slows both halves and cancels out; a real regression (more
+// probes, a scan back over whole rows) slows only the subject, so the readings
+// still move with it. Spreads are printed so a flake, if one ever gets through,
+// can be told from a regression.
 
 private func threadCPUNow() -> Duration {
     var ts = timespec()
@@ -53,29 +60,12 @@ private func ms(_ d: Duration?) -> String {
     String(format: "%.1f", (d ?? .zero) / .milliseconds(1))
 }
 
-/// The cost of one call: the fastest of `calls` on the thread's CPU clock,
-/// after one warm-up.
-private func fastestCall(of calls: Int, _ name: String, _ body: () -> Void) -> Duration {
-    body()
-    var cpu: [Duration] = []
-    var wall: [Duration] = []
-    for _ in 0..<calls {
-        let wallStart = ContinuousClock.now
-        let cpuStart = threadCPUNow()
-        body()
-        cpu.append(threadCPUNow() - cpuStart)
-        wall.append(ContinuousClock.now - wallStart)
-    }
-    print("[perf] \(name) over \(calls) calls: cpu fastest \(ms(cpu.min())) ms, "
-          + "slowest \(ms(cpu.max())) ms; wall fastest \(ms(wall.min())) ms, slowest \(ms(wall.max())) ms")
-    return cpu.min() ?? .zero
-}
-
-/// How much more `body` costs than `reference`, each read as its fastest of
-/// `rounds` calls, the two interleaved so they share whatever core and cache
-/// the round happened to get.
-private func costRatio(of name: String, rounds: Int, _ body: () -> Void,
-                       to reference: () -> Void) -> Double {
+/// How much more `body` costs than `reference`, over `rounds` rounds with the
+/// two interleaved so they share whatever core and cache the round happened to
+/// get, answered from the typical round. `called` names the reference in the
+/// printout.
+private func costRatio(of name: String, rounds: Int, called: String = "probes'",
+                       _ body: () -> Void, to reference: () -> Void) -> Double {
     reference()
     body()
     var measured: [Duration] = []
@@ -89,10 +79,23 @@ private func costRatio(of name: String, rounds: Int, _ body: () -> Void,
         measured.append(threadCPUNow() - start)
     }
     let best = measured.min() ?? .zero
-    let probesCost = baseline.min() ?? .zero
-    let ratio = probesCost > .zero ? best / probesCost : .infinity
-    print("[perf] \(name) over \(rounds) rounds: fastest \(ms(best)) ms against its probes' "
-          + "\(ms(probesCost)) ms, ratio \(String(format: "%.2f", ratio)) "
+    let referenceCost = baseline.min() ?? .zero
+    // The TYPICAL round's ratio, subject over reference within the round.
+    //
+    // Neither end of the spread will do here, and both were tried on 2026-09-17
+    // against a full suite with eight spin loops on top. The best subject
+    // reading over the best reference reading drifts UP under load, because
+    // whichever half is shorter fits into a quiet gap more often and so comes
+    // back cleaner. The best single round's ratio drifts DOWN, because with
+    // twenty rounds to choose from one of them is bound to have caught the
+    // reference slow and the subject fast: that read 0.35 on a guard of 1.3,
+    // loose enough to wave a real regression through. The middle of the pairs
+    // has no such luck in it and held steady both ways.
+    let paired = zip(measured, baseline).filter { $0.1 > .zero }
+        .map { $0.0 / $0.1 }.sorted()
+    let ratio = paired.isEmpty ? .infinity : paired[paired.count / 2]
+    print("[perf] \(name) over \(rounds) rounds: fastest \(ms(best)) ms against its \(called) "
+          + "\(ms(referenceCost)) ms, ratio \(String(format: "%.2f", ratio)) in a typical round "
           + "(slowest \(ms(measured.max())) ms and \(ms(baseline.max())) ms)")
     return ratio
 }
@@ -207,19 +210,35 @@ struct ElementBoundsTests {
         // Tests build unoptimized, so this is asserted with generous slack; the
         // real measurement lives in the render-side fixture test, which pins the
         // cost against the edge-map query it rides on.
+        //
+        // Unlike its two neighbours this call has no probes of its own to be
+        // measured against, so the thing it divides by is `CPUYardstick`: a
+        // fixed piece of work that is none of this app's code, taken back to
+        // back with the pick inside every round. The number below is therefore
+        // what a pick would have cost on the calibration machine, whatever this
+        // machine is and however busy it is. An absolute budget here read
+        // 28.1 ms on a full suite and 4.9 ms alone seconds later, both on the
+        // thread's own CPU clock, which is why there is a ruler.
         var c = Capture(w: 2000, h: 1500)
         c.box(CGRect(x: 900, y: 700, width: 400, height: 200), border: 90)
         let map = c.map
         let luma = c.luma
         var i = 0
-        let perCall = fastestCall(of: 100, "detect") {
+        let ratio = costRatio(of: "detect", rounds: 20, called: "ruler's") {
             _ = ElementBounds.detect(at: CGPoint(x: 1000 + i % 50, y: 800), in: map, luma: luma)
             i += 1
+        } to: {
+            CPUYardstick.round()
         }
-        // About 5 ms unoptimized on a performance core, 8 on an efficiency
-        // core; scanning whole rows again would read in the hundreds.
+        let perCallMS = ratio * CPUYardstick.baselineMS
+        // Reads about 4.5 ms unoptimized, and stayed within a few percent of
+        // that through a 649-suite run with eight spin loops on top, so the
+        // budget can be a real one: a pick that costs two and a half times what
+        // it does today has regressed. Scanning whole rows again would read in
+        // the hundreds.
         if PerfGate.isOn {
-            #expect(perCall < .milliseconds(20), "a hover pick took \(perCall)")
+            #expect(perCallMS < 12,
+                    "a hover pick cost \(perCallMS) ms of the calibration machine's time, \(ratio) times the ruler")
         }
     }
 

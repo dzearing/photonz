@@ -15,9 +15,16 @@ struct CaptionCostTests {
         var a = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
         a.caption = "Save all the changes here"
         _ = CaptionMetrics.pillSize(for: a.caption ?? "", in: a)   // warm the font cache
-        let began = Date()
-        for _ in 0..<1000 { _ = CaptionMetrics.pillSize(for: a.caption ?? "", in: a) }
-        let each = Date().timeIntervalSince(began) / 1000 * 1_000_000
+        // Read the way every other timing check in the suite reads: on this
+        // thread's own CPU clock, and the FASTEST of several batches rather
+        // than the mean of one. A mean off the wall clock counts every moment
+        // the thread was parked, which is why two idle runs of this same test
+        // reported 25.5µs and 37.4µs on 2026-09-17 — a 47% swing with nothing
+        // changed. What is being claimed here is what a call costs, not what
+        // the scheduler was doing at the time.
+        let each = PerfClock.fastestCallMS(batches: 20, callsPerBatch: 200) {
+            _ = CaptionMetrics.pillSize(for: a.caption ?? "", in: a)
+        } * 1000
         print("[perf] CaptionMetrics.pillSize: \(String(format: "%.1f", each))µs per call")
         // ~22µs on the machine this landed on; the ceiling is loose on purpose
         // so a busy runner does not fail the build, and tight enough that

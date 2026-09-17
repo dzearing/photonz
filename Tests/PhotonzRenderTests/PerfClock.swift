@@ -24,7 +24,7 @@ import Foundation
 // regression at a glance.
 //
 // The one thing this cannot see is work handed to another thread or the GPU.
-// Both current callers do their work on the calling thread, so the clock sees
+// Every caller here does its work on the calling thread, so the clock sees
 // all of it; a change that moves that work off-thread needs its guard rethought.
 // `Tests/PhotonzCoreTests/ElementBoundsTests.swift` takes the same approach in
 // its own target.
@@ -45,14 +45,54 @@ enum PerfClock {
         /// the fastest is the one least polluted by the rest of the machine.
         var cost: Double { subject.min() ?? .infinity }
         var baseline: Double { reference.min() ?? 0 }
-        var ratio: Double { baseline > 0 ? cost / baseline : .infinity }
+
+        /// The typical round's ratio, subject over reference WITHIN the round.
+        ///
+        /// Dividing the fastest subject reading by the fastest reference
+        /// reading looks equivalent and is not, whenever the two halves take
+        /// different times: the shorter half fits into a quiet gap on a busy
+        /// machine more often than the longer one, so its best reading is the
+        /// cleaner of the two and the quotient drifts upward under load with
+        /// nothing having changed. Measured on 2026-09-17, the check in
+        /// `ElementDetectionFixtureTests` (a 5.6 ms subject against a 3.0 ms
+        /// reference) read 1.84 idle and 3.40 during a full suite with eight
+        /// spin loops on top, against a guard of 4.
+        ///
+        /// Pairing the halves inside the round they were measured in removes
+        /// that bias, but taking the BEST pair introduces the opposite one:
+        /// over twenty rounds something is bound to have caught the reference
+        /// slow and the subject fast, and on the same loaded run that read 0.35
+        /// against a guard of 1.3, loose enough to wave a real regression
+        /// through. The middle pair has no luck in it either way.
+        var ratio: Double {
+            let paired = zip(subject, reference).filter { $0.1 > 0 }
+                .map { $0.0 / $0.1 }.sorted()
+            return paired.isEmpty ? .infinity : paired[paired.count / 2]
+        }
 
         func report(_ name: String, rounds: Int) {
             print(String(format: "[perf] %@ over %d rounds: fastest %.2f ms against %.2f ms, "
-                         + "ratio %.2f (slowest %.2f ms and %.2f ms)",
+                         + "ratio %.2f in a typical round (slowest %.2f ms and %.2f ms)",
                          name, rounds, cost, baseline, ratio,
                          subject.max() ?? 0, reference.max() ?? 0))
         }
+    }
+
+    /// What one call costs, in milliseconds of this thread's CPU: the fastest
+    /// of `batches` batches of `callsPerBatch` calls, after a warm-up. Other
+    /// work on the machine only ever slows a batch down, so the fastest one is
+    /// the reading least polluted by it, and a batch amortizes the clock read
+    /// over calls too quick to time on their own.
+    static func fastestCallMS(batches: Int, callsPerBatch: Int,
+                              _ body: () -> Void) -> Double {
+        body()
+        var readings: [Double] = []
+        for _ in 0..<batches {
+            let start = nowMS()
+            for _ in 0..<callsPerBatch { body() }
+            readings.append((nowMS() - start) / Double(callsPerBatch))
+        }
+        return readings.min() ?? .infinity
     }
 
     /// Times `subject` against `reference`, one reading of each per round and

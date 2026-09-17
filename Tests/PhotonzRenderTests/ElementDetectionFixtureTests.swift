@@ -232,12 +232,20 @@ struct ElementDetectionFixtureTests {
         // catches the regression that matters — detection going back to
         // scanning whole rows of the image — at any build setting.
         //
-        // Timed through `PerfClock`: the fastest of many rounds, on this
-        // thread's CPU clock, with the query and the detection interleaved so
-        // both see the same machine. On wall clock this went red on a loaded
+        // Timed through `PerfClock`: on this thread's CPU clock, with the query
+        // and the detection interleaved so both see the same machine, and the
+        // answer taken from a typical ROUND rather than from each half's best
+        // round separately. On wall clock this went red on a loaded
         // machine on 2026-09-04, missing by a fifth, because the query half
         // was measured before the detection half and the load arrived in
-        // between.
+        // between; taking each half's own best reading left a smaller bias of
+        // the same kind, worth 1.84 idle against 3.40 under a loaded suite.
+        //
+        // As paired it reads 2.35 idle and 2.79 during a full suite with eight
+        // spin loops on top, so the guard is five rather than four: the old
+        // number left barely a fifth in hand on a busy machine, and what it is
+        // really there to catch — detection going back to scanning whole rows —
+        // reads fifteen times the query, not three.
         let reading = PerfClock.compare("detect against its edge query",
                                         rounds: 20, callsPerRound: 10,
                                         subject: {
@@ -249,7 +257,7 @@ struct ElementDetectionFixtureTests {
         })
         let ratio = String(format: "%.2f", reading.ratio)
         if MachineSpeed.isGating {
-            #expect(reading.cost < reading.baseline * 4,
+            #expect(reading.ratio < 5,
                     "detection costs \(ratio)x the edge query it rides on")
         }
     }
