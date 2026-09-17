@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-fits-the-window",
+  "setup": { "forget": ["all"] },
   "seed": "The right hand panel has to fit in the window it is given, so that the look controls at the bottom of it are there when you reach for them instead of being somewhere below the fold. The window is opened as tall as this display allows and the panel is then asked for every shape it takes in a day's work: one piece of text picked, two, four at once, an arrow, a zoom callout, and a document with fifteen layers in it. At each of those the walk reads the dock's own section offsets back rather than photographing them, so 'Effects is on screen' is a number and not an opinion, and it waits for the Effects section to be wholly inside the panel before it says so. The last stage is the real test of the rule: fifteen layers must scroll inside the Layers list rather than pushing everything under it off the bottom.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1180 },

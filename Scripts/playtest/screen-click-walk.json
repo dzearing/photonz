@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/screen-click",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

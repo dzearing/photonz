@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/fill-the-flow",
+  "setup": { "forget": ["all"] },
   "seed": "One piece in a stack can take whatever room the stack has left along the way it runs, which is how the search field in the middle of a nav bar grows with the bar. The walk draws three pieces in a row, stacks them, gives the stack a width, and sets the middle one to Fill.",
   "steps": [
     {

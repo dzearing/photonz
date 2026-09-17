@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/menu-bar",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

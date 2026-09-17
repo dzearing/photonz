@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/band-inside-a-screen",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1240, "height": 900 },
     { "do": "wait", "seconds": 1 },

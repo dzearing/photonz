@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/fill-the-flow-menu",
+  "setup": { "forget": ["all"] },
   "seed": "The Layer menu's side of taking the room a stack has left over. The panel's side is fill-the-flow-walk.json; this one presses the menu row instead: it stacks three pieces into a bar, gives the bar a width, and fills the middle piece and unfills it from the menu, then proves the row refuses a piece that is in no stack at all.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 500, "width": 1360, "height": 900 },

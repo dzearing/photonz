@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/wrap-onto-more-lines",
+  "setup": { "forget": ["all"] },
   "seed": "A row of pieces of different widths ran straight off its own edge once there were too many of them, and the only way to get a second line was a grid, which puts everything in equal cells. The walk draws six pieces of six different widths, stacks them into a row, gives the row a width of 300, and turns Wrap onto more lines on.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

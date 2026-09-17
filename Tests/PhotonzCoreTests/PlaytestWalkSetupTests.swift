@@ -149,4 +149,39 @@ struct PlaytestWalkSetupTests {
             }
         }
     }
+
+    /// The other half of the same promise, and the one 252 of the 497 walks in
+    /// this folder were quietly missing on 2026-09-16: a walk that names
+    /// nothing in `forget` starts from whatever the last thing to use this
+    /// machine happened to leave behind.
+    ///
+    /// Measured on that date, the probe's own settings held a remembered text
+    /// face of Georgia, a tutorial stopped six steps in, three layer groups
+    /// left open on a fixture, and a dock section order one migration out of
+    /// date. Every walk that did not say `forget` inherited all four, so it was
+    /// passing or failing on the history of the machine rather than on the app,
+    /// and two walks were reported as disagreeing with themselves about one run
+    /// in thirty.
+    ///
+    /// So the line is not optional. `"forget": ["all"]` is the whole of it for
+    /// a walk with no opinion, and a walk that names areas is saying it wants
+    /// the rest inherited on purpose.
+    @Test("Every walk says what it wants forgotten")
+    func everyWalkNamesWhatItForgets() throws {
+        let files = try Self.walkFiles()
+        try #require(!files.isEmpty, "no walks found in \(Self.walkDirectory.path)")
+
+        var silent: [String] = []
+        for file in files {
+            let script = try PlaytestScript.decode(try Data(contentsOf: file))
+            if script.setup.forget.isEmpty { silent.append(file.lastPathComponent) }
+        }
+        #expect(silent.isEmpty, """
+            \(silent.count) walk(s) never say what they want forgotten, so each one starts \
+            from whatever the last run on the machine left behind and means something \
+            different on every machine: \(silent.prefix(12).joined(separator: ", "))\
+            \(silent.count > 12 ? ", and \(silent.count - 12) more" : ""). Give each a \
+            setup block with "forget": ["all"], or name the areas it wants cleared.
+            """)
+    }
 }

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/even-air",
+  "setup": { "forget": ["all"] },
   "seed": "A gap of 8 used to mean 8 between two shapes and about 12 between two lines of type, because the box around words carries a few points of empty room under them. The card is the proof: its picture, its title and the line under it are all one gap apart, so the step from the picture to the title looks like the step from the title to the body.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

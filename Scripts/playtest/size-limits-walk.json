@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/size-limits",
+  "setup": { "forget": ["all"] },
   "seed": "A group that closes around its contents can now be told the smallest and the largest it may get, on each axis. The walk drops a starter Button and holds it open, stops it growing, and makes it taller, with one typed number each and nothing dragged.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

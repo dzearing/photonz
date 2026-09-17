@@ -1,5 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/layers-lazy-rows",
+ "setup": { "forget": ["all"] },
  "steps": [
   {
    "do": "blank",

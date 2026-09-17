@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/angle-field",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

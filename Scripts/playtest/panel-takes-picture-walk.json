@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-takes-picture",
+  "setup": { "forget": ["all"] },
   "seed": "A document with a couple of layers, so the Layers section has rows and the sections fill the top of the right hand panel. A picture is then held over each part of that panel in turn: a layer row, the Position & Size section, a section further down, and the empty space below them all. A text file is held over the same panel to prove it is still refused, and a layer row is dragged over another to prove reordering is untouched. Points are window coordinates measured down from the top-left corner.",
   "steps": [
     {

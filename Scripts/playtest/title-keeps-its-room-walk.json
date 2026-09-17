@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-keeps-its-room",
+  "setup": { "forget": ["all"] },
   "seed": "A control added to the starter Nav Bar never covers its title: the title is in the row and takes whatever room is left, so where you let go decides which end of the bar the control joins.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

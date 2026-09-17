@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/caption-width",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

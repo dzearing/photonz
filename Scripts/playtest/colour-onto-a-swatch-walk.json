@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/colour-onto-a-swatch",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

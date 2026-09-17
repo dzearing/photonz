@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/handles-fit",
+  "setup": { "forget": ["all"] },
   "seed": "A two letter label is about twenty one points wide. Eight handles of eight points each, with six points of slop round every one of them, used to cover it completely: there was no part of the word left that was not a resize target, so the label could not be picked up and dragged at all. Now a selection too small to hold its handles keeps its four corners only, and those corners step outside the outline. This walk proves the middle of the word is grabbable again, that the corners still answer where they draw, that zooming in brings all eight back, and that an ordinary rectangle is untouched.",
   "steps": [
     {

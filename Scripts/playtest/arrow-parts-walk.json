@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/arrow-parts",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
       "width": 1400, "height": 900 },

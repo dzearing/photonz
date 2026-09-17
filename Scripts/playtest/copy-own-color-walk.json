@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-own-color-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1320, "height": 920 },
 

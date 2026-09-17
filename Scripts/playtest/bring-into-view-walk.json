@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/bring-into-view",
+  "setup": { "forget": ["all"] },
   "seed": "A screen cuts off whatever leaves it. Pull a screen's bottom edge up past something drawn near it and that layer simply disappears: the canvas stops drawing it and the layers list is the only place that still says it exists. The row already wears orange scissors naming the screen. This walk checks the scissors are now the way BACK: one press slides the rectangle inside the screen again, and one undo puts it back exactly where it was.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1240, "height": 900 },

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/unique-layer-names",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 1080 },
     { "do": "wait", "seconds": 1 },

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/layers-hold-their-place",
+  "setup": { "forget": ["all"] },
   "seed": "Opening a group in the layers list used to make the list taller, which carried the size, layout and appearance controls under it down the panel and off the bottom of the screen. The walk drops a Card, notes where the controls sit, twists the card open, and looks for the controls in exactly the same places.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

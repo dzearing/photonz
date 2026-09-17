@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/selection-color",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1400, "height": 900 },
     { "do": "wait", "seconds": 1 },

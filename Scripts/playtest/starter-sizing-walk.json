@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/starter-sizing",
+  "setup": { "forget": ["all"] },
   "seed": "The card, the nav bar and the text field now each say which of their sides is a number and which is the size of what is inside them. The walk drops all three, gives each one much longer wording, and the pictures are the only proof that matters: the card grows downward, the bar holds its width and keeps its title centred, the field holds its width and wraps its placeholder inside the box.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

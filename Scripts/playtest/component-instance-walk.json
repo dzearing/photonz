@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-instance-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

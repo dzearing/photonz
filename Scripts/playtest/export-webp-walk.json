@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/export-webp-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

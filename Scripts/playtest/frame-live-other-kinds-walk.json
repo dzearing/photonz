@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/frame-live-other-kinds",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

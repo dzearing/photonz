@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/place-a-version",
+  "setup": { "forget": ["all"] },
   "seed": "A button with a Disabled variant used to take two steps to place: drop a copy, then switch it. The walk gives Button a Disabled variant, sets the shelf tile to it, and drags one copy out that arrives already disabled.",
   "steps": [
     {

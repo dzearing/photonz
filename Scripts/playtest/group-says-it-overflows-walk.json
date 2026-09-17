@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/group-says-it-overflows",
+  "setup": { "forget": ["all"] },
   "seed": "Give a row a width too small for what is in it and the pieces just hang out over the edge, with nothing anywhere saying so. The walk stacks three equal pieces into a row, squeezes the row, and reads the one line the Layout section now prints: which edge they run past, and the two things that would fix it.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

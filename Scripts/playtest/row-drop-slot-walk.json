@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/row-drop-slot",
+  "setup": { "forget": ["all"] },
   "seed": "Where you let go along a row decides where the piece goes in the row: while the drag is still in the air the pieces move aside to open the gap it would take, and letting go puts the piece in that gap.",
   "steps": [
     {

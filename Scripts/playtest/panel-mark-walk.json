@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-mark",
+  "setup": { "forget": ["all"] },
   "seed": "The red dashed refusal outline around the whole right panel used to turn up for drags that had nothing to do with files - a colour off a swatch, a layer row being carried - and once it was up it never cleared. This walk holds a file the app cannot use over a layer row (the mark is right there), lets it go (the mark goes), holds a picture (the accepting mark and the drop line), abandons a file drag in the air without a word (the mark has to take itself off), then carries the app's own things over the same row and expects the panel to say nothing at all.",
   "steps": [
     { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },

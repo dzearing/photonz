@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/short-label",
+  "setup": { "forget": ["all"] },
   "seed": "Typing a short label like OK on the canvas used to give a box eighty points wide with the word sitting in its left third, because every label typed on the canvas was given a minimum width. The same word inside a starter component hugged its letters. This walk checks that a label nobody has narrowed is now exactly as wide as what it says, and that a box somebody DID make wider keeps the width it was given.",
   "steps": [
     {

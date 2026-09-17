@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/one-color-picker",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

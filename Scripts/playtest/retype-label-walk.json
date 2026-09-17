@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/retype-label",
+  "setup": { "forget": ["all"] },
   "seed": "The reported bug: opening words for typing left the cursor sitting after them, so a new label came out welded to the old one (\"ButtonSave all the changes\"). The walk re-words a plain text layer, checks a click inside the open words still puts the cursor where you clicked, checks undo, and then re-words the label on a copy of the starter Button, which is where it was reported.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

@@ -240,6 +240,25 @@ a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,
 because the shape tool remembers the look it was last left holding, and a
 rectangle left with no fill at all has no Fill colour to open.
 
+#### Every walk says it, and `"forget": ["all"]` is the answer when in doubt
+
+Saying nothing is not the same as needing nothing, and for a long time 252 of
+the 497 walks in the folder said nothing. What those walks were really running
+against was the history of whichever machine they were on. Read off this one on
+2026-09-16, that history was: a remembered text face of Georgia, a tutorial
+stopped six steps in, three layer groups left open on a fixture, and a dock
+section order one migration out of date. Not one walk asked for any of it, and
+every one of them inherited all four.
+
+So the line is not optional, and `Scripts/test.sh` holds every walk to it
+(`PlaytestWalkSetupTests`). `"forget": ["all"]` is the whole of it for a walk
+with no opinion, and it is the right default: it costs nothing to clear a
+setting a walk never touches.
+
+Naming areas instead is a claim, not a shortcut. A walk that writes
+`"forget": ["text"]` is saying it wants everything else inherited on purpose,
+and it owes the reader a line saying why.
+
 ### A guide that points at nothing fails the walk
 
 Any walk that drives a tutorial is holding that tutorial to its own promise. The

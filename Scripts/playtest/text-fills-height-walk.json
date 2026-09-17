@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/text-fills-height",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

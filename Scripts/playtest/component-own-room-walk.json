@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-own-room-walk",
+  "setup": { "forget": ["all"] },
   "seed": "The room a card keeps inside its OWN edges, offered as a knob. A card built as one stack keeps its room on the outermost group and nowhere else, so until now every copy of it was stuck with the same roominess. The author exposes that room, drops two copies, and gives one of them 40 while the other stays on the original's 16. Then the original is tightened to 4: the copy that answered keeps its 40, the one that answered nothing follows.",
   "steps": [
     {

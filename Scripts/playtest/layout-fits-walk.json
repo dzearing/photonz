@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/layout-fits",
+  "setup": { "forget": ["all"] },
   "seed": "A laptop-sized window (1200 by 720, so the dock has 688 points to work with) and a Button component dropped twice. The Layout section used to be by far the tallest thing in the panel: 269 points for a copy and 489 for an original, most of it a paragraph restating the controls two rows above it and four padding side fields that folded open underneath the row. This walk reads the dock's own offsets back rather than trusting a picture, and makes three claims: the section is far shorter than it was for both a copy and an original, opening the four sides now costs the panel NOTHING because they come out in a popout, and one number typed over the row still reaches all four sides so nothing became unsettable.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1200, "height": 720 },

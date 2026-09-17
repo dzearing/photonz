@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/toolbar-after",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

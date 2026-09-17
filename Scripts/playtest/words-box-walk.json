@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/words-box",
+  "setup": { "forget": ["all"] },
   "seed": "A measured text box carries a few points of empty room on its far edges so the letters never clip. It used to show: the blue box round a label hugged it at the top left and floated clear of it at the bottom right, and W read four points more than the words were wide. This walk looks at both.",
   "steps": [
     {

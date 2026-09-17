@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/drop-preview",
+  "setup": { "forget": ["all"] },
   "seed": "Nothing to set up: both files dropped here live in the repo.",
   "steps": [
     { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },

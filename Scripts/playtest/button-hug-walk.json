@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/button-hug",
+  "setup": { "forget": ["all"] },
   "seed": "The reported bug: giving a button a longer label leaves the button the width it was, so the words hang out of the pill. The walk drops a Button, gives a copy of it a much longer label, and the picture at the end is the only proof that matters.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

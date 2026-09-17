@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/undo-hands-back-the-pick",
+  "setup": { "forget": ["all"] },
   "seed": "Undo has to hand back the PICKING as well as the drawing. Sweep a band round two boxes, stack them, and press Undo: the boxes come back, the band comes back, and the two boxes must be picked again, or the next thing you do is sweep the same band a second time. Same for a delete: the boxes come back picked, so pressing Backspace again removes the same two. Every claim here is an expectPicked step, because a snapshot cannot photograph a pick that has gone missing - the rows just sit there unhighlighted and the walk passes.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

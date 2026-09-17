@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/crop-rounds-the-card",
+  "setup": { "forget": ["all"] },
   "seed": "A card told to cut off what sticks out past its edge used to be stuck with square corners. Corner Radius over a group reaches past it to what is inside, so the pull rounded the photo, the card's square crop cut the rounded photo straight back to a hard box, and nothing on the canvas moved. A card that crops has an edge you can SEE, so it keeps the row for itself: the number is the curve it crops with, and the photo inside is left alone.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

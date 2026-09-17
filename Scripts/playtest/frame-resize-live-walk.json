@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/frame-resize-live",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

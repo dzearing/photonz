@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/nav-bar-row",
+  "setup": { "forget": ["all"] },
   "seed": "The starter Nav Bar is now a row, so dragging it wider arranges itself: the back label holds the left edge, the title stays in the middle of the whole bar, the hairline spans it and hugs its bottom, and the surface fills it. Nothing is typed into the Layout section, and a second control dropped on the bar lines up beside the back label on its own.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

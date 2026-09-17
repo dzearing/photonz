@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-own-number-walk",
+  "setup": { "forget": ["all"] },
   "seed": "A number as a knob. A card original rounds its box and spaces its labels; the author exposes the rounding, drops two copies, and squares one of them off. The other keeps following, so an edit to the original still reaches it. Then both copies are picked at once, so the field has to say Mixed and still take a number typed over it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },

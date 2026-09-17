@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/history-thumbnail-shapes",
   "setup": {
+    "forget": ["all"],
     "captures": [
       "fixtures/thumbnail-shapes/Shape 1 wide 2400x300.png",
       "fixtures/thumbnail-shapes/Shape 2 ordinary 1200x800.png",

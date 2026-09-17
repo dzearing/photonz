@@ -1,5 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/layers-list-follows-pick",
+ "setup": { "forget": ["all"] },
  "steps": [
   {
    "do": "blank",

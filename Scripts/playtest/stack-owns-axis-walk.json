@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/stack-owns-axis",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

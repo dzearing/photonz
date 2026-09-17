@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/screen-adoption",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

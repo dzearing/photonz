@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-own-size",
+  "setup": { "forget": ["all"] },
   "seed": "A copy can be given a size of its own now. The walk drops the nav bar twice, so the first is the original and the second is a copy, then resizes the copy by its handle and by typing, puts it back with the one button that does that, and finally changes the ORIGINAL's height to prove the copy keeps the width it was given and takes the height it was not.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

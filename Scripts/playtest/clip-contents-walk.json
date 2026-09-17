@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/clip-contents",
+  "setup": { "forget": ["all"] },
   "seed": "A screen has always cut off what hangs over its edge; a card given a size of its own did not, so a long title ran straight out the side and was still there in the export. The walk drops a starter Card, holds it to 120 tall, watches the words run out of the bottom, and turns the same Clip contents switch on.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

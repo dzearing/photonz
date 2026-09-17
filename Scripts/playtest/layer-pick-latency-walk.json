@@ -1,5 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/layer-pick-latency-walk",
+ "setup": { "forget": ["all"] },
  "steps": [
   {
    "do": "describe",

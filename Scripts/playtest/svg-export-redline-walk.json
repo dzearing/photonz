@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/svg-export-redline-walk",
+  "setup": { "forget": ["all"] },
   "seed": "A marked up screenshot is what this app is used for most, and until 2026-09-16 it was the one thing SVG export could not hand over as shapes: an arrow, a highlight and a measurement all rode out as embedded pictures, so whoever received the file could not move a single mark. This walk marks a screenshot up all three ways and asks the file itself what it is made of.",
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },

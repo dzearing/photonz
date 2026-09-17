@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/bar-title-one-line",
+  "setup": { "forget": ["all"] },
   "seed": "A bar title stays on one line. The walk drops a Nav Bar, types a title far longer than the bar has room for, and the picture is the only proof that matters: the words stay on one line inside the bar, ending in an ellipsis, instead of wrapping onto a second line that hangs out of the bottom through the hairline.",
   "steps": [
     {

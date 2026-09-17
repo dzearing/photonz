@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/saved-colour-not-for-that-part",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
     { "do": "wait", "seconds": 1 },

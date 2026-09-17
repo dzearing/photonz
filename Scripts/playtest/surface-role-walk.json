@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/surface-role",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

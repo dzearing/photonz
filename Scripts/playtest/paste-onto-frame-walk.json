@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/paste-onto-frame-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
 

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/multi-drag",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },

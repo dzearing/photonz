@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/pasted-layer-name",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1340, "height": 900 },
     { "do": "wait", "seconds": 1 },

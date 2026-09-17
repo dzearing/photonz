@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-name-rename",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

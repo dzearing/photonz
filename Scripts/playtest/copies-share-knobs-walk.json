@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copies-share-knobs",
+  "setup": { "forget": ["all"] },
   "seed": "Picking a second copy used to take the whole Component section off the panel, so five buttons had to be set one at a time. The walk drops a Card three times (an original and two copies), picks both copies, sets them together, makes them disagree, and reads what each kind of knob says then.",
   "steps": [
     {

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-uneven-room-walk",
+  "setup": { "forget": ["all"] },
   "seed": "Room that differs side to side, offered as a knob. A card is given 10 of room above and below and 24 beside, the shape almost every real control has. Until now that took the room knob off the menu entirely, because four numbers are not one number. Now the knob is offered, a copy meets it in the same control the canvas uses, and opening it lets that copy be roomier on one side while the other three stay where the original put them.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/surface-in-a-stack",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

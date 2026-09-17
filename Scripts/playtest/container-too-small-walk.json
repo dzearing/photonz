@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/container-too-small",
+  "setup": { "forget": ["all"] },
   "seed": "A Card held to 120 tall and set to cut off what does not fit swallows its supporting text. The layers list already marked the row, but the mark could not be pressed: in a stack the card decides where every layer sits, so there is no move to make. What is wrong is the card's own size. The walk holds the card down, loses the text, reads what the mark now offers, presses it, and undoes it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

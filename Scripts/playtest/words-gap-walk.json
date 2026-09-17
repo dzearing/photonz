@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/words-gap",
+  "setup": { "forget": ["all"] },
   "seed": "Two labels, sixty points apart from the top of one to the top of the next. The panel says each one is sixteen points tall, so the space you can see between them is forty-four. A caliper dragged across that space has to say forty-four too, or the numbers on the panel are not the numbers on the picture.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1240, "height": 900 },

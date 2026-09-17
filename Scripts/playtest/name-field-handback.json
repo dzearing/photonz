@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/name-field-handback",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

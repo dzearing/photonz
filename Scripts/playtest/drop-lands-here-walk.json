@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/drop-lands-here",
   "seed": "A picture is dragged off the Library shelf onto the canvas, then the same file is let go the way the Finder hands it over, to prove both land on the point rather than in the middle of the canvas. The shelf tile has to come from the capture folder, so the walk borrows it for the length of the run and gives it back after.",
   "setup": {
+    "forget": ["all"],
     "captures": ["fixtures/Photonz drop probe.png"]
   },
   "steps": [

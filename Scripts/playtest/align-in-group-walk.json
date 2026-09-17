@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/align-in-group",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1200, "canvasHeight": 900, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },

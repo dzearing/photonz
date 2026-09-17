@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/refused-file-panel",
+  "setup": { "forget": ["all"] },
   "seed": "Nothing to set up: every file held over the window lives in the repo. Points are in window coordinates, measured down from the top-left corner, so they name spots that are NOT on the picture: the right hand panel, and the strip of chrome beside it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1400, "canvasHeight": 1000, "width": 1180, "height": 860 },

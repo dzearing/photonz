@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-look-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/arrow-caption-drag",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

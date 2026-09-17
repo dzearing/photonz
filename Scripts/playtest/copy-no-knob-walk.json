@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-no-knob",
+  "setup": { "forget": ["all"] },
   "seed": "A component whose author never made its words adjustable. Typing over a copy of it must refuse in words rather than take the words and drop them, and the way forward must be one press away on the copy's own section.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

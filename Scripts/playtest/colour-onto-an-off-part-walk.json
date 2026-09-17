@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/colour-onto-an-off-part",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

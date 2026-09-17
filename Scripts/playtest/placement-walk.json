@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/placement",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

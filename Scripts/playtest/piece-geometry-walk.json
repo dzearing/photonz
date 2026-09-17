@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/piece-geometry",
+  "setup": { "forget": ["all"] },
   "seed": "What the Position and Size panel does about a piece inside a copy. A piece owns nothing: its place and its size are refilled from the original after every edit, and the canvas offers it no handles. This walk shows first that no ordinary gesture even reaches one - a click, the double click that steps into any other group, a band and the Layers list all land on the whole copy - and then makes a piece the selection outright and reads the panel. There is no Position and Size section on it at all, and none of X, Y, W, H or A. The panel does not offer numbers it could never keep; the Component section says where they come from instead. Scripts/playtest/style-users-walk.json walks the one route that does put a piece in the selection.",
   "steps": [
     {

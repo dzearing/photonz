@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/label-fills-a-row",
+  "setup": { "forget": ["all"] },
   "seed": "A label told to take the room a row has left over. The walk draws a square and a long label, groups them into a row, gives the row a size of its own, and then tells the label to fill it. The words wrap into the room left for them, and the picture is the proof that matters: the wrapped label sits in the middle of the row it is in, not half a line below the middle with its last line hanging out of the bottom.",
   "steps": [
     {

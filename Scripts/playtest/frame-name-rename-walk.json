@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/frame-name-rename",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/text-draft-parity",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

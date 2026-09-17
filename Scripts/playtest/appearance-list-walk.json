@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/appearance-list",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/selection-type-shape",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

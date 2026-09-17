@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/grab-cue",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/layout-mixed-foot",
+  "setup": { "forget": ["all"] },
   "seed": "Pick two groups arranged in different ways and the Layout section used to end in a five line paragraph: 'These are not all arranged the same way. A pick here reaches every one of them, and in the ones that line their contents up, the arrangement still decides one of the two directions.' It ran off the bottom of the panel, and its first sentence was the Arrangement row two above it reading Mixed. This walk reaches both shapes of that state, a stack beside a grid and two stacks running different ways, and reads the foot line back by name: it must be one line, it must still promise the pick reaches every picked group, and it must name the row a stack has already decided rather than saying 'one of the two directions'.",
   "steps": [
     {

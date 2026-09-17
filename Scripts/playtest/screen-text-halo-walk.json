@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/screen-text-halo",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1300, "height": 860 },
     { "do": "wait", "seconds": 1 },

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/wrap-at-a-ceiling",
+  "setup": { "forget": ["all"] },
   "seed": "Words wider than the box they live in wrap onto a second line and the box grows downward, instead of running out past the edge. The walk builds a small card out of a square and a sentence, stacks them, puts a ceiling on the stack's width, and then takes the ceiling away again.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

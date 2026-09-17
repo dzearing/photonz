@@ -1,5 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/corner-reaches-the-group",
+ "setup": { "forget": ["all"] },
  "steps": [
   {
    "do": "blank",

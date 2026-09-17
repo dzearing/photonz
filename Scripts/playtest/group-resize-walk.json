@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/group-resize",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1200, "height": 860 },
     { "do": "wait", "seconds": 1 },

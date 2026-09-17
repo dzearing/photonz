@@ -1,5 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/layers-thumbnail-window",
+ "setup": { "forget": ["all"] },
  "steps": [
   {
    "do": "blank",

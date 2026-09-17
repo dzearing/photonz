@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/spread-gap",
+  "setup": { "forget": ["all"] },
   "seed": "A stack that has been given a size can share the room it has left over between its rows instead of holding one gap, which is how a bar with a logo at one end and buttons at the other is built. The walk draws three pieces in a row, stacks them, gives the stack a width, and presses the switch on the Gap row.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/text-line",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "open",

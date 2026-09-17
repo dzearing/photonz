@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/shape-settings",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1360, "height": 940 },
     { "do": "wait", "seconds": 1 },

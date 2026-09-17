@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/stretch-menu-names-the-surface",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

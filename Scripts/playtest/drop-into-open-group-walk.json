@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/drop-into-open-group",
+  "setup": { "forget": ["all"] },
   "seed": "A tile dragged off the Library shelf onto a group you have stepped inside joins that group, and the box drawn while it is still in the air is where the row will actually park it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },

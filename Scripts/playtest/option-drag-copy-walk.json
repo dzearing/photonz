@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/option-drag-copy",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

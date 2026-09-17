@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/four-sided-popout",
+  "setup": { "forget": ["all"] },
   "seed": "The one row that speaks for four numbers, in both the places it appears. Padding and Corner Radius are the same question asked twice — one number nearly always, four numbers once in a while — and both used to answer it by folding four more rows open underneath, which is the shape the user called the laziest possible UI and which cost a panel that already does not fit its own contents about a hundred points each time. This walk photographs the row at rest, the four open in their popout, and the row saying Mixed with the popout shut, for room first and rounding second, and reads the dock's own offsets back to show the panel did not grow when the four opened.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

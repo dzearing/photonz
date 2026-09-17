@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/layout-for-several",
+  "setup": { "forget": ["all"] },
   "seed": "Picking a second layer used to take the whole Layout section off the panel, so saying where three rows in a card sit meant saying it three times. The walk draws three rows, groups them, picks two, and reads the section: it must stay, be headed for both, set both in one step that one undo puts back, say Mixed where they disagree, and say one sentence rather than going blank when the picked layers are in different places. The group is then pulled wider, which is the only moment a placement rule does anything at all.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

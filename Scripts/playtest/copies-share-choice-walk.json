@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copies-share-choice",
+  "setup": { "forget": ["all"] },
   "seed": "The two knob kinds a walk could not reach before, photographed over two copies: a choice menu and a colour row. Each reads what the copies share, says Mixed when they differ, and setting it reaches both.",
   "steps": [
     {

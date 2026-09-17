@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/copy-layout",
+  "setup": { "forget": ["all"] },
   "seed": "A stack made into a component, and a copy of it. The copy's Layout section must not offer numbers it cannot keep: how a copy arranges its contents is the original's answer, and typing into it used to be accepted and then thrown away by the next edit anywhere in the document.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

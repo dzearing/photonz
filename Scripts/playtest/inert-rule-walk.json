@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/inert-rule",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

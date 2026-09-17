@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/blank-canvas-from-menu",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1100, "height": 800 },
     { "do": "tool", "tool": "rectangle" },

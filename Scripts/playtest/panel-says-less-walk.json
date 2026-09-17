@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-says-less",
+  "setup": { "forget": ["all"] },
   "seed": "THE CLAIM: a section of the right hand panel says at most one short line, and only when that line tells you something you cannot see. Pick three boxes and the panel used to print seven lines of small grey prose before you reached a control: three under Appearance repeating a count the Layers list already shows, two under Effects naming what the plus does, two under Arrange. This walk picks three boxes with nothing turned on, reads the panel's own section geometry back (dockSections, dockViewport, dockInView) and takes a real capture, so the room this buys is a number rather than an opinion. Before: 1044pt of sections in an 868pt viewport, Position & Size 856-1044, entirely below the fold.",
   "steps": [
     {

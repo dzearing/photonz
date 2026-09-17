@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/history-menu-title",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1100, "height": 800 },
     { "do": "wait", "seconds": 1.5 },

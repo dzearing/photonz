@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/trim-with-pieces-walk",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "action", "action": "videoPause" },

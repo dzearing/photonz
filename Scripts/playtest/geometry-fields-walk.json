@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/geometry-fields",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1 },

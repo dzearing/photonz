@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/band-level",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

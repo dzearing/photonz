@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/frame-selection",
+  "setup": { "forget": ["all"] },
   "seed": "Proves a scripted walk can ask for Frame Selection, the way the Layer menu does, and see what it made. One shape is drawn and framed on its own; two more are drawn, both picked, and framed together; then nothing is picked and the same request is refused out loud. Every frameSelection line in the log says what the frame ended up holding, and the state tree beside it shows the framed layers nested inside it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1400, "canvasHeight": 1000, "width": 1180, "height": 860 },

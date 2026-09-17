@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-press",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

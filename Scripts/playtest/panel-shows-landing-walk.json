@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-shows-landing",
+  "setup": { "forget": ["all"] },
   "seed": "A 1400x1000 canvas holding a frame in the middle and two pictures either side of it, so the right hand panel has a frame row, two layer rows and a stack of sections. A picture is then held over each part of that panel in turn \u2014 the top of a row, the bottom of a row, the middle of the frame row, a section header, the empty space under everything \u2014 and each step writes down what the panel says it is about to do and photographs it saying it. A text file is held over the same panel to prove the refusal is visible too. Canvas points are document coordinates; panel points are window coordinates measured down from the top-left corner. Two last steps hold the same picture over the canvas itself, to show the canvas landing box is untouched and the panel stays quiet while the drag is not over it.",
   "steps": [
     {

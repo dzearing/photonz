@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/decided-size",
+  "setup": { "forget": ["all"] },
   "seed": "Every number the app works out for you looks like one it worked out. The walk draws three pieces, stacks them into a column, gives the column a width, and stretches the middle piece across it. Its W becomes plain text while its H stays a box you can type into, so a decided number and a typed one sit side by side in one panel.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

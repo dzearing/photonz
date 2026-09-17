@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/canvas-menu",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1.2 },

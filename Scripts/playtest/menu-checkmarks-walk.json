@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/menu-checkmarks",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 700, "canvasHeight": 500, "width": 1000, "height": 900 },
     { "do": "wait", "seconds": 1.5 },

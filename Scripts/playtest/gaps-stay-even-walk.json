@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/gaps-stay-even",
+  "setup": { "forget": ["all"] },
   "seed": "Every gap in a column is the gap the column was given, even where a piece changes size on its way into it. Two pictures: the starter Card, whose title used to sit a point closer to the line under it than to the picture above it, and a stack inside a stack, stretched across a column 300 wide, whose words re-wrap and make it taller than it was going in. The piece under that one used to be placed for the shorter box, so the column wrote one thing through another.",
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },

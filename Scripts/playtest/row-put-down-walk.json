@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/row-put-down",
+  "setup": { "forget": ["all"] },
   "seed": "A layer row picked up and let go somewhere it cannot land used to stay in the layers list's hand. Nothing looked wrong until the next drag: a colour carried over a row was read as that row coming back, and the list drew a reorder line for a colour. This walk abandons a row drag three ways - over another row, over the picture, and off in the panel with nothing under it - and after each one asks the list what it is holding and carries a colour over a row to see whether a line appears. A walk cannot press escape during a real drag, because it cannot start a real drag session at all; what it can do is leave the drag exactly as escape, a release over the picture and a release outside the window all leave it, which is with nothing ever told that it ended.",
   "steps": [
     { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },

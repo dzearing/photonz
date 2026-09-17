@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/library-shelf-height",
+  "setup": { "forget": ["all"] },
   "steps": [
     {
       "do": "blank",

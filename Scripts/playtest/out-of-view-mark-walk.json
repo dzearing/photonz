@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/out-of-view-mark",
+  "setup": { "forget": ["all"] },
   "seed": "A card held to 120 tall and set to cut off what does not fit makes its supporting text vanish. Until now the layers list showed that text as an ordinary row, so the only clue it still existed was undo. The walk turns the switch on, opens the card in the list, and looks for the mark that says the box is cutting the text off.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
