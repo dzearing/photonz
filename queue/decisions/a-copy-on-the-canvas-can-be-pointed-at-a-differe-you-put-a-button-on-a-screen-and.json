@@ -1,0 +1,68 @@
+{
+  "id": "a-copy-on-the-canvas-can-be-pointed-at-a-differe-you-put-a-button-on-a-screen-and",
+  "taskId": "a-copy-on-the-canvas-can-be-pointed-at-a-differe",
+  "question": "You put a Button on a screen and set it up. Should you be able to point it at a different component without starting over?",
+  "context": "A copy of a component follows an original: change the original and every copy follows. Today a copy is stuck following the one it was made from. Choosing a different one means deleting it and placing the other, then setting its size, its room and its knobs again by hand.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A row in the panel that says which one it is",
+      "summary": "Pick the copy and the panel shows the component it follows, as a row you can click to choose another. Choosing one keeps where it sits, how big it is, and every setting the new one also has.",
+      "pros": [
+        "The panel already says which component a copy follows, so this is that line becoming something you can use",
+        "You can see what it is before you change it",
+        "Reads the same whether the copy is on its own, inside a group, or inside another component"
+      ],
+      "cons": [
+        "It is one more row in a panel that is already full"
+      ],
+      "mitigation": "It replaces the line that is there rather than adding one."
+    },
+    {
+      "id": "b",
+      "label": "Drop the new one on top of the old one",
+      "summary": "Drag a tile out of the Library and let it go on top of a copy that is already there, and it takes that copy over: same place, same size, same settings where they fit.",
+      "pros": [
+        "Nothing new on screen at all",
+        "The gesture you already use to place one is the gesture that swaps one"
+      ],
+      "cons": [
+        "Easy to do by accident when you meant to put a second one next to the first",
+        "Nothing on screen tells you it is possible"
+      ],
+      "mitigation": "The copy underneath lights up while you hover it, and letting go anywhere else places a new one as it does today."
+    },
+    {
+      "id": "c",
+      "label": "Both, the row and the drop",
+      "summary": "The panel row is how you find out you can do it, and dropping one on top is the fast way once you know.",
+      "pros": [
+        "Discoverable and fast",
+        "Each one covers the other´s weakness"
+      ],
+      "cons": [
+        "Two ways into the same thing is two things to keep agreeing with each other",
+        "More to build and more to get wrong"
+      ],
+      "mitigation": "Build the row first and add the drop after, so the second one is judged against a working first."
+    },
+    {
+      "id": "d",
+      "label": "Leave it: delete it and place the other one",
+      "summary": "Changing your mind about which component a copy is means deleting it and dragging out the other, setting it up again.",
+      "declines": true,
+      "pros": [
+        "Nothing new to learn and nothing new to get wrong",
+        "One less thing in the panel"
+      ],
+      "cons": [
+        "Every setting you had made is lost and retyped",
+        "On a screen with twenty copies, trying a different button means twenty deletions"
+      ],
+      "mitigation": "None. This is the answer that says the app is for building screens once rather than exploring them."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-17T18:07:09.433Z"
+}

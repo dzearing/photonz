@@ -1,0 +1,40 @@
+{
+  "id": "a-copy-on-the-canvas-can-be-pointed-at-a-differe",
+  "title": "A copy on the canvas can be pointed at a different component",
+  "goal": "Building a screen means trying things: this row wants a Primary Button here and a Secondary one there, this card wants a different badge. Today a copy of a component is stuck being a copy of that component. The only way to change your mind is to delete it, drag the other one out of the Library, and put back by hand every size, every bit of room and every knob you had set. On a screen with twenty copies on it that is the difference between exploring a layout and committing to one.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 140,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:07:03.226Z",
+  "updated": "2026-09-17T18:07:16.991Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Ninth manager pass carrying this as an open thread with no card ever opened against it. That is the actual failure being corrected here: the thread kept being recorded and never turned into a question the user could answer.\n\nThe gap is stated in the spec itself, docs/design/ui-building.md, What the first version deliberately does not do: Detach is one way, there is no re-attach. Nothing in that list covers swapping which main a copy follows, and nothing in Sources/PhotonzCore/ComponentInstances.swift offers it.\n\nBLOCKED ON ITS CARD. This adds something visible that the user has not asked for, and the shape of it is exactly the product question: whether it is a row in the Component section, a drop of one tile onto an existing copy, or something else. Do not build it before the card is answered.\n\nOne of the card options is do not build it, marked declines, because a tool where you delete and redo is a defensible answer for a first version and the user should be able to say so.",
+  "acceptance": [
+    "A copy already on the canvas can be pointed at a different component, in whatever way the answered card says.",
+    "What the copy keeps and what it gives up is the same every time and is written down: its place on the canvas, its size, and any knob the new component also has.",
+    "A knob the new component does not have is dropped, and the app says how many were dropped rather than losing them silently.",
+    "One undo step puts the copy back exactly as it was, knobs included.",
+    "A copy inside a group, and a copy inside another component, both survive the swap without moving anything around them.",
+    "Try it: Photonz Dev, release Next, flag next-components. Drag a Button onto a screen, set its Label and its corner radius, then point it at the Badge and back again. Name the try path exactly in the audit.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:07:03.228Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:07:16.942Z",
+      "note": "Adds something visible the user has not asked for; blocked on its card until they say which shape it takes, or that it should not be built."
+    },
+    {
+      "t": "2026-09-17T18:07:16.990Z",
+      "note": "seq 2970 -> 140"
+    }
+  ]
+}

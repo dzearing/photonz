@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T16:54:04.408Z",
+  "updated": "2026-09-17T18:06:49.803Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -335,6 +335,10 @@
     {
       "t": "2026-09-17T16:54:04.407Z",
       "note": "words-down-the-box-walk fails on today's main and is not about text: 'Scripts/playtest.sh Scripts/playtest/words-down-the-box-walk.json' -> step 8 (dragTile): no tile called \"Nav Bar\" is in the panel; the ones that are: Badge / Components, Button / Components, Text Field / Components. Reproduced twice, once with the size-settling change stashed, so it is the library's tile list that moved on and not the walk's text work."
+    },
+    {
+      "t": "2026-09-17T18:06:49.802Z",
+      "note": "Manager pass 2026-09-17: pulled the Nav Bar tile failure out of this task and filed it as every-starter-component-can-be-found-on-the-comp. Reason: it is an app finding, not a walk finding (a starter component that may have stopped appearing on the shelf), and it has nothing to do with the locked screen, while this task is blocked behind the lock card and so cannot be claimed. The rest of the failing list stays here."
     }
   ]
 }

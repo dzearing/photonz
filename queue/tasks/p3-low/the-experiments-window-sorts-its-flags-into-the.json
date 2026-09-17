@@ -1,0 +1,36 @@
+{
+  "id": "the-experiments-window-sorts-its-flags-into-the",
+  "title": "The Experiments window sorts its flags into the parts of the app they belong to",
+  "goal": "Everything Next has built is behind a flag in the Experiments window, and there are now seventy-seven of them in one list, in the order somebody happened to add them. Nothing says which part of the app a flag belongs to, so the window reads as a pile rather than a map of what the release contains, and turning one thing off to compare it means scanning all seventy-seven or knowing the word to type. Group them by the part of the app they change, so the window says at a glance what Next is.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:55.446Z",
+  "updated": "2026-09-17T18:06:55.508Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seventh manager pass carrying this as an open thread, which is what earns it a task under the follow-up bar rather than an eighth line in a report. Filed p3 deliberately, because nobody is stopped: the search field works, and 77 of the 79 definitions are enabledByDefaultIn [.next], so a person trying Next is not hunting for switches to turn on. What they are doing is turning ONE thing off to compare, and finding the flag an audit named.\n\nMeasured 2026-09-17: grep -c Definition( Sources/PhotonzCore/FeatureCatalog.swift is 79; releases: [.next] is 77; enabledByDefaultIn: [.next] is 77. Sources/PhotonzCore/FeatureFlag.swift line 214 says the order is catalog order and that is the order the dialog lists them in. FeatureFlag carries name, title, description, isEnabled, parameters and no group of any kind.\n\nFiles: Sources/PhotonzCore/FeatureFlag.swift (the new value, Codable and Sendable like the rest), Sources/PhotonzCore/FeatureCatalog.swift (every definition), Sources/Photonz/ExperimentsDialog.swift flagSection around line 128. Model and the test are PhotonzCore so they are test-first.",
+  "acceptance": [
+    "A flag says which part of the app it belongs to, in the catalog, as a value the model carries rather than a guess the dialog makes from its wording.",
+    "Every one of the seventy-nine definitions has one, and a test fails if a new flag is added without it.",
+    "The window draws the flags under headings for those parts, in a deliberate order, and the headings are plain words a person would use for those parts of the app.",
+    "Typing in the search field still narrows across everything, and a heading with no hits does not draw.",
+    "No new control: this is the same rows and the same switches, in groups. Nothing is added, removed or defaulted differently.",
+    "Try it: Photonz Dev, Experiments window (release Next), and read the list top to bottom. Screenshot in the audit.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:55.448Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:55.507Z",
+      "note": "seq 1330 -> 50"
+    }
+  ]
+}

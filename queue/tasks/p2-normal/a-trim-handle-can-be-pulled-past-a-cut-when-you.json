@@ -1,0 +1,36 @@
+{
+  "id": "a-trim-handle-can-be-pulled-past-a-cut-when-you",
+  "title": "A trim handle can be pulled past a cut when you mean to",
+  "goal": "Trimming a recording, a handle now catches on every cut it passes, which is what makes trimming exactly to a cut easy. The cost is that the band around each cut became unreachable: while the magnet is on you cannot park a handle within eight points of a cut by dragging at all. The canvas already has the answer for this and teaches it everywhere else, which is to hold a key and the magnet lets go for that drag. Give the trim handles the same key, so catching helps you instead of fencing you in.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:37.063Z",
+  "updated": "2026-09-17T18:06:37.126Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-17-video-cutting-trim-catch.json, which names both the problem and this fix: while the magnet is on you cannot park a handle inside eight points of a cut, those positions are unreachable by dragging, and a modifier key to free the magnet mid-drag, the way the canvas uses Command, was left out as the shortest thing that delivers the value and is the obvious next move if that band turns out to matter.\n\nNo card: this is the canvas idiom already in the app, applied to a control the user already has, not a new gesture invented here. Find what the canvas actually uses and match it rather than picking a key.\n\nThe audit also says the precise way in already exists, which is parking the playhead and pressing I or O, and neither of those snaps. That is the argument for calling this p2 rather than p1: there is a way to land in the band, it is just not the way your hand is already on.\n\nFiles: Sources/Photonz/TrimTimeline.swift and the magnet in the trim drag path; the canvas magnet defeat key is the thing to copy. Not reproduced by hand: the Mac has been locked since 2026-09-15 so no walk runs; the audit measured it by test.",
+  "acceptance": [
+    "Holding the same modifier the canvas uses to defeat its magnets frees a trim handle mid-drag: the handle follows the pointer exactly and catches on nothing.",
+    "Letting the key go mid-drag turns catching back on without the handle jumping.",
+    "Pressing the key after the drag has already started works, not only before, so you reach for it at the moment you find you cannot land where you want.",
+    "The handle tooltip or the trim row says the key, the way the other buttons on that row name theirs.",
+    "The magnet numbers themselves are unchanged: 8 points to reach, 16 to hold.",
+    "Try it: Photonz Dev, release Next. Open a recording, press T for trim, drag a handle towards a cut and watch it catch, then drag again with the key held and park it 3 points short of the cut. The flag is the one a-trim-handle-catches-on-a-cut-as-it-passes shipped behind; name it in the audit.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:37.065Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:37.125Z",
+      "note": "seq 2970 -> 40"
+    }
+  ]
+}

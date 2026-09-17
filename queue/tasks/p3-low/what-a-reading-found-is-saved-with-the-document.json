@@ -1,0 +1,36 @@
+{
+  "id": "what-a-reading-found-is-saved-with-the-document",
+  "title": "What a reading found is saved with the document",
+  "goal": "When a screenshot is separated into layers, each row is read so it can say its own words in the layers list instead of being called Text 57. Nothing about that reading is kept, so every time the document is opened the app reads all of it again in the background. On a page of a hundred and forty rows that is a few hundred milliseconds of Vision work on every open, for an answer it already had, and there is no guarantee the second reading names things the same way the first one did. Save what the reading found so opening a document is free and a layer keeps the name you saw last time.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:49.848Z",
+  "updated": "2026-09-17T18:06:49.911Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Second manager pass carrying this, which is what earns it a task under the follow-up bar rather than another line in a report. From the rough list of queue/audits/2026-09-16-separated-row-says-its-words.json: the reading is not saved, so opening a document that already holds separated runs reads them again in the background; on a page of a hundred and forty runs that is a few hundred milliseconds of quiet work after the file opens.\n\np3 because nobody has reported noticing it. The two things that could make it matter are the wasted work on every open and the risk of a second reading disagreeing with the first, and the audit for this task should say which of those is real.\n\nFiles: Sources/PhotonzCore/TextReadingBatch.swift (Batch is not Codable and is not in Document), Sources/Photonz/EditorState+RunWords.swift line 85 where the detached read is kicked off, Sources/PhotonzCore/Document.swift. Flag next-read-every-label and the row-naming flag beside it.",
+  "acceptance": [
+    "What a reading found is written into the document and read back with it, so opening a saved document starts no reading at all.",
+    "A row keeps the name the reading gave it across a save, a quit and an open, including a name somebody then edited by hand.",
+    "A row that has never been read is still read the first time, and a row added after the save is read like any other.",
+    "Measured in the audit: how long a document of about a hundred and forty read rows takes to open before this change and after it.",
+    "The saved form does not put pixel data in the document model, which the repo rules forbid: it is words and what was measured about them, nothing more.",
+    "Try it: Photonz Dev, release Next. Separate a dense capture, let the names settle, save, quit, open it again, and watch the layers list have every name immediately.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:49.850Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:49.910Z",
+      "note": "seq 1330 -> 40"
+    }
+  ]
+}

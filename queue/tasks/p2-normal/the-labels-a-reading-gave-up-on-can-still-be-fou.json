@@ -1,0 +1,35 @@
+{
+  "id": "the-labels-a-reading-gave-up-on-can-still-be-fou",
+  "title": "The labels a reading gave up on can still be found after the line goes",
+  "goal": "Reading every label in a separated screenshot raises a line at the foot of the canvas saying how many came back as words and how many stayed pictures, and the count is the way to find the ones that stayed. The line lasts six seconds and then nothing remembers. Somebody who reads it, clicks the canvas to look at something, and then wants the three stragglers has to read the whole page again to get the count back, which is a full pass of real work for an answer the app already had. Make the way back cheap and always there.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:07:38.416Z",
+  "updated": "2026-09-17T18:07:38.481Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-17-find-what-stayed-a-picture.json, second item: once the line fades there is no way back, nothing remembers which labels a reading gave up on, so a person who reads the line, clicks the canvas and then changes their mind has to read the page again to get the count back.\n\nThat audit is for the task that shipped the count as the way to them (the-labels-a-reading-gave-up-on-can-be-found, done 2026-09-17), so this is its follow-up rather than a near-twin: that task made the count reach them, this one makes the count survive.\n\nNo card: nothing is added to the screen. If the shortest honest fix turns out to need a new control after all, stop and open one rather than inventing it.\n\nFiles: Sources/PhotonzCore/TextReadingBatch.swift (the Batch holds read, stillPictures and family and is thrown away), Sources/Photonz/EditorState+ReadText.swift, the notice in Sources/Photonz/EditorView.swift around canvasNoticeChip and CopyConfirmation´s six second life.\n\nNot reproduced by hand: the screen has been locked since 2026-09-15 so no walk can run here. The audit reproduced it while building the feature.",
+  "acceptance": [
+    "Which labels stayed pictures is remembered after the line goes, for as long as the document is open and nothing about those rows has changed.",
+    "Asking to read the page again, when nothing has changed, brings the count back at once instead of reading everything a second time.",
+    "Nothing new is added to the screen: this is the same line and the same count, reachable again.",
+    "A row that has since been retyped by hand, deleted, or separated afresh is no longer counted, so the number is never stale.",
+    "Try it: Photonz Dev, release Next, flag next-read-every-label. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, separate it, press Read the Words, let the line fade, click the canvas, then get the count of what stayed pictures back.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:07:38.418Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:07:38.480Z",
+      "note": "seq 2970 -> 60"
+    }
+  ]
+}

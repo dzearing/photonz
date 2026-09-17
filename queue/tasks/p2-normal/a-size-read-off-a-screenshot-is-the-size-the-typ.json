@@ -1,0 +1,37 @@
+{
+  "id": "a-size-read-off-a-screenshot-is-the-size-the-typ",
+  "title": "A size read off a screenshot is the size the type really was",
+  "goal": "Redlining a screenshot is what this app is mainly for, and reading a label back into text is now the fastest way to get a number off one. On one of the study captures those numbers come back about nine per cent high: row labels that are 13 points on screen say 28 px where 26 is the true answer. Somebody writing a spec off the Size menu writes the wrong number, and has no way to know. Measure how far off the reading really is against type of a known size, say why, and close the gap or say in the app how close the number is.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:17.241Z",
+  "updated": "2026-09-17T18:06:17.306Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "NOT REPRODUCED BY THE MANAGER, filed p2 as something to look into rather than p1. The screen has been locked since 2026-09-15 so no walk can run, and the loop owns the build directory, so this was read in the code and taken from a runner´s own measurement rather than measured again here.\n\nWhere it comes from: the rough list of queue/audits/2026-09-17-label-size.json, first item. Its words: the size is still about 9 per cent bigger than the type really was; those row labels are 13 points on screen and come back as a 28 point layer on a 2x capture, where 26 would be the true answer. That audit deliberately did not file it, saying it needs its own study rather than a near-twin task. This is that study.\n\nEvidence that cuts the other way, and the first thing to check: Tests/PhotonzRenderTests/ReadPageWeightFixtureTests.swift says the Effects panel rows fit at 22.2, 21.4, 22.4, 22.4 and 21.9 points on a 2x capture. If those rows are 11 points on screen that is dead on, which would mean the error is not a constant nine per cent and is specific to that capture or that face. Settle which before changing anything.\n\nThe mechanism: Sources/PhotonzRender/TextReader.swift, best(_:in:against:inkHeight:scale:) around line 690 and size(of:in:matchingInkHeight:scale:). It sets the string at a probe size, measures the ink height of that render, and scales so the two ink heights match, then nudges over sizeFactors and keeps the best overlap. That is exact only if ink in a capture is measured the same way as ink in a fresh render; antialiasing and the coverage threshold in inkBounds() are the obvious place for a few per cent to come from.\n\nA size a redline is written from is the reason this sits under measure-redline rather than under the reading feature it landed in.",
+  "acceptance": [
+    "A ground-truth round trip exists as a test: set a string at a known point size at a known capture scale, read it back, compare. Several sizes, several faces, both 1x and 2x.",
+    "The test says how far off the reading is at each of those sizes, and that number is written into the audit as a table.",
+    "The cause is named in plain words: why a freshly set string and the same string in a capture do not measure the same ink.",
+    "Where the gap can be closed it is closed, and the round trip lands within a point of the type that made it.",
+    "Where it genuinely cannot be closed, the app says so rather than claiming a number it cannot support, and the audit says which of the two happened.",
+    "The two fixture captures that already have numbers behind them still read the way ReadPageWeightFixtureTests pins them, or that test is updated with the reason in its comment.",
+    "Try it: Photonz Dev, release Next, next-read-every-label is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, pick the Background row, run Separate into Layers, press Read the Words, then pick the six row labels from Launch at login down to Copy to clipboard and read the Size menu in the Text section.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:17.243Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:17.305Z",
+      "note": "seq 2970 -> 30"
+    }
+  ]
+}

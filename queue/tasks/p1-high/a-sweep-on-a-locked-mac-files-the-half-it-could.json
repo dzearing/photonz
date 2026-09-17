@@ -1,0 +1,40 @@
+{
+  "id": "a-sweep-on-a-locked-mac-files-the-half-it-could",
+  "title": "A sweep on a locked Mac files the half it could run",
+  "goal": "The walk sweep is the only thing that tells anybody whether a change broke the app somewhere else. It has filed nothing at all for three days, because the Mac has been locked and the sweep will not report on a set it could only half run. Around 224 of the 510 walks do run under a lock and photograph the app for real, so the honest answer is not silence: file what ran, say plainly it is a part of the set and which part, and never let it be read as the state of the whole set. Then a regression in one of those 224 is found on the day it lands instead of whenever the screen is next unlocked.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:01.186Z",
+  "updated": "2026-09-17T18:06:08.917Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-17 at 18:0x local:\n\n  $ ioreg -n Root -d1 -a | grep -A1 CGSSessionScreenIsLocked\n    <key>CGSSessionScreenIsLocked</key>\n    <true/>\n  $ queue/bin/sweep.sh status\n    Last sweep 2026-09-17T18:03:11Z COULD NOT RUN: the screen was locked, so every walk that looks a control up by name was refused.\n    Half the set would have run and photographed the app, but half a set is not the state of the walk set, so nothing was filed. It runs again once the screen is unlocked.\n    A sweep is pending; the loop runs it between tasks.\n\nThe Mac has been locked since 2026-09-15 08:44. Every audit written since says in its own rough list that no walk ran and there is no picture of the app; several of them then FORCED a run with PHOTONZ_ALLOW_LOCKED_WALK=1 and got real window captures back, which is the proof the lock-safe half really does run.\n\nWhat exists already: Sources/PhotonzCore/PlaytestLockSafety.swift is the unit-tested list of which step kinds survive a lock; Scripts/playtest.sh exits 3 and reports status locked for a walk that needs a name; Scripts/playtest-all.sh already counts refusals separately. So the pieces are there and this task is about what sweep.sh does with them.\n\nThis is NOT the pending card your-mac-locks-at-night-and-whil, which asks whether the loop should keep the Mac awake. That question is about preventing the lock; this one is about what to do while it is locked, and the answer does not depend on it.\n\nFiles: queue/bin/sweep.sh, the sweep record in queue/history.jsonl and queue.mjs state (sweep.last), site/dashboard.html around the sweep strip. The strip already knows how to say a locked Mac (landed 2026-09-17 in the-dashboard-says-when-the-loop-has-gone-blind); this adds the numbers to it.",
+  "acceptance": [
+    "With the screen locked, queue/bin/sweep.sh runs the walks PlaytestLockSafety says are lock-safe and records the result, instead of recording nothing.",
+    "The recorded result says how many walks ran and how many were refused for a lock, and is marked partial, so no reader and no script can mistake it for the whole set.",
+    "The dashboard strip and sweep.sh status both say the partial shape in words: what ran, what passed, what is still waiting on an unlocked screen.",
+    "A walk that FAILS in the lock-safe half is named in the failing list the same way it would be in a full sweep, so it can be claimed.",
+    "The pending sweep request is NOT cleared by a partial run: a full sweep is still owed once the screen is unlocked, and the queue still says so.",
+    "Try it: with the screen locked run queue/bin/sweep.sh once, then queue/bin/sweep.sh status, and read the dashboard Project strip at http://127.0.0.1:8791. Paste both outputs into the audit.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:01.188Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:08.823Z",
+      "note": "seq 310 -> 10"
+    },
+    {
+      "t": "2026-09-17T18:06:08.916Z",
+      "note": "This is the stopgap for a-hundred-and-fifteen-walks-fail-on-code-that-pa, which is blocked on the card asking whether the loop should keep the Mac awake. That task is the real answer and would make this path a fallback nobody hits. This one is filed anyway because that card has been unanswered for two days while the sweep has filed nothing for three, and a partial answer that says it is partial beats silence."
+    }
+  ]
+}

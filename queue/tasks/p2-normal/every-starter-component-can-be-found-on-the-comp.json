@@ -1,0 +1,35 @@
+{
+  "id": "every-starter-component-can-be-found-on-the-comp",
+  "title": "Every starter component can be found on the Components shelf",
+  "goal": "The app ships with five components in the Library so a new document is not an empty canvas: Button, Text Field, Card, Nav Bar and Badge. A walk that drags the Nav Bar tile out now fails because it cannot find that tile, on code nobody changed for it. If a starter has quietly stopped appearing, somebody looking for it concludes the app does not have one. Find out which of the five the shelf really draws and in what circumstances, and make all five reachable.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T18:06:43.438Z",
+  "updated": "2026-09-17T18:06:43.503Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "NOT REPRODUCED BY THE MANAGER, filed p2 as something to look into rather than p1: the screen has been locked since 2026-09-15 so no walk can run here, and the loop owns the build directory.\n\nThe report: the rough list of queue/audits/2026-09-17-label-size.json says words-down-the-box-walk fails on main for an unrelated reason, the components library has no Nav Bar tile any more, reproduced with that change stashed. Its step is Scripts/playtest/words-down-the-box-walk.json line 13, { do: dragTile, tile: Nav Bar }.\n\nWhat was checked here in the code, and what it rules out: StarterComponent in Sources/PhotonzCore/StarterComponents.swift still has all five cases including navBar, so the model has not lost it. Sources/Photonz/LibraryPanel.swift visibleComponents around line 204 is where tiles come from; maxTiles is 60 so truncation is not it. That leaves editorState.starterComponentsEnabled, the ordering of componentEntries, LibrarySearch.filter, or the tile no longer answering to the name the walk types. One of those, or the walk is looking in the wrong scope.\n\nFolded into walks-that-fail-in-the-full-sweep as well, but filed on its own because that task is blocked behind a decision card about the locked screen and this has nothing to do with the lock.",
+  "acceptance": [
+    "Reproduced first: open a new document, open the Library, Components scope, and say in the audit which of the five tiles are there and which are not. If all five are there, say what the walk is really failing on instead and fix that.",
+    "All five starters are on the shelf in a document that has not taken them yet, with no search typed.",
+    "A test in PhotonzCore or a walk pins the five, so one going missing fails something rather than being noticed by a walk written for another feature.",
+    "words-down-the-box-walk passes, or its dragTile step is corrected with the reason written in the walk file.",
+    "Try it: Photonz Dev, release Next, flag next-starter-components. New document, open the Library, Components. Count the tiles. Then run Scripts/playtest-all.sh --no-build words-down-the-box and paste the result.",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T18:06:43.440Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-17T18:06:43.502Z",
+      "note": "seq 2970 -> 50"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:50:13.465Z",
-  "updated": "2026-09-17T12:13:57.075Z",
+  "updated": "2026-09-17T18:01:39.603Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-08 by the pass that wrote the rule this breaks: UX-PATTERNS section 3, Panels and surfaces, \"The question you can silence\", which requires a way back and records that nothing ships one.\n\nThe only silenceable question today is Turn Into Picture: Sources/PhotonzCore/RasterizePrompt.swift holds the words, Sources/Photonz/EditorState+LayerOps.swift:217 holds the answer at UserDefaults key photonz.turnIntoPicture.dontAsk (per app bundle, so dev, probe and release each keep their own). Not reproduced as a defect because there is nothing to reproduce: the code has one setter and no reader anywhere else and no UI reaches it. Verified by grep, not by a walk.\n\nOPEN UX QUESTION for whoever takes this, worth a decision card rather than a guess: where the list lives. Photonz has no Settings window today; the candidates are a new Settings pane, a section in the Experiments window (which is a developer surface, so probably wrong for a normal person), or offering it back inline the next time the command runs. Also worth deciding whether the list names one question or is written to hold the ten it will have in a year.\n\nPARKED at p3-low by the 2026-09-09 triage pass. It serves the design-system epic, which is staged next rather than now, and it does not unblock the focus. It is a real hole and the rule it was filed against still stands; it comes back up when design-system is staged.",
@@ -91,7 +91,63 @@
     {
       "t": "2026-09-17T12:13:57.074Z",
       "note": "seq 90 -> 10"
+    },
+    {
+      "t": "2026-09-17T17:43:54.758Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T17:45:19.461Z",
+      "note": "Adversarial review, second pass (the first was 2026-09-08, before the card was answered). The card resolved 2026-09-09 to A Settings window, so the question of WHERE is settled and the remaining judgement is how much window to build. Walked it again as a first-time user: nobody opens Settings looking for this, they open it because something they turned off needs turning back on, and they get there by Command-comma or by the app menu. Both of those only exist while an editor window is open, because with no window the app is a menu-bar agent with no menu bar of its own, so the menu-bar menu has to carry the row too or the whole surface is unreachable from the state the app spends most of its life in."
+    },
+    {
+      "t": "2026-09-17T17:45:22.427Z",
+      "note": "Cut from the scope: a Settings window with a sidebar and several pages. There is one page of content and inventing four more to make the window look like a settings window is the decorative half. Shortest version that delivers the whole value: one window, one page, a heading, one sentence saying how a question gets on the list, and a row per silenced question with a button. A sidebar arrives the day a second page does."
+    },
+    {
+      "t": "2026-09-17T17:45:22.474Z",
+      "note": "Second silenceable question has arrived since the card was written: Turn Into Path (SilenceableQuestion.all is two now), so the list is already plural and nothing about the page assumes one row. Release scoping: the whole surface sits behind a next-scoped flag, so Current is untouched. That leaves Current's Turn Into Picture still a one way door, which is the porting rule working as designed (Next gets it, Current gets it when Next is promoted), and it is written into the UX-PATTERNS note rather than left implied."
+    },
+    {
+      "t": "2026-09-17T17:57:56.380Z",
+      "note": "owns these walks: a-silenced-question-comes-back-walk"
+    },
+    {
+      "t": "2026-09-17T17:58:03.091Z",
+      "note": "Built and reviewed on the running app. New pure core Sources/PhotonzCore/SettingsWindowModel.swift holds the window's words and its rows, 6 tests written first in Tests/PhotonzCoreTests/SettingsWindowModelTests.swift, and it takes the heading, the empty sentence and the button off SilencedQuestions so no second surface can drift from them. App layer: SettingsDialog.swift (one page, no sidebar) and SettingsWindowController.swift (one reused window, opens with no document on screen), reached from AppCoordinator.showSettings(). Two ways in, both behind next-settings-window: the app menu's own Settings slot on Command-comma (EditorCommands, CommandGroup replacing .appSettings) and a Settings row in the menu-bar menu, which is the only way in while the app is a windowless agent."
+    },
+    {
+      "t": "2026-09-17T17:58:03.140Z",
+      "note": "Second adversarial pass, on the real app rather than on the idea. Fixed: the window opened at a height that left it two thirds empty with one row on it, so it is sized to what is on the page instead (520x320, holds both of today's questions without scrolling). Left rough and written into the audit: the page is still mostly empty below the row, and nobody has yet looked at it with two rows on it, only the unit tests. Also left rough: Current keeps the one way door until Next is promoted, which is the porting rule and not an oversight."
+    },
+    {
+      "t": "2026-09-17T17:58:03.188Z",
+      "note": "Proof: Scripts/playtest/a-silenced-question-comes-back-walk.json, 61 steps, green, lockSafe, 5 real pictures of the window. It ticks Don't ask again on a real sheet, watches the next Turn Into Picture go through with no question, opens Settings with the real Command-comma chord (a shortcut step, which also proves the menu item carries it), presses Ask Me Again, sees the row go and the page say the normal state, then turns a third shape and gets the question back word for word. Harness additions: turnIntoPicture / showSettings / closeSettings actions, a questions area of memory so a walk that silences a question cannot leave it silent for the next walk, and panelWindows() now includes the Settings window so press and expect reach it through the app's own register (which is why the whole walk survives a locked screen)."
+    },
+    {
+      "t": "2026-09-17T17:58:16.401Z",
+      "note": "Acceptance, item by item. (1) One place that lists every silenced question by the plain name of the command: the Settings window's Questions page, proved by the walk's expect on the Turn Into Picture row and by the picture in the audit. (2) Turning one back on makes the command ask the very next time: the walk turns a third shape immediately after and gets the question, because the command reads the answer each time rather than caching it. (3) A question nobody silenced is absent: SilencedQuestions.silenced filters the catalog and the walk claims there is no Ask Me Again on screen once the last one is back on, with the page's own sentence in its place. (4) Proven end to end in the running app: the walk ticks a real Don't ask again on a real sheet and presses a real button in a real window, 61 steps green with five real pictures."
+    },
+    {
+      "t": "2026-09-17T17:58:16.452Z",
+      "note": "left rough: the window has no page other than Questions, so Command-comma opens a settings window with one thing in it. Not filed: it is the shape the answered decision card asked for, and it stops being rough the first time any other setting needs a home rather than by anybody going and fixing it."
+    },
+    {
+      "t": "2026-09-17T17:58:16.502Z",
+      "note": "left rough: UX-PATTERNS now says no release may grow a second silenceable question without the way back being reachable in it, which is a rule about Current as much as Next. Not filed as its own task: Current gets the window when Next is promoted, and filing a task to build it twice is exactly what the porting rule exists to stop."
+    },
+    {
+      "t": "2026-09-17T18:01:25.779Z",
+      "note": "Photonz has a Settings window, on Command-comma and in the menu-bar menu, whose page lists every question you silenced and turns any of them back on. New pure core SettingsWindowModel (6 tests, written first) + SettingsDialog/SettingsWindowController, all behind next-settings-window so Current is untouched. Verified end to end by Scripts/playtest/a-silenced-question-comes-back-walk.json, 61 steps green with five real pictures: it ticks Don't ask again on a real sheet, watches the command go quiet, presses Ask Me Again, and gets the question back on the very next use. Full suite 8217 green. Audit: queue/audits/2026-09-17-silenced-questions.json. Commit 42647338, pushed."
+    },
+    {
+      "t": "2026-09-17T18:01:39.602Z",
+      "note": "Asked for a sweep: panelWindows() now includes the Settings window while it is open and PlaytestMemory gained a questions area, both on paths every walk goes through, and the three existing turn-into walks that exercise the same question could not run because the screen is locked (they ask for a control by name). Not waiting on it and not reporting on it."
     }
   ],
-  "started": "2026-09-08T22:02:53.550Z"
+  "started": "2026-09-17T17:43:54.757Z",
+  "walks": [
+    "a-silenced-question-comes-back-walk"
+  ],
+  "completed": "2026-09-17T18:01:25.780Z"
 }

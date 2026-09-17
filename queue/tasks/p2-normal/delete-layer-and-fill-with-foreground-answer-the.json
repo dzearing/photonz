@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2960,
-  "status": "pending",
+  "status": "done",
   "release": "current",
   "area": "app",
   "created": "2026-09-17T17:31:02.201Z",
-  "updated": "2026-09-17T17:31:02.204Z",
+  "updated": "2026-09-17T18:07:41.459Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same root cause as the-delete-key-drops-a-piece-the-way-the-tooltip, which fixed the third site (Video > Delete This Piece) but is scoped to the next release, so these two shared/current items were left alone. See Sources/PhotonzCore/DeleteKeyCharacters.swift for the whole finding; the fix is to swap .keyboardShortcut(.delete, ...) for .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), ...) at EditorCommands.swift:78 (Fill with Foreground) and EditorCommands.swift:748 (Delete Layer).\n\nReproduced 2026-09-17 on a freshly built probe. SwiftUIs KeyEquivalent.delete is U+0008, the backspace control character, while the key above Return sends U+007F, and AppKit only matches a menu item against U+007F.\n\n1. What SwiftUI actually registered, dumped out of the running probe menu bar:\n     > Edit > Fill with Foreground: [U+0008] flags=524288\n     > Video > Delete This Piece: [U+0008] flags=0\n     > Layer > Delete Layer: [U+0008] flags=1048576\n\n2. What AppKit does with that, a standalone NSMenu given one item and a real key-51 event (xcrun swift /tmp/menueq2.swift):\n     item U+0008 + none: backspace press -> took=false fired=[]\n     item U+0008 + cmd: backspace press -> took=false fired=[]\n     item U+0008 + opt: backspace press -> took=false fired=[]\n     item U+007F + none: backspace press -> took=true fired=[only]\n     item U+007F + cmd: backspace press -> took=true fired=[only]\n     item U+007F + opt: backspace press -> took=true fired=[only]\n\nNot yet watched happening by hand in the dev app: the Mac has been locked for this whole task, and a probe walk cannot press a window-scoped menu chord at all (the frozen menu bar). The two measurements above are what the claim rests on. Whoever takes this should confirm by hand before and after.",
@@ -22,7 +22,47 @@
     {
       "t": "2026-09-17T17:31:02.203Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T17:32:15.063Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T17:40:23.038Z",
+      "note": "Fix in: both rows now carry KeyEquivalent(DeleteKeyCharacters.backwards) (U+007F) instead of SwiftUI's .delete (U+0008). New walk delete-layer-key-walk asks the menu bar which item carries each chord; it fails without the fix (\"no menu item carries command+delete\") and passes with it, naming Layer > Delete Layer and Edit > Fill with Foreground."
+    },
+    {
+      "t": "2026-09-17T17:40:23.088Z",
+      "note": "Adversarial review before building, and a correction to the task's premise: the keys were NOT dead everywhere. CanvasNSView.keyDown (Sources/Photonz/CanvasKeys.swift) already answers keyCode 51 for both chords, so they worked whenever the canvas itself held the keyboard. What was dead was the menu chord, which is the only route when focus is anywhere else (a layer row, a panel, a fresh window). That is the gap this closes, and it is what the audit claims."
+    },
+    {
+      "t": "2026-09-17T17:40:23.137Z",
+      "note": "walks none -> delete-layer-key-walk"
+    },
+    {
+      "t": "2026-09-17T17:43:18.668Z",
+      "note": "Verified: Scripts/test.sh green, 8211 tests (one new). delete-layer-key-walk passes with the fix and fails without it. Re-ran every other walk that presses a delete chord: cut-says-what-it-cannot-do, fill-says-what-it-cannot-do, delete-over-a-marquee, locked-layer-delete-command, locked-layer-key-press, locked-layer, layer-box-is-its-pixels, delete-key-drops-a-piece. All green. tutorial-layers-and-undo-walk presses command+backspace too but is refused under the locked screen; a sweep was already pending from 17:32Z and will cover it once the Mac is unlocked, so no new request was filed."
+    },
+    {
+      "t": "2026-09-17T17:43:18.712Z",
+      "note": "left rough: command+delete now beats a text field being typed into, so renaming a layer and pressing it deletes the layer instead of clearing the line back to its start; option+delete does not, because the field editor keeps that one for deleting a word. Measured with a real key-51 press handed to NSApplication.sendEvent (a window, a focused NSTextField, the menu carrying each chord): option+delete left the menu alone and ate a word, command+delete ran the menu item and left the text alone. That is the ordinary Mac split rather than a defect, so it is an evaluate line and a rough line in the audit for the user to react to, not a task."
+    },
+    {
+      "t": "2026-09-17T17:43:18.756Z",
+      "note": "left rough: two things command+delete used to do on the canvas now go to the menu row instead, because the canvas key handler (CanvasKeys.swift) never looked at the modifier: with path points picked it took the points out, and with a marquee up it rubbed out the pixels. Both are what plain delete does and still does, and the menu row has always said command+delete means Delete Layer, so the new behaviour matches the advertised one. Where the row is dimmed the press still falls through to the canvas, so delete on the locked Background still clears it. In the audit rough for the user to disagree with."
+    },
+    {
+      "t": "2026-09-17T17:43:18.803Z",
+      "note": "Both rows now carry KeyEquivalent(DeleteKeyCharacters.backwards) (U+007F) instead of SwiftUI's .delete (U+0008), in shared EditorCommands.swift so Current and Next both have it. New delete-layer-key-walk asks the menu bar which item carries each chord: it fails without the fix and passes with it. Scripts/test.sh green, 8211 tests. Audit at queue/audits/2026-09-17-delete-layer-key.json with two real window captures. Commit 5ffb8335, pushed to main."
+    },
+    {
+      "t": "2026-09-17T18:07:41.458Z",
+      "note": "Manager pass 2026-09-17: looked at this audit's rough line about Command Delete beating a text field mid-rename, so renaming a layer and pressing it deletes the layer. NOT filed, and deliberately: EditorCommands.swift lines 60-75 record that the split was measured both ways on 2026-09-08 and re-measured on 2026-09-17, and it is the ordinary Mac split (Finder does the same while renaming a file). Option Delete stays with the field, Command Delete goes to the menu. Undo brings the layer back. So the rough line is a real thing to watch and not a defect; left here rather than filed."
     }
   ],
-  "walks": []
+  "walks": [
+    "delete-layer-key-walk"
+  ],
+  "started": "2026-09-17T17:32:15.062Z",
+  "completed": "2026-09-17T17:43:18.804Z"
 }
