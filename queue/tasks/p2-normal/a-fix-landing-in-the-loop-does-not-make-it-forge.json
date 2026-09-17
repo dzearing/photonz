@@ -1,0 +1,28 @@
+{
+  "id": "a-fix-landing-in-the-loop-does-not-make-it-forge",
+  "title": "A fix landing in the loop does not make it forget it is stuck",
+  "goal": "When the build loop is stuck failing and somebody lands a fix to the loop's own script, the loop picks the fix up and forgets everything it knew about being stuck. It stops blaming the environment, it starts its growing retry waits over from the shortest one, and a task it had parked stays parked instead of being handed back. It should carry all of that across, the way it already carries its pass count.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2870,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T01:06:11.759Z",
+  "updated": "2026-09-17T01:06:11.762Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-16 while running down the failure-drill flake (find-out-why-the-failure-drill-failed-once-and-p). queue/bin/go-loop.sh reload_if_changed exec's the script, and the startup block it lands back in calls `Q reset-health`, which queue.mjs writes as {health:'ok', consecutiveFailures:0, lastError:null, failureStreak:null}. reset-health's own comment says a restart is a fresh claim about health, but reload_if_changed's comment says the opposite for a RELOAD: same pid, same queue, pass count carried in PHOTONZ_LOOP_ITERS. Health is the one thing that does not ride across. Likely fix: skip reset-health when PHOTONZ_LOOP_ITERS is set on entry (it is still in the environment at that point; the loop unsets it later, at the ITERS= line).\n\nReproduced, not read. Recipe: build a stand-in repo of symlinks with a writable copy of go-loop.sh (the pattern scenario 4 of the drill already uses), run it with scenario 1's always-failing fake claude (exits 1 with the spend-limit line), PHOTONZ_BACKOFF_STEPS=1,2,3,4,5 PHOTONZ_MAX_ITERS=6, and append one comment line to that copy six seconds in. Output with the edit (reload fires once):\n  FAIL  consecutive failures counted        2 vs 5\n  FAIL  failures across tasks are blamed on the environment   environment flags: 00000\n  FAIL  tasks parked during an environment streak are handed back   0 unparked; still parked: drill-task-one\n  FAIL  each failure waits longer than the last   waits: 1s, 2s, 3s, 1s, 2s\nThe identical run with PHOTONZ_LOOP_RELOAD=0 (no reload) passes all eight, and so does the same run without the mid-run edit.",
+  "acceptance": [
+    "A loop that restarts onto an edited copy of its own script keeps its health, its consecutive failure count and its failure streak instead of zeroing them",
+    "A task parked during an environment failure streak is still handed back when a loop fix lands in the middle of that streak",
+    "The retry wait after such a restart continues the growing sequence instead of starting at the first step",
+    "queue/bin/failure-drill.sh proves it, with the reload deliberately turned on for that check"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T01:06:11.761Z",
+      "note": "created (manual)"
+    }
+  ]
+}

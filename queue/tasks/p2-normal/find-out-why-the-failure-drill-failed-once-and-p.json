@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 390,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:46:56.264Z",
-  "updated": "2026-09-16T12:23:35.034Z",
+  "updated": "2026-09-17T01:06:16.705Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-13 while landing a-manager-pass-does-not-wake-itself-up-again. First run: queue/bin/failure-drill.sh printed [drill] FAILED (scenario 1 exit 1, scenario 2 exit 0, scenario 3 exit 0, scenario 4 exit 0). I had piped it through tail -30, so the failing check itself is lost; scenarios 2 to 4 were all green in that same run. Immediate full rerun on the identical tree: 61 PASS, 0 FAIL, exit 0, [drill] all checks passed. Nothing between the runs but the rerun.\n\nSo this is filed as a question, not a bug: I cannot reproduce it. Scenario 1 is the always-failing runner (backoff, park after three tries, environment unpark), and the parts of it most likely to be timing-sensitive are the growing waits (PHOTONZ_BACKOFF_STEPS) and the regex that greps the loop window for them. Start by running it in a loop capturing full output: for i in $(seq 1 10); do queue/bin/failure-drill.sh > /tmp/fd-$i.txt 2>&1; echo $i $?; done",
@@ -38,6 +38,23 @@
     {
       "t": "2026-09-16T12:23:35.033Z",
       "note": "seq 560 -> 390"
+    },
+    {
+      "t": "2026-09-17T00:43:58.072Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T01:06:16.612Z",
+      "note": "Reproduced and named. Scenario 1 is not flaky on its own: 18 consecutive runs of it passed untouched. It fails when queue/bin/go-loop.sh is EDITED while the drill runs, which is exactly what the person running this drill is usually doing. Scenarios 1, 2, 3, 5 and 6 run the real repo copy of go-loop.sh, and the loop adopts an edit to its own script between passes by exec-ing onto it; the startup block it lands in calls reset-health. Appending one comment line six seconds into scenario 1 fails 4 of its checks, every time: consecutive failures 2 vs 5, environment flags 00000, drill-task-one left parked, waits 1s 2s 3s 1s 2s."
+    },
+    {
+      "t": "2026-09-17T01:06:16.658Z",
+      "note": "Fixed by taking the race away rather than waiting on it: PHOTONZ_LOOP_RELOAD=0 for every scenario, and scenario 4 (the one that IS about the reload, against its own writable copy) turns it back on. The same mid-run edit at the same moment now changes nothing. Full drill 90/90 three runs in a row, scenario 4 still reloads. The finding is written into the drill header above the export."
+    },
+    {
+      "t": "2026-09-17T01:06:16.704Z",
+      "note": "left rough: the loop-side half is real and is filed separately as a-fix-landing-in-the-loop-does-not-make-it-forge (p2) with the reproduction. A reload keeps the loop's pid, queue and pass count but not its health, so landing a fix while the loop is stuck resets its backoff and leaves a parked task parked. No audit: this is loop plumbing, nothing a person can try in the app."
     }
-  ]
+  ],
+  "started": "2026-09-17T00:43:58.071Z"
 }

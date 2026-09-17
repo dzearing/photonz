@@ -90,6 +90,28 @@ exit 0
 FAKENOTIFY
 chmod +x "$SHARED_BIN/osascript"
 export PATH="$SHARED_BIN:$PATH"
+
+# Every scenario but 4 runs the REAL queue/bin/go-loop.sh, straight out of the
+# repo, and between passes the loop adopts an edit to that file by exec-ing
+# itself onto it. So an edit landing during the two minutes this drill takes
+# RESTARTS the drill's loop mid-scenario, and a restart calls
+# `queue.mjs reset-health`: health, the consecutive failure count and the
+# environment failure streak all go back to zero, and the backoff starts over
+# from the first step.
+#
+# That is the 2026-09-13 flake this drill was filed for. It failed scenario 1
+# on its first run and passed completely on the very next one with nothing
+# changed in between, because the person running it was landing a change to
+# go-loop.sh. Reproduced on 2026-09-16 by appending a single comment line to
+# the loop's script six seconds into scenario 1: four of its checks fail, every
+# time (2 consecutive failures counted out of 5, no environment blame, a task
+# left parked, waits 1s 2s 3s 1s 2s). Without the edit, scenario 1 passed 18
+# runs in a row, so nothing here is flaky on its own.
+#
+# Nothing but scenario 4 is about the reload, so it is off everywhere else and
+# this drill no longer depends on the repo holding still while it runs.
+# Scenario 4 turns it back on, against a writable copy of its own.
+export PHOTONZ_LOOP_RELOAD=0
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -503,6 +525,7 @@ export PATH="$BIN4:$PATH"
 export PHOTONZ_QUEUE_DIR="$QDIR4"
 export DRILL_STATE="$STATE4"
 export DRILL_SCRIPT="$FAKEREPO/queue/bin/go-loop.sh"
+export PHOTONZ_LOOP_RELOAD=1        # this scenario IS the reload, and it owns the script it edits
 export PHOTONZ_BACKOFF_STEPS="1,2,3"
 export PHOTONZ_MAX_ITERS=4          # task 1 (breaks it), task 2 (fixes it), the reload, task 3
 unset PHOTONZ_DIGEST_HOUR

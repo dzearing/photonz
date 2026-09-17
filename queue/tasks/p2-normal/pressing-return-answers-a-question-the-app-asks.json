@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 370,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T07:02:01.641Z",
-  "updated": "2026-09-16T12:23:34.946Z",
+  "updated": "2026-09-17T00:22:38.913Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-16, on a clean tree (git stash, rebuild, re-run). Both runs were under PHOTONZ_ALLOW_LOCKED_WALK=1 because the Mac's screen reported locked; the captures came out real and legible, but re-confirm unlocked before digging.\n\nFAILS HONESTLY:\n$ Scripts/playtest.sh Scripts/playtest/turn-into-a-path-walk.json\n  step 42 (expectPath): no path in the document; the layers are: Background, Rectangle\nStep 40 is { do: key, key: return } answering the \"Turn “Rectangle” into a path?\" sheet. The rectangle is still a rectangle, so the press never reached the button.\n\nPASSED WHILE PROVING NOTHING (now fixed in that walk, same root cause):\nturn-into-a-picture-walk.json used the same { do: key, key: return } at its sheet. Every describe after it was false and the walk still went green: turn-5-turned-doc.png and turn-6-piece-out-doc.png came back byte-identical (shasum), the row menu after the \"turn\" still listed 'Turn Into Picture…', and a screen capture taken after the press shows the sheet still standing. Fixed there by pressing the button by name instead: { do: press, control: 'Turn Into Picture', in: 'Sheet' }.\n\nWHAT NOT TO DO: do not just swap turn-into-a-path-walk to the `press` form and call it done. That walk is failing HONESTLY, and the question worth answering first is whether Return ever reached these buttons. The harness's `.key` case routes a press to window.attachedSheet on purpose (PlaytestHarness.swift, the comment dated 2026-09-08 about answering “Turn this shape into a picture?” with ⏎), and turn-a-rectangle-into-a-path landed green, so this looks like something that worked and stopped. Find out what changed before changing the walk.\n\nWhere: Sources/Photonz/Playtest/PlaytestHarness.swift `case .key` and `keyTarget()`; the sheets are NSAlert.beginSheetModal in Sources/Photonz/EditorState+LayerOps.swift (rasterizeLayer, askBeforeTurningIntoPath).",
@@ -26,6 +26,44 @@
     {
       "t": "2026-09-16T12:23:34.945Z",
       "note": "seq 2800 -> 370"
+    },
+    {
+      "t": "2026-09-16T23:53:50.386Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T00:22:28.212Z",
+      "note": "Root cause, reproduced not read: a question sheet's default button carries NO key equivalent of its own. Cancel gets a real Escape, Return is wired through NSWindow.defaultButtonCell, and AppKit presses that only for the KEY window. The probe is hardly ever the active app, so there was no key window and the press matched nothing. Printed mid-walk on 2026-09-16: Turn Into Path|ke=\"\" ; Cancel|ke=\"escape\" ; DEFAULTCELL=Turn Into Path|ke=\"\" ; key=false appActive=false."
+    },
+    {
+      "t": "2026-09-17T00:22:28.258Z",
+      "note": "What changed, as the task asked: nothing in the app. queue/sweep says turn-into-a-path-walk was ok on every run up to 2026-09-14 16:19 and FAILED at 2026-09-15 00:09, the first sweep after the Mac locked at 2026-09-14 20:46:47. The app stopped being frontmost, which is what took the key window away. So the walk was right to fail and the harness was wrong to depend on being frontmost."
+    },
+    {
+      "t": "2026-09-17T00:22:28.304Z",
+      "note": "Fix in Sources/Photonz/Playtest/PlaytestHarness.swift: (1) press() presses the sheet's defaultButtonCell itself when the target is a sheet, is not key, and nothing claimed the press. Sheets only on purpose, since 279 walks press return at the editor expecting a field to get it. (2) new requireAnsweredSheet() fails the step when a plain return or escape aimed at the attached sheet leaves it standing, polling half a second first so the dismiss animation is not a flake, and naming the press-by-name step to use instead. (3) a plain key step now names who took it when it was not just the window."
+    },
+    {
+      "t": "2026-09-17T00:22:33.795Z",
+      "note": "Acceptance checked, not assumed. (1) turn-into-a-path-walk passes (22s), along with turn-into-a-picture-walk and separate-turn-into-text-walk. (2) same result both ways: a 15-step walk raising the same sheet passed identically with { do: key, key: return } and with { do: press, control: 'Turn Into Path', in: 'Sheet' }, both ending 'Path: 4 anchors, closed'. (3) proved the honest failure by switching the new fallback off and re-running: the walk then failed AT step 13 with 'return did not answer the sheet: it is still up, so nothing after this step is evidence about the app... { do: press, control: \"Turn Into Path\", in: \"Sheet\" }' instead of limping on to a wrong-looking failure at step 15. Escape still cancels a sheet and leaves the rectangle alone. Scripts/test.sh green, 7904 tests."
+    },
+    {
+      "t": "2026-09-17T00:22:33.842Z",
+      "note": "Caveat the next reader needs: every run here was PHOTONZ_ALLOW_LOCKED_WALK=1, because the Mac's screen has been locked since 2026-09-14 20:46. That is the right call for this one job (working on the harness itself is what the override exists for), and the locked screen IS the condition the bug appears under, so the fix is proved exactly where it was broken. It has not been run on an unlocked screen. The fix only adds a press when AppKit will not make one, so an unlocked run takes the old path unchanged, but acceptance item 1 says 'on an unlocked screen' and that half is not witnessed."
+    },
+    {
+      "t": "2026-09-17T00:22:33.888Z",
+      "note": "Left rough, not filed: position-and-size-on-screen-walk fails at step 56 (sectionInView 'Effects' did not happen within 4.0s), and corner-drag-rounds-walk / corner-radius-rounds-walk / motion-pivot-in-a-corner-walk fail at a panelMenu name lookup ('no menu called \"Add Effect\" is in the window' while listing that very control with its tooltip and no name). I checked position-and-size-on-screen-walk against unmodified HEAD and it fails identically, so none of these are mine and all four carry the locked-screen signature CLAUDE.md describes. No task filed: a locked screen is not a bug in the app."
+    },
+    {
+      "t": "2026-09-17T00:22:33.934Z",
+      "note": "No audit written: this is harness plumbing, with nothing a person can open the app and try. The user-visible half of it is that the sweep can now be believed about any walk that answers a question."
+    },
+    {
+      "t": "2026-09-17T00:22:38.911Z",
+      "note": "A walk's Return now answers a question sheet. A question sheet's default button carries no key equivalent of its own (Return goes through NSWindow.defaultButtonCell, which AppKit presses only for the KEY window), and the probe is hardly ever the active app, so the press evaporated. PlaytestHarness now presses that button itself when AppKit will not, sheets only, and FAILS the step when a plain return or escape leaves a sheet standing, naming the press-by-name step to use instead. Verified: turn-into-a-path-walk, turn-into-a-picture-walk and separate-turn-into-text-walk all pass; the same sheet answered by Return and by button name gives an identical result; the new failure was proved by switching the fallback off. Scripts/test.sh green (7904 tests). Committed 3970c14d and pushed. Sweep requested because this touches key handling in every walk. Caveat in the log: every run was under PHOTONZ_ALLOW_LOCKED_WALK=1, since the Mac has been locked since 2026-09-14."
     }
-  ]
+  ],
+  "started": "2026-09-16T23:53:50.385Z",
+  "completed": "2026-09-17T00:22:38.912Z"
 }
