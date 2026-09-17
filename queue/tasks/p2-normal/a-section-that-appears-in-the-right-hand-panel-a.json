@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2790,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T17:50:14.180Z",
-  "updated": "2026-09-16T17:50:14.183Z",
+  "updated": "2026-09-17T03:36:16.223Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Replaces picking-a-layer-stops-re-measuring-the-whole-rig, which named the dock height budget and the arrival machinery as the cost. Measured on 2026-09-16 and they are not: the whole breakdown and the method are in the comment above `arrivals` in Sources/Photonz/InspectorPanel.swift (commit e43154ad).\n\nREPRODUCTION. Build a walk that opens a blank 900x700 canvas, draws a rectangle at [140,90]-[340,150] and an arrow at [160,300]-[420,420], then clicks [240,120] and [290,360] alternately twenty times with 0.5s waits, and run it with Scripts/playtest.sh. Take the median of the click steps' mainBusy and longest. On 2026-09-16 on restored source: busy median 49.0ms, longest single pass median 30.2ms, n=38. Picking the arrow (the Annotation section arrives) is 36.9ms; picking the rectangle back (it departs) is 25.1ms. Both are over a frame.\n\nWHERE IT GOES. Each line is one build with one piece taken out, same walk, busy/longest medians:\n  dock hidden altogether (hideInspector)            12.9 / 9.8\n  every section body replaced by a blank            16.6 / 13.4\n  layers list back, forms still blank               22.6 / 19.4\n  everything back                                   46.4 / 28.6\nSo the arriving form is about 24ms of the total and 9ms of the longest pass. Inside one form, on the Canvas section: two TextFields are 6ms, the colour well 2ms. Roughly 3 to 5ms per AppKit backed control, no single villain. A section coming in builds its whole form from nothing, because a view taken out of a ForEach loses its identity and everything under it, so nothing in InspectorPanel can make that cheaper. The work is in the controls.\n\nTRIED AND WORTH NOTHING, do not repeat: removing the per-section chrome (tutorial anchor, frame reader, lift, offsets, animation, drop target); removing .regularMaterial; stubbing out the probe-only PanelTarget and HelpAnchor NSViews (so these numbers are honest about the shipping build); stubbing PanelNumberField to plain text. Two made it WORSE: replacing the ScrollView with a ZStack (38.0 longest) and turning off the arrival deferral (33.3 longest), so keep both as they are.\n\nNOTE ON THE BAR. Acceptance 2 may be unreachable even with a free panel. With the dock hidden entirely a pick is still 9.8ms in its longest pass, and the layers list drawing itself again is 6ms on THREE rows. If the forms are made free and a pick still does not fit in a frame, what is left is the layers list and the canvas, and that is a different task again. Say so rather than forcing it.\n\nMeasured with the screen locked and PHOTONZ_ALLOW_LOCKED_WALK=1, so the absolute numbers may be understated; every comparison above is same machine, same session, one variable at a time.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-16T17:50:14.182Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T03:01:38.748Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T03:36:07.935Z",
+      "note": "REPRODUCED first, then re-measured. Built Scripts/playtest/perf/pick-cost-walk.json: a blank 900x700 canvas with a box and two identical arrows, picked back and forth twelve times each way. On main today: two identical arrows 33.4 / 35.1ms longest single pass; box then arrow 25.9 / 39.0ms. Both phases show the SAME sections (Layers, Appearance, Effects, Motion), which is the first thing the task's premise got wrong: in this document nothing arrives or departs, and a pick still costs two frames."
+    },
+    {
+      "t": "2026-09-17T03:36:11.914Z",
+      "note": "WHERE IT ACTUALLY GOES, one variable at a time on the same walk. PartsInspector's body replaced by a blank: arrow pick 16.3ms, box pick 18.5ms, so the Appearance form is the whole difference. Inside it: the three segmented picture pickers 7ms, the five sliders 4ms, the number boxes 3ms. And it is NOT the number of controls present: ten extra sliders wrapped so their value never changes between picks cost nothing at all (34.6 against 35.8). A control whose inputs do not change is free; a control handed a new value costs about a millisecond, and an arrow's Appearance hands out twenty."
+    },
+    {
+      "t": "2026-09-17T03:36:11.959Z",
+      "note": "THE PRIZE AND THE HAZARD. Wrapping each part row in an EquatableView keyed on what it draws took the arrow-to-arrow pick from 33.8 to 20.2ms, and at the same time put the OTHER arrow's pick up to 51.6ms and left stale readings on screen, because a skipped row keeps the closures it was built with and those name the layer that was picked before. So rows can only be skipped once they stop carrying the selection in their closures. That is the successor task, filed as picking-a-layer-leaves-alone-the-settings-that-d."
+    },
+    {
+      "t": "2026-09-17T03:36:12.004Z",
+      "note": "TRIED AND WORTH NOTHING, do not repeat: caching the picture pickers' glyphs (PathLineStyleGlyph, ArrowheadStyle.glyph, TextVerticalAlign.glyph) so each is drawn once rather than per pick. 35.6 against 35.8, ie nothing, because NSImage(size:flipped:) defers its drawing block anyway and AppKit caches the symbol lookup. The 7ms those rows cost is the NSSegmentedControl being updated. Reverted."
+    },
+    {
+      "t": "2026-09-17T03:36:16.131Z",
+      "note": "Left rough, not filed: one run of Scripts/test.sh reported 1 issue out of 7965 tests and the next two runs both passed all 7965, so something in the suite flakes. The failing name scrolled past before it was captured and could not be named, so there is nothing a task could act on; whoever sees it again should catch the test name."
+    },
+    {
+      "t": "2026-09-17T03:36:16.176Z",
+      "note": "Walks run: layer-pick-latency-walk and layer-pick-at-scale-walk pass; panel-sections-walk passes; dock-picked-first-walk fails at step 66 looking for a layer row called Zoom, which is a pre-existing failure with its own owner (folded the diagnosis into walks-that-fail-in-the-full-sweep). All walks run with the screen locked and PHOTONZ_ALLOW_LOCKED_WALK=1, since the Mac has been locked all session; the numbers may be understated but every comparison is one variable at a time in the same session."
+    },
+    {
+      "t": "2026-09-17T03:36:16.222Z",
+      "note": "The premise is wrong, measured. A pick that brings nothing new into the panel costs the same as one that does (two identical arrows 33.4 / 35.1ms longest pass, box then arrow 25.9 / 39.0ms), so an arriving section is worth about 4ms of a 39ms pause and fixing it would change nothing anybody can feel. Acceptance 2 is not reachable this way either: with the Appearance form blanked entirely a pick is still 16.3ms. What ships from this run is the corrected record next to the machinery people keep suspecting (Sources/Photonz/InspectorPanel.swift) and the stopwatch walk that measures it (Scripts/playtest/perf/pick-cost-walk.json, kept out of the sweep). The real work is filed with all the numbers as picking-a-layer-leaves-alone-the-settings-that-d."
     }
-  ]
+  ],
+  "started": "2026-09-17T03:01:38.747Z"
 }

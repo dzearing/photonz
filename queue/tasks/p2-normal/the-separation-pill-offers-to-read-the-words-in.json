@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2780,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T16:39:46.787Z",
-  "updated": "2026-09-16T18:22:40.612Z",
+  "updated": "2026-09-17T03:00:02.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the study docs/design/separate-reads-the-words.md, which recommended AGAINST reading inside the command and FOR two ways of asking: this pill offer, and a double click on one label. The double click landed on 2026-09-16 (next-double-click-reads-a-label, see docs/design/separate-into-layers.md). This is the other half and it is the one that fixes discovery, since nothing points at the double click.\n\nThe study measured what reading everything at once is worth: letting the page vote on one family and accepting each run where that family still clears the bar takes the strays to zero by construction, at a cost of 1 reading of 31 on app-window-2x and 8 of 82 on the dense page. Per-run reading can never do this because it only ever sees one run.\n\nCost, measured on a release build: settings-pane-2x 143 ms for 9 runs, app-window-2x 477 ms for 40, dense-page-1x 1910 ms for 142, spread over the cores. Past a second this owes a progress indicator. Re-derive with PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparateAutoReadStudyTests.\n\nThe pill is SeparationLeftover / raiseCanvasNotice(.separatedIntoLayers(...)); the reading is EditorState+ReadText.swift.",
@@ -28,6 +28,32 @@
     {
       "t": "2026-09-16T18:22:40.611Z",
       "note": "Folded in from turn-into-picture-takes-every-layer-you-picked (2026-09-16). The SAME batch this task needs is also wanted from the layer row menu: right clicking one of five picked labels and choosing Turn into Text reads only the row you clicked today, while Duplicate, Delete, Group, Merge Down, Turn Into Path and now Turn Into Picture all act on the whole pick. Build the batch once and give it two ways in - the pill's control this task describes, and EditorState.turnIntoText(id:) reading rowMenuTargets(id) - rather than two batches. Shape of the work: turnIntoText(id:) becomes turnIntoTextForLayers(ids:) plus turnIntoTextForSelection() for the Layer menu, mirroring rasterizeLayers/rasterizeSelection which landed on 2026-09-16 in EditorState+LayerOps.swift; run the N TextReader.read calls in one detached Task, await them all, then apply every success in ONE perform so undo takes the batch. THE HARD PART, and the reason the other task did not just do it: applyTextReading ends in raiseCanvasNotice(.turnedIntoText(read.outcome)) and that notice is singular by construction - its title is 'Turned into text' or 'Still a picture' and its detail names the face ONE reading came out in (CopyConfirmation.swift lines 232 and 319). Over five readings it would raise five pills, last one wins. This task's fourth acceptance item ('the line says how many') is exactly the new plural case that fixes it, so it belongs here. ALSO LEFT OPEN by that task and NOT part of this one: Separate into Layers over a selection. Its result model is singular all the way down - one pill counting runs and boxes, one 'what is left in this bitmap' memory keyed to one ImageRef, one rule about which single piece ends up picked, and the 'run it again for more' offer under the layers list that speaks for ONE picture. Nobody has asked to separate two screenshots at once; decide whether it is wanted before building it."
+    },
+    {
+      "t": "2026-09-17T02:44:22.162Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T02:46:19.968Z",
+      "note": "Adversarial review BEFORE building. (1) The pill fades: with a button it gets actionLifetime (6s), which is what that constant was tuned for, so the offer is catchable but must not need hunting. (2) Pressing it starts a 2 second job on a dense page and the pill goes away on press, so the press would look like nothing happened. Fixed by a progress pill: 'Reading the words / 142 labels' goes up when the batch starts and the result replaces it. This is the progress indicator the task notes say is owed past a second. (3) The mock/study says 'read the whole picture'; a batch of ONE run must NOT take the plural path, or the existing singular pill ('Save Changes, set in SF Pro Text Semibold') and its walks regress. So one target falls through to turnIntoText(id:) unchanged. (4) The button must act on the runs the separation MADE, not on what is selected when it is pressed: ids are captured at raise time, as the rasterize action already does. Undo between raise and press leaves no targets and the press does nothing. (5) A pill button is meant to be a shortcut to a real menu row, never the only door. So the batch is reachable from the Layer menu and the row menu too, and selecting the group a big separation arrives in and choosing Turn into Text reads everything inside it. (6) Cut: no percentage, no cancel control, no selection change after the batch. The shortest thing that delivers the value is one press, one undo step, one line saying how many stayed pictures."
+    },
+    {
+      "t": "2026-09-17T03:00:00.370Z",
+      "note": "Built and committed as 2255ce21. What landed: CanvasNoticeAction.readTheWords(runs:) so the separation's line carries a Read the Words button (shortcutHint is now optional, since Turn into Text has no key and a button showing one that does not exist teaches something false); TextReading.Batch for the plural line and CopyConfirmation.readingTheWords(labels:) for the progress line, with a new workingLifetime so a line describing work in progress waits for its own answer; TextReader.readPage rewritten to take per-run scales, an already-settled family, and an option to spread over the cores, so the vote and the second look at the strays are tested against a real capture instead of living in the app; EditorState.turnIntoTextForLayers/ForSelection/ForRow with the Layer menu, the row menu and the harness action all going through them. A batch of ONE still falls through to turnIntoText(id:) unchanged, so the singular pill and every existing walk keep their behaviour."
+    },
+    {
+      "t": "2026-09-17T03:00:00.415Z",
+      "note": "Adversarial review of the BUILT thing, and it is a weaker review than it should be: the Mac's screen was locked for the whole task, so playtest.sh reported status locked and refused every walk, including the new read-every-label-walk.json. I could not use the feature as a person. What I could verify: Scripts/test.sh green at 7965 tests, and five new fixture tests that read a real 2x settings pane AS A PAGE - the spread reading answers exactly as the serial one word for word, face for face and size for size; all nine labels come back in one family; a page told a family it is not in loses readings rather than gaining wrong ones; and a run drawn smaller on the canvas is set smaller. A sweep is requested naming the walks this touches."
+    },
+    {
+      "t": "2026-09-17T03:00:00.462Z",
+      "note": "Left rough, all in queue/audits/2026-09-17-read-every-label.json for the user to react to rather than filed, because none of it is reproduced and the screen lock is what stopped me reproducing it: (1) the vote settles the family and nothing settles the WEIGHT, so six row labels of one pane can come back four Regular and two Medium - the study measured it and queue/audits/2026-09-13-turn-into-text already records it, no open task covers it, and it is more visible now that you see forty labels at once; (2) for six seconds after a separation the line at the bottom of the canvas takes the pointer, so a click meant for a piece under it is swallowed - the same arrangement the refusal pill has shipped with, but a separation happens far more often than a refusal, and I would not change hit testing blind on a machine where no walk can run; (3) a label that stayed a picture is counted and not pointed at."
+    },
+    {
+      "t": "2026-09-17T03:00:02.854Z",
+      "note": "The line a separation raises carries a Read the Words button: one press turns every run it found into real text in one undo step, held to the family the page voted for, and the line then says how many landed, in what family, and how many stayed pictures. Layer > Turn into Text and a layer row's menu take the whole pick too. Flag next-read-every-label, on by default in Next. Committed 2255ce21 and pushed. Verified by Scripts/test.sh (7965 tests green) including five new fixture tests reading a real 2x capture as a page; NOT verified in the running app, because the screen was locked all task and every walk refused to run. Sweep requested; read-every-label-walk.json runs with it. Audit: queue/audits/2026-09-17-read-every-label.json."
     }
-  ]
+  ],
+  "started": "2026-09-17T02:44:22.161Z",
+  "completed": "2026-09-17T03:00:02.855Z"
 }

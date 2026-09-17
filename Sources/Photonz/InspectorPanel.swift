@@ -178,8 +178,9 @@ struct InspectorPanel: View {
     //   ...everything back: the app as it ships                    30.2ms
     //
     // So a pick is roughly 10ms of canvas and selection, 4ms of dock shell,
-    // 6ms of the layers list drawing itself again, and 10ms of building the
-    // arriving section's FORM. Taking a piece out of this file moved none of
+    // 6ms of the layers list drawing itself again, and 10ms of the forms in
+    // the sections (read on: it is not the ARRIVING form, it is all of them).
+    // Taking a piece out of this file moved none of
     // it: the per-section chrome (the tutorial anchor, the frame reader, the
     // lift, the offsets, the drop target) is free, the `.regularMaterial` is
     // free, and the height budget below is free — its writes are no-ops once a
@@ -187,12 +188,40 @@ struct InspectorPanel: View {
     // always. The arrival pass EARNS its keep: turning it off put the longest
     // pass up from 29.7 to 33.3ms, because then all of it lands in one go.
     //
-    // What is left is the cost of making AppKit controls. Two `TextField`s in
-    // the Canvas section are 6ms of it on their own; the colour well is 2ms.
-    // A section coming in builds its whole form from nothing, because a view
-    // taken out of a `ForEach` loses its identity and everything under it, so
-    // there is nothing in the dock to make that cheaper. Making it cheap means
-    // making the forms cheap, which is its own piece of work.
+    // ...AND THE ARRIVING FORM IS NOT IT EITHER, measured 2026-09-17 with
+    // `Scripts/playtest/perf/pick-cost-walk.json`, which picks back and forth
+    // between two IDENTICAL arrows and then between a box and an arrow. If a
+    // section arriving were the cost, the first phase would be cheap:
+    //
+    //   one arrow, then the other: same sections, same rows       33.4 / 35.1ms
+    //   the box, then an arrow:    same sections, different rows  25.9 / 39.0ms
+    //
+    // A pick that changes NOTHING about the panel's shape still costs two
+    // frames. Bringing new rows in is worth about 4ms of the 39; the other 35
+    // is what a pick costs whatever it lands on. So the sentence to carry
+    // forward is not "an arriving section is expensive", it is "the panel
+    // redraws its whole form on every pick".
+    //
+    // The form is all of it: with `PartsInspector`'s body replaced by a blank,
+    // the arrow pick is 16.3ms and the box pick 18.5ms, which is the canvas,
+    // the selection, the layers list and this shell together.
+    //
+    // It is not the number of controls PRESENT. Ten more sliders in Appearance,
+    // wrapped so their value never changes between picks, cost nothing at all
+    // (34.6 against 35.8). What costs is the controls that UPDATE: taking out
+    // the three segmented picture pickers an arrow shows is worth 7ms, the five
+    // sliders 4ms, the number boxes beside them 3ms. Nothing is a villain;
+    // every control that has to be handed a new value asks for about a
+    // millisecond, and an arrow's Appearance hands out twenty.
+    //
+    // Which says where a fix has to come from: rows that SKIP when what they
+    // show has not changed. Wrapping each part row in an `EquatableView` keyed
+    // on what it draws took the arrow-to-arrow pick from 33.8 to 20.2ms. It
+    // also put the other arrow's pick UP to 51.6 and left stale values on
+    // screen, because a skipped row keeps the closures it was built with and
+    // those still name the layer that WAS picked. So the row has to stop
+    // carrying the selection in its closures before it can be skipped safely.
+    // That is its own piece of work, filed as the successor to this note.
     /// Which sections have been built, so a new one can arrive a pass after
     /// the click rather than inside it. See `PanelSectionArrival`.
     @State private var arrivals = DockArrivals()
