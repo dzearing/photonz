@@ -5177,3 +5177,9 @@
 {"t":"2026-09-17T18:20:21.694Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
 {"t":"2026-09-17T18:20:21.743Z","ev":"task_note","id":"a-sweep-on-a-locked-mac-files-the-half-it-could"}
 {"t":"2026-09-17T18:20:31.226Z","ev":"task_done","id":"a-sweep-on-a-locked-mac-files-the-half-it-could","from":"in_progress","note":"A sweep on a locked Mac now runs the walks a lock cannot touch, records them as an explicitly partial result (counts, what was refused, the commit), files any that failed, and keeps the full sweep pending. Verified live on the locked Mac (10 ran, 15 refused, 87 requests handed back intact), dashboard photographed, new sweep-parse drill plus grown notes/line drills and Scripts/test.sh green. Audit: queue/audits/2026-09-17-partial-sweep-on-a-locked-mac.json"}
+{"t":"2026-09-17T18:20:58.599Z","ev":"loop_reloaded","from":"5c3ce5ea4064","to":"7b2690f9eb67"}
+{"t":"2026-09-17T18:20:58.694Z","ev":"loop_started","pid":44685}
+{"t":"2026-09-17T18:20:58.915Z","ev":"task_started","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","title":"A size read off a screenshot is the size the type really was","priority":"p2-normal"}
+{"t":"2026-09-17T18:30:18.125Z","ev":"task_note","id":"a-size-read-off-a-screenshot-is-the-size-the-typ"}
+{"t":"2026-09-17T18:34:04.381Z","ev":"decision_opened","id":"a-size-read-off-a-screenshot-is-the-size-the-typ-a-label-read-off-a-retina-screen","taskId":"a-size-read-off-a-screenshot-is-the-size-the-typ","question":"A label read off a Retina screenshot: should the Size menu say the size the type really was, or the size that makes the retyped words cover the picture exactly?"}
+{"t":"2026-09-17T18:34:42.971Z","ev":"task_walks","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","walks":[]}

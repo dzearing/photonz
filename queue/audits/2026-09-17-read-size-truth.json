@@ -1,0 +1,36 @@
+{
+  "feature": "A size read off a screenshot, measured against type of a known size",
+  "epic": "measure-redline",
+  "summary": "Nothing in the app changed. This is the study that settles how far off the Size menu is when you read a label off a Retina screenshot, and why. It is about 9 per cent high, it is the same amount for every label on a page, and the cause is that the system font is drawn wider at label size than at heading size, so a 13 point label photographed at 2x cannot be reproduced by any point size. How to close it is a question on the dashboard for you.",
+  "setup": "Photonz Dev, Experiments window, release Next. Read every label needs next-read-every-label, which is on by default. No new flag and no new control: this is the app exactly as it was this morning.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row and run Separate into Layers." },
+    { "do": "Press Read the Words on the line at the bottom of the canvas." },
+    {
+      "do": "Pick all six row labels at once, from Launch at login down to Copy to clipboard, and read the Size menu in the Text section: 28 px. Those labels are 13 point type in a 2x picture, so 26 px is the true answer.",
+      "shot": "2026-09-17-read-size-truth-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png, separate it and press Read the Words." },
+    {
+      "do": "Pick Style, Color, Position, Width and Offset together: 22 px, where those rows are 10 point type and 20 px is the true answer.",
+      "shot": "2026-09-17-read-size-truth-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    { "do": "Open the card on the dashboard asking which of the two numbers the Size menu should say, and read the brief behind Explain in more detail: it has a picture of both, against the ink they came from." }
+  ],
+  "evaluate": [
+    "The Size menu is how you get a size off a screenshot. Is it, or do you read the size somewhere else first?",
+    "The true number costs about 7 per cent off the retyped words, so a label 182 pixels wide comes back 168. Look at the picture in the brief: is that a trade you would take to get the right number?",
+    "Every label on a page is high by the same amount, so the labels agree with each other and only disagree with the truth. Does that make it better or worse for what you do with them?",
+    "The third option opens a Retina screenshot as an 800 by 600 canvas rather than 1600 by 1200, which makes every number in the app the number you would write in a spec. Is that the app you want, or do you want the pixel count?",
+    "Would you rather see 26 px, or 13 pt? The panel says px everywhere today, and the measure tool is the one place that offers points."
+  ],
+  "rough": [
+    "The gap is NOT closed. This audit is a measurement and a question, not a fix. Which of the two numbers the app should say is on the dashboard as a card, and the task is blocked on it.",
+    "The size is high by different amounts on different pages: 6.5 per cent on type this study set itself, 9.2 per cent on the settings pane rows, 11 per cent on the Effects panel rows. All the same cause, but the exact figure depends on the words and the size, so the app cannot correct it with one constant.",
+    "The task file guessed the Effects panel rows were 11 point type and dead on. They are 10 point, and they read 22. So the error is not specific to one capture or one face after all, which was the first thing the task asked to settle.",
+    "The app already knows the true size and throws it away: the face is chosen at the capture's own scale, where the size is right to within 1.2 per cent, and then the size is measured again at the layer's scale and that second number is the one you see."
+  ]
+}

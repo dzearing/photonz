@@ -1,0 +1,71 @@
+{
+  "id": "a-size-read-off-a-screenshot-is-the-size-the-typ-a-label-read-off-a-retina-screen",
+  "taskId": "a-size-read-off-a-screenshot-is-the-size-the-typ",
+  "question": "A label read off a Retina screenshot: should the Size menu say the size the type really was, or the size that makes the retyped words cover the picture exactly?",
+  "context": "On a 2x screenshot those two are not the same number and cannot be made the same number. The type was 13 points, which is 26 of the document's own points, but it takes 28.4 to cover the same pixels, because the system font is drawn wider at label size than at heading size. The study measured it: read at the scale the type was set at the app is right to within 1.2 per cent, and the gap is entirely this. The picture in the brief shows both against the original ink.",
+  "options": [
+    {
+      "id": "true-size",
+      "label": "Say the size the type really was",
+      "summary": "Pick those six row labels and the Size menu reads 26 px, which is the size the type in the screenshot really was. The retyped words come out about 7 per cent shorter than the letters they replaced, because the system font at 26 is a narrower drawing than the same font at 13 blown up.",
+      "pros": [
+        "The one size number on the label is the truth, so a spec written off it is right",
+        "The number keeps meaning something after you edit the words or change the size",
+        "Nothing new to learn and nothing extra on screen"
+      ],
+      "cons": [
+        "Retyped words no longer sit exactly on the ink they replace: about 13 pixels short over a label 182 pixels wide",
+        "On a screenshot where you read only some labels, the read ones look a hair smaller than the rest"
+      ],
+      "mitigation": "Read the Words already does the whole page in one press, so every label shrinks together and the page stays even with itself. The words still start on the same left edge and sit on the same line."
+    },
+    {
+      "id": "both-numbers",
+      "label": "Keep the words on the ink, and say the picture's size under the menu",
+      "summary": "Nothing on the canvas changes. The Text section gains one line, shown only on labels read off a Retina screenshot, saying what size the type in the picture was. The Size menu goes on reading 28 px because that is what the layer is set at.",
+      "pros": [
+        "Nothing you have already retyped moves or changes size",
+        "The true number is right there to write into a spec",
+        "Both numbers are on screen and each says what it is"
+      ],
+      "cons": [
+        "Two size numbers for one label is a thing to learn",
+        "Somebody who reads the Size menu and not the line under it still writes 28"
+      ],
+      "mitigation": "The line only appears when the two numbers actually differ, so an ordinary 1x screenshot never shows it."
+    },
+    {
+      "id": "open-at-real-size",
+      "label": "Open Retina screenshots at their real size",
+      "summary": "A 2x screenshot opens as an 800 by 600 canvas instead of 1600 by 1200, still every pixel sharp. Every number in the app becomes the number a designer writes in a spec: the Size menu reads 13 px, gaps read 8 px instead of 16, and the retyped words land exactly on the ink.",
+      "pros": [
+        "One number, right everywhere, with nothing to convert in your head",
+        "The retyped words cover the ink exactly, so nothing is traded away",
+        "Every other readout in the app gets the same fix at the same time"
+      ],
+      "cons": [
+        "The biggest change of the three, and it changes numbers you are used to on every Retina capture",
+        "Exporting has to be taught to keep all the pixels, or a 1600 wide capture comes back out 800 wide"
+      ],
+      "mitigation": "It only applies to captures that say they came from a Retina screen, and the picture on the canvas is unchanged: same pixels, same sharpness, smaller numbers."
+    },
+    {
+      "id": "leave-it",
+      "label": "Leave it as it is",
+      "summary": "The Size menu goes on reading 28 px for 13 point type on a Retina screenshot. The retyped words keep covering the ink exactly and nothing new appears.",
+      "declines": true,
+      "pros": [
+        "Nothing changes and nothing can regress",
+        "The words on the canvas stay pixel accurate to the picture"
+      ],
+      "cons": [
+        "A size read off a screenshot stays about 9 per cent high, and nothing on screen says so",
+        "Redlining is the app's main job, so this is a wrong number in the readout that matters most"
+      ],
+      "mitigation": "The measuring in the study is written down as a test, so whoever picks this up later starts from the numbers rather than from scratch."
+    }
+  ],
+  "recommended": "true-size",
+  "status": "pending",
+  "created": "2026-09-17T18:34:04.380Z"
+}
