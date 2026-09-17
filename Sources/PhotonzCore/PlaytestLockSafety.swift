@@ -64,6 +64,13 @@ public enum PlaytestLockSafety {
     /// failures are about the lock is exactly what sent runners hunting bugs
     /// that were not in the app on 2026-09-15.
     public static let lockStops: [String: String] = {
+        // Watched on 2026-09-17: `wrap-at-a-ceiling-walk`, forced under a lock,
+        // reached its `focus` step and listed the editable fields it could see
+        // as "Opacity, Corner Radius, None, None, Gap, Padding". The step
+        // itself runs — it walks the app's own views in the app's own process,
+        // which a lock cannot touch — and the two limit fields are right there.
+        // What comes back empty is their NAME, so they answer only to the
+        // placeholder "None" and never to "Smallest width" or "Largest width".
         let accessibility = "finds what it needs by asking accessibility for a name, and a locked "
             + "screen hands back an empty one, so it would report a control missing that is on "
             + "screen at the right size with the right tooltip"

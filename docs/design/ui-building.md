@@ -3563,12 +3563,29 @@ rather than fitting them and its switch is already two rows up; a multiple
 selection says nothing, since the number differs per group; and it speaks for a
 group's OWN edge, so a card holding a broken row is quiet and the row says it.
 
+**A picture and a drawn shape are already pieces** (checked 2026-09-17). Words
+wrap to a ceiling and a picture cannot, so the first time somebody caps a card
+holding a screenshot the picture goes on being its own size and hangs out over
+the edge. That is not silent: it is the same line, because nothing here looks at
+what a piece is made of, only at how far past the edge it reaches. A 600 wide
+screenshot in a card capped at 320 with 16 of padding reads "The pieces run past
+the right edge. Make it 632 wide.", and so does a 600 wide drawn bar. It reaches
+a picture nested inside a plain Command G box too, which is the shape most cards
+really are. Wrapping is never offered for one wide picture, since wrapping a
+single piece moves nothing. There is still no shrink to fit anywhere in the app
+and this slice did not add one: a picture is reported, never resized behind your
+back.
+
 Model in `GroupOverflow` and `Layer.contentsOverflow`, carried to the panel on
 `ContentsSelection.Group.overflow`, printed by `ArrangementInspector`. A group
 that fits pays one flow, and one that hugs on both axes pays none at all, since
 a box the size of its contents can never run out of room. Tested in
 `GroupOverflowTests`, walked by
-`Scripts/playtest/group-says-it-overflows-walk.json`.
+`Scripts/playtest/group-says-it-overflows-walk.json` and, for pictures and
+shapes under a ceiling, by `Scripts/playtest/picture-past-the-ceiling-walk.json`
+over the four cards in `Scripts/playtest/fixtures/picture-past-the-ceiling.photonz`
+(a hand built document, so the walk needs no typing and runs with the screen
+locked).
 
 ## Landed: the outline round a picked box is the handle (Next, `next-edge-grab`, 2026-09-09)
 

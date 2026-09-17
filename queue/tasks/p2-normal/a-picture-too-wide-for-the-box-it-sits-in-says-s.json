@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:25.885Z",
-  "updated": "2026-09-17T12:13:56.616Z",
+  "updated": "2026-09-17T15:00:38.939Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-nested-ceiling-wrap.json, written by the runner who had just made a ceiling reach the words inside a nested box: \"A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows.\" The \"no sign\" half is worth checking before anything is built, because docs/design/ui-building.md \"Landed: a group says when its contents run past its edge\" (next-auto-layout, 2026-09-08) says an arranging group already prints one line naming the edge and the width it would need, modelled in GroupOverflow and Layer.contentsOverflow and printed by ArrangementInspector. If that line already fires here the whole task is a walk plus a note; if it does not, the gap is in the flow that feeds GroupOverflow. Shrink-to-fit does not exist anywhere in the app, so introducing it is a bigger decision than reporting: prefer the report unless the flow makes fitting obvious, and if fitting turns out to be the right answer open a card rather than shipping a new sizing rule on the loop's own judgment.",
@@ -39,6 +39,38 @@
     {
       "t": "2026-09-17T12:13:56.615Z",
       "note": "seq 90 -> 40"
+    },
+    {
+      "t": "2026-09-17T14:50:06.553Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T15:00:32.003Z",
+      "note": "owns these walks: picture-past-the-ceiling-walk"
+    },
+    {
+      "t": "2026-09-17T15:00:32.051Z",
+      "note": "ANSWER TO THE FIRST ACCEPTANCE ITEM: the overflow line ALREADY fires for this shape. Reproduced in core before building anything: a column stack with Largest 320 holding a 600x400 picture returns The pieces run past the right edge. Make it 600 wide. Same for a drawn path, for a picture inside a plain Command G box inside the capped card, for a grid, for a capped row, with padding counted in (632 with 16 a side), and silent at exactly the ceiling, on a Free group, and under a floor-only limit. Nothing was missing, so nothing in Sources changed."
+    },
+    {
+      "t": "2026-09-17T15:00:38.796Z",
+      "note": "Adversarial review before building: the mock here is the report itself, and the alternative on the table was shrink-to-fit. Walked it as a first-time user and rejected fitting for this slice: a person who caps a card at 320 and sees their screenshot silently shrink to 288 has had the app resize their picture without asking, and there is no undo-shaped gesture that says take that back. Reporting is also what a too-long word already gets, so fitting would make a picture the one thing in the app that resizes itself. The shortest version that delivers the value was therefore no code at all: prove the line fires, lock it with tests, and put the fitting question to the user in the audit instead of guessing."
+    },
+    {
+      "t": "2026-09-17T15:00:38.843Z",
+      "note": "Shipped: 9 tests in GroupOverflowTests (picture past a ceiling, drawn shape, padding counted in, picture nested in a plain Command G box, no wrap offered for one picture, fits at the ceiling, the number it names actually fits, a picture badge on a Free card left alone); Scripts/playtest/picture-past-the-ceiling-walk.json, 36 steps, 5 real window pictures, passes with the screen locked; Scripts/playtest/fixtures/picture-past-the-ceiling.photonz, four cards built to order; a paragraph in docs/design/ui-building.md under the 2026-09-08 Landed section. Full suite 8164 tests green."
+    },
+    {
+      "t": "2026-09-17T15:00:38.891Z",
+      "note": "The walk opens a fixture document rather than building cards by typing, because the Mac's screen is locked and focus on the Largest width field cannot work under one. Forced wrap-at-a-ceiling-walk to check: focus itself runs fine in-process and lists the fields it can see (Opacity, Corner Radius, None, None, Gap, Padding), but the two limit fields come back as their placeholder None instead of Smallest width and Largest width, because the name a walk matches on is the accessibility label and a lock empties that. So focus stays on the list of steps a lock stops, now with the evidence for WHY rather than a precaution: the step works, the names do not."
+    },
+    {
+      "t": "2026-09-17T15:00:38.938Z",
+      "note": "left rough, not filed: (1) there is still no shrink-to-fit anywhere, so the only fixes offered for a wide picture are raise the ceiling or resize the picture by hand. That is a product direction question rather than a defect, and it is the third evaluate line of the audit for the user to answer. (2) The line lives only in the Layout section of the inspector, so with the inspector shut or that section scrolled away a capped card with a picture spilling out says nothing. That silence is the deliberate 2026-09-08 decision (no colour, no warning badge, no new idiom on the panel), so filing its near-twin would be the reflex the follow-up bar exists to stop; it is in the audit's rough list and its second evaluate line instead."
     }
+  ],
+  "started": "2026-09-17T14:50:06.552Z",
+  "walks": [
+    "picture-past-the-ceiling-walk"
   ]
 }

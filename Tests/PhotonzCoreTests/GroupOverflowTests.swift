@@ -262,4 +262,108 @@ struct GroupOverflowTests {
         floored.minWidth = 100
         #expect(group(chips(), layout: floored).contentsOverflow == nil)
     }
+
+    // MARK: - A picture, and a drawn shape
+
+    /// Words wrap to a ceiling; a picture cannot. The most ordinary thing
+    /// anybody builds here is a card with a screenshot in it, so the first
+    /// time somebody caps that card's width the picture goes on being its own
+    /// size and hangs out over the edge. Nothing shrinks a picture to fit
+    /// anywhere in the app, and nothing should start doing it quietly, so the
+    /// whole answer for a picture is the line: which edge it runs past, and
+    /// the width that would hold it.
+    ///
+    /// These read as a group of their own because the case arrived as a report
+    /// of its own — the rough list of the nested-ceiling audit, 2026-09-17 —
+    /// and the answer to it is "already covered, and here is the proof".
+
+    /// A shape somebody drew, at whatever size they drew it.
+    private func drawn(_ name: String, _ size: CGSize) -> Layer {
+        let path = PathContent(anchors: [
+            PathAnchor(point: CGPoint(x: 0, y: 0)),
+            PathAnchor(point: CGPoint(x: size.width, y: 0)),
+            PathAnchor(point: CGPoint(x: size.width, y: size.height)),
+            PathAnchor(point: CGPoint(x: 0, y: size.height)),
+        ], isClosed: true)
+        return Layer(name: name, content: .path(path),
+                     frame: CGRect(origin: .zero, size: size))
+    }
+
+    /// A card: a column stack held in by a largest width, the shape somebody
+    /// gets by capping a stack's width in the Layout section.
+    private func card(_ children: [Layer], largest: CGFloat,
+                      padding: GroupPadding = .none) -> Layer {
+        var layout = GroupLayout(kind: .stack, direction: .column, gap: 10,
+                                 padding: padding)
+        layout.maxWidth = largest
+        return group(children, layout: layout)
+    }
+
+    private func picture(_ name: String, _ size: CGSize) -> Layer {
+        box(name, CGRect(origin: .zero, size: size))
+    }
+
+    @Test("A picture wider than the card's ceiling says so, and names the width it needs")
+    func aWidePictureSaysSo() {
+        let held = card([picture("Screenshot", CGSize(width: 600, height: 400))], largest: 320)
+        let said = try! #require(held.contentsOverflow)
+        #expect(said.across == 280)
+        #expect(said.down == 0)
+        #expect(said.sentence == "The pieces run past the right edge. Make it 600 wide.")
+    }
+
+    @Test("A drawn shape too wide for the ceiling gets the same line and the same number")
+    func aWideShapeSaysSo() {
+        let held = card([drawn("Bar", CGSize(width: 600, height: 120))], largest: 320)
+        #expect(held.contentsOverflow?.sentence
+                == "The pieces run past the right edge. Make it 600 wide.")
+    }
+
+    @Test("The room down the card's sides is counted in the width it asks for")
+    func paddingIsCountedIn() {
+        let held = card([picture("Screenshot", CGSize(width: 600, height: 400))],
+                        largest: 320, padding: GroupPadding(16))
+        // 600 for the picture and 16 down each side: a number that is short by
+        // the padding would still cut the picture off.
+        #expect(held.contentsOverflow?.width == 632)
+    }
+
+    @Test("A picture inside a plain box inside the card is still reached")
+    func aPictureInsideABoxIsReached() {
+        // Command G makes a box with no layout at all, so this is the shape
+        // most cards really are: the card is capped, the box hugs, and the
+        // picture inside it is what is too wide.
+        let boxed = group([picture("Screenshot", CGSize(width: 600, height: 400))], layout: nil)
+        #expect(card([boxed], largest: 320).contentsOverflow?.sentence
+                == "The pieces run past the right edge. Make it 600 wide.")
+    }
+
+    @Test("Wrapping is never offered for one picture, because it would not help")
+    func wrappingIsNotOfferedForOnePicture() {
+        var row = GroupLayout(kind: .stack, direction: .row, gap: 10)
+        row.maxWidth = 320
+        let said = try! #require(group([picture("Screenshot", CGSize(width: 600, height: 400))],
+                                       layout: row).contentsOverflow)
+        #expect(!said.wrapWouldFit)
+        #expect(!said.sentence.contains("Wrap"))
+    }
+
+    @Test("A picture that fits under the ceiling says nothing")
+    func aPictureThatFitsSaysNothing() {
+        #expect(card([picture("Screenshot", CGSize(width: 320, height: 200))],
+                     largest: 320).contentsOverflow == nil)
+    }
+
+    @Test("The number it names for a picture is the number that makes it fit")
+    func theNumberForAPictureFits() {
+        let shot = picture("Screenshot", CGSize(width: 600, height: 400))
+        let fit = try! #require(card([shot], largest: 320).contentsOverflow?.width)
+        #expect(card([shot], largest: fit).contentsOverflow == nil)
+    }
+
+    @Test("A badge hanging off a Free card is a drawing, even when it is a picture")
+    func aPictureOnAFreeCardIsLeftAlone() {
+        let badge = box("Badge", CGRect(x: 280, y: 20, width: 300, height: 160))
+        #expect(group([badge], layout: .free(width: 320, height: 200)).contentsOverflow == nil)
+    }
 }

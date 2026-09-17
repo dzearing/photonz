@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/picture-past-the-ceiling",
+  "setup": { "forget": ["all"] },
+  "seed": "A card with a screenshot in it is one of the most ordinary things anybody builds here, and the first time you cap that card's width the picture hangs out over the edge at its own size. Words wrap to a ceiling; a picture cannot. So the Layout section has to say so. The walk opens four cards built to order and reads what each one says: a capped card holding a wide picture, the same card with room to spare, a Free card with a badge hanging off it on purpose, and a capped card holding a wide drawn shape.",
+  "steps": [
+    { "do": "open", "file": "fixtures/picture-past-the-ceiling.photonz", "width": 1400, "height": 940 },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "0-four-cards", "note": "Four cards. Two of them hold something wider than they are allowed to be: the top left card has a 600 wide screenshot under a Largest width of 320, and the bottom right one has a 600 wide bar. The picture and the bar are drawn at their own size, hanging out past the card." },
+    { "do": "snapshot", "name": "ceiling-0-four-cards" },
+    { "do": "render", "name": "ceiling-0-four-cards-doc" },
+
+    { "do": "selectRow", "row": "Capped card" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "reveal", "control": "Contents overflow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-picture-says-it", "note": "THE TEST: a picture too wide for the ceiling its card was given does not sit there silently. The Layout section says which edge it runs past and names the width that would hold it, 632, which is the 600 of the picture plus the 16 of padding down each side." },
+    { "do": "expect", "control": "Contents overflow", "reads": "The pieces run past the right edge. Make it 632 wide." },
+    { "do": "snapshot", "name": "ceiling-1-picture-says-it" },
+    { "do": "panel", "stage": "1-picture-says-it" },
+
+    { "do": "selectRow", "row": "Roomy card" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-room-to-spare", "note": "THE OTHER TEST: the same card and the same picture under a Largest width of 900. Everything fits, so the section says nothing at all. A line that never goes away is a line nobody reads." },
+    { "do": "expect", "control": "Contents overflow", "present": false },
+    { "do": "snapshot", "name": "ceiling-2-room-to-spare" },
+    { "do": "panel", "stage": "2-room-to-spare" },
+
+    { "do": "selectRow", "row": "Free card" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-free-is-left-alone", "note": "THE CUT: a Free card with a badge hanging off its corner is somebody's drawing, not a fault. Free groups are left alone, so nothing is said here either, however far past the edge the badge reaches." },
+    { "do": "expect", "control": "Contents overflow", "present": false },
+    { "do": "snapshot", "name": "ceiling-3-free-is-left-alone" },
+    { "do": "panel", "stage": "3-free-is-left-alone" },
+
+    { "do": "selectRow", "row": "Capped shape card" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "reveal", "control": "Contents overflow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-shape-says-it-too", "note": "THE TEST AGAIN, with a drawn shape instead of a photograph: a 600 wide bar under the same 320 ceiling gets the same line and the same number. It is the size of the piece that matters, never what the piece is made of." },
+    { "do": "expect", "control": "Contents overflow", "reads": "The pieces run past the right edge. Make it 632 wide." },
+    { "do": "snapshot", "name": "ceiling-4-shape-says-it-too" },
+    { "do": "render", "name": "ceiling-4-shape-doc" },
+    { "do": "panel", "stage": "4-shape-says-it-too" }
+  ]
+}

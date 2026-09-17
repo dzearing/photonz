@@ -1,0 +1,50 @@
+{
+  "feature": "A picture too wide for its card says so",
+  "epic": "ui-layout",
+  "summary": "A picture or a drawn shape wider than the ceiling its card was given does not sit there silently: the Layout section names the edge it runs past and the width that would hold it. This was already true and nobody had checked, so the work is the proof, not a change.",
+  "setup": "Photonz Dev, Experiments window, release Next. Groups that arrange their own contents (next-auto-layout) on, which is the default.",
+  "try": [
+    {
+      "do": "Drag any wide screenshot onto the canvas."
+    },
+    {
+      "do": "Select it and press Command G, so it sits in a box of its own."
+    },
+    {
+      "do": "With the box selected, set Arrangement to Stack in the Layout section."
+    },
+    {
+      "do": "Open Width, press Limits, and type 320 into Largest."
+    },
+    {
+      "do": "Look at the canvas: the picture is still its own size and hangs out past the card, because nothing squashes a picture.",
+      "shot": "2026-09-17-picture-past-the-ceiling-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Read the last line of the Layout section: \"The pieces run past the right edge. Make it 632 wide.\""
+    },
+    {
+      "do": "Type that number into Largest and watch the line go away the same moment it fits."
+    },
+    {
+      "do": "Draw a wide rectangle, group it, cap it the same way, and get the same line for a drawn shape.",
+      "shot": "2026-09-17-picture-past-the-ceiling-4.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    }
+  ],
+  "evaluate": [
+    "The line sits at the bottom of the Layout section, under the Gap and Padding rows. Did you find it, or did you have to go looking for it?",
+    "The picture covers the card it is in, so you cannot see the card's edge at all. Is it clear which box has run out of room?",
+    "Should a picture wider than its card be scaled down to fit the ceiling instead of being reported? Today nothing in the app ever resizes a picture on its own.",
+    "The only fix offered is to make the card 632 wide, which gives up the 320 ceiling you just set. Is that the fix you wanted offered for a picture?",
+    "A badge hanging off the corner of a Free card is left alone on purpose. Is that the right silence, or would you want that flagged too?"
+  ],
+  "rough": [
+    "Nothing in the app changed. The report already fired for pictures and shapes in every shape that could be built, so this task is a walk, nine tests and a note. The suspicion in the nested-ceiling audit that a wide picture had no sign at all was wrong.",
+    "There is still no shrink to fit anywhere. A ceiling wraps words and cannot touch a picture, so the two fixes offered for a picture are raise the ceiling or make the picture smaller by hand.",
+    "The line only exists in the Layout section of the inspector. With the inspector shut, the section collapsed, or the panel scrolled up, a capped card with a picture spilling out of it says nothing at all. A mark on the canvas would be a new idiom on the panel's vocabulary and is not the loop's to invent.",
+    "The screen was locked for this whole task, so both pictures carry the label saying so: real window, real drawing, colours can read dimmed.",
+    "The walk opens a hand built document instead of building the cards by typing, because a locked screen takes the name off the Largest width field and no walk can type into it."
+  ]
+}

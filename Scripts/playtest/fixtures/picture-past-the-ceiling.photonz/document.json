@@ -1,0 +1,411 @@
+{
+  "canvasSize" : [
+    1500,
+    1050
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "image" : {
+                    "_0" : {
+                      "id" : "A1B2C3D4-0000-4000-8000-000000000001",
+                      "pixelSize" : [
+                        1440,
+                        960
+                      ]
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    600,
+                    400
+                  ]
+                ],
+                "id" : "A1B2C3D4-0000-4000-8000-000000000071",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Screenshot",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ],
+            "layout" : {
+              "columns" : 3,
+              "direction" : "column",
+              "gap" : 12,
+              "kind" : "stack",
+              "maxWidth" : 320,
+              "padding" : 16,
+              "rowGap" : 12
+            }
+          }
+        }
+      },
+      "frame" : [
+        [
+          60,
+          60
+        ],
+        [
+          320,
+          240
+        ]
+      ],
+      "id" : "F193DA7D-C479-407D-B78F-1A334031046A",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Capped card",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "image" : {
+                    "_0" : {
+                      "id" : "A1B2C3D4-0000-4000-8000-000000000001",
+                      "pixelSize" : [
+                        1440,
+                        960
+                      ]
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    600,
+                    400
+                  ]
+                ],
+                "id" : "A1B2C3D4-0000-4000-8000-0000000000BA",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Wide screenshot",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ],
+            "layout" : {
+              "columns" : 3,
+              "direction" : "column",
+              "gap" : 12,
+              "kind" : "stack",
+              "maxWidth" : 900,
+              "padding" : 16,
+              "rowGap" : 12
+            }
+          }
+        }
+      },
+      "frame" : [
+        [
+          60,
+          560
+        ],
+        [
+          320,
+          240
+        ]
+      ],
+      "id" : "9E16357C-2D3D-4F1C-8133-D678A68E2F39",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Roomy card",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "image" : {
+                    "_0" : {
+                      "id" : "A1B2C3D4-0000-4000-8000-000000000001",
+                      "pixelSize" : [
+                        1440,
+                        960
+                      ]
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    200,
+                    20
+                  ],
+                  [
+                    300,
+                    160
+                  ]
+                ],
+                "id" : "A1B2C3D4-0000-4000-8000-00000000009F",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Badge",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ],
+            "layout" : {
+              "columns" : 3,
+              "direction" : "column",
+              "gap" : 12,
+              "height" : 200,
+              "padding" : 0,
+              "rowGap" : 12,
+              "width" : 320
+            }
+          }
+        }
+      },
+      "frame" : [
+        [
+          760,
+          60
+        ],
+        [
+          320,
+          240
+        ]
+      ],
+      "id" : "561B913C-7A18-4ED6-A0FF-4B97DFC9766D",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Free card",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            600,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            600,
+                            120
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            120
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#2F6FED",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#FF3B30",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 4
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    600,
+                    120
+                  ]
+                ],
+                "id" : "A1B2C3D4-0000-4000-8000-0000000000F1",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Wide bar",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ],
+            "layout" : {
+              "columns" : 3,
+              "direction" : "column",
+              "gap" : 12,
+              "kind" : "stack",
+              "maxWidth" : 320,
+              "padding" : 16,
+              "rowGap" : 12
+            }
+          }
+        }
+      },
+      "frame" : [
+        [
+          760,
+          560
+        ],
+        [
+          320,
+          240
+        ]
+      ],
+      "id" : "7067DFE2-40E0-4D41-928E-812A3D0EAC93",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Capped shape card",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 1
+}

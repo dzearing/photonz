@@ -5051,3 +5051,12 @@
 {"t":"2026-09-17T14:49:05.785Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
 {"t":"2026-09-17T14:49:05.830Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
 {"t":"2026-09-17T14:49:05.877Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-be-found"}
+{"t":"2026-09-17T14:49:31.227Z","ev":"task_done","id":"the-labels-a-reading-gave-up-on-can-be-found","from":"in_progress","note":"The count of what stayed a picture is pressable and picks exactly those labels. Line splits in PhotonzCore (TextReading.Batch.detailLead/stillPicturesTail, CanvasNoticeAction.findStillPictures + Presentation, CopyConfirmation.line); the pill draws the tail as an underlined accent-coloured run, the only words in any notice that take the pointer, and EditorState.showStillPictureLabels picks them and brings them into view. Verified in the running app, not from source: Scripts/playtest/find-what-stayed-a-picture-walk.json separates effects-panel-2x, reads every label, asserts the exact line (12 labels, set in SF Pro. 3 stayed pictures), scrolls the layers list away from them, presses the count and asserts the selection is exactly Text 3, Text 5, Text 8 and the list scrolled back to them. 30 steps, lockSafe, two real window captures. a-notice-lets-a-click-through-walk still passes so the rest of the pill is still click-through. Scripts/test.sh green, 8156 tests. Audit: queue/audits/2026-09-17-find-what-stayed-a-picture.json. Committed 47dd7ba3 and pushed."}
+{"t":"2026-09-17T14:50:06.445Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T14:50:06.555Z","ev":"task_started","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s","title":"A picture too wide for the box it sits in says so, the way a row of chips does","priority":"p2-normal"}
+{"t":"2026-09-17T15:00:32.005Z","ev":"task_walks","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s","walks":["picture-past-the-ceiling-walk"]}
+{"t":"2026-09-17T15:00:32.053Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T15:00:38.798Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T15:00:38.845Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T15:00:38.893Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T15:00:38.940Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
