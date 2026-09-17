@@ -1,0 +1,35 @@
+{
+  "id": "the-components-shelf-is-still-there-after-you-ta",
+  "title": "The Components shelf is still there after you take one off it",
+  "goal": "Drag a component out of the Library and the Library disappears: the sections that open for the thing you just placed push the shelf off the bottom of the panel, and the shelf itself shrinks to a single row of three tiles with nothing to say the other two are under it. Getting a second component means a long scroll back and then a scroll inside the shelf, and someone who stops at the first screenful concludes the app only ships three components. Building a screen means taking several off the shelf in a row, so the shelf should still be where you left it.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T19:11:47.607Z",
+  "updated": "2026-09-17T19:12:25.964Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe, 2026-09-17, screen locked (the walk is lock safe, all steps ran and photographed for real).\n\n  Scripts/playtest.sh Scripts/playtest/starter-shelf-walk.json\n\nOn a fresh document the shelf draws all five tiles in two rows (panel-1-shelf.json lists Button, Text Field, Card, Nav Bar, Badge; picture starter-shelf-1-five-sc.png). Drag ONE out and the panel listing puts the Library section header at window y -204 and its tiles at y -315, i.e. 300 points below the bottom edge of a 900 point window, with only three of the five built:\n\n  [8 panel] shelf tiles: Badge (Components), Button (Components), Text Field (Components)\n\nThe cause is not a bug in the shelf: selecting the dropped layer opens Component, Appearance, Effects, Motion and Layout above the Library, and the dock ceiling then squeezes the shelf to LibraryShelfLayout.oneRowHeight. Two consequences, and the second is the one that misleads people: the shelf is off screen, and the one row it does draw gives no sign that there are more tiles below it. On 2026-09-17 an audit read that row and reported the app had lost its Nav Bar component; it had not.\n\nThe app already has the machinery for the first half: EditorState.pendingLibraryReveal, applied by InspectorDockLayout.requestLibrary(), scrolls the dock to the Library section and does nothing when it is already fully in view. Whether a drop from the shelf should ask for that (and so scroll away from the Component section for the layer just placed) is a real UX call, which is why this is filed rather than done.\n\nThe second half (a cut shelf that reads as complete) probably wants an affordance rather than more height: a sliver of the next row, or a count.",
+  "acceptance": [
+    "After dropping a component from the Library onto the canvas, the Library shelf is still visible in the panel without scrolling.",
+    "A shelf that is showing fewer tiles than it holds says so, or shows part of the next row, so nobody reads a cut shelf as the whole list.",
+    "Taking three starters out one after another needs no scrolling of the panel between them.",
+    "starter-shelf-walk still passes, and its pictures show the shelf in view after each drop."
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T19:11:47.609Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T19:12:25.963Z",
+      "note": "adjacent: a-copy-of-a-component-is-configured-not-authored would shrink the wall of sections a COPY opens, which is part of what pushes the shelf off the bottom. It does not cover this one: the shelf disappears when you place an ORIGINAL too, and the one-row shelf saying nothing about the rows under it is its own problem."
+    }
+  ],
+  "walks": [
+    "starter-shelf-walk"
+  ]
+}

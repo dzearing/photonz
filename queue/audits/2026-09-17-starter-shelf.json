@@ -1,0 +1,28 @@
+{
+  "feature": "The five starter components on the shelf",
+  "epic": "ui-components",
+  "summary": "All five starters were on the shelf the whole time. What had gone missing was the ability to REACH the two on the bottom row once the panel filled up, and a scripted walk hit that and reported the Nav Bar component as gone. Tiles below the shelf's fold are now found by scrolling to them, the five are pinned by name in a unit test, and starter-shelf-walk owns them.",
+  "setup": "Photonz Dev, release Next, flags next-components and next-starter-components (both on by default). A new document, nothing typed in the Library search box.",
+  "try": [
+    { "do": "Open a new document (Command N).", "shot": "2026-09-17-starter-shelf-1-five.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Show the Library (View ▸ Show Library) and press Comps." },
+    { "do": "Count the tiles: Button, Text Field, Card, Nav Bar, Badge, in two rows." },
+    { "do": "Drag the Nav Bar tile onto the canvas." },
+    { "do": "Without touching anything else, look for the Library in the panel.", "shot": "2026-09-17-starter-shelf-3-second-one.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Scroll the panel to the bottom and drag the Card tile out as well." },
+    { "do": "Run Scripts/playtest-all.sh --no-build starter-shelf words-down-the-box." }
+  ],
+  "evaluate": [
+    "On a fresh document, does the shelf read as five components, or as a grid that might go on further?",
+    "After the first component lands, is it obvious where the shelf went?",
+    "When the shelf is squeezed to one row of three, does anything tell you two more are under it?",
+    "Is the order right: Button, Text Field, Card, Nav Bar, Badge?",
+    "Would you expect the panel to stay on the shelf after a drop, or to jump to the thing you just placed?"
+  ],
+  "rough": [
+    "Drop one component and the Library is 300 points below the bottom edge of the window, because the sections that open for the placed layer push it there. Fetching a second one is a long scroll back. Filed as the-components-shelf-is-still-there-after-you-ta.",
+    "A shelf cut to one row says nothing about the rows under it, which is exactly how an audit came to report a missing Nav Bar component on an app that had one. Same task.",
+    "A walk can now reach a tile by scrolling the shelf, but an `expect tile` step still only sees what is built, on purpose: an expect is a claim about what is on screen.",
+    "The screen has been locked since 2026-09-15, so six of the tile-drag walks could not run and the pictures here carry the lock label. The walks that matter to this change (starter-shelf, words-down-the-box) are lock safe and ran in full."
+  ]
+}

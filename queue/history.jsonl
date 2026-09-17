@@ -5190,3 +5190,11 @@
 {"t":"2026-09-17T19:00:30.071Z","ev":"task_note","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you"}
 {"t":"2026-09-17T19:00:30.118Z","ev":"task_note","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you"}
 {"t":"2026-09-17T19:00:38.688Z","ev":"task_done","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you","from":"in_progress","note":"⌘ frees a trim handle from the cuts, mid-drag, and letting it go cannot yank the handle back. Magnet memory moved into VideoCutSnapHold (PhotonzCore, 14 new tests, 8236 green); ⌘ read per drag event in TrimTimeline so pressing it part way through works; handle tooltip names the key, and its anchor now tracks the handle (it was stuck at the window edge because offset moves what is drawn, not what is laid out). Verified: full suite green, trim-handle-freed-from-a-cut-walk passes with six real window captures, all 6 runnable trim walks + cut-a-recording still pass. Audit: queue/audits/2026-09-17-video-cutting-trim-free.json. Pushed as 681a9d73."}
+{"t":"2026-09-17T19:01:00.879Z","ev":"task_started","id":"every-starter-component-can-be-found-on-the-comp","title":"Every starter component can be found on the Components shelf","priority":"p2-normal"}
+{"t":"2026-09-17T19:11:47.611Z","ev":"task_created","id":"the-components-shelf-is-still-there-after-you-ta","priority":"p2-normal","title":"The Components shelf is still there after you take one off it"}
+{"t":"2026-09-17T19:12:23.101Z","ev":"task_walks","id":"every-starter-component-can-be-found-on-the-comp","walks":["starter-shelf-walk","words-down-the-box-walk"]}
+{"t":"2026-09-17T19:12:23.148Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
+{"t":"2026-09-17T19:12:23.194Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
+{"t":"2026-09-17T19:12:23.240Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
+{"t":"2026-09-17T19:12:23.288Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
+{"t":"2026-09-17T19:12:25.965Z","ev":"task_note","id":"the-components-shelf-is-still-there-after-you-ta"}

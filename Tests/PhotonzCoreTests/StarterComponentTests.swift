@@ -227,6 +227,18 @@ struct StarterComponentTests {
         #expect(entries.first?.detail == StarterComponents.shelfDetail)
     }
 
+    /// The five, by NAME and in the order the shelf lists them.
+    ///
+    /// The count test above moves with the enum: delete a case and
+    /// `allCases.count` goes down with it, so both sides agree and nothing
+    /// fails. On 2026-09-17 a walk reported the Nav Bar tile missing and this
+    /// was the check that could not have caught it, so the names are written
+    /// out here where a starter going missing has to break something.
+    @Test func theShelfNamesTheFiveStartersInTheOrderItListsThem() {
+        #expect(document().starterComponentEntries.map(\.name)
+                == ["Button", "Text Field", "Card", "Nav Bar", "Badge"])
+    }
+
     /// One tile per component, not two: once the original is in the document,
     /// the document's own entry is the one that describes it.
     @Test func aStarterYouHaveTakenIsListedOnceByTheDocument() {

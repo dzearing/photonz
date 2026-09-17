@@ -5871,6 +5871,75 @@ private final class Run {
         NSApp.postEvent(up, atStart: false)
     }
 
+    /// A tile on the Library shelf, found the way a person finds one: if it is
+    /// not showing, scroll the shelf and look again.
+    ///
+    /// The shelf draws its tiles in a lazy grid, so a tile below its own fold
+    /// is not merely out of view — nothing is built for it, so nothing answers
+    /// to its name and the step reads exactly like the component being gone.
+    /// That is not a corner case: drop one starter and the sections the
+    /// selection opens push the Library off the bottom of the dock, which
+    /// squeezes the shelf to a single row of three, and the two starters on the
+    /// row under it stop existing. words-down-the-box-walk failed on "Nav Bar"
+    /// that way on 2026-09-17, and the audit that hit it concluded the app had
+    /// lost its Nav Bar component.
+    ///
+    /// So the shelf is wound back to the top and walked down a row at a time,
+    /// looking again after each turn, until the tile builds or the shelf runs
+    /// out of length. Same reasoning as `pressControl` scrolling the dock for
+    /// itself: a walk that has to be TOLD to scroll is a walk that goes stale
+    /// the next time the dock grows a section.
+    private func tileTarget(_ name: String) async throws -> PanelTargetView {
+        if let showing = try? panelTarget(name, kind: .tile) { return showing }
+        // Any tile at all gives us the shelf: the marker is a real view inside
+        // the scroll view SwiftUI built for the grid, so its nearest scrolling
+        // ancestor IS the shelf. With no tile built there is no shelf to scroll
+        // and the original failure is the true one.
+        guard let anyTile = try panelTargets().first(where: { $0.kind == .tile }),
+              let clip = anyTile.enclosingScrollView?.contentView else {
+            return try panelTarget(name, kind: .tile)
+        }
+        var turns = 0
+        // To the top first, so a tile ABOVE where the shelf happens to be
+        // sitting is not walked away from.
+        while turns < Self.shelfTurnLimit,
+              Self.scrollClip(clip, by: Self.shelfRowStep * 4) > 0.5 {
+            turns += 1
+            await sleep(0.05)
+        }
+        if let found = try? panelTarget(name, kind: .tile) {
+            note(0, "shelf", "wound the shelf back to the top to reach the tile \"\(name)\"")
+            return found
+        }
+        var scrolled = 0.0
+        while turns < Self.shelfTurnLimit {
+            let moved = Self.scrollClip(clip, by: -Self.shelfRowStep)
+            guard moved > 0.5 else { break }
+            scrolled += moved
+            turns += 1
+            await sleep(0.06)
+            if let found = try? panelTarget(name, kind: .tile) {
+                note(0, "shelf",
+                     "scrolled the Library shelf \(Int(scrolled))pt to bring the tile "
+                        + "\"\(name)\" into it, the way a person would")
+                return found
+            }
+        }
+        // Still nothing, with the shelf at the end of its own length: the tile
+        // really is not on this shelf, and `panelTarget` writes the list.
+        return try panelTarget(name, kind: .tile)
+    }
+
+    /// One row of tiles plus the gap under it: how far one turn of the shelf's
+    /// wheel goes.
+    private static let shelfRowStep =
+        LibraryShelfLayout.tileHeight + LibraryShelfLayout.tileSpacing
+
+    /// The most turns a tile hunt may take. `LibraryPanel.maxTiles` is 60, and
+    /// the narrowest shelf draws one to a row, so this covers the longest shelf
+    /// the app will build and then stops rather than spinning.
+    private static let shelfTurnLimit = 70
+
     /// Picks a tile up off the Library shelf and lets it go on the picture,
     /// through the canvas's own drag destination — the same calls a drag from
     /// the Finder makes, pasteboard and all.
@@ -5879,7 +5948,7 @@ private final class Run {
                           number: Int) async throws {
         let canvas = try requireCanvas()
         let window = try requireWindow()
-        let target = try panelTarget(name, kind: .tile)
+        let target = try await tileTarget(name)
         guard let payload = target.payload else {
             throw Failure(description: "the tile \"\(name)\" cannot be picked up")
         }
@@ -5992,7 +6061,7 @@ private final class Run {
     /// would follow the pointer afterwards: see `PlaytestTilePickUp.swift`.
     private func pickUpTile(_ name: String, to at: PlaytestPoint, number: Int) async throws {
         let canvas = try requireCanvas()
-        let target = try panelTarget(name, kind: .tile)
+        let target = try await tileTarget(name)
         guard let window = target.window, let content = window.contentView else {
             throw Failure(description: "the tile \"\(name)\" is in no window, so nothing could press it")
         }
@@ -6089,7 +6158,7 @@ private final class Run {
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")
         }
-        let source = try panelTarget(name, kind: .tile)
+        let source = try await tileTarget(name)
         let destination = try panelTarget(ontoRow, kind: .row)
         guard let payload = source.payload else {
             throw Failure(description: "the tile \"\(name)\" cannot be picked up")
@@ -6180,7 +6249,7 @@ private final class Run {
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")
         }
-        let source = try pickUpSource(carry)
+        let source = try await pickUpSource(carry)
         guard let payload = source.payload else {
             throw Failure(description: "\"\(carry)\" cannot be picked up")
         }
@@ -6231,10 +6300,19 @@ private final class Run {
 
     /// Anything in the panel a drag can start from, named the way a walk names
     /// it: a layer row first, then a shelf tile, then a colour swatch.
-    private func pickUpSource(_ name: String) throws -> PanelTargetView {
+    private func pickUpSource(_ name: String) async throws -> PanelTargetView {
         if let row = try? panelTarget(name, kind: .row) { return row }
         if let tile = try? panelTarget(name, kind: .tile) { return tile }
-        return try colorDragSource(name)
+        do {
+            return try colorDragSource(name)
+        } catch {
+            // Nothing showing answers to the name, so the last place to look is
+            // under the shelf's own fold. Last on purpose: hunting there means
+            // scrolling the shelf, and a colour swatch that was going to be
+            // found anyway must not move the shelf on its way past.
+            if let tile = try? await tileTarget(name) { return tile }
+            throw error
+        }
     }
 
     /// Picks a row up in the layers list and holds it over another row, then
