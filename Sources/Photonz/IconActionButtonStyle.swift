@@ -68,7 +68,7 @@ struct IconActionButtonStyle: ButtonStyle {
                 .scaleEffect(pressed && style.pointerFeedback ? 0.90 : 1)
                 .contentShape(style.squareHitTarget ? AnyShape(Rectangle()) : AnyShape(Circle()))
                 .opacity(isEnabled ? 1 : 0.4)
-                .onHover { hovering = $0 }
+                .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
                 .animation(.easeOut(duration: 0.10), value: pressed)
         }
@@ -146,7 +146,7 @@ struct PillActionButtonStyle: ButtonStyle {
                 .scaleEffect(pressed ? 0.96 : 1)
                 .contentShape(Capsule())
                 .opacity(isEnabled ? 1 : 0.4)
-                .onHover { hovering = $0 }
+                .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
                 .animation(.easeOut(duration: 0.10), value: pressed)
         }

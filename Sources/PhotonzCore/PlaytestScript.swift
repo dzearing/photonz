@@ -1327,6 +1327,23 @@ public enum PlaytestHoverTarget: Sendable, Equatable {
     case point(PlaytestPoint)
 }
 
+/// Where a `move` step puts the pointer.
+///
+/// A point is the canvas's own language and is what nearly every move wants.
+/// A control is for something whose position depends on the words on it — the
+/// button on the line at the foot of the canvas moves every time its label
+/// changes — so a walk that aimed at numbers would come to rest beside it and
+/// quietly prove nothing. It is found the same way a `press` finds it, through
+/// the app's own register of controls, so a control that has gone fails the
+/// walk instead.
+public enum PlaytestMoveTarget: Sendable, Equatable {
+    /// A point, in whichever space the step named.
+    case point(PlaytestPoint)
+    /// The middle of the control the panel calls this, optionally in a named
+    /// row, exactly as `press` reads them.
+    case control(String, in: String?)
+}
+
 /// A word an `expectCaption` claim is written with.
 public protocol CaptionClaimWord: Sendable, Equatable {
     init?(claim: String)
@@ -1433,7 +1450,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// see a component cross between them at the size it should be
     /// (`SharedComponentScale`).
     case blank(canvas: CGSize, window: CGSize?, card: String?, pixelScale: CGFloat)
-    case wait(seconds: Double)
+    /// Let the editor finish what the step before started. It ends the moment
+    /// the app goes quiet, which is why a walk's waits cost seconds rather than
+    /// minutes.
+    ///
+    /// `onTheClock` spends the whole time instead, and is for the few walks
+    /// about a CLOCK rather than about work: the line at the foot of the canvas
+    /// leaves after six seconds of an app doing nothing at all, so a walk that
+    /// waits for quiet is back in a tenth of a second and has proved nothing
+    /// about the six.
+    case wait(seconds: Double, onTheClock: Bool)
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
     case key(PlaytestKey, [PlaytestModifier])
@@ -1458,13 +1484,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// an application-wide event monitor, and a monitor only ever sees what
     /// goes through the app. This step is how a walk reaches those.
     case appKey(PlaytestKey, [PlaytestModifier])
-    /// Move the pointer to a point without pressing anything, so a walk can
-    /// read what the canvas SAYS a press would do there. `modifiers` are held
+    /// Move the pointer without pressing anything, so a walk can read what the
+    /// canvas SAYS a press would do there AND what resting on something makes
+    /// the app do. `control` rests on a control by the name the panel gives it,
+    /// which is how a walk points at something whose position depends on the
+    /// words on it. `modifiers` are held
     /// while the pointer rests: ⌥ over a layer is its own cue (the copy
     /// badge), and over a screen's own surface ⌥ means different things
     /// depending on whether the screen is picked, so a walk has to be able to
     /// hold it without clicking.
-    case move(PlaytestPoint, [PlaytestModifier])
+    case move(PlaytestMoveTarget, [PlaytestModifier])
     /// Pinch the canvas to a zoom, the way two fingers on a trackpad do: a run
     /// of small nudges rather than one jump, each through the very call the
     /// gesture makes. A grid, a guide or a readout that only misbehaves WHILE
@@ -1991,7 +2020,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// which is the only way a walk can hold the app to a sentence it is
     /// obliged to say — above all the sentence a command says when it changed
     /// NOTHING, which is the one case where the canvas cannot tell you.
-    case expectNotice(says: String?, absent: Bool?)
+    case expectNotice(says: String?, absent: Bool?, held: Bool?)
     /// What the path the Pen just drew is actually made of: how many anchors it
     /// has, whether it closed, and how many of its runs are curves.
     ///
@@ -2428,7 +2457,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"),
                           pixelScale: CGFloat(scale))
         case "wait":
-            self = .wait(seconds: try f.number("seconds"))
+            self = .wait(seconds: try f.number("seconds"),
+                         onTheClock: try f.optionalFlag("onTheClock") ?? false)
         case "key":
             let keyName = try f.string("key")
             guard let key = PlaytestKey(keyName) else {
@@ -2449,7 +2479,13 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .appKey(key, try f.modifiers())
         case "move":
-            self = .move(try f.point("at"), try f.modifiers())
+            if let control = try f.optionalString("control") {
+                self = .move(.control(control, in: try f.optionalString("in")), try f.modifiers())
+            } else if fields["at"] != nil {
+                self = .move(.point(try f.point("at")), try f.modifiers())
+            } else {
+                throw f.invalid("at", "move needs an \"at\" point on the canvas or a \"control\" to rest on by name")
+            }
         case "pinch":
             let to = CGFloat(try f.number("to"))
             guard to.isFinite, to > 0 else {
@@ -2974,10 +3010,15 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectNotice":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent")
-            guard says != nil || absent != nil else {
+            // Whether the pointer resting on the pill is holding its clock
+            // open. The half of the pill a walk could not see until a walk's
+            // pointer could be rested on anything at all (`PlaytestPointer`).
+            let held = try f.optionalFlag("held")
+            guard says != nil || absent != nil || held != nil else {
                 throw f.invalid("says", "expectNotice has to claim something: \"says\" for words "
-                    + "the pill under the canvas must be carrying, or \"absent\": true for no "
-                    + "pill at all")
+                    + "the pill under the canvas must be carrying, \"absent\": true for no "
+                    + "pill at all, or \"held\" for whether the pointer resting on its button is "
+                    + "holding it open")
             }
             if let says, says.trimmingCharacters(in: .whitespaces).isEmpty {
                 throw f.invalid("says", "an empty claim passes against every pill and against no "
@@ -2987,7 +3028,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("absent", "a pill that is not there cannot also be saying "
                     + "something; claim one or the other")
             }
-            self = .expectNotice(says: says, absent: absent)
+            self = .expectNotice(says: says, absent: absent, held: held)
         case "expectRegion":
             let reads = try f.optionalString("reads")
             let present = fields["present"] as? Bool

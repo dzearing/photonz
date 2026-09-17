@@ -514,13 +514,13 @@ struct PlaytestScriptTests {
         guard case .open(let file, let size) = script.steps[0] else { Issue.record("open"); return }
         #expect(file == "/tmp/shot.png")
         #expect(size == CGSize(width: 1280, height: 840))
-        guard case .wait(let seconds) = script.steps[1] else { Issue.record("wait"); return }
+        guard case .wait(let seconds, _) = script.steps[1] else { Issue.record("wait"); return }
         #expect(seconds == 0.5)
         guard case .key(let key, let mods) = script.steps[2] else { Issue.record("key"); return }
         #expect(key.name == "i" && mods.isEmpty)
         guard case .key(_, let chord) = script.steps[3] else { Issue.record("chord"); return }
         #expect(chord == [.command, .control])
-        guard case .move(let at, let moveMods) = script.steps[4] else { Issue.record("move"); return }
+        guard case .move(.point(let at), let moveMods) = script.steps[4] else { Issue.record("move"); return }
         #expect(at.point == CGPoint(x: 100, y: 200) && at.space == .document && moveMods.isEmpty)
         guard case .click(let click, let count, let clickMods) = script.steps[5] else { Issue.record("click"); return }
         #expect(click.space == .view && count == 2 && clickMods.isEmpty)
@@ -596,10 +596,81 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "move", "at": [5, 6], "modifiers": ["option"] },
                      { "do": "move", "at": [7, 8] } ] }
         """)
-        guard case .move(let at, let held) = script.steps[0] else { Issue.record("move"); return }
+        guard case .move(.point(let at), let held) = script.steps[0] else { Issue.record("move"); return }
         #expect(at.point == CGPoint(x: 5, y: 6) && held == [.option])
         guard case .move(_, let none) = script.steps[1] else { Issue.record("move"); return }
         #expect(none.isEmpty)
+    }
+
+    /// Something whose position depends on the words on it cannot be rested on
+    /// by numbers: the button on the line at the foot of the canvas moves every
+    /// time its label changes, so a walk aimed at a point would come to rest
+    /// beside it and prove nothing. A move can name a control instead, and it
+    /// is found the way a press finds one.
+    @Test func aMoveCanRestOnAControlByName() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "move", "control": "Read the Words" },
+                     { "do": "move", "control": "Fixed", "in": "Width" } ] }
+        """)
+        guard case .move(.control(let name, let row), _) = script.steps[0] else {
+            Issue.record("move by control"); return
+        }
+        #expect(name == "Read the Words" && row == nil)
+        guard case .move(.control(let named, let inRow), _) = script.steps[1] else {
+            Issue.record("move by control in a row"); return
+        }
+        #expect(named == "Fixed" && inRow == "Width")
+    }
+
+    /// A move with neither a point nor a control has nowhere to go, and saying
+    /// so beats resting the pointer at the origin.
+    @Test func aMoveWithNowhereToGoIsRefused() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "move" } ] }
+            """)
+        }
+    }
+
+    /// A wait normally ends the moment the app goes quiet. A walk about a CLOCK
+    /// needs the opposite: the line at the foot of the canvas leaves six
+    /// seconds after it arrives whether the app is busy or not.
+    @Test func aWaitCanBePutBackOnTheClock() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "wait", "seconds": 7, "onTheClock": true },
+                     { "do": "wait", "seconds": 1 } ] }
+        """)
+        guard case .wait(let long, let onTheClock) = script.steps[0] else { Issue.record("wait"); return }
+        #expect(long == 7 && onTheClock)
+        guard case .wait(_, let ordinary) = script.steps[1] else { Issue.record("wait"); return }
+        #expect(ordinary == false)
+    }
+
+    /// Whether a pointer resting on the pill is holding its clock open is the
+    /// half of that pill no walk could see until a walk's pointer could rest on
+    /// anything, so it is a claim of its own.
+    @Test func aNoticeCanBeClaimedHeldOrLetGo() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectNotice", "says": "Separated", "held": true },
+                     { "do": "expectNotice", "held": false } ] }
+        """)
+        guard case .expectNotice(let says, _, let held) = script.steps[0] else {
+            Issue.record("expectNotice"); return
+        }
+        #expect(says == "Separated" && held == true)
+        guard case .expectNotice(_, _, let letGo) = script.steps[1] else {
+            Issue.record("expectNotice"); return
+        }
+        #expect(letGo == false)
+    }
+
+    /// A claim that claims nothing passes against every pill and against none.
+    @Test func aNoticeClaimHasToClaimSomething() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectNotice" } ] }
+            """)
+        }
     }
 
     /// A walk that wants to see what EXPORTING looks like asks the render step
@@ -3064,7 +3135,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectNotice", "says": "do not overlap" } ] }
         """)
-        guard case .expectNotice(let says, let absent) = script.steps[0] else {
+        guard case .expectNotice(let says, let absent, _) = script.steps[0] else {
             Issue.record("expectNotice"); return
         }
         #expect(says == "do not overlap")
@@ -3076,7 +3147,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectNotice", "absent": true } ] }
         """)
-        guard case .expectNotice(let says, let absent) = script.steps[0] else {
+        guard case .expectNotice(let says, let absent, _) = script.steps[0] else {
             Issue.record("expectNotice"); return
         }
         #expect(says == nil)

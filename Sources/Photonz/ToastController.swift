@@ -359,7 +359,7 @@ private struct ToastView: View {
             withAnimation(.easeOut(duration: 0.25)) { opacity = 1 }
             startLifecycle()
         }
-        .onHover { hovering in
+        .playtestHover { hovering in
             self.hovering = hovering
             if hovering {
                 lifecycle?.cancel()

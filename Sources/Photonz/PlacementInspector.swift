@@ -639,7 +639,7 @@ struct PlacementInspector: View {
                                                        : AnyShapeStyle(.clear)))
         }
         .buttonStyle(.plain)
-        .onHover { hoveredContentID = $0 ? exception.id : nil }
+        .playtestHover { hoveredContentID = $0 ? exception.id : nil }
         .panelHelp("Select \(exception.name)")
         .playtestControl(exception.name, detail: "Layout, a layer with a rule of its own")
     }

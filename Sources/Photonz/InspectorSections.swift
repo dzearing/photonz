@@ -507,7 +507,7 @@ struct InspectorResizeHandle: View {
                 Color.clear
                     .frame(width: 14)
                     .contentShape(Rectangle())
-                    .onHover { inside in
+                    .playtestHover { inside in
                         if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
                     }
                     .gesture(
@@ -579,7 +579,7 @@ struct PanelAreaResizeHandle: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 12)
                     .contentShape(Rectangle())
-                    .onHover { inside in
+                    .playtestHover { inside in
                         guard inside != isHovering else { return }
                         isHovering = inside
                         if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }

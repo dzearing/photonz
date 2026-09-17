@@ -116,7 +116,7 @@ struct ColorWellButton: View {
         if editorState.designedColorPickerEnabled {
             Button { editorState.openColorWell = key } label: { swatch }
                 .buttonStyle(.plain)
-                .onHover { isHovering = $0 }
+                .playtestHover { isHovering = $0 }
                 .panelHelp("\(name) color")
                 .accessibilityLabel("\(name) color")
                 // Every well in the panel is called Color; what it paints is

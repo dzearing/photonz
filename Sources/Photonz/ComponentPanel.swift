@@ -1957,7 +1957,7 @@ private struct InstanceColorKnob: View {
             // A readout and a control look alike sitting still, so the hairline
             // firms up under the pointer: that is what says this one is worth
             // clicking.
-            .onHover { isHovering = $0 }
+            .playtestHover { isHovering = $0 }
             .panelHelp(help(selection))
             .accessibilityLabel("\(property.name) color")
             // The same word every colour well in the panel answers to, its own

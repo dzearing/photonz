@@ -271,7 +271,7 @@ struct VideoEditorView: View {
         .gesture(panelDrag)
         // Resting the pointer on the controller pins it (never fades); leaving
         // re-arms the fade. Hitting play still overrides this via forceHide().
-        .onHover { hovering in
+        .playtestHover { hovering in
             hoveringControls = hovering
             if hovering {
                 hideTask?.cancel()

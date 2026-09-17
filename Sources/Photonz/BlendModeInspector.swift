@@ -180,7 +180,7 @@ struct BlendModeRow: View {
             .fill(isHovered ? AnyShapeStyle(.selection) : AnyShapeStyle(.clear)))
         // The preview itself. Resting on a row paints it on the canvas and
         // records nothing; leaving the list puts back what was there.
-        .onHover { inside in
+        .playtestHover { inside in
             if inside {
                 hovered = mode
                 editorState.previewLayerStyle(ids: selection.layerIDs) { $0.blendMode = mode }

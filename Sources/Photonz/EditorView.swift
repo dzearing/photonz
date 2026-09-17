@@ -531,7 +531,7 @@ struct EditorView: View {
                 // pill no longer takes the pointer at all: hovering is the same
                 // hit test as clicking, so a pill that noticed the pointer over
                 // its words would be a pill that swallowed clicks there.
-                .onHover { editorState.holdCanvasNotice($0) }
+                .playtestHover(action.label) { editorState.holdCanvasNotice($0) }
             }
         }
             .font(.callout)
@@ -580,7 +580,7 @@ struct EditorView: View {
         // Resting on the words stops the pill's clock, the same as resting on a
         // button does: six seconds is enough to read a sentence and not enough
         // to read it, decide the strays matter, and travel to them.
-        .onHover { editorState.holdCanvasNotice($0) }
+        .playtestHover(words) { editorState.holdCanvasNotice($0) }
     }
 
     /// What the card an empty window shows can do for you.

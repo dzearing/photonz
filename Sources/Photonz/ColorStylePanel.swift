@@ -692,7 +692,7 @@ struct SelectionColorWell: View, Equatable {
             // firms up under the pointer: that is what says this one is worth
             // clicking, and it is the difference between finding the way out of
             // Mixed and giving up on the row.
-            .onHover { isHovering = $0 }
+            .playtestHover { isHovering = $0 }
             .panelHelp(help(selection))
             .accessibilityLabel(boundStyle.map { "\(part) color, using the style \($0.name)" }
                                 ?? "\(part) color of \(selection.count) selected layers")

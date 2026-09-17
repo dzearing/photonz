@@ -911,7 +911,7 @@ struct OutOfViewMark: View {
             if isPressable {
                 Button(action: press) { glyph }
                     .buttonStyle(.plain)
-                    .onHover { hovering = $0 }
+                    .playtestHover { hovering = $0 }
                     .playtestControl("Out of view", detail: place(state))
             } else {
                 // Nothing one press could put right, so nothing that looks

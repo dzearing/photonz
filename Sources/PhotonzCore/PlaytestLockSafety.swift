@@ -53,13 +53,23 @@ public enum PlaytestLockSafety {
     ///   three times over ("3 pieces, piece 2 picked, window 8.00s, trim
     ///   open"). That un-refuses the video walks whose only blocked step was
     ///   this one.
+    /// - `tool-tips`, `segment-tooltips-walk`, `history-tooltips-walk`,
+    ///   `panel-toggle-titlebar-walk`, `path-points-under-the-pen-walk` and
+    ///   `marquee-answers-to-m-walk`, all green on a Mac locked since
+    ///   2026-09-14: hover. A tooltip's own name is not an accessibility name —
+    ///   it is the word the app itself hung on a `HintAnchorView` — so a lock
+    ///   takes nothing away from it, and the tooltip window it raises is a
+    ///   window of the app's own that a snapshot still photographs (the
+    ///   captures come out "with 1 window hung on it"). Six walks that were
+    ///   being refused now run.
     ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
-        "expectPath", "expectPicked", "expectRecording", "key", "measureMode", "move", "open", "panel", "pinch",
+        "expectPath", "expectPicked", "expectRecording", "hover", "key", "measureMode", "move",
+        "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]

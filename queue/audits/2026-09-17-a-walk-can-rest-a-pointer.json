@@ -1,0 +1,27 @@
+{
+  "feature": "A walk can rest the pointer on something",
+  "epic": "unmanned-loop",
+  "summary": "A scripted walk can now put the pointer on a control and the app reacts the way it does for a hand, so everything the app does on hover is testable for the first time. The line at the foot of the canvas is the first thing proved: resting on its button keeps it from leaving, walking away lets it go.",
+  "setup": "Nothing to turn on. This is walk machinery, so the way to see it is to run a walk: Scripts/playtest.sh Scripts/playtest/notice-waits-under-the-pointer-walk.json --no-build. The picture below came out of that run.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/notice-waits-under-the-pointer-walk.json --no-build and watch it finish green in about twenty seconds." },
+    { "do": "Read the log line for step 11: it says the pointer came to rest on \"Read the Words\" and where that button actually was.",
+      "shot": "2026-09-17-a-walk-can-rest-a-pointer-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Open the walk and see that it aims by NAME, not by numbers: { \"do\": \"move\", \"control\": \"Read the Words\" }." },
+    { "do": "Break the app on purpose: make EditorState.holdCanvasNotice return straight away, rebuild the probe, run the walk again. It fails at step 12 and names the control to rest on." },
+    { "do": "Put it back, then read \"What resting the pointer on something proves\" in docs/design/playtest-harness.md for which steps move the pointer and what the technique can and cannot prove." },
+    { "do": "Run Scripts/test.sh and watch PlaytestHoverIsReachableTests: it fails the build's tests if anyone writes a bare .onHover again." }
+  ],
+  "evaluate": [
+    "Is \"rest the pointer on the control called X\" the way you would want to write this in a walk, or would you rather point at coordinates?",
+    "The walk proves everything that happens BECAUSE of a hover, but not SwiftUI's own delivery of the crossing. Is that the right trade, given no synthetic event on this Mac can do the second?",
+    "Twenty hovers in the app were rewritten as playtestHover. Does a test that fails on a bare .onHover feel like a useful guard or like a nuisance?",
+    "A wait can now be put back on the clock for a walk about a timer. Should anything else in the set be spending real seconds?"
+  ],
+  "rough": [
+    "A pointer resting on a region whose view is COVERED by something else still counts as resting on it. Nothing in the app hits this today because the overlapping surfaces are at different places, but a walk that rested on a spot under a panel would get a hover a hand would not.",
+    "The screen was locked for this whole task, so nothing here was seen by eye. Every claim comes from the walk and from real window captures taken under the lock.",
+    "hover now joins the steps a lock cannot touch: six tooltip walks were being refused on a locked Mac and four of them now run unforced (the other two are refused for a menuShot and a step nobody has watched yet). That was proved by forcing them first and reading the result, not by assuming."
+  ]
+}

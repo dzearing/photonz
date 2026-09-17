@@ -380,13 +380,13 @@ by a value an earlier step of the same walk chose.
 | --- | --- | --- |
 | `blank` | optional `canvasWidth` `canvasHeight`, optional `width` `height`, optional `card`, optional `pixelScale` | Opens a NEW EMPTY WINDOW and hands it a blank white canvas, the way the empty window's Blank canvas row does once a size is chosen. Defaults to the offered size (`BlankCanvas.defaultPreset`). `width`/`height` set the window frame, as in `open`. `card` names a snapshot taken of the empty window first, which is the only way to photograph the onboarding card — it stops existing the moment a document arrives. This is how a walk starts from nothing instead of from a screenshot. `pixelScale` is how many of the document's numbers make one point: leave it out and the document counts one to one, the way a blank canvas always has; say `2` and it counts in twos, the way one opened from a Retina capture does. It is the only way a walk can put two documents that count differently side by side, which is what proves a shared component crosses between them at the size it should be (`shared-component-scale-walk.json`). |
 | `open` | `file`, optional `width` `height` | Opens the file in an editor window (path relative to the script or absolute), waits until it can be driven, hides it, sizes it. Every later step targets this editor. |
-| `wait` | `seconds` | Gives the editor up to `seconds` to finish what the step before it started, and carries on the moment it has. Never returns sooner than one run loop turn, never later than `seconds`, so nothing waits longer than it used to. Prefer `waitFor` when there is a condition to name. See "What a wait waits for" below. |
+| `wait` | `seconds`, optional `onTheClock` | Gives the editor up to `seconds` to finish what the step before it started, and carries on the moment it has. Never returns sooner than one run loop turn, never later than `seconds`, so nothing waits longer than it used to. Prefer `waitFor` when there is a condition to name. `onTheClock: true` spends the whole time instead, and is only for a walk about a CLOCK rather than about work: the line at the foot of the canvas leaves six seconds after it arrives whether the app is busy or not, so an ordinary wait is back in a tenth of a second having proved nothing about the six (`notice-waits-under-the-pointer-walk.json`). See "What a wait waits for" below. |
 | `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and then, if neither claimed them as a shortcut, sent to the window as an ordinary press (which is what ⇧↑ in a number field is). The log says who took them: `window`, `menu`, `responder chain`, `the field being typed in`, or `the default button "..."` when the press answered a question sheet. **A question sheet is answered by its name.** ⏎ at a sheet presses its default button and ⎋ presses Cancel, and a walk fails at the step if the sheet is still standing afterwards, with the `press` step to use instead. See "Answering a question the app asks" below. |
 | `appKey` | `key`, optional `modifiers` | Presses and releases a key by handing it to the APPLICATION instead of posting it into the window. `key` goes straight to the window, which is right for typing and for menu shortcuts but invisible to anything watching the app as a whole — and an application-wide event monitor is what takes the history overlay down on Esc and on a click outside it. Use this when the thing you are driving listens to the app rather than to a window; use `key` for everything else. |
 | `shortcut` | `key`, optional `modifiers` `menuItem` `checked` | Presses a chord and REQUIRES it to reach a menu item that actually runs. Fails, loudly and with the reason, when no menu item carries the chord, when the item is not the one `menuItem` names, when something else takes the press, or when the item has nothing behind it. `checked` is for a SETTING's item: one that is simply on or off keeps ONE name and says its state with a checkmark, so `checked` names the tick the item must be wearing BEFORE the press and the walk fails when the checkmark lies. Use it for app-level shortcuts (Capture, New Window, Open); a window-scoped one fails by design and tells you to use `action` instead. See "Which shortcuts a walk can press" below. |
-| `move` | `at`, optional `modifiers` | Moves the pointer over the canvas without pressing anything (hover previews, snap dots, and what the pointer SAYS a press would do). `modifiers` are held while it rests there, which is how a walk reads a cue that only ⌥ brings up: the copy badge over a layer, and on a screen's own surface, where ⌥ means one thing on a picked screen and nothing at all on one that is not. |
+| `move` | `at` or `control`, optional `in`, `modifiers` | Moves the pointer without pressing anything (hover previews, snap dots, what the pointer SAYS a press would do, and anything the app does because something is being rested on). `at` is a point on the canvas. `control` rests on a control by the name the panel gives it, found and scrolled to exactly as a `press` finds one, with `in` naming its row when two wear the same words: use it for anything whose position depends on the words on it, because a button whose label changed moves and a walk aimed at numbers would come to rest beside it and quietly prove nothing. The log line says what the pointer came to rest on and what it walked off. `modifiers` are held while it rests there, which is how a walk reads a cue that only ⌥ brings up: the copy badge over a layer, and on a screen's own surface, where ⌥ means one thing on a picked screen and nothing at all on one that is not. See "What resting the pointer on something proves" below. |
 | `pinch` | `to`, optional `steps` | Pinches the zoom to `to` (1 is 100%), around the middle of the canvas, in `steps` even nudges through the very call two fingers on a trackpad make. Every nudge is checked and the log line says whether the grid was drawn at each one, with `gridDuringPinch` in the state carrying one reading per nudge. This is the only step that can see a fault which exists only WHILE the zoom is moving: a `zoomIn` steps straight over it, and so does a snapshot, since the redraw that takes the picture is the redraw that puts things back. `Scripts/playtest/grid-pinch-walk.json` is the walk that reads it. |
-| `hover` | `label` or `at`, optional `window` | Rests the pointer on a control until its tooltip shows: `label` is the text the tooltip starts with ("Arrow", "Measure"); `at` is a point, and one over no control leaves the tooltip behind. The log line says what showed and where, and a `snapshot` taken now includes it. `window` names another of the app's windows to rest in, by its title, the way `snapshot` does: the capture history is a floating panel of its own, so it is the only way to reach its controls. A point inside a named window is in window space, since there is no canvas there to measure from. |
+| `hover` | `label` or `at`, optional `window` | Rests the pointer on a control until its tooltip shows, and moves the walk's pointer there as `move` does, so whatever reacts to being rested on reacts too: `label` is the text the tooltip starts with ("Arrow", "Measure"); `at` is a point, and one over no control leaves the tooltip behind. The log line says what showed and where, and a `snapshot` taken now includes it. `window` names another of the app's windows to rest in, by its title, the way `snapshot` does: the capture history is a floating panel of its own, so it is the only way to reach its controls. A point inside a named window is in window space, since there is no canvas there to measure from. |
 | `click` | `at`, optional `count`, `modifiers` | Mouse down and up on the canvas. The log line also says what the click cost: `handler` is the synchronous mouse-down and mouse-up time, and `mainBusy` is how long the main thread stayed busy afterwards, over how many run-loop passes, and the longest single pass (see "Reading the cost of a step" below). |
 | `drag` | `from`, `to`, optional `steps`, `modifiers`, `halfway`, `hold`, `wobble`, `showsBox` | Mouse down, a run of drags, mouse up. `modifiers` are held for the whole gesture (Command drags free of every magnet). `halfway` is the modifiers in force for the SECOND half of the travel, when they differ: `"halfway": ["shift"]` against no modifiers presses the key with the button already down, `"modifiers": ["shift"], "halfway": []` lets it go partway through, and the release carries whatever was in force at the end. It is how a walk tests a LIVE constraint — ⇧ holding a caliper on its line, a 45° annotation — rather than only one that was held from the start; `Scripts/playtest/caliper-held-straight-walk.json` is the walk that uses it. Leave it out and the keys never change, which is every other drag. `hold` names a snapshot taken with the button still down, just before the release: the only way to photograph something that exists only mid-drag, like the yellow snap guide. `wobble` shakes the pointer by that many points as it travels, mostly back and forth along the line it is walking and half as much sideways, which is what a hand actually does. Every drag line reports what the snap guides did across the run: `guides caught 1, let go 1, changed 2, went back on themselves 0`. The last number is the one to read — a walk over a dense screenshot honestly crosses dozens of lines, but a guide that RETURNS to one it just left is the flicker, and it should be zero however hard the hand shakes. `Scripts/playtest/snap-hold-walk.json` and `snap-hold-foot-walk.json` are the walks that measure it. `cancel` presses Escape half way along the travel and then carries on to the end and lets go, which is a hand changing its mind: a walk that passes it has proved both that the drag went back AND that the rest of the gesture did nothing, since the button is still down for all of it. The Escape is handed to the canvas the way AppKit hands a key to whatever holds the keyboard. `Scripts/playtest/motion-pivot-walk.json` is the walk that uses it. `showsBox: true` claims the canvas was outlining the box this drag was MAKING while the button was still down, and that the box outlined is exactly where the thing landed once it came up. It is the claim for a container that arranges itself: a stack does not move its rows when its box changes and has no edge of its own, so a picture taken mid-drag looks the same whether the outline is live, frozen or missing entirely, and only the app can settle it. It takes no numbers on purpose, because the claim is that the outline and the landing AGREE. `showsBox: false` claims the opposite, and is how a screen, a plain group and a copy of a component are held to showing their resize by themselves rather than growing a second edge. Left off, a drag claims nothing either way. `Scripts/playtest/frame-live-other-kinds-walk.json` is the walk that uses both. |
 | `focus` | `field` | Gives the keyboard to a named text field in the inspector, by the label the field shows ("W", "H", "X"). Everything after it — `type`, `key` tab, an arrow key — then goes to that field, the way it would for a person who clicked it. Fails with the list of fields that ARE on screen, which is usually the fastest way to learn why a section is not showing. Needed because `click` goes to the canvas view and can never reach the inspector. |
@@ -783,6 +783,59 @@ said Clip contents cuts the words off, so scrolling to the switch is exactly
 what a person does. `dock-picked-first` DOES claim a section is on screen
 without scrolling, which is why it is still red rather than revealed, and why
 picking-a-text-layer-leaves-its-settings-below-the-fold owns it.
+
+## What resting the pointer on something proves
+
+A lot of this app answers a pointer that is only resting. The line at the foot
+of the canvas stops its own clock while you are reaching for its button, a
+capture tile shows what you can do with it, a row lights up, a control raises
+its tip. None of it was reachable from a walk until 2026-09-17, and a walk
+written to prove a hover worked reported nothing at all: it rested the pointer,
+the app noticed nothing, and every step after it passed.
+
+**Why a mouse event cannot do it.** AppKit does not learn where the pointer is
+from an event. It watches the REAL cursor and turns crossings of it into
+`mouseEntered` and `mouseExited`, and SwiftUI's `.onHover` sits at the end of
+that chain. A walk has no real cursor, and it may not take the user's. Five
+ways of faking it were measured on the notice pill's own button and all five
+left `.onHover` silent: delivering `mouseEntered` and `mouseMoved` by hand to
+the SwiftUI hosting view's own tracking area, `window.sendEvent`,
+`NSApp.sendEvent`, a real `CGEvent` posted back to our own process, and warping
+the actual cursor onto the button with the app activated.
+
+**What a walk does instead.** Every hover in the app is written
+`.playtestHover { … }` rather than `.onHover { … }`. That is the same
+`.onHover` plus, in a probe build only, an invisible marker carrying the very
+same closure and sitting on exactly the view the hover is attached to. A walk's
+pointer finds the markers under its point and runs their closures, which is the
+path `toolFlyout` already takes for a SwiftUI list no synthetic click can
+reach. So what a walk proves is everything that happens BECAUSE of a hover, at
+the place a hover really happens, measured against the live layout; what it
+cannot prove is SwiftUI's own delivery of the crossing. A bare `.onHover`
+anywhere in `Sources/Photonz` fails `Scripts/test.sh`
+(`PlaytestHoverIsReachableTests`), because one that creeps back in is a
+reaction no walk can see break.
+
+Nested regions both count, which is what a real pointer does too: a hand over a
+button inside a row hovers the button and the row.
+
+**Which steps move the pointer:**
+
+| Step | Moves the pointer | Raises a tooltip |
+| --- | --- | --- |
+| `move` | yes, to a point or onto a named control | no |
+| `hover` | yes | yes |
+| `click`, `drag`, `press`, `selectRow`, everything else | no | no |
+
+A press does not move the pointer on purpose: it is one event at a position,
+and a walk that wants the app to believe the pointer travelled there first says
+so with a `move`. To let go of a hover, move the pointer somewhere else; there
+is no step for lifting it off, because there is no such thing for a hand
+either.
+
+`Scripts/playtest/notice-waits-under-the-pointer-walk.json` is the walk that
+reads all of this: it rests on the pill's button, proves the pill outlives its
+own six seconds, walks away, and proves the pill then leaves by itself.
 
 ## What a wait waits for
 

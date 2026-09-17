@@ -239,7 +239,7 @@ private struct HistoryOverlayCell: View {
         .contentShape(Rectangle())
         // Hover only reveals this tile's actions (via `hovered`) — it must NOT
         // move the keyboard selection outline (that's ← / → only).
-        .onHover { hovered = $0 }
+        .playtestHover("capture tile") { hovered = $0 }
     }
 
     @ViewBuilder

@@ -230,7 +230,7 @@ struct MotionStripRailView: View {
             .frame(height: Self.height)
             .background(isPointedAt ? AnyShapeStyle(.quaternary.opacity(0.5))
                                     : AnyShapeStyle(.clear))
-            .onHover { isPointedAt = $0 }
+            .playtestHover { isPointedAt = $0 }
             .accessibilityLabel("Open the timing strip: \(editorState.motionStripSummary)")
             .panelHelp("Open the timing strip (⌥⌘T)")
             // What the row SAYS is what a walk claims, so the summary is the

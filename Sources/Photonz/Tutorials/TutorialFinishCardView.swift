@@ -102,7 +102,7 @@ private struct TutorialFinishRow: View {
         }
         .buttonStyle(.plain)
         .keyboardShortcut(isDefault ? .defaultAction : nil)
-        .onHover { hovering = $0 }
+        .playtestHover { hovering = $0 }
         // Named for a walk, and for a screen reader, by what it DOES rather
         // than by the words it currently wears.
         .accessibilityIdentifier("tutorialFinish.\(choice.name)")

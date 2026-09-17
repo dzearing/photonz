@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/notice-waits-under-the-pointer",
+  "seed": "The line at the foot of the canvas carries a button, and it leaves after six seconds. Resting the pointer on that button is supposed to stop its clock, so the line cannot walk away while you are reaching for it, and moving off is supposed to start the clock again. Neither half had ever been checked: a walk's pointer could not make anything in the app notice it was there until PlaytestPointer, so a walk written to prove this reported nothing at all. This is that walk.",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true
+    }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "expectNotice", "says": "Separated", "held": false },
+    { "do": "describe", "stage": "1-the-line-is-up",
+      "note": "THE PILL: separating a screenshot puts up a line carrying the button Read the Words. Nothing is resting on it yet, so noticeHeld is false and its six second clock is running." },
+
+    { "do": "move", "control": "Read the Words" },
+    { "do": "expectNotice", "says": "Separated", "held": true },
+    { "do": "snapshot", "name": "notice-1-pointer-on-the-button" },
+    { "do": "describe", "stage": "2-the-pointer-is-on-the-button",
+      "note": "THE POINTER ARRIVES: resting on the button holds the line open. noticeHeld is true. This is the half no walk could see before." },
+
+    { "do": "wait", "seconds": 7, "onTheClock": true },
+    { "do": "expectNotice", "says": "Separated", "held": true },
+    { "do": "describe", "stage": "3-past-its-six-seconds",
+      "note": "PAST THE CLOCK: seven seconds have gone by and the pill's own life is six, so without the hold it would be gone. It is still up and still held." },
+
+    { "do": "move", "at": [40, 40] },
+    { "do": "expectNotice", "says": "Separated", "held": false },
+    { "do": "describe", "stage": "4-the-pointer-walks-away",
+      "note": "THE POINTER LEAVES: the hold is taken back the moment the pointer is off the button. The line is still up, because letting go gives the whole six seconds again rather than the remainder." },
+
+    { "do": "wait", "seconds": 7, "onTheClock": true },
+    { "do": "expectNotice", "absent": true },
+    { "do": "describe", "stage": "5-and-then-it-goes",
+      "note": "THE POINT: the fresh clock ran out and the line left by itself. A hold that never ended would have left it on screen for good, which is the bug this walk exists to catch." }
+  ]
+}

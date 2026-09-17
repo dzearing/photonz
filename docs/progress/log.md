@@ -17836,3 +17836,48 @@ Reproduced again with this change stashed, so it predates it. It is
 `trim-keeps-the-piece-you-picked-walk` has been failing on.
 
 Next: that Delete key, and the pending sweep once the screen is unlocked.
+
+## 2026-09-17 — A walk can rest the pointer on something
+
+A scripted walk's pointer could not make the app notice it. `move` put a point
+into a mouse event and handed it to the canvas; everything drawn OVER the canvas
+reacts through SwiftUI's `.onHover`, and nothing a walk sends reaches that. So a
+walk written to prove a hover worked reported nothing at all and every step after
+it passed, and the whole walk set was blind to hover breaking.
+
+Reproduced first, then five ways of faking a pointer were measured against the
+notice pill's own button and all five left `.onHover` silent: `mouseEntered` and
+`mouseMoved` delivered by hand to the SwiftUI hosting view's own tracking area,
+`window.sendEvent`, `NSApp.sendEvent`, a real `CGEvent` posted back to our own
+process, and warping the actual cursor onto the button with the app activated.
+AppKit works hover out from the real cursor and a walk has none, nor may it take
+the user's.
+
+What landed instead is the path `toolFlyout` already takes for a SwiftUI list no
+synthetic click can reach: every hover in the app is now written
+`.playtestHover { … }`, which is the same `.onHover` plus, in probe builds only,
+an invisible marker carrying the very same closure on the very same view. A
+walk's pointer finds the markers under its point and runs them.
+
+- `Sources/Photonz/Playtest/PlaytestPointer.swift` — the marker, the modifier and
+  the pointer's own bookkeeping (enter, leave, nested regions both count).
+- 20 `.onHover` call sites rewritten. `PlaytestHoverIsReachableTests` fails the
+  build's tests if a bare one creeps back in.
+- `move` takes `control` as well as `at`, found the way a `press` finds one, so a
+  walk can rest on a button whose position depends on the words on it.
+- `wait` takes `onTheClock`, because a wait that ends when the app goes quiet
+  proves nothing about a six second timer.
+- `expectNotice` takes `held`.
+- `hover` joined `stepsThatSurviveALock`: forced under a lock, six tooltip walks
+  were watched and five ran green, so a tooltip's name was never an
+  accessibility name. Four of them now run unforced on a locked Mac.
+- `Scripts/playtest/notice-waits-under-the-pointer-walk.json` is the new walk. It
+  was checked against a deliberately broken `holdCanvasNotice` and fails there,
+  naming the control to rest on.
+
+Audit: `queue/audits/2026-09-17-a-walk-can-rest-a-pointer.json`. A full sweep was
+requested, because `move` and `hover` are in 59 walks between them.
+
+Next: the sweep's answer. Open question: a pointer resting on a region whose view
+is covered by another still counts as resting on it; nothing in the app hits that
+today, but it is the one place this differs from a hand.

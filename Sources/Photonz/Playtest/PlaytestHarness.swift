@@ -159,6 +159,9 @@ private final class Run {
             return
         }
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
+        // The pointer starts nowhere. Whatever the last walk in this process
+        // was resting on is gone with its window, so there is nothing to leave.
+        PlaytestPointer.forget()
         // Before anything is driven: a locked screen strips the NAME off every
         // control, and finding a control by name is how a walk does anything at
         // all, so whatever this run found would be a fact about the lock and
@@ -493,8 +496,18 @@ private final class Run {
             let url = try fileURL(file)
             try await open(url, size: size, number: number)
 
-        case .wait(let seconds):
-            let said = await settle(for: seconds)
+        case .wait(let seconds, let onTheClock):
+            // On the clock, the whole time is spent: a walk waiting out
+            // something that leaves BY ITSELF is not waiting for the app to
+            // finish anything, and an app with nothing to do goes quiet in a
+            // tenth of a second.
+            let said: String
+            if onTheClock {
+                await sleep(seconds)
+                said = "\(seconds)s on the clock, spent in full"
+            } else {
+                said = await settle(for: seconds)
+            }
             note(number, step.name, "\(said); \(MainThreadMeter.shared.report)")
 
         case .key(let key, let modifiers):
@@ -617,22 +630,53 @@ private final class Run {
             note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app",
                  state: describe())
 
-        case .move(let at, let modifiers):
+        case .move(let target, let modifiers):
             let canvas = try requireCanvas()
-            let p = try viewPoint(at)
+            let flags = eventFlags(modifiers)
+            // Where the pointer is going, and what to call the place in the
+            // log. A control is found through the app's own register, and
+            // scrolled to if the dock has it below the fold, exactly as a
+            // `press` finds one — so a walk resting on something whose words
+            // changed fails with the list of what IS on screen rather than
+            // coming to rest beside it and proving nothing.
+            let place: String
+            let inWindow: CGPoint
+            switch target {
+            case .point(let at):
+                inWindow = canvas.convert(try viewPoint(at), to: nil)
+                place = "to \(short(at.point)) \(at.space.rawValue) = view \(short(try viewPoint(at)))"
+            case .control(let name, let row):
+                let (found, effort) = try await reachableTarget(name, in: row)
+                let settledTarget = await settled(found, named: name, in: row).target
+                guard let itsWindow = settledTarget.window, itsWindow === (try requireWindow()) else {
+                    throw Failure(description: "the control \"\(settledTarget.name)\" is not in the "
+                        + "editor window, so a move cannot reach it; use a \"hover\" step with a "
+                        + "\"window\" for a control in one of the app's other windows")
+                }
+                inWindow = settledTarget.point
+                let where_ = settledTarget.detail.isEmpty ? "" : " in \(settledTarget.detail)"
+                place = "onto \"\(settledTarget.name)\"\(where_) at window \(short(settledTarget.point))"
+                    + (effort.isEmpty ? "" : "; \(effort)")
+            }
             // The canvas learns about held modifiers from `flagsChanged`, not
             // from the mouse event, so a walk that wants ⌥ held while the
             // pointer rests has to put it where the real key would have left
             // it. Setting it here and letting `mouseMoved` read it lands the
             // canvas in the same state a person holding ⌥ would.
-            let flags = eventFlags(modifiers)
             canvas.pointerModifiers = flags
-            if let event = mouseEvent(.mouseMoved, at: p, on: canvas, flags: flags) {
+            let inCanvas = canvas.convert(inWindow, from: nil)
+            if let event = mouseEvent(.mouseMoved, at: inCanvas, on: canvas, flags: flags) {
                 canvas.mouseMoved(with: event)
             }
+            // The canvas works out for itself what a pointer over IT means.
+            // What is drawn OVER the canvas — the line at the foot of it, a
+            // tool chip, a row in a panel — reacts through `.onHover`, and no
+            // synthesized event on this machine reaches that, so the pointer
+            // runs those closures itself. See `PlaytestPointer`.
+            let pointer = window.map { PlaytestPointer.rest(at: inWindow, in: $0) }
             await sleep(0.05)
             let held = modifiers.isEmpty ? "" : " holding " + modifiers.map(\.rawValue).joined(separator: "+")
-            note(number, step.name, "to \(short(at.point)) \(at.space.rawValue) = view \(short(p))" + held)
+            note(number, step.name, place + held + (pointer.map { "; \($0)" } ?? ""))
 
         case .pinch(let to, let steps):
             let canvas = try requireCanvas()
@@ -717,6 +761,11 @@ private final class Run {
             // Through the window, the way a real pointer's move arrives, so
             // AppKit's own tracking areas do the entering and leaving.
             window.sendEvent(event)
+            // A control that reacts to the pointer resting on it does so
+            // through `.onHover`, which no synthesized event reaches, so this
+            // step moves the walk's pointer as `move` does as well as raising
+            // the tooltip.
+            let pointer = PlaytestPointer.rest(at: location, in: window)
             await sleep(0.1)
             var path = "window"
             // If the window did not turn the move into enter and leave
@@ -731,7 +780,9 @@ private final class Run {
             }
             hovered = anchor
             await sleep(HintTooltipController.restDelay + 0.4)
-            note(number, step.name, "\(place) via \(path) events: \(controller.visibleDescription ?? "no tooltip")", state: describe())
+            note(number, step.name,
+                 "\(place) via \(path) events: \(controller.visibleDescription ?? "no tooltip"); \(pointer)",
+                 state: describe())
 
         case .click(let at, let count, let modifiers):
             let canvas = try requireCanvas()
@@ -1490,8 +1541,9 @@ private final class Run {
         case .expectClickReaches(let at, let what):
             note(number, step.name, try checkClickReaches(at, what: what), state: describe())
 
-        case .expectNotice(let says, let absent):
-            note(number, step.name, try checkNotice(says: says, absent: absent), state: describe())
+        case .expectNotice(let says, let absent, let held):
+            note(number, step.name, try checkNotice(says: says, absent: absent, held: held),
+                 state: describe())
 
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
@@ -4332,7 +4384,7 @@ private final class Run {
     }
 
     /// What the notice pill under the canvas is saying right now.
-    private func checkNotice(says: String?, absent: Bool?) throws -> String {
+    private func checkNotice(says: String?, absent: Bool?, held: Bool?) throws -> String {
         let editor = try requireEditor()
         let pill = editor.copyConfirmation
         let reading = pill.map { "\($0.title) · \($0.detail)" }
@@ -4340,7 +4392,31 @@ private final class Run {
             guard let reading else { return "no pill under the canvas, as claimed" }
             throw Failure(description: "a pill is up under the canvas saying \"\(reading)\"")
         }
-        guard let says else { return reading.map { "the pill says \"\($0)\"" } ?? "no pill" }
+        // Whether a pointer resting on the pill's button is stopping its clock.
+        // Only a pill that HAS a button can be held, so a claim of held on an
+        // inert one says which of the two is wrong.
+        var about = ""
+        if let held {
+            guard let reading else {
+                throw Failure(description: "no pill is up under the canvas, so nothing can be "
+                    + "\(held ? "held open" : "let go") by a pointer")
+            }
+            guard editor.canvasNoticeHeld == held else {
+                let has = pill?.action != nil
+                throw Failure(description: "the pill \"\(reading)\" is "
+                    + "\(editor.canvasNoticeHeld ? "held open by the pointer" : "not held")"
+                    + ", and this step claims it is \(held ? "held" : "not held")."
+                    + (has ? " Its button is \"\(pill?.action?.label ?? "")\"; rest the pointer on "
+                         + "that control with a \"move\" step to hold it."
+                       : " This pill carries no button, and only a pill with one can be held."))
+            }
+            about = editor.canvasNoticeHeld
+                ? ", held open by the pointer as claimed"
+                : ", not held by the pointer as claimed"
+        }
+        guard let says else {
+            return (reading.map { "the pill says \"\($0)\"" } ?? "no pill") + about
+        }
         guard let reading else {
             throw Failure(description: "no pill is up under the canvas, so it cannot be saying "
                 + "\"\(says)\"")
@@ -4349,7 +4425,7 @@ private final class Run {
             throw Failure(description: "the pill says \"\(reading)\", which does not carry "
                 + "\"\(says)\"")
         }
-        return "the pill says \"\(reading)\", carrying \"\(says)\" as claimed"
+        return "the pill says \"\(reading)\", carrying \"\(says)\" as claimed" + about
     }
 
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {

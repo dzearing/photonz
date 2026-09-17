@@ -73,7 +73,7 @@ struct CutStrip: View {
                         if wasPlayingBeforeDrag { state.play() }
                     }
             )
-            .onHover { hovering = $0 }
+            .playtestHover { hovering = $0 }
             .animation(.easeOut(duration: 0.12), value: hovering)
         }
         .frame(height: hitHeight)

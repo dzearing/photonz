@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T11:28:16.144Z",
-  "updated": "2026-09-17T12:13:56.982Z",
+  "updated": "2026-09-17T16:23:49.536Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-17 while fixing the notice pill. The harness move step sends a synthesized mouseMoved through window.sendEvent and then delivers mouseEntered/mouseExited BY HAND, but only to its own HintTooltipController anchor views (PlaytestHarness, case .move). SwiftUI .onHover never fires. Reproduction, with EditorState.canvasNoticeHeld newly exposed in the describe state as noticeHeld: /tmp/nw/hover.json separates a screenshot, then moves to window (687, 806) which is the middle of the pill button, then to (500, 806) which is its words, then back. Every describe reports noticeHeld=false: \"1-on-the-button held= False, 2-on-the-words held= False, 3-back-on-the-button held= False\". Run again with the pill fix stashed and the probe rebuilt, so that .onHover sits on the whole capsule as it shipped, the answer is the same three falses, so this is the harness and not the app and it has always been so. Likely fix: after sending the move, tell AppKit the pointer moved for real (NSWindow tracking updates read the actual mouse location), or drive the hosting view's tracking areas the way the tooltip anchors are driven. Worth checking whether a walk can instead ask the app what it thinks is hovered, which would be cheaper and is how expectCue already works.",
@@ -31,7 +31,26 @@
     {
       "t": "2026-09-17T12:13:56.981Z",
       "note": "seq 2930 -> 120"
+    },
+    {
+      "t": "2026-09-17T15:39:46.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T15:50:24.358Z",
+      "note": "Reproduced first, then tried every way of faking a pointer. Point checked against the real control: the pill's button marker reads 'Read the Words[Canvas notice]@635,84 103x20' in window space and the walk rested at (687,94), dead centre of it, so the aim was never the problem. Five ways of telling the app the pointer was there, all with noticeHeld staying false at every step: (1) mouseEntered+mouseMoved delivered by hand to every tracking area under the point, including the SwiftUI hosting view's own (opts 643 = inVisibleRect|activeAlways|mouseMoved|enteredAndExited, owner the hosting view itself); (2) window.sendEvent and NSApp.sendEvent of a synthesized mouseMoved; (3) CGEvent(.mouseMoved).postToPid(self); (4) CGWarpMouseCursorPosition so the REAL cursor sat on the button (window.mouseLocationOutsideOfEventStream confirmed real=687,94) with no synthetic events at all; (5) warp plus NSApp.activate plus makeKeyAndOrderFront. None of them fired .onHover. (4) and (5) are inconclusive on their own because the Mac's screen was locked and the login window is over the app, so the window server would not route a real crossing to us anyway, and warping the user's pointer is not something a walk may do in production regardless."
+    },
+    {
+      "t": "2026-09-17T16:23:49.535Z",
+      "note": "walks none -> notice-waits-under-the-pointer-walk, tool-tips, segment-tooltips-walk, panel-toggle-titlebar-walk, marquee-answers-to-m-walk"
     }
   ],
-  "walks": []
+  "walks": [
+    "notice-waits-under-the-pointer-walk",
+    "tool-tips",
+    "segment-tooltips-walk",
+    "panel-toggle-titlebar-walk",
+    "marquee-answers-to-m-walk"
+  ],
+  "started": "2026-09-17T15:39:46.684Z"
 }

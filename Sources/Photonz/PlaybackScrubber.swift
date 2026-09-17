@@ -58,7 +58,7 @@ struct PlaybackScrubber: View {
                         if wasPlayingBeforeDrag { state.play() }
                     }
             )
-            .onHover { hovering = $0 }
+            .playtestHover { hovering = $0 }
             .animation(.easeOut(duration: 0.12), value: hovering)
             .animation(.easeOut(duration: 0.12), value: dragging)
         }
@@ -122,7 +122,7 @@ struct VolumeControl: View {
                             state.setVolume(Double(fraction))
                         }
                 )
-                .onHover { hovering = $0 }
+                .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
             }
             .frame(width: trackWidth, height: 24)
