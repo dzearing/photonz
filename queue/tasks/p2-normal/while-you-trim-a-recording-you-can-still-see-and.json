@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:00.657Z",
-  "updated": "2026-09-17T11:48:12.822Z",
+  "updated": "2026-09-17T11:48:26.977Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json, written by the runner who built trim mode: \"Trim mode does not show which piece is selected, the way the strip does outside it. There is no Delete while trimming, and an accent block would compete with the accent handles and the accent window border, so the track stays about the window and nothing else.\" That colour argument is the thing to solve rather than to repeat: the pick probably wants a quieter mark than the accent block used outside trim mode. Code: Sources/Photonz/TrimTimeline.swift draws the blocks and the handles, Sources/Photonz/VideoEditorState.swift holds the pieces (cuts, VideoCutList) and deleteSelectedPiece() at line 540, Sources/Photonz/VideoEditorView.swift:212 is where the Delete key is gated on cuttingAvailable and canDeleteSelectedPiece. Nothing about this has been seen on a screen: the whole video track was built while the Mac was locked, and that audit says so at the top in capitals.",
@@ -54,11 +54,16 @@
     {
       "t": "2026-09-17T11:48:12.821Z",
       "note": "left rough, not filed: (a) the outline may be too quiet on a piece the window keeps in full — cannot be settled without looking at it, so it is an evaluate question on the audit rather than a task; (b) the trim row is now a round icon button next to three text buttons, a look nobody has seen; (c) dragging a handle moves the playhead and the playhead is what picks a piece, so a handle drag quietly changes which piece Delete would take — inherent to there being no separate selection, and on the audit for the user to react to. Folded into an existing task: handles still do not catch on a cut (a-trim-handle-catches-on-a-cut-as-it-passes). Filed: undo-is-reachable-while-you-are-trimming-a-recor."
+    },
+    {
+      "t": "2026-09-17T11:48:26.975Z",
+      "note": "The picked piece keeps a quiet white outline under the trim handles, the trash button joined the trim row, and Delete now drops the piece without throwing away the window you were setting: VideoCutList.trimAfterRemovingPiece maps the window (and the baseline Cancel restores) through the delete, undo moves both back. Commit afc59db1. Verified: 8096 tests pass, eight pinning the window-moves-with-the-pieces arithmetic and two replaying both new walks against the model so every number they claim is right. NOT verified on a screen: the Mac was locked all task, so trim-keeps-the-piece-you-picked-walk and trim-cancel-after-a-delete-walk parse but have never run and there is no capture or render. Sweep requested. Audit: queue/audits/2026-09-17-video-cutting-trim-pick.json."
     }
   ],
   "started": "2026-09-17T11:36:41.010Z",
   "walks": [
     "trim-keeps-the-piece-you-picked-walk",
     "trim-cancel-after-a-delete-walk"
-  ]
+  ],
+  "completed": "2026-09-17T11:48:26.976Z"
 }

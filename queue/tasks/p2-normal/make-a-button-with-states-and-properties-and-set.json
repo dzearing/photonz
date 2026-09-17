@@ -4,12 +4,12 @@
   "goal": "Somebody who knows design tools sat down with components and could not do the one thing components are for. Take the whole journey and make it work end to end: draw a button, give it a label you can change per copy, give it a resting, hovered, pressed and disabled look, place copies, and set each copy's look and label without leaving the panel or guessing what anything is called.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 210,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:03:35.089Z",
-  "updated": "2026-09-16T12:23:34.243Z",
+  "updated": "2026-09-17T12:13:56.708Z",
   "deps": [
     "every-pane-says-what-it-is-for-in-words-somebody",
     "a-copy-of-a-component-is-configured-not-authored"
@@ -56,6 +56,10 @@
     {
       "t": "2026-09-16T12:23:34.242Z",
       "note": "seq 2.4 -> 210"
+    },
+    {
+      "t": "2026-09-17T12:13:56.707Z",
+      "note": "seq 210 -> 60"
     }
   ]
 }

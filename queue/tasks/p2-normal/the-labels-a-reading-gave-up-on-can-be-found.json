@@ -4,12 +4,12 @@
   "goal": "Read every label in a separated screenshot and a line tells you how it went: so many came back as text, three stayed pictures. Those three are the ones you have to deal with by hand, and the app will not tell you which they are. The only way to find them is to scroll the layers list looking for rows still called Text and guess. Make the count the way to them: press it and those are what you have picked.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:17.467Z",
-  "updated": "2026-09-17T10:56:19.433Z",
+  "updated": "2026-09-17T12:13:56.571Z",
   "deps": [
     "a-notice-at-the-foot-of-the-canvas-stops-swallow"
   ],
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-17T10:56:19.432Z",
       "note": "seq 2930 -> 80"
+    },
+    {
+      "t": "2026-09-17T12:13:56.570Z",
+      "note": "seq 80 -> 30"
     }
   ]
 }

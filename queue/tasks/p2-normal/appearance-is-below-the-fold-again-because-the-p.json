@@ -4,12 +4,12 @@
   "goal": "With a piece of text picked in a three layer document, the right hand panel asks for more height than the tallest window this display can give it, and the section that lost the argument is Appearance: its last stretch now sits below the bottom of the panel where it used to be on screen. You asked on 2026-09-07 that Appearance and Effects are the two sections nobody should ever have to scroll to, and shipped work has quietly walked that back. Decide how the panel keeps that promise when what it wants does not fit, and make it keep it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 100,
+  "seq": 50,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-16T16:48:40.944Z",
+  "updated": "2026-09-17T12:13:56.661Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -56,6 +56,14 @@
     {
       "t": "2026-09-16T16:48:40.942Z",
       "note": "Measured and written down; the fix needs an answer. At 1200x720 the dock has 609pt and is asked for 660-1102, so Appearance or Effects is below the fold 44% of the time, and Appearance alone reaches 669pt - taller than the whole panel. Seven previous fixes were all re-orderings, which only move which section loses. The three real ways out are visibly different products and none covers every case alone, so a decision card is open (recommended: let the height budget shorten Appearance, the only answer that cannot fail). The measurement and the budget rule shipped in InspectorDockLayout.swift regardless of the answer; b90b6e7b."
+    },
+    {
+      "t": "2026-09-17T12:13:48.469Z",
+      "note": "Design review 2026-09-17: this is the one IA finding of the cycle and it is getting worse rather than waiting quietly. Two more sections landed in the same column in the last 24 hours (Motion moved under Effects, queue/audits/2026-09-16-motion-under-effects.json; the Sections row shipped and was then corrected twice for counting wrong). The card has been up since 2026-09-16 16:46Z. A scrub item has been added to two-rules-in-ux-patterns-get-scrubbed-a-callout so that whichever way you answer, the rule is written down and the next section does not have to work it out again."
+    },
+    {
+      "t": "2026-09-17T12:13:56.660Z",
+      "note": "seq 100 -> 50"
     }
   ],
   "started": "2026-09-16T16:42:58.097Z"

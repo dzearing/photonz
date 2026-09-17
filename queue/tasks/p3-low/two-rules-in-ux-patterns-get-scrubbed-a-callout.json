@@ -4,12 +4,12 @@
   "goal": "Several written rules in the shared patterns document have been bent by things that shipped, each time because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 100,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-16T12:23:35.519Z",
+  "updated": "2026-09-17T12:13:57.122Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -63,6 +63,14 @@
     {
       "t": "2026-09-16T12:23:35.518Z",
       "note": "seq 80 -> 100"
+    },
+    {
+      "t": "2026-09-17T12:13:48.371Z",
+      "note": "Design review 2026-09-17 adds an item to this scrub, from the IA finding of the pass. The shared patterns have no rule for what a panel column owes when the sections in it want more height than the window can give. The right hand panel has been over-subscribed twice in a fortnight and both times the section that lost the argument was chosen by accident rather than by rule: Appearance fell below the fold again on 2026-09-16 (appearance-is-below-the-fold-again-because-the-p, blocked on the user's card since 16:46Z), and the Sections row was added on 2026-09-17 partly to manage the same crowding. Motion was moved under Effects in the same cycle (queue/audits/2026-09-16-motion-under-effects.json), which is one more section in the same column. The rule to write: which sections a panel may push below the fold, what it owes the one it pushes, and what a new section has to prove before it may join the column. Cite the audits above, and do not write it until the user's card is answered, because the answer settles it."
+    },
+    {
+      "t": "2026-09-17T12:13:57.121Z",
+      "note": "seq 100 -> 20"
     }
   ]
 }

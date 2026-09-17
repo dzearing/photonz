@@ -4,12 +4,12 @@
   "goal": "The Export sheet weighs the file for the lossy formats, so you can see a quality slider make it smaller. PNG never weighs itself. That gap has started to matter: an icon can now be exported with nothing behind it, and the one thing a person wants to see when they tick that box is the file getting smaller, which is exactly what the sheet refuses to show them for the format icons are usually saved in. Give PNG the same readout the others have.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:31.422Z",
-  "updated": "2026-09-17T10:57:00.821Z",
+  "updated": "2026-09-17T12:13:56.754Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-icon-export.json: \"PNG shows no file size on the sheet, so you cannot see the file get smaller when the canvas goes. Only the lossy formats weigh themselves.\" The sheet is the destination-first export sheet; the weighing lives with the quality control shipped under next-export-quality. PNG is lossless so there is no slider to move, which is presumably why it was never weighed, but the weight still changes with the picture and with the canvas going. Watch the cost: weighing a PNG means encoding it, and the lossy path presumably already has somewhere to hang that work off. The same audit's next rough line, the transparency swatch sitting hard right of the checkbox it explains, is a layout nit that did not earn a task and is left in that audit.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-17T10:57:00.820Z",
       "note": "seq 2930 -> 110"
+    },
+    {
+      "t": "2026-09-17T12:13:56.753Z",
+      "note": "seq 110 -> 70"
     }
   ]
 }

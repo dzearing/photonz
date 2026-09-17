@@ -1,24 +1,25 @@
 {
   "id": "an-audit-gets-a-real-picture-of-the-app-again",
-  "title": "An audit gets a real picture of the app again",
-  "goal": "The loop photographs the app for every audit the user reads, and right now every one of those pictures is an offscreen drawing of the window rather than the window itself. The app says it is allowed to record the screen and then fails every time it tries, so nobody reading an audit is seeing what the app actually looks like: colours, shadows and anything layered over the window are all missing.",
+  "title": "An audit gets a photograph of the app even while the Mac is locked",
+  "goal": "Almost every audit the user reads this week opens by saying there is no picture of the app in it. The reason given is that a locked Mac cannot be photographed, and that reason is wrong: the camera works fine under a lock, and several runners have proved it by forcing a run and getting real window captures. What actually stops a walk is that a lock takes the NAME off every control, so a walk cannot find anything. Steps that never look a control up by name, which includes every snapshot, are unaffected. Make the loop take the pictures it can take instead of writing an apology, so the user can see what shipped.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 20,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-17T10:45:50.723Z",
-  "deps": [
-    "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
-  ],
+  "updated": "2026-09-17T12:13:56.298Z",
+  "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-09-14 23:13 and again at 23:54 and 00:20, three separate probe launches. Scripts/probe-app.sh prints \"==> Grants: probe Screen Recording granted\" and every snapshot step then logs:\n\n  [0 capture] failed: Error Domain=com.apple.ScreenCaptureKit.SCStreamErrorDomain Code=-3811 \"Failed to start stream due to audio/video capture failure\"\n\nso <name>.png (the offscreen render) is written and <name>-sc.png never is. Run any walk with a snapshot step to see it, for example Scripts/playtest.sh Scripts/playtest/path-line-style-walk.json, then look in /tmp/photonz-playtest/path-line-style: four .png files, no -sc.png, and the error above six times in log.json.\n\nIt WAS working the day before: Scripts/playtest/out/ in the repo still holds panel-says-less-three-picked-sc.png and panel-says-less-arrange-reference-sc.png written at 2026-09-14 20:27 by the previous task. So something between then and now stopped it, which is the thing to find. Candidates worth checking in order: whether the probe bundle was re-signed with a different identity (the grant is pinned to the code identity, and CLAUDE.md records this exact failure mode for the dev app: \"the app shows as granted/on in System Settings but still can not capture\"); whether SCShareableContent is being asked for while the probe is not frontmost; and whether the grant check the Grants line prints is asking a different question from the one the capture needs (CGPreflightScreenCaptureAccess says undetermined-or-granted, which is not the same as granted).\n\nThe fix of last resort is documented in CLAUDE.md and needs a person: tccutil reset ScreenCapture com.dzearing.photonz.probe, relaunch, re-grant. A runner cannot do that, so if that is the answer the task is to make the Grants line SAY so instead of claiming the grant.\n\nFound while auditing a-path-says-what-its-colour-paints-how-thick-its, whose audit had to ship offscreen renders and say so.",
+  "notes": "SPOT-CHECKED BY THE DIGEST PASS, 2026-09-17 12:2x, on a Mac locked since 2026-09-14 20:46 (CGSSessionScreenIsLocked true, dist/probe-grants.json screenLocked true).\n\nWhat I ran and what I saw:\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json --no-build\n\nAll 74 steps passed. done.json: status \"ok\", screenLocked true, and six real window captures:\npanel-sections-1-shape-automatic-sc.png ... panel-sections-6-component-copy-sc.png, 2560x1800, about 1MB each,\nagainst 128KB offscreen siblings at 1280x900. I opened panel-sections-2-sections-list-sc.png: it is the real\nwindow, rounded corners, traffic lights, drop shadow, the dark panel, the Sections popover with its switches,\nthe tool bar and the zoom chip. No SCStreamErrorDomain -3811 anywhere in log.json.\n\nThe same walk run plain, without the override, refused as designed: status \"locked\", zero steps, exit 3,\ncapturesSaid \"none. This walk never asked for one.\"\n\nSO THE OLD DIAGNOSIS IN THIS TASK IS DEAD. There is nothing wrong with the grant and nothing wrong with the\ncamera. What is left is a documentation defect that is costing the user every audit:\n\n  queue/bin/runner-prompt.md line 52 says, to every runner:\n    \"**`screen locked` means you get no picture, because the walk will not run at all.** ... Say it in\n    `rough` in one plain sentence and ship the offscreen renders.\"\n  and line 57 still shows the stale example line\n    \"==> Window captures: none. The screen was locked, so macOS refuses every one.\"\n\nCLAUDE.md was corrected on 2026-09-17 (commit bad34165) and now says the opposite: the app still draws, still\nanimates, and \"a snapshot step still photographs the window for real\". runner-prompt.md was never brought into\nline, so most runners obey it and ship nothing.\n\nTHE SPLIT IS VISIBLE IN THE AUDITS. Of the 45 audits written in the 24 hours to 2026-09-17 12:30, 38 mention\nthe lock. Seven runners forced the run and got real photographs (2026-09-16-screen-name-plate,\n2026-09-16-icon-keyline-shapes, 2026-09-16-icon-export-background, 2026-09-16-landing-on-a-screenshot,\n2026-09-15-panel-sections, 2026-09-17-sections-row-count, 2026-09-17-tool-command-row,\n2026-09-17-tutorial-value-trigger). The rest wrote a sentence like \"macOS refuses every capture in that state\"\n(2026-09-16-nested-motion-distance), \"macOS would not photograph the window\"\n(2026-09-16-combined-shape-says-path) or \"NOTHING HERE WAS PHOTOGRAPHED, AND THERE ARE NOT EVEN OFFSCREEN\nRENDERS\" (2026-09-16-video-cutting-trim), which is false on this machine today.\n\nAlready measured by the walks task on 2026-09-16: 'press' and 'expect' go through the playtestControl registry\nand are unaffected by a lock; 'focus', 'field' and 'panelMenu' go through AppKit accessibility and break.\nKnown cost of forcing: colours in a forced capture can read dimmed (queue/audits/2026-09-17-icon-export says\nthe white canvas read grey), and a tutorial card does not draw because the login window is over it\n(queue/audits/2026-09-17-tutorial-value-trigger). Both are worth saying on the picture rather than hiding.\n\nThis does NOT need the Mac unlocked and does NOT need the pending overnight-lock decision card. That is why\nthe dependency on a-hundred-and-fifteen-walks-fail-on-code-that-pa was removed by this pass: the two are\ndifferent jobs. That task makes an unattended sweep trustworthy; this one makes today's audits show the app.",
   "acceptance": [
-    "A walk with a snapshot step writes a real window capture beside its offscreen drawing again",
-    "The line the app prints about what it is allowed to do agrees with what it can actually do: if recording is going to fail, it does not claim to be granted",
-    "A walk run from a clean start proves it, with the capture file listed in its output"
+    "A runner whose task lands while the Mac is locked still ships at least one real photograph of the window when the walk it needs does not look controls up by name, rather than an apology",
+    "queue/bin/runner-prompt.md says what CLAUDE.md says: a lock takes control NAMES away, it does not stop the window being drawn or photographed. The stale \"macOS refuses every one\" example goes",
+    "The runner prompt says which step kinds survive a lock (snapshot, press, expect through the control registry) and which do not (focus, field, panelMenu), so a runner can tell in advance whether its walk can be forced",
+    "A picture taken under a lock is LABELLED as such where the audit shows it, including the two known costs: colours can read dimmed, and a tutorial card does not draw because the login window is over it",
+    "Proved by running it: one task-shaped run on a locked Mac produces an audit with a real -sc.png in it, named in the audit",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {
@@ -148,6 +149,14 @@
     {
       "t": "2026-09-17T10:45:50.722Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-17T12:13:32.588Z",
+      "note": "TRIAGE SPOT-CHECK, digest pass 2026-09-17. Ran the reproduction in the notes and it does NOT reproduce: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json --no-build passed all 74 steps on a locked Mac and wrote six real 2560x1800 window captures, no SCStreamErrorDomain -3811 anywhere. I opened one and it is the real window with its shadow, traffic lights, dark panel and the Sections popover. The same walk run plain refused as designed (status locked, 0 steps, exit 3). So the grant is fine and the camera is fine. The task has been rewritten around what IS broken and reproduced: queue/bin/runner-prompt.md line 52 tells every runner a locked screen means no picture and to ship offscreen renders, and line 57 still prints the stale 'macOS refuses every one' example, both of which CLAUDE.md contradicted on 2026-09-17 (bad34165). Seven runners forced the run and got photographs; the rest obeyed the prompt and shipped nothing. Kept at p1 rather than dropped to p2 as the spot-check rule would normally require, because the SUBJECT reproduces hard (38 of 45 audits in 24 hours mention the lock, most with no picture at all) and the fix is now concrete and needs nobody to unlock anything. Removed the dependency on a-hundred-and-fifteen-walks-fail-on-code-that-pa for the same reason: it is claimable today."
+    },
+    {
+      "t": "2026-09-17T12:13:56.297Z",
+      "note": "seq 20 -> 10"
     }
   ],
   "started": "2026-09-15T10:05:49.238Z",

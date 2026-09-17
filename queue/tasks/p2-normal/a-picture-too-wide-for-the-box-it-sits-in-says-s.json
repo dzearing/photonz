@@ -4,12 +4,12 @@
   "goal": "A stack can be told the widest it may get, and the words inside it now wrap to fit that. A picture or a drawn shape inside the same stack does not: it hangs out over the edge at its own size, and as far as anyone has checked nothing says a word about it. A card with a screenshot in it is one of the most ordinary things somebody builds here, so the first time they cap a card's width the picture breaks out of it with no explanation. Either it is fitted, or the group says it has run past its edge the way it already does for a row of chips.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:25.885Z",
-  "updated": "2026-09-17T10:56:31.378Z",
+  "updated": "2026-09-17T12:13:56.616Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-nested-ceiling-wrap.json, written by the runner who had just made a ceiling reach the words inside a nested box: \"A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows.\" The \"no sign\" half is worth checking before anything is built, because docs/design/ui-building.md \"Landed: a group says when its contents run past its edge\" (next-auto-layout, 2026-09-08) says an arranging group already prints one line naming the edge and the width it would need, modelled in GroupOverflow and Layer.contentsOverflow and printed by ArrangementInspector. If that line already fires here the whole task is a walk plus a note; if it does not, the gap is in the flow that feeds GroupOverflow. Shrink-to-fit does not exist anywhere in the app, so introducing it is a bigger decision than reporting: prefer the report unless the flow makes fitting obvious, and if fitting turns out to be the right answer open a card rather than shipping a new sizing rule on the loop's own judgment.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-17T10:56:31.377Z",
       "note": "seq 2930 -> 90"
+    },
+    {
+      "t": "2026-09-17T12:13:48.515Z",
+      "note": "Seconded by queue/audits/2026-09-17-nested-ceiling-wrap.json, written the same day: 'A box too wide because of a picture or a shape still overhangs the ceiling at its own size. That matches what a single too-long word already does, but there is no shrink-to-fit anywhere, so a wide picture in a capped card sticks out with no sign that it knows.' Same defect from the other side, so that audit is a second reproduction for this task rather than a separate finding."
+    },
+    {
+      "t": "2026-09-17T12:13:56.615Z",
+      "note": "seq 90 -> 40"
     }
   ]
 }

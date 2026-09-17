@@ -1,15 +1,15 @@
 {
   "id": "walks-that-fail-in-the-full-sweep",
-  "title": "Walks that fail in the full sweep",
+  "title": "Every walk in the sweep either passes or is corrected",
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 400,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T11:20:54.590Z",
+  "updated": "2026-09-17T12:13:57.029Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -307,6 +307,14 @@
     {
       "t": "2026-09-17T11:20:54.589Z",
       "note": "2026-09-17, same check on the other families a notice-pill change could touch, all PRE-EXISTING (identical failures with the change stashed and the probe rebuilt): PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest-all.sh label -> 8 passed, 4 failed (label-border-follows, label-fills-a-row, read-every-label at 'no row called Text 5 is in the panel', wrapped-label-width at 'no editable field labelled Largest width is on screen'); the same for combine-shapes-walk, which fails at step 11 before it combines anything ('3 layers in the document, more than the 2 claimed: Background, Ellipse, Ellipse 2'). Clean in both runs: all 6 caliper-* walks and notice-carries-the-way-out-walk."
+    },
+    {
+      "t": "2026-09-17T12:13:36.568Z",
+      "note": "TRIAGE, digest pass 2026-09-17: retitled from 'Walks that fail in the full sweep', which named a symptom rather than an outcome and read as a bucket. The acceptance already says the outcome: every walk still failing in a trustworthy sweep is either fixed in the app or corrected in the walk."
+    },
+    {
+      "t": "2026-09-17T12:13:57.028Z",
+      "note": "seq 400 -> 130"
     }
   ]
 }

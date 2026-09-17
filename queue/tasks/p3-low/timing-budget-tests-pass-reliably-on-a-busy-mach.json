@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T08:44:12.445Z",
-  "updated": "2026-09-17T07:56:38.510Z",
+  "updated": "2026-09-17T12:09:54.612Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tests/PhotonzCoreTests/ElementBoundsTests.swift:268 (50 ms budget over 20 runs, saw 55.9 ms) and :535 (30 ms budget, saw 30.6 ms). Options: take the best of several batches instead of one mean, run them serialized (.serialized trait) so parallel suites do not compete, or widen the budgets with a comment. Serves measure-redline only indirectly (keeps its commits unblocked); filed under the arrow-caption epic because that is where it bit.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-09-17T07:56:38.509Z",
       "note": "flaked again 2026-09-17 00:5x during a full Scripts/test.sh: detectionStaysWellInsideTheMouseMoveBudget failed at ElementBoundsTests.swift:222 with perCall 0.026064375s against the .milliseconds(20) budget (30% over, not the sub-millisecond miss this task fixed). It passed on its own seconds later (Scripts/test.sh --filter detectionStaysWellInsideTheMouseMoveBudget, 2.7s) and the machine had nothing above 50% CPU. So the absolute budget this task deliberately kept on the detect test is still the one that misses under full-suite parallel load. Noted rather than refiled; if it shows up a third time it has earned its own task."
+    },
+    {
+      "t": "2026-09-17T12:09:54.611Z",
+      "note": "Flaked a third time, 2026-09-17 04:5x, on a full Scripts/test.sh during the trim-catch task: detectionStaysWellInsideTheMouseMoveBudget failed at ElementBoundsTests.swift:222 with perCall 0.028111333s against .milliseconds(20), 40 percent over. The suite's own printout that run: '[perf] detect over 100 calls: cpu fastest 28.1 ms, slowest 33.4 ms'. Re-run alone seconds later with Scripts/test.sh --filter ElementBoundsTests: '[perf] detect over 100 calls: cpu fastest 4.9 ms, slowest 5.9 ms', passed in 3.1s, and the next full run was green (8112 tests). So the absolute 20 ms budget on this one test is still load-sensitive by a factor of six while the two ratio-based tests beside it were fine both times. Filed as its own task now that it has recurred twice in one day."
     }
   ],
   "started": "2026-09-02T12:47:10.260Z",

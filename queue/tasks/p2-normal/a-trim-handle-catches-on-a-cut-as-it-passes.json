@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:06.635Z",
-  "updated": "2026-09-17T11:48:06.723Z",
+  "updated": "2026-09-17T12:10:18.959Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-16-video-cutting-trim.json: \"A handle does not catch on a cut as it passes. Trimming exactly to a join is therefore a steady hand, not a snap. I left it out deliberately: it changes what a drag does rather than what it draws, and whether handles should be magnetic is a feel question worth answering by trying this first.\" That trial has not happened, because the Mac has been locked since 2026-09-15 and nobody has driven the video editor by hand, so build it behind the existing flag and let the audit be where it is judged. The cut positions are VideoCutList.pieces boundaries in timeline seconds (Sources/PhotonzCore/VideoCuts.swift), the handle drag is in Sources/Photonz/TrimTimeline.swift (timeFor/xFor convert points to seconds, so the catch distance converts the other way), and the existing minimum piece floor is VideoCutList.minPieceDuration. The app already has snapping idioms to copy the feel from: next-measure-center-snap and next-measure-layer-snap.",
@@ -35,6 +35,31 @@
     {
       "t": "2026-09-17T11:48:06.722Z",
       "note": "Still open after the pick landed in trim mode (2026-09-17). Worth more now than it was: the picked piece wears an outline under the handles, so the join a handle is creeping up on is visibly the edge of a named piece, and stopping one pixel short of it is more obviously a miss than it used to be."
+    },
+    {
+      "t": "2026-09-17T11:49:57.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T11:51:10.958Z",
+      "note": "Adversarial review before building. (1) The tell cannot be the join gap lighting up: the gap is 4pt and the handle is 14pt of solid accent sitting exactly on top of it, so anything drawn AT the cut is hidden by the thing that caught. The tell has to read AROUND the handle, so it is a wider accent slab behind it plus a white hairline on the handle itself, the same 'this is locked to something' mark the picked piece wears. (2) A magnet with a fixed reach and no memory flickers: one event inside the reach, the next outside, while the hand barely moves. Copying SnapHold's promise (catch at 8pt, keep until 16pt) is not optional polish, it is the difference between a snap and a stutter. (3) The magnet makes a band unreachable: you cannot park a handle 4pt short of a cut while it is on. Accepted rather than adding a modifier key, because the app already has the precise way in - park the playhead and press I or O, which never snaps. Recorded in the audit's rough list. (4) Snapping only in the view would mean nothing but a human hand could ever exercise it, so the drag entry point moves onto VideoEditorState with the live track width published from layout, and the walk drives the same path the pointer does. (5) Candidates that the min-piece floor would push away from are filtered out, so the tell can never say caught while the handle lands somewhere else. (6) The two ends of the recording are candidates too, not just interior cuts."
+    },
+    {
+      "t": "2026-09-17T12:09:41.578Z",
+      "note": "owns these walks: trim-catches-on-a-cut-walk"
+    },
+    {
+      "t": "2026-09-17T12:10:14.802Z",
+      "note": "left rough (none of these clear the follow-up bar; each is a line of queue/audits/2026-09-17-video-cutting-trim-catch.json that the user can react to on the dashboard, which files a task by their hand): (1) no pictures at all, not even offscreen renders, because the Mac has been locked since 2026-09-15 and the walk refuses to run rather than report failures that are about the lock - nothing can unlock it, so there is nothing to file; (2) nobody has FELT this, so the reach of 8 points and the hold of 16 are borrowed numbers from the canvas magnets and a one-axis timeline handle may want different ones; (3) while the magnet is on you cannot park a handle inside 8 points of a cut, and no modifier key frees it mid-drag the way Command does on the canvas - left out deliberately as the shortest thing that delivers the value, with the audit asking whether that band ever matters, and it is the obvious next move if the answer is yes; (4) whether the lit slot reads as the cut being caught or just as a fatter handle needs eyes; (5) the recording's two ends catch as well as the interior cuts, which changes how dragging a handle back against the start feels even with no cut in it, and that is untried by hand too."
+    },
+    {
+      "t": "2026-09-17T12:10:18.957Z",
+      "note": "Trim handles now catch on cuts. The magnet is VideoCutSnapping in PhotonzCore (pure, 15 tests): reach 8 points ON SCREEN so it feels the same at any recording length, hold 16 points so a wobble cannot lose a cut you are standing on, nearest cut wins, and the two ends of the recording are candidates like any join. The drag entry point moved onto VideoEditorState (dragTrimIn/dragTrimOut/endTrimHandleDrag) with the live track width published from TrimTimeline's layout, so a walk drives the same path a pointer does. A cut the minimum-piece floor would push the window off is never offered, so the tell cannot say caught while the handle lands elsewhere; the caught position is what gets stored, so the readout and what is kept cannot drift. The tell is a lit slot behind the handle plus a white hairline on it, deliberately not the join gap lighting up (4pt gap under a 14pt handle), and the caught cut is spoken in the track's description. Verified: Scripts/test.sh green, 8112 tests in 647 suites. NOT verified by hand or by picture - the Mac's screen has been locked since 2026-09-15, so Scripts/playtest/trim-catches-on-a-cut-walk.json refuses to run (status locked, exit 3, nothing photographed); its every claim is replayed against the model in TrimCatchWalkArithmeticTests at five plausible track widths, and the walk parses cleanly on a freshly built probe. Audit: queue/audits/2026-09-17-video-cutting-trim-catch.json. Commits 0b941075 and bad34165, pushed to main. Filed one follow-up: the-hover-speed-test-stops-failing-when-the-mach (ElementBoundsTests' absolute 20ms budget failed at 28ms during a loaded full run and read 4.9ms alone seconds later; third recurrence, reproduction in its notes)."
     }
-  ]
+  ],
+  "started": "2026-09-17T11:49:57.684Z",
+  "walks": [
+    "trim-catches-on-a-cut-walk"
+  ],
+  "completed": "2026-09-17T12:10:18.958Z"
 }

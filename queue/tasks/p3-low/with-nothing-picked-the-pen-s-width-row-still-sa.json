@@ -1,0 +1,34 @@
+{
+  "id": "with-nothing-picked-the-pen-s-width-row-still-sa",
+  "title": "With nothing picked, the Pen's Width row still says 4 where it draws 2",
+  "goal": "An icon frame thins a line so it suits the size of the icon, and the Width row was taught to show the weight the line will really land at rather than the one the tool is armed with. It learns that from whatever is picked inside the frame, so if you pick nothing at all and draw straight into the frame, the row still reads 4 and the line comes out at 2. You are told one number and given another, which is the exact thing the row was fixed to stop doing.",
+  "epic": "icon-vector",
+  "priority": "p3-low",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T12:13:42.288Z",
+  "updated": "2026-09-17T12:13:57.166Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left rough in queue/audits/2026-09-17-icon-vector-width-row.json, from the-pen-s-width-row-shows-the-weight-the-line-wi (done 2026-09-17, commit 058c8bab). That task's first acceptance item reads: \"With the Pen in hand over a 24 px icon frame and nothing chosen yet, the Width row reads the weight a line drawn there would really come out at\". It is met in every selection state but this one.\n\nThe audit says why: \"The row only knows which icon it is speaking for while something in that frame is picked, which is the same rule the icon previews strip uses. Pick nothing at all, then draw straight into an icon frame, and the row says 4 while the line still lands at 2.\"\n\nNot yet watched in the running app: the walk for the fix (Scripts/playtest/icon-width-row-reads-true-walk.json) is written and has never run, because the Mac has been locked since 2026-09-14. So the first job is to reproduce it, which on a locked Mac means forcing a run past the refusal, and this walk looks controls up by name so it may not be forceable. A unit test over the same rule will settle it either way.\n\nFiled as p3 because it is one corner of one tool rather than the common path: draw anything in the frame first, or pick anything in it, and the row is right.",
+  "acceptance": [
+    "Reproduced first, and the reproduction written into this task's log with what was run and what came back",
+    "With the Pen in hand, nothing picked anywhere, and an icon frame under the pointer, the Width row reads the weight a line drawn there would really land at",
+    "The same holds for a box's and a line's Width rows, which share the rule",
+    "Drawing straight into the frame produces a line at the weight the row said",
+    "Nothing changes on bare canvas or on a large frame, where the row already reads the armed weight",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T12:13:42.290Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T12:13:57.165Z",
+      "note": "seq 1330 -> 30"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "the-hover-speed-test-stops-failing-when-the-mach",
+  "title": "The hover speed test stops failing when the machine is busy",
+  "goal": "One test in the suite fails at random when the computer is doing other work, so a green test run is partly luck. Every task in the loop has to get a green run before it can commit, so a runner that hits it either wastes a cycle re-running the whole suite or, worse, learns to shrug at a red result. The test should measure the thing it means to measure without being able to fail because something else was running.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T12:09:59.854Z",
+  "updated": "2026-09-17T12:13:57.211Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "detectionStaysWellInsideTheMouseMoveBudget, Tests/PhotonzCoreTests/ElementBoundsTests.swift:222, asserts perCall < .milliseconds(20).\n\nReproduced 2026-09-17 04:5x on a full Scripts/test.sh (8112 tests, 647 suites, 147s): FAILED with perCall 0.028111333s against 0.02s. The suite printed: [perf] detect over 100 calls: cpu fastest 28.1 ms, slowest 33.4 ms; wall fastest 28.1 ms, slowest 33.4 ms.\n\nRe-run alone seconds later, Scripts/test.sh --filter ElementBoundsTests: [perf] detect over 100 calls: cpu fastest 4.9 ms, slowest 5.9 ms -> passed in 3.135s, 39 tests green. The very next full run was green too. So idle is 25 percent of budget and loaded is 140 percent of it: a factor of six, not a marginal miss.\n\nThis is the third recurrence. The done task timing-budget-tests-pass-reliably-on-a-busy-mach converted the two probe-count tests beside it to a RATIO against their own probe detects on the same thread (guard 1.3), which has held: both were green in the failing run. It left THIS test on an absolute budget, merely widened from 10 to 20 ms, with a note. An absolute wall or CPU budget cannot tell a busy machine or an efficiency core from a regression, which is exactly what that task already concluded. The fix is almost certainly to give this test the same ratio treatment its two neighbours got. See that task's log for the ratio helpers and for how the regression check was verified (doubled probes read 2.0).",
+  "acceptance": [
+    "The test passes on a full Scripts/test.sh run while the machine is under heavy load, three runs in a row",
+    "It still FAILS when the thing it guards actually gets slower: make the work it times do noticeably more and watch it go red",
+    "No other timing test in the suite is left with the same weakness"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T12:09:59.856Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T12:13:56.479Z",
+      "note": "seq 2950 -> 10"
+    },
+    {
+      "t": "2026-09-17T12:13:57.210Z",
+      "note": "TRIAGE, digest pass 2026-09-17: moved from the back of p2 (seq 2950) to the front (seq 10), ahead of focus work. Every task in the loop has to get a green Scripts/test.sh before it may commit, so one test that fails on load is a tax on every runner in the queue rather than a problem in one feature. It has now flaked three times in two days, twice on 2026-09-17 alone, and the last one missed its budget by 40 percent, which is enough for a runner to start treating red as noise. Small, self-contained, and the pattern to copy is already in the two tests beside it."
+    }
+  ],
+  "walks": []
+}

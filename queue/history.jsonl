@@ -4967,3 +4967,44 @@
 {"t":"2026-09-17T11:48:12.725Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
 {"t":"2026-09-17T11:48:12.775Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
 {"t":"2026-09-17T11:48:12.823Z","ev":"task_note","id":"while-you-trim-a-recording-you-can-still-see-and"}
+{"t":"2026-09-17T11:48:26.978Z","ev":"task_done","id":"while-you-trim-a-recording-you-can-still-see-and","from":"in_progress","note":"The picked piece keeps a quiet white outline under the trim handles, the trash button joined the trim row, and Delete now drops the piece without throwing away the window you were setting: VideoCutList.trimAfterRemovingPiece maps the window (and the baseline Cancel restores) through the delete, undo moves both back. Commit afc59db1. Verified: 8096 tests pass, eight pinning the window-moves-with-the-pieces arithmetic and two replaying both new walks against the model so every number they claim is right. NOT verified on a screen: the Mac was locked all task, so trim-keeps-the-piece-you-picked-walk and trim-cancel-after-a-delete-walk parse but have never run and there is no capture or render. Sweep requested. Audit: queue/audits/2026-09-17-video-cutting-trim-pick.json."}
+{"t":"2026-09-17T11:49:57.561Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T11:49:57.687Z","ev":"task_started","id":"a-trim-handle-catches-on-a-cut-as-it-passes","title":"A trim handle catches on a cut as it passes","priority":"p2-normal"}
+{"t":"2026-09-17T11:51:10.960Z","ev":"task_note","id":"a-trim-handle-catches-on-a-cut-as-it-passes"}
+{"t":"2026-09-17T12:09:41.580Z","ev":"task_walks","id":"a-trim-handle-catches-on-a-cut-as-it-passes","walks":["trim-catches-on-a-cut-walk"]}
+{"t":"2026-09-17T12:09:54.613Z","ev":"task_note","id":"timing-budget-tests-pass-reliably-on-a-busy-mach"}
+{"t":"2026-09-17T12:09:59.858Z","ev":"task_created","id":"the-hover-speed-test-stops-failing-when-the-mach","priority":"p2-normal","title":"The hover speed test stops failing when the machine is busy"}
+{"t":"2026-09-17T12:10:14.804Z","ev":"task_note","id":"a-trim-handle-catches-on-a-cut-as-it-passes"}
+{"t":"2026-09-17T12:10:18.960Z","ev":"task_done","id":"a-trim-handle-catches-on-a-cut-as-it-passes","from":"in_progress","note":"Trim handles now catch on cuts. The magnet is VideoCutSnapping in PhotonzCore (pure, 15 tests): reach 8 points ON SCREEN so it feels the same at any recording length, hold 16 points so a wobble cannot lose a cut you are standing on, nearest cut wins, and the two ends of the recording are candidates like any join. The drag entry point moved onto VideoEditorState (dragTrimIn/dragTrimOut/endTrimHandleDrag) with the live track width published from TrimTimeline's layout, so a walk drives the same path a pointer does. A cut the minimum-piece floor would push the window off is never offered, so the tell cannot say caught while the handle lands elsewhere; the caught position is what gets stored, so the readout and what is kept cannot drift. The tell is a lit slot behind the handle plus a white hairline on it, deliberately not the join gap lighting up (4pt gap under a 14pt handle), and the caught cut is spoken in the track's description. Verified: Scripts/test.sh green, 8112 tests in 647 suites. NOT verified by hand or by picture - the Mac's screen has been locked since 2026-09-15, so Scripts/playtest/trim-catches-on-a-cut-walk.json refuses to run (status locked, exit 3, nothing photographed); its every claim is replayed against the model in TrimCatchWalkArithmeticTests at five plausible track widths, and the walk parses cleanly on a freshly built probe. Audit: queue/audits/2026-09-17-video-cutting-trim-catch.json. Commits 0b941075 and bad34165, pushed to main. Filed one follow-up: the-hover-speed-test-stops-failing-when-the-mach (ElementBoundsTests' absolute 20ms budget failed at 28ms during a loaded full run and read 4.9ms alone seconds later; third recurrence, reproduction in its notes)."}
+{"t":"2026-09-17T12:10:55.546Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T12:13:32.590Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T12:13:36.526Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-17T12:13:36.570Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T12:13:42.292Z","ev":"task_created","id":"with-nothing-picked-the-pen-s-width-row-still-sa","priority":"p3-low","title":"With nothing picked, the Pen's Width row still says 4 where it draws 2"}
+{"t":"2026-09-17T12:13:48.373Z","ev":"task_note","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout"}
+{"t":"2026-09-17T12:13:48.422Z","ev":"task_note","id":"a-label-read-back-into-text-comes-back-in-the-we"}
+{"t":"2026-09-17T12:13:48.471Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-17T12:13:48.517Z","ev":"task_note","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s"}
+{"t":"2026-09-17T12:13:56.299Z","ev":"task_resequenced","id":"an-audit-gets-a-real-picture-of-the-app-again","from":20,"to":10}
+{"t":"2026-09-17T12:13:56.343Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":10,"to":20}
+{"t":"2026-09-17T12:13:56.390Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":30,"to":30}
+{"t":"2026-09-17T12:13:56.434Z","ev":"task_resequenced","id":"work-out-whether-the-app-needs-project-types-at","from":40,"to":40}
+{"t":"2026-09-17T12:13:56.481Z","ev":"task_resequenced","id":"the-hover-speed-test-stops-failing-when-the-mach","from":2950,"to":10}
+{"t":"2026-09-17T12:13:56.527Z","ev":"task_resequenced","id":"a-label-read-back-into-text-comes-back-in-the-we","from":70,"to":20}
+{"t":"2026-09-17T12:13:56.572Z","ev":"task_resequenced","id":"the-labels-a-reading-gave-up-on-can-be-found","from":80,"to":30}
+{"t":"2026-09-17T12:13:56.617Z","ev":"task_resequenced","id":"a-picture-too-wide-for-the-box-it-sits-in-says-s","from":90,"to":40}
+{"t":"2026-09-17T12:13:56.662Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":100,"to":50}
+{"t":"2026-09-17T12:13:56.709Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":210,"to":60}
+{"t":"2026-09-17T12:13:56.755Z","ev":"task_resequenced","id":"a-png-says-what-it-will-weigh-before-you-save-it","from":110,"to":70}
+{"t":"2026-09-17T12:13:56.800Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":2900,"to":80}
+{"t":"2026-09-17T12:13:56.846Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":2890,"to":90}
+{"t":"2026-09-17T12:13:56.892Z","ev":"task_resequenced","id":"undo-is-reachable-while-you-are-trimming-a-recor","from":2940,"to":100}
+{"t":"2026-09-17T12:13:56.938Z","ev":"task_resequenced","id":"put-the-pieces-of-a-recording-in-a-different-ord","from":120,"to":110}
+{"t":"2026-09-17T12:13:56.983Z","ev":"task_resequenced","id":"a-walk-can-prove-what-resting-the-pointer-on-som","from":2930,"to":120}
+{"t":"2026-09-17T12:13:57.030Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":400,"to":130}
+{"t":"2026-09-17T12:13:57.076Z","ev":"task_resequenced","id":"a-question-you-turned-off-can-be-turned-back-on","from":90,"to":10}
+{"t":"2026-09-17T12:13:57.123Z","ev":"task_resequenced","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","from":100,"to":20}
+{"t":"2026-09-17T12:13:57.167Z","ev":"task_resequenced","id":"with-nothing-picked-the-pen-s-width-row-still-sa","from":1330,"to":30}
+{"t":"2026-09-17T12:13:57.212Z","ev":"task_note","id":"the-hover-speed-test-stops-failing-when-the-mach"}
+{"t":"2026-09-17T12:14:06.910Z","ev":"triage","summary":"open 19 -> 20. Merged 0 (no duplicates found). Filed 1 (the Pen Width row corner case). Folded 4 findings into tasks that already covered them. Rewrote 1 p1 whose reproduction no longer reproduced, removed its dependency and kept it at p1 with the corrected diagnosis. Retitled 2 whose titles named a symptom or a disproved claim. Moved 1 flaky timing test from the back of p2 to the front because it taxes every runner. Reset 0, guard clean, no leftovers. Resequenced all 20 open tasks to steps of ten."}
+{"t":"2026-09-17T12:15:08.931Z","ev":"digest","file":"2026-09-17.md"}
