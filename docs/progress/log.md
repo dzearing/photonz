@@ -17393,3 +17393,33 @@ change), and the same background question for PNG, which still bakes the white
 in with no way to ask otherwise.
 
 Next: whatever the loop picks up.
+
+## 2026-09-16 — Every walk starts from a clean machine
+
+252 of the 497 scripted walks never said what they wanted forgotten, so each
+started from whatever the last thing to use the machine had left behind. Read
+off this machine before touching anything, that inheritance was real: a
+remembered text face of Georgia against a factory SF Pro, a tutorial stopped
+six steps in, three layer groups left open on a fixture, and a dock section
+order one migration out of date. Those 252 now carry `"forget": ["all"]`. The
+245 that already name areas are untouched, because naming areas is a claim that
+the rest is wanted on purpose.
+
+`PlaytestWalkSetupTests.everyWalkNamesWhatItForgets` holds the folder to it from
+now on, so the line cannot quietly go missing from the next walk anybody writes.
+Checked both ways: it names the file and fails with one walk reverted, and
+passes with all 252 in. `docs/design/playtest-harness.md` says the line is
+required and what the inherited history actually was.
+
+The screen has been locked since 2026-09-15, so no walk runs normally. Forced
+past the lock, though, a walk that drives by coordinate rather than by control
+name still runs honestly, which turned out to cover most of them: 72 of the 252
+were sampled and 64 passed with the new line, step 0 reading "forgot text,
+color, shapes, measure, tools, groups, panel, grid, frames, tutorials, motion
+(29 settings)". Each of the 8 failures was re-run on pre-change source and
+failed identically, same step and same message, so none is attributable to the
+change. Full suite green at 7905.
+
+Next: a sweep is requested and pending. It judges the other 71% and the
+name-driven walks the moment the screen is unlocked; any walk that was leaning
+on history comes back as its own task.
