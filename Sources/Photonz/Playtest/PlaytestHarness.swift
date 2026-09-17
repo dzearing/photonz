@@ -2078,6 +2078,8 @@ private final class Run {
             case .videoDragTrimNearCut: try dragTrimHandle(video, .start, pointsFromCut: 5)
             case .videoDragTrimJustPastCut: try dragTrimHandle(video, .start, pointsFromCut: 12)
             case .videoDragTrimClearOfCut: try dragTrimHandle(video, .start, pointsFromCut: 24)
+            case .videoDragTrimFreedNearCut:
+                try dragTrimHandle(video, .start, pointsFromCut: 3, freed: true)
             case .videoDragTrimEndNearCut: try dragTrimHandle(video, .end, pointsFromCut: 5)
             case .videoDragTrimRelease: video.endTrimHandleDrag()
             default: break
@@ -2756,6 +2758,7 @@ private final class Run {
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
                  .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
+                 .videoDragTrimFreedNearCut,
                  .videoDragTrimEndNearCut, .videoDragTrimRelease,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
@@ -6736,8 +6739,13 @@ private final class Run {
     /// and read off the live track width because that is what a hand would be
     /// looking at. A walk therefore never has to know how long the sample
     /// recording is or how wide the window came up.
+    ///
+    /// `freed` is ⌘ being held for this event, which is the one thing a walk
+    /// cannot press for itself: the key is read off the keyboard at the moment
+    /// of the drag, and a scripted run has no hand on it.
     private func dragTrimHandle(_ video: VideoEditorState, _ handle: TrimHandle,
-                                pointsFromCut points: CGFloat) throws {
+                                pointsFromCut points: CGFloat,
+                                freed: Bool = false) throws {
         guard video.isTrimming else {
             throw Failure(description: "the trim handles are not open, so there is no handle to "
                 + "drag; add a \"videoBeginTrim\" step first")
@@ -6754,8 +6762,8 @@ private final class Run {
         }
         let away = TimeInterval(points / (video.trimTrackWidth / CGFloat(video.duration)))
         switch handle {
-        case .start: video.dragTrimIn(toTimeline: target - away)
-        case .end: video.dragTrimOut(toTimeline: target + away)
+        case .start: video.dragTrimIn(toTimeline: target - away, freed: freed)
+        case .end: video.dragTrimOut(toTimeline: target + away, freed: freed)
         }
     }
 

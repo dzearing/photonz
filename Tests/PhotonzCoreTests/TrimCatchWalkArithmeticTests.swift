@@ -3,8 +3,9 @@ import Foundation
 import Testing
 @testable import PhotonzCore
 
-/// The numbers `Scripts/playtest/trim-catches-on-a-cut-walk.json` claims,
-/// replayed against the model.
+/// The numbers `Scripts/playtest/trim-catches-on-a-cut-walk.json` and
+/// `Scripts/playtest/trim-handle-freed-from-a-cut-walk.json` claim, replayed
+/// against the model.
 ///
 /// Same reason as `TrimPickWalkArithmeticTests`: the walk was written on a Mac
 /// whose screen was locked, so it could not be RUN before it was committed, and
@@ -34,7 +35,8 @@ struct TrimCatchWalkArithmeticTests {
         var cuts: VideoCutList
         var trim: VideoTrim
         var playhead: TimeInterval = 0
-        var caught: TimeInterval?
+        var hold = VideoCutSnapHold()
+        var caught: TimeInterval? { hold.caught }
         let trackWidth: CGFloat
 
         init(duration: TimeInterval, trackWidth: CGFloat) {
@@ -61,37 +63,39 @@ struct TrimCatchWalkArithmeticTests {
         mutating func cut() { cuts.split(atTimeline: playhead) }
 
         /// `VideoEditorState.dragTrimIn`, driven the way the harness drives it.
-        mutating func dragStart(pointsShortOfFirstJoin points: CGFloat) {
+        /// `freed` is ⌘ being held for this event, which is what the harness
+        /// passes for `videoDragTrimFreedNearCut`.
+        mutating func dragStart(pointsShortOfFirstJoin points: CGFloat,
+                                freed: Bool = false) {
             guard let join = joins.first else { return }
             let ceiling = max(0, trim.outPoint - VideoCutList.minPieceDuration)
-            let snap = VideoCutSnapping.snap(
-                join - TimeInterval(points / perSecond),
-                to: VideoCutSnapping.candidates(in: cuts, within: 0...ceiling),
-                pointsPerSecond: perSecond, held: caught)
-            caught = snap.caught
-            trim.setIn(snap.seconds, duration: cuts.timelineDuration)
+            let landed = hold.landing(
+                for: join - TimeInterval(points / perSecond),
+                catchingOn: VideoCutSnapping.candidates(in: cuts, within: 0...ceiling),
+                pointsPerSecond: perSecond, freed: freed)
+            trim.setIn(landed, duration: cuts.timelineDuration)
             playhead = trim.inPoint
         }
 
         /// `VideoEditorState.dragTrimOut`, the same way.
-        mutating func dragEnd(pointsPastLastJoin points: CGFloat) {
+        mutating func dragEnd(pointsPastLastJoin points: CGFloat,
+                              freed: Bool = false) {
             guard let join = joins.last else { return }
             let floor = min(cuts.timelineDuration,
                             trim.inPoint + VideoCutList.minPieceDuration)
-            let snap = VideoCutSnapping.snap(
-                join + TimeInterval(points / perSecond),
-                to: VideoCutSnapping.candidates(in: cuts,
-                                                within: floor...max(floor, cuts.timelineDuration)),
-                pointsPerSecond: perSecond, held: caught)
-            caught = snap.caught
-            trim.setOut(snap.seconds, duration: cuts.timelineDuration)
+            let landed = hold.landing(
+                for: join + TimeInterval(points / perSecond),
+                catchingOn: VideoCutSnapping.candidates(in: cuts,
+                                                        within: floor...max(floor, cuts.timelineDuration)),
+                pointsPerSecond: perSecond, freed: freed)
+            trim.setOut(landed, duration: cuts.timelineDuration)
             playhead = trim.outPoint
         }
 
-        mutating func release() { caught = nil }
+        mutating func release() { hold = VideoCutSnapHold() }
 
         mutating func done() {
-            caught = nil
+            hold = VideoCutSnapHold()
             guard trim.isTrimmed else { return }
             cuts.keep(fromTimeline: trim.inPoint, toTimeline: trim.outPoint)
             trim = VideoTrim(duration: cuts.timelineDuration)
@@ -156,5 +160,58 @@ struct TrimCatchWalkArithmeticTests {
         editor.done()
         check(editor, stage: "6-done-keeps-exactly-that", width: width,
               pieces: 1, seconds: 4, caught: false)
+    }
+
+    /// The walk that shows the key freeing a handle from the cut it caught on.
+    ///
+    /// One continuous drag: the cut takes the handle, the key is pressed part
+    /// way through and the handle parks inside the band the cut owns, the key
+    /// is let go of in that band without the handle being yanked back, and
+    /// once the hand has gone clearly away the cut catches again.
+    @Test("trim-handle-freed-from-a-cut-walk", arguments: TrimCatchWalkArithmeticTests.trackWidths)
+    func freedFromACut(width: CGFloat) {
+        var editor = Editor(duration: Self.clip, trackWidth: width)
+        editor.seek(toFraction: 0.25)
+        editor.cut()
+        editor.seek(toFraction: 0.75)
+        editor.cut()
+        check(editor, stage: "0-handles-open", width: width,
+              pieces: 3, keeps: 3, seconds: 8, starts: 0, caught: false)
+
+        editor.dragStart(pointsShortOfFirstJoin: 5)
+        check(editor, stage: "1-the-cut-takes-it", width: width,
+              keeps: 2, seconds: 6, starts: 2, caught: true)
+
+        // The key goes down mid-drag: three points short of the cut, which is
+        // inside the band the magnet owns and unreachable without it.
+        editor.dragStart(pointsShortOfFirstJoin: 3, freed: true)
+        check(editor, stage: "2-parked-inside-the-band", width: width,
+              keeps: 3, caught: false)
+        let parked = editor.trim.inPoint
+        #expect(parked < 2 - 1e-9,
+                "2-parked-inside-the-band at \(Int(width))pt: still on the cut")
+        #expect(abs((2 - parked) * TimeInterval(editor.perSecond) - 3) < 0.01,
+                "2-parked-inside-the-band at \(Int(width))pt: \(parked) is not three points short")
+
+        // And comes up again five points short, with the cut still muted.
+        editor.dragStart(pointsShortOfFirstJoin: 5)
+        check(editor, stage: "3-the-key-came-up-and-nothing-jumped", width: width,
+              keeps: 3, caught: false)
+        #expect(abs((2 - editor.trim.inPoint) * TimeInterval(editor.perSecond) - 5) < 0.01,
+                "3-the-key-came-up-and-nothing-jumped at \(Int(width))pt: it jumped to the cut")
+
+        // Twenty four points clear, which is past the hold, so the cut is free
+        // to take the handle again.
+        editor.dragStart(pointsShortOfFirstJoin: 24)
+        check(editor, stage: "3b-clear-of-the-cut", width: width, keeps: 3, caught: false)
+
+        editor.dragStart(pointsShortOfFirstJoin: 5)
+        check(editor, stage: "4-the-cut-works-again", width: width,
+              starts: 2, caught: true)
+
+        editor.release()
+        editor.done()
+        check(editor, stage: "5-done-keeps-what-caught", width: width,
+              pieces: 2, seconds: 6, caught: false)
     }
 }

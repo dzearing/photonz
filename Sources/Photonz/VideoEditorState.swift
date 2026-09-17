@@ -511,11 +511,16 @@ final class VideoEditorState {
     /// everything.
     var trimTrackWidth: CGFloat = 0
 
+    /// What the handle drag in progress remembers: the cut it is standing on,
+    /// and any cut the freeing key has told it to leave alone. Reset whenever
+    /// a drag ends, so nothing carries from one to the next.
+    private var trimSnapHold = VideoCutSnapHold()
+
     /// The cut the handle being dragged is standing on, in timeline seconds, or
     /// nil when nothing has it. The track draws its tell from this and the
     /// spoken description says it out loud, so what is on screen and what was
     /// stored are the same fact rather than two that agree by luck.
-    private(set) var caughtCut: TimeInterval?
+    var caughtCut: TimeInterval? { trimSnapHold.caught }
 
     /// How much of the track one second takes up. Nil while there is nothing to
     /// measure against.
@@ -527,36 +532,40 @@ final class VideoEditorState {
     /// Drag the in-handle to a timeline position, catching on any cut it passes
     /// close to. The caught position is what gets stored, so the length the
     /// readout shows is the length that is kept.
-    func dragTrimIn(toTimeline seconds: TimeInterval) {
+    ///
+    /// `freed` is ⌘ being held right now, which turns the magnet off for as
+    /// long as it is down. It is read per event rather than once per drag, so
+    /// reaching for the key half way through a drag works: that is the moment
+    /// you discover the cut will not let you park where you want.
+    func dragTrimIn(toTimeline seconds: TimeInterval, freed: Bool = false) {
         // The out-handle has to be left somewhere legal, so a cut too near it
         // is not offered: `setIn` would shove the window off the cut again and
         // the tell would be describing a place the handle is not.
         let ceiling = max(0, trim.outPoint - VideoCutList.minPieceDuration)
-        let snap = snapHandle(to: seconds, within: 0...ceiling)
-        caughtCut = snap.caught
-        setTrimIn(snap.seconds)
+        setTrimIn(snapHandle(to: seconds, within: 0...ceiling, freed: freed))
     }
 
     /// Drag the out-handle to a timeline position, catching the same way.
-    func dragTrimOut(toTimeline seconds: TimeInterval) {
+    func dragTrimOut(toTimeline seconds: TimeInterval, freed: Bool = false) {
         let floor = min(duration, trim.inPoint + VideoCutList.minPieceDuration)
-        let snap = snapHandle(to: seconds, within: floor...max(floor, duration))
-        caughtCut = snap.caught
-        setTrimOut(snap.seconds)
+        setTrimOut(snapHandle(to: seconds, within: floor...max(floor, duration),
+                              freed: freed))
     }
 
     /// Let go of the handle. The cut it was standing on stops being news the
-    /// moment the hand comes off it, so the tell goes with it.
+    /// moment the hand comes off it, so the tell goes with it, and so does
+    /// every cut this drag had muted.
     func endTrimHandleDrag() {
-        caughtCut = nil
+        trimSnapHold = VideoCutSnapHold()
     }
 
     private func snapHandle(to seconds: TimeInterval,
-                            within range: ClosedRange<TimeInterval>) -> VideoCutSnap {
-        VideoCutSnapping.snap(seconds,
-                              to: VideoCutSnapping.candidates(in: cuts, within: range),
-                              pointsPerSecond: trimTrackPointsPerSecond,
-                              held: caughtCut)
+                            within range: ClosedRange<TimeInterval>,
+                            freed: Bool) -> TimeInterval {
+        trimSnapHold.landing(for: seconds,
+                             catchingOn: VideoCutSnapping.candidates(in: cuts, within: range),
+                             pointsPerSecond: trimTrackPointsPerSecond,
+                             freed: freed)
     }
 
     // MARK: - Cutting a recording into pieces
@@ -721,7 +730,7 @@ final class VideoEditorState {
     func commitTrim() {
         isTrimming = false
         trimBeforeSession = nil
-        caughtCut = nil
+        trimSnapHold = VideoCutSnapHold()
         if trim.isTrimmed { applyTrim() }
         // Raised whether or not the handles had been moved, because what the
         // step asks for is the person pressing Done. A Done that applied
@@ -735,7 +744,7 @@ final class VideoEditorState {
         isTrimming = false
         if let prev = trimBeforeSession { trim = prev }
         trimBeforeSession = nil
-        caughtCut = nil
+        trimSnapHold = VideoCutSnapHold()
     }
 
     /// Apply the live trim: shrink the working clip to `[in, out]`. The timeline,

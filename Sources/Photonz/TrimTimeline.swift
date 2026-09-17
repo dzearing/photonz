@@ -1,3 +1,4 @@
+import AppKit
 import PhotonzCore
 import SwiftUI
 
@@ -102,12 +103,30 @@ struct TrimTimeline: View {
                     caughtMark(at: xFor(caught, trackW: trackW, duration: duration))
                 }
 
+                // What each handle says when the pointer rests on it, hung on
+                // its own invisible view rather than on the handle.
+                //
+                // A tooltip is a real AppKit view laid over the control, and
+                // the handles are placed with `offset`, which moves what is
+                // DRAWN without moving what was laid out: hung on the handle,
+                // both labels came up stacked at the left edge of the track,
+                // naming a handle that was not there (measured, three
+                // positions, same answer). Placed with `position` they follow
+                // the handle exactly. They are separate views so that the
+                // handles' own drag path is untouched by any of this, and they
+                // take nothing: `HintAnchorView.hitTest` returns nil and the
+                // view is out of SwiftUI's hit testing too.
+                handleTip(.left, at: inX)
+                handleTip(.right, at: outX)
+
                 // In/out handles last so they sit above the mask + scrub area.
-                handle(.left, at: inX, isCaught: isCaught(state.trim.inPoint)) { x in
-                    state.dragTrimIn(toTimeline: timeFor(x, trackW: trackW, duration: duration))
+                handle(.left, at: inX, isCaught: isCaught(state.trim.inPoint)) { x, freed in
+                    state.dragTrimIn(toTimeline: timeFor(x, trackW: trackW, duration: duration),
+                                     freed: freed)
                 }
-                handle(.right, at: outX, isCaught: isCaught(state.trim.outPoint)) { x in
-                    state.dragTrimOut(toTimeline: timeFor(x, trackW: trackW, duration: duration))
+                handle(.right, at: outX, isCaught: isCaught(state.trim.outPoint)) { x, freed in
+                    state.dragTrimOut(toTimeline: timeFor(x, trackW: trackW, duration: duration),
+                                      freed: freed)
                 }
             }
             .coordinateSpace(.named(Self.space))
@@ -196,7 +215,10 @@ struct TrimTimeline: View {
     private enum HandleSide {
         case left, right
         var image: String { self == .left ? "chevron.compact.left" : "chevron.compact.right" }
+        /// What this handle does, for the tooltip that names its key.
+        var what: String { self == .left ? "Trim the start" : "Trim the end" }
     }
+
 
     /// A handle centered on `xPos` with a wide invisible grab area so it's easy to
     /// hit. Drags map `location.x` (in the "trim" space) straight to a time.
@@ -206,7 +228,7 @@ struct TrimTimeline: View {
     /// "this stretch is kept" (the accent already says that three times over)
     /// but "this is locked onto something".
     private func handle(_ side: HandleSide, at xPos: CGFloat, isCaught: Bool,
-                        onDrag: @escaping (CGFloat) -> Void) -> some View {
+                        onDrag: @escaping (CGFloat, Bool) -> Void) -> some View {
         ZStack {
             Color.clear
                 .frame(width: handleHit, height: trackHeight)
@@ -232,9 +254,26 @@ struct TrimTimeline: View {
         .offset(x: xPos - handleHit / 2)
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
-                .onChanged { v in onDrag(v.location.x) }
+                // ⌘ is read off the keyboard at the moment of the event, not
+                // captured when the drag began, so pressing it part way
+                // through a drag frees the handle from there on. A SwiftUI
+                // drag value carries no modifiers of its own, which is why
+                // this asks AppKit directly — the same flags the canvas
+                // gestures read.
+                .onChanged { v in
+                    onDrag(v.location.x, NSEvent.modifierFlags.contains(.command))
+                }
                 .onEnded { _ in state.endTrimHandleDrag() }
         )
+    }
+
+    /// The invisible view a handle's tooltip hangs on, in the handle's place.
+    private func handleTip(_ side: HandleSide, at xPos: CGFloat) -> some View {
+        Color.clear
+            .frame(width: handleHit, height: trackHeight)
+            .toolTip(side.what, key: TrimCopy.freeKeyHint)
+            .position(x: xPos, y: trackHeight / 2)
+            .allowsHitTesting(false)
     }
 
     /// Whether this handle is the one standing on a cut.

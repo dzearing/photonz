@@ -1,0 +1,31 @@
+{
+  "feature": "Getting a trim handle past a cut",
+  "epic": "video-cutting",
+  "summary": "Hold ⌘ while dragging a trim handle and the cuts stop grabbing it, so you can park the handle a hair short of a cut instead of being pushed onto it. Let the key go and the cuts work again, without the handle being yanked back onto the one you just escaped.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Cut a recording into pieces and drop the one you do not want\" (next-cut-a-recording) on. Open any recording from capture history.",
+  "try": [
+    { "do": "Press space to pause, then B to cut the recording somewhere in the middle." },
+    { "do": "Press Trim to open the handles." },
+    { "do": "Drag the left handle slowly towards the cut and let it catch.", "shot": "2026-09-17-trim-free-1-the-cut-takes-it.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Rest the pointer on the handle and read what it says.", "shot": "2026-09-17-trim-free-1b-the-handle-names-its-key.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Drag the handle again and hold ⌘ part way through, then park it just short of the cut.", "shot": "2026-09-17-trim-free-2-parked-inside-the-band.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Let ⌘ go with the handle still sitting beside the cut, and keep dragging gently.", "shot": "2026-09-17-trim-free-3-the-key-came-up-and-nothing-jumped.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Drag well clear of that cut and back onto it, and watch it catch as it always did." },
+    { "do": "Press Done and check the length the row reported is the length you kept." }
+  ],
+  "evaluate": [
+    "Is ⌘ the key your hand reaches for, given it is the key that frees the magnets on the canvas?",
+    "When you let ⌘ go beside a cut, does the handle staying put feel right, or did you expect the cut to take it back?",
+    "Does the tooltip on the handle tell you about the key, or would you never have rested there long enough to see it?",
+    "Parked three points short of a cut, can you tell from the track that you are short of it, or only from the timecode and the piece count?",
+    "Is there a moment you wanted this and the key did not occur to you?"
+  ],
+  "rough": [
+    "Nothing on screen says the key except a tooltip you have to hover for. A pill beside the piece count reading \"⌘ ignores cuts\", shown only while a handle is caught, was built and taken back out: the transport is drawn centred over that same strip and the pill ran straight into the play button. Say the word and the row gets one somewhere that fits.",
+    "The one link no test or walk covers is the keyboard itself. A scripted walk drives the drag through the same call the pointer makes and can pass it the key, but it cannot press ⌘: a SwiftUI drag carries no modifiers, so the app reads the key off the keyboard at the moment of the event, and only a hand on the keys exercises that. Everything from there inwards is covered by 14 unit tests and a walk.",
+    "The tell for the key is subtractive: nothing appears while ⌘ is down, the lit slot behind the handle simply stops appearing. That reads fine when a cut has just let go, and says nothing at all if you press the key before you are near a cut.",
+    "Pressing ⌘ without moving the pointer changes nothing until the next movement, because the key is read on each drag event. In practice the next thing you do is move, so this has no cost, but the lit slot does linger for one frame longer than the key is down.",
+    "Three points short of a cut looks exactly like being on it. What tells you which you got is the timecode gaining hundredths and the piece count going from 2 of 3 to 3 of 3. Whether that is enough is the fourth question above.",
+    "The magnet is still on for everyone, not only for the release that has cutting: an uncut recording's two ends catch as well, and this key frees a handle from those too. That was true before this change and is unchanged by it."
+  ]
+}

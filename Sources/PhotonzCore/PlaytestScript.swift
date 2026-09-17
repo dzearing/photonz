@@ -627,6 +627,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// distances are points on screen off the real track, so this is the same
     /// path a pointer takes rather than a number poked into the trim.
     case videoDragTrimNearCut, videoDragTrimJustPastCut, videoDragTrimClearOfCut
+    /// The start handle dragged to three points short of the first cut with ⌘
+    /// HELD, which is a place the magnet makes unreachable otherwise: anything
+    /// the hand puts within eight points of a cut is taken by the cut. Used
+    /// straight after one of the drags above, with no release in between, so a
+    /// walk shows the key being reached for part way through a drag rather
+    /// than only before one.
+    case videoDragTrimFreedNearCut
     /// The end handle dragged the other way onto the last cut, so a walk shows
     /// both ends of the window catching rather than assuming the second one
     /// does because the first one did.
@@ -655,6 +662,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
              .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
+             .videoDragTrimFreedNearCut,
              .videoDragTrimEndNearCut, .videoDragTrimRelease: true
         default: false
         }

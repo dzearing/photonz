@@ -5185,3 +5185,7 @@
 {"t":"2026-09-17T18:34:42.971Z","ev":"task_walks","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","walks":[]}
 {"t":"2026-09-17T18:35:00.689Z","ev":"task_note","id":"a-size-read-off-a-screenshot-is-the-size-the-typ"}
 {"t":"2026-09-17T18:35:00.744Z","ev":"task_blocked","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":"in_progress","note":"The study is done, committed and audited (queue/audits/2026-09-17-read-size-truth.json). The size is 6.5 to 11 per cent high on a Retina capture, every label by the same amount, and the cause is the system font's optical size: a 13 point label photographed at 2x cannot be reproduced by any point size. Closing it means picking which number the Size menu says, which is on the dashboard as a card with a picture of both against the original ink."}
+{"t":"2026-09-17T18:35:23.029Z","ev":"task_started","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you","title":"A trim handle can be pulled past a cut when you mean to","priority":"p2-normal"}
+{"t":"2026-09-17T18:42:02.894Z","ev":"task_walks","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you","walks":["trim-handle-freed-from-a-cut-walk","trim-catches-on-a-cut-walk"]}
+{"t":"2026-09-17T19:00:30.071Z","ev":"task_note","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you"}
+{"t":"2026-09-17T19:00:30.118Z","ev":"task_note","id":"a-trim-handle-can-be-pulled-past-a-cut-when-you"}

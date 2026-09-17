@@ -1,0 +1,205 @@
+{
+  "out": "/tmp/photonz-playtest/trim-handle-freed-from-a-cut-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "videoCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "action",
+      "action": "videoCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoBeginTrim"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 3,
+      "keeps": 3,
+      "seconds": 8,
+      "starts": 0,
+      "caught": false
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimNearCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "starts": 2,
+      "caught": true,
+      "keeps": 2,
+      "seconds": 6
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-cut-takes-it",
+      "note": "the start handle was dragged to five points short of the cut at two seconds and the cut took it, which is the whole point of the magnet and also the fence: every position within eight points of that cut is now unreachable by dragging"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-cut-takes-it"
+    },
+    {
+      "do": "hover",
+      "label": "Trim the start"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1b-the-handle-names-its-key",
+      "note": "resting on the handle says what it is and, quieter underneath, the key that frees it from the cuts: the only place in the app that says the band round a cut is reachable at all"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-the-handle-names-its-key"
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimFreedNearCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "caught": false,
+      "keeps": 3
+    },
+    {
+      "do": "describe",
+      "stage": "2-parked-inside-the-band",
+      "note": "the same drag, still going, with the key now held down: the handle is parked three points short of the cut, inside the band it could not reach a moment ago. The lit slot and the hairline are gone because nothing is caught, and the first piece is partly kept again"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-parked-inside-the-band"
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimNearCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "caught": false,
+      "keeps": 3
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-key-came-up-and-nothing-jumped",
+      "note": "the key is let go of with the handle still five points from the cut, and the handle stays where the hand has it: the cut it was just freed from is muted until the hand travels clearly away, so letting go of the key cannot yank the handle back onto the thing it was held to escape"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-key-came-up-and-nothing-jumped"
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimClearOfCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectRecording",
+      "caught": false,
+      "keeps": 3
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimNearCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "starts": 2,
+      "caught": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-cut-works-again",
+      "note": "the hand has gone twenty four points clear and come back, and the cut catches exactly as it did before: the key frees a drag, it does not switch the magnet off for the rest of the session"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-the-cut-works-again"
+    },
+    {
+      "do": "action",
+      "action": "videoDragTrimRelease"
+    },
+    {
+      "do": "action",
+      "action": "videoTrimDone"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 2,
+      "seconds": 6,
+      "caught": false
+    },
+    {
+      "do": "describe",
+      "stage": "5-done-keeps-what-caught",
+      "note": "Done keeps the window the handles ended on: two pieces, six seconds, starting exactly at the cut"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-done-keeps-what-caught"
+    }
+  ]
+}
