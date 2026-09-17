@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/crop-resize-command",
+  "setup": { "forget": ["measure", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "waitFor", "condition": "dialogGone", "value": "Resize Image" },
+
+    { "do": "toolFlyout", "tool": "Crop", "ticked": "Free" },
+    { "do": "describe", "stage": "1-crop-list", "note": "Crop's list ends with Resize Image, and the log says (command): it is not one of the aspect locks" },
+
+    { "do": "toolFlyout", "tool": "Crop", "choose": "Resize Image" },
+    { "do": "waitFor", "condition": "dialogUp", "value": "Resize Image" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "2-resize-dialog", "note": "the row opened the resize dialog AND left Select in hand, which is what makes it a command rather than a mode" },
+    { "do": "snapshot", "name": "crop-resize-dialog" },
+
+    { "do": "action", "action": "closeSheets" },
+    { "do": "waitFor", "condition": "dialogGone", "value": "Resize Image" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "3-closed", "note": "dialog away, still on Select, nothing about the crop lock touched" },
+
+    { "do": "toolFlyout", "tool": "Crop", "ticked": "Free", "choose": "16:9" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "waitFor", "condition": "dialogGone", "value": "Resize Image" },
+    { "do": "describe", "stage": "4-mode-row", "note": "the contrast: a MODE row in the same list does pick the tool up, and opens no dialog" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "waitFor", "condition": "tool", "value": "select" }
+  ]
+}

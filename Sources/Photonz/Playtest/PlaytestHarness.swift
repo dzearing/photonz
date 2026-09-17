@@ -918,7 +918,14 @@ private final class Run {
                 throw Failure(description: "no tool called \"\(tool)\" is keeping a list in its own button; "
                     + "the ones that are: " + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
             }
-            let reading = rows.map { "\($0.title)\($0.isLive ? " (ticked)" : "")" }.joined(separator: ", ")
+            func describeRow(_ row: ToolFlyoutRow) -> String {
+                var words = row.title
+                if row.isLive { words += " (ticked)" }
+                if row.isCommand { words += " (command)" }
+                if !row.isEnabled { words += " (greyed)" }
+                return words
+            }
+            let reading = rows.map(describeRow).joined(separator: ", ")
             let live = rows.first(where: \.isLive)?.title ?? "nothing"
             if let ticked, live != ticked {
                 throw Failure(description: "\(tool)'s list has \(live) ticked and it should be \"\(ticked)\"; "
@@ -926,12 +933,23 @@ private final class Run {
             }
             var detail = "\(tool) lists \(reading)"
             if let choose {
-                guard let row = rows.first(where: { $0.title == choose }) else {
+                // A command row prints its ellipsis ("Resize Image…") because
+                // that is what a person reads, and a walk should not have to
+                // type one to name it. Exact words win; the forgiving match is
+                // only reached when nothing answered to them.
+                guard let row = rows.first(where: { $0.title == choose })
+                        ?? rows.first(where: { Self.sameRowWords($0.title, choose) }) else {
                     throw Failure(description: "\(tool)'s list has no row called \"\(choose)\"; it reads: \(reading)")
+                }
+                // Firing what the pointer could not is how a walk comes to
+                // report a dialog opening in a build where the row is greyed.
+                guard row.isEnabled else {
+                    throw Failure(description: "\(tool)'s row \"\(row.title)\" is greyed, so a click on it would do "
+                        + "nothing; the list reads: \(reading)")
                 }
                 row.choose()
                 await sleep(0.2)
-                detail += "; chose \(choose)"
+                detail += "; chose \(describeRow(row))"
             }
             note(number, step.name, detail, state: describe())
 
@@ -7027,10 +7045,52 @@ private final class Run {
     /// through the log for the numbers. A claim about where a section SITS is
     /// answered by the list of sections, and the list is short.
     private func conditionHint(_ condition: PlaytestCondition) -> String {
+        // A dialog named wrong waits out its whole timeout looking like the app
+        // never opened it, so say what the names are.
+        if case .dialog(let name, _) = condition, !Self.knowsDialog(name) {
+            return "; \"\(name)\" is not a dialog this build knows; the ones it does: "
+                + Self.dialogNames.joined(separator: ", ")
+        }
         guard case .sectionDirectlyUnder = condition else { return "" }
         let drawn = InspectorLayoutProbe.shared.measured.map(\.title)
         guard !drawn.isEmpty else { return "; the dock is drawing no sections at all" }
         return "; the dock draws: " + drawn.joined(separator: " > ")
+    }
+
+    /// Two rows read as the same words when only the way they trail off differs,
+    /// so a walk can write "Resize Image" for a row that prints "Resize Image…".
+    /// Case is forgiven with it: the words on a row are the walk's handle on it,
+    /// not a password.
+    private static func sameRowWords(_ a: String, _ b: String) -> Bool {
+        func plain(_ s: String) -> String {
+            var t = s.trimmingCharacters(in: .whitespaces)
+            while t.hasSuffix("\u{2026}") || t.hasSuffix(".") { t.removeLast() }
+            return t.trimmingCharacters(in: .whitespaces).lowercased()
+        }
+        return plain(a) == plain(b)
+    }
+
+    /// The dialogs a walk can wait on, by the words at the top of each. A sheet
+    /// is drawn by the app rather than by AppKit, so there is no window in the
+    /// list carrying its name: the editor is what knows.
+    private static let dialogNames = ["Resize Image", "Canvas Size", "Export", "New Frame", "Blank Canvas"]
+
+    private static func knowsDialog(_ name: String) -> Bool {
+        dialogNames.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Whether that dialog is up. Nil when nothing in the app answers to the
+    /// name, which is a walk with a typo in it rather than a dialog that
+    /// refused to open, and which must never read as "it has gone".
+    private static func isDialogUp(_ name: String, in editor: EditorState) -> Bool? {
+        switch name.lowercased() {
+        case "resize image": editor.isResizeDialogPresented
+        case "canvas size": editor.isCanvasSizeDialogPresented
+        case "export": editor.isExportDialogPresented
+        case "new frame": editor.isNewFrameDialogPresented
+        case "blank canvas": editor.isBlankCanvasDialogPresented
+        default: nil
+        }
     }
 
     private func holds(_ condition: PlaytestCondition, editor: EditorState?) -> Bool {
@@ -7073,6 +7133,8 @@ private final class Run {
             TutorialController.shared.run?.step.id == id
         case .tutorialFinished(let id):
             TutorialController.shared.finished?.guideID == id
+        case .dialog(let name, let up):
+            Self.isDialogUp(name, in: editor).map { $0 == up } ?? false
         }
     }
 

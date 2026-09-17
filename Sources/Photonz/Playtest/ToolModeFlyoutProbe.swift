@@ -8,9 +8,10 @@
 // source rather than from the app.
 //
 // So the button says what its list holds. Each row hands over its words, its
-// glyph, whether it is the live one, and THE SAME closure its own row runs —
-// one closure, used by both, so a walk can never choose something the pointer
-// would not.
+// glyph, whether it is the live one, whether it is a command rather than a
+// mode, whether it can be pressed at all, and THE SAME closure its own row
+// runs — one closure, used by both, so a walk can never choose something the
+// pointer would not.
 //
 // Probe builds only; the shipping app compiles the no-op at the bottom.
 import SwiftUI
@@ -19,15 +20,37 @@ import SwiftUI
 /// the button can name the type either side of the probe flag; only a probe
 /// build ever asks for one.
 @MainActor struct ToolFlyoutRow {
-    /// The words on the row: "Gap", "16:9".
+    /// The words on the row: "Gap", "16:9", "Resize Image…".
     let title: String
     /// The glyph beside them.
     let symbol: String
     /// Whether this is the mode the tool is in, which is the row wearing the
-    /// tick.
+    /// tick. Always false for a command row, which is not a mode to be in.
     let isLive: Bool
+    /// Whether this row is a COMMAND rather than a mode: the ones at the foot
+    /// of the list, below the divider, that do something and leave the tool in
+    /// your hand alone (Crop carries Resize Image). A walk reads this so its
+    /// log says which kind of row it pressed, and so a change that quietly
+    /// turned a command into a mode is a walk that fails rather than a
+    /// difference nobody sees.
+    let isCommand: Bool
+    /// Whether the row can be pressed at all. A command with nothing to act on
+    /// is greyed (Resize Image with no picture open), and a walk must not be
+    /// able to fire what a pointer could not.
+    let isEnabled: Bool
     /// Exactly what a click on the row runs.
     let choose: @MainActor () -> Void
+
+    init(title: String, symbol: String, isLive: Bool,
+         isCommand: Bool = false, isEnabled: Bool = true,
+         choose: @escaping @MainActor () -> Void) {
+        self.title = title
+        self.symbol = symbol
+        self.isLive = isLive
+        self.isCommand = isCommand
+        self.isEnabled = isEnabled
+        self.choose = choose
+    }
 }
 
 #if PHOTONZ_PLAYTEST

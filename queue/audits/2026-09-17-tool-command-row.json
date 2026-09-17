@@ -1,0 +1,26 @@
+{
+  "feature": "A walk can press the command at the foot of a tool's list",
+  "epic": "unmanned-loop",
+  "summary": "Crop's list ends with Resize Image, a command rather than an aspect lock. A scripted walk can now read that row, press it by its words, and check the dialog it opens, so a change that quietly turned it into a mode or dropped it would fail a walk instead of going unnoticed.",
+  "setup": "Nothing to turn on. Photonz Next with the tool bar families flag, which is on by default. The row itself looks and behaves exactly as it did.",
+  "try": [
+    { "do": "Open any picture in Photonz Dev." },
+    { "do": "Press and hold the Crop button in the floating tool bar." },
+    { "do": "Read the list: four aspect locks, a divider, then Resize Image with its chord on the right." },
+    { "do": "Pick Resize Image.", "shot": "2026-09-17-tool-command-row.png" },
+    { "do": "Check the tool bar behind the dialog: whatever tool you had is still the one lit." },
+    { "do": "Cancel the dialog, then press and hold Crop again and pick 16:9 instead." },
+    { "do": "Note the difference: a mode row puts Crop in your hand, the command row does not." }
+  ],
+  "evaluate": [
+    "Does Resize Image read as a different KIND of row from the four locks above it, or does the divider alone have to carry that?",
+    "Is Crop the right button to find Resize Image under, or would you look for it somewhere else first?",
+    "Opening the dialog leaves your current tool alone. Is that what you expected, or did you expect Crop to come into your hand?",
+    "With no picture open the row is greyed rather than gone. Is greyed the right answer there?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole run, so both walks were forced past the refusal with PHOTONZ_ALLOW_LOCKED_WALK=1, which the harness keeps for work on the harness itself. Neither walk looks a control up by name, which is the one thing a lock takes away, and the picture above is a real screen capture taken during the locked run. Even so, a sweep has been asked for so both walks are re-run on an unlocked Mac before anyone treats them as green.",
+    "The command row still only shows up when the tool has more than one mode OR carries a command. Before this it silently vanished for a one-mode tool, which no tool hits today but was a trap waiting.",
+    "A walk still cannot see that the row is greyed with no picture open, because every walk opens one first. The check exists in the harness (a greyed row fails rather than firing), nothing exercises it."
+  ]
+}

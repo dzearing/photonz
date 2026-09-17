@@ -993,14 +993,17 @@ struct EditorView: View {
     /// it is the other way to change the picture's bounds, so it rides with
     /// Crop rather than spending a slot of its own. The chord is printed for
     /// teaching; the Image menu is what fires it.
-    private var resizeMenuRow: some View {
-        Button {
+    ///
+    /// Described rather than built here, so the button puts the row together:
+    /// that is what lets a walk read the row and press it by its words instead
+    /// of the harness having to take the app's word for it.
+    private var resizeCommand: ToolCommand {
+        ToolCommand(title: "Resize Image…",
+                    symbol: "arrow.down.right.and.arrow.up.left.rectangle",
+                    shortcut: KeyboardShortcut("i", modifiers: [.command, .option]),
+                    isEnabled: editorState.document != nil) {
             editorState.isResizeDialogPresented = true
-        } label: {
-            Label("Resize Image…", systemImage: "arrow.down.right.and.arrow.up.left.rectangle")
         }
-        .keyboardShortcut("i", modifiers: [.command, .option])
-        .disabled(editorState.document == nil)
     }
 
     /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
@@ -1875,7 +1878,7 @@ struct EditorView: View {
                 namespace: toolbarNamespace,
                 activate: { editorState.setTool(.crop) },
                 keyCycles: false,
-                footer: Experiments.shared.toolGroupsEnabled ? AnyView(resizeMenuRow) : nil,
+                command: Experiments.shared.toolGroupsEnabled ? resizeCommand : nil,
                 pressedKey: { editorState.setTool(.crop) })
             .tutorialAnchor(.tool(.crop))
         } else {

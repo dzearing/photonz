@@ -506,6 +506,15 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// which used to be a moment nothing could describe: the callout simply
     /// vanished (`TutorialFinish`).
     case tutorialFinished(String)
+    /// A dialog is up (or has gone), named by the words at the top of it:
+    /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
+    ///
+    /// A dialog is a sheet the app draws for itself, so there is no AppKit
+    /// window carrying its name for a walk to find, and the only thing a walk
+    /// could say about one was that the step which opens it did not throw.
+    /// This asks the editor whether the sheet is really up, so "pressing that
+    /// row opened the resize dialog" is a step the walk fails on.
+    case dialog(String, up: Bool)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -2456,7 +2465,9 @@ public enum PlaytestStep: Sendable, Equatable {
             case "layerRowInView": .layerRowInView(try f.string("value"))
             case "tutorialStep": .tutorialStep(try f.string("value"))
             case "tutorialFinished": .tutorialFinished(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep or tutorialFinished")
+            case "dialogUp": .dialog(try f.string("value"), up: true)
+            case "dialogGone": .dialog(try f.string("value"), up: false)
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, dialogUp or dialogGone")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

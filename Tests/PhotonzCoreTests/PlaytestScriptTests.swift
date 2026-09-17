@@ -2925,6 +2925,53 @@ struct PlaytestScriptTests {
         #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
     }
 
+    @Test func waitForReadsWhetherADialogIsUp() {
+        // A dialog is a sheet the app draws itself, so nothing in the window
+        // answers to its name. The condition asks the editor instead, by the
+        // words on the dialog.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "dialogUp", "value": "Resize Image", "timeout": 3 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .dialog("Resize Image", up: true) && timeout == 3)
+    }
+
+    @Test func waitForReadsWhetherADialogHasGone() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "dialogGone", "value": "Resize Image" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .dialog("Resize Image", up: false))
+    }
+
+    @Test func waitForRejectsADialogWithNoName() {
+        let json = """
+        { "out": "/tmp/x", "steps": [ { "do": "waitFor", "condition": "dialogUp" } ] }
+        """
+        #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
+    }
+
+    @Test func aToolFlyoutStepCanChooseTheCommandAtTheFootOfTheList() {
+        // Crop's list ends with Resize Image, which is a command rather than a
+        // mode. A walk names it the same way it names a mode: by its words.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "toolFlyout", "tool": "Crop", "choose": "Resize Image" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .toolFlyout(let tool, let choose, let ticked) = script.steps[0] else {
+            Issue.record("toolFlyout"); return
+        }
+        #expect(tool == "Crop" && choose == "Resize Image" && ticked == nil)
+    }
+
     // MARK: - The colours a path came out wearing
 
     @Test("An expectPath step can claim how many points curve on one side only")

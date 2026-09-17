@@ -11,6 +11,40 @@ struct ToolMode<Mode: Hashable>: Identifiable {
     var id: Mode { mode }
 }
 
+/// A command at the foot of a tool's list: not a mode, and not a tool of its
+/// own. It belongs to the same family as the tool (Crop carries Resize Image,
+/// since both change the picture's bounds), it does its thing, and it leaves
+/// the tool in your hand alone.
+///
+/// Described rather than handed over as a finished view, so the button can put
+/// the row together itself: that is what lets the row carry its own chord and
+/// what lets a walk read it and press it by its words. Handed over as an
+/// `AnyView` the row was opaque, and the only thing anyone could say about
+/// Resize Image was what the source said.
+struct ToolCommand {
+    /// The words on the row, as a person reads them: "Resize Image…".
+    let title: String
+    /// The glyph beside them.
+    let symbol: String
+    /// The chord printed on the row. Printed for teaching: the menu bar is
+    /// what a person's fingers actually reach, and this says which keys.
+    let shortcut: KeyboardShortcut?
+    /// Whether there is anything for it to act on. A command with nothing to
+    /// do is greyed rather than missing, so the list does not change shape.
+    let isEnabled: Bool
+    /// What pressing the row does.
+    let run: @MainActor () -> Void
+
+    init(title: String, symbol: String, shortcut: KeyboardShortcut? = nil,
+         isEnabled: Bool = true, run: @escaping @MainActor () -> Void) {
+        self.title = title
+        self.symbol = symbol
+        self.shortcut = shortcut
+        self.isEnabled = isEnabled
+        self.run = run
+    }
+}
+
 /// A tool button that owns its own modes (UX-PATTERNS D15).
 ///
 /// The floating tool bar is a fixed, scarce strip, so its width must not grow
@@ -66,10 +100,10 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// a deliberate pick, and the key stays a plain "pick this tool up". Only
     /// the wording changes here; `pressedKey` is what actually decides.
     var keyCycles: Bool = true
-    /// Extra rows at the foot of the list, below the modes: a command that
-    /// belongs to the same family but is not a mode (Crop carries Resize
-    /// Image, since both change the picture's bounds). Nil for none.
-    var footer: AnyView? = nil
+    /// A command at the foot of the list, below the modes: something in the
+    /// same family that is not a mode (Crop carries Resize Image, since both
+    /// change the picture's bounds). Nil for none.
+    var command: ToolCommand? = nil
     /// What the tool's key does: pick the tool up, or, when it is already in
     /// hand, move to the next mode. The caller decides from LIVE state rather
     /// than from `isActive`, because a keyboard shortcut's action is registered
@@ -99,15 +133,22 @@ struct ToolModeButton<Mode: Hashable>: View {
 
     private var tooltip: String {
         guard let current else { return "\(toolTitle)\(keySuffix)" }
-        guard modes.count > 1 else { return "\(current.help)\(keySuffix)" }
+        guard hasList else { return "\(current.help)\(keySuffix)" }
         guard let keyLabel else { return "\(current.help)\nPress and hold for the list." }
-        guard keyCycles else { return "\(current.help)\(keySuffix)\nPress and hold for the list." }
+        guard keyCycles, modes.count > 1 else { return "\(current.help)\(keySuffix)\nPress and hold for the list." }
         return "\(current.help)\n\(keyLabel) cycles modes. Press and hold for the list."
     }
 
+    /// Whether there is anything inside the button worth opening: more than one
+    /// mode, or a command riding at the foot. Without the second half a tool
+    /// with one mode and a command drew as a plain button and the command
+    /// silently vanished, which is a row nobody could reach and nobody could
+    /// see was missing.
+    private var hasList: Bool { modes.count > 1 || command != nil }
+
     var body: some View {
         Group {
-            if modes.count > 1 {
+            if hasList {
                 modeMenu
             } else {
                 plainButton
@@ -139,7 +180,7 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// which is how a pro editor has always flagged a tool group, and it costs
     /// zero extra width.
     @ViewBuilder private var moreMarker: some View {
-        if modes.count > 1 {
+        if hasList {
             ToolBarMoreMarker(isActive: isActive)
         }
     }
@@ -176,6 +217,17 @@ struct ToolModeButton<Mode: Hashable>: View {
         }
     }
 
+    /// The command at the foot, built here rather than handed in ready-made, so
+    /// the row carries its own chord and its own greying and so the probe below
+    /// can describe and fire the same thing a click fires.
+    private func commandRow(_ command: ToolCommand) -> some View {
+        Button { command.run() } label: {
+            Label(command.title, systemImage: command.symbol)
+        }
+        .keyboardShortcut(command.shortcut)
+        .disabled(!command.isEnabled)
+    }
+
     /// Click picks the tool up; press-and-hold or the chevron opens the modes.
     private var modeMenu: some View {
         Menu {
@@ -189,9 +241,9 @@ struct ToolModeButton<Mode: Hashable>: View {
                 // nothing.
                 Text("Press \(keyLabel) to cycle")
             }
-            if let footer {
+            if let command {
                 Divider()
-                footer
+                commandRow(command)
             }
         } label: {
             glyph
@@ -217,7 +269,11 @@ struct ToolModeButton<Mode: Hashable>: View {
         // own row runs. Probe builds only; a no-op everywhere else.
         .toolFlyoutProbe(
             tool: toolTitle,
-            signature: modes.map { "\($0.title)\($0.mode == selection ? "*" : "")" }
+            // The command rides in the signature too, greying and all, so the
+            // list a walk reads goes stale the moment Resize Image stops being
+            // pressable rather than the next time a mode happens to change.
+            signature: (modes.map { "\($0.title)\($0.mode == selection ? "*" : "")" }
+                        + (command.map { ["\($0.title)\($0.isEnabled ? "" : " (off)")"] } ?? []))
                 .joined(separator: "|"),
             rows: {
                 modes.map { mode in
@@ -225,6 +281,11 @@ struct ToolModeButton<Mode: Hashable>: View {
                                   isLive: mode.mode == selection,
                                   choose: { choose(mode.mode) })
                 }
+                + (command.map {
+                    [ToolFlyoutRow(title: $0.title, symbol: $0.symbol, isLive: false,
+                                   isCommand: true, isEnabled: $0.isEnabled,
+                                   choose: $0.run)]
+                } ?? [])
             })
     }
 
