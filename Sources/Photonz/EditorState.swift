@@ -82,6 +82,16 @@ final class EditorState {
     /// Session chrome like the words above: counting a vote changes no pixel
     /// and costs no undo step.
     @ObservationIgnored var familyTheRunsAreSetIn: [UUID?: String?] = [:]
+    /// The batch readings this window has already made, newest first, so the
+    /// line counting what one gave up on can be asked for again long after it
+    /// has faded (`TextReading.Remembered`, `EditorState+ReadText`).
+    ///
+    /// Several because one document can hold several screenshots, and a person
+    /// who reads two pages and comes back to the first expects the first
+    /// page's answer, not the second's. Capped at `readingsRemembered`, and
+    /// session chrome like the vote above: it changes no pixel and costs no
+    /// undo step.
+    @ObservationIgnored var rememberedReadings: [TextReading.Remembered] = []
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 

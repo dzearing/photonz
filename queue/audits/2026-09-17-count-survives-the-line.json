@@ -1,0 +1,33 @@
+{
+  "feature": "The count of what a reading gave up on outlives its line",
+  "epic": "ui-building",
+  "summary": "Reading every label in a separated screenshot ends with a line counting how many stayed pictures, and that count is the only way to them. The line goes when you press it and six seconds later if you do not, and until now everything the app knew about those labels went with it. Now the reading is kept: point Turn into Text at the picture the labels came off and the same line comes straight back, with the same count to press, without reading anything again.",
+  "setup": "Photonz Dev, Experiments window, release Next. Separate a screenshot into layers and Read every label in a separated screenshot at once are both on by default.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png." },
+    { "do": "Right click its row in the layers list and choose Separate into Layers." },
+    { "do": "Press Read the Words on the line at the bottom of the canvas, and read what it leaves: 12 labels, set in SF Pro. 3 stayed pictures." },
+    { "do": "Press 3 stayed pictures to pick them, then click somewhere else on the canvas. The line is gone and so is any sign of which three they were." },
+    { "do": "Click the Background row in the layers list, then choose Layer ▸ Turn into Text.",
+      "shot": "2026-09-17-count-survives-the-line-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press 3 stayed pictures on the line that came back: the same three labels are picked again." },
+    { "do": "Delete one of the three, click the Background row and choose Turn into Text once more.",
+      "shot": "2026-09-17-count-survives-the-line-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Read that line: 2 stayed pictures, not 3. The count follows the page rather than repeating what it once said." }
+  ],
+  "evaluate": [
+    "Pointing Turn into Text at the screenshot is the way back. Is that the gesture you would have reached for, or were you hunting for something else?",
+    "The line that returns still opens with Turned into text, over a canvas where nothing changed this time. Does that read as the app answering you, or as it claiming it just did something?",
+    "The count quietly shrinks when a label is deleted. Is that better than it refusing to answer once the page has been touched?",
+    "Nothing new appears on screen for any of this. Is the way back findable without some mark, on the picture's own row or elsewhere?",
+    "It lasts as long as the window. Should a reading survive closing and reopening the document too, or is one sitting the right amount of memory?"
+  ],
+  "rough": [
+    "Nothing advertises the way back. The Background row already carries a note saying what is left in the picture, and the number of labels a reading gave up on would sit naturally beside it, but that is a new mark on screen and this task was explicitly not to add one.",
+    "The returning line says Turned into text, which is the verb of the first run. It is the same report and the same numbers, but a person reading it a second time could take it as a second reading having happened.",
+    "A straggler somebody has moved or stretched stands the whole reading down, so the ask goes through and reads every stray again rather than just the one that changed. That is the safe answer and it is more work than it needs to be.",
+    "Close the document and open it again and the reading is gone, because this is kept in the window and never in the file. Getting the count back then means reading the page again."
+  ]
+}

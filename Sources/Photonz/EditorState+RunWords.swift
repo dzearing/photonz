@@ -116,6 +116,9 @@ extension EditorState {
         // And what the runs of that document voted their family to be: these
         // are not those runs.
         familyTheRunsAreSetIn = [:]
+        // And the readings already made in this window, for the same reason:
+        // a line about labels that are not in front of anybody any more.
+        rememberedReadings = []
     }
 
     /// What the layers list and the find field name a separated run from:

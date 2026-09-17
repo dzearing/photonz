@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/the-count-survives-the-line",
+  "seed": "THE LINE GOES, THE ANSWER STAYS. Reading every label in a separated screenshot ends with a line saying how many came back as words and how many stayed pictures, and that count is the only way to the ones that stayed: they look exactly like the ones that came back. The line goes the moment it is pressed, and six seconds later if it is not. Until now everything the reading knew went with it. This walk reads an effects panel, presses the count, clicks away, and then asks to read the page again by pointing Turn into Text at the picture the labels came off. The same line comes straight back, with the same count and the same words to press, and nothing is read to get it: the app already had the answer. Then it deletes one of the three and asks again, and the line says two, because a count that goes stale is worse than no count at all.",
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-separate-into-layers": true,
+      "next-read-every-label": true,
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": false,
+      "next-a-separation-arrives-shut": false
+    }
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "press", "control": "Read the Words" },
+    { "do": "wait", "seconds": 3 },
+
+    { "do": "describe", "stage": "1-the-line-counts-what-it-gave-up-on", "note": "Twelve labels came back as words and three did not. The count of the three is the only part of the sentence a person can act on, and it is about to disappear." },
+    { "do": "expectNotice", "says": "Turned into text · 12 labels, set in SF Pro. 3 stayed pictures" },
+    { "do": "snapshot", "name": "survives-1-the-line-is-up" },
+
+    { "do": "press", "control": "3 stayed pictures" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Text 3", "Text 5", "Text 8"] },
+    { "do": "click", "at": [1000, 220] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-the-line-is-gone", "note": "Pressing the count took the line away, and a click on the canvas moved on to something else. Six seconds of doing nothing would have taken it away just the same. Before this walk's change, everything the reading knew about those three labels went with it." },
+    { "do": "expectNotice", "absent": true },
+    { "do": "snapshot", "name": "survives-2-nothing-on-screen" },
+
+    { "do": "describe", "stage": "3-ask-the-page-again", "note": "THE TEST: the picture the labels came off is picked and Turn into Text is run on it, which is a person saying read this page again. The answer comes back at once, in the same words, with the same count to press, and nothing was read to produce it." },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "turnIntoText" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectNotice", "says": "Turned into text · 12 labels, set in SF Pro. 3 stayed pictures" },
+    { "do": "snapshot", "name": "survives-3-the-same-line-is-back" },
+
+    { "do": "describe", "stage": "4-and-it-still-goes-to-them", "note": "The count that came back is the same door it was: pressing it picks the three labels the reading gave up on, on the canvas and in the layers list." },
+    { "do": "press", "control": "3 stayed pictures" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Text 3", "Text 5", "Text 8"] },
+    { "do": "snapshot", "name": "survives-4-the-three-are-picked" },
+
+    { "do": "describe", "stage": "5-and-it-never-goes-stale", "note": "One of the three is deleted by hand. Asking the page again now says two, not three: a remembered count that names a label nobody can find any more would be worse than no count at all." },
+    { "do": "selectRow", "row": "Text 5" },
+    { "do": "action", "action": "deleteLayer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "turnIntoText" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectNotice", "says": "Turned into text · 12 labels, set in SF Pro. 2 stayed pictures" },
+    { "do": "snapshot", "name": "survives-5-two-now" },
+    { "do": "render", "name": "survives-6-document" }
+  ]
+}

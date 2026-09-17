@@ -297,6 +297,10 @@ extension EditorState {
     func turnIntoTextForLayers(ids: Set<UUID>) {
         guard let document else { return }
         let targets = runsToRead(ids).filter { !separationsInFlight.contains($0) }
+        // Asked to read something a reading has already answered for: say what
+        // it found, at once, rather than reading the same labels to the same
+        // answer a second time.
+        if sayAgainWhatAReadingFound(askedFor: ids, about: targets) { return }
         guard targets.count > 1 else {
             if let only = targets.first { turnIntoText(id: only) }
             return
@@ -424,6 +428,122 @@ extension EditorState {
         raiseCanvasNotice(.turnedIntoTextInBatch(
             TextReading.Batch(read: edits.count, stillPictures: stayed.count, family: family)),
             action: stayed.isEmpty ? nil : .findStillPictures(labels: stayed))
+        // And the line is kept, because in six seconds it is gone and the count
+        // is the only way to those labels.
+        rememberTheReading(read: edits.map(\.id), stayed: stayed, family: family)
+    }
+
+    // MARK: - The line outlives itself
+
+    /// How many readings a window keeps. One per screenshot somebody has read
+    /// is the real shape of it, and a document with more than eight of those
+    /// in one sitting has older answers nobody is coming back to.
+    private static let readingsRemembered = 8
+
+    /// Keeps what a reading landed and what it gave up on, so its line can be
+    /// said again (`TextReading.Remembered`).
+    ///
+    /// Reading the same labels again supersedes what was kept about them:
+    /// nothing may hold two answers about one label, or asking twice would get
+    /// whichever was filed first.
+    private func rememberTheReading(read: [UUID], stayed: [UUID], family: String?) {
+        guard let document else { return }
+        let left = stayed.compactMap { id in
+            document.layer(id: id).map {
+                TextReading.Remembered.StillAPicture(id: id, box: $0.frame)
+            }
+        }
+        let reading = TextReading.Remembered(read: read, stayed: left, family: family)
+        let touched = Set(read).union(stayed)
+        rememberedReadings.removeAll { !Set($0.read + $0.labels).isDisjoint(with: touched) }
+        guard reading.isWorthKeeping else { return }
+        rememberedReadings.insert(reading, at: 0)
+        rememberedReadings = Array(rememberedReadings.prefix(Self.readingsRemembered))
+    }
+
+    /// Says a kept reading's line again, and answers whether it did.
+    ///
+    /// Two asks bring one back, and both of them mean "what did you make of
+    /// this page?". The ask is the picture the labels came off
+    /// (`isThePageOf`), which is the way back that is always there; or it is
+    /// exactly the labels the reading gave up on and nothing else, which is
+    /// what Turn into Text on a shut separation's group comes to once the rest
+    /// of the page is words. Either way the app already has the answer, and
+    /// reading those labels again would come back word for word the same: the
+    /// pixels are the pixels and the family was settled the first time.
+    ///
+    /// Anything else is a different question and gets a real reading. Pointing
+    /// at ONE of the three strays means that stray, and it deserves a sentence
+    /// about itself rather than a line about a page; an ask that sweeps in a
+    /// picture nobody has offered to this yet has work in it nobody has done.
+    /// A remembered line stretched over either would be the app answering a
+    /// question it was not put.
+    ///
+    /// Nothing is shown that was not shown before: the same words, the same
+    /// count, the same thing to press, in the same place at the foot of the
+    /// canvas. Nothing is mutated either, so this costs no undo step.
+    private func sayAgainWhatAReadingFound(askedFor ids: Set<UUID>, about targets: [UUID]) -> Bool {
+        guard Experiments.shared.readEveryLabelEnabled else { return false }
+        let asked = Set(targets)
+        for (index, reading) in rememberedReadings.enumerated() {
+            guard let standing = reading.standing(given: rowsNow(in: reading)) else { continue }
+            guard Set(standing.labels) == asked || isThePageOf(standing, ids) else { continue }
+            // What is left of it is what is kept from here on, so the rows it
+            // has stopped describing are not walked again every time.
+            rememberedReadings[index] = standing
+            raiseCanvasNotice(.turnedIntoTextInBatch(standing.batch),
+                              action: .findStillPictures(labels: standing.labels))
+            return true
+        }
+        return false
+    }
+
+    /// Whether the ask is "read this page again", pointed at the page a
+    /// reading was made of.
+    ///
+    /// This is the way back that is always there. A separation leaves its
+    /// pieces lying on the picture they came off, and that picture keeps its
+    /// row in the layers list forever, so pointing Turn into Text at it is the
+    /// one gesture a person can always make and the words for it are the words
+    /// they would use: read this page again. Until now it read the whole
+    /// screenshot as a single run — a full recognition pass over the page — to
+    /// arrive at a sentence saying it should be separated first, which is the
+    /// worst of both: slow, and no answer.
+    ///
+    /// One layer, and it must not be a label itself: pointing at one of the
+    /// three strays means that stray, and it gets a real second reading and a
+    /// sentence about itself. Its labels have to lie inside it, which is what
+    /// makes it THEIR page rather than some other picture on the canvas.
+    private func isThePageOf(_ reading: TextReading.Remembered, _ ids: Set<UUID>) -> Bool {
+        guard ids.count == 1, let id = ids.first, let document,
+              let layer = document.layer(id: id), layer.isARunOfText != true,
+              let page = document.canvasBounds(of: id) else { return false }
+        // A hair of slack: a label's box can sit flush against the edge of the
+        // page it was cut from, and rounding must not push it outside.
+        let room = page.insetBy(dx: -1, dy: -1)
+        return reading.labels.allSatisfy { label in
+            document.canvasBounds(of: label).map(room.contains) ?? false
+        }
+    }
+
+    /// How the rows a reading was about look NOW, which is what decides
+    /// whether it still describes the document (`TextReading.RowNow`).
+    ///
+    /// A row that is neither words nor a readable picture — cropped, turned,
+    /// locked, or gone from the document — is left out, and left out means
+    /// forgotten: it is not a label this reading can still speak for.
+    private func rowsNow(in reading: TextReading.Remembered) -> [UUID: TextReading.RowNow] {
+        guard let document else { return [:] }
+        var rows: [UUID: TextReading.RowNow] = [:]
+        for id in reading.read + reading.labels {
+            guard let layer = document.layer(id: id) else { continue }
+            if layer.holdsWordsToRead {
+                rows[id] = .stillAPicture(box: layer.frame)
+            } else if layer.text != nil {
+                rows[id] = .words
+            }
+        }
+        return rows
     }
 
     /// Press the count: the labels the reading gave up on become the selection,

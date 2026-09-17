@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:07:38.416Z",
-  "updated": "2026-09-17T18:07:38.481Z",
+  "updated": "2026-09-17T19:27:05.136Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-find-what-stayed-a-picture.json, second item: once the line fades there is no way back, nothing remembers which labels a reading gave up on, so a person who reads the line, clicks the canvas and then changes their mind has to read the page again to get the count back.\n\nThat audit is for the task that shipped the count as the way to them (the-labels-a-reading-gave-up-on-can-be-found, done 2026-09-17), so this is its follow-up rather than a near-twin: that task made the count reach them, this one makes the count survive.\n\nNo card: nothing is added to the screen. If the shortest honest fix turns out to need a new control after all, stop and open one rather than inventing it.\n\nFiles: Sources/PhotonzCore/TextReadingBatch.swift (the Batch holds read, stillPictures and family and is thrown away), Sources/Photonz/EditorState+ReadText.swift, the notice in Sources/Photonz/EditorView.swift around canvasNoticeChip and CopyConfirmation´s six second life.\n\nNot reproduced by hand: the screen has been locked since 2026-09-15 so no walk can run here. The audit reproduced it while building the feature.",
@@ -30,6 +30,30 @@
     {
       "t": "2026-09-17T18:07:38.480Z",
       "note": "seq 2970 -> 60"
+    },
+    {
+      "t": "2026-09-17T19:12:59.464Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T19:21:26.234Z",
+      "note": "built it: TextReading.Remembered in PhotonzCore keeps each batch reading (which labels became words, which stayed pictures and the box each was in, the family), EditorState keeps up to eight of them per window, and turnIntoTextForLayers says the line again instead of reading. Two doors back: Turn into Text pointed at the picture the labels came off (always there, and it used to OCR the whole screenshot to refuse), or an ask that is exactly the labels it gave up on (the shut-group case). New walk the-count-survives-the-line-walk passes with five real window captures."
+    },
+    {
+      "t": "2026-09-17T19:22:23.201Z",
+      "note": "owns these walks: the-count-survives-the-line-walk"
+    },
+    {
+      "t": "2026-09-17T19:27:05.086Z",
+      "note": "left rough, none of it worth its own task: (1) nothing on screen advertises the way back, and the picture's own row would be the natural place to say it, but that is a new mark on screen and this task said not to add one without a card, so it is an audit line for the user to react to instead; (2) the line that returns still opens with Turned into text, which is the verb of the first run, over a canvas where nothing changed this time; (3) a straggler somebody has moved or stretched stands the whole reading down, so the ask reads every stray again rather than the one that changed, which is safe and more work than it needs to be; (4) it lasts as long as the window, never the file. Also: the acceptance's try recipe names settings-pane-2x, where every label reads and so no count ever appears; the audit uses effects-panel-2x, which is the capture with three stragglers."
+    },
+    {
+      "t": "2026-09-17T19:27:05.135Z",
+      "note": "filed one follow-up: a-walk-can-wait-for-something-to-fade (p3-low, unmanned-loop). Walk waits end as soon as the app goes quiet, so a walk asking for 8 seconds spends 0.1 and the six second pill is still up when it looks; reproduction is in that task. The walk here works around it by pressing the count, which also takes the line away. Also folded the four failing separate-* walks into walks-that-fail-in-the-full-sweep with a baseline showing they fail without this task's code."
     }
+  ],
+  "started": "2026-09-17T19:12:59.463Z",
+  "walks": [
+    "the-count-survives-the-line-walk"
   ]
 }

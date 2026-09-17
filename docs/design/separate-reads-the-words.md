@@ -148,6 +148,44 @@ three differences that all favour it:
   `docs/design/separate-into-layers.md`, "The page it came from settles the
   family".
 
+### The line goes, the count stays
+
+**Landed 2026-09-17** behind `next-read-every-label`, on by default in Next.
+
+The line the reading leaves counts what it gave up on, and that count is the
+only way to those labels: one that stayed a picture looks exactly like one that
+came back. The line lasts six seconds, and it goes the moment it is pressed.
+Everything the app knew about those three labels went with it, so somebody who
+read the line, clicked the canvas to look at something and then wanted the
+strays had to read the page a second time to get the count back. That is a full
+recognition pass for an answer the app already had, and it is the same answer:
+the pixels are the pixels and the family was settled the first time.
+
+So a reading is kept for as long as the document is open — which labels became
+words, which stayed pictures and the box each was drawn in, and the family the
+page was held to — and asking for it again says it again at once, in the same
+words, in the same place, with the same count to press
+(`TextReading.Remembered`). Nothing is added to the screen.
+
+Two asks bring it back, and both are things a person was going to do anyway:
+
+- **Point Turn into Text at the picture the labels came off.** A separation
+  leaves its pieces lying on the picture they came from, and that picture keeps
+  its row in the layers list forever, so this is the one gesture that is always
+  available and the words for it are the words a person would use: read this
+  page again. It used to read the whole screenshot as a single run to arrive at
+  a sentence saying it should be separated first, which was slow AND no answer.
+- **Ask for exactly the labels it gave up on** — which is what Turn into Text on
+  a shut separation's group comes to once the rest of the page is words.
+
+What it must never do is say something that has stopped being true, so every row
+is checked against the document as it is now. A label deleted since, or read or
+retyped by hand, is dropped and the count is smaller. A label drawn in a
+different box, or a reading taken back by undo, stands the memory down
+altogether and the ask goes through to a real reading — a stretched label is not
+the label the reading gave up on, and it deserves a real second look rather than
+a remembered no.
+
 ### The rows say their words, even though the canvas does not
 
 **Landed 2026-09-16** behind `next-a-separated-row-says-its-words`, on by

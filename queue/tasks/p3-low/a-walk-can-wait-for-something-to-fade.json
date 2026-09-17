@@ -1,0 +1,30 @@
+{
+  "id": "a-walk-can-wait-for-something-to-fade",
+  "title": "A walk can wait for something to fade",
+  "goal": "Scripted walks can no longer test anything that disappears on a timer. When a walk asks to wait eight seconds it now spends a tenth of a second, because waits end as soon as the app goes quiet, so the six second line at the foot of the canvas is still on screen when the walk looks. Nothing in the whole walk set can catch a notice that stops fading, or one that fades too early, and a notice that never goes away would sit over the picture until the window closes.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T19:24:51.233Z",
+  "updated": "2026-09-17T19:24:51.236Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-17 while building the-labels-a-reading-gave-up-on-can-still-be-fou. An earlier draft of Scripts/playtest/the-count-survives-the-line-walk.json clicked the canvas and then waited 8 seconds for the six-second pill to fade:\n\n  Scripts/playtest.sh Scripts/playtest/the-count-survives-the-line-walk.json --no-build\n  [16 wait] 8.0s asked, quiet after 0.10s; mainBusy 27.5ms over 13 passes, longest 16.3ms\n  [17 2-the-line-is-gone] ...\n  [18 expectNotice] FAILED: a pill is up under the canvas saying \"Turned into text · 12 labels, set in SF Pro. 3 stayed pictures\"\n  \"secondsSaved\" : 16.54\n\nThe pacing is PlaytestSettle (Sources/PhotonzCore/PlaytestSettle.swift, landed with a-full-walk-run-finishes-in-an-hour-not-four) and it is the right default: it took the suite from four hours to one. PHOTONZ_PLAYTEST_PACE=clock restores real waits, but a walk cannot ask for that by itself and a sweep would not run it that way.\n\nThe cheap fix is a waitFor condition, since waitFor already runs on the real clock (PlaytestHarness.swift, case .waitFor): add a notice condition to PlaytestCondition/holds() so a walk can write { \"do\": \"waitFor\", \"condition\": \"notice\", \"value\": \"absent\", \"timeout\": 10 }. The walk above works around it by pressing the count, which also takes the line away, so it proves the answer outlives the line without ever watching one fade.",
+  "acceptance": [
+    "A walk can say it is waiting for the canvas notice to go, and the run really waits for it rather than ending early.",
+    "A walk written that way fails when the notice is still up at the end of its wait, and passes when it has gone.",
+    "At least one existing walk uses it to prove the canvas line fades on its own."
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T19:24:51.235Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "the-count-survives-the-line-walk"
+  ]
+}

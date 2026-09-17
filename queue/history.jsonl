@@ -5198,3 +5198,13 @@
 {"t":"2026-09-17T19:12:23.240Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
 {"t":"2026-09-17T19:12:23.288Z","ev":"task_note","id":"every-starter-component-can-be-found-on-the-comp"}
 {"t":"2026-09-17T19:12:25.965Z","ev":"task_note","id":"the-components-shelf-is-still-there-after-you-ta"}
+{"t":"2026-09-17T19:12:41.959Z","ev":"task_done","id":"every-starter-component-can-be-found-on-the-comp","from":"in_progress","note":"Reproduced first: all five starters (Button, Text Field, Card, Nav Bar, Badge) are on the Components shelf of a fresh document, in two rows, with nothing typed. The walk was failing on reach, not on absence: the shelf's lazy grid does not build a tile below its own fold, and dropping one starter pushes the Library 300pt off the bottom of the panel and squeezes the shelf to one row of three. PlaytestHarness.tileTarget now scrolls the shelf to a named tile the way a person does; words-down-the-box-walk passes unchanged. The five are pinned by name in StarterComponentTests and by the new Scripts/playtest/starter-shelf-walk.json. Audit queue/audits/2026-09-17-starter-shelf.json with two real window pictures. The shelf vanishing after a drop is filed as the-components-shelf-is-still-there-after-you-ta. Verified: Scripts/test.sh green (8237), both owned walks pass, six more tile-drag walks pass; sweep requested for the other 35. Committed 2fe116e0, pushed."}
+{"t":"2026-09-17T19:12:59.466Z","ev":"task_started","id":"the-labels-a-reading-gave-up-on-can-still-be-fou","title":"The labels a reading gave up on can still be found after the line goes","priority":"p2-normal"}
+{"t":"2026-09-17T19:21:26.236Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-still-be-fou"}
+{"t":"2026-09-17T19:22:23.203Z","ev":"task_walks","id":"the-labels-a-reading-gave-up-on-can-still-be-fou","walks":["the-count-survives-the-line-walk"]}
+{"t":"2026-09-17T19:24:51.237Z","ev":"task_created","id":"a-walk-can-wait-for-something-to-fade","priority":"p3-low","title":"A walk can wait for something to fade"}
+{"t":"2026-09-17T19:26:53.968Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T19:26:55.831Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":["separate-hierarchy-walk","separate-boxes-walk","separate-shadow-walk","separate-whole-screenshot-walk"]}
+{"t":"2026-09-17T19:27:05.088Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-still-be-fou"}
+{"t":"2026-09-17T19:27:05.137Z","ev":"task_note","id":"the-labels-a-reading-gave-up-on-can-still-be-fou"}
+{"t":"2026-09-17T19:30:28.912Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-17T18:06:49.803Z",
+  "updated": "2026-09-17T19:30:28.911Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -339,6 +339,24 @@
     {
       "t": "2026-09-17T18:06:49.802Z",
       "note": "Manager pass 2026-09-17: pulled the Nav Bar tile failure out of this task and filed it as every-starter-component-can-be-found-on-the-comp. Reason: it is an app finding, not a walk finding (a starter component that may have stopped appearing on the shelf), and it has nothing to do with the locked screen, while this task is blocked behind the lock card and so cannot be claimed. The rest of the failing list stays here."
+    },
+    {
+      "t": "2026-09-17T19:26:53.966Z",
+      "note": "four separate-* walks fail on this machine today and they are not about the walks' own subject, they are about what Separate into Layers now produces. Run 2026-09-17 12:22 on a probe built from 2fe116e0: separate-hierarchy-walk step 13 (expect) \"no row called Box 2 is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3\"; separate-boxes-walk step 16, same error; separate-whole-screenshot-walk step 16 (expectLayers) \"173 layers in the document, more than the 151 claimed\"; separate-shadow-walk also failed. Baselined: I stashed my own task's source changes, rebuilt the probe and ran separate-hierarchy-walk and separate-boxes-walk again at 12:25, and both failed with the identical error, so this is not something the read-every-label work did. It reads like the box sweep finding a different set of pieces than when those walks were written (candidates in git log: 12364a49 'A page of labels comes back at one size', c5c13167 'A page of labels comes back at one weight'). Nobody owns these four yet."
+    },
+    {
+      "t": "2026-09-17T19:26:55.829Z",
+      "note": "owns these walks: separate-hierarchy-walk, separate-boxes-walk, separate-shadow-walk, separate-whole-screenshot-walk"
+    },
+    {
+      "t": "2026-09-17T19:30:28.910Z",
+      "note": "correction to the note above: the first baseline attempt at 12:25 was not valid, because the probe build failed (two SwiftPM builds were running at once) and the walk ran against a probe that still had the read-every-label changes in it. Done properly at 12:30: changes stashed, probe rebuilt from 2fe116e0 alone, separate-hierarchy-walk run again, and it fails with the identical error, step 13 (expect) \"no row called Box 2 is in the panel; the ones that are: Text 1, Box 4, Text 9, Fill, Box 3\". So the four separate-* failures are not from the read-every-label work. Worth knowing for anyone else doing this: two playtest builds at once make one of them print \"probe build failed\" and carry on with the old bundle, which is how the first attempt produced an answer that looked real."
     }
+  ],
+  "walks": [
+    "separate-hierarchy-walk",
+    "separate-boxes-walk",
+    "separate-shadow-walk",
+    "separate-whole-screenshot-walk"
   ]
 }
