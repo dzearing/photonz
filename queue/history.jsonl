@@ -4698,3 +4698,4 @@
 {"t":"2026-09-17T01:11:28.411Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
 {"t":"2026-09-17T01:11:30.678Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
 {"t":"2026-09-17T01:11:31.886Z","ev":"task_note","id":"two-shapes-joined-into-one-stop-calling-themselv"}
+{"t":"2026-09-17T01:11:45.241Z","ev":"task_done","id":"two-shapes-joined-into-one-stop-calling-themselv","from":"in_progress","note":"All four combines now leave the surviving row reading Path when nobody named it by hand, in the same undo step as the combine (PhotonzCore/PathCombining.swift). Seven new tests in PathCombineDocumentTests; full suite green, 7911 tests. Audit at queue/audits/2026-09-16-combined-shape-says-path.json. Not driven in the app: the screen was locked all task, so the walk reported locked and no window could be photographed; the pending sweep runs combine-shapes-walk once it is unlocked. Pushed as 183eaa45."}
