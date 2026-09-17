@@ -1,0 +1,72 @@
+{
+  "id": "copying-an-icon-carries-the-white-canvas-the-exp-copying-an-icon-should-the-white",
+  "taskId": "copying-an-icon-carries-the-white-canvas-the-exp",
+  "question": "Copying an icon: should the white canvas come with it?",
+  "context": "Exporting an icon as a PNG now leaves the blank white canvas out by default, with a checkbox in the sheet to put it back. Copy (Shift Command C) still puts the white on the clipboard, so the icon you save is see-through and the icon you paste is not. Copy has no sheet, so whatever it does it does silently. Reproduced today: the copied PNG reads solid white in all four corners where the exported one reads empty.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Copy leaves the canvas out too",
+      "summary": "Press Copy (Shift Command C) on a drawing made on a blank canvas and what lands on the clipboard is the drawing with nothing behind it, exactly like the PNG you would save. Paste it into a dark page and the icon sits on the dark. A screenshot or a captured screen is untouched and still copies with everything in it.",
+      "pros": [
+        "The picture you save and the picture you paste are finally the same picture",
+        "One rule to remember: the blank canvas is a workspace, not part of the drawing",
+        "Nothing new to learn, no new menu item, no new shortcut"
+      ],
+      "cons": [
+        "There is then no way at all to copy the white version, and today there is",
+        "A wireframe drawn on white and pasted into a dark chat loses its backing, so its dark lines land on nothing and disappear",
+        "Copy changes what it does without ever saying so, because it has no sheet to say it in"
+      ],
+      "mitigation": "Only a bottom layer that is one flat colour covering the whole canvas counts as a canvas, so a screenshot, a photograph or a screen capture never changes. To get the white back you would export a PNG with Include the background ticked and hand over the file."
+    },
+    {
+      "id": "b",
+      "label": "Copy leaves it out, holding Option copies it with",
+      "summary": "Copy does what option A does. Hold Option and the File menu's Copy Image becomes Copy Image with Background, on its own shortcut, and that one puts the drawing on its canvas exactly as today. The default agrees with Export and the old result is still one key away.",
+      "pros": [
+        "The picture you save and the picture you paste agree by default",
+        "Nothing is lost: the white version is still there for a wireframe or a card that needs its backing",
+        "Holding Option to reveal a variant of a command is the ordinary Mac way, so it costs no visible clutter"
+      ],
+      "cons": [
+        "A variant hidden behind Option is easy never to discover",
+        "There are now two ways to copy a picture instead of one"
+      ],
+      "mitigation": "The Export sheet already teaches the same idea with its Include the background checkbox and its colour swatch, so the two commands read as the same choice in two places rather than a new concept."
+    },
+    {
+      "id": "c",
+      "label": "Copy keeps the canvas, a second command leaves it out",
+      "summary": "Copy (Shift Command C) goes on doing exactly what it does today, white canvas and all. A new item sits under it in the File menu, Copy Image Without Background, always visible, for when you want to paste an icon onto a colour.",
+      "pros": [
+        "Nothing anybody is already doing changes",
+        "Both results are available and both are visible in the menu, nothing hidden",
+        "No silent change to a command people press all day"
+      ],
+      "cons": [
+        "The complaint in the report stays true: saving gives you see-through by default and copying gives you white by default",
+        "Two items of nearly the same name sitting in the menu at once"
+      ],
+      "mitigation": "The new item sits directly under Copy Image so the pair reads as one choice, and it can carry the same shortcut with Option added."
+    },
+    {
+      "id": "d",
+      "label": "Leave copy alone",
+      "summary": "Copy goes on putting the white canvas on the clipboard. Handing an icon over see-through stays an Export job: save the PNG with Include the background unticked and pass the file along.",
+      "pros": [
+        "Nothing changes and nothing can break",
+        "Copy stays literally what you can see on the canvas"
+      ],
+      "cons": [
+        "Pasting an icon onto a dark theme keeps putting a white box round it",
+        "The two ways of handing an icon over go on disagreeing"
+      ],
+      "mitigation": "Export already does the see-through hand-off, so the capability exists, it just costs a save and a file.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-09-17T07:14:13.026Z"
+}
