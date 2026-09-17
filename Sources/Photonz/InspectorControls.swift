@@ -76,6 +76,13 @@ struct SliderReadout: View {
     /// style a saved effect row edits. A different thing is a different
     /// number, so a half-typed draft does not carry across a change of
     /// selection.
+    ///
+    /// A row that names its reach (`PanelReach`) hands its NAME here, which
+    /// holds still across a pick — the whole point, since a value that moved
+    /// every click is what stopped the panel leaving the box alone. Nothing is
+    /// lost: the box lands its draft the moment it loses the keyboard, and
+    /// clicking the canvas to pick something else is exactly that, so there is
+    /// no half-typed number left to carry over.
     let identity: AnyHashable?
     /// Whether there is anything to type into. A row speaking for no layers
     /// draws its number and takes no keyboard, exactly as its slider does.
@@ -146,10 +153,18 @@ struct SliderReadout: View {
 /// The number beside it is typed into wherever the row says how its number is
 /// written (`typing`), and a typed number is ONE undo step, the same as a pull
 /// on the knob.
-struct LayerStyleSlider: View {
+struct LayerStyleSlider: View, Equatable {
     @Environment(EditorState.self) private var editorState
-    /// The layers one pull on this slider changes.
-    let layerIDs: [UUID]
+    /// The layers one pull on this slider changes, said as a NAME so the row
+    /// survives a change of selection that does not change its number
+    /// (`PanelReach`). The layers themselves are looked up at the moment the
+    /// knob moves.
+    let reach: PanelReach
+    /// Whether there is anything for this row to change. Handed in rather than
+    /// worked out here, because working it out would mean asking who is picked
+    /// while the row is being DRAWN, which is the very thing that stops the
+    /// panel leaving the row alone.
+    let isEnabled: Bool
     let label: String
     /// What the layers say: one number when they agree, Mixed when they do not.
     let reading: StyleReading<Double>
@@ -163,6 +178,48 @@ struct LayerStyleSlider: View {
     var field: LayerStyleField? = nil
     let apply: (inout LayerStyle, Double) -> Void
 
+    /// The row as it was always written: the layers, listed. Everything outside
+    /// Appearance still says it this way, because those rows really are about a
+    /// particular set of layers.
+    init(layerIDs: [UUID], label: String, reading: StyleReading<Double>,
+         range: ClosedRange<Double>, typing: SliderNumber = .points,
+         field: LayerStyleField? = nil,
+         apply: @escaping (inout LayerStyle, Double) -> Void) {
+        self.init(reach: .fixed(layerIDs), isEnabled: !layerIDs.isEmpty, label: label,
+                  reading: reading, range: range, typing: typing, field: field, apply: apply)
+    }
+
+    init(reach: PanelReach, isEnabled: Bool, label: String, reading: StyleReading<Double>,
+         range: ClosedRange<Double>, typing: SliderNumber = .points,
+         field: LayerStyleField? = nil,
+         apply: @escaping (inout LayerStyle, Double) -> Void) {
+        self.reach = reach
+        self.isEnabled = isEnabled
+        self.label = label
+        self.reading = reading
+        self.range = range
+        self.typing = typing
+        self.field = field
+        self.apply = apply
+    }
+
+    /// Everything a person can SEE about this row. What it does is named by
+    /// `reach` and looked up when it is used, so two rows that compare equal
+    /// really are interchangeable — which is what makes `.equatable()` safe
+    /// here and what takes the work out of clicking between two alike layers.
+    ///
+    /// `apply` is deliberately left out, and that carries ONE rule with it: a
+    /// call site's `apply` must depend on nothing but the number it is handed.
+    /// Every one of them sets a field of `LayerStyle` and does nothing else,
+    /// which is why this holds. A call site that one day closed over the
+    /// selection would be a row that looks right and edits the wrong layer,
+    /// with nothing to catch it, so it must take a `PanelReach` instead.
+    nonisolated static func == (a: LayerStyleSlider, b: LayerStyleSlider) -> Bool {
+        a.reach == b.reach && a.isEnabled == b.isEnabled && a.label == b.label
+            && a.reading == b.reading && a.range == b.range && a.typing == b.typing
+            && a.field == b.field
+    }
+
     /// Where the knob sits. Over layers that differ this is the first picked
     /// layer's number, and it is a starting point rather than a claim: the
     /// readout beside it says Mixed.
@@ -171,33 +228,43 @@ struct LayerStyleSlider: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        // Held onto by hand rather than read off `self` later: the closures
+        // below outlive the pass that built them now, and an @Environment read
+        // from a stale view is not something to rely on. The object itself
+        // never changes for the life of a window.
+        let state = editorState
+        let reach = reach
+        let apply = apply
+        return VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
-                if let field, let only = soleLayerID(layerIDs) {
-                    InstanceStyleRevert(layerID: only, field: field)
+                if let field {
+                    InstanceStyleRevert(reach: reach, field: field)
                 }
                 Spacer()
                 SliderReadout(
                     typing: typing, label: label, value: CGFloat(knob),
                     isMixed: reading.isMixed,
                     range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
-                    identity: layerIDs, isEnabled: !layerIDs.isEmpty,
+                    identity: reach, isEnabled: isEnabled,
                     // ONE undo step, the same as a pull on the knob is: a
                     // typed number is a one-shot edit with no preview behind
                     // it, so it goes the way the steppers and the switches go.
                     land: { value in
-                        editorState.setLayerStyle(ids: layerIDs) { apply(&$0, Double(value)) }
+                        let ids = state.layerIDs(reaching: reach)
+                        state.setLayerStyle(ids: ids) { apply(&$0, Double(value)) }
                     })
             }
             Slider(value: Binding(
                 get: { knob },
-                set: { v in editorState.previewLayerStyle(ids: layerIDs) { apply(&$0, v) } }),
+                set: { v in
+                    state.previewLayerStyle(ids: state.layerIDs(reaching: reach)) { apply(&$0, v) }
+                }),
                    in: range) { editing in
-                if !editing { editorState.commitLayerStyle(ids: layerIDs) }
+                if !editing { state.commitLayerStyle(ids: state.layerIDs(reaching: reach)) }
             }
             .controlSize(.small)
-            .disabled(layerIDs.isEmpty)
+            .disabled(!isEnabled)
             // Named so a walk can move it: a press lands in the middle of the
             // track, which is what putting the knob there by hand does. Without
             // this, everything in Effects could be photographed and never used.
@@ -215,8 +282,16 @@ struct LayerStyleSlider: View {
 /// While the shapes differ the readout says Mixed and the knob sits at the
 /// first picked shape's number, so the position is a starting point rather
 /// than a claim. The moment the knob moves they agree, and it says so.
-struct ShapeSlider: View {
-    let layerIDs: [UUID]
+struct ShapeSlider: View, Equatable {
+    @Environment(EditorState.self) private var editorState
+    /// The shapes one pull on this slider changes, said as a NAME so the row
+    /// survives a change of selection that does not change its number
+    /// (`PanelReach`).
+    let reach: PanelReach
+    /// Whether there is anything for this row to change. Handed in for the
+    /// same reason `LayerStyleSlider` takes it: asking who is picked while the
+    /// row is being drawn is what stops the panel leaving the row alone.
+    let isEnabled: Bool
     let label: String
     let reading: StyleReading<CGFloat>
     let range: ClosedRange<CGFloat>
@@ -231,6 +306,43 @@ struct ShapeSlider: View {
     let preview: ([UUID], CGFloat) -> Void
     let commit: ([UUID], CGFloat) -> Void
 
+    /// The row as it was always written: the layers, listed.
+    init(layerIDs: [UUID], label: String, reading: StyleReading<CGFloat>,
+         range: ClosedRange<CGFloat>, format: @escaping (CGFloat) -> String,
+         typing: SliderNumber? = nil, round: @escaping (CGFloat) -> CGFloat = { $0.rounded() },
+         preview: @escaping ([UUID], CGFloat) -> Void,
+         commit: @escaping ([UUID], CGFloat) -> Void) {
+        self.init(reach: .fixed(layerIDs), isEnabled: !layerIDs.isEmpty, label: label,
+                  reading: reading, range: range, format: format, typing: typing,
+                  round: round, preview: preview, commit: commit)
+    }
+
+    init(reach: PanelReach, isEnabled: Bool, label: String, reading: StyleReading<CGFloat>,
+         range: ClosedRange<CGFloat>, format: @escaping (CGFloat) -> String,
+         typing: SliderNumber? = nil, round: @escaping (CGFloat) -> CGFloat = { $0.rounded() },
+         preview: @escaping ([UUID], CGFloat) -> Void,
+         commit: @escaping ([UUID], CGFloat) -> Void) {
+        self.reach = reach
+        self.isEnabled = isEnabled
+        self.label = label
+        self.reading = reading
+        self.range = range
+        self.format = format
+        self.typing = typing
+        self.round = round
+        self.preview = preview
+        self.commit = commit
+    }
+
+    /// Everything a person can see about this row; what it DOES is named by
+    /// `reach` and looked up when it is used. See `LayerStyleSlider`, including
+    /// the rule the left-out closures carry: `format`, `round`, `preview` and
+    /// `commit` must depend on nothing but what they are handed.
+    nonisolated static func == (a: ShapeSlider, b: ShapeSlider) -> Bool {
+        a.reach == b.reach && a.isEnabled == b.isEnabled && a.label == b.label
+            && a.reading == b.reading && a.range == b.range && a.typing == b.typing
+    }
+
     /// Where the knob is while the hand is on it, so it moves smoothly even
     /// though what it sends is rounded.
     @State private var draft: CGFloat?
@@ -244,34 +356,41 @@ struct ShapeSlider: View {
     private var showsMixed: Bool { draft == nil && reading.isMixed }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        // Held by hand, not read off `self`: these closures outlive the pass
+        // that built them (see `PanelReach`).
+        let state = editorState
+        let reach = reach
+        let round = round
+        let preview = preview
+        let commit = commit
+        return VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 SliderReadout(
                     typing: typing, label: label, value: knob, isMixed: showsMixed,
                     range: range, format: format,
-                    identity: layerIDs, isEnabled: !layerIDs.isEmpty,
+                    identity: reach, isEnabled: isEnabled,
                     // The commit is ONE undo step on its own — it is what the
                     // end of a drag calls — so a typed number costs exactly
                     // what a pull costs. The shapes clamp it to the same ends
                     // the box already held it inside, so there is nothing for
                     // them to refuse.
-                    land: { value in commit(layerIDs, round(value)) })
+                    land: { value in commit(state.layerIDs(reaching: reach), round(value)) })
             }
             Slider(value: Binding(
                 get: { knob },
                 set: { v in
                     draft = v
-                    preview(layerIDs, round(v))
+                    preview(state.layerIDs(reaching: reach), round(v))
                 }), in: range) { editing in
                 if !editing {
-                    commit(layerIDs, round(draft ?? knob))
+                    commit(state.layerIDs(reaching: reach), round(draft ?? knob))
                     draft = nil
                 }
             }
             .controlSize(.small)
-            .disabled(layerIDs.isEmpty)
+            .disabled(!isEnabled)
             .playtestControl("Slider", detail: label)
         }
         .playtestField(label)

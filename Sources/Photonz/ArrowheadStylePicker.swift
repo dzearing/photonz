@@ -58,10 +58,17 @@ extension ArrowheadStyle {
 /// in) and by the picked arrow's section in the dock (what THIS one ends in).
 /// `selection` is optional so a mixture of picked arrows can show nothing
 /// chosen rather than lying about one of them; picking then sets them all.
-struct ArrowheadStylePicker: View {
+struct ArrowheadStylePicker: View, Equatable {
     let selection: ArrowheadStyle?
     let isMixed: Bool
     let pick: (ArrowheadStyle) -> Void
+
+    /// Which picture is lit, and nothing else. What a press does is looked up
+    /// when it happens, so the panel can leave the segments alone on a click
+    /// that does not change the ending (`PanelReach`).
+    nonisolated static func == (a: ArrowheadStylePicker, b: ArrowheadStylePicker) -> Bool {
+        a.selection == b.selection && a.isMixed == b.isMixed
+    }
 
     /// The word beside the caption: which ending is on, or that they differ.
     static func word(_ selection: ArrowheadStyle?, isMixed: Bool) -> String? {

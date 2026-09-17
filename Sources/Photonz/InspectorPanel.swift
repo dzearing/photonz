@@ -215,13 +215,40 @@ struct InspectorPanel: View {
     // millisecond, and an arrow's Appearance hands out twenty.
     //
     // Which says where a fix has to come from: rows that SKIP when what they
-    // show has not changed. Wrapping each part row in an `EquatableView` keyed
-    // on what it draws took the arrow-to-arrow pick from 33.8 to 20.2ms. It
-    // also put the other arrow's pick UP to 51.6 and left stale values on
-    // screen, because a skipped row keeps the closures it was built with and
-    // those still name the layer that WAS picked. So the row has to stop
-    // carrying the selection in its closures before it can be skipped safely.
-    // That is its own piece of work, filed as the successor to this note.
+    // show has not changed. That landed on 2026-09-17 (`PanelReach.swift`).
+    // Every slider and picture picker in Appearance is now handed the NAME of
+    // what it edits rather than the layers that happened to be picked when it
+    // was drawn, and it looks those layers up at the moment somebody uses it,
+    // so a row the panel leaves alone behaves exactly like one it rebuilt.
+    // Then `.equatable()` on each of them compares only what a person can see.
+    // Same walk, same locked machine, median of 12 picks, three runs each way:
+    //
+    //   one arrow, then the other      33.2 to 34.0ms  ->  24.3 to 25.6ms
+    //   blanking PartsInspector, same session and protocol      16.0 to 19.1ms
+    //
+    // So Appearance costs about 6ms of a pick now rather than about 15, and
+    // what is left of a pick is mostly NOT the panel's form: the canvas, the
+    // selection, the layers list and this shell are two thirds of it now. So
+    // "the panel redraws its whole form on every pick", true above, has stopped
+    // being where the cost is, and the next person chasing a pick should start
+    // with that floor rather than with Appearance.
+    //
+    // MEASURE IT LIKE THIS or the number is fiction. Build the probe once
+    // (`Scripts/playtest.sh <walk>`), then take every reading with
+    // `--no-build`. The reading that first went into this note was taken
+    // against a probe still carrying the previous experiment, and it claimed
+    // five milliseconds this change never won.
+    //
+    // What is left inside Appearance, measured the same way by taking each one
+    // out on its own: the colour rows about 2ms (a well reads the selection in
+    // its OWN body, so nothing the row above it does can leave it alone; it
+    // would have to be handed its reading the way the sliders now are), the
+    // arrow's Caption block about 1ms, and the rest spread across the row
+    // chrome with no villain in it.
+    // `Scripts/playtest/pick-leaves-settings-alone-walk.json` is the guard that
+    // the skipping stayed honest: it picks the second of two arrows that read
+    // exactly alike, which is the case where a control really was skipped, and
+    // then uses that control and checks which arrow moved.
     /// Which sections have been built, so a new one can arrive a pass after
     /// the click rather than inside it. See `PanelSectionArrival`.
     @State private var arrivals = DockArrivals()

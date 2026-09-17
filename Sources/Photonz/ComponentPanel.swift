@@ -1003,11 +1003,27 @@ struct ComponentPieceInspector: View {
 /// that follows the original shows nothing to put back.
 struct InstanceStyleRevert: View {
     @Environment(EditorState.self) private var editorState
-    let layerID: UUID
+    /// The layer whose override this puts back, said either outright or as the
+    /// NAME of what the row beside it reaches (`PanelReach`). A row the panel
+    /// left alone still carries the name, and the name still answers with
+    /// whatever is picked now.
+    let reach: PanelReach
     let field: LayerStyleField
 
+    init(layerID: UUID, field: LayerStyleField) {
+        self.init(reach: .fixed([layerID]), field: field)
+    }
+
+    init(reach: PanelReach, field: LayerStyleField) {
+        self.reach = reach
+        self.field = field
+    }
+
     var body: some View {
-        if editorState.isInstanceStyleOwn(instance: layerID, field: field) {
+        // Only ever for ONE copy: over a selection there is no single copy for
+        // it to answer for.
+        if let layerID = soleLayerID(editorState.layerIDs(reaching: reach)),
+           editorState.isInstanceStyleOwn(instance: layerID, field: field) {
             Button {
                 editorState.clearInstanceStyleOverride(instance: layerID, field: field)
             } label: {

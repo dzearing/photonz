@@ -35,8 +35,8 @@ struct ShapePartSettings: View {
         let selection = shapes(ids)
         if row.part == .arrowHead, !selection.isEmpty {
             OwnedSettings(owner: row.title) {
-                ending(selection, ids: ids)
-                if selection.rows.contains(.headSize) { headSize(selection, ids: ids) }
+                ending(selection)
+                if selection.rows.contains(.headSize) { headSize(selection) }
             }
         } else if let slot = row.slot {
             switch slot {
@@ -61,9 +61,9 @@ struct ShapePartSettings: View {
                 // a switched-off Fill does (`LayerPartRow.showsSettings`).
                 if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
-                        self.thickness(thickness, ids: thickness.layerIDs)
-                        PathLineStyleSettings(selection: lineStyle)
-                        ShapeLineEndSettings(selection: selection)
+                        self.thickness(thickness)
+                        PathLineStyleSettings(rowID: row.id, selection: lineStyle)
+                        ShapeLineEndSettings(rowID: row.id, selection: selection)
                     }
                 }
             case .captionText where !selection.isEmpty:
@@ -94,15 +94,10 @@ struct ShapePartSettings: View {
     /// The picked layers THIS row speaks for, which is not always the whole
     /// selection: pick an arrow and a box together and the Line row reaches the
     /// arrow alone, so its Thickness has to reach the arrow alone too.
-    private var reach: [UUID] {
-        // The Head row over an arrow that ends in nothing has no colour and so
-        // no layers named on one, but its Ending picker still has to reach that
-        // arrow: it is the control that gives it an ending back.
-        if let ids = row.colors.first?.layerIDs, !ids.isEmpty { return ids }
-        guard row.part == .arrowHead else { return [] }
-        return editorState.shapeSelection.members
-            .filter { $0.content.shape == .arrow }.map(\.id)
-    }
+    /// The same answer the controls below reach for when somebody uses them,
+    /// so what the row SHOWS and what it DOES cannot drift apart
+    /// (`EditorState.partRowReach`).
+    private var reach: [UUID] { editorState.partRowReach(row) }
 
     /// Those layers as shapes, so the sliders read what they actually wear.
     private func shapes(_ ids: [UUID]) -> ShapeSelection {
@@ -112,21 +107,58 @@ struct ShapePartSettings: View {
                               selectionCount: ids.count)
     }
 
-    private func thickness(_ selection: OutlineThicknessSelection, ids: [UUID]) -> some View {
-        ShapeSlider(layerIDs: ids, label: "Thickness",
+    private func thickness(_ selection: OutlineThicknessSelection) -> some View {
+        ShapeSlider(reach: .partThickness(row.id), isEnabled: !selection.isEmpty,
+                    label: "Thickness",
                     reading: selection.reading,
                     range: AnnotationStyles.strokeWidthRange,
                     format: { DocumentUnit.text($0) },
                     typing: .points,
                     preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                     commit: { editorState.commitOutlineWidth(ids: $0, $1) })
+            .equatable()
             .panelHelp("How thick the line is. Its colour is the row above.")
     }
 
-    /// What the arrow ENDS IN. A picture rather than a number, so it carries
-    /// its own caption instead of a slider's readout.
-    private func ending(_ selection: ShapeSelection, ids: [UUID]) -> some View {
-        let reading = selection.reading { $0.arrowheadStyle }
+    private func ending(_ selection: ShapeSelection) -> some View {
+        ArrowEndingRow(reach: .partRow(row.id),
+                       reading: selection.reading { $0.arrowheadStyle })
+            .equatable()
+    }
+
+    private func headSize(_ selection: ShapeSelection) -> some View {
+        ShapeSlider(reach: .partRow(row.id), isEnabled: !selection.isEmpty,
+                    label: "Head Size",
+                    reading: selection.number { $0.arrowheadScale },
+                    range: AnnotationStyles.arrowheadScaleRange,
+                    format: { "×\(String(format: "%.1f", $0))" },
+                    typing: .times,
+                    round: { $0 },
+                    preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
+                    commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
+            .equatable()
+    }
+}
+
+/// What the arrow ENDS IN. A picture rather than a number, so it carries its
+/// own caption instead of a slider's readout.
+///
+/// A view of its own rather than a block inside `ShapePartSettings` so the
+/// panel can leave it alone: an NSSegmentedControl being handed a value it
+/// already has was the single most expensive thing about clicking from one
+/// arrow to another (`PanelReach`).
+struct ArrowEndingRow: View, Equatable {
+    @Environment(EditorState.self) private var editorState
+    let reach: PanelReach
+    let reading: StyleReading<ArrowheadStyle>
+
+    nonisolated static func == (a: ArrowEndingRow, b: ArrowEndingRow) -> Bool {
+        a.reach == b.reach && a.reading == b.reading
+    }
+
+    var body: some View {
+        let state = editorState
+        let reach = reach
         return VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
                 Text("Ending").font(.caption).foregroundStyle(.secondary)
@@ -137,22 +169,12 @@ struct ShapePartSettings: View {
                 }
                 Spacer(minLength: 0)
             }
-            ArrowheadStylePicker(selection: reading.value, isMixed: reading.isMixed) {
-                editorState.setArrowheadStyle(ids: ids, $0)
+            ArrowheadStylePicker(selection: reading.value, isMixed: reading.isMixed) { style in
+                state.setArrowheadStyle(ids: state.layerIDs(reaching: reach), style)
             }
+            .equatable()
         }
         .playtestField("Ending")
-    }
-
-    private func headSize(_ selection: ShapeSelection, ids: [UUID]) -> some View {
-        ShapeSlider(layerIDs: ids, label: "Head Size",
-                    reading: selection.number { $0.arrowheadScale },
-                    range: AnnotationStyles.arrowheadScaleRange,
-                    format: { "×\(String(format: "%.1f", $0))" },
-                    typing: .times,
-                    round: { $0 },
-                    preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
-                    commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
     }
 }
 
@@ -201,23 +223,25 @@ struct ArrowLabelSettings: View {
     }
 
     private func labelSize(_ selection: ShapeSelection) -> some View {
-        ShapeSlider(layerIDs: selection.layerIDs, label: "Label size",
+        ShapeSlider(reach: .captionArrow, isEnabled: !selection.isEmpty, label: "Label size",
                     reading: selection.number { $0.captionFontSize },
                     range: MeasureContent.labelSizeRangePx,
                     format: { DocumentUnit.text($0) },
                     typing: .points,
                     preview: { editorState.previewCaptionFontSize(ids: $0, $1) },
                     commit: { editorState.commitCaptionFontSize(ids: $0, $1) })
+            .equatable()
     }
 
     private func labelCorners(_ selection: ShapeSelection) -> some View {
-        ShapeSlider(layerIDs: selection.layerIDs, label: "Label corners",
+        ShapeSlider(reach: .captionArrow, isEnabled: !selection.isEmpty, label: "Label corners",
                     reading: selection.number { $0.captionRoundness },
                     range: AnnotationContent.captionRoundnessRange,
                     format: { AnnotationRoundnessWord.text($0) },
                     round: { $0 },
                     preview: { editorState.previewCaptionRoundness(ids: $0, $1) },
                     commit: { editorState.commitCaptionRoundness(ids: $0, $1) })
+            .equatable()
             .panelHelp("How round the label's corners are, from a square box through a badge to a full pill")
     }
 }

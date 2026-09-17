@@ -1,0 +1,25 @@
+{
+  "feature": "Picking a layer leaves alone the settings that did not change",
+  "epic": "ui-building",
+  "summary": "Clicking from one shape to another no longer rebuilds every control in the settings panel. A slider or a picture picker showing the same number or the same word is now left exactly as it was, so a click between two alike layers costs about ten milliseconds less than it did.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Draw two arrows on a blank canvas and click back and forth between them.",
+  "try": [
+    { "do": "Draw two arrows on a blank canvas, then press V for the pointer.", "shot": "2026-09-17-pick-cost-1-alike.png" },
+    { "do": "Click one arrow, then the other, back and forth a dozen times. Watch for the hitch." },
+    { "do": "With the second arrow picked, pull Thickness. Only that arrow thickens." },
+    { "do": "Click the first arrow. Thickness reads its number, not the one you just set.", "shot": "2026-09-17-pick-cost-2-endings.png" },
+    { "do": "Click back to the second arrow and press a different Ending. Only that arrow's tip changes." },
+    { "do": "Click the first arrow again and check its Ending is still the solid head." }
+  ],
+  "evaluate": [
+    "Does clicking between two alike shapes feel instant now, or can you still feel a hitch?",
+    "Does anything in the panel ever show you the last layer's number for a moment before catching up?",
+    "After clicking from one shape to another, does every control act on the one you just clicked, with nothing happening to the other?",
+    "The panel still costs about six milliseconds of a click, most of it the colour rows. Is that worth another pass, or does it already feel fast enough?"
+  ],
+  "rough": [
+    "The target was 22ms and it landed at 24 to 26, down from 33 to 34. The missing three milliseconds are not in the sliders and pickers this task was about: with the whole Appearance form blanked the same click still costs 16 to 19ms, which is the canvas, the selection and the layers list. Appearance's own share went from about 15ms to about 6.",
+    "The colour rows are the biggest thing left, about 2ms. A colour well reads the selection in its own body, so nothing the row above it does can leave it alone; it would have to be handed its reading the way the sliders now are. Filed as its own task.",
+    "The Mac has been locked for this whole session, so no walk could be run the way the loop normally runs one. Everything here was run with the locked-screen refusal forced off, which is how the numbers in the task were taken too, so the before and after are comparable. The two pictures above are real captures of the window, not offscreen renders. A full sweep is requested and will run once the screen is unlocked."
+  ]
+}

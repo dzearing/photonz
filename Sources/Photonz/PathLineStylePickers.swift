@@ -98,7 +98,7 @@ enum PathLineStyleGlyph {
 /// `selection` is optional so a mixture of picked paths shows nothing chosen
 /// rather than lying about one of them; picking then sets all of them, which is
 /// what the word Mixed is there to offer.
-struct PathLineStyleRow<Value: Hashable & CaseIterable & Sendable>: View
+struct PathLineStyleRow<Value: Hashable & CaseIterable & Sendable>: View, Equatable
 where Value.AllCases: RandomAccessCollection {
     let label: String
     let reading: StyleReading<Value>
@@ -106,6 +106,15 @@ where Value.AllCases: RandomAccessCollection {
     let glyph: (Value) -> Image
     let help: (Value) -> String
     let pick: (Value) -> Void
+
+    /// The caption and the picture that is lit: everything a person can see
+    /// here. What a press DOES is looked up when it happens, so a row the panel
+    /// left alone still sets whatever is picked now (`PanelReach`). This is
+    /// what takes the segmented control out of the cost of clicking between two
+    /// alike shapes.
+    nonisolated static func == (a: PathLineStyleRow, b: PathLineStyleRow) -> Bool {
+        a.label == b.label && a.reading == b.reading
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -143,6 +152,10 @@ where Value.AllCases: RandomAccessCollection {
 /// turns a corner.
 struct PathLineStyleSettings: View {
     @Environment(EditorState.self) private var editorState
+    /// Which part row these hang under, which is how a press finds the paths
+    /// that are picked at the moment it happens rather than the ones that were
+    /// picked when the pictures were drawn (`PanelReach`).
+    let rowID: String
     /// The picked paths this Outline row speaks for.
     let selection: PathLineStyleSelection
 
@@ -151,13 +164,15 @@ struct PathLineStyleSettings: View {
         // outline switched off shows no colour and no thickness either, and a
         // picker over nothing is a control that cannot act.
         if !selection.isEmpty, selection.hasALine {
-            let ids = selection.layerIDs
+            let state = editorState
+            let reach = PanelReach.partPathLine(rowID)
             PathLineStyleRow(label: "Pattern",
                              reading: selection.reading(\.linePattern),
                              title: \.title,
                              glyph: { PathLineStyleGlyph.pattern($0, named: $0.title) },
                              help: { Self.patternHelp($0) },
-                             pick: { editorState.setPathLinePattern(ids: ids, $0) })
+                             pick: { state.setPathLinePattern(ids: state.layerIDs(reaching: reach), $0) })
+                .equatable()
             // Only where there are ends to see: an open path has two, and a
             // dashed one has two on every dash. A closed solid shape has none,
             // so it is not asked (`PathContent.showsLineEnds`).
@@ -167,14 +182,16 @@ struct PathLineStyleSettings: View {
                                  title: \.title,
                                  glyph: { PathLineStyleGlyph.end($0, named: $0.title) },
                                  help: { Self.endHelp($0) },
-                                 pick: { editorState.setPathLineEnd(ids: ids, $0) })
+                                 pick: { state.setPathLineEnd(ids: state.layerIDs(reaching: reach), $0) })
+                    .equatable()
             }
             PathLineStyleRow(label: "Corners",
                              reading: selection.reading(\.lineCorner),
                              title: \.title,
                              glyph: { PathLineStyleGlyph.corner($0, named: $0.title) },
                              help: { Self.cornerHelp($0) },
-                             pick: { editorState.setPathLineCorner(ids: ids, $0) })
+                             pick: { state.setPathLineCorner(ids: state.layerIDs(reaching: reach), $0) })
+                .equatable()
         }
     }
 
@@ -218,6 +235,9 @@ struct PathLineStyleSettings: View {
 /// the rest of this panel goes out of its way not to show.
 struct ShapeLineEndSettings: View {
     @Environment(EditorState.self) private var editorState
+    /// Which part row this hangs under, so a press reaches whatever is picked
+    /// at the moment it happens (`PanelReach`).
+    let rowID: String
     /// The picked shapes this Outline row speaks for.
     let selection: ShapeSelection
 
@@ -225,13 +245,15 @@ struct ShapeLineEndSettings: View {
         // Only where there are ends to see: a box and an oval are closed, and
         // a highlight is a wash rather than a line (`showsLineEnds`).
         if Experiments.shared.lineEndsEnabled, selection.rows.contains(.lineEnds) {
-            let ids = selection.layerIDs
+            let state = editorState
+            let reach = PanelReach.partShapes(rowID)
             PathLineStyleRow(label: "Ends",
                              reading: selection.reading(\.lineEnd),
                              title: \.title,
                              glyph: { PathLineStyleGlyph.end($0, named: $0.title) },
                              help: { Self.help($0) },
-                             pick: { editorState.setShapeLineEnd(ids: ids, $0) })
+                             pick: { state.setShapeLineEnd(ids: state.layerIDs(reaching: reach), $0) })
+                .equatable()
         }
     }
 

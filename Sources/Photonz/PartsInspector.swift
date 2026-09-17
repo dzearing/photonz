@@ -147,12 +147,14 @@ struct PartsInspector: View {
     /// above read as a second copy of it.
     private var opacity: some View {
         let selection = editorState.layerStyleSelection
-        return LayerStyleSlider(layerIDs: selection.layerIDs, label: "Opacity",
+        return LayerStyleSlider(reach: .layerStyle, isEnabled: !selection.isEmpty,
+                                label: "Opacity",
                                 reading: selection.reading { $0.opacity }, range: 0...1,
                                 typing: .percent,
                                 field: .opacity) { style, v in
             style.opacity = v
         }
+        .equatable()
     }
 
 }

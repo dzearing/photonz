@@ -4732,3 +4732,15 @@
 {"t":"2026-09-17T03:36:16.133Z","ev":"task_note","id":"a-section-that-appears-in-the-right-hand-panel-a"}
 {"t":"2026-09-17T03:36:16.178Z","ev":"task_note","id":"a-section-that-appears-in-the-right-hand-panel-a"}
 {"t":"2026-09-17T03:36:16.224Z","ev":"task_dropped","id":"a-section-that-appears-in-the-right-hand-panel-a","from":"in_progress","note":"The premise is wrong, measured. A pick that brings nothing new into the panel costs the same as one that does (two identical arrows 33.4 / 35.1ms longest pass, box then arrow 25.9 / 39.0ms), so an arriving section is worth about 4ms of a 39ms pause and fixing it would change nothing anybody can feel. Acceptance 2 is not reachable this way either: with the Appearance form blanked entirely a pick is still 16.3ms. What ships from this run is the corrected record next to the machinery people keep suspecting (Sources/Photonz/InspectorPanel.swift) and the stopwatch walk that measures it (Scripts/playtest/perf/pick-cost-walk.json, kept out of the sweep). The real work is filed with all the numbers as picking-a-layer-leaves-alone-the-settings-that-d."}
+{"t":"2026-09-17T03:38:03.730Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T03:38:03.837Z","ev":"task_started","id":"picking-a-layer-leaves-alone-the-settings-that-d","title":"Picking a layer leaves alone the settings that did not change","priority":"p2-normal"}
+{"t":"2026-09-17T03:39:10.897Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T03:48:46.868Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T03:53:27.671Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:00:24.464Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:24:16.188Z","ev":"task_created","id":"the-colour-rows-redraw-themselves-on-every-click","priority":"p2-normal","title":"The colour rows redraw themselves on every click"}
+{"t":"2026-09-17T04:24:25.094Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:24:25.140Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:24:25.187Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:24:25.233Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}
+{"t":"2026-09-17T04:24:25.279Z","ev":"task_note","id":"picking-a-layer-leaves-alone-the-settings-that-d"}

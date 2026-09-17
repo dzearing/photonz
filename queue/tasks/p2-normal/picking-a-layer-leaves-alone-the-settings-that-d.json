@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2795,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T03:36:05.097Z",
-  "updated": "2026-09-17T03:36:05.100Z",
+  "updated": "2026-09-17T04:24:25.278Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SUCCESSOR to a-section-that-appears-in-the-right-hand-panel-a, which was dropped because its premise was wrong. The measurements are in the comment above `arrivals` in Sources/Photonz/InspectorPanel.swift and the walk that takes them is Scripts/playtest/perf/pick-cost-walk.json (kept out of Scripts/playtest so the sweep never runs a stopwatch). Measured 2026-09-17, probe build, longest single run loop pass per pick, median of 5, screen locked with PHOTONZ_ALLOW_LOCKED_WALK=1 so absolute numbers may be understated; every comparison is one variable at a time in the same session.\n\nWHAT IS TRUE. Two identical arrows, picked back and forth: 33.4 / 35.1ms. A box and an arrow, which show the same SECTIONS but different rows: 25.9 / 39.0ms. So a pick that changes nothing about the panel's shape still costs two frames, and new rows arriving are only about 4ms of the 39.\n\nWHERE IT IS. With PartsInspector's body replaced by a blank the arrow pick is 16.3ms and the box pick 18.5ms: the Appearance form is the whole difference. Inside it, taking out the three segmented picture pickers is worth 7ms, the five sliders 4ms, the number boxes beside them 3ms. No villain: roughly a millisecond per control that is handed a new value, and an arrow's Appearance hands out about twenty.\n\nIT IS NOT THE NUMBER OF CONTROLS. Ten extra sliders added to Appearance, wrapped so their value never changes between picks, cost nothing at all (34.6 against 35.8). A control whose inputs are unchanged is free. That is the whole opening.\n\nTHE PRIZE AND THE HAZARD, both measured. Wrapping each part row in PartsInspector in an EquatableView keyed on what it draws took the arrow-to-arrow pick from 33.8 to 20.2ms. It ALSO put the other arrow's pick up to 51.6ms and left stale values on screen, because a skipped row keeps the closures it was built with and those name the layer that WAS picked. So the row cannot simply be wrapped: it has to stop carrying the selection in its closures first. A row should take the reading it shows (a value, already Equatable) plus enough to name WHAT it edits, and resolve which layers that reaches from EditorState at the moment the control is used. Then a stale-but-identical row is behaviourally identical, and the wrap is safe.\n\nSTART AT PartsInspector.swift (the ForEach over layerPartRows), ShapePartSettings.swift and InspectorControls.swift (ShapeSlider, LayerStyleSlider, SliderReadout). LayerPartRow.id is already stable across selections, so the ForEach identity is not the problem.\n\nTRIED AND WORTH NOTHING, do not repeat: caching the segmented pickers' pictures (PathLineStyleGlyph, ArrowheadStyle.glyph) so they are drawn once instead of per pick. Changed nothing measurable (35.6 against 35.8), because NSImage(size:flipped:) defers its drawing block anyway. The 7ms those rows cost is the NSSegmentedControl being updated, not the pictures being made.",
@@ -23,6 +23,47 @@
     {
       "t": "2026-09-17T03:36:05.099Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T03:38:03.835Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T03:39:10.895Z",
+      "note": "Read the task, PartsInspector/ShapePartSettings/InspectorControls and the pickers. Plan: give the leaf controls a named reach (resolved from EditorState when the control is USED) instead of a captured list of layer ids, then let SwiftUI skip a control whose reading has not changed."
+    },
+    {
+      "t": "2026-09-17T03:48:46.866Z",
+      "note": "MEASURED, fair comparison (probe built once, then three --no-build runs each, screen locked with PHOTONZ_ALLOW_LOCKED_WALK=1 as the original measurements were). Arrow to arrow, longest single pass, median of 12 picks per run: baseline 34.0 / 34.0 / 33.2ms, after 20.2 / 19.2 / 19.9ms. Box to arrow: 37.4 / 37.2 / 36.5 -> 17.2 / 17.1 / 18.1ms. Beware: a run that BUILDS first reads 4-5ms high because the machine is still busy from the compile; always --no-build for the stopwatch."
+    },
+    {
+      "t": "2026-09-17T03:53:27.669Z",
+      "note": "Acceptance 4, before and after: arrow-parts-walk ok / picker-controls-walk ok on both main and this change; parts-settings-inline-walk dies at the SAME step on both (step 10 panelMenu \"Add Effect\": the menu is in the window with the right tooltip and an empty name, which is the locked-screen signature). So the three walks behave identically. Run with PHOTONZ_ALLOW_LOCKED_WALK=1 because the Mac has been locked all session; a sweep is requested so they run for real once it is unlocked."
+    },
+    {
+      "t": "2026-09-17T04:00:24.462Z",
+      "note": "New walk Scripts/playtest/pick-leaves-settings-alone-walk.json proves acceptance 2 and 3, and it has teeth: sabotaging EditorState.layerIDs(reaching:) so .partRow answers with the FIRST arrow in the document instead of the picked one makes it fail at the right step (the ending lands on the arrow that was not clicked). It passes on this change. It picks the second of two arrows that read exactly alike, which is the case where the control really was skipped - a counter in ArrowEndingRow.body confirmed 4 builds across about a dozen picks, so the skip is real."
+    },
+    {
+      "t": "2026-09-17T04:24:25.092Z",
+      "note": "CORRECTION to the earlier measurement entry in this log. Those after-numbers (19-20ms) were taken against a probe that had not been rebuilt since the blank-PartsInspector experiment, so they were the blank panel's numbers and not this change's. Rebuilt properly and re-measured, three runs each way, median of 12 picks: arrow to arrow 33.2/34.0 baseline -> 24.3/25.6/25.4 after. Box to arrow 36.5-37.4 -> 32.8-35.4 (the arrow-after-box pick is unchanged at about 38.5, which is right: new rows really do arrive there). The protocol is now written into the note above arrivals in InspectorPanel.swift so nobody repeats it."
+    },
+    {
+      "t": "2026-09-17T04:24:25.138Z",
+      "note": "ACCEPTANCE 1 IS NOT MET AS WRITTEN. It asks for 22ms and this lands at 24-26, down from 33-34. The missing three milliseconds are not in the controls this task named: blanking PartsInspector entirely reads 16-19ms in the same session, so Appearance's own share went from about 15ms to about 6 and the rest of a pick is the canvas, the selection, the layers list and the dock shell. Inside what is left, the colour rows are about 2ms and the arrow Caption block about 1ms; both were measured by taking them out on their own. The colour rows need the same treatment but in a different subsystem (a colour well reads the selection in its OWN body, so it invalidates whatever its parent does), which is a second task rather than more of this one: filed as the-colour-rows-redraw-themselves-on-every-click with all the numbers."
+    },
+    {
+      "t": "2026-09-17T04:24:25.185Z",
+      "note": "Adversarial review, before: the shortest version that pays is the leaves, not the rows. Wrapping a whole part row would have meant giving the colour system the same treatment in the same change; wrapping only the controls that are handed a new value gets most of the win and touches nothing outside Appearance. Everything outside Appearance (Effects, Measure, the old Annotation section) keeps the list-of-layers form it always had and takes no .equatable(), so its behaviour is untouched."
+    },
+    {
+      "t": "2026-09-17T04:24:25.231Z",
+      "note": "left rough: SliderReadout's identity is now the reach, which holds still across a pick, so its .onChange(of: identity) draft reset no longer fires on a click. No task: the box lands its draft the moment it loses the keyboard and clicking the canvas is exactly that, so I could not construct a case where a half-typed number survives a pick. Said out loud in the comment on the property."
+    },
+    {
+      "t": "2026-09-17T04:24:25.277Z",
+      "note": "left rough: the == on these controls leaves out format, round, preview, commit and apply, which is only sound because every call site's closures depend on nothing but what they are handed. Nothing enforces that. No task: it is an invariant, spelled out on both == implementations, and a call site that broke it would have to take a PanelReach instead."
     }
-  ]
+  ],
+  "started": "2026-09-17T03:38:03.834Z"
 }
