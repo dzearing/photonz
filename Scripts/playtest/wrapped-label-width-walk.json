@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/wrapped-label-width",
   "setup": { "forget": ["all"] },
-  "seed": "A label the container wrapped keeps the whole room the container gave it as its box, even though the words that came out of the wrap are narrower. The walk builds the stack, puts a ceiling on it, then picks the label itself so its W can be read beside the words it actually has.",
+  "seed": "A label the container wrapped is as wide as the words that came out of the wrap, not as wide as the room it was given (landed 2026-09-17). The walk builds the stack, puts a ceiling of 140 on it, then picks the label itself so its W can be read beside the words it actually has: the outline should stop at the last letter, and the stack should settle under its ceiling rather than standing at it.",
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
     { "do": "wait", "seconds": 0.8 },
@@ -33,7 +33,7 @@
     { "do": "type", "text": "140" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "1-group-picked", "note": "the stack at its ceiling of 140, words on two lines" },
+    { "do": "describe", "stage": "1-group-picked", "note": "the stack under its ceiling of 140, words on two lines. The stack is as wide as its wrapped words plus its room, not the whole 140" },
     { "do": "snapshot", "name": "wrapped-1-group" },
     { "do": "panel", "stage": "1-group-picked" },
 
@@ -41,7 +41,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "selectRow", "row": "Save all the changes" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "2-label-picked", "note": "THE TEST: the label itself is picked. Its selection outline runs the whole 140 the stack gave it, well past the end of the words, and W says 140 rather than how wide the two lines came out." },
+    { "do": "describe", "stage": "2-label-picked", "note": "THE TEST: the label itself is picked. Its selection outline should stop at the last letter of the longest line, and W should read how wide the two lines came out rather than the room the stack gave it." },
     { "do": "snapshot", "name": "wrapped-2-label" },
     { "do": "panel", "stage": "2-label-picked" }
   ]

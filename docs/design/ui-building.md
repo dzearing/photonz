@@ -643,6 +643,25 @@ itself whenever the two things that decide its shape change:
   A paragraph somebody dragged narrower by hand is not touched. That width is
   an answer, not a derivation.
 
+  **The box is the LINES that came out, not the room they were allowed**
+  (landed 2026-09-17, from the decision "When words are wrapped to fit the box
+  around them, should the label be as wide as the words that came out, or as
+  wide as the room it was given?", answered "Fit the words"). Words given 108
+  that break at 89 are an 89 wide label: the outline stops at the last letter,
+  and W on a label is how wide the words are whether or not anything wrapped
+  them. Anything around it that is still the size of its contents measures
+  them again after the wrap, so a stack held at a Largest width of 140 settles
+  at whatever its wrapped words need rather than standing at its ceiling with
+  a strip of nothing down one side. A width somebody TYPED on the group is a
+  size they chose and stays exactly what they typed; so does a floor. Breaking
+  at the widest line cannot move where the lines break, because every line
+  already fits it and the word that would not fit the wider room does not fit
+  this one either, so the answer settles in one pass.
+
+  Before this, a wrapped label reported the whole room its container handed it.
+  The selection outline ran past the last letter, and a person redlining a
+  wrapped label read a number the words never reached.
+
 ### Every gap is the gap you typed (landed 2026-09-06)
 
 A stack works out where everything goes from the sizes its pieces have GOING

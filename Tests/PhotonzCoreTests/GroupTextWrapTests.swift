@@ -74,10 +74,12 @@ struct GroupTextWrapTests {
         var layout = GroupLayout.free(padding: room(16))
         layout.maxWidth = 100
         let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
-        // 100 wide, 32 of it room, so the words get 68 across.
-        #expect(held.localBounds.width == 100)
+        // 100 wide, 32 of it room, so the words get 68 across. They break at
+        // 63 and the box is the 63 (see "A wrapped label is as wide as the
+        // words that came out"), so the ceiling holds and nothing reaches it.
+        #expect(held.localBounds.width <= 100)
         let words = piece(held, "Label")
-        #expect(words.width == 68 + TextMeasurement.slack)
+        #expect(words.width == 63 + TextMeasurement.slack)
         #expect(words.maxX - TextMeasurement.slack <= 100 - 16)
         #expect(words.height > oneLine)
     }
@@ -101,7 +103,9 @@ struct GroupTextWrapTests {
         layout.maxWidth = 100
         layout.maxHeight = 40
         let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
-        #expect(held.localBounds.size == CGSize(width: 100, height: 40))
+        // 95 across is the wrapped words plus their room, under the 100 the
+        // ceiling allows; 40 is the height ceiling biting.
+        #expect(held.localBounds.size == CGSize(width: 95, height: 40))
     }
 
     // MARK: - A width somebody typed
@@ -111,8 +115,10 @@ struct GroupTextWrapTests {
         var layout = GroupLayout.free(padding: room(16))
         layout.width = 100
         let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        // A width somebody typed is a size they chose, so the group stays
+        // exactly 100 even though its wrapped words only need 63 of it.
         #expect(held.localBounds.width == 100)
-        #expect(piece(held, "Label").width == 68 + TextMeasurement.slack)
+        #expect(piece(held, "Label").width == 63 + TextMeasurement.slack)
         #expect(piece(held, "Label").height > oneLine)
     }
 
@@ -190,9 +196,10 @@ struct GroupTextWrapTests {
             group([words("Save all the changes", at: 0, 0),
                    box("Icon", CGRect(x: 0, y: 40, width: 20, height: 20))],
                   layout: layout))
-        #expect(stacked.localBounds.width == 100)
-        // 100 wide, 20 of it room, so the words get 80 across.
-        #expect(piece(stacked, "Label").width == 80 + TextMeasurement.slack)
+        // 100 wide, 20 of it room, so the words get 80 across; they break at
+        // 63, and the stack then settles around them.
+        #expect(stacked.localBounds.width == 83)
+        #expect(piece(stacked, "Label").width == 63 + TextMeasurement.slack)
         #expect(piece(stacked, "Label").height > oneLine)
         // The row under the words is pushed down by the line they gained.
         #expect(piece(stacked, "Icon").minY
@@ -208,9 +215,10 @@ struct GroupTextWrapTests {
             group([box("Icon", CGRect(x: 0, y: 0, width: 20, height: 20)),
                    words("Save all the changes", at: 30, 0)],
                   layout: layout))
-        #expect(row.localBounds.width == 120)
-        // 120 wide, 20 of room, a 20 wide icon and an 8 gap: 72 left.
-        #expect(piece(row, "Label").width == 72 + TextMeasurement.slack)
+        // 120 wide, 20 of room, a 20 wide icon and an 8 gap: 72 left for the
+        // words, which break at 63 and take the row down to 111 with them.
+        #expect(row.localBounds.width == 111)
+        #expect(piece(row, "Label").width == 63 + TextMeasurement.slack)
         #expect(piece(row, "Label").maxX - TextMeasurement.slack <= 120 - 10)
     }
 
@@ -222,8 +230,9 @@ struct GroupTextWrapTests {
             group([words("Save all the changes", at: 0, 0),
                    box("Icon", CGRect(x: 60, y: 0, width: 20, height: 20))],
                   layout: layout))
-        // 150 wide, 20 of room, one 10 gap, two columns: 60 a cell.
-        #expect(piece(grid, "Label").width == 60 + TextMeasurement.slack)
+        // 150 wide, 20 of room, one 10 gap, two columns: 60 a cell, which
+        // these words break at 58 of.
+        #expect(piece(grid, "Label").width == 58 + TextMeasurement.slack)
         #expect(piece(grid, "Label").height > oneLine)
     }
 
@@ -254,6 +263,101 @@ struct GroupTextWrapTests {
         // words break at the word and overhang rather than coming apart.
         #expect(piece(held, "Label").width == widest)
         #expect(widest > 24 + TextMeasurement.slack)
+    }
+
+    // MARK: - The number and the picture agree
+
+    /// The decision "When words are wrapped to fit the box around them, should
+    /// the label be as wide as the words that came out, or as wide as the room
+    /// it was given?", answered "Fit the words" on 2026-09-09. A wrapped label
+    /// used to report the whole room its container handed it, so the selection
+    /// outline ran past the last letter and W read a number the words never
+    /// reached.
+    @Test("A wrapped label is as wide as the words that came out, not the room")
+    func aWrappedLabelIsAsWideAsItsWrappedWords() {
+        var layout = GroupLayout.free(padding: room(16))
+        layout.maxWidth = 100
+        let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        // 100 wide, 32 of it room, so the words are given 68 across. They
+        // break as "Save all the" over "changes", and the longest of those is
+        // 63. The box is the 63, not the 68 it was allowed.
+        let words = piece(held, "Label")
+        #expect(words.width == 63 + TextMeasurement.slack)
+        #expect(words.width < 68 + TextMeasurement.slack)
+        #expect(words.height > oneLine)
+        #expect(label(held)?.wrappedByItsContainer == true)
+    }
+
+    @Test("A group that hugs settles at the wrapped words rather than its ceiling")
+    func aHuggingGroupSettlesAtTheWrappedWords() {
+        var layout = GroupLayout.free(padding: room(16))
+        layout.maxWidth = 100
+        let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        // The ceiling is what broke the words; once they are broken the group
+        // is the size of what is in it again: 63 of words and 32 of room.
+        #expect(held.localBounds.width == 95)
+        #expect(held.localBounds.width < 100)
+        // ...and the surface behind them is still the whole box.
+        #expect(piece(held, "Background").size == held.localBounds.size)
+    }
+
+    @Test("A stack inside a stack settles at its wrapped words in one pass")
+    func aNestedStackSettlesAtItsWrappedWords() {
+        var inner = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        inner.maxWidth = 120
+        let outer = GroupLayout(kind: .stack, direction: .column, gap: 8, padding: room(10))
+        let nested = group([words("Save all the changes", at: 0, 0)], layout: inner)
+        let held = GroupFlow.flowing(group([nested], layout: outer))
+        // The ceiling of 120 leaves the words 100 across; they break at 63, so
+        // the inner stack settles at 83 and the outer one closes at 103.
+        #expect(held.localBounds.width == 103)
+        #expect(held.children[0].children[0].wrappedByItsContainer == true)
+        let twice = GroupFlow.flowing(held)
+        let thrice = GroupFlow.flowing(twice)
+        #expect(twice.localBounds == held.localBounds)
+        #expect(thrice.localBounds == held.localBounds)
+    }
+
+    @Test("A floor still holds the group open once its words have wrapped")
+    func aFloorHoldsTheGroupOpenAfterTheWrap() {
+        var layout = GroupLayout.free(padding: room(16))
+        layout.maxWidth = 100
+        layout.minWidth = 98
+        let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        // The wrapped words plus their room come to 95, which is under the
+        // floor, so the floor wins and the group stays 98.
+        #expect(held.localBounds.width == 98)
+        #expect(piece(held, "Label").width == 63 + TextMeasurement.slack)
+    }
+
+    @Test("A width somebody typed on the group stays, and the label hugs its words")
+    func aTypedGroupWidthIsKeptWhileTheLabelHugs() {
+        var layout = GroupLayout.free(padding: room(16))
+        layout.width = 100
+        let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        #expect(held.localBounds.width == 100)
+        #expect(piece(held, "Label").width == 63 + TextMeasurement.slack)
+    }
+
+    @Test("A width typed into a wrapped label sticks, exactly as dragging it does")
+    func aWidthTypedIntoAWrappedLabelSticks() {
+        var layout = GroupLayout.free(padding: room(16))
+        layout.maxWidth = 100
+        let held = GroupFlow.flowing(button(saying: "Save all the changes", layout: layout))
+        let wrapped = label(held)!
+        #expect(wrapped.wrappedByItsContainer == true)
+        // 60 is under the width of the words, which is what makes it an
+        // answer rather than something the flow will work out again.
+        let typed = wrapped.resized(to: CGRect(x: 16, y: 8, width: 60,
+                                               height: wrapped.frame.height))
+        #expect(typed.wrappedByItsContainer == nil)
+        var again = held
+        var content = again.group!
+        content.children = [content.children[0], typed]
+        again.content = .group(content)
+        let settled = GroupFlow.flowing(again)
+        #expect(piece(settled, "Label").width == 60)
+        #expect(label(settled)?.wrappedByItsContainer == nil)
     }
 
     // MARK: - What the container decided is not what somebody chose

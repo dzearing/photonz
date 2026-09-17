@@ -1,0 +1,28 @@
+{
+  "feature": "A wrapped label is as wide as its words",
+  "epic": "ui-layout",
+  "summary": "When a container breaks a label onto more lines, the label's box is now the lines that came out rather than the whole room it was allowed, so the selection outline stops at the last letter and W reads the width of the words. A stack that is still the size of its contents settles around them instead of standing at its ceiling with a strip of nothing down one side.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how the flow works now.",
+  "try": [
+    { "do": "Draw a small square on a blank canvas." },
+    { "do": "With the text tool, type \"Save all the changes\" under it." },
+    { "do": "Select both, then Arrange > Stack Selection." },
+    { "do": "In the inspector's Layout section, press Limits under Width and type 140 into Largest width." },
+    { "do": "Click the label row in the layers list to pick the label itself.", "shot": "2026-09-17-wrapped-label-width.png" },
+    { "do": "Read W in the Transform section and compare it with where the longest line ends." },
+    { "do": "Type 60 into W and press return, then read W again." }
+  ],
+  "evaluate": [
+    "Does the label's outline now stop where the words stop, close enough that the number and the picture read as the same thing?",
+    "The stack settles under the 140 you typed as its Largest width. Does that read as the ceiling working, or as the number being ignored?",
+    "Is W on a label useful for a redline now, in a way it was not when it reported the room?",
+    "Typing 60 into W still makes the label a paragraph 60 wide. Did anything about that feel different from before?",
+    "Anything on your canvas that shifted by a few points where a left aligned wrapped label sat in a wider box: did you notice, and did it look wrong?"
+  ],
+  "rough": [
+    "No picture of the real window: the Mac's screen was locked all through this task, so no walk could run and macOS takes every control's name away. The image on step 5 is an offscreen render straight from the app's renderer, not a photograph of the window, and it carries drawn boxes for the room, the stack and the label so the three numbers can be seen at once.",
+    "The stack's own W and its Largest width now say different numbers a row apart (121 and 140 in the picture). That is the decision working as answered, but it is the one place a person could still read the two numbers as disagreeing.",
+    "A ceiling on a stack still does not reach a label inside a stack inside it: the words stay on one line and hang out of the box. Reproduced in a test and filed separately; it is older than this change.",
+    "A centred label inside a wrapped box now centres its lines in the narrower box. Nothing looked wrong in the renders, but it is the change most likely to move something by a few points on an existing canvas."
+  ]
+}

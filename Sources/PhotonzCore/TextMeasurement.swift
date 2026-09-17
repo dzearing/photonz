@@ -292,15 +292,26 @@ extension Layer {
         // Never narrower than a single word needs. Below that the words break
         // in the middle of themselves, which is worse than the overhang this
         // set out to fix.
-        let allowed = max(max(1, room + boxSlack.width), TextMeasurement.widestWord(in: content))
+        let widestWord = TextMeasurement.widestWord(in: content)
+        let allowed = max(max(1, room + boxSlack.width), widestWord)
         guard TextMeasurement.size(of: content).width > allowed else { return self }
         let box = frame.standardized
         // Room somebody gave the box is theirs, so a container narrowing it
         // re-wraps the words inside the room rather than taking it away.
-        let height = max(TextMeasurement.size(of: content, wrappingAt: allowed).height,
-                         heightChosenByHand ?? 0)
+        let wrapped = TextMeasurement.size(of: content, wrappingAt: allowed)
+        let height = max(wrapped.height, heightChosenByHand ?? 0)
+        // The box is the LINES that came out, not the room they were allowed:
+        // words given 68 that break at 63 are a 63 wide label, so the outline
+        // stops at the last letter and W is the width of the words every time
+        // (decision "When words are wrapped to fit the box around them...",
+        // answered "Fit the words"). Breaking at the widest line cannot change
+        // where the lines break — every one of them already fits it, and the
+        // word that would not fit the wider room does not fit this either.
+        // The floor is the widest single word, because a word too long for
+        // the room overhangs at its own width rather than being cut off.
+        let width = min(allowed, max(wrapped.width, widestWord))
         var out = self
-        out.frame = CGRect(x: box.minX, y: box.minY, width: allowed, height: height)
+        out.frame = CGRect(x: box.minX, y: box.minY, width: width, height: height)
         out.wrappedByItsContainer = true
         return out
     }

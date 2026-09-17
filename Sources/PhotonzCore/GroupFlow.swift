@@ -127,6 +127,22 @@ enum GroupFlow {
         // past the edge, and the box grows downward the way it does everywhere
         // else a max width and a label meet.
         let fitted = wrapping(children, rules: rules, layout: layout, bounds: bounds)
+        // A ceiling that broke the words has done its job, and the group is
+        // the size of its contents again: words allowed 68 that came out 63
+        // leave a group of 95 rather than one held at 100 with five points of
+        // nothing down its right edge. Only where the width was a LIMIT on an
+        // axis that hugs — a width somebody typed is a size they chose, and it
+        // stays whatever the words do. Measuring again cannot start another
+        // wrap: the answer comes from the wrapped children themselves, so it
+        // is never narrower than they are.
+        if bounds.limitedWidth, fitted.contains(where: { $0.wrappedByItsContainer == true }) {
+            var hugging = bounds
+            hugging.width = nil
+            hugging.limitedWidth = false
+            bounds = holding(fitted, rules: rules, layout: layout, bounds: hugging,
+                             contentPlacement: contentPlacement, onAScreen: onAScreen,
+                             horizontal: true)
+        }
         bounds = holding(fitted, rules: rules, layout: layout, bounds: bounds,
                          contentPlacement: contentPlacement, onAScreen: onAScreen,
                          horizontal: false)
