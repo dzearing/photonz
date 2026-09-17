@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2930,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T14:09:52.522Z",
-  "updated": "2026-09-17T16:54:38.619Z",
+  "updated": "2026-09-17T16:55:04.320Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-17 finishing a-label-read-back-into-text-comes-back-in-the-we, which settled the WEIGHT and is done; see queue/audits/2026-09-17-label-weight.json and the screenshot beside it, where the Text section reads Font SF Pro, Weight Regular, Size Mixed for six labels picked together. The machinery to copy is already there and is pure: TextReading.WeightBallot groups the runs of a page into cohorts of one size and one ink colour (TextReading.weightCohorts) and TextReading.pageWeights settles each cohort. The size question is not identical though, and that is the interesting part: the weight is one of four values so a vote works, while the size is continuous, so the answer is probably the cohort s median fit rounded to something a person would type, and it has to stay inside the tolerance theRetypedWordsAreTheSizeTheOldOnesWere holds (3 px on the ink box). Careful with the two scales: the size a cohort is grouped BY is at captureScale, and the size a layer is SET at is at layerScale, and TextReader.settle is where the second one is worked out. Note the cohort sizes above are at 2x (13 points of type in a 2x capture opened whole is a 27ish point layer).",
@@ -50,10 +50,15 @@
     {
       "t": "2026-09-17T16:54:38.618Z",
       "note": "Found while verifying, and fixed here because it made the feature look broken in its own screenshot: a text box exactly as wide as its words was being cut with an ellipsis on the canvas at some zooms. A box is measured in document points and drawn through a zoom, the canvas states the frame in output pixels and the rasterizer divides it back, and w*zoom/zoom is not always w in binary floating point. One ulp cost three characters: 'Show in menu bar' drew as 'Show in menu b…' at 151%. Reproduced at the arithmetic (154 of 2000 zoom steps in a thousandth either side of the walk's zoom put that width under) and in the app (screenshot before and after, old build reproduced with the change stashed). TextRasterizer.truncationSlack = 0.01pt, covered by two tests in OneLineTextRenderTests. Shared code, so Current gets the fix too, which is right: it is a defect, not a Next behaviour."
+    },
+    {
+      "t": "2026-09-17T16:55:04.318Z",
+      "note": "Labels of one kind come back at one size. TextReading.pageSize/pageSizes (PhotonzCore, pure) settle each weight cohort on the middle of the sizes its runs fit at; TextReader.holdEachToItsCohortsSize re-sets each run at it and keeps the run's own size where the settled one cannot account for its ink. Settings pane rows all 28.38 (were 27.6-28.5), Effects panel rows 22.22 and sections 23.03, every retyped word within 2px of its ink. Verified: full suite 8197 green, 9 new core tests, 4 new settings-pane fixture tests and 4 new effects-panel ones, label-size-walk (60 steps, 6 real window captures) green and failing on the old build at step 23 with Mixed. Also fixed a hairsbreadth truncation in TextRasterizer that made 'Show in menu bar' draw as 'Show in menu b…' on the canvas. Audit queue/audits/2026-09-17-label-size.json. Commit 12364a49."
     }
   ],
   "walks": [
     "label-size-walk"
   ],
-  "started": "2026-09-17T16:24:52.110Z"
+  "started": "2026-09-17T16:24:52.110Z",
+  "completed": "2026-09-17T16:55:04.319Z"
 }
