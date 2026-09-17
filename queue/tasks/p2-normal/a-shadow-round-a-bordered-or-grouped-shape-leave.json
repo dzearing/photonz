@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2830,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T22:25:34.502Z",
-  "updated": "2026-09-17T05:11:28.143Z",
+  "updated": "2026-09-17T05:11:45.182Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Shipped. The answer to both halves is the one element SVG already has for moving something without a transform: a nested <svg> with x, y, width, height and viewBox. CoreSVG honours a filter on one, and a viewport is not a transform. Two forms, and the difference is load-bearing: a viewport that CARRIES the filter has viewBox equal to its own x/y/width/height, because CoreSVG draws a filtered element twice over when its coordinates are shifted from where it is placed; a viewport standing in for a group's transform has viewBox shifted by the frame origin, since that is what does the placing, and it is safe because that one carries no filter. Both are sized from Layer.renderBounds rather than the frame, because CoreSVG clips a nested viewport and ignores overflow=visible. Code: SVGExport.holdsAFilter / placesByViewport decide, Writer.viewportElement writes, docs/design/svg-export.md has the section 'A viewport where a transform would not do'. Still falling back: a turned shape, a turned group, and in the ANIMATED file a moving group, all because a turn has to be a transform and nothing else says one.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-17T05:11:28.142Z",
       "note": "Correction to the count above: the full suite is green at 8000 tests, not 8001."
+    },
+    {
+      "t": "2026-09-17T05:11:45.180Z",
+      "note": "A shape wearing a drop shadow now leaves the app as a real shape even with a ring round it or drawn inside a frame, and the Export sheet stops naming it. Both go inside a nested <svg> viewport: the multi-piece drawing has one carrying the filter (CoreSVG honours a filter there where it ignores one on a <g>), and a group holding anything filtered places its contents with one instead of a transform (CoreSVG draws a filtered element a step along for every transform above it). Both sized from Layer.renderBounds, because CoreSVG clips a nested viewport and ignores overflow=visible. Also fixed: a shadow inside a group that MOVES was written under the animating transforms and landed wrong; it now falls back in the animated file only, and the sheet agrees. Verified by six new render-back tests through the system's own SVG reader (0.007 to 0.106 off where nothing opaque is under the shadow) plus four core tests; full suite green at 8000. Quick Look checked with qlmanage on the written files. No walk could run: the screen was locked all task. Commit 761c2402, audit queue/audits/2026-09-17-shadow-on-a-ringed-or-framed-shape.json, follow-up filed as a-shadow-comes-out-of-the-app-a-different-shade."
     }
   ],
-  "started": "2026-09-17T04:49:35.254Z"
+  "started": "2026-09-17T04:49:35.254Z",
+  "completed": "2026-09-17T05:11:45.181Z"
 }
