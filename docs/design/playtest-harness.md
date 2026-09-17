@@ -18,6 +18,14 @@ malformed script fails with a readable error before anything runs.
   `PHOTONZ_PLAYTEST` for the dev and probe variants only. Dev carries the code
   so dev and probe share one compiled product and flipping between them never
   triggers a rebuild.
+- **`swift build` therefore cannot see a mistake in the harness at all**, and
+  neither can `Scripts/test.sh`: `PlaytestHarness.swift` is behind that flag, so
+  a plain build compiles none of it and reports a clean build over code that
+  does not compile. Adding a `PlaytestAction` is the way this bites, because the
+  harness switches over the action list TWICE and the second one is exhaustive.
+  After touching anything under `Sources/Photonz/Playtest/`, build the probe
+  (`Scripts/probe-app.sh`, which is safe to run as often as you like) before
+  believing it builds.
 - The probe is launched with `--playtest <script.json>` (via `open --args`).
   Nothing is read from a fixed location, so a stale request can never fire.
 - The probe never becomes the active app, and macOS would not let it if we
