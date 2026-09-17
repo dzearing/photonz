@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2880,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T04:24:16.184Z",
-  "updated": "2026-09-17T04:24:16.187Z",
+  "updated": "2026-09-17T07:01:39.479Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SUCCESSOR to picking-a-layer-leaves-alone-the-settings-that-d, which did the same thing for the sliders and the picture pickers and took the arrow-to-arrow pick from 33.5 to 25ms. The pattern to copy is Sources/Photonz/PanelReach.swift: a control takes the NAME of what it edits plus the reading it shows, looks the layers up from EditorState when somebody uses it, and is then wrapped in .equatable() so SwiftUI can skip it.\n\nWHY THE COLOUR ROWS ARE HARDER. ColorStyleRow (Sources/Photonz/ColorStylePanel.swift:508) reads editorState.colorStyleSelection(target) and editorState.colorStyleNaming in its OWN body, and so do SelectionColorWell and ColorStyleControl under it. A view that reads the selection itself invalidates on every pick no matter what its parent does, so wrapping it changes nothing: the reading has to be hoisted into PartRowView, which already has row.colors, and handed down.\n\nMEASURED 2026-09-17, probe build, screen locked with PHOTONZ_ALLOW_LOCKED_WALK=1, median of 12 picks, two runs: with PartRowView.colorControl returning nothing the arrow-to-arrow pick is 22.6 and 23.3ms against 24.3 to 25.6 with it. The arrow Caption block is worth about another 1ms (23.2 to 25.2 with ArrowLabelSettings blanked) and could go the same way.\n\nWHAT IS NOT WORTH DOING. Below about 19ms there is nothing in Appearance left to win: blanking PartsInspector entirely reads 16 to 19ms in the same session, and that floor is the canvas, the selection, the layers list and the dock shell. Anyone who wants a pick under 20ms should start there, not here.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-17T04:24:16.186Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T06:19:32.940Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T07:01:39.204Z",
+      "note": "Adversarial review before building: the mock is not in play here, this is the panel behaving. Two things looked wrong with the plan as written. (1) 'wrap it in .equatable()' is not enough on its own -- the colour row is THREE views (ColorStyleRow, SelectionColorWell, ColorStyleControl) and each reads the selection in its own body, so each has to be handed its reading or it wakes itself up whatever its parent does. (2) the reading itself names the picked layers, so two identical arrows are never equal: what a row can compare is what it DRAWS. That became ColorStyleSelection.appearance in PhotonzCore, tested first."
+    },
+    {
+      "t": "2026-09-17T07:01:39.251Z",
+      "note": "Built: ColorTarget carries a Source (selection / partRow(id) / effect(index)) so a row holds the NAME of what it paints, and EditorState.resolved(_:) looks the layers up again at the top of every read and every paint. ColorStyleRow, SelectionColorWell and ColorStyleControl are Equatable and are handed selection + isNaming + previewPaint. ColorStyleNamingRequest now compares on the row's shape rather than on the layers it was born over. Dropped two dead ColorPartRow inits and the generic Well with them; the Mixed-without-a-well branch went with them, unreachable since the row over one layer stopped existing."
+    },
+    {
+      "t": "2026-09-17T07:01:39.298Z",
+      "note": "Verified on the running app, with the screen locked the whole task (PHOTONZ_ALLOW_LOCKED_WALK=1, which buys the run and not the verdict, so both new walks were written to need NO control names). color-row-leaves-alone-walk: a click between two alike arrows builds 0 colour rows, a click to a rectangle builds 3. color-row-reaches-what-is-picked-walk: holds the row over arrow 1, clicks arrow 2 (0 rows built, so the row really was skipped), then checks the held row speaks for arrow 2 and paints arrow 2 and nothing else. Proved that guard is real by making resolved() a no-op: the walk fails with 'the held colour row still speaks for Arrow, and what is picked now is Arrow 2'."
+    },
+    {
+      "t": "2026-09-17T07:01:39.343Z",
+      "note": "Perf, interleaved A/B in one session with the change stashed and unstashed, median of 12 picks each: WITHOUT 24.1 / 24.9 / 24.1 (and 25.0 / 25.8 earlier in the session), WITH 23.4 / 23.3 / 23.3 (and 23.4 / 23.4 / 24.1 / 24.0 / 23.0). Acceptance asked for 23ms or under and this misses it by about 0.4. That number came from yesterday's quieter machine: TODAY, with PartRowView.colorControl returning nothing at all, the same walk reads 23.1 and 24.6. So the colour rows now cost nothing measurable and 23 is below today's floor. Load on the machine is not mine: iconservicesagent has been at 51% since boot, 163 days."
+    },
+    {
+      "t": "2026-09-17T07:01:39.387Z",
+      "note": "Could NOT run the four named walks in acceptance 4 (pick-leaves-settings-alone, arrow-parts, shape-parts, one-color-picker): the Mac's screen was locked for the whole task, so every one reported status locked, which is neither a pass nor a failure. Asked for a sweep with the reason. Scripts/test.sh is green, 8030 tests."
+    },
+    {
+      "t": "2026-09-17T07:01:39.432Z",
+      "note": "left rough: Tests/PhotonzRenderTests ElementBoundsTests.detectionStaysWellInsideTheMouseMoveBudget failed once under load (26.1ms against a 20ms budget), passed on its own and on a second full run. A wall-clock budget in a unit test on a machine with a 51% background process. Not filed: it did not reproduce, it is not in anything this task touched, and one flake is not yet a pattern."
+    },
+    {
+      "t": "2026-09-17T07:01:39.478Z",
+      "note": "left rough: the arrow's Caption block is the next millisecond in Appearance and is deliberately not done here. Its field is bound to one arrow's WORDS, so two arrows are genuinely two different fields and the trick above does not apply; it needs a different answer. Written into the note in InspectorPanel.swift rather than filed, since the note is where the next person looks."
     }
-  ]
+  ],
+  "started": "2026-09-17T06:19:32.939Z"
 }

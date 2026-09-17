@@ -1,0 +1,28 @@
+{
+  "id": "the-sections-row-cries-5-hidden-in-a-document-th",
+  "title": "The Sections row cries 5 hidden in a document that has hidden nothing",
+  "goal": "At the foot of the right hand panel is a row that says which sections the panel is showing. In a brand new document where nobody has hidden anything, it reads \"Sections · 5 hidden\". That is an alarm about missing settings raised on a document that never had them, and it is the opposite of what the row is for: it should say nothing but \"Sections\" until somebody actually turns a section off.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2910,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-17T06:07:07.128Z",
+  "updated": "2026-09-17T06:07:07.131Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-17 with PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/panel-sections-walk.json (walk status ok). Its stage 1 capture /tmp/photonz-playtest/panel-sections/panel-sections-1-shape-automatic-sc.png shows the footer reading \"Sections · 5 hidden\" on a blank 1200x800 document with one rectangle picked and the panel settings forgotten. The same reading is in /tmp/photonz-playtest/reopen-test/reopen-2-closed-sc.png.\n\nThe walk that passes says the opposite in its own seed: \"The Sections row at the foot reads just Sections, because nothing is hidden.\" It passes anyway because every step checks the CONTROL name, which is the literal string \"Sections\" from playtestControl, and never the words on screen.\n\nCause is in Sources/Photonz/PanelSectionsFooter.swift: hiddenCount counts every row with isShown == false, which includes the ones the automatic rule left out for this document (Measurements, Layout, Component, Library and one more) as well as the ones a person turned off. The doc comment right above it says the count exists because \"where did Measurements go\" is the risk of HIDING something, so the count wants rows whose reason is .turnedOff, not rows that are merely automatically out. Feature landed under the-panel-shows-the-panes-that-matter-and-you-ca.",
+  "acceptance": [
+    "A new document with a plain shape picked shows a footer row reading just \"Sections\", with no count",
+    "Turning one section off in the list makes the row read \"Sections · 1 hidden\"",
+    "Turning it back on, or Use Automatic For All, makes the row read just \"Sections\" again",
+    "A walk photographs the row in all three states and checks the words, not just that the row is there"
+  ],
+  "log": [
+    {
+      "t": "2026-09-17T06:07:07.130Z",
+      "note": "created (manual)"
+    }
+  ]
+}

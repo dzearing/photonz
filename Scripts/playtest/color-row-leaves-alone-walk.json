@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/color-row-leaves-alone",
+  "seed": "Clicking from one shape to an identical one must not rebuild a single colour row. A stopwatch cannot prove that once each row is cheap, so this walk COUNTS the row bodies instead: two arrows drawn the same way, clicked back and forth, and the count has to stay at nothing. It then makes them differ and checks the rows do build, because a counter that is always zero because the rows stopped existing would pass just as quietly. Every step here is a click at a place on the canvas rather than a control looked up by name, so it is the one colour walk that still answers on a Mac whose screen is locked.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 90], "to": [340, 150] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [160, 300], "to": [420, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [520, 300], "to": [780, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "describe", "stage": "1-the-rows-are-there",
+      "note": "pick the first arrow, so the panel has its colour rows up and counted at least once" },
+    { "do": "click", "at": [290, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow"] },
+
+    { "do": "describe", "stage": "2-an-alike-pick-builds-nothing",
+      "note": "THE TEST: the other arrow reads exactly the same, so not one colour row may be built" },
+    { "do": "click", "at": [650, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow 2"] },
+    { "do": "expectBuilds", "view": "colorRow", "atMost": 0 },
+    { "do": "click", "at": [290, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow"] },
+    { "do": "expectBuilds", "view": "colorRow", "atMost": 0 },
+
+    { "do": "describe", "stage": "3-a-pick-that-really-differs-does-build",
+      "note": "the other half of the claim: a rectangle has a Fill row an arrow does not, so picking it HAS to build some. Without this the walk above would pass just as quietly the day the colour rows stopped being drawn at all." },
+    { "do": "click", "at": [240, 120] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Rectangle"] },
+    { "do": "expectBuilds", "view": "colorRow", "atLeast": 1 },
+
+    { "do": "describe", "stage": "4-nothing-else-moved",
+      "note": "still the box and the two arrows on the background they were drawn on" },
+    { "do": "expectLayers", "count": 4 }
+  ]
+}

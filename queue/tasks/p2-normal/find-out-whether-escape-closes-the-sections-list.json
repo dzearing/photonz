@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2860,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T23:52:48.797Z",
-  "updated": "2026-09-16T23:52:48.800Z",
+  "updated": "2026-09-17T06:07:38.522Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced in the harness, not by hand. /tmp/reopen-test.json: press \"Sections\", snapshot, key escape, snapshot, press \"Sections\" again, expect \"Use Automatic For All\". Output:\n\n  [23 expect] FAILED: no control called \"Use Automatic For All\" is in the panel\n\nand reopen-2-closed-sc.png, taken AFTER the escape, shows the list still fully on screen with the rectangle no longer selected and Appearance/Effects/Motion gone from the panel behind it. So the escape reached the canvas, not the popover, and the second press on the row toggled isOpen back to false rather than reopening.\n\nThe likely innocent explanation: PlaytestHarness posts key events at the EDITOR window (keyEvent(..., in: window)), and a SwiftUI .popover lives in a window of its own, so the walk can never deliver a key to it. That would make this a harness limitation and not an app bug, which is why this is filed as a question at p2 rather than as a bug. It cannot be settled without driving the app by hand, and the screen has been locked since 2026-09-15 08:44.\n\nPanelSectionsFooter.swift: Button { isOpen.toggle() } with .popover(isPresented: $isOpen). panel-sections-walk.json now closes the list by pressing the Sections row a second time, so it passes; put Escape back when this is answered.",
+  "notes": "ANSWERED, mechanically rather than by hand, and the innocent explanation in the old notes was only half right.\n\nWHAT THE HARNESS COULD NOT DO, and what that was not. The old theory was that a walk posts a key at the EDITOR window while the list lives in a window of its own. The first half is true and the second half does not matter. With the list open, a census of the windows standing over the editor printed:\n\n  SwiftUI.AppKitWindow|key=false|canKey=true|child=false|fr=Photonz.CanvasNSView\n  _NSPopoverWindow    |key=false|canKey=true|child=true |fr=Photonz.CanvasNSView\n\nRouting the press to the popover window instead changed NOTHING: its first responder is the canvas too, so the Escape still went to the canvas and still cleared the selection. That experiment was made and then reverted; it buys nothing and would put all 322 walks at risk.\n\nWHAT WAS ACTUALLY WRONG. Nothing in the app handled Escape for this list at all. Driving the press the way a person's press reaches an app-wide watch (the `appKey` step, which is how the history overlay is taken down on Esc) on UNCHANGED main: the list stayed open and selection went from [\"Rectangle\"] to []. So this was not only a harness limitation.\n\nTHE FIX. PanelSectionsEscapeWatch in Sources/Photonz/PanelSectionsFooter.swift: a local NSEvent keyDown monitor, installed while isOpen and removed the moment it closes or the row goes away, that closes the list on keyCode 53 and SWALLOWS the press so it cannot go on to clear the selection. Same idiom as InspectorPanel's carried-section watch and EditorState+MotionStrip's dragged-bar watch, and for the same reason: nothing in the list holds the keyboard.\n\nVERIFIED, before and after, same walk:\n  without the fix: [18 expect] FAILED: the control called \"Use Automatic For All\" is in the panel, and this step says it should not be; selection = []\n  with the fix:    [18 expect] no control \"Use Automatic For All\" in the panel, as claimed; selection = [\"Rectangle\"] at every step\nScripts/playtest/panel-sections-walk.json now closes the list with Escape in both places and passes (14s, 5 real window captures). Scripts/test.sh: 8013 tests in 639 suites passed.\n\nWHAT IS STILL NOT KNOWN. Whether macOS would have closed the list on Escape by itself for a person, because the probe is never the frontmost app so the popover window never becomes key. The fix makes the app close it either way, so this no longer gates anything; acceptance item 1 is the part that could not be met, and the audit asks the user to try it once the screen is unlocked.\n\nPre-existing and unrelated: panel-section-drag fails on main (no section called \"Position & Size\"), verified by stashing this change; folded into walks-that-fail-in-the-full-sweep.",
   "acceptance": [
     "Somebody has opened the Sections list by hand and pressed Escape, and written down what happened",
     "If Escape leaves the list open for a person too, it closes the list and leaves the canvas selection alone",
@@ -22,6 +22,24 @@
     {
       "t": "2026-09-16T23:52:48.799Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T05:53:53.483Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T06:07:31.750712Z",
+      "note": "Reproduced on unchanged main, found the app was not handling Escape at all (not just a harness gap), fixed it with an escape watch, put Escape back in panel-sections-walk.json. Walk ok, Scripts/test.sh green. Audit: queue/audits/2026-09-17-panel-sections-escape.json"
+    },
+    {
+      "t": "2026-09-17T06:07:31.750863Z",
+      "note": "left rough: the walk has to drive this Escape with the appKey step rather than a plain key step, because the app watches for the key app-wide rather than owning the keyboard. Same as the history overlay, already documented in docs/design/playtest-harness.md, so no task: a walk author who writes a plain key step here will find it goes to the canvas."
+    },
+    {
+      "t": "2026-09-17T06:07:38.520Z",
+      "note": "Escape now closes the Sections list and leaves the canvas selection alone. It was NOT only a harness limitation: nothing in the app handled the key, shown on unchanged main by driving the press app-wide (list stayed open, selection went to []). Fixed with PanelSectionsEscapeWatch in Sources/Photonz/PanelSectionsFooter.swift, which swallows the press so it cannot reach the canvas. panel-sections-walk.json closes the list with Escape again and passes with 5 real captures; Scripts/test.sh green (8013 tests). Committed e0096ea3. Audit: queue/audits/2026-09-17-panel-sections-escape.json. Acceptance 1 (a person tries it by hand) could not be met: the screen has been locked since 2026-09-15, so the audit asks the user to."
     }
-  ]
+  ],
+  "started": "2026-09-17T05:53:53.482Z",
+  "completed": "2026-09-17T06:07:38.521Z"
 }

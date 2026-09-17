@@ -13,6 +13,23 @@ import PhotonzCore
 /// ring.
 extension EditorState {
 
+    /// The same row, over the layers it reaches RIGHT NOW.
+    ///
+    /// Every question below asks this first, and so does every paint, so a
+    /// colour row the panel skipped over a click behaves exactly like one it
+    /// rebuilt: it was handed the NAME of the row it edits, not the layers that
+    /// happened to be picked when it was drawn (`ColorTarget.Source`).
+    ///
+    /// A row whose part has left the panel altogether reaches nothing rather
+    /// than keeping hold of layers nobody has picked any more.
+    func resolved(_ target: ColorTarget) -> ColorTarget {
+        guard case .partRow(let id) = target.source else { return target }
+        guard let row = layerPartRows.first(where: { $0.id == id }), !row.colors.isEmpty else {
+            return ColorTarget(emptying: target)
+        }
+        return ColorTarget(target, layers: row.colors)
+    }
+
     /// The picked layers one colour of a row reaches.
     private func reach(_ part: ColorTarget.Part) -> [UUID] {
         part.layerIDs ?? colorStyleTargetIDs
@@ -24,7 +41,8 @@ extension EditorState {
     /// The count of picked layers is the WHOLE selection whichever way the row
     /// reaches, so "Applies to 1 of the 2 selected layers" still counts the
     /// layers a person picked rather than the ones the row happened to claim.
-    func colorStyleSelection(_ target: ColorTarget) -> ColorStyleSelection {
+    func colorStyleSelection(_ rowTarget: ColorTarget) -> ColorStyleSelection {
+        let target = resolved(rowTarget)
         guard let document else {
             return ColorStyleSelection(slot: target.lead, members: [], selectionCount: 0)
         }
@@ -46,7 +64,8 @@ extension EditorState {
     /// Which layers take which colour when this row is painted. Empty parts are
     /// dropped, so a screenshot with no ring does not turn one on behind the
     /// person's back.
-    private func work(_ target: ColorTarget) -> [(slot: ColorSlot, ids: [UUID])] {
+    private func work(_ rowTarget: ColorTarget) -> [(slot: ColorSlot, ids: [UUID])] {
+        let target = resolved(rowTarget)
         guard let document else { return [] }
         return target.parts.compactMap { part in
             let ids = document.colorStyleSelection(layerIDs: reach(part), slot: part.slot).layerIDs
@@ -79,7 +98,8 @@ extension EditorState {
     }
 
     /// What the row's layers are painted with, when they agree.
-    func selectionPaint(_ target: ColorTarget) -> Paint? {
+    func selectionPaint(_ rowTarget: ColorTarget) -> Paint? {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             return document?.sharedPaint(layerIDs: reach(target.parts[0]), effectAt: place)
         }
@@ -98,7 +118,8 @@ extension EditorState {
     }
 
     /// One frame of a colour drag over the row, recording nothing.
-    func previewSelectionPaint(_ target: ColorTarget, paint: Paint) {
+    func previewSelectionPaint(_ rowTarget: ColorTarget, paint: Paint) {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
@@ -129,7 +150,8 @@ extension EditorState {
     }
 
     /// Paints the row across everything it reaches, in one step.
-    func setSelectionPaint(_ target: ColorTarget, paint: Paint) {
+    func setSelectionPaint(_ rowTarget: ColorTarget, paint: Paint) {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
@@ -153,7 +175,8 @@ extension EditorState {
     }
 
     /// Points the row at a saved colour, in one step.
-    func useColorStyle(_ target: ColorTarget, styleID: UUID) {
+    func useColorStyle(_ rowTarget: ColorTarget, styleID: UUID) {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
@@ -170,7 +193,8 @@ extension EditorState {
 
     /// Every colour on the row stays exactly as it is and becomes its own
     /// layer's again.
-    func unlinkColorStyle(_ target: ColorTarget) {
+    func unlinkColorStyle(_ rowTarget: ColorTarget) {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
@@ -195,7 +219,8 @@ extension EditorState {
     func effectColorTarget(_ row: LayerEffectRow) -> ColorTarget? { ColorTarget(effect: row) }
 
     /// The name the Save as Style field opens on.
-    func suggestedColorStyleName(_ target: ColorTarget) -> String {
+    func suggestedColorStyleName(_ rowTarget: ColorTarget) -> String {
+        let target = resolved(rowTarget)
         guard target.isSplit || target.effectIndex != nil else {
             return suggestedColorStyleName(slot: target.lead)
         }
@@ -207,7 +232,8 @@ extension EditorState {
     /// "Save as Style" on the row: keeps what its layers share under a name and
     /// points every one of them at it, whichever colour each one wears.
     @discardableResult
-    func saveColorStyle(_ target: ColorTarget, name: String? = nil) -> UUID? {
+    func saveColorStyle(_ rowTarget: ColorTarget, name: String? = nil) -> UUID? {
+        let target = resolved(rowTarget)
         if let place = target.effectIndex {
             guard colorStylesEnabled else { return nil }
             // The field closes whether or not a style comes of it, exactly as

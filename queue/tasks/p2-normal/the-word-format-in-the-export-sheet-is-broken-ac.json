@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2840,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T22:45:05.939Z",
-  "updated": "2026-09-17T05:36:37.853Z",
+  "updated": "2026-09-17T05:36:46.615Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-16 on main at c158cc07 plus the background work. Command: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/svg-export-background-walk.json ; the sheet render is /tmp/photonz-playtest/svg-export-background-walk/svg-export-background-4-sheet.png and the window capture is the matching -sc.png, both showing Fo/r/m/at stacked. Not caused by the background row, which sits below it: the cause is the segmented Picker in ExportDialog.swift having five segments (PNG JPEG HEIC WebP SVG, WebP added 2026-09-15) inside .frame(width: 320), so SwiftUI gives the leading label almost no room. Either widen the sheet, drop to .labelsHidden() on that Picker (the segments say what they are), or move the label above the row.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-17T05:36:37.852Z",
       "note": "The Mac's screen was locked for this whole task, so every walk ran with PHOTONZ_ALLOW_LOCKED_WALK=1. Three export walks fail under that: icon-export-animated (step 9, a panel menu is nameless), tutorial-save-export-copy and tutorial-export-a-spec-list (both step 14, waiting on a tutorial step behind a copy chord). I checked each against the unchanged file by stashing and re-running: identical failures without my change, so they are the lock and not this work. Folded into walks-that-fail-in-the-full-sweep rather than filed."
+    },
+    {
+      "t": "2026-09-17T05:36:46.613Z",
+      "note": "Format sits on one line beside all five format buttons. Every row of the Export sheet now writes its own label, held at natural width in a shared column, and the sheet is 380pt wide instead of 320 because at 320 the name and five buttons cannot both fit. Verified by eight export and frames walks, each photographing the sheet, plus a green Scripts/test.sh. Audit: queue/audits/2026-09-16-export-format-row.json"
     }
   ],
-  "started": "2026-09-17T05:14:12.077Z"
+  "started": "2026-09-17T05:14:12.077Z",
+  "completed": "2026-09-17T05:36:46.614Z"
 }

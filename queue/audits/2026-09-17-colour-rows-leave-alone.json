@@ -1,0 +1,27 @@
+{
+  "feature": "The colour rows stop redrawing on every click",
+  "epic": "ui-building",
+  "summary": "Clicking from one shape to an identical one no longer rebuilds the colour row of every part in the settings panel. It was the last thing in Appearance still reading the selection in its own body, and it was the last piece of the pause people feel clicking back and forth between two alike shapes.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: this is how Appearance behaves now.",
+  "try": [
+    { "do": "Draw two arrows the same way, one under the other." },
+    { "do": "Press Escape, then V for the Select tool." },
+    { "do": "Click one arrow, then the other, back and forth about ten times." },
+    { "do": "Straight after a click, drop a colour on the Line row: the arrow you clicked LAST takes it." },
+    { "do": "Give one arrow a different colour, then click between them again and watch the Line row." },
+    { "do": "Open the Line row's saved-colours menu on one arrow, then click the other and open it again." }
+  ],
+  "evaluate": [
+    "Does clicking back and forth between two alike shapes feel instant now, or is there still a beat?",
+    "Does a colour dropped on a row right after a click ever land on the wrong shape?",
+    "After picking a red arrow and then a blue one, does the Line row ever show red for a moment?",
+    "Does the saved-colours menu still open on the right list, and does Save as Style still open its name field under the right row?",
+    "Dragging a colour out of a well onto another row: does the chip still keep up with the canvas while you pull?"
+  ],
+  "rough": [
+    "The click is 23.3 to 23.4ms of main thread work in its longest pass, against 24.1 to 25.8 before. The task asked for 23 or under, and that number was measured yesterday on a quieter machine: today, with the colour rows taken out of the panel ALTOGETHER, the same walk reads 23.1 to 24.6. So the colour rows now cost nothing measurable and the bar as written is not reachable today. What is left of the click is the canvas, the selection, the layers list and the dock shell.",
+    "The next millisecond in Appearance is the arrow's Caption block, and it is a different job: the text field is bound to one arrow's words, so two arrows really are two different fields and it cannot be skipped the way a colour row can.",
+    "Every walk that finds a control BY NAME was unrunnable for this whole task: the Mac's screen was locked from start to finish, so pick-leaves-settings-alone, arrow-parts, shape-parts and one-color-picker all reported 'locked' rather than passing or failing. A sweep has been asked for. What WAS checked on the running app is two new walks that need no names and so answer on a locked Mac: one counts the colour row bodies a click builds (nothing, on an alike pick; three when the shape really differs), and one holds the row over one arrow, clicks the other, and checks that painting through the row it is still holding reaches the arrow clicked last and leaves the first one alone.",
+    "There are no pictures with this audit. The screen was locked, so the walks that take them could not run."
+  ]
+}

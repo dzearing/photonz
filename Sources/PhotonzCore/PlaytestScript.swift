@@ -1012,6 +1012,22 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The picker is a popover a walk cannot reach with the pointer, so this
     /// is how the same preview-and-commit path it takes gets exercised.
     case holdColorDrag, releaseColorDrag
+    /// Remember the first colour row of the right hand panel exactly as the row
+    /// itself holds it, and then, after the walk has picked something else,
+    /// paint through the row it remembered.
+    ///
+    /// This is the one thing a picture cannot show about a panel that leaves
+    /// controls alone. A colour row the panel skipped is still on screen
+    /// holding the address it was born with, and the promise is that painting
+    /// through it reaches whatever is picked NOW rather than the shape it was
+    /// drawn for (`ColorTarget.Source`). `paintHeldColorRow` paints and then
+    /// checks both halves: every picked layer with that colour wears the new
+    /// one, and nothing that is not picked moved at all.
+    ///
+    /// Every step of the walk that uses these is a click at a place on the
+    /// canvas, so it is the one colour check that still answers on a Mac whose
+    /// screen is locked and no control carries a name.
+    case holdColorRow, paintHeldColorRow
     /// The type rows over the whole selection (`ui-building`, step D9): the
     /// Size menu set to 14pt, and the Weight menu set to Bold. Both are menus
     /// in the dock, which a walk cannot reach with the pointer, so this is how
@@ -1790,14 +1806,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// passes one that is not, while "picking a layer rebuilt the whole editor"
     /// is either true or it is not. The views that can be counted are the ones
     /// the probe build meters (`ViewBuildMeter`): `editorBody`,
-    /// `inspectorPanel`, `layersList`, `layersRow`, `layerThumbnail`.
+    /// `inspectorPanel`, `layersList`, `layersRow`, `layerThumbnail`, `colorRow`.
     ///
     /// Zero is the usual ceiling and the useful one: picking a layer must not
     /// re-run the editor's own body, which is the canvas, the tool bar, the
     /// zoom bar and the dock together. It did until 2026-09-14, because the
     /// picked layer rode into the undo stack and the whole window is drawn
     /// from that stack (`layer-pick-latency-walk`).
-    case expectBuilds(view: String, atMost: Int)
+    /// `atLeast` is the other side of the same claim, and a walk asserting a
+    /// ceiling of nothing wants it: a count that is zero because the view has
+    /// stopped being drawn at all passes exactly as quietly as one that is zero
+    /// because the click was skipped. So the walk that says "an alike pick
+    /// rebuilds no colour row" says on the next click that a pick which really
+    /// changes something rebuilds some (`color-row-leaves-alone-walk`). One of
+    /// the two is enough; both together bound the count from either side.
+    case expectBuilds(view: String, atMost: Int?, atLeast: Int?)
     /// Whether the layers list moved under the last pick, which is the one
     /// promise the list makes that a picture cannot show: a row you can
     /// already see wins, and the list stays exactly where the reader left it.
@@ -2895,12 +2918,16 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectOneNumberPerName
         case "expectBuilds":
             guard fields["view"] != nil else {
-                throw f.invalid("view", "expectBuilds has to name the view it is counting: editorBody, inspectorPanel, layersList, layersRow or layerThumbnail")
+                throw f.invalid("view", "expectBuilds has to name the view it is counting: editorBody, inspectorPanel, layersList, layersRow, layerThumbnail or colorRow")
             }
-            guard fields["atMost"] != nil else {
-                throw f.invalid("atMost", "expectBuilds has to say how many builds are allowed; \"atMost\": 0 is the usual one")
+            guard fields["atMost"] != nil || fields["atLeast"] != nil else {
+                throw f.invalid("atMost", "expectBuilds has to bound the count: \"atMost\": 0 is the usual one, and \"atLeast\": 1 is how a walk says the view really did build")
             }
-            self = .expectBuilds(view: try f.string("view"), atMost: Int(try f.number("atMost")))
+            self = .expectBuilds(view: try f.string("view"),
+                                 atMost: fields["atMost"] == nil
+                                     ? nil : Int(try f.number("atMost")),
+                                 atLeast: fields["atLeast"] == nil
+                                     ? nil : Int(try f.number("atLeast")))
         case "expectListStill":
             self = .expectListStill(moved: try f.optionalFlag("moved") ?? false)
         case "expectPicked":

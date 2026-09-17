@@ -319,11 +319,19 @@ private struct PartRowView: View {
     // MARK: The colour
 
     @ViewBuilder private var colorControl: some View {
-        if let target = ColorTarget(row.colors) {
+        if let target = ColorTarget(row.colors, rowID: row.id) {
             // ONE well, however many kinds of line the row speaks for. Over a
             // rectangle and a screenshot it paints the shape its stroke and the
             // picture its ring, in one step one undo puts back.
-            ColorStyleRow(target: target, part: row.title)
+            // Handed everything it shows, so a click that leaves this row
+            // looking exactly as it did leaves it alone: it holds the row's
+            // NAME and looks the layers up again when somebody paints
+            // (`ColorTarget.Source`, `PanelReach.swift`).
+            ColorStyleRow(target: target, part: row.title,
+                          selection: editorState.colorStyleSelection(target),
+                          isNaming: editorState.isNamingColorStyle(target),
+                          previewPaint: editorState.previewedPaint(target))
+                .equatable()
             // The way back for a copy of a component that has picked its own
             // ring colour. It sits with the colour it undoes, which is here.
             if target.lead == .border, let only = soleLayerID(row.switchIDs) {

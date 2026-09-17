@@ -91,6 +91,10 @@ private final class Run {
 
     /// The editor the last `open` produced; every later step targets it.
     private var editor: EditorState?
+    /// A colour row remembered exactly as the row on screen holds it, so a walk
+    /// can paint through it after picking something else. See
+    /// `PlaytestAction.holdColorRow`.
+    private var heldColorRow: ColorTarget?
     /// The recording's window a video guide opened, when the walk is in one.
     /// Nil in every other walk, and the two are never both set: a window holds
     /// a picture or a recording, never both.
@@ -1332,22 +1336,35 @@ private final class Run {
                  },
                  state: describe())
 
-        case .expectBuilds(let view, let atMost):
+        case .expectBuilds(let view, let atMost, let atLeast):
             guard let subject = ViewBuildMeter.Subject(rawValue: view) else {
                 throw Failure(description: "there is no view called \"\(view)\" to count; the ones "
                     + "the probe counts are: "
                     + ViewBuildMeter.Subject.allCases.map(\.rawValue).joined(separator: ", "))
             }
             let built = ViewBuildMeter.shared.count(subject)
-            guard built <= atMost else {
-                throw Failure(description: "\"\(view)\" built \(built) time\(built == 1 ? "" : "s") "
+            let times = "\(built) time\(built == 1 ? "" : "s")"
+            if let atMost, built > atMost {
+                throw Failure(description: "\"\(view)\" built \(times) "
                     + "since the step before this one, and this walk allows at most \(atMost). "
                     + "Something the step just did is read by that view, so SwiftUI rebuilt it and "
                     + "re-measured everything inside it. The whole count: "
                     + ViewBuildMeter.shared.report)
             }
+            // The other side of the same claim: a ceiling of nothing is met
+            // just as well by a view that has stopped being drawn at all, so a
+            // walk asserting one wants to assert somewhere that the view still
+            // builds when something really changed.
+            if let atLeast, built < atLeast {
+                throw Failure(description: "\"\(view)\" built \(times) "
+                    + "since the step before this one, and this walk expects at least \(atLeast). "
+                    + "Either the step did not change what that view shows, or the view is not on "
+                    + "screen at all. The whole count: " + ViewBuildMeter.shared.report)
+            }
+            let bounds = [atLeast.map { "at least \($0)" }, atMost.map { "at most \($0)" }]
+                .compactMap { $0 }.joined(separator: " and ")
             note(number, step.name,
-                 "\"\(view)\" built \(built) time\(built == 1 ? "" : "s"), at most \(atMost) allowed; "
+                 "\"\(view)\" built \(times), \(bounds) allowed; "
                  + ViewBuildMeter.shared.report,
                  state: describe())
 
@@ -1926,6 +1943,90 @@ private final class Run {
                  + (video.hasUnsavedChanges ? ", unsaved" : ""),
                  state: describe())
 
+        // The one colour check that needs no control to carry a name, so it
+        // still answers on a locked Mac. See `PlaytestAction.holdColorRow`.
+        case .action(let action) where action == .holdColorRow:
+            let editor = try requireEditor()
+            guard let row = editor.layerPartRows.first,
+                  let target = ColorTarget(row.colors, rowID: row.id) else {
+                throw Failure(description: "nothing picked has a colour row to hold; the panel "
+                    + "has \(editor.layerPartRows.count) part rows")
+            }
+            heldColorRow = target
+            let over = row.colors.flatMap { $0.layerIDs ?? [] }
+                .compactMap { editor.document?.layer(id: $0)?.name }
+            note(number, step.name,
+                 "holding the colour row \"\(row.title)\" (\(row.id)), which reaches "
+                 + (over.isEmpty ? "nothing" : over.joined(separator: ", ")) + " right now",
+                 state: describe())
+
+        case .action(let action) where action == .paintHeldColorRow:
+            let editor = try requireEditor()
+            guard let held = heldColorRow else {
+                throw Failure(description: "no colour row is being held; a holdColorRow step has "
+                    + "to come first")
+            }
+            guard let before = editor.document else {
+                throw Failure(description: "there is no document to paint")
+            }
+            let slot = held.lead
+            let hex = "#B0184A"
+            let was = Dictionary(uniqueKeysWithValues:
+                                    before.allLayers.map { ($0.id, $0.colorHex(for: slot)) })
+            // Worked out from the SELECTION rather than from the row, so the
+            // claim does not lean on the very lookup it is checking.
+            let picked = Set(editor.actionableLayerIDs)
+            let owed = Set(before.allLayers
+                .filter { picked.contains($0.id) && !$0.isLocked && $0.colorSlots.contains(slot) }
+                .map(\.id))
+            // First: what the held row SAYS it reaches. A row the panel left
+            // alone still carries the layers it was drawn over, so this is the
+            // lookup that has to happen before anything else does.
+            let reaches = Set(editor.colorStyleSelection(held).layerIDs)
+            guard reaches == owed else {
+                let names = { (ids: Set<UUID>) -> String in
+                    ids.isEmpty ? "nothing"
+                        : ids.compactMap { before.layer(id: $0)?.name }.sorted()
+                            .joined(separator: ", ")
+                }
+                throw Failure(description: "the held colour row still speaks for "
+                    + "\(names(reaches)), and what is picked now is \(names(owed)). A row the "
+                    + "panel left alone has to look its layers up again by name rather than "
+                    + "keeping the ones it was drawn over (`EditorState.resolved(_:)`)")
+            }
+            editor.setSelectionPaint(held, paint: Paint(hex: hex))
+            await sleep(0.3)
+            guard let after = editor.document else {
+                throw Failure(description: "the document went away while painting")
+            }
+            var wrong: [String] = []
+            for layer in after.allLayers {
+                let now = layer.colorHex(for: slot)
+                let wears = now?.caseInsensitiveCompare(hex) == .orderedSame
+                if owed.contains(layer.id) {
+                    if !wears {
+                        wrong.append("\(layer.name) is picked and has a \(slot.rawValue), and the "
+                            + "row left it as \(now ?? "nothing")")
+                    }
+                } else if now != was[layer.id] {
+                    wrong.append("\(layer.name) is not picked and the row painted it anyway: "
+                        + "\(was[layer.id] ?? "nothing") became \(now ?? "nothing")")
+                }
+            }
+            guard wrong.isEmpty else {
+                throw Failure(description: "the colour row painted the wrong layers. "
+                    + wrong.joined(separator: "; ")
+                    + ". A row the panel left alone is still holding the layers it was drawn "
+                    + "over; it has to look them up again before it paints "
+                    + "(`EditorState.resolved(_:)`)")
+            }
+            note(number, step.name,
+                 "painted \(slot.rawValue) \(hex) through the held row: it reached "
+                 + (owed.isEmpty ? "nothing" : owed.compactMap { after.layer(id: $0)?.name }
+                        .sorted().joined(separator: ", "))
+                 + " and left every other layer alone",
+                 state: describe())
+
         case .action(let action):
             let editor = try requireEditor()
             // Zeroed here so `showInspector` reports the cost of the panel
@@ -1938,6 +2039,9 @@ private final class Run {
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
             switch action {
+            // Handled in full above, where they can refuse the walk. Named
+            // here only because this switch covers every action.
+            case .holdColorRow, .paintHeldColorRow: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             case .copy: editor.copySelectedLayer()

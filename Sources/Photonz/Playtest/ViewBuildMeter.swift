@@ -31,6 +31,12 @@ final class ViewBuildMeter {
         case inspectorPanel
         /// The layers list's body, which is one step under the dock's.
         case layersList
+        /// One colour row of the right hand panel: the chip, the word and the
+        /// saved-colours menu beside them. Clicking from one shape to an
+        /// identical one must not build a single one of them, and a stopwatch
+        /// cannot tell "rebuilt cheaply" from "not rebuilt" once the row is
+        /// small (`ColorStyleRow`).
+        case colorRow
     }
 
     private var counts: [Subject: Int] = [:]

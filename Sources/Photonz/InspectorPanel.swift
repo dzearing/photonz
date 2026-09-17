@@ -239,12 +239,26 @@ struct InspectorPanel: View {
     // against a probe still carrying the previous experiment, and it claimed
     // five milliseconds this change never won.
     //
-    // What is left inside Appearance, measured the same way by taking each one
-    // out on its own: the colour rows about 2ms (a well reads the selection in
-    // its OWN body, so nothing the row above it does can leave it alone; it
-    // would have to be handed its reading the way the sliders now are), the
-    // arrow's Caption block about 1ms, and the rest spread across the row
-    // chrome with no villain in it.
+    // The colour rows followed on 2026-09-17 and were the last of it
+    // (`ColorTarget.Source`). They were the piece that could not be fixed from
+    // outside: the well, the styles menu and the row itself each read the
+    // selection in their OWN bodies, so nothing the row above them did could
+    // leave them alone. Each is handed its reading now and compares what it
+    // DRAWS, and the layers it paints are looked up at the moment somebody
+    // paints. Interleaved against the same build with the change stashed, six
+    // runs of the same walk in one session: 24.1 to 25.8ms without, 23.3 to
+    // 23.4 with. The number to trust is not the stopwatch, though, it is the
+    // count: `color-row-leaves-alone-walk` builds ZERO colour rows on a click
+    // between two alike arrows, and three on a click that really changes the
+    // panel.
+    //
+    // What is left inside Appearance: the arrow's Caption block, about 1ms, and
+    // the rest spread across the row chrome with no villain in it. The Caption
+    // block is a different job from the rows above -- its field is bound to one
+    // arrow's WORDS, so two arrows really are two different fields -- and the
+    // floor underneath it all, measured on 2026-09-17 by blanking
+    // `PartsInspector` in the same session, is 23.1 to 24.6ms. Which is to say
+    // Appearance has stopped being where a pick costs anything.
     // `Scripts/playtest/pick-leaves-settings-alone-walk.json` is the guard that
     // the skipping stayed honest: it picks the second of two arrows that read
     // exactly alike, which is the case where a control really was skipped, and

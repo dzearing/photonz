@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 2850,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T22:45:42.591Z",
-  "updated": "2026-09-16T22:45:42.594Z",
+  "updated": "2026-09-17T05:52:12.734Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Falls out of an-icon-exported-as-svg-comes-out-with-nothing-b (2026-09-16), which fixed SVG only. Reproduced the same day: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-walk.json --no-build wrote icon-as-png.png (900x700, hasAlpha yes) from a pen-drawn shape on a blank 900x700 canvas, and reading it back gave top-left (5,5) r255 g255 b255 a255 and bottom-right (895,695) r255 g255 b255 a255: opaque white, not empty. The SVG side is SVGExport.Background plus SVGExport.backdrop(in:flatImages:) in PhotonzCore, and ExportDialog.backgroundRow already holds the control and already knows the backdrop for the target (it reads FlatBitmap.colors once per sheet). The picture path is EditorState.exportComposite plus ExportSizer; the smallest version is to render with the backdrop layer set isVisible = false. JPEG and HEIC hold no transparency, so the row must not appear for them.",
@@ -23,6 +23,40 @@
     {
       "t": "2026-09-16T22:45:42.593Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T05:38:21.637Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T05:45:00.000Z",
+      "note": "Adversarial review before building. (1) The row is the SAME control as SVG's, sharing keepsBackground, so switching PNG<->SVG in the sheet never changes what happens to the canvas: an answer that flips as you change format is worse than either default. (2) Default stays unticked (canvas left out) for pictures too, matching SVG: the sheet says in plain words what will happen, with a swatch of the colour that would go, every time. (3) The row can only appear when the bottom layer really is one flat colour covering the canvas, so a screenshot or a captured screen never sees it and keeps its background unasked. (4) JPEG and HEIC hold no transparency: the row is hidden AND the picture path forces keep for them, so no caller can write a JPEG with the canvas missing. (5) Shortest version: no new concept, no new setting, reuse SVGExport.Background and the backdrop finder, hide the backdrop layer at render time."
+    },
+    {
+      "t": "2026-09-17T05:52:09.946Z",
+      "note": "Built. PhotonzDocument.drawn(with:flatImages:) (PhotonzCore, new) hides the canvas layer; ExportSizer takes a background answer, keys its kept render on it, and forces keep for a format with no transparency; EditorState.exportComposite passes it through; ExportDialog shows the same Include the background row for PNG and WebP, last in the block exactly where SVG has it. Tests first: 4 core, 6 render (corners of the real file read back), 3 script-parse. Full Scripts/test.sh green, 8013 tests."
+    },
+    {
+      "t": "2026-09-17T05:52:09.990Z",
+      "note": "Verified. The Mac's screen was locked, so a normal walk refuses; run with PHOTONZ_ALLOW_LOCKED_WALK=1 the new png-export-background-walk passed all 41 steps, names resolved and macOS took 4 real window captures anyway (done.json screenLocked true, status ok). Reading the files back by hand: png-export-background-2-file.png top-left (5,5) rgba [0,0,0,0] where the bug report had [255,255,255,255], and the same drawing with the box ticked gives [255,255,255,255]. The JPEG written asking for drop is byte for byte the one written asking for keep. The sheet pictures show the row on PNG and no row at all on JPEG."
+    },
+    {
+      "t": "2026-09-17T05:52:10.036Z",
+      "note": "Also ran forced: export-quality, export-webp, svg-export, svg-export-background, svg-export-redline, tutorial-export-an-animated-svg, tutorial-export-a-recording all ok. Three failed on control-name lookups (icon-export-animated at a panelMenu, tutorial-export-a-spec-list and tutorial-save-export-copy at a waitFor on a tutorial step). All three passed in the 2026-09-14 sweep and all three are name lookups, which is the documented locked-screen artifact, so nothing was filed from them. A sweep is already pending and will judge them once the screen is unlocked."
+    },
+    {
+      "t": "2026-09-17T05:52:10.082Z",
+      "note": "left rough: PNG shows no file size on the sheet, so you cannot watch the file shrink when the canvas goes; only the lossy formats weigh themselves. And the colour swatch sits hard right of the sheet, a long way from the checkbox it explains, which is inherited from the SVG row rather than new here. Neither is broken and neither stops anyone, so neither earned a task."
+    },
+    {
+      "t": "2026-09-17T05:52:10.127Z",
+      "note": "Follow-up filed: copying-an-icon-carries-the-white-canvas-the-exp. Copy (Shift Command C) still puts the white canvas on the clipboard, so the icon you save and the icon you paste now disagree. A person notices that one, and no open task covered it."
+    },
+    {
+      "t": "2026-09-17T05:52:12.732Z",
+      "note": "Export's Include the background now works for PNG and WebP as well as SVG: an icon drawn on a blank canvas goes out see-through, a screenshot never sees the question, and JPEG/HEIC cannot be asked for it. Core helper PhotonzDocument.drawn(with:flatImages:), guard in ExportSizer, row in ExportDialog. Verified by 13 new tests, the full suite (8013, green), and png-export-background-walk, whose PNG reads rgba [0,0,0,0] in the corner where the bug report read [255,255,255,255]. Audit: queue/audits/2026-09-17-icon-export.json."
     }
-  ]
+  ],
+  "started": "2026-09-17T05:38:21.636Z",
+  "completed": "2026-09-17T05:52:12.733Z"
 }

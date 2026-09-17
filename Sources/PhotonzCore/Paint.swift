@@ -93,6 +93,17 @@ public struct Paint: Hashable, Sendable {
     /// written uppercase everywhere the app makes one, but a document read from
     /// disk or a pasted color can arrive either way.
     ///
+    /// The same question where either side may be nothing at all: a row with
+    /// no colour, or a colour nobody is dragging. Two nothings draw alike; a
+    /// nothing and a something never do.
+    public static func draws(_ one: Paint?, sameAs other: Paint?) -> Bool {
+        switch (one, other) {
+        case (nil, nil): return true
+        case (.some(let one), .some(let other)): return one.draws(sameAs: other)
+        default: return false
+        }
+    }
+
     /// This is the comparison anything asking "is this still what it was
     /// painted" wants: a style checking the layers wearing it, a row asking
     /// whether the picked layers agree.

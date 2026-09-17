@@ -4779,3 +4779,36 @@
 {"t":"2026-09-17T05:36:37.808Z","ev":"task_note","id":"the-word-format-in-the-export-sheet-is-broken-ac"}
 {"t":"2026-09-17T05:36:37.854Z","ev":"task_note","id":"the-word-format-in-the-export-sheet-is-broken-ac"}
 {"t":"2026-09-17T05:36:40.031Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T05:36:46.616Z","ev":"task_done","id":"the-word-format-in-the-export-sheet-is-broken-ac","from":"in_progress","note":"Format sits on one line beside all five format buttons. Every row of the Export sheet now writes its own label, held at natural width in a shared column, and the sheet is 380pt wide instead of 320 because at 320 the name and five buttons cannot both fit. Verified by eight export and frames walks, each photographing the sheet, plus a green Scripts/test.sh. Audit: queue/audits/2026-09-16-export-format-row.json"}
+{"t":"2026-09-17T05:38:21.529Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T05:38:21.639Z","ev":"task_started","id":"an-icon-exported-as-a-picture-can-come-out-with","title":"An icon exported as a picture can come out with nothing behind it too","priority":"p2-normal"}
+{"t":"2026-09-17T05:51:54.323Z","ev":"task_created","id":"copying-an-icon-carries-the-white-canvas-the-exp","priority":"p2-normal","title":"Copying an icon carries the white canvas the export no longer does"}
+{"t":"2026-09-17T05:52:09.948Z","ev":"task_note","id":"an-icon-exported-as-a-picture-can-come-out-with"}
+{"t":"2026-09-17T05:52:09.992Z","ev":"task_note","id":"an-icon-exported-as-a-picture-can-come-out-with"}
+{"t":"2026-09-17T05:52:10.038Z","ev":"task_note","id":"an-icon-exported-as-a-picture-can-come-out-with"}
+{"t":"2026-09-17T05:52:10.084Z","ev":"task_note","id":"an-icon-exported-as-a-picture-can-come-out-with"}
+{"t":"2026-09-17T05:52:10.129Z","ev":"task_note","id":"an-icon-exported-as-a-picture-can-come-out-with"}
+{"t":"2026-09-17T05:52:12.735Z","ev":"task_done","id":"an-icon-exported-as-a-picture-can-come-out-with","from":"in_progress","note":"Export's Include the background now works for PNG and WebP as well as SVG: an icon drawn on a blank canvas goes out see-through, a screenshot never sees the question, and JPEG/HEIC cannot be asked for it. Core helper PhotonzDocument.drawn(with:flatImages:), guard in ExportSizer, row in ExportDialog. Verified by 13 new tests, the full suite (8013, green), and png-export-background-walk, whose PNG reads rgba [0,0,0,0] in the corner where the bug report read [255,255,255,255]. Audit: queue/audits/2026-09-17-icon-export.json."}
+{"t":"2026-09-17T05:53:53.378Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T05:53:53.485Z","ev":"task_started","id":"find-out-whether-escape-closes-the-sections-list","title":"Find out whether Escape closes the Sections list","priority":"p2-normal"}
+{"t":"2026-09-17T06:07:07.132Z","ev":"task_created","id":"the-sections-row-cries-5-hidden-in-a-document-th","priority":"p2-normal","title":"The Sections row cries 5 hidden in a document that has hidden nothing"}
+{"t":"2026-09-17T06:07:14.942Z","ev":"task_note","id":"an-audit-gets-a-real-picture-of-the-app-again"}
+{"t":"2026-09-17T06:07:16.938Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-17T06:07:38.523Z","ev":"task_done","id":"find-out-whether-escape-closes-the-sections-list","from":"in_progress","note":"Escape now closes the Sections list and leaves the canvas selection alone. It was NOT only a harness limitation: nothing in the app handled the key, shown on unchanged main by driving the press app-wide (list stayed open, selection went to []). Fixed with PanelSectionsEscapeWatch in Sources/Photonz/PanelSectionsFooter.swift, which swallows the press so it cannot reach the canvas. panel-sections-walk.json closes the list with Escape again and passes with 5 real captures; Scripts/test.sh green (8013 tests). Committed e0096ea3. Audit: queue/audits/2026-09-17-panel-sections-escape.json. Acceptance 1 (a person tries it by hand) could not be met: the screen has been locked since 2026-09-15, so the audit asks the user to."}
+{"t":"2026-09-17T06:09:20.870Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T06:09:20.977Z","ev":"task_started","id":"a-fix-landing-in-the-loop-does-not-make-it-forge","title":"A fix landing in the loop does not make it forget it is stuck","priority":"p2-normal"}
+{"t":"2026-09-17T06:16:38.344Z","ev":"task_note","id":"a-fix-landing-in-the-loop-does-not-make-it-forge"}
+{"t":"2026-09-17T06:18:59.313Z","ev":"task_done","id":"a-fix-landing-in-the-loop-does-not-make-it-forge","from":"in_progress","note":"The loop's restart onto an edited copy of its own script now carries health, the consecutive failure count and the failure streak across, so a fix landing mid-streak no longer resets the growing retry wait, no longer stops blaming the environment, and no longer leaves a task parked. A genuine start still clears an old unhealthy flag. queue/bin/go-loop.sh (RESUMED read from PHOTONZ_LOOP_ITERS before anything unsets it). Proved by new failure-drill scenario 7, which is scenario 1 with a restart dropped into the middle: 6 of 11 checks fail on the old code with exactly the reported shape, all 11 pass on the fix. All 7 scenarios green in 2m44; churn-drill and decision-drill green; Scripts/test.sh 8013 tests pass. Shipped in 21a4444d."}
+{"t":"2026-09-17T06:19:06.386Z","ev":"task_note","id":"a-fix-landing-in-the-loop-does-not-make-it-forge"}
+{"t":"2026-09-17T06:19:06.431Z","ev":"task_note","id":"a-fix-landing-in-the-loop-does-not-make-it-forge"}
+{"t":"2026-09-17T06:19:17.440Z","ev":"loop_reloaded","from":"2fd690563f13","to":"5c3ce5ea4064"}
+{"t":"2026-09-17T06:19:17.536Z","ev":"loop_started","pid":44685}
+{"t":"2026-09-17T06:19:32.832Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-17T06:19:32.943Z","ev":"task_started","id":"the-colour-rows-redraw-themselves-on-every-click","title":"The colour rows redraw themselves on every click","priority":"p2-normal"}
+{"t":"2026-09-17T07:01:39.206Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.253Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.300Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.345Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.389Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.434Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}
+{"t":"2026-09-17T07:01:39.480Z","ev":"task_note","id":"the-colour-rows-redraw-themselves-on-every-click"}

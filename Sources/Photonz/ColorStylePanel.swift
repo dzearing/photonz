@@ -11,6 +11,17 @@ struct ColorStyleNamingRequest: Hashable {
 
     init(target: ColorTarget) { self.target = target }
     init(slot: ColorSlot) { self.target = ColorTarget(slot) }
+
+    /// Two requests mean the same field when they address the same ROW. The
+    /// layers a row was built over are not part of its address — the row speaks
+    /// for whatever is picked — and comparing them would close the field the
+    /// moment a row was handed a fresh reading of the same colour
+    /// (`ColorTarget.Shape`).
+    static func == (a: ColorStyleNamingRequest, b: ColorStyleNamingRequest) -> Bool {
+        a.target.shape == b.target.shape
+    }
+
+    func hash(into hasher: inout Hasher) { hasher.combine(target.shape) }
 }
 
 // MARK: - The styles button that sits beside a color (Next, `next-styles`)
@@ -59,26 +70,31 @@ struct ColorStyleNamingRequest: Hashable {
 /// is the one place a color lives whatever is picked. The mock hangs it off a
 /// Fill section of its own; one section holding every color the selection has
 /// is the same idea without a second place to look.
-struct ColorStyleControl: View {
+struct ColorStyleControl: View, Equatable {
     @Environment(EditorState.self) private var editorState
     /// The colours this row paints. Usually one; two on the Outline row over a
     /// shape and a picture, which the menu treats as the one part it is.
+    ///
+    /// Which layers that is, it does not trust: it holds the row's NAME and
+    /// asks again whenever somebody picks from the menu, so the panel can leave
+    /// this button alone across a click (`ColorTarget.Source`).
     let target: ColorTarget
     /// What the row beside this paints, in the row's own words: "Outline",
     /// "Fill", "Background", "Text". The menu says it out loud, so a shorter
     /// list reads as scoped rather than as colors having gone missing.
     let part: String
+    /// What the row is showing, read by the row above rather than in here. It
+    /// used to be read here, which is what made this button rebuild itself on
+    /// every pick however alike two shapes were.
+    let selection: ColorStyleSelection
 
-    init(target: ColorTarget, part: String) {
-        self.target = target
-        self.part = part
+    /// Equal when it would DRAW the same, which is the row it belongs to and
+    /// what that row is showing. The layers underneath are looked up fresh at
+    /// the moment somebody uses the menu, so two equal buttons behave alike.
+    nonisolated static func == (a: ColorStyleControl, b: ColorStyleControl) -> Bool {
+        a.target.shape == b.target.shape && a.part == b.part
+            && a.selection.appearance == b.selection.appearance
     }
-
-    init(slot: ColorSlot, part: String) {
-        self.init(target: ColorTarget(slot), part: part)
-    }
-
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
     /// Only the saved colors meant for this part. A color kept for hairlines
     /// is not something to fill a box with, and offering it was how the menu
     /// stopped meaning anything.
@@ -402,35 +418,16 @@ extension PanelRowHead where Switch == EmptyView {
 /// looking at is the moment the row stopped saying. Now the label is a column
 /// of its own and never moves.
 struct ColorPartRow: View {
+    @Environment(EditorState.self) private var editorState
     /// What this row paints, in words: Outline, Fill, Background, Color.
     let part: String
     let slot: ColorSlot
     private let switchControl: AnyView?
-    /// The color the row edits directly. Nil for the row over several picked
-    /// layers, which brings a well of its own: one that paints all of them.
-    private let well: AnyView?
     /// A small control that belongs to this row and sits after the color: the
     /// way back for a copy of a component whose border color is its own. It
     /// goes where the color it undoes is, rather than staying behind in the
     /// section the color came from.
     private var accessory: AnyView?
-
-    init(part: String, slot: ColorSlot, @ViewBuilder well: () -> some View) {
-        self.part = part
-        self.slot = slot
-        self.switchControl = nil
-        self.well = AnyView(well())
-    }
-
-    /// A row whose color can be switched off altogether, like a box's inside.
-    /// The switch answers to the same label as the color beside it.
-    init(part: String, slot: ColorSlot, switchControl: some View,
-         @ViewBuilder well: () -> some View) {
-        self.part = part
-        self.slot = slot
-        self.switchControl = AnyView(switchControl)
-        self.well = AnyView(well())
-    }
 
     /// The row in the Color section: one well that paints everything picked,
     /// and the menu.
@@ -438,7 +435,6 @@ struct ColorPartRow: View {
         self.part = part
         self.slot = slot
         self.switchControl = nil
-        self.well = nil
     }
 
     /// The same row for a color that can be switched off altogether, like a
@@ -447,7 +443,6 @@ struct ColorPartRow: View {
         self.part = part
         self.slot = slot
         self.switchControl = AnyView(switchControl)
-        self.well = nil
     }
 
     /// Hangs a small control off the end of the row.
@@ -478,11 +473,7 @@ struct ColorPartRow: View {
             }
             .frame(width: ColorPartLayout.switchWidth,
                    height: ColorPartLayout.rowHeight, alignment: .leading)
-            if let well {
-                ColorStyleRow(slot: slot, part: part) { well }
-            } else {
-                ColorStyleRow(slot: slot, part: part)
-            }
+            colorRow
             if let accessory { accessory }
             Spacer(minLength: 0)
         }
@@ -490,6 +481,17 @@ struct ColorPartRow: View {
         // so the row's own word is what tells Fill's from Background's:
         // `press "Color" in "Fill"`.
         .playtestField(part)
+    }
+
+    /// The readout and the menu, handed everything they show so that a click
+    /// that leaves this row exactly as it was can leave it alone.
+    private var colorRow: some View {
+        let target = ColorTarget(slot)
+        return ColorStyleRow(target: target, part: part,
+                             selection: editorState.colorStyleSelection(target),
+                             isNaming: editorState.isNamingColorStyle(target),
+                             previewPaint: editorState.previewedPaint(target))
+            .equatable()
     }
 }
 
@@ -505,51 +507,52 @@ struct ColorPartRow: View {
 /// say Mixed, because showing one of their colors is how three layers end up
 /// somewhere nobody asked for — and over a selection that word is itself the
 /// well, so the way out of Mixed is the thing you were already looking at.
-struct ColorStyleRow<Well: View>: View {
+struct ColorStyleRow: View, Equatable {
     @Environment(EditorState.self) private var editorState
     /// The colours this row paints. One on nearly every row; two on the Outline
     /// row over a shape and a picture, which is one line to a person and
     /// therefore one row here.
+    ///
+    /// It is the row's NAME, not the layers that were picked when it was drawn:
+    /// everything below asks `EditorState` which layers that name reaches at
+    /// the moment somebody uses the row (`ColorTarget.Source`).
     let target: ColorTarget
     /// What the row paints, passed through to the menu so it can say which
     /// saved colors it is offering and why there are not more of them.
     let part: String
-    /// True for the row over several picked layers. Its well paints all of
-    /// them, and stands in for the word Mixed as the thing you click when they
-    /// disagree.
-    private let paintsSelection: Bool
-    private let well: Well
+    /// What the row is showing. Read by whoever BUILT the row, not in here.
+    ///
+    /// That is the whole of the fix for a panel that redrew its colours on
+    /// every click. A view that reads the selection in its own body invalidates
+    /// on every pick however alike the two shapes are, so nothing its parent
+    /// does can leave it alone — and the panel's colour rows were the last
+    /// thing in Appearance still doing it, worth about two milliseconds of a
+    /// twenty five millisecond click (`InspectorPanel.swift`).
+    let selection: ColorStyleSelection
+    /// Whether the name field is open on THIS row.
+    let isNaming: Bool
+    /// The colour in flight while one is being dragged over the row, so the
+    /// chip keeps up with the canvas instead of sitting on the old colour for a
+    /// whole pull and jumping. Nil the rest of the time.
+    let previewPaint: Paint?
 
     @State private var draft = ""
     @FocusState private var nameFocused: Bool
 
-    init(slot: ColorSlot, part: String, @ViewBuilder well: () -> Well) {
-        self.target = ColorTarget(slot)
-        self.part = part
-        self.well = well()
-        self.paintsSelection = false
-    }
-
-    /// The row over a selection: one well for all of them, and the menu.
-    init(slot: ColorSlot, part: String) where Well == SelectionColorWell {
-        self.init(target: ColorTarget(slot), part: part)
-    }
-
-    /// The same, for a row the parts list built, which already knows which of
-    /// the picked layers wears which colour.
-    init(target: ColorTarget, part: String) where Well == SelectionColorWell {
-        self.target = target
-        self.part = part
-        self.well = SelectionColorWell(target: target, part: part)
-        self.paintsSelection = true
-    }
-
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
-    private var isNaming: Bool {
-        editorState.colorStyleNaming == ColorStyleNamingRequest(target: target)
+    /// Equal when it would DRAW the same: the same row of the panel, showing
+    /// the same thing. Not the same LAYERS — two identical arrows are a
+    /// different pair of ids and an identical row, and telling them apart was
+    /// the cost.
+    nonisolated static func == (a: ColorStyleRow, b: ColorStyleRow) -> Bool {
+        a.target.shape == b.target.shape && a.part == b.part && a.isNaming == b.isNaming
+            && a.selection.appearance == b.selection.appearance
+            && Paint.draws(a.previewPaint, sameAs: b.previewPaint)
     }
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.colorRow)
+        #endif
         VStack(alignment: .leading, spacing: 6) {
             // The color keeps a column the width of its CHIP, so a row showing
             // a chip and a row showing nothing put the menu beside them in the
@@ -558,7 +561,8 @@ struct ColorStyleRow<Well: View>: View {
             HStack(alignment: .center, spacing: ColorPartLayout.styleGap) {
                 readout(selection)
                     .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading)
-                ColorStyleControl(target: target, part: part)
+                ColorStyleControl(target: target, part: part, selection: selection)
+                    .equatable()
             }
             .frame(minHeight: ColorPartLayout.rowHeight)
             if isNaming { namingField }
@@ -583,44 +587,24 @@ struct ColorStyleRow<Well: View>: View {
         }
     }
 
+    /// The colour column: one well, in ONE place in the view tree whatever the
+    /// row is reading.
+    ///
+    /// That it never moves matters. Two branches of a switch are two views, so
+    /// a picker open over a styled row used to be torn down the moment picking
+    /// a colour took the row off its style: the popover shut under the pointer
+    /// after one swatch, where every other row lets you keep trying. Same for
+    /// the row that says Mixed and then agrees — the word Mixed IS the well
+    /// over a selection, and it is the one thing to click to stop them
+    /// differing.
+    ///
+    /// A row with nothing to show has no well at all, which is the Fill row
+    /// over a layer that simply has no fill.
     @ViewBuilder private func readout(_ selection: ColorStyleSelection) -> some View {
-        // The well is in ONE place in the view tree whatever the row is
-        // reading, and it matters: two branches of a switch are two views, so
-        // a picker open over a styled row used to be torn down the moment
-        // picking a color took the row off its style. The popover shut under
-        // the pointer after one swatch, where every other row lets you keep
-        // trying. Same for the row that says Mixed and then agrees.
-        if showsWell(selection) {
-            well
-        } else if case .mixed = selection.reading {
-            // A row over ONE layer cannot be mixed with itself, so this is the
-            // row inside a shape's own section: it has no well of its own to
-            // offer and says the word on its own.
-            Text(ColorStyleSelection.mixedText)
-                .font(.caption)
-                .foregroundStyle(MixedLook.style)
-                .panelHelp("The picked layers do not share one \(part.lowercased()). "
-                      + "Choosing a color or a style sets all of them.")
-        }
-    }
-
-    /// Whether the color column is the well.
-    ///
-    /// A color of its own is one, and so is a color that comes from a style:
-    /// the well draws that one FRAMED rather than filled edge to edge, and
-    /// picking a color in it takes the row off the style, which is what
-    /// painting by hand has always meant everywhere else in the app. It used to
-    /// be a plain chip with a tooltip, the same size and shape and in the same
-    /// column as the live wells beside it, so two rows looked identical and
-    /// only one of them answered — which is the one thing a person tries first.
-    ///
-    /// Over a selection the word Mixed IS the well: it says they differ and it
-    /// is the one thing to click to stop them differing.
-    private func showsWell(_ selection: ColorStyleSelection) -> Bool {
-        switch selection.reading {
-        case .style, .color: return true
-        case .mixed: return paintsSelection
-        case .empty: return !paintsSelection
+        if !selection.isEmpty {
+            SelectionColorWell(target: target, part: part,
+                               selection: selection, previewPaint: previewPaint)
+                .equatable()
         }
     }
 
@@ -669,28 +653,32 @@ struct ColorStyleRow<Well: View>: View {
 /// It is the app's own picker rather than the system panel, so a color lands on
 /// a deliberate action (a swatch, a slider let go of, a hex typed) instead of
 /// on every drag tick. Twenty undo steps for one blue is not one move.
-struct SelectionColorWell: View {
+struct SelectionColorWell: View, Equatable {
     @Environment(EditorState.self) private var editorState
     /// The colours this one well paints. Two on the Outline row over a shape
     /// and a picture: one click paints the shape its stroke and the picture its
     /// ring, in one step one undo puts back.
+    ///
+    /// The row's NAME rather than the layers picked when it was drawn: which
+    /// layers a click here paints is looked up at the moment of the click
+    /// (`ColorTarget.Source`), which is what lets the panel skip this well.
     let target: ColorTarget
     /// What the row beside this paints, in the row's own words, so the hover
     /// tip can say it: "Fill", "Outline", "Text".
     let part: String
+    /// What the well is showing, read by the row above rather than in here.
+    let selection: ColorStyleSelection
+    /// The colour in flight while one is being dragged, so the chip keeps up
+    /// with the canvas. Nil the rest of the time.
+    let previewPaint: Paint?
 
     @State private var isHovering = false
 
-    init(target: ColorTarget, part: String) {
-        self.target = target
-        self.part = part
+    nonisolated static func == (a: SelectionColorWell, b: SelectionColorWell) -> Bool {
+        a.target.shape == b.target.shape && a.part == b.part
+            && a.selection.appearance == b.selection.appearance
+            && Paint.draws(a.previewPaint, sameAs: b.previewPaint)
     }
-
-    init(slot: ColorSlot, part: String) {
-        self.init(target: ColorTarget(slot), part: part)
-    }
-
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
 
     /// The key this well answers to, so only one picker is ever open and a
     /// walk can open this one without a pointer.
@@ -864,7 +852,7 @@ struct SelectionColorWell: View {
         // shows the paint in flight while a color drag is happening, so it
         // keeps up with the canvas instead of sitting on the old color for a
         // whole pull and jumping.
-        PaintFill(paint: editorState.previewedPaint(target) ?? paint)
+        PaintFill(paint: previewPaint ?? paint)
             .clipShape(RoundedRectangle(cornerRadius: 4))
             // Under a color that can be see-through, so a translucent fill
             // reads as translucent rather than as a paler one.
@@ -887,7 +875,7 @@ struct SelectionColorWell: View {
     /// wears one beside the style's name, and the same mark twice in one row
     /// says nothing the first one did not.
     private func styledSwatch(_ style: ColorStyle) -> some View {
-        PaintFill(paint: editorState.previewedPaint(target) ?? style.paint(for: target.lead))
+        PaintFill(paint: previewPaint ?? style.paint(for: target.lead))
             .clipShape(RoundedRectangle(cornerRadius: 2))
             .background(CheckerBoard(square: 3).clipShape(RoundedRectangle(cornerRadius: 2)))
             .frame(width: 12, height: 12)

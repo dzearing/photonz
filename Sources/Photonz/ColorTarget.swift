@@ -23,6 +23,32 @@ import PhotonzCore
 ///   a line round anything. A row that reached by slot alone repainted it.
 struct ColorTarget: Hashable {
 
+    /// WHERE the row finds its layers again, said as a name rather than as the
+    /// list it happened to be born with.
+    ///
+    /// This is what lets a colour row skip a click. A row handed "the layers of
+    /// the part row called fill" is the same row across a click that swaps one
+    /// arrow for an identical one, where a row handed `[arrow A]` is a
+    /// different row every time — so every colour row in the panel rebuilt
+    /// itself on every pick, even when what it drew was pixel for pixel the
+    /// same (`PanelReach.swift` says the same thing for the sliders beside it).
+    ///
+    /// Skipping is only safe because nothing acts on the layers the target was
+    /// built over: `EditorState.resolved(_:)` looks them up again at the moment
+    /// somebody uses the row, and every call that reads or paints goes through
+    /// it first.
+    enum Source: Hashable {
+        /// Every picked layer that has this kind of colour, worked out fresh
+        /// each time. Nothing to resolve: the parts carry no layers.
+        case selection
+        /// The part row with this id, looked up now. The parts list works out
+        /// who wears what when it builds its rows, so this is the one source
+        /// that can go stale.
+        case partRow(String)
+        /// One entry in the Effects list, over every picked layer.
+        case effect(Int)
+    }
+
     /// One colour the row paints, and who takes it.
     struct Part: Hashable {
         let slot: ColorSlot
@@ -38,17 +64,39 @@ struct ColorTarget: Hashable {
     /// At least one, in the order the row shows them.
     let parts: [Part]
 
+    /// How to find these layers again once the selection has moved on.
+    let source: Source
+
     /// A row that paints one kind of colour across whatever is picked.
     init(_ slot: ColorSlot) {
         parts = [Part(slot: slot, layerIDs: nil)]
+        source = .selection
     }
 
     /// A row the parts list built, which already knows who wears what. Nil for
     /// a row with no colour at all — the shadow, whose colour is not one of the
     /// layer's slots and which brings its own well.
-    init?(_ colors: [PartColor]) {
+    /// `rowID` is the part row this came off, which is how the row is found
+    /// again after the selection moves. Without one the target keeps the layers
+    /// it was born with for good, which is right for a one-off question and
+    /// wrong for anything a view holds on to.
+    init?(_ colors: [PartColor], rowID: String? = nil) {
         guard !colors.isEmpty else { return nil }
         parts = colors.map { Part(slot: $0.slot, layerIDs: $0.layerIDs) }
+        source = rowID.map { Source.partRow($0) } ?? .selection
+    }
+
+    /// The same row, over the layers it reaches NOW.
+    init(_ other: ColorTarget, layers colors: [PartColor]) {
+        parts = colors.map { Part(slot: $0.slot, layerIDs: $0.layerIDs) }
+        source = other.source
+    }
+
+    /// The same row with nothing left to reach: what a row whose part has left
+    /// the panel altogether paints, which is nothing.
+    init(emptying other: ColorTarget) {
+        parts = other.parts.map { Part(slot: $0.slot, layerIDs: [], effectIndex: $0.effectIndex) }
+        source = other.source
     }
 
     /// The Color row under ONE effect. Nil for an effect that paints no colour
@@ -61,12 +109,25 @@ struct ColorTarget: Hashable {
     /// not take a saved name).
     init?(effect row: LayerEffectRow) {
         guard let slot = row.kind.colorSlot else { return nil }
+        source = .effect(row.index)
         // Every picked layer, not the row's own reach: the document already
         // skips the ones with nothing at that place in their list, and passing
         // the whole selection is what lets the row say "applies to 1 of the 2
         // selected layers" honestly.
         parts = [Part(slot: slot, layerIDs: nil, effectIndex: row.index)]
     }
+
+    /// What the row IS, with the layers it happened to be born over left out.
+    ///
+    /// Two targets with the same shape address the same row of the panel, so
+    /// this is what a row compares when it is deciding whether a click changed
+    /// anything about it, and what the name field is keyed on.
+    struct Shape: Hashable {
+        let slots: [ColorSlot]
+        let source: Source
+    }
+
+    var shape: Shape { Shape(slots: parts.map(\.slot), source: source) }
 
     /// The colour this row leads with: the one its name field, its saved
     /// colours menu and its picker are keyed on. Every slot a row holds shares

@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/color-row-reaches-what-is-picked",
+  "seed": "The panel leaves a colour row alone when the colour on it has not changed, which is what makes clicking between two alike shapes feel instant. The danger in doing that is a row that was left alone still painting the shape it was drawn for. So this walk holds the row over one arrow, clicks the other, and then paints through the row it is still holding: the arrow clicked LAST has to be the one that changes, and the first one has to be exactly as it was.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [160, 300], "to": [420, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [520, 300], "to": [780, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "describe", "stage": "1-the-row-over-the-first-arrow",
+      "note": "pick the first arrow and remember its colour row exactly as the row on screen holds it" },
+    { "do": "click", "at": [290, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow"] },
+    { "do": "action", "action": "holdColorRow" },
+
+    { "do": "describe", "stage": "2-the-row-paints-what-is-picked-now",
+      "note": "THE TEST: click the other arrow, which reads exactly the same so the panel is allowed to leave the row alone, then paint through the row it is still holding. The second arrow changes; the first does not." },
+    { "do": "click", "at": [650, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow 2"] },
+    { "do": "expectBuilds", "view": "colorRow", "atMost": 0 },
+    { "do": "action", "action": "paintHeldColorRow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "render", "name": "color-row-reaches-1-second-arrow-painted" },
+
+    { "do": "describe", "stage": "3-nothing-shows-a-stale-colour",
+      "note": "the two arrows now differ, so the click between them is NOT one the panel may skip: the row has to be built again or it would be showing the colour of the arrow before it." },
+    { "do": "click", "at": [290, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow"] },
+    { "do": "expectBuilds", "view": "colorRow", "atLeast": 1 },
+    { "do": "click", "at": [650, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Arrow 2"] },
+    { "do": "expectBuilds", "view": "colorRow", "atLeast": 1 },
+
+    { "do": "describe", "stage": "4-nothing-else-moved",
+      "note": "still the two arrows on the background they were drawn on" },
+    { "do": "expectLayers", "count": 3 }
+  ]
+}

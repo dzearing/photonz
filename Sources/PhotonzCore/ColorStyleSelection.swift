@@ -160,6 +160,62 @@ public struct ColorStyleSelection: Hashable, Sendable {
         return "A color picked here takes \(styled) of them off their style."
     }
 
+    /// What the row SHOWS, with the identities of the layers under it left out.
+    ///
+    /// The reading itself names every layer it speaks for, so picking one arrow
+    /// and then an identical one hands the panel a value that is never equal to
+    /// the one before it — and the colour row rebuilt itself, every row of it,
+    /// on a click that changed nothing a person could see. This is the half of
+    /// the reading a person CAN see: the chip, the word, the name beside it and
+    /// every sentence under it are all decided by these, and by nothing else.
+    ///
+    /// So a row handed two selections with equal appearances draws the same
+    /// thing twice and can skip the second one. What it must NOT do is act on
+    /// the layers it was handed: it asks for those again at the moment somebody
+    /// uses it (`ColorTarget.Source`, `EditorState.resolved(_:)`).
+    public struct Appearance: Hashable, Sendable {
+        public let slot: ColorSlot
+        public let reading: ColorStyleReading
+        /// The paint the row draws and the one Save would keep. Compared by
+        /// what it DRAWS, so a flat orange still carrying yesterday's ramp is
+        /// the same row as a flat orange that never had one.
+        public let paint: Paint?
+        /// How many layers the row speaks for, how many were picked, how many
+        /// could have taken this colour: the row prints all three.
+        public let count: Int
+        public let selectionCount: Int
+        public let capableCount: Int
+        /// How many of them wear a style, which is the number `unlinkNote`
+        /// says out loud.
+        public let styledCount: Int
+
+        public static func == (a: Appearance, b: Appearance) -> Bool {
+            a.slot == b.slot && a.reading == b.reading
+                && a.count == b.count && a.selectionCount == b.selectionCount
+                && a.capableCount == b.capableCount && a.styledCount == b.styledCount
+                && Paint.draws(a.paint, sameAs: b.paint)
+        }
+
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(slot)
+            hasher.combine(reading)
+            hasher.combine(count)
+            hasher.combine(selectionCount)
+            hasher.combine(capableCount)
+            hasher.combine(styledCount)
+            // Only the parts of a paint that `draws(sameAs:)` can tell apart,
+            // or two values that compare equal would hash differently.
+            hasher.combine(paint?.hex.uppercased())
+            hasher.combine(paint?.isGradient)
+        }
+    }
+
+    public var appearance: Appearance {
+        Appearance(slot: slot, reading: reading, paint: members.first?.paint,
+                   count: count, selectionCount: selectionCount, capableCount: capableCount,
+                   styledCount: members.reduce(0) { $1.styleID == nil ? $0 : $0 + 1 })
+    }
+
     /// What the picker says over a color that comes from a style, before a
     /// color is picked in it.
     ///

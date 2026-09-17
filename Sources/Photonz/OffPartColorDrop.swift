@@ -52,7 +52,7 @@ struct OffPartColorDrop: ViewModifier {
     /// What this row would do with whatever is in the air right now.
     private func answer() -> ColorDrop.Answer? {
         guard let payload = DragCargo.colorInFlight() else { return nil }
-        let target = ColorTarget(row.colors)
+        let target = ColorTarget(row.colors, rowID: row.id)
         // The shadow has no colour of the layer's own, so it wears no names —
         // exactly as its swatch already answers once the shadow is on.
         var welcome = ColorDrop.StyleWelcome.neverWearsNames

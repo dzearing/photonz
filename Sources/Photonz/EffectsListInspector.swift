@@ -441,6 +441,7 @@ private struct EffectRowView: View {
 /// An effect with no colour at all — a blur — brings no row rather than a blank
 /// one.
 private struct EffectColorRow: View {
+    @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
     var body: some View {
@@ -455,7 +456,11 @@ private struct EffectColorRow: View {
                 // offer "Saved border colors" instead of one of them offering
                 // "Saved border 2 colors". Which of the two a walk means is
                 // already settled by the row it is in.
-                ColorStyleRow(target: target, part: row.kind.title)
+                ColorStyleRow(target: target, part: row.kind.title,
+                              selection: editorState.colorStyleSelection(target),
+                              isNaming: editorState.isNamingColorStyle(target),
+                              previewPaint: editorState.previewedPaint(target))
+                    .equatable()
                 Spacer(minLength: 0)
             }
             // Its own row name, INSIDE the effect's, so a walk says

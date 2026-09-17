@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 2870,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T01:06:11.759Z",
-  "updated": "2026-09-17T01:06:11.762Z",
+  "updated": "2026-09-17T06:19:06.430Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-16 while running down the failure-drill flake (find-out-why-the-failure-drill-failed-once-and-p). queue/bin/go-loop.sh reload_if_changed exec's the script, and the startup block it lands back in calls `Q reset-health`, which queue.mjs writes as {health:'ok', consecutiveFailures:0, lastError:null, failureStreak:null}. reset-health's own comment says a restart is a fresh claim about health, but reload_if_changed's comment says the opposite for a RELOAD: same pid, same queue, pass count carried in PHOTONZ_LOOP_ITERS. Health is the one thing that does not ride across. Likely fix: skip reset-health when PHOTONZ_LOOP_ITERS is set on entry (it is still in the environment at that point; the loop unsets it later, at the ITERS= line).\n\nReproduced, not read. Recipe: build a stand-in repo of symlinks with a writable copy of go-loop.sh (the pattern scenario 4 of the drill already uses), run it with scenario 1's always-failing fake claude (exits 1 with the spend-limit line), PHOTONZ_BACKOFF_STEPS=1,2,3,4,5 PHOTONZ_MAX_ITERS=6, and append one comment line to that copy six seconds in. Output with the edit (reload fires once):\n  FAIL  consecutive failures counted        2 vs 5\n  FAIL  failures across tasks are blamed on the environment   environment flags: 00000\n  FAIL  tasks parked during an environment streak are handed back   0 unparked; still parked: drill-task-one\n  FAIL  each failure waits longer than the last   waits: 1s, 2s, 3s, 1s, 2s\nThe identical run with PHOTONZ_LOOP_RELOAD=0 (no reload) passes all eight, and so does the same run without the mid-run edit.",
@@ -23,6 +23,28 @@
     {
       "t": "2026-09-17T01:06:11.761Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-17T06:09:20.975Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-17T06:16:38.342Z",
+      "note": "Reproduced first: scenario 7 against the unfixed go-loop.sh fails 6 of 11 checks with exactly the reported shape (2 counted vs 5 failures, environment flags 00000, drill-task-seven still parked, waits 1s 2s 3s 1s 2s). Fix is in go-loop.sh: RESUMED is read from PHOTONZ_LOOP_ITERS before anything can unset it, and the startup block skips Q reset-health when set. All 11 pass on the fix; all 7 scenarios green in 2m44."
+    },
+    {
+      "t": "2026-09-17T06:18:59.310Z",
+      "note": "The loop's restart onto an edited copy of its own script now carries health, the consecutive failure count and the failure streak across, so a fix landing mid-streak no longer resets the growing retry wait, no longer stops blaming the environment, and no longer leaves a task parked. A genuine start still clears an old unhealthy flag. queue/bin/go-loop.sh (RESUMED read from PHOTONZ_LOOP_ITERS before anything unsets it). Proved by new failure-drill scenario 7, which is scenario 1 with a restart dropped into the middle: 6 of 11 checks fail on the old code with exactly the reported shape, all 11 pass on the fix. All 7 scenarios green in 2m44; churn-drill and decision-drill green; Scripts/test.sh 8013 tests pass. Shipped in 21a4444d."
+    },
+    {
+      "t": "2026-09-17T06:19:06.384Z",
+      "note": "left rough: right after a mid-streak restart the window banner reads 'restarting onto the updated loop script' and then 'working' until the next failure, even though the loop is now known to be unhealthy. The dashboard hero is correct throughout (status.json carries health), and the window is arguably right since the loop really is trying again, so this did not earn a task. No audit written: this is loop infrastructure, not a playtestable app feature. No walks or app code touched, so no sweep requested."
+    },
+    {
+      "t": "2026-09-17T06:19:06.429Z",
+      "note": "also fixed here, found while writing scenario 7: PHOTONZ_LOOP_RELOAD=1 set by scenario 4 was staying on for scenarios 5 and 6, which run the REAL repo go-loop.sh, so an edit landing mid-drill would have restarted them mid-scenario. That is the same flake this drill was filed for. Both now set it to 0 explicitly. The drill also takes a scenario number now (failure-drill.sh 7, ~25s vs ~3min for the set)."
     }
-  ]
+  ],
+  "started": "2026-09-17T06:09:20.974Z",
+  "completed": "2026-09-17T06:18:59.311Z"
 }

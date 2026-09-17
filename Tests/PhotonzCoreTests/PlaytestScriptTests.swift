@@ -1754,7 +1754,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectBuilds", "view": "editorBody", "atMost": 0 } ] }
         """)
-        guard case .expectBuilds(let view, let atMost) = script.steps[0] else {
+        guard case .expectBuilds(let view, let atMost, _) = script.steps[0] else {
             Issue.record("expectBuilds"); return
         }
         #expect(view == "editorBody")
@@ -1776,6 +1776,35 @@ struct PlaytestScriptTests {
             { "steps": [ { "do": "expectBuilds", "view": "editorBody" } ] }
             """)
         }
+    }
+
+    /// A floor as well as a ceiling, because a ceiling of nothing passes just
+    /// as quietly when the thing being counted has stopped existing. A walk
+    /// that claims a click rebuilds nothing has to be able to claim, on the
+    /// next click, that it rebuilds something.
+    @Test("An expectBuilds step can claim a view DID build")
+    func expectBuildsCanClaimAFloor() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBuilds", "view": "colorRow", "atLeast": 1 } ] }
+        """)
+        guard case .expectBuilds(let view, let atMost, let atLeast) = script.steps[0] else {
+            Issue.record("expectBuilds"); return
+        }
+        #expect(view == "colorRow")
+        #expect(atMost == nil)
+        #expect(atLeast == 1)
+    }
+
+    @Test("A floor and a ceiling together bound the count from both sides")
+    func expectBuildsTakesBoth() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBuilds", "view": "colorRow", "atLeast": 1, "atMost": 4 } ] }
+        """)
+        guard case .expectBuilds(_, let atMost, let atLeast) = script.steps[0] else {
+            Issue.record("expectBuilds"); return
+        }
+        #expect(atLeast == 1)
+        #expect(atMost == 4)
     }
 
     // A pick that brings a row into view has to be told apart from a pick that

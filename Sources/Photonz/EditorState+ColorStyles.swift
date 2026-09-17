@@ -106,7 +106,14 @@ extension EditorState {
             return ColorTarget(slot)
         }
         let row = document.layerPartRow(layerIDs: colorStyleTargetIDs, slot: slot)
-        return row.flatMap { ColorTarget($0.colors) } ?? ColorTarget(slot)
+        return row.flatMap { ColorTarget($0.colors, rowID: $0.id) } ?? ColorTarget(slot)
+    }
+
+    /// Whether the name field is open on this row. Asked by whoever BUILDS the
+    /// row rather than by the row itself, so that a row the panel could leave
+    /// alone is not woken by reading it (`ColorStyleRow`).
+    func isNamingColorStyle(_ target: ColorTarget) -> Bool {
+        colorStyleNaming == ColorStyleNamingRequest(target: target)
     }
 
     /// The same, for a row that paints more than one kind of colour.
