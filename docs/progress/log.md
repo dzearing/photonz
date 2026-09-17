@@ -17423,3 +17423,32 @@ change. Full suite green at 7905.
 Next: a sweep is requested and pending. It judges the other 71% and the
 name-driven walks the moment the screen is unlocked; any walk that was leaning
 on history comes back as its own task.
+
+## 2026-09-17 — a label read back into text keeps its page's face
+
+Turn into Text let each run pick its own typeface, and a run cannot tell by
+looking at itself that it is the odd one out: four labels of the thirty-one this
+app's own window reads came back in Helvetica Neue on a window with none in it,
+all four the app's confident verdict, so "Border 1" arrived heavier than the
+identical "Border 2" below it. No bar separates them — the gaps to the page's own
+family are 0.05 to 0.15 and the wrong answers outscore plenty of right ones.
+
+Now the runs of a capture vote on the family (`TextReading.pageFamily`), each run
+is set in its own best weight of the winner (`decide(preferring:)`,
+`TextReader.read(preferring:)`, `readPage`), and a run the winner cannot account
+for stays a picture. Measured in release: app-window 4 strays → 0 for one reading
+of 31, dense page 13 → 0 for five of 82, settings pane unchanged at 9 of 9.
+
+The study's claim that per-run Turn into Text could never have this turned out to
+be wrong. The vote needs a dozen runs ASKED what family they are, not a page read
+and set, so the editor asks them off the main thread (~0.1s) and remembers the
+answer for the rest of that separation. With no page to ask, nothing votes.
+
+`ReadRunAsTextFixtureTests` is now `.serialized`: a dozen of its tests blocking on
+one lazily read capture deadlocked the full run. 7944 tests in 635 suites pass.
+
+Not watched in the app: the screen was locked all task, so every separate and
+turn-into-text walk came back `locked` with nought steps. A sweep is requested.
+
+Next: run those walks once the screen is unlocked, and the weight wobble (Corner
+Radius reads Semibold while Border 1 reads Medium) is still open.
