@@ -57,8 +57,9 @@ enum LayerCommandList {
         // clicked alongside two lines still offers it and leaves the picture
         // alone.
         // The row says what it will do to THIS selection: Turn Into Path while
-        // something still has to be turned, Join Paths over outlines already
-        // drawn with the Pen (`EditorState+LayerOps.turnIntoPathMenuItem`).
+        // something still has to be turned, Join Paths over two outlines
+        // already drawn with the Pen, Close Path over one of them on its own
+        // (`EditorState+LayerOps.turnIntoPathMenuItem`).
         if editorState.canTurnLayerIntoPath(id: id) {
             rows.append(.command(editorState.turnIntoPathMenuItem(id: id)) {
                 editorState.turnLayerIntoPath(id: id)

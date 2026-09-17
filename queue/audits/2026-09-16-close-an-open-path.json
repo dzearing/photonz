@@ -1,0 +1,30 @@
+{
+  "feature": "Close an outline you already finished",
+  "epic": "icon-vector",
+  "summary": "An outline you drew with the Pen and finished with Return can now be shut afterwards: pick it on its own and the path row on the Layer menu reads Close Path, which lays a straight run between its two ends however far apart they are. Until now the only way to close a path was to click back on the first point while you were still drawing it.",
+  "setup": "Photonz Dev, Experiments window, release Next. It rides the existing Turn a rectangle into a path flag, which is on by default.",
+  "try": [
+    { "do": "Press P for the Pen and click three corners of a triangle, leaving the last side undrawn." },
+    { "do": "Press Return to finish it, then Escape to get the Select tool back." },
+    { "do": "Click the Path row in the layers list." },
+    { "do": "Open the Layer menu and read the row that used to say Turn Into Path." },
+    { "do": "Choose Close Path and read the question before you answer it." },
+    { "do": "Press Close Path, then look at the Fill row on the panel and switch it on." },
+    { "do": "Press Command Z once." },
+    { "do": "Draw three points in a straight line with the Pen, finish with Return, pick that row and ask for Close Path." }
+  ],
+  "evaluate": [
+    "Is the Layer menu the first place you looked for this, or did you expect to find it on the canvas instead (dragging one end onto the other)?",
+    "Does Close Path read as the obvious name, sitting where Turn Into Path and Join Paths sit?",
+    "The question names the gap in points before it closes anything. Is that the number you wanted to know, or is it noise?",
+    "Closing leaves the colour and line exactly as they were and does not fill the shape. Did you expect a fill to appear?",
+    "When the points are in a line it refuses and says why under the canvas. Is that clearer than the row simply being dimmed?"
+  ],
+  "rough": [
+    "No screenshots in this audit. The Mac's screen was locked for the whole task, so every walk reported status locked and refused to run, and nothing can unlock it. The walk is written and parses; it needs one unlocked run.",
+    "The app layer was not driven. The geometry, the plan, the question and both chip lines are covered by 23 passing tests, and the menu wiring is a three line branch that compiles, but nobody has clicked the row yet.",
+    "It shares the one Don't ask again with Turn Into Path and Join Paths. Silence that question once on a rectangle and Close Path will never ask either. That is one row, one promise, but it is a judgment call.",
+    "The gap is stated in the question and never shown on the canvas. There is no preview of the run that is about to appear.",
+    "Closing several picked outlines at once works and asks the plural question, but it is only reachable when none of them are joinable siblings, which is an odd corner. The common case, one outline, is the one that was designed."
+  ]
+}

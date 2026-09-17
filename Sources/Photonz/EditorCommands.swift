@@ -470,7 +470,9 @@ struct EditorCommands: Commands {
                 // path, welded where their ends meet (`PathJoining.swift`).
                 // ...and picking two outlines already drawn with the PEN
                 // welds those, which is the same command: the row retitles
-                // itself Join Paths when nothing picked has to be turned first.
+                // itself Join Paths when nothing picked has to be turned first,
+                // and Close Path over one open outline on its own, which shuts
+                // it on its own two ends (`PathClosing.swift`).
                 Button(editor?.turnSelectionIntoPathMenuItem ?? TurnIntoPathPrompt.menuItem) {
                     editor?.turnSelectionIntoPath()
                 }

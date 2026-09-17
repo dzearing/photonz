@@ -415,23 +415,55 @@ extension EditorState {
         canTurnLayersIntoPath(ids: actionableLayerIDs)
     }
 
-    /// Whether the command applies, from EITHER half of it: a shape with an
-    /// outline to find, or two outlines already drawn that could weld.
+    /// Whether the command applies, from ANY of its three halves: a shape with
+    /// an outline to find, two outlines already drawn that could weld, or one
+    /// open outline that could be shut on its own two ends.
     ///
-    /// The second half is what somebody working with the PEN gets. Two runs
-    /// drawn end to end are the ordinary way an icon outline gets built, and
-    /// until this the menu offered them nothing at all, because the gate asked
-    /// only whether something still had to be turned.
+    /// The last two are what somebody working with the PEN gets. Runs drawn
+    /// end to end are the ordinary way an icon outline gets built, and until
+    /// this the menu offered them nothing at all, because the gate asked only
+    /// whether something still had to be turned.
     ///
-    /// It does NOT ask whether their ends actually meet. Working that out means
-    /// planning the whole join on every menu open, and a row dimmed because two
-    /// points are three apart teaches nobody what to do about it. Offered and
-    /// honest beats dimmed and silent: when nothing welds, the line under the
-    /// canvas names the gap (`PathEditHint.nothingJoined`).
+    /// It does NOT ask whether their ends actually meet, or whether closing
+    /// one would enclose anything. Working either out means planning the whole
+    /// thing on every menu open, and a row dimmed because two points are three
+    /// apart teaches nobody what to do about it. Offered and honest beats
+    /// dimmed and silent: when nothing welds the line under the canvas names
+    /// the gap (`PathEditHint.nothingJoined`), and when closing would paint
+    /// nothing it says that instead (`PathEditHint.nothingClosed`).
     private func canTurnLayersIntoPath(ids: Set<UUID>) -> Bool {
-        guard Experiments.shared.turnIntoPathEnabled, let document else { return false }
-        if ids.contains(where: { document.layer(id: $0)?.canTurnIntoPath == true }) { return true }
-        return document.openPathsThatCouldJoin(ids: ids).count >= 2
+        pathRowAction(ids: ids) != nil
+    }
+
+    /// Which of the three things the ONE row does for what is picked right now.
+    ///
+    /// They are one row and not three because they are one idea — make the
+    /// thing picked into an outline you can fill — and because three rows a
+    /// menu apart, two of them always dimmed, is how a menu stops being
+    /// readable. The order is the order of how much is taken away: turning is
+    /// the only one that makes a shape stop being a shape, so it wins whenever
+    /// something picked still has to be turned.
+    private enum PathRowAction {
+        /// A box, an oval or a line becomes an outline (and welds and closes
+        /// on the way, where ends meet).
+        case turn
+        /// Two or more outlines already drawn weld into one where their ends
+        /// meet.
+        case join
+        /// One outline already drawn is shut on its own two ends.
+        case close
+    }
+
+    private func pathRowAction(ids: Set<UUID>) -> PathRowAction? {
+        guard Experiments.shared.turnIntoPathEnabled, let document, !ids.isEmpty else { return nil }
+        if ids.contains(where: { document.layer(id: $0)?.canTurnIntoPath == true }) { return .turn }
+        if document.openPathsThatCouldJoin(ids: ids).count >= 2 { return .join }
+        // One open outline picked on its own. Until this it offered nothing at
+        // all, which left the person who drew it with the Pen and pressed
+        // Return holding a run that could never be filled
+        // (`PathClosing.swift`).
+        if !document.openPathsThatCouldClose(ids: ids).isEmpty { return .close }
+        return nil
     }
 
     /// What the row says from a layer ROW's menu.
@@ -454,11 +486,13 @@ extension EditorState {
     /// is both shorter and truer, and with nothing picked it still reads Turn
     /// Into Path, so the row stays somewhere you can learn it exists.
     private func turnIntoPathMenuItem(ids: Set<UUID>) -> String {
-        guard let document,
-              !ids.contains(where: { document.layer(id: $0)?.canTurnIntoPath == true }),
-              document.openPathsThatCouldJoin(ids: ids).count >= 2
-        else { return TurnIntoPathPrompt.menuItem }
-        return PathJoin.menuItem
+        // With nothing picked the row still reads Turn Into Path, so it stays
+        // somewhere you can learn it exists.
+        switch pathRowAction(ids: ids) ?? .turn {
+        case .turn: return TurnIntoPathPrompt.menuItem
+        case .join: return PathJoin.menuItem
+        case .close: return PathClose.menuItem
+        }
     }
 
     /// The layer row menu's Turn Into Path, on the whole selection when the row
@@ -487,6 +521,14 @@ extension EditorState {
     /// (`TurnIntoPathQuestion`).
     func turnLayersIntoPath(ids: Set<UUID>) {
         guard Experiments.shared.turnIntoPathEnabled, let document, !ids.isEmpty else { return }
+        // One outline picked on its own is the third thing this row does, and
+        // it is its own operation: it lays a straight run between that
+        // outline's OWN two ends, however far apart they are, where the join
+        // welds different outlines to each other and only across two points.
+        if pathRowAction(ids: ids) == .close {
+            closeOpenPaths(ids: ids)
+            return
+        }
         let plan = document.turningLayersIntoPath(ids: ids).plan
         guard !plan.isEmpty else {
             // The join was offered on two outlines and found no two ends near
@@ -566,6 +608,69 @@ extension EditorState {
         turnedIntoPathNotice = joinOnly
             ? PathEditHint.justJoined(paths: alive.count)
             : PathEditHint.justTurned(paths: alive.count)
+    }
+
+    // MARK: - Close Path (an outline you already finished, shut)
+
+    /// Asks the question, then shuts the picked outlines on their own ends.
+    ///
+    /// It asks for a reason the other two halves do not have: a run appears on
+    /// the canvas that was not there before, and how long it is depends on
+    /// where you stopped drawing. The question says the gap in points, so a
+    /// run forty points long is never a surprise (`ClosePathQuestion`).
+    ///
+    /// An outline whose points are in a line is refused rather than asked
+    /// about, because closing it would leave a layer painting no pixels. The
+    /// line under the canvas says why, in the Pen's own words.
+    private func closeOpenPaths(ids: Set<UUID>) {
+        guard let document else { return }
+        let plan = document.closingPaths(ids: ids).plan
+        guard let question = ClosePathQuestion(plan: plan) else {
+            turnedIntoPathNotice = PathEditHint.nothingClosed()
+            return
+        }
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
+            applyClosePaths(ids: ids)
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = question.title
+        alert.informativeText = question.message
+        alert.addButton(withTitle: question.confirm)
+        alert.addButton(withTitle: question.cancel)
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = TurnIntoPathPrompt.suppression
+        let answer: @MainActor (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            // One row, one "Don't ask again": somebody who ticked it on this
+            // row asked not to be asked on this row, whichever of the three it
+            // is doing at the time.
+            if alert.suppressionButton?.state == .on {
+                Self.silencedQuestions.silence(.turnIntoPath)
+            }
+            guard response == .alertFirstButtonReturn else { return }
+            self?.applyClosePaths(ids: ids)
+        }
+        if let window = hostWindow {
+            alert.beginSheetModal(for: window) { response in
+                MainActor.assumeIsolated { answer(response) }
+            }
+        } else {
+            answer(alert.runModal())
+        }
+    }
+
+    /// Writes the closed outlines in, in ONE undo step.
+    ///
+    /// Nothing is swallowed and nothing is renamed, so what was picked is
+    /// still picked and the selection is left exactly as it was.
+    private func applyClosePaths(ids: Set<UUID>) {
+        discardDragPreview()
+        guard let closes = document?.closingPaths(ids: ids).plan.closes, closes > 0 else { return }
+        perform { $0.closePaths(ids: ids) }
+        // ...and the chip says what happened and where the inside now is,
+        // because closing an outline changes the picture hardly at all: one
+        // straight run appears, and the Fill row turns up on the panel.
+        turnedIntoPathNotice = PathEditHint.justClosed(paths: closes)
     }
 
     // MARK: - Two shapes become one (join, cut out, keep or drop the overlap)

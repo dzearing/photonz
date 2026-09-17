@@ -112,6 +112,36 @@ public enum PathEditHint {
             + "Drag an end onto another to bring them together."
     }
 
+    /// The same line when one outline was shut on its own two ends
+    /// (`PathClosing.swift`).
+    ///
+    /// It names the next thing to do rather than only what happened, because
+    /// closing an outline changes the picture hardly at all: one straight run
+    /// appears and everything else looks the same. What actually changed is
+    /// that the shape has an INSIDE now, and the way to see that is the Fill
+    /// row, which only turns up on the panel once a path closes
+    /// (`Layer.colorSlots`). The row is named and its SECTION is not, because
+    /// that section answers to two different headings depending on a flag.
+    public static func justClosed(paths: Int) -> String {
+        let what = paths <= 1 ? "Closed" : "Closed \(paths) paths"
+        return "\(what). Switch Fill on to paint inside it, "
+            + "or Command Z to put the open line back."
+    }
+
+    /// The line when closing was offered, was asked for, and would have left a
+    /// shape with no inside.
+    ///
+    /// The command is offered on any open outline rather than only on ones
+    /// that would really close, because a row dimmed for having its points in
+    /// a line teaches nobody what to do about it. This is the other half of
+    /// that bargain, and it is the Pen's own refusal word for word
+    /// (`PenSession.flatCloseReason`), so the same shape gets the same answer
+    /// whether you meet it while drawing or an hour later.
+    public static func nothingClosed() -> String {
+        "Nothing closed: these points are in a line, so joining them up has no inside. "
+            + "Drag a point off the line and try again."
+    }
+
     /// The line for a path with `picked` of its points selected, and `anchor`
     /// the one point picked where there is exactly one.
     ///

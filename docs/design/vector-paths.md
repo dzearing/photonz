@@ -789,6 +789,58 @@ One outline whose OWN two ends came within the tolerance closes by itself
 nothing converted. That case asks **Close this path?** rather than pretending
 two paths are joining, and confirms with `Close Path`.
 
+### One outline you already finished, shut
+
+The Pen closes a path only WHILE you are drawing it, by clicking back on the
+first point. Press Return and the run is open for good: there is no inside, so
+it can never be filled. Somebody building an icon is exactly the person who
+finishes an outline, looks at it, and then wants it shut.
+
+So the one row does a third thing. Pick ONE open outline on its own and it
+reads `Close Path…`, and it lays a straight run between that outline's own two
+ends. `PathClosing.swift` is the whole of it, and it is a different operation
+from the join in the one way that matters:
+
+| | Join Paths | Close Path |
+| --- | --- | --- |
+| Acts on | several outlines' ends, to each other | one outline's own two ends |
+| Gap it will cross | 2 pt (`PathJoin.tolerance`) | any, because you asked for it by name |
+| What moves | both ends, to the point half way between | nothing |
+
+The tolerance stays exactly where it is. It is a stated promise, and two lines
+welding across a forty point gap by surprise is worse than not welding at all.
+Close Path is not a surprise: it is one outline, named on the menu, asked for.
+
+**Nothing moves, and the new run is straight.** A handle on the way IN to the
+first anchor, or OUT of the last, shapes only the closing run, and on an open
+path that run does not exist — so those two handles are invisible before this
+and would bend the new run into a shape nobody drew. They are cleared; every
+other handle is left exactly as it was. Two ends already sitting on the same
+spot become ONE anchor rather than two on top of each other.
+
+**The look is untouched.** The outline keeps its colour and its line, and it
+gains an inside rather than a fill: `Layer.colorSlots` only offers `.fill` once
+a path closes, so the Fill row turns up on the panel with its switch off. A
+command that filled the outline itself would drop a block of colour on the
+canvas nobody asked for. That is the same bargain Join Paths already strikes.
+
+> **Close this path?**
+> A straight run joins its two ends, 40 pt apart. Neither end moves. The
+> outline closes, so you can paint inside it. Undo puts it back.
+
+**The refusal is the Pen's own.** An outline whose points are all in a line
+sweeps no area, and closing it would leave a layer on the canvas painting no
+pixels. It is still OFFERED — a row dimmed for having three points in a line
+teaches nobody what to do about it — and asking for it changes nothing and says
+why: `PathEditHint.nothingClosed`, which is `PenSession.flatCloseReason`'s
+sentence word for word. Afterwards, `PathEditHint.justClosed` names the Fill
+row and the way back.
+
+Unlike the join, a TURNED path is welcome. The join reads one layer's anchors
+against another's, so a rotated layer is not where its numbers say it is;
+closing reads one outline against itself, and the run it lays is inside the box
+the outline already covers, so the layer neither moves nor changes size.
+
 ## Two shapes become one
 
 Most icons are not drawn point by point, they are built. A circle with a smaller
