@@ -329,6 +329,22 @@ canvas), so the Export sheet asks **once when it opens and whenever the target
 changes**, and hands the same answer to the background row, the fallback lines,
 the photograph lines and the hand-off list.
 
+### A picture can leave the canvas out too
+
+The same question, the same control, the same answer, for **PNG and WebP**: an
+icon handed over as a picture has exactly the problem an icon handed over as
+SVG had. A picture cannot simply not write a rectangle, because it is rendered,
+so `PhotonzDocument.drawn(with:flatImages:)` hands the renderer the document
+with the canvas layer hidden and everything else where it was; `ExportSizer`
+does that once per render and keeps it, so the number on the sheet and the file
+that lands are the same picture.
+
+**JPEG and HEIC hold no transparency**, so the row is not offered for them and
+the picture path writes the canvas whatever it is asked for — a choice that
+cannot be honoured is worse than no choice, and the guard lives in
+`ExportSizer` rather than on the sheet so no caller can write that file by
+mistake.
+
 ## Saying what it could not do
 
 `SVGExport.fallbacks(in:)` answers the same question the writer answers, without

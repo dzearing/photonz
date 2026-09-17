@@ -703,6 +703,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// time, so this asks for SVG the same way picking it once would and then
     /// opens the sheet.
     case exportDialogAsSVG
+    /// The Export sheet already on PNG, for the same reason: a walk cannot
+    /// click the format row inside a sheet, and PNG is where the question of
+    /// what to do with the canvas behind a drawing is asked.
+    case exportDialogAsPNG
     /// The Export sheet already on JPEG (Next, `next-export-quality`), for the
     /// same reason: a walk cannot click the format row inside a sheet, and the
     /// quality slider only exists for a format that has a quality.
@@ -1173,6 +1177,19 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
     case above, inside, below
 }
 
+/// What is behind the drawing in a picture a walk wrote: nothing, or the
+/// canvas it was made on.
+///
+/// Read off the four corners of the file itself, because that is where a
+/// canvas that should have been left out shows up and where a drawing never
+/// reaches.
+public enum PictureCorners: String, Sendable, Equatable, CaseIterable {
+    /// Every corner see-through, so the icon sits on any colour.
+    case empty
+    /// Every corner solid, so the picture carries its own background.
+    case painted
+}
+
 /// What in the right hand panel an `expect` step is talking about, by the word
 /// the walk uses for it.
 public enum PlaytestPanelThing: String, Sendable, Equatable, CaseIterable {
@@ -1540,7 +1557,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// same answers, because it comes from the same encoder given the same
     /// picture. That is how a walk proves the sheet is not estimating: the file
     /// is beside the log line and it weighs what the line said.
-    case writePicture(name: String, format: String, quality: Int, scale: CGFloat)
+    ///
+    /// `background` is the Export sheet's Include the background checkbox, the
+    /// same answer `writeSVG` takes: "drop" (the default, and what the sheet
+    /// opens on) leaves the canvas the drawing was made on out of the picture,
+    /// so an icon goes out see-through behind the shapes; "keep" paints it in.
+    /// A format that cannot hold transparency writes the canvas either way.
+    ///
+    /// `behind` is the CLAIM about the file that landed: "empty" means every
+    /// corner of it is see-through, "painted" means every corner is solid.
+    /// Printing what the corners are is not checking them, and a white box
+    /// round an icon is invisible in a screenshot of a white sheet, so this is
+    /// the step that can fail.
+    case writePicture(name: String, format: String, quality: Int, scale: CGFloat,
+                      background: SVGExport.Background, behind: PictureCorners?)
     /// Set the quality a picture format is remembered at, exactly as pressing
     /// Export at that quality would (Next, `next-export-quality`). A walk
     /// cannot drag a slider inside a sheet, so this is how the sheet gets
@@ -2414,11 +2444,17 @@ public enum PlaytestStep: Sendable, Equatable {
                 : SVGExport.Background.drop
             self = .writeSVG(name: try f.string("name"), background: background)
         case "writePicture":
+            let canvas = f.has("background")
+                ? try f.enumValue("background", SVGExport.Background.self)
+                : SVGExport.Background.drop
             self = .writePicture(name: try f.string("name"),
                                  format: try f.string("format"),
                                  quality: Int(try f.optionalNumber("quality")
                                      ?? Double(ExportQuality.standard)),
-                                 scale: CGFloat(try f.optionalNumber("scale") ?? 1))
+                                 scale: CGFloat(try f.optionalNumber("scale") ?? 1),
+                                 background: canvas,
+                                 behind: f.has("behind")
+                                     ? try f.enumValue("behind", PictureCorners.self) : nil)
         case "exportQuality":
             self = .exportQuality(format: try f.string("format"),
                                   percent: Int(try f.number("percent")))

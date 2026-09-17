@@ -1,0 +1,92 @@
+{
+  "out": "/tmp/photonz-playtest/png-export-background-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [220, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [440, 200], "to": [560, 210], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [223, 523] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "describe",
+      "stage": "1-icon-drawn",
+      "note": "an icon drawn with the Pen on a blank white canvas: the white is a real full size bitmap under the shape, and until now every PNG of this carried it baked into every pixel"
+    },
+    { "do": "snapshot", "name": "png-export-background-1-drawn" },
+    {
+      "do": "writePicture",
+      "name": "png-export-background-2-file",
+      "format": "png",
+      "behind": "empty"
+    },
+    {
+      "do": "describe",
+      "stage": "2-nothing-behind-it",
+      "note": "the PNG Export writes by default: every corner of the file is see-through, so the icon can be dropped on a coloured page or a dark theme without a white box round it"
+    },
+    {
+      "do": "writePicture",
+      "name": "png-export-background-3-file-with-canvas",
+      "format": "png",
+      "background": "keep",
+      "behind": "painted"
+    },
+    {
+      "do": "describe",
+      "stage": "3-canvas-kept",
+      "note": "the same drawing asked for with the canvas in it: every corner solid again, which is what a screenshot or a whole screen always gets"
+    },
+    {
+      "do": "writePicture",
+      "name": "png-export-background-4-jpeg",
+      "format": "jpeg",
+      "quality": 80,
+      "behind": "painted"
+    },
+    {
+      "do": "describe",
+      "stage": "4-jpeg-keeps-it",
+      "note": "JPEG cannot hold see-through pixels, so it writes the canvas whatever it is asked for, and the sheet never offers the choice for it"
+    },
+    { "do": "action", "action": "exportDialogAsPNG" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "5-sheet-says-so",
+      "note": "the Export sheet on PNG: under the pixel size there is Include the background, unticked, with a swatch of the colour that would go in and a line saying the icon sits on any colour"
+    },
+    { "do": "snapshot", "name": "png-export-background-5-sheet" },
+    { "do": "expect", "control": "Include the background", "present": true },
+    { "do": "press", "control": "Include the background" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "describe",
+      "stage": "6-ticked",
+      "note": "ticked: the line under it changes to say the canvas colour is painted behind the drawing, so which file you are about to save is readable before you save it"
+    },
+    { "do": "snapshot", "name": "png-export-background-6-sheet-ticked" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "exportDialogAsJPEG" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "7-jpeg-never-asks",
+      "note": "the same sheet on JPEG: no Include the background at all, because the format has no way to hold it and a choice that cannot be honoured is worse than no choice"
+    },
+    { "do": "snapshot", "name": "png-export-background-7-sheet-jpeg" },
+    { "do": "expect", "control": "Include the background", "present": false },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

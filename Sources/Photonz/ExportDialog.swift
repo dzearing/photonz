@@ -69,6 +69,11 @@ enum ExportQualityMemory {
 /// cannot is at the very top of that slider, where it writes a lossless file and
 /// the line under the slider says "Lossless" instead of "Best".
 ///
+/// A drawing made on a blank canvas can go out with NOTHING behind it, as SVG
+/// and as a picture alike: Include the background is the same control in the
+/// same place for both, and it is never offered for a format that cannot hold
+/// transparency or for a document with no canvas to leave out.
+///
 /// With SVG in the picker (Next, `next-export-svg`), choosing it puts the scale
 /// row away — 1× and 2× mean nothing for a file with no pixels — and says
 /// instead what the file will be and what, if anything, could not be written as
@@ -193,9 +198,21 @@ struct ExportDialog: View {
             return
         }
         flatImages = FlatBitmap.colors(in: target, store: editorState.store)
-        backdrop = choice.isVector
+        backdrop = holdsTransparency
             ? SVGExport.backdrop(in: target, flatImages: flatImages)
             : nil
+    }
+
+    /// Whether the file being written could hold see-through pixels at all.
+    ///
+    /// SVG always can. A picture can only where the format can: a JPEG or a
+    /// HEIC has no way to say "nothing here", so the question is never asked
+    /// for them and the canvas goes in as it always did.
+    private var holdsTransparency: Bool {
+        switch choice {
+        case .svg: true
+        case .picture(let format): format.holdsTransparency
+        }
     }
 
     private func refreshVectorSize() {
@@ -401,6 +418,12 @@ struct ExportDialog: View {
                 if lossyFormat != nil {
                     qualityRow
                 }
+                // Last in the block, exactly where it sits for SVG: an icon
+                // drawn on a blank canvas can go out as a PNG with nothing
+                // behind it too.
+                if let backdrop {
+                    backgroundRow(backdrop)
+                }
             }
             HStack {
                 Spacer()
@@ -420,7 +443,8 @@ struct ExportDialog: View {
                         // encoding this very file, so saving it is instant.
                         editorState.exportComposite(format: format, scale: scale,
                                                     quality: ExportQuality.fraction(percent),
-                                                    frameID: frameID, using: sizer)
+                                                    frameID: frameID, background: background,
+                                                    using: sizer)
                     case .svg:
                         editorState.exportSVG(frameID: frameID, animated: carriesTheMotion,
                                               background: background)
@@ -481,8 +505,11 @@ struct ExportDialog: View {
         .onChange(of: choice) { refreshSize() }
         .onChange(of: frameID) { refreshSize() }
         // A file with nothing behind it is a different file, so it is a
-        // different number.
-        .onChange(of: keepsBackground) { refreshVectorSize() }
+        // different number, whether it is shapes or pixels.
+        .onChange(of: keepsBackground) {
+            refreshVectorSize()
+            refreshPictureSize()
+        }
         // 2x is a different file, so it is a different number.
         .onChange(of: scale) { refreshPictureSize() }
         .onChange(of: qualityPercent) { refreshPictureSize() }

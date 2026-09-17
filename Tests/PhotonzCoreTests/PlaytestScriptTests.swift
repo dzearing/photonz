@@ -14,6 +14,44 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A writePicture step leaves the canvas out unless the walk asks for it")
+    func writePictureLeavesTheCanvasOutByDefault() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "writePicture", "name": "icon", "format": "png" } ] }
+        """)
+        guard case .writePicture(_, _, _, _, let background, let behind) = script.steps[0] else {
+            Issue.record("writePicture"); return
+        }
+        #expect(background == .drop)
+        #expect(behind == nil)
+    }
+
+    @Test("A writePicture step can ask for the canvas and claim what is behind the drawing")
+    func writePictureCarriesTheCanvasAnswerAndTheClaim() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "writePicture", "name": "icon", "format": "png",
+                       "background": "keep", "behind": "painted" } ] }
+        """)
+        guard case .writePicture(let name, let format, _, _, let background, let behind) =
+            script.steps[0] else {
+            Issue.record("writePicture"); return
+        }
+        #expect(name == "icon")
+        #expect(format == "png")
+        #expect(background == .keep)
+        #expect(behind == .painted)
+    }
+
+    @Test("A writePicture step refuses a claim that is not one of the two")
+    func writePictureRefusesAnUnknownClaim() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "writePicture", "name": "icon", "format": "png",
+                           "behind": "white" } ] }
+            """)
+        }
+    }
+
     @Test("A shortcut step names the chord and the menu item it must reach")
     func shortcutStepNamesTheMenuItem() throws {
         let script = try decode("""

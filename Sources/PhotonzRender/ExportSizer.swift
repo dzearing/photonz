@@ -26,6 +26,10 @@ public actor ExportSizer {
     private struct Render: Hashable {
         let frameID: UUID?
         let scale: CGFloat
+        /// What the picture does with the canvas the drawing was made on. A
+        /// file with nothing behind the drawing is a different picture, so it
+        /// is a different render and a different number.
+        let background: SVGExport.Background
     }
 
     /// A render plus everything that turns it into a file.
@@ -67,18 +71,27 @@ public actor ExportSizer {
     /// writes for the same answers, because it is the same render and the same
     /// encoder given the same numbers.
     public func byteCount(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,
-                          format: ImageCodec.Format, quality: Double) -> Int? {
-        data(of: document, frameID: frameID, scale: scale, format: format, quality: quality)?.count
+                          format: ImageCodec.Format, quality: Double,
+                          background: SVGExport.Background = .keep) -> Int? {
+        data(of: document, frameID: frameID, scale: scale, format: format, quality: quality,
+             background: background)?.count
     }
 
     /// The bytes themselves, for anything that wants to write the very file the
     /// number came from — which is how a walk proves the number was true.
     public func data(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,
-                     format: ImageCodec.Format, quality: Double) -> Data? {
-        let key = Encoding(render: Render(frameID: frameID, scale: scale),
+                     format: ImageCodec.Format, quality: Double,
+                     background: SVGExport.Background = .keep) -> Data? {
+        // Asked of a format with no transparency in it, leaving the canvas out
+        // would write a black or white box rather than nothing, so the answer
+        // is the canvas. Held here rather than at the sheet, so no caller can
+        // write that file by mistake.
+        let canvas = format.holdsTransparency ? background : .keep
+        let key = Encoding(render: Render(frameID: frameID, scale: scale, background: canvas),
                            format: format, quality: quality)
         if let encoded, encoded.of == key { return encoded.data }
-        guard let image = picture(of: document, frameID: frameID, scale: scale),
+        guard let image = picture(of: document, frameID: frameID, scale: scale,
+                                  background: canvas),
               let data = ImageCodec.encode(image, format: format, quality: quality) else {
             return nil
         }
@@ -92,12 +105,20 @@ public actor ExportSizer {
         encoded = nil
     }
 
-    private func picture(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat) -> CGImage? {
-        let key = Render(frameID: frameID, scale: scale)
+    private func picture(of document: PhotonzDocument, frameID: UUID?, scale: CGFloat,
+                         background: SVGExport.Background) -> CGImage? {
+        let key = Render(frameID: frameID, scale: scale, background: background)
         if let kept, kept.of == key { return kept.picture }
         // The same scoping Export itself uses, so what gets weighed and what
         // gets saved can never be two different pictures.
-        let target = document.exportTarget(frameID: frameID)
+        let scoped = document.exportTarget(frameID: frameID)
+        // Leaving the canvas out is the canvas layer hidden: the drawing lands
+        // on nothing and every other layer is where it was. Reading which
+        // bitmaps are flat walks their pixels, so it is only asked for when
+        // something is being left out.
+        let target = background == .drop
+            ? scoped.drawn(with: .drop, flatImages: FlatBitmap.colors(in: scoped, store: store))
+            : scoped
         guard let image = renderer.render(target, store: store, scale: scale) else { return nil }
         kept = (key, image)
         return image

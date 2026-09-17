@@ -1,0 +1,29 @@
+{
+  "feature": "An icon exported as a picture can leave its canvas out",
+  "epic": "icon-export",
+  "summary": "An icon drawn on a blank canvas now exports as a PNG with nothing behind the shapes, so it can be dropped on a coloured page or a dark theme without a white box round it. The Export sheet asks with the same Include the background checkbox SVG has, in the same place, and never asks for a format that cannot hold transparency.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "File ▸ New Canvas, take the default size." },
+    { "do": "Press P for the Pen and draw a closed shape a few clicks across." },
+    { "do": "Press ⌘E.", "shot": "2026-09-17-png-export-background-sheet.png" },
+    { "do": "Read the row under the pixel size: Include the background, unticked, with a swatch of the canvas colour." },
+    { "do": "Press Export… and save the PNG, then open it over something dark (a dark Finder Quick Look, a dark web page).", "shot": "2026-09-17-png-export-background-ticked.png" },
+    { "do": "Press ⌘E again, tick Include the background, and save a second PNG: that one carries the white." },
+    { "do": "Press ⌘E and pick JPEG: the row is gone, because a JPEG cannot hold see-through pixels." },
+    { "do": "Open a screenshot instead of a blank canvas and press ⌘E: no row at all, and the picture exports with its background as it always did." }
+  ],
+  "evaluate": [
+    "Is unticked the right default for PNG, given a picture drawn on a blank canvas now goes out see-through unless you say otherwise?",
+    "Does the row read clearly enough under the pixel size, or does it want to sit somewhere else on the sheet?",
+    "Is the swatch at the far right of the row doing its job, or is it too far from the words it belongs to?",
+    "Was it obvious the exported PNG would be see-through before you opened it, or did you have to check?",
+    "Should copying the picture (⇧⌘C) do the same thing, or is a paste always expected to carry the canvas?"
+  ],
+  "rough": [
+    "The two pictures here are real screen captures, but the Mac reported its screen locked while the walk ran, so the colours in them are dimmed: the white canvas reads grey and the shape reads dull red. What the pictures are being shown for, the row and its words, is unaffected.",
+    "PNG shows no file size on the sheet, so you cannot see the file get smaller when the canvas goes. Only the lossy formats weigh themselves.",
+    "Copying the picture with ⇧⌘C still carries the white canvas: the change is on the Export path only. Filed as its own task.",
+    "The swatch sits hard right of the sheet, a long way from the checkbox it explains. That is inherited from the SVG row rather than new here, so it was left alone."
+  ]
+}

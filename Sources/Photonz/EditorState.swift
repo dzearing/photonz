@@ -1986,6 +1986,12 @@ final class EditorState {
 
     /// Renders the composite at `scale` and writes it where the user picks.
     ///
+    /// `background` is what the Export sheet's Include the background checkbox
+    /// says: leaving it out writes an icon with nothing behind it, so it can
+    /// sit on a coloured page or a dark theme. Only PNG and WebP can hold that,
+    /// and only a drawing made on a flat canvas has anything to leave out
+    /// (`ExportSizer`).
+    ///
     /// `frameID` narrows the picture to one frame (Next, `next-frames`): the
     /// frame's own box becomes the canvas, so what comes out is that screen and
     /// nothing else — not the canvas behind it, not the layer overlapping it
@@ -1998,7 +2004,8 @@ final class EditorState {
     /// has already closed by then, so what a person sees is the app still alive
     /// and then the save panel, rather than a beach ball.
     func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9,
-                         frameID: UUID? = nil, using warm: ExportSizer? = nil) {
+                         frameID: UUID? = nil, background: SVGExport.Background = .keep,
+                         using warm: ExportSizer? = nil) {
         guard let document else { return }
         let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
         let base = frame.flatMap { document.layer(id: $0)?.name }
@@ -2010,7 +2017,8 @@ final class EditorState {
         let sizer = warm ?? ExportSizer(renderer: previewRenderer, store: store)
         Task { [weak self] in
             let data = await sizer.data(of: document, frameID: frame, scale: scale,
-                                        format: format, quality: quality)
+                                        format: format, quality: quality,
+                                        background: background)
             guard let self else { return }
             guard let data else {
                 self.presentExportRefusal(format: format, document: document,

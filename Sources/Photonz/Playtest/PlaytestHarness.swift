@@ -396,6 +396,57 @@ private final class Run {
         try data.write(to: out.appendingPathComponent("\(name).png"))
     }
 
+    /// What the four corners of a picture a walk just wrote are, and whether
+    /// they are what the walk claimed.
+    ///
+    /// The corners are where a canvas that should have been left out shows up,
+    /// and where no drawing ever reaches. Read off the FILE rather than off the
+    /// render that made it, because a format that cannot hold transparency
+    /// quietly fills it in and that is the thing worth catching.
+    private func cornersOf(_ data: Data, named file: String,
+                           claim: PictureCorners?) throws -> String {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            throw Failure(description: "\(file) could not be read back to check its corners")
+        }
+        let width = image.width, height = image.height
+        let spots = [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]
+        let alphas = spots.map { alpha(of: image, x: $0.0, y: $0.1) }
+        let found: PictureCorners? = alphas.allSatisfy { $0 == 0 } ? .empty
+            : alphas.allSatisfy { $0 == 255 } ? .painted : nil
+        let said: String
+        switch found {
+        case .empty: said = "nothing behind the drawing"
+        case .painted: said = "a background behind the drawing"
+        case nil: said = "corners \(alphas.map(String.init).joined(separator: "/")) opaque"
+        }
+        if let claim, claim != found {
+            throw Failure(description: "\(file) was to have \(claim == .empty ? "nothing" : "a background") "
+                          + "behind the drawing in every corner, and it has \(said)")
+        }
+        return said
+    }
+
+    /// How opaque one pixel of `image` is, counting y from the TOP the way the
+    /// document counts. One pixel is drawn, not the whole picture: a 12
+    /// megapixel export would be 48 MB of buffer to read four numbers.
+    private func alpha(of image: CGImage, x: Int, y: Int) -> Int {
+        var pixel: [UInt8] = [0, 0, 0, 0]
+        pixel.withUnsafeMutableBytes { raw in
+            guard let context = CGContext(data: raw.baseAddress, width: 1, height: 1,
+                                          bitsPerComponent: 8, bytesPerRow: 4,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)
+                                              ?? CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return }
+            // Core Graphics draws from the bottom up, so the row wanted is
+            // counted back from the far side.
+            context.draw(image, in: CGRect(x: -x, y: -(image.height - 1 - y),
+                                           width: image.width, height: image.height))
+        }
+        return Int(pixel[3])
+    }
+
     // MARK: - Steps
 
     private func perform(_ step: PlaytestStep, number: Int) async throws {
@@ -1142,7 +1193,8 @@ private final class Run {
             note(number, step.name,
                  "\(name).svg \(written.data.count) bytes, \(pictured)\(motion)\(canvas)")
 
-        case .writePicture(let name, let format, let quality, let scale):
+        case .writePicture(let name, let format, let quality, let scale, let background,
+                           let behind):
             let editor = try requireEditor()
             guard let picture = ImageCodec.Format(rawValue: format) else {
                 throw Failure(description: "\(format) is not a picture format Export writes")
@@ -1157,15 +1209,21 @@ private final class Run {
             let started = Date()
             guard let data = await sizer.data(of: document, frameID: editor.selectedFrameID,
                                               scale: scale, format: picture,
-                                              quality: ExportQuality.fraction(quality)) else {
+                                              quality: ExportQuality.fraction(quality),
+                                              background: background) else {
                 throw Failure(description: "the document did not write as \(format)")
             }
             let file = "\(name).\(picture.fileExtension)"
             try data.write(to: out.appendingPathComponent(file))
             let took = Int(Date().timeIntervalSince(started) * 1000)
+            // What happened to the canvas the drawing was made on, read off the
+            // file that just landed rather than off what was asked for, and
+            // checked where the walk made a claim.
+            let corners = try cornersOf(data, named: file, claim: behind)
             note(number, step.name,
                  "\(file) at \(quality)% is \(data.count) bytes "
-                 + "(\(ExportQuality.fileSize(bytes: data.count))), weighed in \(took) ms")
+                 + "(\(ExportQuality.fileSize(bytes: data.count))), weighed in \(took) ms"
+                 + ", \(corners)")
 
         case .exportQuality(let format, let percent):
             guard ExportQuality.applies(toFormat: format) else {
@@ -2285,6 +2343,9 @@ private final class Run {
                     editor.selectLibraryItem(first.id)
                 }
             case .exportDialog: editor.isExportDialogPresented = true
+            case .exportDialogAsPNG:
+                editor.playtestOpensExportOnPicture = .png
+                editor.isExportDialogPresented = true
             case .exportDialogAsJPEG:
                 // Asked for on the sheet itself, the same way SVG is, so a walk
                 // that photographs the quality slider cannot change what the

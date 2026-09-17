@@ -40,6 +40,19 @@ public enum ImageCodec {
             }
         }
 
+        /// Whether a file of this format can hold see-through pixels.
+        ///
+        /// What decides whether Export may offer to leave the canvas out: a
+        /// PNG or a WebP handed over with nothing behind the drawing sits on
+        /// any colour, while a JPEG or a HEIC has no way to say "nothing here"
+        /// and would land as a black or white box instead.
+        public var holdsTransparency: Bool {
+            switch self {
+            case .png, .webp: true
+            case .jpeg, .heic: false
+            }
+        }
+
         /// Whether the system writes this one, or we do.
         var isWrittenBySystem: Bool { self != .webp }
     }
