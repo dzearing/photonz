@@ -1,6 +1,6 @@
 {
-  "updated": "2026-09-18T08:31:28.762Z",
-  "focus": "ui-building",
+  "updated": "2026-09-18T15:14:01.744Z",
+  "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "One focus at a time. A feature is not done when it compiles, it is done when it is playtestable and has an audit report the user can act on.",
@@ -9,49 +9,6 @@
     "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built."
   ],
   "epics": [
-    {
-      "id": "ui-building",
-      "title": "Make Photonz the best tool for building UI",
-      "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
-      "stage": "now",
-      "children": [
-        {
-          "id": "ui-components",
-          "title": "Component design: create once, reuse everywhere, override safely",
-          "note": "",
-          "stage": "now",
-          "children": []
-        },
-        {
-          "id": "ui-layout",
-          "title": "Auto-layout and grids that behave like real UI",
-          "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" — answered \"Move auto layout up, start it next\".",
-          "stage": "now",
-          "children": []
-        },
-        {
-          "id": "ui-screens",
-          "title": "Build full screens from nothing fast",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-design-systems",
-          "title": "Design systems: tokens, styles, and switching them",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-prototyping",
-          "title": "Click-through prototyping",
-          "note": "",
-          "stage": "later",
-          "children": []
-        }
-      ]
-    },
     {
       "id": "interaction-foundations",
       "title": "Interaction foundations: the primitives everything sits on",
@@ -91,6 +48,49 @@
           "title": "The one color picker, everywhere a color lives",
           "note": "",
           "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "video-editing",
+      "title": "Make Photonz the best tool for creating and editing video",
+      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it. Promoted to now on 2026-09-15 by the manager pass, acting on the user's answer to \"You moved video editing up the list this morning, above redlining. Should the loop start building it?\", which was \"Start video now\": the loop builds video editing in the app, beginning with cutting a recording into pieces, while icon and redlining work keep going around it. Focus from 2026-09-18: the user shifted priority to video. The clickthroughs are ideas to build on, not specs. The whole set turns on one thesis they all repeat: video is not a separate mode, it is the same document with time.",
+      "stage": "now",
+      "children": [
+        {
+          "id": "video-cutting",
+          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
+          "note": "Promoted to now on 2026-09-15 with its parent: the answered card names cutting a recording into pieces as where video starts.",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "video-transitions-motion",
+          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
+          "note": "",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "video-titles-graphics",
+          "title": "Titles, captions, and graphics on the timeline",
+          "note": "",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "video-audio",
+          "title": "Audio you can see and shape",
+          "note": "",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "video-share",
+          "title": "Fast, predictable export and share",
+          "note": "",
+          "stage": "now",
           "children": []
         }
       ]
@@ -154,6 +154,49 @@
       ]
     },
     {
+      "id": "ui-building",
+      "title": "Make Photonz the best tool for building UI",
+      "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
+      "stage": "now",
+      "children": [
+        {
+          "id": "ui-components",
+          "title": "Component design: create once, reuse everywhere, override safely",
+          "note": "",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "ui-layout",
+          "title": "Auto-layout and grids that behave like real UI",
+          "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" — answered \"Move auto layout up, start it next\".",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "ui-screens",
+          "title": "Build full screens from nothing fast",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "ui-design-systems",
+          "title": "Design systems: tokens, styles, and switching them",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "ui-prototyping",
+          "title": "Click-through prototyping",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
       "id": "icon-svg",
       "title": "Make Photonz the best platform for building icons and animated SVGs",
       "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar. Moved to now on 2026-09-13: the user asked for a pen that draws polygons with hard edges and bezier curves, for building elaborate SVG icons.",
@@ -190,49 +233,6 @@
         {
           "id": "icon-sets",
           "title": "Icon sets as a library scope: one style, one grid, whole families",
-          "note": "",
-          "stage": "later",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "video-editing",
-      "title": "Make Photonz the best tool for creating and editing video",
-      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it. Promoted to now on 2026-09-15 by the manager pass, acting on the user's answer to \"You moved video editing up the list this morning, above redlining. Should the loop start building it?\", which was \"Start video now\": the loop builds video editing in the app, beginning with cutting a recording into pieces, while icon and redlining work keep going around it.",
-      "stage": "now",
-      "children": [
-        {
-          "id": "video-cutting",
-          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
-          "note": "Promoted to now on 2026-09-15 with its parent: the answered card names cutting a recording into pieces as where video starts.",
-          "stage": "now",
-          "children": []
-        },
-        {
-          "id": "video-transitions-motion",
-          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-titles-graphics",
-          "title": "Titles, captions, and graphics on the timeline",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-audio",
-          "title": "Audio you can see and shape",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-share",
-          "title": "Fast, predictable export and share",
           "note": "",
           "stage": "later",
           "children": []

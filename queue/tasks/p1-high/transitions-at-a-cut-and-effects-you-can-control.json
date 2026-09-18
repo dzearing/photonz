@@ -1,0 +1,42 @@
+{
+  "id": "transitions-at-a-cut-and-effects-you-can-control",
+  "title": "Transitions at a cut, and effects you can control over time",
+  "goal": "A cut can be hard, or one shot can become another. Make a transition a real thing that lives at the cut between two clips, with its behaviour and its length there to adjust, and let the effects a layer already has be controlled across time rather than being one fixed setting for the whole clip.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T15:15:42.920Z",
+  "updated": "2026-09-18T15:15:43.167Z",
+  "deps": [
+    "cut-arrange-and-retime-what-is-on-the-timeline"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-transitions.html and video-transition-wt.html. Their thesis: \"A transition is not a filter on a clip. It is a relationship between two clips at a cut, so it lives on the timeline where the cut is.\" The walkthrough adds the distinction worth keeping: \"The ones that need an overlap put both clips on screen together, so they spend spare media. The dips do not: each clip fades inside the time it already has.\"\n\nThe second half of this task, effects over time, must NOT invent a keyframe system. The user settled the animation model on 2026-09-15: a value recorded at a moment, motion as a property of a layer, lanes per moving part, real easing with a custom curve. An effect changing over a shot is that same machinery pointed at a different property. If the two end up different, one of them is wrong.\n\n---\nSHARED CONTEXT for the video set (the user made video the priority on 2026-09-18).\n\nTheir words: \"I am shifting priority to video. I want to make sure you are looking at our video usage clickthroughs. These are NOT specs, they are ideas on which we are building on. We are building something better than any other video editor out there. We need a robust set of ways to build video, separate audio, introduce audio, auto caption, slice things, transition and control the effects, interweave components and animate them using animation patterns, etc.\"\n\nTHE CLICKTHROUGHS ARE IDEAS, NOT SPECS. Read them, build ON them, and say in the audit where you went further or differently and why. Fifteen pages exist under docs/design/mocks/pages: video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed, and comp-video. Do not start a page from scratch that already exists there.\n\nTHE THESIS THEY ALL SHARE, and it should govern every task in this set. Every page says the same thing in its own words:\n- \"A recording opens the same document with a time dimension, so the transport bar and the timeline dock appear.\" (video)\n- \"Audio rides the same time axis as the picture, so a mixer is not a separate app.\" (video-audio)\n- \"Captions are not a mode that replaces the app. They are what the Title / Text tool does when the document has time.\" (video-captions)\n- \"Compositing is just layers with a rule for how they combine. The stack is the timeline.\" (video-compositing)\n- \"Motion is not a separate mode... the same window, on a document that has time... each animated layer gets a lane.\" (video-motion)\n- \"A title is a text layer that happens to live in a document with time, so it gets an in and an out.\" (video-title-wt)\n- \"A transition is not a filter on a clip. It is a relationship between two clips at a cut.\" (video-transitions)\n- \"Retiming is a property of the selected clip, so nothing new appears in the chrome.\" (video-speed)\n- \"A freeze is not a special object: it is a clip whose in and out are the same frame.\" (video-freeze-wt)\n- \"a key is a value recorded at a moment. There is no keyframe window and no animate mode.\" (video-move-wt)\nSo: VIDEO IS NOT A MODE. It is the layer document with time. Anything built as a separate editor, a separate window or a separate model contradicts every page and should not be built that way.\n\nWHAT EXISTS TODAY, and it is the opposite of the thesis, which is why the foundation task comes first. Video is a SEPARATE editor: Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift, one clip at a time, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState rather than a reusable model. PhotonzMedia carries VideoExporter and VideoAssetCommit. PhotonzCore has NO notion of time, duration, tracks or keyframes at all. So none of this is \"extend the video editor\"; it is \"give the document time and let the video editor retire into it\".\n\nThis also settles a question already raised elsewhere: the modes work (work-out-whether-the-app-needs-project-types-at) has as its acid test a component drawn in one mode and placed on a video timeline, and the user said \"You can create a component, and then show that on a video timeline\" and \"you can make an icon and use it in your component\". That is only possible if video lives in the layer document. The mocks and the modes direction agree; today's code does not.\n\nAnd the animation model is already settled by the user, on 2026-09-15: motion is a property of a layer, opening into a timing surface with a lane per moving part. There is NO canned list of named motions. Easing is real curves including a custom one. Two parts of one thing must be able to move out of phase. Whatever time model this set builds must serve that, because an icon animating and a clip moving are the same machinery.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/video.md is the source of truth, written by the foundation task.",
+  "acceptance": [
+    "A transition lives at the cut between two clips rather than being a filter on one of them, and selecting it opens its settings in the panel like any other selection",
+    "The ones that need overlapping media spend it, and the ones that do not fade inside the time the clips already have: the difference is visible and explained where somebody will read it",
+    "A transition that has no spare media to spend says so rather than silently producing something shorter than asked",
+    "Its length can be adjusted directly at the cut",
+    "The effects a layer already has can change over time, using the same way of recording a value at a moment that the animation work uses, not a second mechanism",
+    "A blur that comes on over a second, and a colour that shifts across a shot, both work and are captured in the audit",
+    "What plays is what exports, checked by exporting and comparing rather than assumed",
+    "Audit under queue/audits/ with each transition behaviour captured, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T15:15:42.922Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-18T15:15:43.006Z",
+      "note": "seq 320 -> 5"
+    },
+    {
+      "t": "2026-09-18T15:15:43.167Z",
+      "note": "deps set: the document gets time first"
+    }
+  ]
+}

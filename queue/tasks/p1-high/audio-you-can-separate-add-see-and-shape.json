@@ -1,0 +1,42 @@
+{
+  "id": "audio-you-can-separate-add-see-and-shape",
+  "title": "Audio you can separate, add, see and shape",
+  "goal": "A recording arrives with its sound welded to its picture. Let the two come apart, let other sound be brought in, and let both be seen and shaped on the same timeline, so a voiceover can survive a cut to the picture over it and music can sit under the whole thing.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T15:15:42.610Z",
+  "updated": "2026-09-18T15:15:43.166Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-audio.html, whose thesis is the one to keep: \"Audio rides the same time axis as the picture, so a mixer is not a separate app. The tracks are lanes on the timeline dock, the selected track's channel strip opens in Properties, and the source files live in Library.\"\n\nThat last part matters and connects to work already settled: source files living in the Library is the document-scoped shelf the user described on 2026-09-15, with History as the global one. Do not invent a third place for media.\n\nThe honest risk is scope: a full mixer is a product of its own. What this task owes is separate, add, see, and set a level including over time. Anything past that - buses, effects racks, meters with ballistics - is a follow-up and should be filed rather than built.\n\n---\nSHARED CONTEXT for the video set (the user made video the priority on 2026-09-18).\n\nTheir words: \"I am shifting priority to video. I want to make sure you are looking at our video usage clickthroughs. These are NOT specs, they are ideas on which we are building on. We are building something better than any other video editor out there. We need a robust set of ways to build video, separate audio, introduce audio, auto caption, slice things, transition and control the effects, interweave components and animate them using animation patterns, etc.\"\n\nTHE CLICKTHROUGHS ARE IDEAS, NOT SPECS. Read them, build ON them, and say in the audit where you went further or differently and why. Fifteen pages exist under docs/design/mocks/pages: video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed, and comp-video. Do not start a page from scratch that already exists there.\n\nTHE THESIS THEY ALL SHARE, and it should govern every task in this set. Every page says the same thing in its own words:\n- \"A recording opens the same document with a time dimension, so the transport bar and the timeline dock appear.\" (video)\n- \"Audio rides the same time axis as the picture, so a mixer is not a separate app.\" (video-audio)\n- \"Captions are not a mode that replaces the app. They are what the Title / Text tool does when the document has time.\" (video-captions)\n- \"Compositing is just layers with a rule for how they combine. The stack is the timeline.\" (video-compositing)\n- \"Motion is not a separate mode... the same window, on a document that has time... each animated layer gets a lane.\" (video-motion)\n- \"A title is a text layer that happens to live in a document with time, so it gets an in and an out.\" (video-title-wt)\n- \"A transition is not a filter on a clip. It is a relationship between two clips at a cut.\" (video-transitions)\n- \"Retiming is a property of the selected clip, so nothing new appears in the chrome.\" (video-speed)\n- \"A freeze is not a special object: it is a clip whose in and out are the same frame.\" (video-freeze-wt)\n- \"a key is a value recorded at a moment. There is no keyframe window and no animate mode.\" (video-move-wt)\nSo: VIDEO IS NOT A MODE. It is the layer document with time. Anything built as a separate editor, a separate window or a separate model contradicts every page and should not be built that way.\n\nWHAT EXISTS TODAY, and it is the opposite of the thesis, which is why the foundation task comes first. Video is a SEPARATE editor: Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift, one clip at a time, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState rather than a reusable model. PhotonzMedia carries VideoExporter and VideoAssetCommit. PhotonzCore has NO notion of time, duration, tracks or keyframes at all. So none of this is \"extend the video editor\"; it is \"give the document time and let the video editor retire into it\".\n\nThis also settles a question already raised elsewhere: the modes work (work-out-whether-the-app-needs-project-types-at) has as its acid test a component drawn in one mode and placed on a video timeline, and the user said \"You can create a component, and then show that on a video timeline\" and \"you can make an icon and use it in your component\". That is only possible if video lives in the layer document. The mocks and the modes direction agree; today's code does not.\n\nAnd the animation model is already settled by the user, on 2026-09-15: motion is a property of a layer, opening into a timing surface with a lane per moving part. There is NO canned list of named motions. Easing is real curves including a custom one. Two parts of one thing must be able to move out of phase. Whatever time model this set builds must serve that, because an icon animating and a clip moving are the same machinery.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/video.md is the source of truth, written by the foundation task.",
+  "acceptance": [
+    "The audio of a clip can be separated from its picture, and afterwards each can be cut and moved without disturbing the other",
+    "Sound can be brought in from a file and placed on the timeline",
+    "Audio is visible as a waveform, so a cut can be aimed at a word or a beat rather than guessed",
+    "Level can be set per clip and over time, so a bed of music can duck under a voice",
+    "What you hear while scrubbing and playing matches what exports, checked by exporting and listening rather than assumed",
+    "A cut to the picture does not cut the voiceover over it, which is the case the cut clickthrough is built around",
+    "Several pieces of audio play together correctly, and the audit says how many were tested",
+    "Audit under queue/audits/ with a waveform captured and a mixed export, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T15:15:42.612Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-18T15:15:42.692Z",
+      "note": "seq 320 -> 3"
+    },
+    {
+      "t": "2026-09-18T15:15:43.166Z",
+      "note": "deps set: the document gets time first"
+    }
+  ]
+}

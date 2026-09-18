@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 310,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T13:32:03.734Z",
-  "updated": "2026-09-18T13:32:03.737Z",
+  "updated": "2026-09-18T14:42:50.415Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on a CLEAN main (258d7422) with every local change stashed, four consecutive runs of Scripts/test.sh --filter theDensePageStopsAtTheCeiling:\n  run 1: FAILED  (taken.result.crowded -> 359) == 357\n  run 2: passed\n  run 3: FAILED  (taken.result.crowded -> 355) == 357\n  run 4: passed\nSo it is not a stale build and not a side effect of another test: one filter, one test, same binary.\n\nThe failing claim is Tests/PhotonzRenderTests/SeparateFixturePieceCountTests.swift:155, #expect(taken.result.crowded == 357) on Fixtures/dense-page-1x.png. runs.count (142), boxes.count (30, the ceiling) and skipped (8) are all steady in every run; only crowded moves, by two at a time.\n\nqueue/audits/2026-09-18-separate-into-layers.json says this was already chased once: the box sweep picked a winner out of a dictionary of votes and Swift reseeds its hashing per process, so ties were made to go to the lowest region number. That fixed some of it and clearly not all of it, so the remaining non-determinism is somewhere else in BoxSweep (Sources/PhotonzCore/BoxSweep.swift) - another Set or Dictionary walked in order, or work split across cores and gathered in arrival order. Because boxes.count sits exactly on SeparateBudget.maxBoxes, WHICH thirty boxes win changes what is left over, so the instability may be in the ordering of the candidates rather than in the counting.",
@@ -22,6 +22,48 @@
     {
       "t": "2026-09-18T13:32:03.736Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-18T14:24:41.713Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T14:42:36.359Z",
+      "note": "Reproduced first: four runs of Scripts/test.sh --filter theDensePageStopsAtTheCeiling gave pass, pass, 359, 355. Confirmed the cause was Swift's per-process hash seed by running the same test four times with SWIFT_DETERMINISTIC_HASHING=1: 355 every time."
+    },
+    {
+      "t": "2026-09-18T14:42:36.407Z",
+      "note": "Bisected with temporary prints: the text sweep found 400 runs and 103 beyond its limit in every run, and BoxSweep read the same 456 islands off the same backdrop every run, yet its depth-1 pass came back with 32, 34 or 36 boxes. The trace showed two pairs of small boxes (islands 449/450 at y=899 and 457/458 at y=997) passing or failing the 'does a reserved text run clip this' guard differently between runs, which meant the RECTS of the text runs were moving even though their count was not."
+    },
+    {
+      "t": "2026-09-18T14:42:36.452Z",
+      "note": "Root cause: TextRunSweep.components gathered its runs in a [Int: Box] keyed by the union-find root and returned Array(boxes.values), i.e. hash order. The pass above it takes candidates biggest first and drops any that overlaps one already taken, so a different arrival order kept a different one of each overlapping pair. Not BoxSweep at all, which is where the earlier chase (queue/audits/2026-09-18-separate-into-layers.json) had looked."
+    },
+    {
+      "t": "2026-09-18T14:42:36.499Z",
+      "note": "Fix: components now builds its list as the segments are walked, with the dictionary demoted to 'which place in the list does this root hold'. Dictionary LOOKUP by key is deterministic; only walking it is not. Result is reading order. Also gave the biggest-first candidate sort an explicit tie-break on that order, because sorted(by:) is not promised to be stable; it did not move any number, so it is free."
+    },
+    {
+      "t": "2026-09-18T14:42:36.546Z",
+      "note": "The pinned 357 was one of the lucky values and is now 355, which is what the seed-pinned run gave before the fix too. Comment in the test says so."
+    },
+    {
+      "t": "2026-09-18T14:42:36.591Z",
+      "note": "Verified: ten consecutive runs of the filtered test all pass; full Scripts/test.sh green, 8310 tests in 665 suites. Scripts/playtest-all.sh separate: 5 passed (separate-boxes, separate-hierarchy, separate-shadow, separate-whole-screenshot, separated-boxes-say-their-words), 5 could not run because the Mac's screen is locked and they look controls up by name. Not forced: a forced run fails on the lock rather than on the code, and the walk that exercises the dense page (separate-whole-screenshot-walk) is one of the five that ran."
+    },
+    {
+      "t": "2026-09-18T14:42:50.319Z",
+      "note": "Swept the rest of PhotonzCore and PhotonzRender for the same class of bug while I was in there: the only other places that walk a dictionary or set are ComponentVersions.canvasVersionNames, AnnotationStyles.forgetUnheldStyleNames and PlaytestLockSafety.stepsALockStops, and all three only build another dictionary or set out of it, so order cannot reach their answers. Nothing to file."
+    },
+    {
+      "t": "2026-09-18T14:42:50.365Z",
+      "note": "No audit written: this is a defect fix inside a shipped feature, not a feature or a slice of one. What a person would see is a number that used to wobble and now does not, which the tests pin rather than a playtest."
+    },
+    {
+      "t": "2026-09-18T14:42:50.413Z",
+      "note": "TextRunSweep.components returned Array(dict.values), so the runs of text arrived in a different hash order every process and the biggest-first overlap pass kept a different one of each overlapping pair; the leftover count came out 355, 357 or 359 for one fixture. It now builds its list as the segments are walked (reading order) with the dictionary only holding each root's place, plus an explicit tie-break on the biggest-first sort. New Tests/PhotonzCoreTests/TextRunSweepDeterminismTests.swift pins the ordering itself, which is seed-independent, and fails on the old code; the fixture's pinned count moves 357 -> 355 with the reason in the test. Verified: ten consecutive filtered runs pass, full Scripts/test.sh green (8310 tests), five separate walks pass and five could not run because the screen is locked. Commit ebbcfc3f, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-18T14:24:41.712Z",
+  "completed": "2026-09-18T14:42:50.414Z"
 }

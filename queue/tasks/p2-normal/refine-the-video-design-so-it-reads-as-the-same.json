@@ -1,0 +1,38 @@
+{
+  "id": "refine-the-video-design-so-it-reads-as-the-same",
+  "title": "Refine the video design so it reads as the same app",
+  "goal": "Video brings a transport, a timeline with lanes, waveforms, channel strips, transition settings and caption lists. That is a lot of new surface arriving at once, into a panel that is already too full. Before any of it is built, work the design through against the rest of the app so it lands as more of Photonz rather than a video editor bolted to the side.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 0.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T15:16:17.258Z",
+  "updated": "2026-09-18T15:16:34.714Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-18, immediately after shifting priority to video: \"We really need to ensure that we refine the design and ensure things flow with the rest of the app well.\"\n\nThis comes FIRST, before the foundation task, because the panel has just taught everybody what happens otherwise. Three days ago the same user sat down with the component panel and said it was \"completely cluttered and hard to read and unpredictable. total mess\", and the measuring backed them: 1052 points of sections against a 968 point viewport, with Position and Size never wholly on screen at any window size. Six tasks came out of that. Video adds more surface than components did. Doing the same thing twice would be a choice.\n\nWhat the panel just learned, and what video must not undo:\n- A section is named for the job it does, in words somebody already knows. The app invented Adjustable and Versions and the user could not say what either was for.\n- A section that needs a paragraph inside it to explain itself is misnamed; the paragraph is the symptom.\n- A grid of number boxes is the laziest answer. One row with a way into the detail, and a Mixed state when the parts differ.\n- Things that are set by dragging do not deserve permanent room in the panel: Position and Size left it entirely.\n- Panes can be hidden, and there is an automatic mode showing what the selection actually needs.\nEvery one of those applies to a channel strip, a transition's settings and a caption list as much as it did to a component.\n\nWhat exists to build on rather than restart: fifteen clickthroughs under docs/design/mocks/pages (video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed) plus comp-video, which is the time primitives page and says its own purpose out loud: \"Time needs its own primitives, and they are the ones most likely to get re-invented per page because they look like decoration. They are not.\" The user was explicit that these are ideas rather than specs, so refine them, contradict them where they are wrong, and say where and why.\n\nAlso read the pane-load study (work-out-whether-the-right-hand-pane-is-carrying, done) whose page is docs/design/mocks/pages/pane-load.html: it already measured the dock and already recommended a timing strip across the bottom with Motion staying in the panel. That recommendation was made for animation and video inherits the same question, so either follow it or say why video changes the answer.\n\nAnd the modes work (work-out-whether-the-app-needs-project-types-at) is the other half of this: if a mode is a preset of what is showing, then 'the video surface appears when the document has time' and 'the video mode shows these panes' are the same mechanism described twice. Reconcile them rather than building two.",
+  "acceptance": [
+    "The whole video surface is drawn against the app as it stands, not against an empty window: the same panel, the same layers list, the same tool bar, with time added",
+    "Where the new surface goes is settled and shown: what the timeline is, where it lives, what happens to it at a small window and a large one, and what it does when the document has no time",
+    "The panel's share is answered specifically, because it is already over budget at 1052 points of sections against a 968 point viewport: say what video adds to it, what it displaces, and what the total comes to",
+    "Every new control is checked against the rules the panel just learned: a section is named for what it is for, nothing needs a paragraph inside it to explain itself, and a number that has several parts gets one row and a way in rather than a grid of boxes",
+    "The time primitives are drawn once and reused rather than re-invented per page, extending docs/design/mocks/pages/comp-video.html rather than starting beside it",
+    "The existing fifteen video pages are reconciled with each other: where two of them answer the same question differently, one answer is chosen and both pages are updated",
+    "A person who knows the rest of the app can predict where things are: the audit records a walk-through with somebody who has used Photonz but not this, and what surprised them",
+    "It says plainly what it is NOT doing, so the build tasks know their edges",
+    "A decision card is opened for the user on anything the design cannot settle on its own",
+    "Audit under queue/audits/ with the reconciled pages and the panel budget, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T15:16:17.260Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-18T15:16:34.713Z",
+      "note": "seq 3010 -> 0.5"
+    }
+  ]
+}

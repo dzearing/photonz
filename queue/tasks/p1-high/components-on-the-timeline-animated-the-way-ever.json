@@ -1,0 +1,43 @@
+{
+  "id": "components-on-the-timeline-animated-the-way-ever",
+  "title": "Components on the timeline, animated the way everything else is",
+  "goal": "The thing that would make this better than other video editors is that what you draw and what you edit are the same document. A component you built, an icon you drew, a title you styled: put any of them on the timeline, give it a start and an end, and animate it with the same moves you animate anything else with.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T15:15:43.070Z",
+  "updated": "2026-09-18T15:15:43.167Z",
+  "deps": [
+    "a-document-can-have-time",
+    "transitions-at-a-cut-and-effects-you-can-control"
+  ],
+  "blockedBy": [],
+  "notes": "This is the task that makes the product argument. Everything before it is table stakes that other editors already have; this is the part they cannot do, because their drawing tools and their timelines are different applications.\n\nIt is also the acid test named in the modes work (work-out-whether-the-app-needs-project-types-at) and by the user directly: \"You can create a component, and then show that on a video timeline\" and \"you can make an icon and use it in your component\". Read that task, and if it has landed, this should mostly be proving the chain works rather than building it.\n\nBuild on docs/design/mocks/pages/video-compositing.html and video-motion.html. The compositing page states the rule: \"Compositing is just layers with a rule for how they combine. The stack is the timeline: a track composites over the tracks below it, and every rule (key, matte, blend) is a property of the selected layer.\"\n\nThe animation model is settled and must not be re-litigated here; see the shared context. If animating a placed component needs something the model cannot express, that is a finding about the model and belongs in a task of its own.\n\n---\nSHARED CONTEXT for the video set (the user made video the priority on 2026-09-18).\n\nTheir words: \"I am shifting priority to video. I want to make sure you are looking at our video usage clickthroughs. These are NOT specs, they are ideas on which we are building on. We are building something better than any other video editor out there. We need a robust set of ways to build video, separate audio, introduce audio, auto caption, slice things, transition and control the effects, interweave components and animate them using animation patterns, etc.\"\n\nTHE CLICKTHROUGHS ARE IDEAS, NOT SPECS. Read them, build ON them, and say in the audit where you went further or differently and why. Fifteen pages exist under docs/design/mocks/pages: video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed, and comp-video. Do not start a page from scratch that already exists there.\n\nTHE THESIS THEY ALL SHARE, and it should govern every task in this set. Every page says the same thing in its own words:\n- \"A recording opens the same document with a time dimension, so the transport bar and the timeline dock appear.\" (video)\n- \"Audio rides the same time axis as the picture, so a mixer is not a separate app.\" (video-audio)\n- \"Captions are not a mode that replaces the app. They are what the Title / Text tool does when the document has time.\" (video-captions)\n- \"Compositing is just layers with a rule for how they combine. The stack is the timeline.\" (video-compositing)\n- \"Motion is not a separate mode... the same window, on a document that has time... each animated layer gets a lane.\" (video-motion)\n- \"A title is a text layer that happens to live in a document with time, so it gets an in and an out.\" (video-title-wt)\n- \"A transition is not a filter on a clip. It is a relationship between two clips at a cut.\" (video-transitions)\n- \"Retiming is a property of the selected clip, so nothing new appears in the chrome.\" (video-speed)\n- \"A freeze is not a special object: it is a clip whose in and out are the same frame.\" (video-freeze-wt)\n- \"a key is a value recorded at a moment. There is no keyframe window and no animate mode.\" (video-move-wt)\nSo: VIDEO IS NOT A MODE. It is the layer document with time. Anything built as a separate editor, a separate window or a separate model contradicts every page and should not be built that way.\n\nWHAT EXISTS TODAY, and it is the opposite of the thesis, which is why the foundation task comes first. Video is a SEPARATE editor: Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift, one clip at a time, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState rather than a reusable model. PhotonzMedia carries VideoExporter and VideoAssetCommit. PhotonzCore has NO notion of time, duration, tracks or keyframes at all. So none of this is \"extend the video editor\"; it is \"give the document time and let the video editor retire into it\".\n\nThis also settles a question already raised elsewhere: the modes work (work-out-whether-the-app-needs-project-types-at) has as its acid test a component drawn in one mode and placed on a video timeline, and the user said \"You can create a component, and then show that on a video timeline\" and \"you can make an icon and use it in your component\". That is only possible if video lives in the layer document. The mocks and the modes direction agree; today's code does not.\n\nAnd the animation model is already settled by the user, on 2026-09-15: motion is a property of a layer, opening into a timing surface with a lane per moving part. There is NO canned list of named motions. Easing is real curves including a custom one. Two parts of one thing must be able to move out of phase. Whatever time model this set builds must serve that, because an icon animating and a clip moving are the same machinery.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/video.md is the source of truth, written by the foundation task.",
+  "acceptance": [
+    "A component can be placed on the timeline, keeps its link to its original, and updating the original updates it there",
+    "An icon drawn in the app can be placed the same way, which is the chain the user asked for: icon into component into timeline, with nothing exported or converted along the way",
+    "Anything placed gets a start and an end like any other clip, and can be cut, moved and retimed with the same gestures",
+    "It animates with the same machinery as everything else: a value recorded at a moment, a lane per moving part, real easing including a custom curve, and no list of canned motions",
+    "Two parts of one placed thing can move out of phase, which is the test the animation model was chosen against",
+    "Layers composite over the tracks below them with the rules the compositing clickthrough describes, and the audit shows at least a key or a matte working",
+    "It exports correctly: what plays is what leaves, checked by comparing frames rather than assumed",
+    "Audit under queue/audits/ with the whole chain captured end to end, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T15:15:43.072Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-18T15:15:43.161Z",
+      "note": "seq 320 -> 6"
+    },
+    {
+      "t": "2026-09-18T15:15:43.167Z",
+      "note": "deps set: the document gets time first"
+    }
+  ]
+}
