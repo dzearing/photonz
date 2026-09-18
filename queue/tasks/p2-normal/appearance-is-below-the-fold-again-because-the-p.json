@@ -4,12 +4,12 @@
   "goal": "With a piece of text picked in a three layer document, the right hand panel asks for more height than the tallest window this display can give it, and the section that lost the argument is Appearance: its last stretch now sits below the bottom of the panel where it used to be on screen. You asked on 2026-09-07 that Appearance and Effects are the two sections nobody should ever have to scroll to, and shipped work has quietly walked that back. Decide how the panel keeps that promise when what it wants does not fit, and make it keep it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 80,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-17T23:08:25.393Z",
+  "updated": "2026-09-18T12:09:34.448Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -69,6 +69,22 @@
     {
       "t": "2026-09-17T23:08:25.392Z",
       "note": "Folded in from the UX-PATTERNS scrub (two-rules-in-ux-patterns-get-scrubbed-a-callout, 2026-09-17). The shared patterns document has no rule for what a panel column owes when its sections want more height than the window can give: which sections it may push below the fold, what it owes the one it pushes, and what a new section has to prove before it may join the column. Section 3's height rule stops at 'when it still does not fit, the dock scrolls and nothing is thrown away', which says what must not happen and not who loses. The answer to the card on this task settles it, so the rule is written by whoever does this task, not before. Cases to cite when writing it: this task, the Sections row added on 2026-09-17 partly to manage the same crowding, and Motion moving under Effects (queue/audits/2026-09-16-motion-under-effects.json), which is one more section in the same column."
+    },
+    {
+      "t": "2026-09-18T11:12:22.515Z",
+      "note": "More evidence from separate-into-layers work on 2026-09-18, and it adds a case the other seven fixes did not cover: after Separate into Layers on Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png the document holds 24 layers, and the Layers list shows FIVE rows. Reaching the two cards at the bottom of the tree takes two scrolls in a playtest (Scripts/playtest/separate-boxes-walk.json now does exactly that). The twist: in that same window the sections under it are EMPTY - Effects says 'Nothing yet. Add one with the plus above.' and Motion says 'Nothing moves yet.' - and roughly the bottom third of the dock is blank. So this is not only over-subscription; a section with nothing in it is still holding height the list could have had. Picture: queue/audits/2026-09-18-separate-2-layers-list.png."
+    },
+    {
+      "t": "2026-09-18T12:08:13.828Z",
+      "note": "Design review 2026-09-18, folded in with an ACCEPTANCE ADDITION (there is no queue.mjs command to edit acceptance, so treat this line as one): a section the panel has squeezed must say it has been squeezed, and today only one of them does. queue/audits/2026-09-17-shelf-stays-put.json: 'The Library is the only self-bounding section in the panel that fades its cut edge. The layers list bounds itself the same way and still ends on a clean cut, so a squeezed layers list reads as the whole document.' queue/audits/2026-09-18-separate-into-layers.json then shows the cost of that in the focus feature: after Separate into Layers the document holds 24 layers and the list shows FIVE rows, on a clean cut, so the list reads as the whole document when it is a fifth of it. So the rule this task writes into UX-PATTERNS section 3 has to answer 'what it owes the one it pushes' for a section cut short as well as for one pushed below the fold, and whatever it settles has to apply to the layers list, not only to the Library shelf."
+    },
+    {
+      "t": "2026-09-18T12:08:25.774Z",
+      "note": "seq 50 -> 70"
+    },
+    {
+      "t": "2026-09-18T12:09:34.447Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "started": "2026-09-16T16:42:58.097Z"

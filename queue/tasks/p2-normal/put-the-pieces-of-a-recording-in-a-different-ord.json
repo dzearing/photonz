@@ -4,12 +4,12 @@
   "goal": "You can cut a recording into pieces and throw one away, and that is where it stops: the pieces play in the order they were recorded and there is no way to change it. Showing the result before the setup, or moving a good take in front of a bad one, means recording again. The epic this belongs to is called cutting and arranging, and only the cutting half exists. Let somebody pick up a piece on the strip and drop it somewhere else in the order.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 120,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:38.608Z",
-  "updated": "2026-09-17T12:13:56.937Z",
+  "updated": "2026-09-18T12:09:34.635Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective gap rather than a bug. The video-cutting epic is titled \"Cutting and arranging: blade, trim, and place clips with confidence\" and it has had exactly two tasks since the user answered \"Start video now\" on 2026-09-15: cutting into pieces, and keeping the pieces visible while trimming. Arranging is not built anywhere. Sources/PhotonzCore/VideoCuts.swift holds VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), and no way to move a piece; the pieces array is in play order and timeline time is derived from it, so a move is a reorder of that array and everything downstream already reads through it. Sources/Photonz/TrimTimeline.swift draws the blocks. Filed with a card because dragging a piece to a new place is a new gesture on the strip that the user has not asked for by name, and the card also asks whether this is where video should go next at all.",
@@ -39,6 +39,14 @@
     {
       "t": "2026-09-17T12:13:56.936Z",
       "note": "seq 120 -> 110"
+    },
+    {
+      "t": "2026-09-18T12:08:25.959Z",
+      "note": "seq 110 -> 110"
+    },
+    {
+      "t": "2026-09-18T12:09:34.634Z",
+      "note": "seq 110 -> 120"
     }
   ]
 }

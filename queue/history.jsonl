@@ -5340,3 +5340,54 @@
 {"t":"2026-09-18T09:55:17.778Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
 {"t":"2026-09-18T09:55:17.829Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
 {"t":"2026-09-18T09:57:35.370Z","ev":"task_done","id":"a-walk-whose-app-died-says-the-app-died","from":"in_progress","note":"A walk whose app died now says CRASHED with the frames macOS wrote down, ending at what was being done, and ends in ~9s instead of sitting out the 180s timeout. Scripts/crash-report.mjs reads the .ips (matched on the crash time inside it, never the file's mtime, which macOS rewrites); playtest.sh watches the probe process (new exit 4) and a real timeout now says 'ran out of time after 180s, with the app still running'; playtest-all counts crashes apart ('1 passed, 0 failed, 1 crashed') and sweep-parse/record/notes carry them to the standing task and the loop's note. Verified on the real crash: probe rebuilt with the rename fix reverted, unique-layer-names-walk printed 'CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)' in 8.7s where it used to print 'no done.json' at 186s; restored, both walks green. 8285 Swift tests pass; drills Scripts/crash-report-drill.mjs and queue/bin/sweep-parse-drill.mjs pass. Audit: queue/audits/2026-09-18-walk-crash-reporting.json"}
+{"t":"2026-09-18T10:49:05.308Z","ev":"sweep_pass","walks":249,"passed":245,"failed":4,"seconds":3064,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":526}
+{"t":"2026-09-18T10:49:05.437Z","ev":"task_started","id":"a-separated-screenshot-hands-back-the-pieces-the","title":"A separated screenshot hands back the pieces the walks were written for","priority":"p2-normal"}
+{"t":"2026-09-18T11:12:22.517Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-18T11:12:38.766Z","ev":"task_note","id":"a-separated-screenshot-hands-back-the-pieces-the"}
+{"t":"2026-09-18T11:12:44.754Z","ev":"task_note","id":"a-separated-screenshot-hands-back-the-pieces-the"}
+{"t":"2026-09-18T11:12:44.801Z","ev":"task_note","id":"a-separated-screenshot-hands-back-the-pieces-the"}
+{"t":"2026-09-18T11:12:44.848Z","ev":"task_note","id":"a-separated-screenshot-hands-back-the-pieces-the"}
+{"t":"2026-09-18T11:12:53.081Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-18T11:13:09.725Z","ev":"task_done","id":"a-separated-screenshot-hands-back-the-pieces-the","from":"in_progress","note":"Settled: the separation changed on purpose (18bbecfb and eb326b78, both 2026-09-16, box detection widened) and the four walks still claimed the old numbers. Nothing is cutting too finely. Attribution measured in worktrees at four commits, not read off the diff. All four walks pass (Scripts/playtest-all.sh separate: 4 passed, 0 failed, 5 could not run on the locked screen). Counts pinned by Tests/PhotonzRenderTests/SeparateFixturePieceCountTests.swift. Pinning them first needed a real fix: BoxSweep settled ties by hash order, so the same picture gave 355/357/359 pieces left across three processes; ties now go to the lowest region number (BoxSweep.mostVoted, tests in BoxSweepTieBreakTests). Full suite green, 8293 tests. Audit at queue/audits/2026-09-18-separate-into-layers.json with two real window captures. Commit 2e6008d8, pushed. Sweep requested because box detection is shared with read-text and measure."}
+{"t":"2026-09-18T12:05:03.474Z","ev":"sweep_pass","walks":249,"passed":249,"failed":0,"seconds":3094,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":526}
+{"t":"2026-09-18T12:07:57.016Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-18T12:07:57.063Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-18T12:08:03.085Z","ev":"task_created","id":"a-clean-sweep-leaves-the-standing-task-saying-wh","priority":"p2-normal","title":"A clean sweep leaves the standing task saying what the last broken one said"}
+{"t":"2026-09-18T12:08:10.134Z","ev":"task_created","id":"a-separated-switch-says-what-it-is-instead-of-bo","priority":"p2-normal","title":"A separated switch says what it is, instead of Box 7"}
+{"t":"2026-09-18T12:08:13.830Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-18T12:08:25.353Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":20,"to":10}
+{"t":"2026-09-18T12:08:25.401Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":30,"to":20}
+{"t":"2026-09-18T12:08:25.448Z","ev":"task_resequenced","id":"work-out-whether-the-app-needs-project-types-at","from":40,"to":30}
+{"t":"2026-09-18T12:08:25.496Z","ev":"task_resequenced","id":"a-clean-sweep-leaves-the-standing-task-saying-wh","from":5,"to":10}
+{"t":"2026-09-18T12:08:25.543Z","ev":"task_resequenced","id":"a-separated-switch-says-what-it-is-instead-of-bo","from":15,"to":20}
+{"t":"2026-09-18T12:08:25.589Z","ev":"task_resequenced","id":"a-walk-shows-only-the-pictures-it-took-this-time","from":3010,"to":30}
+{"t":"2026-09-18T12:08:25.636Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":30,"to":40}
+{"t":"2026-09-18T12:08:25.682Z","ev":"task_resequenced","id":"the-row-of-icon-previews-stays-up-when-you-pick","from":30,"to":50}
+{"t":"2026-09-18T12:08:25.729Z","ev":"task_resequenced","id":"points-on-a-path-can-be-swept-up-with-a-box","from":40,"to":60}
+{"t":"2026-09-18T12:08:25.776Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":50,"to":70}
+{"t":"2026-09-18T12:08:25.821Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":60,"to":80}
+{"t":"2026-09-18T12:08:25.869Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":80,"to":90}
+{"t":"2026-09-18T12:08:25.914Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":90,"to":100}
+{"t":"2026-09-18T12:08:25.961Z","ev":"task_resequenced","id":"put-the-pieces-of-a-recording-in-a-different-ord","from":110,"to":110}
+{"t":"2026-09-18T12:08:26.008Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":130,"to":120}
+{"t":"2026-09-18T12:08:26.055Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":140,"to":130}
+{"t":"2026-09-18T12:08:26.101Z","ev":"task_resequenced","id":"an-icon-frame-s-guides-stop-looking-like-a-secon","from":1340,"to":10}
+{"t":"2026-09-18T12:08:26.150Z","ev":"task_resequenced","id":"a-turning-layer-says-where-its-pivot-is-twice","from":1350,"to":20}
+{"t":"2026-09-18T12:08:26.196Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":1360,"to":30}
+{"t":"2026-09-18T12:08:26.243Z","ev":"task_resequenced","id":"a-screenshot-separated-before-today-only-has-to","from":1370,"to":40}
+{"t":"2026-09-18T12:08:26.288Z","ev":"task_note","id":"a-walk-shows-only-the-pictures-it-took-this-time"}
+{"t":"2026-09-18T12:08:55.522Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-18T12:08:58.765Z","ev":"triage","summary":"20 open after (3 p1, 13 p2, 4 p3), 18 before. Merged 0 (no duplicates found across five searches). Filed 2: a-clean-sweep-leaves-the-standing-task-saying-wh (reproduced: a sweep with no failures never writes back, so the standing task still named four walks the 12:05Z sweep passed) and a-separated-switch-says-what-it-is-instead-of-bo (focus-feature review). Folded 3 findings into existing tasks: the cut-edge rule into appearance-is-below-the-fold, the walk scroll brittleness into the standing sweep task, the ten-partial-sweeps cost into the locked-Mac card task. Reset 0, guard clean, no leftovers, no in_progress strays. Moved a-walk-shows-only-the-pictures-it-took-this-time from last in p2 to third. Resequenced all three priorities to steps of 10. Every open task carries an epic staged now, a plain goal and an acceptance list; nothing needed backfilling."}
+{"t":"2026-09-18T12:09:15.451Z","ev":"task_created","id":"the-sweep-s-size-is-the-size-it-really-is-in-the","priority":"p2-normal","title":"The sweep's size is the size it really is, in the docs and in its own time limit"}
+{"t":"2026-09-18T12:09:34.262Z","ev":"task_resequenced","id":"the-sweep-s-size-is-the-size-it-really-is-in-the","from":35,"to":40}
+{"t":"2026-09-18T12:09:34.308Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":40,"to":50}
+{"t":"2026-09-18T12:09:34.355Z","ev":"task_resequenced","id":"the-row-of-icon-previews-stays-up-when-you-pick","from":50,"to":60}
+{"t":"2026-09-18T12:09:34.402Z","ev":"task_resequenced","id":"points-on-a-path-can-be-swept-up-with-a-box","from":60,"to":70}
+{"t":"2026-09-18T12:09:34.449Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":70,"to":80}
+{"t":"2026-09-18T12:09:34.496Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":80,"to":90}
+{"t":"2026-09-18T12:09:34.543Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":90,"to":100}
+{"t":"2026-09-18T12:09:34.590Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":100,"to":110}
+{"t":"2026-09-18T12:09:34.636Z","ev":"task_resequenced","id":"put-the-pieces-of-a-recording-in-a-different-ord","from":110,"to":120}
+{"t":"2026-09-18T12:09:34.683Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":120,"to":130}
+{"t":"2026-09-18T12:09:34.729Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":130,"to":140}
+{"t":"2026-09-18T12:10:10.628Z","ev":"digest","file":"2026-09-18.md"}

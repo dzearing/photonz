@@ -1,0 +1,36 @@
+{
+  "id": "a-separated-switch-says-what-it-is-instead-of-bo",
+  "title": "A separated switch says what it is, instead of Box 7",
+  "goal": "Take a settings pane apart and the words on it come back as layers wearing those words, which is what makes the list searchable. Everything that is not words comes back as Box 1 through Box 10, in one flat run: a card, a button, a switch and a text field all get the same name and a number. Somebody redlining that pane wants the switch next to Launch at login, and the only way to find it is to click boxes until the right one lights up. The pieces that are not text should be as findable as the pieces that are.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T12:08:10.130Z",
+  "updated": "2026-09-18T12:08:25.542Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the focus-feature review in the 2026-09-18 digest, on queue/audits/2026-09-18-separate-into-layers.json. That audit's own evaluate list asks it twice: 'The switches and fields are called Box 5 to Box 10. Is a numbered box findable, when the runs of text next to them wear the words they say?' and 'The pill says 10 boxes, but looking at this pane you would probably count four'.\n\nThe runner who shipped the separation left this in the task log rather than filing it, calling it a naming question for the user. Filing it because the harm is not a matter of taste: the app already knows how to name a piece after words (it does it for every text run), and it declines to use that for the pieces sitting inside and beside those words, so half the list is unsearchable. If the shape of the answer turns out to need the user (for example whether a card should be called Card rather than Box), open a card for that specific choice rather than for the whole task.",
+  "acceptance": [
+    "On Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, separating the Background row gives a Layers list in which the switch beside a labelled row can be found from the list alone, without clicking pieces on the canvas to find out which is which",
+    "A piece that is not text takes its name from something a person can see: the words it sits beside or contains, or what it plainly is, with a numbered fallback only where nothing is available",
+    "The names are stable: separating the same picture twice gives the same names in the same order",
+    "The pill's count is explained by what the list shows, so somebody who counts four things on the pane and reads ten is not left guessing which six they missed",
+    "Searching the find field for a word on the pane reaches the piece beside it, not only the run of text itself",
+    "The four separate-* walks still pass, and one of them checks a name rather than only a count",
+    "Try it: Photonz Dev, release Next, next-separate-into-layers and next-layer-groups on. Open the fixture above, pick Background, run Separate into Layers, then find the Launch at login switch in the list",
+    "Audit under queue/audits/, and anything rough filed as a follow-up if it clears the bar or logged here if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T12:08:10.132Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-09-18T12:08:25.541Z",
+      "note": "seq 15 -> 20"
+    }
+  ]
+}

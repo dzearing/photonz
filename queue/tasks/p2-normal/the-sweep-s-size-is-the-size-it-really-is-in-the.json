@@ -1,0 +1,33 @@
+{
+  "id": "the-sweep-s-size-is-the-size-it-really-is-in-the",
+  "title": "The sweep's size is the size it really is, in the docs and in its own time limit",
+  "goal": "Four places tell whoever is working here that the full walk sweep is 322 walks and about 52 minutes. There are 526 walks and the last measured run puts a full one nearer a hundred minutes. That number is not decoration: it is the whole reason a task runner is forbidden to start a sweep, and it is what the sweep's own two hour stop was set against back when a sweep was under an hour. Put the real size in the places that quote it, and check the stop still has room, because the first full sweep after the screen is unlocked is the one that finds out.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-18T12:09:15.447Z",
+  "updated": "2026-09-18T12:09:34.261Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the 2026-09-18 digest's rule scrub.\n\nCommand:\n  /bin/ls Scripts/playtest/*.json | wc -l\n  grep -n 322 CLAUDE.md queue/README.md queue/sweep/README.md queue/bin/sweep.sh\n\nOutput:\n  526\n  CLAUDE.md:38: 'it is 322 walks and about 52 minutes'\n  queue/bin/sweep.sh:5: 'are 322 of them and the last measured run did 247 in 40m 21s'\n  queue/bin/sweep.sh:182: 'would leave 322 walks timing out one after'\n  queue/sweep/README.md:4: '322 of them, about 52 minutes'\n  queue/README.md:25: 'all 322 scripted walks, about 52 minutes'\n\nThe cap arithmetic, from queue/sweep/latest.json (began 11:13:29Z, ended 12:05:03Z, 3094s): 249 walks ran in full and 277 were refused in about a second each, so a real walk costs about 11.3s. A full 526 at that rate is about 99 minutes against a cap of 120 (PHOTONZ_SWEEP_MAX_MINUTES in queue/bin/sweep.sh), which is roughly 17 per cent of headroom. The walks that only run unlocked are the ones that drive menus and named controls, so there is no reason to assume they are the fast ones. Nothing is broken today because every sweep since 2026-09-14 has been a partial; the first full one is where it would show.",
+  "acceptance": [
+    "CLAUDE.md, queue/README.md, queue/sweep/README.md and the comments at the top of queue/bin/sweep.sh all say how many walks there are and how long a full sweep takes, and all four agree with each other",
+    "The number they quote is derived from something, not typed in: say where it came from, so the next hundred walks do not make them wrong again in silence",
+    "The time limit in sweep.sh is checked against a full run at the measured per-walk cost, and either it is shown to have real room or it is raised, with the arithmetic written next to it",
+    "A sweep that does hit the limit is still unmistakable in what it records: a truncated run must not be readable as a set of failures",
+    "Nothing about how the sweep runs changes beyond the limit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T12:09:15.449Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-09-18T12:09:34.260Z",
+      "note": "seq 35 -> 40"
+    }
+  ]
+}

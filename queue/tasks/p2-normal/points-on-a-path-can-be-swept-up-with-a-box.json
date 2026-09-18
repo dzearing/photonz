@@ -4,12 +4,12 @@
   "goal": "Reshaping a drawn shape means picking its points, and today the only way to pick more than one is to hold Shift and click each one. An icon of any real detail has thirty or forty points, so moving one side of it is thirty clicks, and one miss starts over. Drag a box across the points you want and take them all at once, the way every other drawing tool does.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:30.913Z",
-  "updated": "2026-09-18T08:30:35.557Z",
+  "updated": "2026-09-18T12:09:34.401Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the Known rough edges list in docs/design/vector-paths.md: 'Points cannot be swept up with a marquee, only gathered with SHIFT click. On a shape with thirty points that is thirty clicks.'\n\nNo card, on purpose: this is not a new control or a new mark on screen, it is the absence of a gesture every vector tool has had for thirty years, and the user asked for the Pen on 2026-09-13 specifically to build elaborate SVG icons, which is the case where thirty clicks bites. If the runner finds it cannot be done without adding something visible, open a card then.\n\nOne thing to settle while doing it, from the same rough list: 'A path cannot be scaled by dragging any more once its points show.' A sweep starting on empty space is the gesture that would otherwise be free for a scale handle, so say in the audit which one that space belongs to.\n\nReshaping chrome and hit testing: Sources/Photonz around the path reshape tool; docs/design/vector-paths.md section 'Reshaping one' (line 474) is the spec.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-18T08:30:35.556Z",
       "note": "seq 3010 -> 40"
+    },
+    {
+      "t": "2026-09-18T12:08:25.727Z",
+      "note": "seq 40 -> 60"
+    },
+    {
+      "t": "2026-09-18T12:09:34.400Z",
+      "note": "seq 60 -> 70"
     }
   ]
 }

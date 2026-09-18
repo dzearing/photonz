@@ -4,12 +4,12 @@
   "goal": "The question was whether the app should know what kind of thing you are making. The user's answer is that a document should not be locked into a kind: you should be able to swap between modes freely, where a mode is a preset of which panes and tool groups are showing, and you can always turn a hidden thing back on by hand and get back to what you had a second ago. Prototype that in the mocks and see whether it holds up. The thing being prototyped is one app that does four jobs, not four apps sharing a window: work made in one mode has to flow into another, so a component you drew can be put on a video timeline without leaving anything or converting anything.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 40,
+  "seq": 30,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-17T12:13:56.433Z",
+  "updated": "2026-09-18T12:08:25.447Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -131,6 +131,10 @@
     {
       "t": "2026-09-17T12:13:56.432Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-18T12:08:25.446Z",
+      "note": "seq 40 -> 30"
     }
   ],
   "started": "2026-09-15T17:02:48.204Z"

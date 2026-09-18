@@ -4,12 +4,12 @@
   "goal": "While you are drawing with the Pen, every point you have placed is the same round dot, so you cannot tell a hard corner from a bend from a point that curves on one side only. You can tell them apart the moment you stop drawing and start reshaping, because the reshaping chrome draws all three differently. Draw them the same way as you place them, so you can see the shape you are making while you are making it.",
   "epic": "icon-vector",
   "priority": "p3-low",
-  "seq": 1360,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:35.604Z",
-  "updated": "2026-09-18T08:30:42.340Z",
+  "updated": "2026-09-18T12:08:26.195Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From docs/design/vector-paths.md, Known rough edges: 'The Pen draws every anchor it has placed as the same round dot, so while you are drawing you cannot see which points are corners, bends, or curved on one side. The reshaping chrome tells all three apart.'\n\nNo card: this is not a new idiom, it is the Pen borrowing the vocabulary the reshaping chrome already ships and the user has already seen. p3 because nothing is broken and nothing is lost, it is only harder to read than it needs to be.\n\nRelated rough edge from the same list, worth mentioning in the audit rather than fixing here: 'The Pen still needs Option to place a half-smooth anchor as it draws, and its own chip does not mention it', so the two tools answer the same question differently. Once the points look different the chip has something to point at.\n\nSpec: docs/design/vector-paths.md section 'The Pen' (line 307) and 'Reshaping one' (line 474).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-18T08:30:42.339Z",
       "note": "seq 1360 -> 1360"
+    },
+    {
+      "t": "2026-09-18T12:08:26.194Z",
+      "note": "seq 1360 -> 30"
     }
   ]
 }

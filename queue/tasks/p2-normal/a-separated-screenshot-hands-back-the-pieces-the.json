@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:16.554Z",
-  "updated": "2026-09-18T08:30:18.767Z",
+  "updated": "2026-09-18T11:13:09.724Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED here at 2026-09-18 01:26 local on HEAD 33132430:\n\n  $ Scripts/playtest-all.sh --no-build separate-boxes\n  separate-boxes-walk   6s  FAILED  step 16 (expect): no row called \"Box 2\" is in the panel;\n                            the ones that are: Text 1, Box 4, Text 9, Fill, Box 3, Library\n  ==> 0 passed, 1 failed\n\nThe other three fail the same way in every sweep log from 2026-09-17-123336 onwards, which is as far back as queue/sweep/ goes:\n  separate-hierarchy-walk        step 13 (expect): no row called \"Box 2\"\n  separate-shadow-walk           step 15 (expect): no row called \"Box 2\"\n  separate-whole-screenshot-walk step 16 (expectLayers): 173 layers in the document, more than the 151 claimed\n\nAll four are lock safe and run in 5-7 seconds, so they are nothing to do with the locked screen and should not have been sitting behind the lock card inside walks-that-fail-in-the-full-sweep. Pulled out here so they can be claimed.\n\nTwo leads, and the first one is cheap to check: `expect row` only sees rows that are IN VIEW, which the separated-rows audit on 2026-09-17 already tripped over. separate-boxes-walk's own note says 'the list is long enough now that reaching the first card means scrolling to it', so Box 1 and Box 2 may simply have scrolled off and the walk needs a scrollPanel before the expect. That would make three of the four a stale-walk fix. It does NOT explain separate-whole-screenshot, which counts layers in the document and not rows on screen: 173 against 151 is 22 more pieces than the walk was written against, and that one is the question worth answering first.\n\nFixture: Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png. Walks: Scripts/playtest/separate-{boxes,hierarchy,shadow,whole-screenshot}-walk.json. Spec: docs/design/separate-into-layers.md. Cross-linked from walks-that-fail-in-the-full-sweep.",
@@ -33,6 +33,30 @@
     {
       "t": "2026-09-18T08:30:18.766Z",
       "note": "owns these walks: separate-boxes-walk, separate-hierarchy-walk, separate-shadow-walk, separate-whole-screenshot-walk"
+    },
+    {
+      "t": "2026-09-18T10:49:05.435Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T11:12:38.764Z",
+      "note": "ANSWER: the separation changed, on purpose, and the four checks were never updated. Two commits did it, both 2026-09-16, both intended. 18bbecfb 'A row inside a card comes out as its own layer' took settings-pane-2x.png from 2 boxes to 10, because the switches and fields sitting on the cards now come out as their own layers inside the card. eb326b78 'Separate finds the boxes in a dark window, not just on a flat light page' took dense-page-1x.png from 0 boxes to 30, which is the whole of SeparateBudget.maxBoxes, and that is the 22 extra pieces: 1 background + 142 runs + 30 boxes = 173 against the walk's claimed ceiling of 151. The 151 was maxTextRuns + 1 and never counted boxes at all, so it was a ceiling the budget itself did not promise. Attribution measured, not read: a worktree at 242ab73a (where the walks were written), then at 18bbecfb, eb326b78 and a14cec9c, running the same count each time. Nothing is cutting too finely: the pieces are right and better than they were."
+    },
+    {
+      "t": "2026-09-18T11:12:44.752Z",
+      "note": "Found and fixed a real defect underneath, which is why the pin was possible at all: BoxSweep settled a tie between two paints by taking whichever a [Int32: Int] dictionary walk reached first. Swift reseeds hashing every process, so the same fixture separated in two different runs handed back a different count of what was left in the picture - 355, 357 and 359 across three runs of Scripts/test.sh --filter SeparateFixturePieceCount on identical bytes, and that number is printed to the person in the notice pill. Ties now go to the LOWEST region number, which is the one found first as the picture is read across and down: BoxSweep.mostVoted plus a second sort key in backgroundRegions. Tests first: Tests/PhotonzCoreTests/BoxSweepTieBreakTests.swift, which failed on the old code (two tied paints came back [2, 1] in one test and [1, 2] in its mirror image). Four runs of the pinning suite in four processes now agree."
+    },
+    {
+      "t": "2026-09-18T11:12:44.799Z",
+      "note": "Adversarial review of the built thing, on the real app (probe, screen locked, Screen Recording granted so the pictures are real): left rough, and not filed. (1) The pill says '9 runs of text and 10 boxes' where a person looking at the settings pane would count four boxes - two cards and two buttons. The other six are switches and text fields, which nobody calls a box. That is a naming question for the user rather than a bug, so it is in the audit's evaluate list instead of a task. (2) The switches come back as Box 5 to Box 10, unfindable by name, while the runs of text beside them wear the words they say. Same card: it is the same naming question. (3) The walks now scroll the layers list in two hops with hand-tuned distances (-150 then -110 points), which will need retuning if the dock or the row height changes; a scrollPanel that could scroll TO a named row would not have this problem. Did not clear the bar: nobody but a walk author sees it."
+    },
+    {
+      "t": "2026-09-18T11:12:44.846Z",
+      "note": "Folded into appearance-is-below-the-fold-again-because-the-p rather than filed as a near-twin: after this separation the Layers list shows five rows out of 24 while Effects says 'Nothing yet' and Motion says 'Nothing moves yet', so about the bottom third of the dock is blank. That is the panel height task's problem with a new fact on it - an empty section still holds height the list could have had. Picture at queue/audits/2026-09-18-separate-2-layers-list.png."
+    },
+    {
+      "t": "2026-09-18T11:13:09.722Z",
+      "note": "Settled: the separation changed on purpose (18bbecfb and eb326b78, both 2026-09-16, box detection widened) and the four walks still claimed the old numbers. Nothing is cutting too finely. Attribution measured in worktrees at four commits, not read off the diff. All four walks pass (Scripts/playtest-all.sh separate: 4 passed, 0 failed, 5 could not run on the locked screen). Counts pinned by Tests/PhotonzRenderTests/SeparateFixturePieceCountTests.swift. Pinning them first needed a real fix: BoxSweep settled ties by hash order, so the same picture gave 355/357/359 pieces left across three processes; ties now go to the lowest region number (BoxSweep.mostVoted, tests in BoxSweepTieBreakTests). Full suite green, 8293 tests. Audit at queue/audits/2026-09-18-separate-into-layers.json with two real window captures. Commit 2e6008d8, pushed. Sweep requested because box detection is shared with read-text and measure."
     }
   ],
   "walks": [
@@ -40,5 +64,7 @@
     "separate-hierarchy-walk",
     "separate-shadow-walk",
     "separate-whole-screenshot-walk"
-  ]
+  ],
+  "started": "2026-09-18T10:49:05.434Z",
+  "completed": "2026-09-18T11:13:09.723Z"
 }

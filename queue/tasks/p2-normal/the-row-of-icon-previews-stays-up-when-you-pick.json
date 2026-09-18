@@ -4,12 +4,12 @@
   "goal": "While you are drawing an icon, a row of small previews at the top left of the canvas shows it at the sizes it will really be used. Click an empty part of the canvas, or press Escape, and the whole row vanishes, because it only knows which icon to show from whatever is selected. Deselecting is the ordinary way to stand back and look at what you have drawn, and it is exactly the moment the previews are worth most. Keep them up.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:25.099Z",
-  "updated": "2026-09-18T08:30:30.864Z",
+  "updated": "2026-09-18T12:09:34.354Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Straight from the rough list of queue/audits/2026-09-17-icon-width-row-nothing-picked.json: 'The icon previews strip still vanishes the moment you pick nothing, for the same reason the Width row used to go wrong: it only knows which icon it is showing from what is picked. It was left alone here so this change stayed to one row.'\n\nThe code says the same. Sources/Photonz/EditorState+IconPreviews.swift:\n\n    var iconPreviewFrameID: UUID? {\n        guard iconPreviewsEnabled, let document, let id = selectedLayerID else { return nil }\n        return document.iconFrameID(containing: id)\n    }\n\nNo selectedLayerID, no frame, and iconPreviewTiles returns [] so the strip draws nothing.\n\nThe answer already exists one file away: with-nothing-picked-the-pen-s-width-row-still-sa (done, commit 2c1a4bc4) taught the Width row to fall back to the icon frame UNDER THE POINTER when nothing is picked. Reuse that, do not invent a second rule. That task's audit also records the one flaw worth not repeating: sweep the pointer out of the frame onto bare canvas and the row can read stale, so decide deliberately what the previews show when the pointer is over neither.\n\nDrawing surface: Sources/Photonz/IconPreviewsStrip.swift, Sources/Photonz/IconPreviewsOverlay.swift.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-18T08:30:30.863Z",
       "note": "seq 3010 -> 30"
+    },
+    {
+      "t": "2026-09-18T12:08:25.680Z",
+      "note": "seq 30 -> 50"
+    },
+    {
+      "t": "2026-09-18T12:09:34.353Z",
+      "note": "seq 50 -> 60"
     }
   ]
 }

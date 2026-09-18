@@ -1,0 +1,34 @@
+{
+  "id": "a-clean-sweep-leaves-the-standing-task-saying-wh",
+  "title": "A clean sweep leaves the standing task saying what the last broken one said",
+  "goal": "When the walk sweep finds nothing wrong, it tells nobody. The standing task that the dashboard and every runner read for the state of the walks keeps whatever the last failing sweep wrote, under a heading promising it is rewritten by every sweep. Right now it names four walks as broken that the sweep run fifteen minutes ago watched pass. A sweep that comes back clean should say so in the same place a sweep that comes back broken says so. This serves the loop epic because the sweep is the only whole-app check the loop has, and a result nobody writes down is a result nobody can act on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-18T12:08:03.081Z",
+  "updated": "2026-09-18T12:08:25.495Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced during triage on 2026-09-18.\n\nCommand:\n  node -e 'const r=JSON.parse(require(\"fs\").readFileSync(\"queue/sweep/latest.json\",\"utf8\"));console.log(r.ended, r.passed, JSON.stringify(r.failed));'\n  node queue/bin/sweep-report.mjs queue/sweep/latest.json\n  node -e 'console.log(JSON.parse(require(\"fs\").readFileSync(\"queue/tasks/p2-normal/walks-that-fail-in-the-full-sweep.json\",\"utf8\")).notes.split(\"\\n\")[4])'\n\nOutput:\n  2026-09-18T12:05:03Z 249 []\n  ==> Nothing failing; no task filed.\n  Failing walks (4): separate-boxes-walk, separate-hierarchy-walk, separate-shadow-walk, separate-whole-screenshot-walk\n\nCause, both halves of it:\n  queue/bin/sweep.sh only runs sweep-report.mjs inside `if [[ \"$FAILCOUNT\" != 0 ]]`.\n  queue/bin/sweep-report.mjs then exits early anyway: `if (!result.failed?.length) { console.log('==> Nothing failing; no task filed.'); process.exit(0); }`.\nSo the write-back has no clean-sweep path at all. Both halves need changing, and sweep-notes.mjs mergeNotes has to render an empty failure list.",
+  "acceptance": [
+    "A sweep that finds nothing failing updates the standing task's sweep block with its own numbers and its own date, so the block never names a walk the latest sweep passed",
+    "The walks that stopped failing are named, the way a sweep that still has failures already names them",
+    "A partial sweep under a locked screen that finds nothing failing in the part that ran says exactly that, and does not read as the whole set passing",
+    "The block's own heading stays true: whatever it says was written by the most recent sweep",
+    "A drill covers the clean case the way queue/bin/sweep-notes-drill.mjs already covers the failing one",
+    "The standing task is corrected once by hand as part of this work, so it stops naming the four separate-* walks"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T12:08:03.083Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-09-18T12:08:25.494Z",
+      "note": "seq 5 -> 10"
+    }
+  ]
+}
