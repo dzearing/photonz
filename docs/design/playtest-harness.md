@@ -49,6 +49,47 @@ The wrapper builds and launches the probe with the script, waits for
 renders, and quits the probe. Exit status is 0 only when `done.json` says
 `ok`. `Scripts/probe-app.sh --playtest <script>` does the launch alone.
 
+### Four ways a walk can end, and they are not the same news
+
+| What happened | What it prints | Exit |
+| --- | --- | --- |
+| The walk ran | `done.json`, and the failing step when it failed | 0 / 1 |
+| The APP DIED | `CRASHED` and the frames macOS wrote down, ending at the thing being done | 4 |
+| It ran out of road | `ran out of time after 180s, with the app still running` | 1 |
+| The screen was locked and it needs a name | `COULD NOT RUN` | 3 |
+
+The second row is new on 2026-09-18 and is the reason the rest are spelled out.
+A crashed walk leaves no `done.json`, which for a long time printed the same
+`no done.json` a merely slow walk prints: on the night of 2026-09-17 the app
+aborted on every layer rename, left twenty-one crash reports on disk, and four
+sweeps in a row called it seven walks that took 187 seconds each. Nobody was
+lied to on purpose, but nobody could have told either.
+
+So a run now watches the app itself. The moment the process goes away without a
+`done.json`, the walk ends (about six seconds, not the full 180) and
+`Scripts/crash-report.mjs` reads the `.ips` macOS drops into
+`~/Library/Logs/DiagnosticReports`, printing what killed it and the app's own
+frames, top first:
+
+```
+==> Verdict: CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)
+```
+
+Two things it is careful about. A report is matched on the crash time INSIDE it
+and never on the file's mtime, because macOS rewrites these files when it
+symbolicates them and last night's crash can carry this minute's date. And
+macOS writes one report per crash signature and then skips repeats for a while,
+so when a crash left no report of its own the last recent one is offered with
+that said in the same line: `no report of its own; the crash 77s earlier was
+...`. Read one by hand with
+`node Scripts/crash-report.mjs --file "<report>.ips"`; the drill is
+`node Scripts/crash-report-drill.mjs`.
+
+`Scripts/playtest-all.sh` counts crashes apart from failures
+(`==> 3 passed, 1 failed, 2 crashed`), lists what each died in above the counts,
+and still puts their names in the list under it, so the sweep files them like
+any other broken walk (`queue/bin/sweep-parse.mjs`).
+
 The example walk, `Scripts/playtest/redline-walk.json`, opens the settings
 fixture and walks the whole redline flow: Distance, Size, Gap, Alignment, a
 captioned arrow, Copy as Spec List and Copy Image. Copy it and change the

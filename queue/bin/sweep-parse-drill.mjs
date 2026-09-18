@@ -115,5 +115,51 @@ check('it is not dressed as a lock', r.screenLocked === false && r.partial === f
 s = said(r);
 check('the cut-short wording is unchanged', /DID NOT FINISH \(stopped on the clock\)/.test(s), s);
 
+// ---- 5. a sweep the app died in ---------------------------------------------
+// The one this was rebuilt for. Until 2026-09-18 a walk whose app ABORTED left
+// no done.json and was reported in the same six words a merely slow walk gets,
+// so four sweeps in a row called twenty-one crashes seven slow walks and the
+// crash behind them was found by a person reading a stack trace instead.
+console.log('a sweep the app died in');
+const CRASHED = `==> Building the probe bundle...
+a-box-says-what-it-picks-walk               7s  ok
+unique-layer-names-walk                     9s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)
+pen-draws-a-path-walk                      14s  FAILED  expected the card
+rename-a-layer-walk                         8s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter
+
+==> 2 walk(s) CRASHED: the app was GONE before the walk finished.
+    That is not a walk running slowly. Everything the app was holding went with it,
+    unique-layer-names-walk: EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)
+    rename-a-layer-walk: EXC_CRASH (SIGABRT) in EditorState.document.getter
+    Crash reports: ~/Library/Logs/DiagnosticReports
+==> 1 passed, 1 failed, 2 crashed
+    pen-draws-a-path-walk
+    unique-layer-names-walk
+    rename-a-layer-walk
+==> 4 walks in 0m 38s, 9s each on average; slowest pen-draws-a-path-walk at 14s
+`;
+r = parseSweepLog(CRASHED, { total: 4 });
+r.ended = '2026-09-18T09:00:00Z'; r.seconds = 38;
+check('all four walks are counted', r.walks === 4 && r.passed === 1, r);
+check('a crash is a failure and is filed like one',
+  r.failed.join() === 'pen-draws-a-path-walk,unique-layer-names-walk,rename-a-layer-walk', r.failed);
+check('and it is ALSO carried apart, because the app being gone is not a walk failing',
+  r.crashed.length === 2 && r.crashed[0].name === 'unique-layer-names-walk', r.crashed);
+check('with what it died in', r.crashed[0].why.includes('EditorState.renameLayer(id:to:)'), r.crashed[0]);
+check('the run is complete and not dressed as a lock',
+  r.complete === true && r.screenLocked === false && r.couldNotRun === 0, r);
+s = said(r);
+check('the first sentence says the app died, because that is the only one the loop reads',
+  /The app DIED in 2 of them/.test(sweepSentences(r)[0]), sweepSentences(r)[0]);
+check('and it names the walk and the frame', /unique-layer-names-walk \(EXC_CRASH/.test(sweepSentences(r)[0]), sweepSentences(r)[0]);
+check('a prose line in the crash paragraph is never read as a crashed walk',
+  !r.crashed.some((c) => /went with it/.test(c.name + c.why)), r.crashed);
+
+// A sweep with nothing crashed says nothing about crashes at all.
+r = parseSweepLog(FULL, { total: 3 });
+r.ended = '2026-09-17T18:00:00Z'; r.seconds = 30;
+check('a sweep where nothing crashed does not mention crashes',
+  r.crashed.length === 0 && !/DIED/.test(said(r)), said(r));
+
 console.log(failures ? '\n' + failures + ' FAILED' : '\nall good');
 process.exit(failures ? 1 : 0);

@@ -1,0 +1,28 @@
+{
+  "feature": "A walk whose app died says the app died",
+  "epic": "unmanned-loop",
+  "summary": "When a scripted walk ends because the app crashed, the run now says so and names the frames it died in, instead of printing the same 'no done.json' a merely slow walk prints. It also ends in about nine seconds instead of sitting out the full three minute timeout.",
+  "setup": "A terminal in the repo. Nothing to install, nothing in the app to turn on. The probe bundle is already built; every command below is safe to run while you are using the dev app.",
+  "try": [
+    { "do": "Run: node Scripts/crash-report-drill.mjs", "note": "Every line says ok. This is the reader of macOS crash reports, drilled against the real rename crash of 2026-09-17 night." },
+    { "do": "Run: node Scripts/crash-report.mjs --file \"$(ls -t ~/Library/Logs/DiagnosticReports/Photonz\\ Probe-*.ips | head -1)\"", "note": "The first line is what a sweep would print: EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:). Read < as 'called from'." },
+    { "do": "Run: Scripts/playtest-all.sh --no-build unique-layer-names experiments-groups", "shot": "2026-09-18-walk-crash-reporting-1.png", "note": "Both pass in twelve seconds and nothing mentions a crash, because the app no longer crashes. The picture is the window this walk photographed at step 13." },
+    { "do": "Put the crash back for one run: git stash && git checkout 6bfe4969^ -- Sources/Photonz/EditorState.swift Sources/PhotonzCore/History.swift && Scripts/build-app.sh --probe", "note": "Two minutes of building. This is the only way to see a real crash, since the bug is fixed." },
+    { "do": "Run: Scripts/playtest-all.sh --no-build unique-layer-names experiments-groups", "note": "unique-layer-names-walk now reads CRASHED with the frames, the summary reads '1 passed, 0 failed, 1 crashed', and the whole thing takes nineteen seconds where it used to take 187." },
+    { "do": "Put it back: git checkout HEAD -- Sources/Photonz/EditorState.swift Sources/PhotonzCore/History.swift && Scripts/build-app.sh --probe && git stash pop" },
+    { "do": "Prove a slow walk still reads as slow: PHOTONZ_PLAYTEST_TIMEOUT=1 Scripts/playtest-all.sh --no-build experiments-groups", "note": "It says 'ran out of time after 1s, with the app still running', which is a different sentence from a crash and is meant to stay that way." }
+  ],
+  "evaluate": [
+    "Reading only the walk's one line, can you tell a crash from a slow walk without opening anything else?",
+    "Is the frame list the right length: does 'EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)' tell you where to look, or would one frame have done?",
+    "When macOS skips a repeat crash report, the line says 'no report of its own; the crash 77s earlier was ...'. Is that the right amount of doubt, or should a crash with no report of its own say only that the app died?",
+    "A crash still costs about ten seconds waiting for macOS to write the report. Is that worth it for the frames, or should the walk give up sooner and say less?",
+    "Should a sweep stop dead at the first crash instead of running the other 300 walks against an app that has just proved it can die?"
+  ],
+  "rough": [
+    "macOS writes one crash report per crash signature and then skips repeats: two runs of the same crashing walk 18 seconds apart left one report between them. The second walk says 'no report of its own; the crash 18s earlier was ...' and shows that report's frames, which are the likely shape of the crash rather than proof of it.",
+    "A walk's output folder is never cleared between runs, so a walk that crashed at step 17 still has the pictures an earlier passing run left at steps 25 and 31 sitting beside it. Filed as its own task.",
+    "The standing failing-walks task now carries a crash section naming what each one died in, but that path has only been proved by drill, not by a real sweep that crashed. The next sweep with a crash in it is the first real reading.",
+    "A crash is still counted as a failure for everything downstream, so a sweep with one crash and no other failure exits 1 and files the walk in the usual list. That seems right, but it does mean a crash does not interrupt the sweep in any way."
+  ]
+}

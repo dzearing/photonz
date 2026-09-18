@@ -76,6 +76,21 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
     `Failing walks (${failed.length}): ${list}`,
   ];
 
+  // A crash is in that list like any other failure and means something else
+  // entirely: the app was GONE, so the open document went with it and no walk
+  // after it proves anything. Say which ones and what they died in, above
+  // everything else this block has to say.
+  const crashed = result.crashed || [];
+  if (crashed.length) {
+    lines.push(
+      ``,
+      `The app DIED in ${crashed.length} of those, which is not a walk running slowly. Fix these first:`,
+      ...crashed.map((c) => `  ${c.name}: ${c.why}`),
+      `Crash reports: ~/Library/Logs/DiagnosticReports. Read one with`,
+      `node Scripts/crash-report.mjs --file "<report>.ips".`,
+    );
+  }
+
   // A partial sweep replaces a list that may have come from a whole check. The
   // walks it never ran are not fixed and not failing: they are unread, and
   // dropping them would read as the app having healed overnight. So they are

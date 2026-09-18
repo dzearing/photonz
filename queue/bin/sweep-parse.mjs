@@ -21,9 +21,13 @@
 // Drill: queue/bin/sweep-parse-drill.mjs
 
 // One walk's line out of playtest-all.sh: "name   7s  ok".
-const WALK_LINE = /^([a-z0-9][a-z0-9-]*) +(\d+)s {2}(ok|FAILED|COULD NOT RUN)/;
-// Its summary line, with the third count only there when a lock refused some.
-const COUNTS = /^==> (\d+) passed, (\d+) failed(?:, (\d+) could not run)?$/m;
+const WALK_LINE = /^([a-z0-9][a-z0-9-]*) +(\d+)s {2}(ok|FAILED|CRASHED|COULD NOT RUN)/;
+// Its summary line. The crash count is only there when the app died in one of
+// the walks, and the refused count only when a locked screen turned some away.
+const COUNTS = /^==> (\d+) passed, (\d+) failed(?:, (\d+) crashed)?(?:, (\d+) could not run)?$/m;
+// What the app died of, one line per crashed walk, in the paragraph above the
+// counts: "    unique-layer-names-walk: EXC_CRASH (SIGABRT) in ...".
+const CRASH_WHY = /^ {4}([a-z0-9][a-z0-9-]*): (\S.*)$/;
 // A walk name in the indented list under the summary. Deliberately narrow: the
 // locked run prints prose at the same indent, and a sentence must never be read
 // as the name of a failing walk.
@@ -37,6 +41,23 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
     if (m) seen.push({ name: m[1], verdict: m[3] });
   }
   const counts = text.match(COUNTS);
+  // A walk whose APP DIED. It is a failure and is filed like one, and it is
+  // also the one kind of failure that says nothing after it can be trusted, so
+  // it is carried by name with what it died in. Before 2026-09-18 a crash
+  // printed the same "no done.json" a slow walk prints and four sweeps in a row
+  // read twenty-one crashes as seven slow walks.
+  const crashed = [];
+  for (const l of lines) {
+    const m = l.match(CRASH_WHY);
+    if (m && seen.some((w) => w.name === m[1] && w.verdict === 'CRASHED')) {
+      crashed.push({ name: m[1], why: m[2] });
+    }
+  }
+  for (const w of seen) {
+    if (w.verdict === 'CRASHED' && !crashed.some((c) => c.name === w.name)) {
+      crashed.push({ name: w.name, why: 'the app quit part way through' });
+    }
+  }
   const failed = [];
   if (counts) {
     // playtest-all lists each failing walk on its own indented line right after
@@ -51,13 +72,14 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
     // No summary line, so the run was stopped part way. Read the per-walk lines
     // it did print: "it got to walk 58 and these two failed" is worth far more
     // than a row of zeroes.
-    for (const w of seen) if (w.verdict === 'FAILED') failed.push(w.name);
+    for (const w of seen) if (w.verdict === 'FAILED' || w.verdict === 'CRASHED') failed.push(w.name);
   }
-  const couldNotRun = counts && counts[3] !== undefined
-    ? Number(counts[3])
+  const couldNotRun = counts && counts[4] !== undefined
+    ? Number(counts[4])
     : seen.filter((w) => w.verdict === 'COULD NOT RUN').length;
+  const crashedCount = counts && counts[3] !== undefined ? Number(counts[3]) : crashed.length;
   const ran = counts
-    ? Number(counts[1]) + Number(counts[2])
+    ? Number(counts[1]) + Number(counts[2]) + crashedCount
     : seen.filter((w) => w.verdict !== 'COULD NOT RUN').length;
   const passed = counts ? Number(counts[1]) : ran - failed.length;
   const screenLocked = couldNotRun > 0;
@@ -72,6 +94,7 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
     ranWalks: seen.filter((w) => w.verdict !== 'COULD NOT RUN').map((w) => w.name),
     refusedWalks: seen.filter((w) => w.verdict === 'COULD NOT RUN').map((w) => w.name),
     couldNotRun,
+    crashed,
     total: total || ran + couldNotRun,
     screenLocked,
     // A partial sweep is one that has something to report AND something it
@@ -87,9 +110,26 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
 
 const took = (seconds) => (seconds >= 60 ? `${Math.round(seconds / 60)}m` : `${seconds}s`);
 
+// The app dying is the loudest thing a sweep can find, and the loop only ever
+// reads the first sentence, so it goes there rather than in a line underneath.
+function crashClause(r) {
+  const c = r.crashed || [];
+  if (!c.length) return '';
+  const named = c.slice(0, 3).map((x) => `${x.name} (${x.why})`).join('; ');
+  const more = c.length > 3 ? `, and ${c.length - 3} more` : '';
+  return ` The app DIED in ${c.length} of them, which is not a walk running slowly: ${named}${more}.`;
+}
+
 // What to say about a recorded sweep, in plain sentences. The first one is the
 // headline; the rest bound what it may be read as.
 export function sweepSentences(r) {
+  const said = sweepSentencesPlain(r);
+  const crash = crashClause(r);
+  if (crash) said[0] += crash;
+  return said;
+}
+
+function sweepSentencesPlain(r) {
   const when = r.ended || 'just now';
   if (r.partial) {
     return [

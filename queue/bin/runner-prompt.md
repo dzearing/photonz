@@ -103,6 +103,23 @@ The machine you run on is the user's. Anything you start, you finish.
   names in it. **You do not wait for it and you do not report on it.** Say in
   your task log that you asked for one and why, and finish.
 
+- **A walk that says CRASHED means the app DIED, and that is yours to chase.**
+  A walk has four endings and they are different news: it ran (`ok` or
+  `FAILED  <the step>`), it ran out of time (`ran out of time after 180s, with
+  the app still running`), the screen was locked and it needed a name
+  (`COULD NOT RUN`), or the app went away part way through:
+  ```
+  unique-layer-names-walk    9s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < … < closure #1 in EditorState.renameLayer(id:to:)
+  ```
+  That line is macOS's own crash report, read for you, top frame first, ending
+  at the thing that was being done; read `<` as "called from". A crash takes the
+  open document with it, so nothing the walk was checking got answered and no
+  walk after it is worth much either. Never fold one into "some walks are
+  failing": it is a p0-shaped bug with its stack already attached. The fuller
+  stack is in the walk's own output, the report itself is under
+  `~/Library/Logs/DiagnosticReports`, and
+  `node Scripts/crash-report.mjs --file "<report>.ips"` reads any of them.
+
 - **If your task owns a failing walk, say so on the task.** The sweep's list of
   failures says which of them another open task is already on, so nobody
   re-diagnoses a walk somebody is fixing. When a task has not said, that is

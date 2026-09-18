@@ -188,11 +188,12 @@ run)
   LAST_REPORTED=0
   while kill -0 "$SWEEP_PID" 2>/dev/null; do
     sleep 15
-    # playtest-all prints one padded line per walk, ending in "ok" or "FAILED".
+    # playtest-all prints one padded line per walk, ending in "ok", "FAILED" or
+    # "CRASHED" (the app died in it).
     # grep -c exits 1 on no match, so `|| echo 0` would print the count AND a
     # zero into the same substitution. Take whatever it printed and insist it
     # is a number.
-    DONE_N=$(grep -c -E '^[a-z0-9-]+ +[0-9]+s  (ok|FAILED)' "$RUNLOG" 2>/dev/null || true)
+    DONE_N=$(grep -c -E '^[a-z0-9-]+ +[0-9]+s  (ok|FAILED|CRASHED)' "$RUNLOG" 2>/dev/null || true)
     [[ "$DONE_N" =~ ^[0-9]+$ ]] || DONE_N=0
     if (( DONE_N >= LAST_REPORTED + 20 )); then
       LAST_REPORTED=$DONE_N

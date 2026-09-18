@@ -5318,3 +5318,25 @@
 {"t":"2026-09-18T08:31:01.725Z","ev":"task_resequenced","id":"a-walk-whose-app-died-says-the-app-died","from":310,"to":10}
 {"t":"2026-09-18T08:31:28.791Z","ev":"objectives_updated","by":"manager","change":"design-system back to next: both tasks that earned its promotion on 2026-09-17 are done and it holds none"}
 {"t":"2026-09-18T08:31:52.698Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-18-0131.md"}
+{"t":"2026-09-18T08:32:03.625Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-18T08:32:03.671Z","ev":"task_started","id":"renaming-a-layer-stops-crashing-the-app","title":"Renaming a layer stops crashing the app","priority":"p0-critical"}
+{"t":"2026-09-18T08:52:19.986Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.031Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.077Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.125Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.172Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.218Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:20.265Z","ev":"task_note","id":"renaming-a-layer-stops-crashing-the-app"}
+{"t":"2026-09-18T08:52:36.800Z","ev":"task_done","id":"renaming-a-layer-stops-crashing-the-app","from":"in_progress","note":"Renaming a layer renames it. The crash was Swift exclusivity: the rename closure read the document out of the same property History.perform was holding under exclusive access, so the app aborted. History now works an edit out (preparing, read-only, where the caller's closure runs) and records it (record, write-only, no caller code) as two acts, which kills the whole class of crash rather than just rename; same split for a change from outside the document. Zero perf cost, the composite path is untouched. Verified: reproduced first on HEAD 33132430, then all seven owned walks pass (unique-layer-names, duplicate-names, pasted-layer-name, placed-image-dedupe, frame-name-rename, version-row-name, shared-component), an ordinary document and a separated one both rename and undo correctly, 8285 tests green, and the new test aborts the run if the old shape comes back. Commit 6bfe4969, pushed. Audit: queue/audits/2026-09-18-layer-rename-crash.json. Sweep requested."}
+{"t":"2026-09-18T09:43:43.406Z","ev":"sweep_pass","walks":249,"passed":245,"failed":4,"seconds":3049,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":526}
+{"t":"2026-09-18T09:43:43.532Z","ev":"task_started","id":"a-walk-whose-app-died-says-the-app-died","title":"A walk whose app died says the app died","priority":"p1-high"}
+{"t":"2026-09-18T09:54:30.501Z","ev":"task_walks","id":"a-walk-whose-app-died-says-the-app-died","walks":[]}
+{"t":"2026-09-18T09:54:49.380Z","ev":"task_created","id":"a-walk-shows-only-the-pictures-it-took-this-time","priority":"p2-normal","title":"A walk shows only the pictures it took this time"}
+{"t":"2026-09-18T09:54:53.496Z","ev":"task_walks","id":"a-walk-shows-only-the-pictures-it-took-this-time","walks":[]}
+{"t":"2026-09-18T09:55:17.569Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:55:17.621Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:55:17.674Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:55:17.727Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:55:17.778Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:55:17.829Z","ev":"task_note","id":"a-walk-whose-app-died-says-the-app-died"}
+{"t":"2026-09-18T09:57:35.370Z","ev":"task_done","id":"a-walk-whose-app-died-says-the-app-died","from":"in_progress","note":"A walk whose app died now says CRASHED with the frames macOS wrote down, ending at what was being done, and ends in ~9s instead of sitting out the 180s timeout. Scripts/crash-report.mjs reads the .ips (matched on the crash time inside it, never the file's mtime, which macOS rewrites); playtest.sh watches the probe process (new exit 4) and a real timeout now says 'ran out of time after 180s, with the app still running'; playtest-all counts crashes apart ('1 passed, 0 failed, 1 crashed') and sweep-parse/record/notes carry them to the standing task and the loop's note. Verified on the real crash: probe rebuilt with the rename fix reverted, unique-layer-names-walk printed 'CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)' in 8.7s where it used to print 'no done.json' at 186s; restored, both walks green. 8285 Swift tests pass; drills Scripts/crash-report-drill.mjs and queue/bin/sweep-parse-drill.mjs pass. Audit: queue/audits/2026-09-18-walk-crash-reporting.json"}

@@ -28,6 +28,10 @@ const result = {
   began, ended, seconds: Number(seconds),
   walks: r.walks, passed: r.passed, failed: r.failed,
   couldNotRun: r.couldNotRun, total: r.total,
+  // Which of those failures were the app DYING, and what it died in. A crash
+  // is filed like any failure and read like nothing else: it takes the open
+  // document with it and everything after it is a question mark.
+  crashed: r.crashed,
   ranWalks: r.ranWalks, refusedWalks: r.refusedWalks,
   requests, log: runlogRel,
   complete: r.complete, timedOut: r.timedOut,

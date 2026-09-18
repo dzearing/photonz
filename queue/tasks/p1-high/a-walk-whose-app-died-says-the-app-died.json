@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:59.315Z",
-  "updated": "2026-09-18T08:31:01.724Z",
+  "updated": "2026-09-18T09:57:35.369Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED here at 2026-09-18 01:26 local on HEAD 33132430:\n\n  $ Scripts/playtest-all.sh --no-build unique-layer-names\n  unique-layer-names-walk    186s  FAILED  no done.json\n  ==> 0 passed, 1 failed\n\nand at the same moment a fresh report appeared at ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-18-012738.ips, EXC_CRASH SIGABRT, top app frame EditorState.renameLayer. Nothing in the sweep output mentions it.\n\nWhere the wording is made: Scripts/playtest-all.sh:149-151\n\n    reason=\"$(printf '%s' \"$out\" | sed -n 's/.*\\\"error\\\" : \\\"\\(.*\\)\\\",*$/\\1/p' | head -1)\"\n    verdict=\"FAILED  ${reason:-no done.json}\"\n\nThe fallback is used whenever the walk left no error behind, which covers both 'the app died' and 'the walk never finished', and those are not the same news. A crash also costs the full per-walk timeout, which is why seven crashing walks burn 22 minutes of every sweep.\n\nWhat a fix has to hand: the probe's own exit is visible to Scripts/playtest.sh, and macOS writes an .ips into ~/Library/Logs/DiagnosticReports within a second or two of the abort, named for the app and stamped with the time, so a run that ends badly can look for one newer than its own start. Whichever route is chosen, the point is the WORDS the sweep prints, because those words are all the loop reads.\n\nWhy this is filed against the loop rather than left alone: this is the loop's only whole-app regression signal, and it did not merely miss the crash, it actively described it as something else. Twenty-one crashes over six hours and four sweeps went by with nobody looking, and the p0 that came out of it (renaming-a-layer-stops-crashing-the-app) was found by a manager pass reading a stack trace, not by the thing whose job it is.",
@@ -29,6 +29,45 @@
     {
       "t": "2026-09-18T08:31:01.723Z",
       "note": "seq 310 -> 10"
+    },
+    {
+      "t": "2026-09-18T09:43:43.530Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T09:54:30.499Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-18T09:55:17.567Z",
+      "note": "Before building: walked the idea for holes. A walk's output is read by a machine first, so the fix is WORDS, not a dashboard. Two traps found before writing anything: (1) an .ips file's mtime lies, because macOS rewrites a report when it symbolicates it, so last night's crash can carry this minute's date; matching is on the crash time INSIDE the report. (2) The top frame of a Swift abort is runtime, and the first app frame is a compiler-generated getter, so a one-frame answer would have named EditorState.history.getter and nobody would have found the rename. The line carries three app frames, top first, ending at what was being done."
+    },
+    {
+      "t": "2026-09-18T09:55:17.619Z",
+      "note": "Shipped: Scripts/crash-report.mjs reads a macOS .ips into one line plus the app's own frames; Scripts/playtest.sh watches the probe process and ends the walk the moment it goes (exit 4, 'CRASHED  <what it died in>'), and a walk that really does run out of road now says 'ran out of time after 180s, with the app still running' rather than 'no done.json'; Scripts/playtest-all.sh counts crashes apart from failures ('1 passed, 0 failed, 1 crashed'), says what each died in above the counts, and lists their names under it so the sweep still files them; sweep-parse/sweep-record/sweep-notes carry the crashes through to the standing task and to the loop's one-sentence note. Drills: Scripts/crash-report-drill.mjs (new) and a fifth scenario in queue/bin/sweep-parse-drill.mjs."
+    },
+    {
+      "t": "2026-09-18T09:55:17.672Z",
+      "note": "Verified against the real crash, not a fixture. Rebuilt the probe with the rename fix reverted (git checkout 6bfe4969^ -- Sources/Photonz/EditorState.swift Sources/PhotonzCore/History.swift) and ran the walk the task names: 'unique-layer-names-walk  9s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)', with the fuller stack and the report path under it. 8.7s, where the old code took 186s. Summary line read '1 passed, 0 failed, 1 crashed'. Restored the fix, rebuilt, and both walks pass with no crash words anywhere. PHOTONZ_PLAYTEST_TIMEOUT=1 on a healthy walk still reports 'ran out of time after 1s, with the app still running' (exit 1, distinct from the crash's exit 4)."
+    },
+    {
+      "t": "2026-09-18T09:55:17.725Z",
+      "note": "Found while verifying, and worth knowing: macOS writes ONE crash report per crash signature and then skips repeats. Two runs of the same crashing walk 18 seconds apart left one report between them, so the second run found nothing of its own. Rather than going quiet it falls back to the last report within 30 minutes and says so in the same line: 'no report of its own; the crash 77s earlier was EXC_CRASH (SIGABRT) in ...'. Drilled both ways."
+    },
+    {
+      "t": "2026-09-18T09:55:17.776Z",
+      "note": "left rough: something that QUITS the probe deliberately mid-walk (a stray probe-app.sh --quit from another session) is reported as a crash, and with a recent report on disk it will quote that report's frames as the likely shape. The line always says whether the report was this run's own, so it is readable, but there is no way to tell a deliberate quit from an abort: the app is started by 'open', so nothing here ever sees its exit status. Not filed: it needs two runs fighting over one probe, which the lock and the single loop make rare."
+    },
+    {
+      "t": "2026-09-18T09:55:17.827Z",
+      "note": "left rough: a crash still costs about ten seconds waiting for macOS to write the report, so a sweep with seven crashes spends 70s waiting. Down from 22 minutes. Not filed; the audit asks the user whether that trade is right."
+    },
+    {
+      "t": "2026-09-18T09:57:35.367Z",
+      "note": "A walk whose app died now says CRASHED with the frames macOS wrote down, ending at what was being done, and ends in ~9s instead of sitting out the 180s timeout. Scripts/crash-report.mjs reads the .ips (matched on the crash time inside it, never the file's mtime, which macOS rewrites); playtest.sh watches the probe process (new exit 4) and a real timeout now says 'ran out of time after 180s, with the app still running'; playtest-all counts crashes apart ('1 passed, 0 failed, 1 crashed') and sweep-parse/record/notes carry them to the standing task and the loop's note. Verified on the real crash: probe rebuilt with the rename fix reverted, unique-layer-names-walk printed 'CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)' in 8.7s where it used to print 'no done.json' at 186s; restored, both walks green. 8285 Swift tests pass; drills Scripts/crash-report-drill.mjs and queue/bin/sweep-parse-drill.mjs pass. Audit: queue/audits/2026-09-18-walk-crash-reporting.json"
     }
-  ]
+  ],
+  "started": "2026-09-18T09:43:43.529Z",
+  "walks": [],
+  "completed": "2026-09-18T09:57:35.368Z"
 }

@@ -2,6 +2,54 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-18 — A walk whose app died says the app died
+
+A scripted walk that ends because the app ABORTED leaves no `done.json`, and
+until today `Scripts/playtest-all.sh` printed the same six words for that as for
+a walk that was merely slow: `no done.json`. On the night of 2026-09-17 the app
+aborted on every layer rename, left twenty-one crash reports on disk, and four
+sweeps in a row reported it as seven walks that took 187 seconds each. The p0
+behind it was found by a manager pass reading a stack trace, not by the sweep
+whose whole job that is.
+
+A run now watches the app. The moment the process goes away without a
+`done.json`, `Scripts/playtest.sh` stops waiting (about nine seconds, not the
+full 180), reads the `.ips` macOS drops into `~/Library/Logs/DiagnosticReports`
+with the new `Scripts/crash-report.mjs`, and prints what killed it with the
+app's own frames, top first and ending at the thing that was being done:
+
+    unique-layer-names-walk    9s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < EditorState.readWordsForRows.getter < closure #1 in EditorState.renameLayer(id:to:)
+
+`playtest-all` counts crashes apart from failures (`1 passed, 0 failed, 1
+crashed`), says what each died in above the counts, and still lists their names
+under it so the sweep files them like any other broken walk. `sweep-parse.mjs`
+reads all of that, `sweep-record` keeps it, and the standing failing-walks task
+grows a section naming the crashes first. Exit codes: 0 ok, 1 failed or ran out
+of time, 3 could not run (locked screen), 4 the app died.
+
+Two things the reader is not lied to about. A report is matched on the crash
+time INSIDE it and never on the file's mtime, because macOS rewrites these files
+when it symbolicates them and last night's crash can carry this minute's date.
+And macOS writes one report per crash signature then skips repeats: two runs of
+the same crashing walk 18 seconds apart left one report between them, so a crash
+with no report of its own says exactly that in the same line, `no report of its
+own; the crash 77s earlier was ...`.
+
+Verified against the real thing rather than a mock: the probe was rebuilt with
+the layer-rename fix reverted (`git checkout 6bfe4969^ -- EditorState.swift
+History.swift`), `unique-layer-names-walk` crashed for real, and the run printed
+the crash line above naming `EditorState.renameLayer` in 8.7 seconds where the
+old code took 186. Restored and rebuilt, both walks pass and nothing mentions a
+crash. A forced `PHOTONZ_PLAYTEST_TIMEOUT=1` still reports `ran out of time
+after 1s, with the app still running`. Drills:
+`Scripts/crash-report-drill.mjs` (new, including the mtime trap and the skipped
+repeat) and `queue/bin/sweep-parse-drill.mjs` (a sweep the app died in).
+
+Next: the first real sweep with a crash in it is the first reading of the
+standing task's new crash section. Filed alongside: a walk's output folder is
+never cleared, so a run that stopped early still shows the pictures a healthier
+run left behind (`a-walk-shows-only-the-pictures-it-took-this-time`).
+
 ## 2026-09-17 — Renaming the failing-walks task no longer clones it
 
 The walk sweep keeps ONE standing task and updates it in place, and it found

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:29:56.962Z",
-  "updated": "2026-09-18T08:30:18.813Z",
+  "updated": "2026-09-18T08:52:36.799Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED. Not a hang: the app aborts.\n\nCause, off the crash report: Sources/Photonz/EditorState+LayersPanel.swift:499 is\n\n    func renameLayer(id: UUID, to name: String) {\n        perform { $0.renameLayer(id: id, to: name, readWords: readWordsForRows) }\n    }\n\nThe closure reads `readWordsForRows` (Sources/Photonz/EditorState+RunWords.swift:148), which reads `document`, while History.perform already holds `document` under exclusive access. Swift's exclusivity check fires and calls abort(). Read `readWordsForRows` into a local BEFORE perform and the overlap goes away; check the other perform closures added by the same commit for the same shape.\n\nStack (Photonz Probe-2026-09-18-012238.ips, and identical in the first one at 2026-09-17-192704):\n  swift_beginAccess\n  EditorState.history.getter\n  EditorState.document.getter\n  EditorState.readWordsForRows.getter\n  closure #1 in EditorState.renameLayer(id:to:)\n  History.perform(_:)\n  EditorState.perform(announcing:reportingLinkBreaks:_:)\n  EditorState.renameLayer(id:to:)\n  LayersListView.commitRename(id:)\n\nWhen it started: commit 4f83fd70 'What a reading found is saved with the document', 2026-09-17 19:14:32, which is where readWordsForRows was born. The walk sweep at 17:21 had unique-layer-names ok in 8s, duplicate-names ok in 10s, shared-component ok in 14s; the sweep at 19:15, the first after that commit, has all three at 186-187s FAILED no done.json, and every sweep since says the same. ~/Library/Logs/DiagnosticReports has three Photonz Probe crashes between 09-12 and 09-13, then nothing until 2026-09-17 19:27:04, then 21 of them in the next six hours.\n\nRun here at 2026-09-18 01:26 local, on HEAD 33132430:\n  $ Scripts/playtest-all.sh --no-build unique-layer-names\n  (wrote names-1-four-shapes, then nothing; no probe process left alive; a fresh\n   .ips at 01:27 with the stack above)\n\nThis also explains all seven of the 'no done.json' failures in the 2026-09-18T08:26Z partial sweep. Six of them call the renameSelectedLayer action, which is a straight call to editor.renameLayer; frame-name-rename and version-row-name reach the same commitRename by typing in the row. One bug, seven walks. Fold the result back into walks-that-fail-in-the-full-sweep.",
@@ -33,6 +33,42 @@
     {
       "t": "2026-09-18T08:30:18.812Z",
       "note": "owns these walks: duplicate-names-walk, frame-name-rename-walk, pasted-layer-name-walk, placed-image-dedupe-walk, shared-component-walk, unique-layer-names-walk, version-row-name-walk"
+    },
+    {
+      "t": "2026-09-18T08:32:03.669Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T08:52:19.984Z",
+      "note": "REPRODUCED on HEAD 33132430 before touching anything: Scripts/playtest.sh Scripts/playtest/unique-layer-names-walk.json died at step 17 (action renameSelectedLayer), no done.json after 180s, and the .ips from the same stack names swift_beginAccess -> EditorState.readWordsForRows.getter -> closure in renameLayer -> History.perform."
+    },
+    {
+      "t": "2026-09-18T08:52:20.029Z",
+      "note": "Adversarial review of the fix, three ways to do it. (1) Hoist readWordsForRows into a local before perform: one line, but it leaves the landmine armed for the next command whose closure reads the document, and there are hundreds of perform call sites. (2) Copy the stack into a local, edit that, put it back: also one line, but it COW-copies up to 200 document snapshots on every single edit, a silent tax on the hot path. (3) Split the act in two, which is what shipped: History.preparing works the edit out while the stack is only READ, History.record writes it with no caller code running. Zero extra cost, same work as before, and the whole class of crash is gone for every command rather than for rename alone."
+    },
+    {
+      "t": "2026-09-18T08:52:20.075Z",
+      "note": "Verified the test actually catches a regression rather than just passing: temporarily put the old one-call shape back in the test's stand-in editor and the test run died with 'Fatal access conflict detected' and the same swift_beginAccess stack as the app. Restored."
+    },
+    {
+      "t": "2026-09-18T08:52:20.123Z",
+      "note": "Verified the separated-document half of acceptance with a one-off walk in /tmp (open dense-page-1x.png, separate, wait for the words to be read, pick the row reading 'Running', rename it, undo): renamed, still up, undo puts the read words back. Not added to Scripts/playtest permanently: the seven walks the task already owns catch this crash in the sweep, and the mechanism is held by the unit test, so a 15s dense-page walk would be buying cover we already have."
+    },
+    {
+      "t": "2026-09-18T08:52:20.170Z",
+      "note": "Asked for a full sweep (queue/bin/sweep.sh request): History.perform is on the path of every command in the app, so the whole set is the right confirmation that nothing else moved. Not waited on, not reported here."
+    },
+    {
+      "t": "2026-09-18T08:52:20.216Z",
+      "note": "left rough: shared-component-scale-walk could not run (screen locked, it looks a control up by name). Not a failure and not this bug; it was refused the same way before the fix."
+    },
+    {
+      "t": "2026-09-18T08:52:20.263Z",
+      "note": "left rough: recording a PreparedEdit against a stack that has moved since it was worked out would clobber it. Impossible today (both calls are adjacent, on the main actor, with nothing between them) and documented on the type, but it is a rule rather than a guarantee. No cheap guard exists: a document has no version stamp, and comparing whole documents would double the cost of every edit."
+    },
+    {
+      "t": "2026-09-18T08:52:36.797Z",
+      "note": "Renaming a layer renames it. The crash was Swift exclusivity: the rename closure read the document out of the same property History.perform was holding under exclusive access, so the app aborted. History now works an edit out (preparing, read-only, where the caller's closure runs) and records it (record, write-only, no caller code) as two acts, which kills the whole class of crash rather than just rename; same split for a change from outside the document. Zero perf cost, the composite path is untouched. Verified: reproduced first on HEAD 33132430, then all seven owned walks pass (unique-layer-names, duplicate-names, pasted-layer-name, placed-image-dedupe, frame-name-rename, version-row-name, shared-component), an ordinary document and a separated one both rename and undo correctly, 8285 tests green, and the new test aborts the run if the old shape comes back. Commit 6bfe4969, pushed. Audit: queue/audits/2026-09-18-layer-rename-crash.json. Sweep requested."
     }
   ],
   "walks": [
@@ -43,5 +79,7 @@
     "shared-component-walk",
     "unique-layer-names-walk",
     "version-row-name-walk"
-  ]
+  ],
+  "started": "2026-09-18T08:32:03.668Z",
+  "completed": "2026-09-18T08:52:36.798Z"
 }

@@ -8,9 +8,13 @@
 #   Scripts/playtest-all.sh --no-build      reuse the built probe
 #   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh  all of them (see the gate below)
 #
-# Exits 0 when every walk passed, 1 when one failed, and 3 when the Mac's screen
-# was locked: then the walks that look a control up by name were refused and the
-# run covered only a part of the set, however many of the rest passed.
+# Exits 0 when every walk passed, 1 when one failed or crashed, and 3 when the
+# Mac's screen was locked: then the walks that look a control up by name were
+# refused and the run covered only a part of the set, however many of the rest
+# passed. A walk whose APP DIED is reported as a crash, with the frames it died
+# in, and counted apart from ordinary failures: a crash used to print the same
+# "no done.json" a slow walk prints, and four sweeps in a row read twenty-one
+# crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
 # The whole set is now 322 walks, about 52 minutes, and it is GATED behind
@@ -107,6 +111,13 @@ hold_awake
 
 PASSED=0
 FAILED=()
+# Walks whose APP DIED part way through. Never folded into the failures: a
+# failure is the app saying no, a crash is the app being gone, and only one of
+# those means every walk after it is running against a question mark. Their
+# names still go in the list under the counts, because the sweep files a bug
+# from that list and a crash is the most filable thing there is.
+CRASHED=()
+CRASH_WHY=()
 # Walks that DID NOT RUN, because the screen was locked. Never counted as
 # failures: see Sources/Photonz/Playtest/PlaytestScreenState.swift.
 LOCKED=0
@@ -146,8 +157,20 @@ for walk in Scripts/playtest/*.json; do
     COULD_NOT_RUN=$((COULD_NOT_RUN + 1))
     printf '%4ds  COULD NOT RUN  it needs a control by name and the screen is locked\n' $((SECONDS - WALK_BEGAN))
     continue
+  elif (( code == 4 )); then
+    # The app died. playtest.sh has already looked up what macOS wrote down
+    # about it and put it on one line for us.
+    why="$(printf '%s' "$out" | sed -n 's/^==> Verdict: CRASHED  //p' | head -1)"
+    why="${why:-the app quit part way through}"
+    verdict="CRASHED  $why"
+    CRASHED+=("$name")
+    CRASH_WHY+=("$why")
   else
-    reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
+    # A walk that simply ran out of road says so in its own words; only a walk
+    # that left nothing at all falls back to "no done.json", and now that a
+    # crash and a timeout both speak up, that fallback means what it says.
+    reason="$(printf '%s' "$out" | sed -n 's/^==> Verdict: //p' | head -1)"
+    [[ -n "$reason" ]] || reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
     verdict="FAILED  ${reason:-no done.json}"
     FAILED+=("$name")
   fi
@@ -157,7 +180,7 @@ for walk in Scripts/playtest/*.json; do
 done
 
 TOTAL=$((SECONDS - RUN_BEGAN))
-RAN=$((PASSED + ${#FAILED[@]}))
+RAN=$((PASSED + ${#FAILED[@]} + ${#CRASHED[@]}))
 echo
 # A run stopped by the lock is NOT a verdict on the walk set. Say so first and
 # on its own line, so nothing downstream reads the counts underneath as one.
@@ -173,15 +196,30 @@ if (( LOCKED )); then
   fi
   echo "    Unlock the screen to run the rest."
 fi
-# The counts, in the one shape every reader of this log parses: the third number
-# is only there when a lock refused some, and the failing walks are the indented
-# lines under it and nothing else (queue/bin/sweep-parse.mjs).
-if (( LOCKED )); then
-  echo "==> $PASSED passed, ${#FAILED[@]} failed, $COULD_NOT_RUN could not run"
-else
-  echo "==> $PASSED passed, ${#FAILED[@]} failed"
+# A crash is not a slow walk and must never read as one. Say it above the
+# counts, with what it died in, because that line is the whole point: the loop
+# reads these words and nothing else.
+if (( ${#CRASHED[@]} )); then
+  echo "==> ${#CRASHED[@]} walk(s) CRASHED: the app was GONE before the walk finished."
+  echo "    That is not a walk running slowly: everything the app was holding went with it, and"
+  echo "    whatever the walk was about is unanswered. The frames below run from where it died"
+  echo "    down to what was being done; read < as \"called from\", and the fuller stack is in"
+  echo "    each walk's own output above."
+  for i in "${!CRASHED[@]}"; do
+    printf '    %s: %s\n' "${CRASHED[$i]}" "${CRASH_WHY[$i]}"
+  done
+  echo "    Crash reports: ~/Library/Logs/DiagnosticReports"
 fi
+# The counts, in the one shape every reader of this log parses: the crash count
+# is only there when something crashed and the refused count only when a lock
+# turned walks away, and the broken walks are the indented lines under it and
+# nothing else (queue/bin/sweep-parse.mjs).
+COUNTS="==> $PASSED passed, ${#FAILED[@]} failed"
+(( ${#CRASHED[@]} )) && COUNTS="$COUNTS, ${#CRASHED[@]} crashed"
+(( LOCKED )) && COUNTS="$COUNTS, $COULD_NOT_RUN could not run"
+echo "$COUNTS"
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
+(( ${#CRASHED[@]} == 0 )) || printf '    %s\n' "${CRASHED[@]}"
 printf '==> %d walks in %dm %02ds' "$RAN" $((TOTAL / 60)) $((TOTAL % 60))
 (( RAN > 0 )) && printf ', %ds each on average' $((TOTAL / RAN))
 [[ -n "$SLOWEST" ]] && printf '; slowest %s at %ds' "$SLOWEST" "$SLOWEST_S"
@@ -191,4 +229,4 @@ echo
 # a partial, keeps its request pending, and still files any walk that FAILED in
 # the part that ran.
 (( LOCKED )) && exit 3
-exit $(( ${#FAILED[@]} == 0 ? 0 : 1 ))
+exit $(( ${#FAILED[@]} + ${#CRASHED[@]} == 0 ? 0 : 1 ))

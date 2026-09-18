@@ -11,8 +11,12 @@
 #   Scripts/playtest.sh <script.json> --keep      leave the probe running after
 #   PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh ...   (default 180s)
 #
-# Exits 0 when done.json says "ok", 1 otherwise; prints the output folder and
-# the log's last lines either way. Never touches "dist/Photonz Dev.app".
+# Exits 0 when done.json says "ok", 1 when the walk failed or ran out of time,
+# 3 when the screen was locked and the walk could not run at all, and 4 when THE
+# APP DIED part way through: that one prints what macOS wrote down about the
+# crash, because "no done.json" is what a merely slow walk says and a crash is
+# not that. Prints the output folder and the log's last lines either way.
+# Never touches "dist/Photonz Dev.app".
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -46,12 +50,43 @@ OUT="$(node -e '
 mkdir -p "$OUT"
 rm -f "$OUT/done.json"
 
+# When the app dies, the reason is in a crash report macOS drops into
+# ~/Library/Logs/DiagnosticReports a second or two later. Remember when this run
+# began, so a report from last night is never read as this run's crash: macOS
+# rewrites those files when it symbolicates them, and their mtime lies.
+RUN_BEGAN_MS="$(node -e 'console.log(Date.now())')"
+
 Scripts/probe-app.sh --playtest "$SCRIPT_ABS" ${NO_BUILD:+"$NO_BUILD"}
+
+# Anchored on the bundle's executable path, exactly as probe-app.sh anchors it,
+# so it can never match "Photonz Dev.app", "Photonz.app" or a bare `swift build`.
+MATCH="Photonz Probe.app/Contents/MacOS"
+PROBE_PID="$(pgrep -f "$MATCH" | head -1 || true)"
+probe_alive() {
+  if [[ -n "$PROBE_PID" ]]; then
+    kill -0 "$PROBE_PID" 2>/dev/null
+  else
+    pgrep -f "$MATCH" >/dev/null 2>&1
+  fi
+}
 
 TIMEOUT="${PHOTONZ_PLAYTEST_TIMEOUT:-180}"
 echo "==> Waiting up to ${TIMEOUT}s for $OUT/done.json"
+# Whether the app went away on us. Until 2026-09-18 nobody watched for this, so
+# an app that aborted at step 12 was waited on for the full timeout and then
+# reported as "no done.json", which is the same sentence a slow walk gets. Seven
+# walks crashing that way cost 22 minutes of every sweep and read as nothing at
+# all; the crash behind them was found by a person reading a stack trace.
+DIED=0
 for ((i = 0; i < TIMEOUT * 2; i++)); do
   [[ -f "$OUT/done.json" ]] && break
+  if ! probe_alive; then
+    # It may have written done.json and exited between two polls, so look once
+    # more after giving that write a moment to land.
+    sleep 1
+    [[ -f "$OUT/done.json" ]] || DIED=1
+    break
+  fi
   sleep 0.5
 done
 
@@ -73,8 +108,30 @@ if [[ -f "$OUT/done.json" ]]; then
     echo "   plainly on screen. The error above names the step that needs a name and says"
     echo "   what forcing the walk would still photograph."
   fi
+elif (( DIED )); then
+  # The app is gone. Say so, and say what it died of: the words a sweep prints
+  # are all the loop ever reads, and "no done.json" sent four sweeps in a row
+  # past twenty-one crashes (2026-09-17 night).
+  STATUS=4
+  CRASH="$(node Scripts/crash-report.mjs --since "$RUN_BEGAN_MS" --wait 10 2>/dev/null || true)"
+  echo "!! THE APP DIED part way through this walk. It is gone and it left no done.json," >&2
+  echo "   which is not the same news as a walk that merely ran slowly." >&2
+  if [[ -n "$CRASH" ]]; then
+    printf '%s\n' "$CRASH" | tail -n +2
+    echo "   The frames run from where it died down to what was being done; read < as \"called from\"."
+    echo "==> Verdict: CRASHED  $(printf '%s' "$CRASH" | head -1)"
+  else
+    echo "   macOS left no crash report for it within 10s, so either something quit it or it" >&2
+    echo "   went away without crashing. Look in ~/Library/Logs/DiagnosticReports." >&2
+    echo "==> Verdict: CRASHED  the app quit part way through and left no crash report"
+  fi
 else
-  echo "!! No done.json after ${TIMEOUT}s. The probe may still be running; its log so far:" >&2
+  # Still running, still nothing written: this one really is a walk that ran out
+  # of road, and it has to stay tellable apart from a crash.
+  echo "!! RAN OUT OF TIME: ${TIMEOUT}s gone, no done.json, and the app is still running." >&2
+  echo "   Its log so far is below; raise the clock with PHOTONZ_PLAYTEST_TIMEOUT if the walk" >&2
+  echo "   is honestly this long." >&2
+  echo "==> Verdict: ran out of time after ${TIMEOUT}s, with the app still running"
 fi
 # What the run actually photographed. `<name>-sc.png` is the window as a person
 # would see it, and it is the only picture an audit may ship; the plain
