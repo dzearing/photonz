@@ -1442,6 +1442,22 @@ final class EditorState {
     /// and the tree is exactly what it was.
     var groupContextID: UUID?
 
+    /// The icon frame the pointer is resting in, echoed up from the canvas
+    /// while the pointer is over it (`next-icon-frames`). Nil when the pointer
+    /// is out on bare canvas or over a screen.
+    ///
+    /// What it is for is the tool bar's Width row. The row reads the weight a
+    /// line will really land at, and it learns which icon it is speaking for
+    /// from whatever is picked inside that icon. Pick nothing at all and there
+    /// was nothing left to ask, so the row went back to reading the armed 4
+    /// while a line drawn into a 24 pixel frame still landed at 2.
+    ///
+    /// It KEEPS its last answer once the pointer leaves the canvas entirely,
+    /// rather than going blank. Reading the Width row means reaching up to the
+    /// tool bar, and a number that changed on the way to being read would be
+    /// no better than the one this replaced.
+    var pointerIconFrameID: UUID?
+
     /// A component whose Name field should be waiting for typing, set by the
     /// command that just made it. The Component section consumes it and puts it
     /// back to nil, so it fires once rather than every redraw.

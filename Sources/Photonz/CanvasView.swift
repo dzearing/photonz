@@ -149,6 +149,11 @@ struct CanvasView: NSViewRepresentable {
     /// person saying they are done with it, even though the canvas selection
     /// itself did not change (there was nothing selected to change).
     let onClickedNothing: () -> Void
+    /// The icon frame the pointer came to rest in, or nil for a screen and for
+    /// bare canvas. Sent only when the answer CHANGES, so a pointer crossing
+    /// the canvas costs nothing above the hover work already being done.
+    /// Read by the tool bar's Width row (`EditorState.pointerIconFrameID`).
+    var onPointerIconFrameChange: (UUID?) -> Void = { _ in }
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
@@ -380,6 +385,7 @@ struct CanvasView: NSViewRepresentable {
         view.onFrameCreate = onFrameCreate
         view.onLensCreate = onLensCreate
         view.onPathCommit = onPathCommit
+        view.onPointerIconFrameChange = onPointerIconFrameChange
         view.onPenHintChange = onPenHintChange
         view.onPathPreview = onPathPreview
         view.onPathEditCommit = onPathEditCommit
@@ -479,6 +485,10 @@ final class CanvasNSView: NSView {
     var onRenameComponent: ((UUID, String) -> Void) = { _, _ in }
     var onRenameComponentVersion: ((UUID, UUID, String) -> Void) = { _, _, _ in }
     var onClickedNothing: (() -> Void) = {}
+    var onPointerIconFrameChange: ((UUID?) -> Void) = { _ in }
+    /// The last answer sent up, so a pointer wandering inside one icon frame
+    /// sends nothing at all.
+    var pointerIconFrameID: UUID?
     var onExitGroup: (() -> Bool) = { false }
     var canvasMenu: ((UUID?, UUID?) -> [MenuRow]) = { _, _ in [] }
     var onDragBegin: ((UUID) -> Void) = { _ in }

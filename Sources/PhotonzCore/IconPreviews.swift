@@ -86,4 +86,14 @@ extension PhotonzDocument {
         guard let frameID = frameID(containing: id), isIconFrame(id: frameID) else { return nil }
         return frameID
     }
+
+    /// The icon frame a canvas point is inside, if any.
+    ///
+    /// The same question `frameID(under:)` answers, narrowed to the frames that
+    /// are icons, so a screen and bare canvas both come back nil: neither has
+    /// anything to say about the weight of a line.
+    public func iconFrameID(under point: CGPoint) -> UUID? {
+        guard let id = frameID(under: point), isIconFrame(id: id) else { return nil }
+        return id
+    }
 }

@@ -67,13 +67,20 @@ extension EditorState {
     /// the number in the row and the pictures beside it are about one icon. Off
     /// an icon frame there is nothing to decide and the armed weight is the
     /// answer, exactly as before.
+    ///
+    /// With NOTHING picked the pointer says which icon instead
+    /// (`pointerIconFrameID`). That case was left out at first and it is the
+    /// one that draws: pick nothing, hold the Pen over a 24 pixel frame and
+    /// draw, and the line lands at 2 because the drawing asks about the point
+    /// it is landing on, while the row had nothing to ask and went on reading
+    /// the armed 4.
     var startedStrokeWidth: CGFloat {
         let armed = annotationStyles.strokeWidth(for: activeTool)
-        guard Experiments.shared.iconFramesEnabled,
-              let document, let id = selectedLayerID else { return armed }
+        guard Experiments.shared.iconFramesEnabled, let document else { return armed }
         return document.startingStrokeWidth(armed: armed,
                                             chosen: armedStrokeWidthIsChosen,
-                                            drawingInside: id)
+                                            picked: selectedLayerID,
+                                            pointerIn: pointerIconFrameID)
     }
 }
 

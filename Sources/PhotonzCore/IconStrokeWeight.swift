@@ -65,8 +65,7 @@ extension PhotonzDocument {
     /// frame adopts a new shape, so the weight a shape arrives at and the frame
     /// it arrives in can never disagree.
     public func iconFrameSize(under point: CGPoint) -> CGSize? {
-        guard let id = frameID(under: point), let frame = layer(id: id),
-              IconPreviews.isIconSize(frame.frame.size) else { return nil }
+        guard let id = iconFrameID(under: point), let frame = layer(id: id) else { return nil }
         return frame.frame.size
     }
 
@@ -101,6 +100,36 @@ extension PhotonzDocument {
                                     drawingInside id: UUID) -> CGFloat {
         IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
                                        onFrameSized: iconFrameSize(containing: id))
+    }
+
+    /// The icon the Width row is speaking for, from the two things that can
+    /// say so: what is PICKED, and failing that, the frame the POINTER is
+    /// resting in.
+    ///
+    /// What is picked comes first, because a shape you have chosen is the
+    /// thing you are working on wherever the hand happens to be. It answers
+    /// even when the answer is "no icon": picking a shape on a screen and then
+    /// sweeping the pointer across an icon does not make the row speak for the
+    /// icon.
+    ///
+    /// The pointer is the case this was added for. Pick nothing at all, hold
+    /// the Pen over a 24 pixel frame and draw, and the line lands at 2 because
+    /// the drawing asks about the point it is landing on. The row had nothing
+    /// to ask about and went on reading the armed 4, so the app said one number
+    /// and drew another — the one thing a box you can type into must not do.
+    public func iconFrameSize(picked: UUID?, pointerIn hovered: UUID?) -> CGSize? {
+        guard let id = picked ?? hovered else { return nil }
+        return iconFrameSize(containing: id)
+    }
+
+    /// The weight the Width row reads with a tool in hand and nothing drawn
+    /// yet: the armed weight, after whichever icon is being worked in has had
+    /// its say (`iconFrameSize(picked:pointerIn:)`).
+    public func startingStrokeWidth(armed: CGFloat, chosen: Bool,
+                                    picked: UUID?, pointerIn hovered: UUID?) -> CGFloat {
+        IconStrokeWeight.startingWidth(armed: armed, chosen: chosen,
+                                       onFrameSized: iconFrameSize(picked: picked,
+                                                                   pointerIn: hovered))
     }
 
     /// A freshly drawn shape's line, started at the weight the canvas under

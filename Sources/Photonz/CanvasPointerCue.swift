@@ -43,12 +43,36 @@ extension CanvasNSView {
         // modifiers so ⌘ and ⇧ are the ones being held right now.
         pointerModifiers = event.modifierFlags
         refreshDrawLanding()
+        refreshPointerIconFrame(at: convert(event.locationInWindow, from: nil))
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
+    /// The icon frame the pointer is resting in, told upward when it CHANGES.
+    ///
+    /// The tool bar's Width row reads it (`EditorState.pointerIconFrameID`):
+    /// with nothing picked there is nothing else to say which icon the row is
+    /// speaking for, so it read the armed 4 while a line drawn into a 24 pixel
+    /// frame landed at 2.
+    ///
+    /// Two things keep it cheap. It only asks while the release that has icon
+    /// frames is on and the document HAS frames at all, so a document of
+    /// screenshots never pays for it; and it only reports a change, so a
+    /// pointer wandering inside one frame rebuilds nothing.
+    func refreshPointerIconFrame(at viewPoint: CGPoint) {
+        guard Experiments.shared.iconFramesEnabled,
+              let document, document.hasFrames, let viewport else { return }
+        let id = document.iconFrameID(under: viewport.documentPoint(fromView: viewPoint))
+        guard id != pointerIconFrameID else { return }
+        pointerIconFrameID = id
+        onPointerIconFrameChange(id)
+    }
+
     override func mouseExited(with event: NSEvent) {
         hoverPoint = nil
+        // `pointerIconFrameID` is deliberately LEFT as it is. Reading the Width
+        // row means reaching up to the tool bar, and a number that changed on
+        // the way to being read would be no better than the one it replaced.
         refreshNameLabelHover(at: nil)
         applyGrabCursor(nil)
         // Nothing is being aimed at once the pointer is off the canvas, so

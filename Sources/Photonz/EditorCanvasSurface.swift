@@ -86,6 +86,7 @@ struct EditorCanvasSurface: View {
                        return editorState.canvasMenuRows
                    },
                    onClickedNothing: { editorState.clearLibraryPick() },
+                   onPointerIconFrameChange: { editorState.pointerIconFrameID = $0 },
                    onDragBegin: { editorState.beginLayerDrag(id: $0) },
                    onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
                    onFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1) },

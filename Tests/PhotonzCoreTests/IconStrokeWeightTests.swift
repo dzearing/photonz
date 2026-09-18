@@ -199,6 +199,72 @@ struct IconStrokeWeightTests {
                                              drawnAt: CGPoint(x: 110, y: 110)) == stock)
     }
 
+    // MARK: - With nothing picked, the pointer says which icon
+
+    @Test("The icon the pointer is resting in is the one it names")
+    func iconFrameUnderThePointer() {
+        let document = document()
+        #expect(document.iconFrameID(under: CGPoint(x: 110, y: 110)) == document.layers[0].id)
+        // A screen is a frame, but it is not an icon, so it has nothing to say.
+        #expect(document.iconFrameID(under: CGPoint(x: 500, y: 300)) == nil)
+        #expect(document.iconFrameID(under: CGPoint(x: 50, y: 50)) == nil)
+    }
+
+    @Test("With nothing picked, the Width row reads the icon the pointer is in")
+    func nothingPickedTheRowFollowsThePointer() {
+        // The gap this closes: the row learned which icon it was speaking for
+        // from what was PICKED, so picking nothing at all put it back to
+        // reading the armed 4 while a line drawn into the frame still landed
+        // at 2. Two numbers for one line.
+        let document = document()
+        let styles = AnnotationStyles()
+        let iconID = document.layers[0].id
+        let armed = styles.strokeWidth(for: .pen)
+        let chosen = styles.strokeWidthWasChosen(for: .pen)
+
+        #expect(document.startingStrokeWidth(armed: armed, chosen: chosen,
+                                             picked: nil, pointerIn: iconID) == 2)
+        // And that is the weight the line really lands at, asked the way the
+        // drawing asks it.
+        #expect(document.startingStrokeWidth(armed: armed, chosen: chosen,
+                                             drawnAt: CGPoint(x: 110, y: 110)) == 2)
+        // Nothing picked and the pointer nowhere useful: the armed weight, as
+        // it always was.
+        #expect(document.startingStrokeWidth(armed: armed, chosen: chosen,
+                                             picked: nil, pointerIn: nil) == stock)
+    }
+
+    @Test("What is picked outranks where the pointer is")
+    func whatIsPickedWins() {
+        // A shape you have chosen is what you are working on wherever the hand
+        // has wandered to, so sweeping the pointer over an icon while a shape
+        // on a screen is picked must not make the row speak for the icon.
+        let document = document()
+        let styles = AnnotationStyles()
+        let iconID = document.layers[0].id
+        let screenID = document.layers[1].id
+        let armed = styles.strokeWidth(for: .pen)
+        let chosen = styles.strokeWidthWasChosen(for: .pen)
+
+        #expect(document.startingStrokeWidth(armed: armed, chosen: chosen,
+                                             picked: screenID, pointerIn: iconID) == stock)
+        // The other way round: the icon is picked and the pointer has left it,
+        // which is what reaching for the tool bar does.
+        #expect(document.startingStrokeWidth(armed: armed, chosen: chosen,
+                                             picked: iconID, pointerIn: nil) == 2)
+    }
+
+    @Test("A weight somebody chose survives the pointer too")
+    func thePointerNeverOverridesAChoice() {
+        var styles = AnnotationStyles()
+        let document = document()
+        let iconID = document.layers[0].id
+        styles.setStrokeWidth(stock, for: .pen)
+        #expect(document.startingStrokeWidth(armed: styles.strokeWidth(for: .pen),
+                                             chosen: styles.strokeWidthWasChosen(for: .pen),
+                                             picked: nil, pointerIn: iconID) == stock)
+    }
+
     @Test("A box's and a line's Width rows read the same way the Pen's does")
     func everyShapeRowAgrees() {
         // The gap was never the Pen's alone: every shape tool's Width row had

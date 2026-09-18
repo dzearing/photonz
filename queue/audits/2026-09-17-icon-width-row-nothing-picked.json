@@ -1,0 +1,29 @@
+{
+  "feature": "The Width row reads true with nothing picked",
+  "epic": "icon-vector",
+  "summary": "With nothing at all picked and the Pen held over a 24 pixel icon frame, the Width row now reads the 2 a line there really lands at instead of the 4 the tool is armed with. The pointer says which icon it is speaking for when no selection does.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-icon-frames on (it is on by default).",
+  "try": [
+    { "do": "Make a new document, then File > New Frame and pick 24 under Icons." },
+    { "do": "Click out on the empty canvas beside the frame so nothing is picked at all." },
+    { "do": "Press P for the Pen, then rest the pointer inside the icon frame." },
+    { "do": "Click the colour swatch in the middle of the tool bar to open the style popover.",
+      "shot": "2026-09-17-icon-width-row-nothing-picked-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Read the Width row: it says 2. Press Escape, then click three corners in the frame and press Return.",
+      "shot": "2026-09-17-icon-width-row-nothing-picked-2.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Now zoom out, rest the pointer on empty canvas away from the frame and open the popover again: it reads 4, because a line out there really is 4." }
+  ],
+  "evaluate": [
+    "When you open the popover, is the number it shows the number you expected for where you were about to draw?",
+    "Does the number changing as you cross in and out of the icon frame read as the app being helpful, or as the number being unsteady?",
+    "The row keeps its last canvas answer once the pointer is up on the tool bar. Does that feel right, or would you rather it went back to the armed weight?",
+    "A box's Width row reads 0 on an icon frame, because a box arrives with no edge at all. Is 0 the right thing to see there?"
+  ],
+  "rough": [
+    "The row can still be read out of date. Sweep the pointer from the icon frame across bare canvas and then up to the tool bar, and it reads the 4 the bare canvas last said. In practice a new icon frame opens at 3,200% and fills the canvas, so the pointer is nearly always inside it, but the stale reading is possible.",
+    "The icon previews strip still vanishes the moment you pick nothing, for the same reason the Width row used to go wrong: it only knows which icon it is showing from what is picked. It was left alone here so this change stayed to one row.",
+    "icon-width-row-reads-true-walk, written by the task before this one and never run because the Mac was locked, carried two claims that were not true: it expected 2 layers where the document has 4, and it read a line's Width row without putting the pointer anywhere. Both are corrected and the walk now runs green end to end."
+  ]
+}
