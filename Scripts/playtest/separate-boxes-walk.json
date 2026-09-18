@@ -48,7 +48,7 @@
     {
       "do": "describe",
       "stage": "1-the-pill-counts-the-boxes-too",
-      "note": "THE FIRST TEST: the pill says what came out, and it now counts boxes beside the runs of text. Four boxes came out of this capture: the two cards down the page and the two buttons at the bottom. The cards used to be left in the picture because of the soft shadow under them, and now come out wearing it"
+      "note": "THE FIRST TEST: the pill says what came out, and it now counts boxes beside the runs of text. Ten boxes come out of this capture: the two cards down the page, the two buttons at the bottom, and the six switches and fields sitting on the cards. The cards used to be left in the picture because of the soft shadow under them, and now come out wearing it"
     },
     {
       "do": "snapshot",
@@ -65,16 +65,11 @@
     {
       "do": "describe",
       "stage": "2-separated",
-      "note": "THE SECOND TEST: Box 1 and Box 2 are the two cards and Box 3 and Box 4 are the Reset and Save Changes buttons, each stacked UNDER the words that were sitting on it, so the canvas looks exactly as it did. There is no Box 5, and the list is long enough now that reaching the first card means scrolling to it"
+      "note": "THE SECOND TEST: Box 1 and Box 2 are the two cards, Box 3 and Box 4 are the Reset and Save Changes buttons, and Box 5 to Box 10 are the switches and fields that were sitting on the cards, each stacked UNDER the words that were on it, so the canvas looks exactly as it did. The two cards are now the bottom of a long list, so reaching them means scrolling down: the exact number of pieces this capture makes is pinned by SeparateFixturePieceCountTests"
     },
     {
       "do": "expect",
-      "row": "Box 2",
-      "present": true
-    },
-    {
-      "do": "expect",
-      "row": "Box 3",
+      "row": "Text 1",
       "present": true
     },
     {
@@ -84,18 +79,27 @@
     },
     {
       "do": "expect",
-      "row": "Box 5",
-      "present": false
-    },
-    {
-      "do": "expect",
-      "row": "Text 1",
+      "row": "Box 3",
       "present": true
     },
     {
       "do": "scrollPanel",
       "row": "Text 1",
-      "by": -400
+      "by": -150
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Box 2",
+      "by": -110
     },
     {
       "do": "wait",
@@ -220,6 +224,8 @@
     "forget": [
       "groups"
     ],
-    "flags": { "next-a-separated-row-says-its-words": false }
+    "flags": {
+      "next-a-separated-row-says-its-words": false
+    }
   }
 }

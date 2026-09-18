@@ -213,6 +213,21 @@ public enum BoxSweep {
     /// side, and not one of those holds half the border; demanding that gave up
     /// on the whole picture and returned no boxes at all. Each of them is a
     /// background, and what interrupts ANY of them is a thing.
+    /// The paint with the most votes, and on a tie the LOWEST number.
+    ///
+    /// A `[Int32: Int]` is walked in hash order and Swift reseeds its hashing
+    /// every process, so `votes.max(by:)` alone answers a tie differently in
+    /// different runs of the same app on the same picture — which showed up as
+    /// the notice pill counting 355, 357 and 359 pieces left in one fixture
+    /// across three runs of one test. Region numbers are handed out as the
+    /// picture is read across and down, so the lowest is the one found first:
+    /// the same rule `SeparateBudget.choose` settles its ties by.
+    static func mostVoted(_ votes: [Int32: Int]) -> (key: Int32, value: Int)? {
+        votes.max { a, b in
+            a.value == b.value ? a.key > b.key : a.value < b.value
+        }
+    }
+
     public static let minBorderShare = 0.1
 
     /// How many times the sweep will step inside something that filled the
@@ -495,7 +510,7 @@ public enum BoxSweep {
                 votes[regions[y * w + x], default: 0] += 1
             }
         }
-        guard let body = votes.max(by: { $0.value < $1.value })?.key else { return [] }
+        guard let body = mostVoted(votes)?.key else { return [] }
 
         // The parent's pixels with the band at its own outline taken off, which
         // is where its antialiasing lives. Without that, a header painted edge
@@ -639,8 +654,12 @@ public enum BoxSweep {
         for y in 1..<max(1, h - 1) { vote(0, y); vote(w - 1, y) }
         guard total > 0 else { return [] }
         let floor = minBorderShare * Double(total)
+        // Sorted by votes, and on a tie by the lower number: `sorted` is not
+        // stable and a dictionary has no order to be stable against, so
+        // without the second key two paints holding the same share of the
+        // border swap places between runs.
         return votes.filter { Double($0.value) >= floor }
-            .sorted { $0.value > $1.value }
+            .sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }
             .map(\.key)
     }
 
@@ -751,7 +770,7 @@ public enum BoxSweep {
                 votes[regions[y * w + x], default: 0] += 1
             }
         }
-        guard let best = votes.max(by: { $0.value < $1.value }),
+        guard let best = mostVoted(votes),
               Double(best.value) >= minPaintShare * Double(island.area) else { return nil }
         return best.key
     }

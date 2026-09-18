@@ -48,7 +48,7 @@
     {
       "do": "describe",
       "stage": "1-the-cards-came-out",
-      "note": "THE FIRST TEST: the pill counts four boxes. Before this the two cards were the one thing on the page the command could not take, because the soft shadow around them is neither one colour nor a straight ramp and filling that space would have left a grey halo behind"
+      "note": "THE FIRST TEST: the pill counts ten boxes. Before this the two cards were the one thing on the page the command could not take, because the soft shadow around them made the edge unreadable; now they come out as Box 1 and Box 2, each wearing its own shadow, with the switches and fields that sat on them inside"
     },
     {
       "do": "snapshot",
@@ -56,7 +56,17 @@
     },
     {
       "do": "wait",
-      "seconds": 1.5
+      "seconds": 2.0
+    },
+    {
+      "do": "expect",
+      "row": "Box 4",
+      "present": true
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -150
     },
     {
       "do": "wait",
@@ -68,14 +78,9 @@
       "present": true
     },
     {
-      "do": "expect",
-      "row": "Box 4",
-      "present": true
-    },
-    {
       "do": "scrollPanel",
-      "row": "Text 1",
-      "by": -400
+      "row": "Box 2",
+      "by": -110
     },
     {
       "do": "wait",
@@ -194,6 +199,8 @@
     "forget": [
       "groups"
     ],
-    "flags": { "next-a-separated-row-says-its-words": false }
+    "flags": {
+      "next-a-separated-row-says-its-words": false
+    }
   }
 }

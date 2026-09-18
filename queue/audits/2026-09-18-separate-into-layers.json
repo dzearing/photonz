@@ -1,0 +1,31 @@
+{
+  "feature": "Separate into Layers",
+  "epic": "ui-building",
+  "summary": "Separating a screenshot now hands back the controls that were sitting on its cards, not just the cards: the settings pane comes apart into 19 pieces instead of 11, with each switch and field as its own layer inside the card it sat on. The four walks that watch this had been claiming the old numbers since 2026-09-16 and were failing; they now claim what the app really does, and the exact counts are pinned by a test instead of by a walk.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-separate-into-layers and next-layer-groups are on by default. The file is Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row in the Layers list and run Separate into Layers.",
+      "shot": "2026-09-18-separate-1-pill.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Read the pill at the bottom of the canvas: it says 9 runs of text and 10 boxes." },
+    { "do": "Scroll the Layers list to the bottom and open Box 1, the first white card.",
+      "shot": "2026-09-18-separate-2-layers-list.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Click one of the green switches on the canvas: it picks as its own layer, inside that card." },
+    { "do": "Drag the Save Changes button off the page. The words travel with it and the space it left is plain page." },
+    { "do": "Press Command Z twice: the drag goes back, then the whole separation goes back to one Background picture." }
+  ],
+  "evaluate": [
+    "The pill says 10 boxes, but looking at this pane you would probably count four: two cards and two buttons. Does 10 read as a mistake?",
+    "Is a switch you can pick up on its own worth having here, or is it six extra rows between you and the two cards you actually wanted?",
+    "The switches and fields are called Box 5 to Box 10. Is a numbered box findable, when the runs of text next to them wear the words they say?",
+    "After separating, the Layers list shows five rows out of 24 while the bottom third of the dock is empty. Does reaching the cards feel like work?"
+  ],
+  "rough": [
+    "The word boxes is doing too much. A card, a button, a switch and a text field all come back as Box N, and the pill adds them up into one number that is four times what a person would count on this pane. Folded into the task log rather than filed: it is a naming question the user should weigh in on, and the evaluate list above asks it directly.",
+    "The Layers list is a five row porthole onto a 24 layer document, and in the same window Effects says Nothing yet and Motion says Nothing moves yet, so roughly the bottom third of the dock is blank. Folded into the open task appearance-is-below-the-fold-again-because-the-p, which is the panel height task, because this is the same problem with a new fact attached: an empty section is still holding height the list could have had.",
+    "The four walks now scroll the Layers list in two hops to reach the cards, with the scroll distances tuned by hand (-150 then -110 points). If the dock gets taller or the rows get shorter those numbers will need retuning. A walk that could say scroll to the row called Box 1 would not have this problem.",
+    "Fixed along the way, and it was not in the task: the box sweep picked a winner out of a dictionary of votes, and a tie went to whichever the hash order reached first. Swift reseeds its hashing every process, so the same picture separated in two different runs handed back a different count of what was left in it: 355, 357 and 359 across three runs of one test. Ties now go to the lowest region number. Without this the counts below could not have been pinned at all."
+  ]
+}

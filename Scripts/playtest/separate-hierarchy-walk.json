@@ -48,16 +48,11 @@
     {
       "do": "describe",
       "stage": "1-the-list-reads-like-the-screen",
-      "note": "THE FIRST TEST: the layers list is a tree and not a pile. Box 3 and Box 4 are the two buttons and each one OPENS: inside is the button itself and the words that were sitting on it. The heading and the six row labels belong to nothing, so they stayed at the top level rather than being pushed into a group that does not fit them"
+      "note": "THE FIRST TEST: the layers list is a tree and not a pile. Box 3 and Box 4 are the two buttons and each one OPENS: inside is the button itself and the words that were sitting on it. Box 1 and Box 2 are the two cards, and they open onto their labels AND the switches and fields that were on them, which is why reaching them means scrolling down the list"
     },
     {
       "do": "wait",
       "seconds": 0.5
-    },
-    {
-      "do": "expect",
-      "row": "Box 2",
-      "present": true
     },
     {
       "do": "expect",
@@ -72,7 +67,21 @@
     {
       "do": "scrollPanel",
       "row": "Text 1",
-      "by": -400
+      "by": -150
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Box 2",
+      "by": -110
     },
     {
       "do": "wait",
@@ -224,6 +233,8 @@
       "groups",
       "panel"
     ],
-    "flags": { "next-a-separated-row-says-its-words": false }
+    "flags": {
+      "next-a-separated-row-says-its-words": false
+    }
   }
 }
