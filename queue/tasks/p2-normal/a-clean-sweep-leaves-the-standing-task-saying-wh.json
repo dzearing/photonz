@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-18T12:08:03.081Z",
-  "updated": "2026-09-18T12:08:25.495Z",
+  "updated": "2026-09-18T12:15:03.119Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced during triage on 2026-09-18.\n\nCommand:\n  node -e 'const r=JSON.parse(require(\"fs\").readFileSync(\"queue/sweep/latest.json\",\"utf8\"));console.log(r.ended, r.passed, JSON.stringify(r.failed));'\n  node queue/bin/sweep-report.mjs queue/sweep/latest.json\n  node -e 'console.log(JSON.parse(require(\"fs\").readFileSync(\"queue/tasks/p2-normal/walks-that-fail-in-the-full-sweep.json\",\"utf8\")).notes.split(\"\\n\")[4])'\n\nOutput:\n  2026-09-18T12:05:03Z 249 []\n  ==> Nothing failing; no task filed.\n  Failing walks (4): separate-boxes-walk, separate-hierarchy-walk, separate-shadow-walk, separate-whole-screenshot-walk\n\nCause, both halves of it:\n  queue/bin/sweep.sh only runs sweep-report.mjs inside `if [[ \"$FAILCOUNT\" != 0 ]]`.\n  queue/bin/sweep-report.mjs then exits early anyway: `if (!result.failed?.length) { console.log('==> Nothing failing; no task filed.'); process.exit(0); }`.\nSo the write-back has no clean-sweep path at all. Both halves need changing, and sweep-notes.mjs mergeNotes has to render an empty failure list.",
@@ -29,6 +29,23 @@
     {
       "t": "2026-09-18T12:08:25.494Z",
       "note": "seq 5 -> 10"
+    },
+    {
+      "t": "2026-09-18T12:10:22.658Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T12:11:24.158Z",
+      "note": "reviewed the idea before building. Three things the task as filed does not say, and they matter more than the fix it names:\n(1) The hole is wider than the clean case. A sweep that is CUT SHORT and finds nothing failing in what it reached would, with the naive fix, wipe the previous failure list and read as the app having healed. Only the partial (locked-screen) branch carries walks it never ran across. So the carry-over becomes 'any run that did not cover the set', not 'a locked one'.\n(2) A run that got through zero walks (screen locked, nothing through) has no news at all, and must not rewrite the block with a row of zeroes.\n(3) A clean sweep with NO standing task open must not FILE one. The writer's only path today files a task when it cannot find one, and unguarded that means a green sweep opens a task saying nothing is wrong.\nAlso decided, and it is an engineering call rather than a UX one so no card: a sweep that COVERED THE WHOLE SET and found nothing failing closes the standing task done, rather than leaving a pending task whose own notes say nothing is failing. Leaving it open costs a runner cycle of the focus to claim it, find nothing, and close it by hand. Gated hard on complete===false being false, so a partial or a cut-short run never closes anything."
+    },
+    {
+      "t": "2026-09-18T12:13:53.303Z",
+      "note": "built and verified. queue/bin/sweep.sh no longer gates the write-back behind a failure count, so every sweep is written down. queue/bin/sweep-report.mjs lost its early exit and now: refuses to write anything for a run that got through no walk at all; refreshes the standing task's block for a clean run with its own numbers and date; leaves the task open when the run did not cover the set; closes it done when a run covered the WHOLE set cleanly, unless somebody is holding it (status other than pending). queue/bin/sweep-notes.mjs renders an empty failure list as one of three sentences depending on how much of the set ran, and its carry-over of walks-not-run now covers ANY run that did not cover the set rather than only a locked one.\n\nVerified end to end through the real sweep.sh against a sandbox queue dir (PHOTONZ_QUEUE_DIR) and one real walk on the real probe app, screen locked:\n  PHOTONZ_QUEUE_DIR=$QD PHOTONZ_SWEEP_ARGS=blank-canvas-walk queue/bin/sweep.sh run --force\n  blank-canvas-walk                           6s  ok\n  ==> Walk sweep finished in 0m 15s, 0 failing\n  ==> Nothing failing across the whole set. Closed the standing task walks-that-fail-in-the-full-sweep.\nand the sandbox task came back status done, block reading 'Failing walks: none. Every walk in the set passed.', 'Stopped failing since the last sweep (2): ghost-one-walk, ghost-two-walk', with the hand-written triage paragraph below the end marker untouched. Probe app quit itself; pgrep clean afterwards.\n\nqueue/bin/sweep-notes-drill.mjs grew a clean-sweep section and six end-to-end checks; all three sweep drills pass, as do audit-index, state-poll, churn and decision."
+    },
+    {
+      "t": "2026-09-18T12:15:03.118Z",
+      "note": "acceptance, item by item:\n1. A clean sweep updates the block with its own numbers and date. Verified twice: drill ('a clean sweep stops calling the last sweep's walks failing', '...and stamps the block with its own date') and on the real task, which now reads 'Last sweep 2026-09-18T12:05:03Z ... Failing walks: none.' where it read 'Failing walks (4): separate-*'.\n2. Walks that stopped failing are named. Drill: 'Stopped failing since the last sweep (2): alpha-walk, beta-walk', and the real sandbox run named both ghost walks. The path was already there; nothing reached it because the writer never ran on a clean sweep.\n3. A clean partial says exactly that. Real block now: 'Failing walks: none. Nothing failed in the part that ran, and the 277 walks the locked screen refused are unknown, not passing. This is not the walk set passing.' The headline's 'This list is the failures in the part that ran' clause is dropped when there is no list, since it read as describing a list that was not there.\n4. The heading stays true. sweep.sh now calls the writer unconditionally, and the writer is the only thing that touches the block.\n5. Drill covers the clean case: a new 'a sweep that found nothing failing' section (whole set, clean partial, clean-but-cut-short) plus eight end-to-end checks through sweep-report.mjs.\n6. The standing task was corrected by running the real writer over the real queue/sweep/latest.json, which is the fix doing its own job rather than a hand edit. It also still DECLARED those four walks as its own (queue.mjs walks), which is the other place it was naming them, so that is now --none: the walks it names are examples.\n\nleft rough: the block rounds seconds to minutes, so a run under thirty seconds reads '0 minutes'. Only ever visible on a narrow test run; a real sweep is about fifty minutes. Not worth a task.\nleft rough: 94 sweep requests are pending, because a partial hands its claimed requests back and the screen has been locked since 2026-09-15. Not new and not mine; it is the same root as a-hundred-and-fifteen-walks-fail-on-code-that-pa.\nfolded, not filed: the 101 carried walks being unrunnable under a lock went onto a-hundred-and-fifteen-walks-fail-on-code-that-pa, which already owns the locked-walk problem."
     }
-  ]
+  ],
+  "started": "2026-09-18T12:10:22.657Z"
 }

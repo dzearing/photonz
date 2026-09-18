@@ -1,0 +1,26 @@
+{
+  "feature": "A sweep that finds nothing says so, in the place a sweep that finds something says it",
+  "epic": "unmanned-loop",
+  "summary": "The walk sweep now writes down what it found whether or not it found anything. Until today a clean sweep printed 'nothing failing' and stopped, so the one task the dashboard and every runner read for the state of the walks kept the last BROKEN sweep's list, under a heading promising every sweep rewrites it. This morning it named four walks as broken that the sweep fifteen minutes earlier had watched pass.",
+  "setup": "A terminal in the repo, and the Project section of the dashboard at http://127.0.0.1:8791. Nothing in the app to turn on, and every command below is safe to run while you are using the dev app.",
+  "try": [
+    { "do": "Read the standing task as it stands now: node queue/bin/queue.mjs show walks-that-fail-in-the-full-sweep", "note": "The block at the top is this morning's clean partial sweep, written by the new code. It names no failing walk; it names the 101 the locked screen refused and says they are unread, not fixed." },
+    { "do": "Open the dashboard's Project section and find that task.", "note": "This is the reading a runner gets. Ask yourself whether it tells you the state of the walks in one glance." },
+    { "do": "Run the drill: node queue/bin/sweep-notes-drill.mjs", "note": "The 'a sweep that found nothing failing' section and the last dozen lines of 'two sweeps through sweep-report.mjs' are the new cases." },
+    { "do": "Watch it happen for real, against a throwaway queue and one real walk: QD=$(mktemp -d) && mkdir -p $QD/tasks/p2-normal $QD/sweep && PHOTONZ_QUEUE_DIR=$QD PHOTONZ_SWEEP_ARGS=blank-canvas-walk queue/bin/sweep.sh run --force", "note": "About two minutes, most of it building the probe bundle. With no standing task open it prints 'Nothing failing, and no standing task is open, so there is nothing to update' and files nothing." },
+    { "do": "Ask for the next real sweep: queue/bin/sweep.sh request \"see the clean write-back on the real set\"", "note": "The loop runs it between tasks. It is the first real reading: this has been proved by drill and by a one-walk run, not yet by a full set." }
+  ],
+  "evaluate": [
+    "Reading only the block on that task, can you tell whether the walks are healthy right now, or only what the last run happened to touch?",
+    "'Failing walks: none. Nothing failed in the part that ran, and the 277 walks the locked screen refused are unknown, not passing.' Is that the right amount of caution, or does it read as hedging?",
+    "A sweep that covers the whole set cleanly now closes the standing task by itself. Would you rather it stayed open until a person closed it?",
+    "When that task is closed and a walk breaks a week later, a brand new task is filed and the old triage is only findable with search --all. Is losing the thread worth the clean queue?",
+    "The 101 walks carried across as 'not run this time and still failing' have been carried by partial sweeps for days. Does that list still read as work, or has it become wallpaper?"
+  ],
+  "rough": [
+    "No screenshot: nothing about this is on screen in the app. What it changes is the text of one task, which step one prints and step two shows on the dashboard.",
+    "It has not run against a full clean set yet. The close path was proved by drill and by a real one-walk run through sweep.sh; the real set has not come back clean since the Mac locked on 2026-09-15.",
+    "The block says '0 minutes' for a run under thirty seconds, because it rounds seconds to minutes. Never visible on a real sweep of about fifty minutes, only on narrow test runs. Left alone.",
+    "The standing task still lists 101 walks a locked screen has refused for days. That is honest but it is not actionable while the screen stays locked, and nothing in the block says which of them a person could force with PHOTONZ_ALLOW_LOCKED_WALK=1."
+  ]
+}

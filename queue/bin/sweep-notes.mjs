@@ -68,12 +68,25 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
     // in the same breath: half a set read as a whole set is how a green sweep
     // would come to mean nothing.
     result.partial
-      ? `Last sweep ${result.ended} ran only the part of the walk set a locked screen cannot touch: ${result.walks} of ${result.total} walks ran in ${minutes} minutes, of which ${result.passed} passed. The other ${result.couldNotRun} were refused because the screen is locked, and those are unknown, not passing. This list is the failures in the part that ran, not the state of the walk set.`
+      ? `Last sweep ${result.ended} ran only the part of the walk set a locked screen cannot touch: ${result.walks} of ${result.total} walks ran in ${minutes} minutes, of which ${result.passed} passed. The other ${result.couldNotRun} were refused because the screen is locked, and those are unknown, not passing.`
+        + (failed.length ? ` This list is the failures in the part that ran, not the state of the walk set.` : ``)
       : result.complete === false
         ? `Last sweep ${result.ended} DID NOT FINISH${result.timedOut ? ' (stopped on the clock)' : ''}: it reached ${result.walks} walks in ${minutes} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
         : `Last sweep ${result.ended}: ${result.passed} of ${result.walks} walks passed in ${minutes} minutes.`,
     ``,
-    `Failing walks (${failed.length}): ${list}`,
+    // Nothing failing is a RESULT and gets written down like one. Until
+    // 2026-09-18 a clean sweep wrote nothing at all, so this block kept the last
+    // broken sweep's list under a heading promising every sweep rewrites it: on
+    // 2026-09-18 it named four walks as broken that the sweep fifteen minutes
+    // earlier had watched pass. What "nothing failing" is worth still depends on
+    // how much of the set ran, so the sentence says which of the three it is.
+    failed.length
+      ? `Failing walks (${failed.length}): ${list}`
+      : result.partial
+        ? `Failing walks: none. Nothing failed in the part that ran, and the ${result.couldNotRun} walks the locked screen refused are unknown, not passing. This is not the walk set passing.`
+        : result.complete === false
+          ? `Failing walks: none. Nothing failed in what this run reached, and the walks it never reached are unknown, not passing. This is not the walk set passing.`
+          : `Failing walks: none. Every walk in the set passed.`,
   ];
 
   // A crash is in that list like any other failure and means something else
@@ -91,19 +104,27 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
     );
   }
 
-  // A partial sweep replaces a list that may have come from a whole check. The
-  // walks it never ran are not fixed and not failing: they are unread, and
-  // dropping them would read as the app having healed overnight. So they are
-  // carried across by name, under their own heading, and read back as
+  // A run that did not cover the set replaces a list that may have come from one
+  // that did. The walks it never ran are not fixed and not failing: they are
+  // unread, and dropping them would read as the app having healed overnight. So
+  // they are carried across by name, under their own heading, and read back as
   // previous failures by the sweep after this one.
-  if (result.partial) {
+  //
+  // This used to apply only to a sweep a locked screen cut down. A sweep stopped
+  // on the clock has exactly the same hole and is the more dangerous of the two
+  // now that a clean run writes a block at all: it reaches a hundred walks, none
+  // of them fails, and without this the other four hundred silently stop being
+  // failures.
+  if (result.complete === false) {
     const ran = new Set(result.ranWalks || []);
     const carried = previous.filter((w) => !failed.includes(w) && !ran.has(w));
     if (carried.length) {
       lines.push(
         ``,
         `Not run this time and still failing from the last check (${carried.length}): ${carried.join(', ')}`,
-        `Those walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.`,
+        result.partial
+          ? `Those walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.`
+          : `This run stopped before reaching them. They are unread, not fixed.`,
       );
     }
   }

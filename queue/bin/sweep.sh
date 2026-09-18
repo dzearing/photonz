@@ -260,12 +260,13 @@ run)
     });
   ' "$LATEST")" >/dev/null 2>&1
 
-  # A failing sweep becomes one task, not one per sweep: if the standing task
-  # is still open, the new result is appended to it instead of filing a
-  # duplicate every time the sweep runs.
-  if [[ "$FAILCOUNT" != 0 ]]; then
-    node queue/bin/sweep-report.mjs "$LATEST"
-  fi
+  # Every sweep is written onto the standing task, including a clean one. A
+  # failing sweep becomes one task, not one per sweep: if the standing task is
+  # still open, the new result is appended to it instead of filing a duplicate
+  # every time the sweep runs. A clean one refreshes the same block with its own
+  # numbers, so the block can never keep naming walks the latest sweep passed,
+  # and closes the task if it covered the whole set. It never files a task.
+  node queue/bin/sweep-report.mjs "$LATEST"
 
   # Exit 3 still means the set was not covered, for anything that reads it.
   (( SWEEP_CODE == 3 )) && exit 3

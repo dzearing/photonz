@@ -126,6 +126,62 @@ console.log('walks that stopped failing');
   check('...with no em dash', !part.includes('\u2014'), part);
 }
 
+// ---- a sweep that found nothing ---------------------------------------------
+// The other half of the same problem. Until 2026-09-18 a clean sweep wrote
+// nothing at all, so this block kept the last broken sweep's list under a
+// heading promising every sweep rewrites it: on 2026-09-18 it named four walks
+// as broken that the sweep fifteen minutes earlier had watched pass. "Nothing
+// failing" is a result and is written down like one, and what it is WORTH
+// depends on how much of the set ran.
+console.log('a sweep that found nothing failing');
+{
+  const whole = notes.mergeNotes('', result({ failed: ['alpha-walk', 'beta-walk'] }));
+
+  const clean = notes.mergeNotes(whole, result({ ended: '2026-09-18T12:00:00Z', failed: [], passed: 10, log: 'queue/sweep/clean.log' }));
+  check('a clean sweep stops calling the last sweep\'s walks failing',
+    !/^Failing walks \(/m.test(clean), clean);
+  check('...and says plainly that nothing failed', clean.includes('Failing walks: none. Every walk in the set passed.'), clean);
+  check('...and stamps the block with its own date', clean.includes('Last sweep 2026-09-18T12:00:00Z'), clean);
+  check('...and names the walks that stopped failing',
+    clean.includes('Stopped failing since the last sweep (2): alpha-walk, beta-walk'), clean);
+  check('...and leaves nothing for the next sweep to read back as failing',
+    notes.previousFailures(clean).length === 0, notes.previousFailures(clean));
+  check('...with no em dash', !clean.includes('—'), clean);
+
+  // A clean PART of the set is not a clean set. alpha-walk was refused, so it
+  // is carried across; beta-walk ran and passed, so it is gone.
+  const cleanPart = notes.mergeNotes(whole, result({
+    ended: '2026-09-18T12:05:00Z', failed: [], complete: false, partial: true, screenLocked: true,
+    walks: 249, passed: 249, couldNotRun: 277, total: 526, ranWalks: ['beta-walk'],
+  }));
+  check('a clean partial says nothing failed in the part that ran',
+    cleanPart.includes('Failing walks: none. Nothing failed in the part that ran'), cleanPart);
+  check('...and refuses to read as the whole set passing',
+    cleanPart.includes('This is not the walk set passing.'), cleanPart);
+  check('...and counts what the lock refused as unknown', cleanPart.includes('277 walks the locked screen refused are unknown, not passing'), cleanPart);
+  check('...and carries across the walk it never ran',
+    /Not run this time and still failing from the last check \(1\): alpha-walk/.test(cleanPart), cleanPart);
+  check('...and drops the walk it did run and passed', !cleanPart.includes('beta-walk'), cleanPart);
+  check('...and claims nothing stopped failing', !cleanPart.includes('Stopped failing'), cleanPart);
+  check('...and is read back next time as still failing',
+    notes.previousFailures(cleanPart).join() === 'alpha-walk', notes.previousFailures(cleanPart));
+
+  // A sweep stopped on the clock has the same hole and is the more dangerous of
+  // the two now that a clean run writes a block: it reaches a hundred walks,
+  // none of them fails, and the other four hundred must not stop being failures.
+  const cleanCut = notes.mergeNotes(whole, result({
+    ended: '2026-09-18T13:00:00Z', failed: [], complete: false, timedOut: true,
+    walks: 100, passed: 100, ranWalks: ['beta-walk'],
+  }));
+  check('a clean run stopped on the clock says so', cleanCut.includes('DID NOT FINISH (stopped on the clock)'), cleanCut);
+  check('...and says nothing failed in what it reached',
+    cleanCut.includes('Failing walks: none. Nothing failed in what this run reached'), cleanCut);
+  check('...and carries across the walk it never reached',
+    /Not run this time and still failing from the last check \(1\): alpha-walk/.test(cleanCut), cleanCut);
+  check('...and says why, without blaming a lock',
+    cleanCut.includes('This run stopped before reaching them. They are unread, not fixed.'), cleanCut);
+}
+
 // ---- failures another task already owns -------------------------------------
 console.log('walks another task owns, guessed from its wording');
 {
@@ -254,6 +310,69 @@ console.log('two sweeps through sweep-report.mjs');
   check('...and does not claim the walks it never ran stopped failing',
     !task.notes.includes('Stopped failing'), task.notes);
   check('...and logs the run like any other', (task.log || []).some((e) => e.note.startsWith('sweep 2026-09-17T18:00:00Z')), task.log);
+
+  // A clean part of the set. The block is refreshed so it stops naming walks
+  // this run watched pass, and the task STAYS OPEN: most of the set never ran.
+  const r4 = write('r4.json', result({
+    ended: '2026-09-18T12:05:00Z', failed: [], log: 'queue/sweep/r4.log',
+    complete: false, partial: true, screenLocked: true,
+    walks: 249, passed: 249, couldNotRun: 277, total: 521, ranWalks: ['beta-walk', 'delta-walk'],
+  }));
+  const said4 = run(r4);
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('a clean partial refreshes the block instead of leaving the last failures',
+    !task.notes.includes('Failing walks (2): beta-walk, delta-walk'), task.notes);
+  check('...and says nothing failed in the part that ran',
+    task.notes.includes('Failing walks: none. Nothing failed in the part that ran'), task.notes);
+  check('...and leaves the standing task open', task.status === 'pending', task.status);
+  check('...and says so out loud', said4.includes('Left open; the set was not covered'), said4);
+  check('...and keeps what a person wrote', task.notes.includes(HAND), task.notes);
+  check('...and logs the clean run', (task.log || []).some((e) => e.note.startsWith('sweep 2026-09-18T12:05:00Z: nothing failing')), task.log);
+
+  // A locked screen that let NOTHING through is a run that did not happen. It
+  // must not write its row of zeroes over the last real answer.
+  const before = task.notes;
+  const said0 = run(write('r0.json', result({
+    ended: '2026-09-18T12:30:00Z', failed: [], walks: 0, passed: 0,
+    complete: false, screenLocked: true, couldNotRun: 521, total: 521,
+  })));
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('a sweep that ran no walk at all writes nothing', task.notes === before, task.notes);
+  check('...and says why', said0.includes('No walk ran'), said0);
+
+  // ...but never out from under whoever is holding it. A runner mid-task would
+  // otherwise finish work on a task that is already done, and a card opened
+  // against a blocked one would be stranded.
+  task.status = 'in_progress';
+  writeFileSync(file, JSON.stringify(task, null, 2));
+  const saidBusy = run(write('rbusy.json', result({ ended: '2026-09-18T17:00:00Z', failed: [], walks: 521, passed: 521 })));
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('a clean sweep does not close a standing task somebody is running', task.status === 'in_progress', task.status);
+  check('...and says why it left it alone', saidBusy.includes('is in_progress, so it is left alone'), saidBusy);
+  check('...but still refreshes the block', task.notes.includes('Last sweep 2026-09-18T17:00:00Z'), task.notes);
+  task.status = 'pending';
+  writeFileSync(file, JSON.stringify(task, null, 2));
+
+  // The whole set, every walk passing. The task's own acceptance is met, so it
+  // is closed rather than left as a pending row whose notes say nothing is wrong.
+  const said5 = run(write('r5.json', result({
+    ended: '2026-09-18T18:00:00Z', failed: [], walks: 521, passed: 521, log: 'queue/sweep/r5.log',
+  })));
+  task = JSON.parse(readFileSync(file, 'utf8'));
+  check('a sweep that covered the whole set cleanly closes the standing task', task.status === 'done', task.status);
+  check('...and says what it saw', said5.includes('Closed the standing task'), said5);
+  check('...and the block says every walk passed',
+    task.notes.includes('Failing walks: none. Every walk in the set passed.'), task.notes);
+  check('...and names no failing walk at all', !/^Failing walks \(/m.test(task.notes), task.notes);
+  check('...and still keeps what a person wrote', task.notes.includes(HAND), task.notes);
+
+  // With nothing open, a clean sweep files nothing. A task announcing that
+  // nothing is wrong is a red row on a green queue.
+  const filedBefore = readdirSync(join(dir, 'tasks', 'p2-normal')).length;
+  const said6 = run(write('r6.json', result({ ended: '2026-09-18T19:00:00Z', failed: [], walks: 521, passed: 521 })));
+  check('a clean sweep with no standing task open files nothing',
+    readdirSync(join(dir, 'tasks', 'p2-normal')).length === filedBefore, readdirSync(join(dir, 'tasks', 'p2-normal')));
+  check('...and says there was nothing to update', said6.includes('nothing to update'), said6);
 }
 
 // ---- the standing task survives being renamed -------------------------------

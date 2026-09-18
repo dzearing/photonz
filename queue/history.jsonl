@@ -5391,3 +5391,9 @@
 {"t":"2026-09-18T12:09:34.683Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":120,"to":130}
 {"t":"2026-09-18T12:09:34.729Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":130,"to":140}
 {"t":"2026-09-18T12:10:10.628Z","ev":"digest","file":"2026-09-18.md"}
+{"t":"2026-09-18T12:10:22.660Z","ev":"task_started","id":"a-clean-sweep-leaves-the-standing-task-saying-wh","title":"A clean sweep leaves the standing task saying what the last broken one said","priority":"p2-normal"}
+{"t":"2026-09-18T12:11:24.160Z","ev":"task_note","id":"a-clean-sweep-leaves-the-standing-task-saying-wh"}
+{"t":"2026-09-18T12:13:14.008Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":[]}
+{"t":"2026-09-18T12:13:53.305Z","ev":"task_note","id":"a-clean-sweep-leaves-the-standing-task-saying-wh"}
+{"t":"2026-09-18T12:14:43.506Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-18T12:15:03.120Z","ev":"task_note","id":"a-clean-sweep-leaves-the-standing-task-saying-wh"}
