@@ -29,6 +29,9 @@ struct SeparatedRowsSayTheirWordsTests {
         let words: [ImageRef: String]
         let runs: Int
         let readMS: Double
+        /// The bitmaps the document points at, so the package can be written
+        /// the way the app writes one.
+        let store: ImageStore
     }
 
     private static func takeApart(_ name: String, scale: CGFloat) -> Taken? {
@@ -80,7 +83,7 @@ struct SeparatedRowsSayTheirWordsTests {
             words[ref] = TextReader.words(in: picture) ?? ""
         }
         return Taken(document: document, words: words, runs: refs.count,
-                     readMS: Date().timeIntervalSince(t0) * 1000)
+                     readMS: Date().timeIntervalSince(t0) * 1000, store: store)
     }
 
     private static let settings = takeApart("settings-pane-2x", scale: 2)
@@ -114,18 +117,154 @@ struct SeparatedRowsSayTheirWordsTests {
                                          readWords: taken.words).count == 1)
     }
 
-    @Test func nothingIsWrittenIntoTheDocument() throws {
+    @Test func nothingIsWrittenOntoTheCanvas() throws {
         let taken = try #require(Self.settings)
-        // The bytes of the document with the words read and without them are
-        // the same bytes: the names in the list are worked out as it is drawn.
-        // This is what keeps it off the undo stack and out of the file.
+        // No layer is renamed and no layer becomes text. The names in the list
+        // are worked out as it is drawn, from what was read, which is what
+        // keeps the reading off the undo stack.
+        let runs = taken.document.allLayers.filter { $0.isARunOfText == true }
+        #expect(runs.allSatisfy { $0.name.hasPrefix("Text ") })
+        #expect(runs.allSatisfy { $0.text == nil })
+    }
+
+    /// What the reading found IS written into the document, and comes back
+    /// with it: that is the whole of `ReadWords`.
+    @Test func whatTheReadingFoundIsSavedWithTheFileAndOpensWithIt() throws {
+        let taken = try #require(Self.settings)
+        var document = taken.document
+        document.readWords.remember(taken.words.map { ($0.key, $0.value) })
+
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        let written = try encoder.encode(taken.document)
-        let names = taken.document.allLayers.filter { $0.isARunOfText == true }.map(\.name)
-        #expect(names.allSatisfy { $0.hasPrefix("Text ") })
-        #expect(try encoder.encode(taken.document) == written)
-        #expect(String(data: written, encoding: .utf8)?.contains("Save Changes") != true)
+        let written = try encoder.encode(document)
+        let opened = try JSONDecoder().decode(PhotonzDocument.self, from: written)
+        #expect(opened == document)
+
+        // The words a person can see on the pane are in the file, against the
+        // bitmaps they were read off, and the list built from the OPENED
+        // document says them with no reading having happened.
+        let names = opened
+            .layerRows(expanded: opened.openableGroupIDs, selected: [],
+                       readWords: opened.readWords.byPicture)
+            .map(\.name)
+        #expect(names.contains("Save Changes"))
+        #expect(!names.contains { $0.hasPrefix("Text ") })
+    }
+
+    /// The point of saving it: opening the file leaves nothing to read.
+    @Test func openingASavedReadingLeavesNothingPending() throws {
+        let taken = try #require(Self.settings)
+        var document = taken.document
+        document.readWords.remember(taken.words.map { ($0.key, $0.value) })
+        let opened = try JSONDecoder().decode(
+            PhotonzDocument.self, from: JSONEncoder().encode(document))
+
+        // Exactly the question `EditorState.readWordsOffRuns` asks before it
+        // starts a pass: which runs has nothing been read off yet.
+        func pending(_ doc: PhotonzDocument) -> [ImageRef] {
+            doc.allLayers
+                .filter { $0.isARunOfText == true }
+                .compactMap(\.imageRef)
+                .filter { !doc.readWords.hasBeenRead($0) }
+        }
+        #expect(pending(taken.document).count == taken.runs)
+        #expect(pending(opened).isEmpty)
+
+        // ...and a run that arrives afterwards is read like any other: nothing
+        // about the saved reading covers a picture it has never seen.
+        var withANewRun = opened
+        let fresh = ImageRef(pixelSize: CGSize(width: 40, height: 12))
+        var layer = Layer(name: "Text 99", content: .image(fresh),
+                          frame: CGRect(x: 0, y: 0, width: 40, height: 12))
+        layer.isARunOfText = true
+        withANewRun.layers.append(layer)
+        #expect(pending(withANewRun) == [fresh])
+    }
+
+    // MARK: - The real save path
+
+    /// Written and opened the way the app writes and opens a file: a .photonz
+    /// package, with the bitmaps encoded as HEIC beside the model.
+    @Test func aSavedPackageOpensWithItsRowsAlreadySayingTheirWords() throws {
+        let taken = try #require(Self.settings)
+        var document = taken.document
+        document.readWords.remember(taken.words.map { ($0.key, $0.value) })
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("read-words-\(UUID().uuidString).photonz")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try PackageIO.write(document, store: taken.store, to: url)
+
+        // A new store, the way a new window opens a file: nothing in memory
+        // knows anything about these pictures.
+        let opened = try PackageIO.read(from: url, into: ImageStore())
+        #expect(opened.readWords.count == taken.words.count)
+        let names = opened
+            .layerRows(expanded: opened.openableGroupIDs, selected: [],
+                       readWords: opened.readWords.byPicture)
+            .map(\.name)
+        #expect(names.contains("Save Changes"))
+        #expect(!names.contains { $0.hasPrefix("Text ") })
+    }
+
+    /// Whether a second reading would have said the same thing.
+    ///
+    /// This is the half of the case for saving the reading that could only be
+    /// answered by trying it: the bitmaps in a package are HEIC, so the pixels
+    /// a reopened file hands the reader are NOT the pixels the first reading
+    /// saw. Printed rather than asserted, because it is a fact about Vision on
+    /// this machine rather than a rule the app enforces:
+    ///
+    /// ```
+    /// PHOTONZ_STUDY=1 Scripts/test.sh -c release --filter SeparatedRowsSayTheirWords
+    /// ```
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["PHOTONZ_STUDY"] == "1"))
+    func aSecondReadingOfTheSavedPicturesNeedNotAgreeWithTheFirst() throws {
+        for (name, scale) in [("settings-pane-2x", CGFloat(2)), ("dense-page-1x", CGFloat(1))] {
+            guard let taken = Self.takeApart(name, scale: scale) else { continue }
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("read-words-\(UUID().uuidString).photonz")
+            defer { try? FileManager.default.removeItem(at: url) }
+            var document = taken.document
+            document.readWords.remember(taken.words.map { ($0.key, $0.value) })
+            try PackageIO.write(document, store: taken.store, to: url)
+            let store = ImageStore()
+            let opened = try PackageIO.read(from: url, into: store)
+
+            // What carrying the reading costs on disk, against what the file
+            // weighs anyway.
+            func bytes(_ at: URL) -> Int {
+                (try? FileManager.default.attributesOfItem(atPath: at.path)[.size] as? Int) as? Int ?? 0
+            }
+            let modelWith = bytes(url.appendingPathComponent("document.json"))
+            let bare = FileManager.default.temporaryDirectory
+                .appendingPathComponent("read-words-bare-\(UUID().uuidString).photonz")
+            defer { try? FileManager.default.removeItem(at: bare) }
+            try PackageIO.write(taken.document, store: taken.store, to: bare)
+            let modelWithout = bytes(bare.appendingPathComponent("document.json"))
+            let pictures = (try? FileManager.default
+                .contentsOfDirectory(at: url.appendingPathComponent("images"),
+                                     includingPropertiesForKeys: nil))?
+                .reduce(0) { $0 + bytes($1) } ?? 0
+
+            let t0 = Date()
+            var differed: [(String, String)] = []
+            for (ref, first) in taken.words {
+                guard let picture = store.image(for: ref) else { continue }
+                let again = TextReader.words(in: picture) ?? ""
+                if again != first { differed.append((first, again)) }
+            }
+            let ms = Date().timeIntervalSince(t0) * 1000
+            print("""
+            ==== \(name): reading it again after a save
+            \(taken.words.count) runs, read again in \(Int(ms)) ms — which is what \
+            opening this file used to cost, every time
+            \(differed.count) of them came back saying something different
+            \(differed.prefix(8).map { "\"\($0.0)\" -> \"\($0.1)\"" }.joined(separator: " · "))
+            the file: model \(modelWithout / 1024) KB without the reading, \
+            \(modelWith / 1024) KB with it, beside \(pictures / 1024) KB of pictures
+            """)
+        }
     }
 
     // MARK: - What it costs

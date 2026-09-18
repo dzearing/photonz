@@ -13,12 +13,19 @@ import PhotonzRender
 /// Three rules decide the shape of it, and all three come out of the study
 /// `docs/design/separate-reads-the-words.md`:
 ///
-/// - **Nothing is written into the document.** A reading is a guess about
-///   pixels. It names a row and it does nothing else, so a separated picture is
-///   byte for byte what it was, no undo step is spent, and a wrong word costs
-///   nothing but a wrong word in a list. Turn into Text is still the one and
-///   only thing that puts a guess ON the canvas, one run at a time, where one
-///   press takes it back.
+/// - **Nothing is put on the canvas, and nothing is an edit.** A reading is a
+///   guess about pixels. It names a row and it does nothing else: no undo step
+///   is spent, the file does not go edited, and a wrong word costs nothing but
+///   a wrong word in a list. Turn into Text is still the one and only thing
+///   that puts a guess ON the canvas, one run at a time, where one press takes
+///   it back.
+///
+///   What the reading FOUND is kept, though, written into the document
+///   alongside the layers (`ReadWords.swift`) so that opening a file full of
+///   separated runs costs nothing and a row says the same words it said last
+///   time. It is filed outside history and outside the saved baseline, so it
+///   still spends no undo step and still leaves the file looking exactly as
+///   edited as the person left it.
 /// - **The words only, never the face.** `TextReader.read` also identifies the
 ///   family, the weight and the size, and the study measured that as where its
 ///   mistakes are: four of thirty one runs of this app's own window came back
@@ -46,7 +53,10 @@ extension EditorState {
     ///
     /// Safe to call as often as you like: a run whose words are already known
     /// is skipped, including one whose reading came back empty, so a picture
-    /// with nothing readable in it is asked once and never again.
+    /// with nothing readable in it is asked once and never again. "Already
+    /// known" now spans saves as well as sessions, so a file that was saved
+    /// with its readings in it opens with nothing pending at all and this does
+    /// no work whatsoever.
     func readWordsOffRuns() {
         guard Experiments.shared.separatedRowSaysItsWordsEnabled, let document else { return }
         // In the order the layers list draws them, top down, so the rows a
@@ -58,7 +68,7 @@ extension EditorState {
             .compactMap { document.layer(id: $0.id) }
             .filter { $0.isARunOfText == true }
             .compactMap { layer -> (ImageRef, CGImage)? in
-                guard let ref = layer.imageRef, wordsReadOffPictures[ref] == nil,
+                guard let ref = layer.imageRef, !document.readWords.hasBeenRead(ref),
                       seen.insert(ref).inserted, let image = store.image(for: ref)
                 else { return nil }
                 return (ref, image)
@@ -99,22 +109,34 @@ extension EditorState {
         }
     }
 
-    /// Files what a batch came back with. An empty string is a real answer —
-    /// this picture holds no words — and it is what stops the same switch or
-    /// icon being read again every time the pass runs.
+    /// Files what a batch came back with, into the document.
+    ///
+    /// An empty string is a real answer — this picture holds no words — and it
+    /// is what stops the same switch or icon being read again every time the
+    /// pass runs, or every time the file is opened.
+    ///
+    /// Written through `applyWithoutMarkingEdited` for two reasons at once: it
+    /// is not something the person did, so it spends no undo step and reaches
+    /// the steps already on the stack (undo a separation, do it again, and the
+    /// reading is still there); and it must not make the file look edited,
+    /// because nobody would understand a save prompt for words the app read to
+    /// itself. It rides along with the next real save.
     private func rememberWords(_ found: [(ImageRef, String)]) {
-        for (ref, words) in found { wordsReadOffPictures[ref] = words }
+        applyWithoutMarkingEdited { $0.readWords.remember(found) }
     }
 
-    /// Calls off a reading in flight and forgets what it found: a new document
-    /// in this window, whose pictures are not these pictures.
+    /// Calls off a reading in flight: a new document in this window, whose
+    /// pictures are not these pictures.
+    ///
+    /// What was READ is not forgotten here any more, because it is not held
+    /// here any more — it belongs to the document, and the outgoing document
+    /// takes its own readings with it.
     func forgetWordsReadOffPictures() {
         wordReadingPass?.cancel()
         wordReadingPass = nil
         readingWordsOffPictures = false
-        wordsReadOffPictures = [:]
-        // And what the runs of that document voted their family to be: these
-        // are not those runs.
+        // What the runs of that document voted their family to be goes, though:
+        // these are not those runs.
         familyTheRunsAreSetIn = [:]
         // And the readings already made in this window, for the same reason:
         // a line about labels that are not in front of anybody any more.
@@ -124,6 +146,7 @@ extension EditorState {
     /// What the layers list and the find field name a separated run from:
     /// empty while the flag is off, so the list is exactly the one it was.
     var readWordsForRows: [ImageRef: String] {
-        Experiments.shared.separatedRowSaysItsWordsEnabled ? wordsReadOffPictures : [:]
+        guard Experiments.shared.separatedRowSaysItsWordsEnabled else { return [:] }
+        return document?.readWords.byPicture ?? [:]
     }
 }

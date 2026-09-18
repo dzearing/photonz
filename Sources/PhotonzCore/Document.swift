@@ -54,6 +54,15 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// that loops is. It also means the ruler holds still while a bar is
     /// dragged along it, instead of rescaling under the hand that is dragging.
     public var motionCycleMS: Int?
+    /// What the app has read off the pictures in this document, so a separated
+    /// run's row says its words the moment the file opens rather than after a
+    /// second of background reading (`ReadWords.swift`).
+    ///
+    /// It is words and the bitmap they came off, never pixels. It is filed
+    /// outside history and outside the saved baseline, so reading spends no
+    /// undo step and does not make a file look edited; it rides along with the
+    /// next save the person makes.
+    public var readWords = ReadWords()
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -71,7 +80,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
-        case gridOriginX, gridOriginY, motionCycleMS
+        case gridOriginX, gridOriginY, motionCycleMS, readWords
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -94,6 +103,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // cycle simply follows its longest motion saves byte for byte as it did
         // before laps could be written down at all.
         if let motionCycleMS { try c.encode(motionCycleMS, forKey: .motionCycleMS) }
+        // A document nothing has been read off writes no readings key, so one
+        // saved before the app kept its reading is byte for byte what it was.
+        if !readWords.isEmpty { try c.encode(readWords, forKey: .readWords) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -121,6 +133,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Nothing written means the lap follows the longest motion, which is
         // what every document written before this did.
         motionCycleMS = try c.decodeIfPresent(Int.self, forKey: .motionCycleMS)
+        // Nothing written means nothing has been read off this document's
+        // pictures yet, which is what every document written before this did:
+        // it is read in the background on open, exactly as it was.
+        readWords = try c.decodeIfPresent(ReadWords.self, forKey: .readWords) ?? ReadWords()
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

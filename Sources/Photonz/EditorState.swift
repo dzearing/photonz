@@ -53,17 +53,6 @@ final class EditorState {
     /// bitmap again, so the offer goes away the moment undo takes that picture
     /// out of the document.
     var lastSeparated: ImageRef?
-    /// The words the app has read off each separated run of text, so its row
-    /// can say them instead of saying Text 57
-    /// (`EditorState+RunWords`, `next-a-separated-row-says-its-words`).
-    ///
-    /// Keyed by the BITMAP, like the leftover counts above and for the same
-    /// reasons: undoing a separation and running it again finds the reading
-    /// already there, and two layers cut from one picture agree. Session
-    /// chrome, never the document — a reading is a guess about pixels, so it
-    /// costs no undo step and a file saved with this on is byte for byte an
-    /// ordinary file.
-    var wordsReadOffPictures: [ImageRef: String] = [:]
     /// Whether a background reading pass is still working through the runs a
     /// separation just made. The find field says so rather than saying no layer
     /// says that, which would be a wrong answer a second early.
@@ -1203,6 +1192,27 @@ final class EditorState {
     /// save, capture-history save): the current state becomes the clean baseline.
     func markSaved() {
         savedDocument = document
+    }
+
+    /// A change that came from outside this document AND is not work anybody
+    /// did: the words the app read off a picture in the background
+    /// (`EditorState+RunWords`).
+    ///
+    /// It records no undo step, like anything else from outside, and it moves
+    /// the clean baseline with it, which nothing else does. That second half
+    /// is the whole point: a file must not acquire an edited dot, or a save
+    /// prompt on close, because the app read something while nobody was
+    /// looking. The reading rides along with the next save the person makes,
+    /// and until then it is exactly as free as it was before it was written
+    /// down.
+    @discardableResult
+    func applyWithoutMarkingEdited(_ update: (inout PhotonzDocument) -> Void) -> Bool {
+        guard applyOutsideHistory(update) else { return false }
+        if var baseline = savedDocument {
+            update(&baseline)
+            savedDocument = baseline
+        }
+        return true
     }
 
     // MARK: - State the intent extensions work on

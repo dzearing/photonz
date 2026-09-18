@@ -1,0 +1,32 @@
+{
+  "feature": "What a reading found is saved with the document",
+  "epic": "ui-building",
+  "summary": "Take a screenshot apart, let the rows fill in with the words that are in them, save, and the words are saved too. Open that file again and every row says its name at once, instead of the app quietly reading a hundred and forty pictures all over again for an answer it already had.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-a-separated-row-says-its-words, on by default, and it needs next-a-row-says-its-words and next-find-a-layer, both on by default too.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png and press Fit." },
+    { "do": "Pick the Background row and run Layer > Separate into Layers." },
+    { "do": "Wait two seconds and read the layers list: the rows have turned from Text 1, Text 2 into the words in each piece.", "shot": "2026-09-17-read-words-saved-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Note which words a few rows say, then press Command S and save it as a .photonz file." },
+    { "do": "Close the window, then open that .photonz file again." },
+    { "do": "Read the layers list the instant it appears: every row already says its words, with no second of numbers first." },
+    { "do": "Type a word you can see on the canvas into the find field over the list and check it still reaches the piece holding it.", "shot": "2026-09-17-read-words-saved-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Rename one row by hand, save, close, open again, and check your name is still there." }
+  ],
+  "evaluate": [
+    "Does a file that opens with every row already named feel better than watching a hundred and forty rows fill in, or do you miss seeing it happen?",
+    "The app never marks the file edited just because it read something, so the words are only saved when you save for your own reasons. Is that the right side to err on, or would you rather it saved them for you?",
+    "A saved reading means a row says the same words every time. Had you ever noticed one changing its mind between openings?",
+    "The dense page's file grows from 154 KB of model to 179 KB, beside 772 KB of pictures. Is carrying the words worth that?",
+    "If you rename a row by hand and then undo the whole separation, the words the app read are still remembered for next time. Does that surprise you?"
+  ],
+  "rough": [
+    "The save, quit and open loop is not driven by a scripted walk: the playtest harness has no step that saves a document or reopens one. It is covered end to end in a test that writes and reads a real .photonz package through the same PackageIO the app uses, and by hand in the steps above.",
+    "The pictures here were taken with the Mac's screen locked, so colours read dimmed. They show the rows saying their words, which is the surface the feature sits on; they cannot show the save and reopen, for the reason above.",
+    "Measured: reading the dense page's 142 runs again after a save costs 3.1 seconds of CPU, spread a dozen at a time across the cores so it lands as a few hundred milliseconds of quiet work after every open. That is what opening a saved separation used to cost and now costs nothing.",
+    "Measured: the second reading does not always agree with the first. Over two runs of the same 142 pictures, one run had a row that said colours come back saying nothing at all, and the other run had no disagreement. So it is real, rare, and not even stable between readings, which is the honest case for writing the answer down rather than asking again.",
+    "A document keeps what was read off a picture even after undo takes that picture out of it, which is deliberate so re-separating is free, and nothing ever prunes those entries. On a file separated and undone twenty times that is twenty sets of dead words in the model, a few kilobytes each.",
+    "A file separated before today opens, reads in the background, and then holds the reading without being marked edited, so the words are only written down if you save for some other reason. A person who never saves it pays the reading again next time.",
+    "Typing into the find field over a 173 row list still freezes the app for about a third of a second on the first keystroke. That is unchanged by this work and was there before it; it is filed separately."
+  ]
+}

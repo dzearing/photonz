@@ -194,9 +194,12 @@ says the words in its picture".
 
 Saying no to automatic reading is about what goes ON THE CANVAS: a guess set in
 the wrong face is evidence nobody can tell is a guess. A NAME is not that. It
-costs no undo step, it is never saved, a wrong word in a list is a wrong word in
-a list, and the half of the reading this study found unreliable — the face — is
-not asked for at all. So the rows read, the canvas does not, and the two answers
+costs no undo step, a wrong word in a list is a wrong word in a list, and the
+half of the reading this study found unreliable — the face — is not asked for at
+all. What the reading found is kept with the document as of 2026-09-17, so
+opening a separated file is free and a row says what it said last time; it is
+still filed outside the history and outside the saved baseline, so it spends no
+undo step and never makes a file look edited. So the rows read, the canvas does not, and the two answers
 agree with each other rather than contradicting.
 
 ### Double clicking a separated label reads it and opens it for typing

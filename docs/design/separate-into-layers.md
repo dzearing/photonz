@@ -991,15 +991,28 @@ decide the shape of it, and each one is a line somebody could disagree with:
   dense page's 142 runs read in 1650 ms one after another, which is a few
   hundred spread out, so the numbers become words about a second after the pill
   appears.
-- **Nothing is written into the document.** The reading is held against the
-  BITMAP, beside the document and not in it, the way the leftover counts already
-  are (`EditorState.wordsReadOffPictures`). The row works its name out as it is
-  drawn (`Layer.displayName(readWords:)`). So the separated picture is byte for
-  byte what it was, no undo step is spent on it, undoing the separation and
-  running it again finds the reading already there, and the moment somebody
-  names a piece by hand or turns it into real text their answer takes over.
-  Opening the rename field on a row that is saying read words and pressing
-  Return changes nothing, the same promise a text layer's row already makes.
+- **Nothing is written onto the canvas, and no undo step is spent.** The
+  reading is held against the BITMAP rather than against the layer
+  (`PhotonzDocument.readWords`, `ReadWords.swift`), and the row works its name
+  out as it is drawn (`Layer.displayName(readWords:)`). So no pixel moves, no
+  layer is renamed, undoing the separation and running it again finds the
+  reading already there, and the moment somebody names a piece by hand or turns
+  it into real text their answer takes over. Opening the rename field on a row
+  that is saying read words and pressing Return changes nothing, the same
+  promise a text layer's row already makes.
+- **What the reading FOUND is saved with the document.** Added 2026-09-17. It
+  used to live only as long as the window, so a file holding a hundred and forty
+  separated runs was read again from nothing on every open, and the second
+  reading was free to disagree with the first: measured on the dense page, one
+  of its 142 runs came back different after a save, and the row that said
+  "colours" went back to saying Text 57. Now the words are written into the
+  document beside the layers, so opening it costs nothing and a row says what it
+  said last time. It is filed through `History.applyOutsideHistory` and the
+  editor moves its saved baseline with it
+  (`EditorState.applyWithoutMarkingEdited`), so it still spends no undo step and
+  a file never becomes "edited" because the app read something to itself: the
+  reading rides along with the next save the person makes. A document nothing
+  has been read off writes no readings key at all.
 
 A piece with nothing readable in it — an icon, a switch, a patch of flat panel —
 keeps the name the command gave it, and is asked once and never again. While the

@@ -1474,6 +1474,9 @@ private final class Run {
         case .expectListStill(let moved):
             note(number, step.name, try checkListStill(moved: moved), state: describe())
 
+        case .expectEdited(let edited):
+            note(number, step.name, try checkEdited(edited), state: describe())
+
         case .expectPicked(let layers):
             note(number, step.name, try checkPicked(layers), state: describe())
 
@@ -3929,17 +3932,41 @@ private final class Run {
         return wanted ? "the list followed the pick: \(said)" : "the list did not move: \(said)"
     }
 
+    /// Fails the run unless the window's unsaved state is what the walk claims.
+    ///
+    /// The promise worth pinning with it: what the app works out on its own —
+    /// the words read off a separated picture — is kept with the document but
+    /// never counts as work the person has to save.
+    private func checkEdited(_ edited: Bool) throws -> String {
+        let editor = try requireEditor()
+        guard editor.hasUnsavedChanges == edited else {
+            throw Failure(description: edited
+                ? "closing this window would lose nothing, and the walk says it should be holding unsaved changes"
+                : "this window is holding unsaved changes, and the walk says nothing should be unsaved here")
+        }
+        return edited ? "unsaved changes, as claimed" : "nothing unsaved, as claimed"
+    }
+
     private func checkPicked(_ layers: [String]) throws -> String {
         let editor = try requireEditor()
         let picked = editor.actionableLayerIDs
         let all = editor.document?.allLayers ?? []
-        let holding = all.filter { picked.contains($0.id) }.map(\.name)
+        // A walk names a layer the way the layers LIST names it, which for a
+        // separated run of text is the words read off its picture rather than
+        // the "Text 48" it is stored under. Either answers: a walk written
+        // before the rows could say their words still names them the old way,
+        // and one written since names what is on screen.
+        let words = editor.readWordsForRows
+        let holding = all.filter { picked.contains($0.id) }
+        let said = holding.map { $0.displayName(readWords: words) }
         func list(_ names: [String]) -> String { names.isEmpty ? "nothing" : names.joined(separator: ", ") }
-        guard holding == layers else {
-            throw Failure(description: "the layers picked are \(list(holding)), not \(list(layers)); "
-                + "the ones in the document: \(list(all.map(\.name)))")
+        let asClaimed = holding.count == layers.count
+            && zip(holding, layers).allSatisfy { $0.name == $1 || $0.displayName(readWords: words) == $1 }
+        guard asClaimed else {
+            throw Failure(description: "the layers picked are \(list(said)), not \(list(layers)); "
+                + "the ones in the document: \(list(all.map { $0.displayName(readWords: words) }))")
         }
-        return "picked: \(list(holding)), as claimed"
+        return "picked: \(list(said)), as claimed"
     }
 
     /// Fails the run unless exactly `count` measurements are on the canvas.
@@ -8519,6 +8546,12 @@ private final class Run {
             // Edit menu dims itself on and what a shortcut walk checks.
             "canUndo": editor.canUndo,
             "canRedo": editor.canRedo,
+            // Whether closing this window would lose work, which is the dot in
+            // the close button and the save prompt. A walk reads it to prove
+            // that something the app did on its own — reading the words off a
+            // picture, say — did NOT leave the person holding unsaved changes
+            // they never made.
+            "edited": editor.hasUnsavedChanges,
             // The picker's Recent row, newest first. A colour drag must leave
             // ONE entry here for the whole gesture rather than one per frame,
             // and this is what a walk reads to prove it.

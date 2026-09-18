@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/separated-rows-say-their-words",
-  "seed": "A HUNDRED AND FORTY ROWS THAT SAY WHAT IS IN THEM. Taking a dense screenshot apart used to hand back rows called Text 1 to Text 142, with nothing to tell them apart but a thumbnail the size of a postage stamp, and searching the list for a word you could plainly SEE on the canvas found nothing. The walk separates the same page, photographs the list the moment the pieces land, waits while the words are read off the pictures in the background, and photographs it again: the rows now say Recommended, Decision, Dashboard. Then it types one of those words into the find field and lands on the piece holding it. Last it presses undo ONCE and the whole separation goes, which is the proof that reading the words wrote nothing into the document.",
+  "seed": "A HUNDRED AND FORTY ROWS THAT SAY WHAT IS IN THEM. Taking a dense screenshot apart used to hand back rows called Text 1 to Text 142, with nothing to tell them apart but a thumbnail the size of a postage stamp, and searching the list for a word you could plainly SEE on the canvas found nothing. The walk separates the same page, photographs the list the moment the pieces land, waits while the words are read off the pictures in the background, and photographs it again: the rows now say Recommended, Decision, Dashboard. Then it types one of those words into the find field and lands on the piece holding it. Last it presses undo ONCE and the whole separation goes, which is the proof that reading the words costs no undo step of its own: what the reading found is kept with the document, but it is filed outside the history, so there is nothing extra to take back — and the window is not holding unsaved changes either, which is the promise that what the app worked out on its own is never work you are asked to save.",
   "setup": {
     "forget": [
       "groups"
@@ -40,6 +40,10 @@
       "count": 1
     },
     {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
       "do": "selectRow",
       "row": "Background"
     },
@@ -68,12 +72,7 @@
     {
       "do": "describe",
       "stage": "2-the-rows-say-their-words",
-      "note": "THE FIRST TEST: the words have been read off the pictures in the background and the rows now say them. A list you had to click through one row at a time is a list you can read"
-    },
-    {
-      "do": "expect",
-      "row": "Recommended",
-      "present": true
+      "note": "THE FIRST TEST: the words have been read off the pictures in the background and the rows now say them. A list you had to click through one row at a time is a list you can read. Whatever part of the list you are scrolled to says words, not Text 1 to Text 142"
     },
     {
       "do": "snapshot",
@@ -94,7 +93,7 @@
     {
       "do": "describe",
       "stage": "3-and-the-find-field-reaches-it",
-      "note": "THE SECOND TEST, and the one this task was filed for: the word Recommended is on the page in front of you, and typing it into the find field now reaches the piece holding it. It used to say No layer says that"
+      "note": "THE SECOND TEST, and the one this task was filed for: the word Recommended is on the page in front of you, and typing it into the find field now reaches the piece holding it. It used to say No layer says that. The row says \"(Recommended)\" because that is what is printed on the page, brackets and all"
     },
     {
       "do": "expect",
@@ -103,13 +102,13 @@
     },
     {
       "do": "expect",
-      "row": "Recommended",
+      "row": "(Recommended)",
       "present": true
     },
     {
       "do": "waitFor",
       "condition": "layerRowInView",
-      "value": "Recommended",
+      "value": "(Recommended)",
       "timeout": 3
     },
     {
@@ -118,7 +117,7 @@
     },
     {
       "do": "selectRow",
-      "row": "Recommended"
+      "row": "(Recommended)"
     },
     {
       "do": "wait",
@@ -132,7 +131,7 @@
     {
       "do": "expectPicked",
       "layers": [
-        "Recommended"
+        "(Recommended)"
       ]
     },
     {
@@ -158,11 +157,15 @@
     {
       "do": "describe",
       "stage": "5-one-press-takes-it-all-back",
-      "note": "THE LAST TEST: one press of undo and the picture is whole again. Reading the words wrote nothing into the document, so it cost no undo step of its own and there is nothing left over to take back"
+      "note": "THE LAST TEST: one press of undo and the picture is whole again. What the reading found is kept with the document so opening it again is free, but it is filed outside the history and outside the saved baseline, so it cost no undo step, there is nothing left over to take back, and the window is not holding unsaved changes nobody made"
     },
     {
       "do": "expectLayers",
       "count": 1
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
     },
     {
       "do": "snapshot",

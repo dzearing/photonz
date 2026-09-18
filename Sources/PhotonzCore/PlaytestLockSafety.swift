@@ -74,7 +74,7 @@ public enum PlaytestLockSafety {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
-        "expectPath", "expectPicked", "expectRecording", "hover", "key", "measureMode", "move",
+        "expectEdited", "expectPath", "expectPicked", "expectRecording", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         "snapshot",

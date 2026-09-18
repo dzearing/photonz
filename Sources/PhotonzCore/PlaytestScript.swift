@@ -1925,6 +1925,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// MUST be brought in — so a list that quietly stopped following cannot
     /// pass by standing still.
     case expectListStill(moved: Bool)
+    /// Whether closing the window right now would lose work: the dot in the
+    /// close button, and the save prompt behind it.
+    ///
+    /// It is here for the promises the app makes about work NOBODY DID. The
+    /// words read off a separated picture are written into the document so the
+    /// file opens already named, and the one thing that must never follow from
+    /// that is a person being asked to save changes they did not make. A walk
+    /// that separates a page, lets the reading land and presses undo can say
+    /// `expectEdited: false` and pin it.
+    case expectEdited(Bool)
     /// How many measurements must be on the canvas right now.
     ///
     /// `expectPicked` asks what the app is holding; this asks what it has
@@ -2362,7 +2372,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2441,6 +2451,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectPicked: "expectPicked"
         case .expectBuilds: "expectBuilds"
         case .expectListStill: "expectListStill"
+        case .expectEdited: "expectEdited"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
         case .describe: "describe"
@@ -3123,6 +3134,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                      ? nil : Int(try f.number("atLeast")))
         case "expectListStill":
             self = .expectListStill(moved: try f.optionalFlag("moved") ?? false)
+        case "expectEdited":
+            self = .expectEdited(try f.optionalFlag("edited") ?? f.optionalFlag("is") ?? true)
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")
