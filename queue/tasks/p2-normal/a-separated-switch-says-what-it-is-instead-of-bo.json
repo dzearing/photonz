@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T12:08:10.130Z",
-  "updated": "2026-09-18T13:32:26.357Z",
+  "updated": "2026-09-18T13:32:44.691Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the focus-feature review in the 2026-09-18 digest, on queue/audits/2026-09-18-separate-into-layers.json. That audit's own evaluate list asks it twice: 'The switches and fields are called Box 5 to Box 10. Is a numbered box findable, when the runs of text next to them wear the words they say?' and 'The pill says 10 boxes, but looking at this pane you would probably count four'.\n\nThe runner who shipped the separation left this in the task log rather than filing it, calling it a naming question for the user. Filing it because the harm is not a matter of taste: the app already knows how to name a piece after words (it does it for every text run), and it declines to use that for the pieces sitting inside and beside those words, so half the list is unsearchable. If the shape of the answer turns out to need the user (for example whether a card should be called Card rather than Box), open a card for that specific choice rather than for the whole task.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-09-18T13:32:26.356Z",
       "note": "Scripts/test.sh: 8308 tests, everything green except theDensePageStopsAtTheCeilingRatherThanHandingBackAWall, which is a PRE-EXISTING flake and not this change. Proved by stashing every local change and running it four times on clean main 258d7422: 359, pass, 355, pass. Filed as the-dense-page-counts-a-different-number-of-left with that reproduction."
+    },
+    {
+      "t": "2026-09-18T13:32:44.689Z",
+      "note": "Every separated piece that is not text now wears the words it sits inside or beside: \"Launch at login box\" for the switch on that row, \"Save Changes box\" for the button, with only the two cards keeping Box 1 and Box 2 because they hold three labelled rows each. The rule is SeparatedBoxNames in PhotonzCore (13 unit tests), the name is worked out as the list is drawn from Layer.labelledBy so it costs no undo step, and the find field reaches the boxes as well as the words. Verified end to end on the real fixture by SeparatedRowsSayTheirWordsTests and on the running app by the new separated-boxes-say-their-words-walk, which photographed the window four times; separate-boxes, separate-hierarchy, separate-shadow and separate-whole-screenshot all still pass. Audit: queue/audits/2026-09-18-separated-box-names.json. Shipped in fa49afce."
     }
   ],
   "started": "2026-09-18T13:08:49.497Z",
@@ -68,5 +72,6 @@
     "separate-hierarchy-walk",
     "separate-shadow-walk",
     "separate-whole-screenshot-walk"
-  ]
+  ],
+  "completed": "2026-09-18T13:32:44.690Z"
 }
