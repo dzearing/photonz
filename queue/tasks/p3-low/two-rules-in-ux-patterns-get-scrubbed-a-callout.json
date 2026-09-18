@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-17T23:09:18.671Z",
+  "updated": "2026-09-17T23:12:42.825Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -91,8 +91,17 @@
     {
       "t": "2026-09-17T23:09:18.670Z",
       "note": "The last acceptance-shaped item in the 2026-09-17 design review note (a rule for a panel column that is over-subscribed) is NOT written here, on that note's own instruction: it says do not write it until the user's card is answered, and queue/decisions/appearance-is-below-the-fold-again-because-the-p-... is still pending. It is folded into that task instead, as a new acceptance item and a log entry naming the cases to cite, so whoever acts on the answer writes the rule in the same sitting."
+    },
+    {
+      "t": "2026-09-17T23:12:42.776Z",
+      "note": "No audit written and none owed: this task ships a rules document, not a feature a person can open the app and judge. The one thing here a person can look at is the keyline picture, and it went on the task it argues for (an-icon-frame-s-guides-stop-looking-like-a-secon) rather than into an audit of the document. No sweep requested either: no code changed."
+    },
+    {
+      "t": "2026-09-17T23:12:42.823Z",
+      "note": "Nine bent rules scrubbed in docs/design/mocks/shared/UX-PATTERNS.md, each citing the audit that forced it: D14 (no empty side, and never author the content around a callout), D14+D16 (a tutorial card is an annotation), D16 rule 3 (a guide differs in kind from the selection outline), D16 (canvas furniture, the third kind, and what gives way for a corner), D9 (what a bottom dock owes that a side dock does not), D10 (catalogue versus what is moving, and what decides it), section 3 Modal and toast (a fading notice carries only a result you are finished with). Two new sections: One setting, two doors; and what a surface SAYS while something is held over it. Verified by reading each rule against the shipped code and by running icon-keylines-walk on the probe (6 real window captures); Scripts/test.sh green at 8250 tests, no code changed. Committed ea66d9ae and pushed. Filed an-icon-frame-s-guides-stop-looking-like-a-secon (reproduced, picture at queue/audits/2026-09-17-keyline-vs-selection.png) and a-turning-layer-says-where-its-pivot-is-twice. The panel-column over-subscription rule is left unwritten on purpose and folded into appearance-is-below-the-fold-again-because-the-p, whose pending card settles it."
     }
   ],
   "started": "2026-09-17T23:03:59.769Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-17T23:12:42.824Z"
 }

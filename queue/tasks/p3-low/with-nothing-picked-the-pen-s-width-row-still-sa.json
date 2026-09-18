@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T12:13:42.288Z",
-  "updated": "2026-09-17T12:13:57.166Z",
+  "updated": "2026-09-18T00:20:52.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough in queue/audits/2026-09-17-icon-vector-width-row.json, from the-pen-s-width-row-shows-the-weight-the-line-wi (done 2026-09-17, commit 058c8bab). That task's first acceptance item reads: \"With the Pen in hand over a 24 px icon frame and nothing chosen yet, the Width row reads the weight a line drawn there would really come out at\". It is met in every selection state but this one.\n\nThe audit says why: \"The row only knows which icon it is speaking for while something in that frame is picked, which is the same rule the icon previews strip uses. Pick nothing at all, then draw straight into an icon frame, and the row says 4 while the line still lands at 2.\"\n\nNot yet watched in the running app: the walk for the fix (Scripts/playtest/icon-width-row-reads-true-walk.json) is written and has never run, because the Mac has been locked since 2026-09-14. So the first job is to reproduce it, which on a locked Mac means forcing a run past the refusal, and this walk looks controls up by name so it may not be forceable. A unit test over the same rule will settle it either way.\n\nFiled as p3 because it is one corner of one tool rather than the common path: draw anything in the frame first, or pick anything in it, and the row is right.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-09-17T12:13:57.165Z",
       "note": "seq 1330 -> 30"
+    },
+    {
+      "t": "2026-09-18T00:03:28.844Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T00:05:46.674Z",
+      "note": "Reproduced in the running app. Wrote Scripts/playtest/icon-width-row-with-nothing-picked-walk.json (lock-safe, ran on the locked Mac): a 24 px icon frame, click bare canvas so nothing is picked, Pen in hand, pointer rested at [799,550] inside the frame, open the tool colour popover. Step 22 came back: 'the field called \"Width\" reads \"4\", not \"2\"'. Command: Scripts/playtest.sh Scripts/playtest/icon-width-row-with-nothing-picked-walk.json"
+    },
+    {
+      "t": "2026-09-18T00:20:24.381Z",
+      "note": "owns these walks: icon-width-row-with-nothing-picked-walk, icon-width-row-reads-true-walk"
+    },
+    {
+      "t": "2026-09-18T00:20:35.336Z",
+      "note": "Shipped. Core: PhotonzDocument.iconFrameID(under:) and startingStrokeWidth(armed:chosen:picked:pointerIn:) — what is PICKED decides which icon the Width row speaks for, and failing that the frame the POINTER is resting in. App: EditorState.pointerIconFrameID, echoed up from CanvasNSView.refreshPointerIconFrame on mouseMoved, only when the answer changes, and only while next-icon-frames is on and the document has frames. It deliberately KEEPS its last answer when the pointer leaves the canvas, because reading the Width row means reaching up to the tool bar. Verified: Scripts/test.sh, 8254 tests in 657 suites, four new over the picked/pointer rule; icon-width-row-with-nothing-picked-walk green with 5 real pictures; icon-width-row-reads-true-walk green over all 86 steps (forced under the lock); icon, pen and frame walk families all green (5, 9 and 8 passed, 0 failed)."
+    },
+    {
+      "t": "2026-09-18T00:20:37.748Z",
+      "note": "Adversarial review, before: the first sketch was to make the row follow the live pointer and go blank the moment the pointer left the canvas. Walking it as a person killed that: the Width row lives in a popover you open from the tool bar, so the pointer is never on the canvas at the moment the number is read, and it would have flipped back to 4 on the way to being read. Hence the row keeps the last thing the canvas said. Reviewing it after, on the real app, softened the remaining worry: a new icon frame opens at 3,200% and fills the canvas, so the walk from the frame to the tool bar is mostly still inside the frame."
+    },
+    {
+      "t": "2026-09-18T00:20:40.565Z",
+      "note": "Left rough, not filed: the icon previews strip still vanishes when nothing is picked, for exactly the reason the Width row used to go wrong — it learns which icon it is showing from the selection alone (EditorState+IconPreviews.iconPreviewFrameID). It could read pointerIconFrameID the same way the row now does. Not filed as its own task: it is one tidy-up in one strip, no wrong number and nothing broken, and the next pass over the previews strip will find this line. The other rough edge, a Width row that can read the bare-canvas 4 after the pointer swept across bare canvas on its way to the tool bar, is in the audit's rough list for the user to react to rather than filed, since deciding it is a question about what the number should do rather than a defect."
+    },
+    {
+      "t": "2026-09-18T00:20:52.402Z",
+      "note": "With nothing picked, the Width row now reads the icon frame the pointer is resting in, so the number it shows is the weight a line there really lands at. Core rule in PhotonzDocument.startingStrokeWidth(armed:chosen:picked:pointerIn:); the canvas reports the frame under the pointer on mouseMoved. Verified by Scripts/test.sh (8254 tests, four new) and two walks green in the running app, one of them with five real pictures. Audit: queue/audits/2026-09-17-icon-width-row-nothing-picked.json. Commit 2c1a4bc4."
     }
-  ]
+  ],
+  "started": "2026-09-18T00:03:28.843Z",
+  "walks": [
+    "icon-width-row-with-nothing-picked-walk",
+    "icon-width-row-reads-true-walk"
+  ],
+  "completed": "2026-09-18T00:20:52.403Z"
 }
