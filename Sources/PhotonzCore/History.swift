@@ -13,7 +13,7 @@ public struct History: Sendable {
 
     /// One point the stack can return to: the picture and the marquee that
     /// was over it, put back together.
-    private struct Step: Sendable {
+    fileprivate struct Step: Sendable {
         var document: PhotonzDocument
         var selection: SelectionSnapshot
     }
@@ -36,6 +36,16 @@ public struct History: Sendable {
     public var canUndo: Bool { !undoStack.isEmpty }
     public var canRedo: Bool { !redoStack.isEmpty }
 
+    /// An edit that has been worked out but not yet recorded.
+    ///
+    /// Opaque on purpose: there is nothing to do with one but hand it back to
+    /// `record`, on the stack it came from and before anything else lands.
+    public struct PreparedEdit: Sendable {
+        fileprivate let next: PhotonzDocument
+        fileprivate let report: EditReport
+        fileprivate let changed: Bool
+    }
+
     /// Applies a mutation as a single undoable step. No-op edits are not recorded.
     ///
     /// Every copy of a component is put back in step with its original inside
@@ -49,8 +59,28 @@ public struct History: Sendable {
     /// (`LinkBreakReport`): a break is a fact about the difference between two
     /// versions of the document, so every command gets it right without knowing
     /// it exists.
+    ///
+    /// **A caller whose closure reads the document must use `preparing` and
+    /// `record` instead.** This is one mutating call, so a stack kept in a
+    /// property is held exclusively for as long as the closure runs, and a
+    /// closure that reaches back for the document reads the very property
+    /// being written: Swift stops the process on the spot. That is what
+    /// renaming a layer did for a day (2026-09-17), and splitting the act in
+    /// two is what fixes it, because working the edit out only READS the
+    /// stack.
     @discardableResult
     public mutating func perform(_ mutate: (inout PhotonzDocument) -> Void) -> EditReport {
+        record(preparing(mutate))
+    }
+
+    /// Works out what an edit would do, WITHOUT touching the stack.
+    ///
+    /// The first half of `perform`, and the half the caller's closure runs in.
+    /// Nothing here writes anything: the stack is only read, so the closure is
+    /// free to read the document, the layers list, or anything else living
+    /// beside them while it makes up its mind. Hand the result straight to
+    /// `record`.
+    public func preparing(_ mutate: (inout PhotonzDocument) -> Void) -> PreparedEdit {
         var next = current
         mutate(&next)
         // A color that was repainted some other way lets go of the style it
@@ -77,12 +107,32 @@ public struct History: Sendable {
         // told to say something longer has a label that just grew, and the
         // stack around it has to close up in this same step.
         if sync.updatedInstances > 0 { next.reflowLayouts() }
-        guard next != current else { return EditReport() }
-        let breaks = LinkBreakReport.between(current, next)
+        guard next != current else {
+            return PreparedEdit(next: current, report: EditReport(), changed: false)
+        }
+        let report = EditReport(componentSync: sync,
+                                linkBreaks: LinkBreakReport.between(current, next))
+        return PreparedEdit(next: next, report: report, changed: true)
+    }
+
+    /// Puts a worked-out edit on the stack as one undoable step. The second
+    /// half of `perform`, and the only half that writes: no caller code runs
+    /// in here, so nothing can be reading the stack while it moves.
+    @discardableResult
+    public mutating func record(_ edit: PreparedEdit) -> EditReport {
+        guard edit.changed else { return EditReport() }
         push(Step(document: current, selection: selection))
         redoStack.removeAll()
-        current = next
-        return EditReport(componentSync: sync, linkBreaks: breaks)
+        current = edit.next
+        return edit.report
+    }
+
+    /// A change from outside the document, worked out but not yet applied.
+    /// The counterpart of `PreparedEdit`, and used the same way.
+    public struct OutsideChange: Sendable {
+        fileprivate let next: PhotonzDocument
+        fileprivate let undoStack: [Step]
+        fileprivate let redoStack: [Step]
     }
 
     /// A change that came from OUTSIDE this document: the shared shelf moved
@@ -95,8 +145,21 @@ public struct History: Sendable {
     /// holds is not part of this document's history.
     ///
     /// Returns whether anything moved.
+    ///
+    /// Like `perform`, this runs the caller's closure inside one mutating
+    /// call, so a caller whose closure reads the document uses
+    /// `preparingOutsideHistory` and `record` instead.
     @discardableResult
     public mutating func applyOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> Bool {
+        guard let change = preparingOutsideHistory(update) else { return false }
+        record(change)
+        return true
+    }
+
+    /// Works out a change from outside the document without touching the
+    /// stack, so the closure is free to read the document while it runs.
+    /// `nil` when nothing moved. Hand the result straight to `record`.
+    public func preparingOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> OutsideChange? {
         func applied(_ document: PhotonzDocument) -> PhotonzDocument {
             var next = document
             update(&next)
@@ -106,11 +169,19 @@ public struct History: Sendable {
             return next
         }
         let next = applied(current)
-        guard next != current else { return false }
-        current = next
-        undoStack = undoStack.map { Step(document: applied($0.document), selection: $0.selection) }
-        redoStack = redoStack.map { Step(document: applied($0.document), selection: $0.selection) }
-        return true
+        guard next != current else { return nil }
+        return OutsideChange(
+            next: next,
+            undoStack: undoStack.map { Step(document: applied($0.document), selection: $0.selection) },
+            redoStack: redoStack.map { Step(document: applied($0.document), selection: $0.selection) })
+    }
+
+    /// Applies a worked-out outside change: the picture and every step the
+    /// stack can return to, all moved together, with no undo step recorded.
+    public mutating func record(_ change: OutsideChange) {
+        current = change.next
+        undoStack = change.undoStack
+        redoStack = change.redoStack
     }
 
     /// The marquee moved without that being a step of its own — the canvas was

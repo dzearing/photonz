@@ -2871,7 +2871,11 @@ final class EditorState {
     func applyOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> Bool {
         guard history != nil else { return false }
         flushSelectionToHistory()
-        return history!.applyOutsideHistory(update)
+        // Two acts, for the reason spelled out in `perform` below: the closure
+        // runs while the stack is only being read.
+        guard let change = history?.preparingOutsideHistory(update) else { return false }
+        history?.record(change)
+        return true
     }
 
     func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
@@ -2886,7 +2890,18 @@ final class EditorState {
         pasteToolReturn = nil
         let before = document
         flushSelectionToHistory()
-        let report = history?.perform(mutate) ?? EditReport()
+        // The edit is worked out first and recorded second, and never in one
+        // mutating call on `history`. A command's closure is allowed to read
+        // `document`, which reads `history` — renaming a layer does, for the
+        // words read off a picture — and a read inside a write of the same
+        // property is a hard stop in Swift, not a warning. It killed the app
+        // on every rename for a day (2026-09-17). Working the edit out only
+        // reads the stack, so the closure may read it too; recording runs no
+        // caller code at all.
+        var report = EditReport()
+        if let prepared = history?.preparing(mutate) {
+            report = history?.record(prepared) ?? EditReport()
+        }
         rerender()
         // Anything this edit changed about a component that follows the shared
         // shelf goes to the shelf, and from there to every other open window

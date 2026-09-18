@@ -1,0 +1,26 @@
+{
+  "feature": "Renaming a layer",
+  "epic": "ui-building",
+  "summary": "Renaming a layer in the layers list renames it. Since the evening of 2026-09-17 it quit the app instead, every single time, taking the open document with it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default; nothing to switch on.",
+  "try": [
+    { "do": "Draw two rectangles and an ellipse on a blank canvas." },
+    { "do": "Double click the first row's name in the layers panel, type Header, press Return.", "shot": "2026-09-18-layer-rename-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command Z and check the row says Rectangle again." },
+    { "do": "Open a screenshot, pick the Background row, run Separate into Layers, and wait for the rows to stop saying Text 1 and start saying words." },
+    { "do": "Double click one of those rows, type a name, press Return.", "shot": "2026-09-18-layer-rename-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command Z and check the row goes back to saying the words that were read off it." },
+    { "do": "Open the rename field on any row and press Return without typing: the name must not change." }
+  ],
+  "evaluate": [
+    "Does renaming feel instant, or is there a pause between Return and the row changing?",
+    "After renaming a separated run, does undo put back the words that were read off it rather than a number?",
+    "Pressing Return on an untouched field leaves the name alone. Is that what you expect, or would you rather it pinned the name it was showing?",
+    "Is anything else about the layers list still behaving oddly after last night?"
+  ],
+  "rough": [
+    "The whole walk set has not been run against this. The seven walks that this crash killed all pass again, and the unit suite is green at 8285 tests, but a sweep is asked for and runs between tasks.",
+    "The pictures here were taken with the Mac's screen locked, so colours read a little dimmed. The window, the rows and the names in them are real.",
+    "An edit is now worked out and then recorded as two acts rather than one call. Nothing about it is visible, and it costs nothing extra, but it is a rule a future command has to follow: a command that reads the document while editing it must use the two acts. The rule is written on the one call it replaces."
+  ]
+}
