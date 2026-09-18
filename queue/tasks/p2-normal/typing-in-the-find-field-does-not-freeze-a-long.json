@@ -1,0 +1,73 @@
+{
+  "id": "typing-in-the-find-field-does-not-freeze-a-long",
+  "title": "Typing in the find field does not freeze a long list",
+  "goal": "On a screenshot taken apart into a hundred and seventy layers, typing the first letter into the find field over the layers list stops the app for about a third of a second. The list is exactly where somebody goes when there are too many rows to scroll, so the one place the field is for is the one place it stutters. Make the first keystroke land as fast as the rest.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 3000,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T02:02:41.436Z",
+  "updated": "2026-09-18T04:13:54.395Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced twice on dense-page-1x (173 layers after Separate into Layers), on code with and without the read-words change, so it predates that work.\n\nCommand:\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh Scripts/playtest/separated-rows-say-their-words-walk.json\n\nThe wait step straight after the type step reports, from /tmp/photonz-playtest/separated-rows-say-their-words/log.json:\n  without the read-words change: [17 wait] 0.8s asked, quiet after 0.58s; mainBusy 1018.8ms over 841 passes, longest 370.9ms\n  with it:                       [17 wait] 0.8s asked, quiet after 0.59s; mainBusy 1132.9ms over 808 passes, longest 355.2ms\n\nEvery other wait in the same walk reports a longest pass under 40ms, so this is the search and not the reading. Likely the whole filtered tree being rebuilt synchronously on the first keystroke (PhotonzDocument.layerRows(matching:) via EditorState+LayersPanel).",
+  "acceptance": [
+    "Typing into the find field over a list of a hundred and seventy rows never blocks the main thread for more than one frame at a time.",
+    "The walk separated-rows-say-their-words-walk reports no main-thread pass longer than 50ms across the step where it types into the find field.",
+    "What the field finds and how it looks are unchanged."
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T02:02:41.438Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-18T02:02:46.121Z",
+      "note": "walks separated-rows-say-their-words-walk -> none"
+    },
+    {
+      "t": "2026-09-18T03:26:12.004Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T03:55:02.051Z",
+      "note": "Reproduced, and the first reading was confounded. The walk's 329ms pass was cumulative since step 9: nothing between a type step and the wait after it zeroed the main-thread meter, so the screen capture two steps earlier was being counted as the keystroke's. Fixed that first: the type step now installs and zeroes MainThreadMeter and ViewBuildMeter, so the wait after it reports the keystroke's own cost and nothing else."
+    },
+    {
+      "t": "2026-09-18T03:55:05.484Z",
+      "note": "walks none -> separated-rows-say-their-words-walk, find-a-layer-walk"
+    },
+    {
+      "t": "2026-09-18T03:55:05.529Z",
+      "note": "Root cause, measured not guessed. The filter itself is not the cost: a probe meter round EditorState.layerRows said 3 to 6ms over 3 to 5 calls per keystroke, and a core benchmark over 173 rows said 1.6ms a call in a debug build. A sample of the probe while it typed was all SwiftUI: ModifiedElements.makeElements, LayoutEngineBox.sizeThatFits, DisplayList.ViewUpdater, NSView subview churn. That is the LazyVStack's .animation(.spring(duration: 0.25), value: displays.map(.row)) in LayersListView: the value it watches was the rows on SCREEN, so every letter asked a hundred and seventy rows to slide out and the results to slide in. Proved it by setting that one animation to nil: 290ms a keystroke fell to 25 to 86ms and the app went quiet in 0.10s instead of 0.61s."
+    },
+    {
+      "t": "2026-09-18T04:13:38.645Z",
+      "note": "Shipped: the list's slide is keyed to the WHOLE list now, not to the rows on screen. New PhotonzCore/LayerListSlide.swift holds the rule (5 tests, written first), EditorState.wholePanelRows is the unfiltered rows, and LayersListView's .animation reads LayerListSlide.key. The unfiltered walk only happens while a search is showing, since with an empty field the two lists are the same one. Current is untouched: next-find-a-layer is releases [.next], so isSearchingLayers is always false there and the key is the same value it always was."
+    },
+    {
+      "t": "2026-09-18T04:13:38.692Z",
+      "note": "Measured after, letter by letter over 173 rows (walk /tmp/photonz-probe-walks/find-field-hitch.json): per keystroke 290ms of main thread became 47 to 117ms, and the app goes quiet in 0.10 to 0.43s instead of 0.61s. In separated-rows-say-their-words-walk the type step now reports mainBusy 37.5ms over 28 passes, longest 19.3ms, where before the wait after it read longest 329.3ms. All of Scripts/test.sh green (8272 tests); separated-rows-say-their-words-walk, find-a-layer-walk and layers-lazy-rows-walk all ok; the 25 walks matching 'layer' ran 13 ok, 2 failed (pasted-layer-name-walk, unique-layer-names-walk) and those two were already failing in the 2026-09-17 sweep and belong to walks-that-fail-in-the-full-sweep."
+    },
+    {
+      "t": "2026-09-18T04:13:43.160Z",
+      "note": "Acceptance, honestly: 2 and 3 are met, 1 is not fully. The walk reports longest 19.3ms across the typing step, well under the 50ms the task asked for, and what the field finds and how a result row looks are unchanged (find-a-layer-walk and separated-rows-say-their-words-walk both pass their expect steps). One frame at a time is not met in every case: a letter whose results run to about a hundred rows still costs one block of about 43ms. That is the list showing a NEW SET OF ROWS, not the search: typing zq over the same 173 rows, which matches nothing, costs 28ms with a longest pass of 16.9ms, and pressing Clear to bring all 173 back costs 10.4ms with a longest pass of 2.1ms. So the burst scales with how many RESULT rows the ForEach has to make elements for, at roughly 0.35ms a row, plus the dozen row bodies that are now on screen."
+    },
+    {
+      "t": "2026-09-18T04:13:43.209Z",
+      "note": "left rough: the layers list costs about 0.35ms a row in SwiftUI view-list work whenever the set of rows it shows is replaced, which is what is left of this hitch and is also what a document with that many layers pays when its list first draws. Reproduce with PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/photonz-probe-walks/find-field-hitch.json. Not filed: it is not broken, nobody is stopped by it, and the three done tasks it is adjacent to (the-layers-list-only-builds-the-rows-you-can-see, a-layers-list-with-many-rows-costs-no-more-per-c, clicking-a-layer-is-instant-whichever-layer-it-i) already cover that ground. It is in the audit's rough list too, so the user can turn it into a task if 2 to 3 dropped frames on a letter matter to them."
+    },
+    {
+      "t": "2026-09-18T04:13:54.393Z",
+      "note": "The layers list's slide is keyed to the whole list instead of to the rows on screen, so typing in the find field shows its results at once rather than sliding a hundred and seventy rows per letter. New PhotonzCore/LayerListSlide.swift (5 tests, written first), EditorState.wholePanelRows, one .animation in LayersListView. Per keystroke over 173 rows: 290ms of main thread down to 47 to 117ms; the acceptance walk's type step reports longest 19.3ms where the reading before was 329.3ms. The playtest type step now zeroes its meters so that number is the keystroke's own and not the screen capture two steps earlier. Scripts/test.sh green, separated-rows-say-their-words-walk, find-a-layer-walk, layers-lazy-rows-walk ok. Audit: queue/audits/2026-09-17-find-field-typing.json."
+    }
+  ],
+  "walks": [
+    "separated-rows-say-their-words-walk",
+    "find-a-layer-walk"
+  ],
+  "started": "2026-09-18T03:26:12.003Z",
+  "completed": "2026-09-18T04:13:54.394Z"
+}

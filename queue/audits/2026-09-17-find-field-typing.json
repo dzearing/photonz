@@ -1,0 +1,25 @@
+{
+  "feature": "Typing in the find field over a long layers list",
+  "epic": "ui-building",
+  "summary": "Typing a letter into the find field over the layers list now shows its results at once. It used to ask every row in the list to slide out and the results to slide in, which on a screenshot taken apart into a hundred and seventy pieces cost about a third of a second of stalled app per letter.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-find-a-layer and next-a-row-says-its-words are on by default.",
+  "try": [
+    { "do": "Open any dense screenshot, something with a lot of text on it." },
+    { "do": "Pick the Background row in the layers list and run Separate into Layers." },
+    { "do": "Wait for the rows to stop saying Text 1, Text 2 and start saying the words on the page." },
+    { "do": "Click into the Find a layer field at the top of the layers list." },
+    { "do": "Type one letter, then another, then another, at your normal speed.", "shot": "2026-09-17-find-field-typing.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press the x at the right of the field to clear it and watch the whole list come back." },
+    { "do": "With nothing typed, delete a layer, and watch the rows close the gap." }
+  ],
+  "evaluate": [
+    "Does each letter you type land straight away, or can you still feel the list catching up?",
+    "Results appearing with no slide at all: does that read as fast, or as abrupt?",
+    "When you clear the field, should the whole list come back instantly the way it does now, or slide back in?",
+    "Deleting a layer still slides the rows. Is that the right place to keep the movement?"
+  ],
+  "rough": [
+    "One letter that turns a hundred and seventy rows into a hundred and twenty still costs about 40ms in a single block, which is two or three dropped frames. It is the cost of building a long list's rows again, not of the search: the same burst shows up whenever the list's contents are replaced wholesale, and cutting it further means changing how the list is built rather than how the field works.",
+    "Clearing the search is now instant too, which was not asked for. It follows from the same rule and I think it is right, but it is a change you can see."
+  ]
+}

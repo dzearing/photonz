@@ -649,8 +649,15 @@ struct LayersListView: View {
         .onPreferenceChange(LayerCanvasRowHeightKey.self) { canvasRowHeight = max(1, $0) }
         // Rows slide/fade on add, delete, duplicate, reorder, and on a group
         // opening or closing. Keyed on the SHAPE of the list only: a selection
-        // change is not a layout change and never was animated here.
-        .animation(.spring(duration: 0.25), value: displays.map(\.row))
+        // change is not a layout change and never was animated here, and
+        // neither is a search — what you typed changes how much of the list
+        // you are shown, not the list, so results land the instant you type
+        // rather than a hundred and seventy rows sliding per letter
+        // (`LayerListSlide`).
+        .animation(.spring(duration: 0.25),
+                   value: LayerListSlide.key(shown: displays.map(\.row),
+                                             whole: editorState.wholePanelRows,
+                                             isSearching: editorState.isSearchingLayers))
     }
 
     /// How long a list has to be before it is worth offering to search it.

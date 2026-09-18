@@ -75,7 +75,18 @@ extension EditorState {
         // read the same rows the eye does. While a search is typed that is the
         // results, and nothing downstream has to know a search is happening.
         if isSearchingLayers { return layerRows.map(\.row) }
-        return document?.panelRows(expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [])
+        return wholePanelRows
+    }
+
+    /// The rows the list would draw with NOTHING typed in the find field.
+    ///
+    /// The same list as `panelRows` whenever no search is showing. While one
+    /// is, this is what the search is a view of, and it is what the list's
+    /// slide is keyed to: narrowing a query changes the rows on screen but not
+    /// the list they came from, so the results land instantly instead of a
+    /// whole separated screenshot sliding once per letter (`LayerListSlide`).
+    var wholePanelRows: [LayerPanelRow] {
+        document?.panelRows(expanded: Experiments.shared.layerGroupsEnabled ? expandedGroupIDs : [])
             ?? []
     }
 

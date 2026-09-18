@@ -926,9 +926,20 @@ private final class Run {
                     .joined(separator: ", ")
                 throw Failure(description: "no text field has the keyboard (first responder is \(responder))")
             }
+            // What TYPING costs, from the key landing to the app standing
+            // still. Zeroed here so the `wait` right after a `type` step
+            // reports the keystroke's own main-thread cost and nothing else:
+            // it used to carry everything since the last press or action,
+            // which on a walk that photographs the window first meant the
+            // screen capture's own 300ms read as the keystroke's
+            // (`typing-in-the-find-field-does-not-freeze-a-long`).
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             field.insertText(text, replacementRange: field.selectedRange())
             await sleep(0.05)
-            note(number, step.name, "\"\(text)\" into \(type(of: field))")
+            note(number, step.name, "\"\(text)\" into \(type(of: field)); "
+                + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report)
 
         case .focus(let name):
             // The editor window AND whatever is open above it. A number that
