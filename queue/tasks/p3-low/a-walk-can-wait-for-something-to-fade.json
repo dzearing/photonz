@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 1330,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T19:24:51.233Z",
-  "updated": "2026-09-17T19:24:51.236Z",
+  "updated": "2026-09-18T07:14:48.767Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-17 while building the-labels-a-reading-gave-up-on-can-still-be-fou. An earlier draft of Scripts/playtest/the-count-survives-the-line-walk.json clicked the canvas and then waited 8 seconds for the six-second pill to fade:\n\n  Scripts/playtest.sh Scripts/playtest/the-count-survives-the-line-walk.json --no-build\n  [16 wait] 8.0s asked, quiet after 0.10s; mainBusy 27.5ms over 13 passes, longest 16.3ms\n  [17 2-the-line-is-gone] ...\n  [18 expectNotice] FAILED: a pill is up under the canvas saying \"Turned into text · 12 labels, set in SF Pro. 3 stayed pictures\"\n  \"secondsSaved\" : 16.54\n\nThe pacing is PlaytestSettle (Sources/PhotonzCore/PlaytestSettle.swift, landed with a-full-walk-run-finishes-in-an-hour-not-four) and it is the right default: it took the suite from four hours to one. PHOTONZ_PLAYTEST_PACE=clock restores real waits, but a walk cannot ask for that by itself and a sweep would not run it that way.\n\nThe cheap fix is a waitFor condition, since waitFor already runs on the real clock (PlaytestHarness.swift, case .waitFor): add a notice condition to PlaytestCondition/holds() so a walk can write { \"do\": \"waitFor\", \"condition\": \"notice\", \"value\": \"absent\", \"timeout\": 10 }. The walk above works around it by pressing the count, which also takes the line away, so it proves the answer outlives the line without ever watching one fade.",
@@ -22,9 +22,38 @@
     {
       "t": "2026-09-17T19:24:51.235Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-18T07:04:02.319Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T07:14:45.944Z",
+      "note": "Adversarial review of the task's own premise, before building: the mechanism this task asks for ALREADY EXISTS. 'wait' gained onTheClock in c6aa1536 (2026-09-17 09:24), ten hours BEFORE this task was filed at 19:24, and notice-waits-under-the-pointer-walk.json already used it to prove the canvas line goes by itself. Verified by running it rather than by reading it: [21 wait] 7.0s on the clock, spent in full / [22 expectNotice] no pill under the canvas, as claimed / status ok. So acceptance 1 and 2 were already met and the notes' reproduction was a walk written with a plain wait, not proof that no walk could wait."
+    },
+    {
+      "t": "2026-09-18T07:14:45.992Z",
+      "note": "Decided AGAINST building the waitFor 'notice' condition the notes recommend, and this is a judgment worth reading rather than a shortcut. A waitFor that returns the moment the pill goes cannot tell 'faded at 0.5s' from 'faded at 6s', so it would PASS a notice that fades far too early, which is half of what this task's own goal says must be catchable. It would also be a second way to wait on a pill beside onTheClock, in exactly the area where settle-versus-clock confusion is what filed this task. The shortest thing that delivers the whole goal is a pair of clock waits bracketing the number, and that needs no new machinery."
+    },
+    {
+      "t": "2026-09-18T07:14:46.041Z",
+      "note": "Built: notice-waits-under-the-pointer-walk.json now boxes the six seconds in from both sides once the pointer has left. Its single 'wait 7, expect absent' became 'wait 4, expect still up' then 'wait 3, expect absent' — same 7s of wall clock, one more claim. Proved the new claim is not vacuous by breaking the app under it: with CopyConfirmation.actionLifetime cut from 6.0 to 2.0 the walk FAILS at step 22 ('no pill is up under the canvas, so nothing can be let go by a pointer'), where before this change that same build passed the walk, because a 2 second pill is indeed gone by seven. Lifetime restored; walk green again at 26 steps, status ok."
+    },
+    {
+      "t": "2026-09-18T07:14:46.089Z",
+      "note": "Built: docs/design/playtest-harness.md gained 'When the walk is about a clock, not about work' under 'What a wait waits for'. That section is where the step table sends you and it said NOTHING about onTheClock, which is the most likely reason this task got filed ten hours after the fix landed. It now names onTheClock, spells out the both-sides bracket with the JSON, and warns that the seconds are real and that a snapshot between the two bounds eats the budget."
+    },
+    {
+      "t": "2026-09-18T07:14:46.136Z",
+      "note": "Verified: Scripts/test.sh green, 8280 tests in 660 suites. Walk re-run green after restoring the lifetime. No audit file written: this is walk-harness and documentation work with nothing a person can try in the app, so there is no feature for the user to judge."
+    },
+    {
+      "t": "2026-09-18T07:14:48.766Z",
+      "note": "walks the-count-survives-the-line-walk -> notice-waits-under-the-pointer-walk"
     }
   ],
   "walks": [
-    "the-count-survives-the-line-walk"
-  ]
+    "notice-waits-under-the-pointer-walk"
+  ],
+  "started": "2026-09-18T07:04:02.318Z"
 }

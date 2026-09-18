@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/notice-waits-under-the-pointer",
-  "seed": "The line at the foot of the canvas carries a button, and it leaves after six seconds. Resting the pointer on that button is supposed to stop its clock, so the line cannot walk away while you are reaching for it, and moving off is supposed to start the clock again. Neither half had ever been checked: a walk's pointer could not make anything in the app notice it was there until PlaytestPointer, so a walk written to prove this reported nothing at all. This is that walk.",
+  "seed": "The line at the foot of the canvas carries a button, and it leaves after six seconds. Resting the pointer on that button is supposed to stop its clock, so the line cannot walk away while you are reaching for it, and moving off is supposed to start the clock again. Neither half had ever been checked: a walk's pointer could not make anything in the app notice it was there until PlaytestPointer, so a walk written to prove this reported nothing at all. This is that walk. It also boxes the six seconds in from both sides once the pointer is gone \u2014 still up at four, gone by seven \u2014 so a line that stops fading and a line that fades early both fail here.",
   "setup": {
     "forget": ["all"],
     "flags": {
@@ -38,9 +38,14 @@
     { "do": "describe", "stage": "4-the-pointer-walks-away",
       "note": "THE POINTER LEAVES: the hold is taken back the moment the pointer is off the button. The line is still up, because letting go gives the whole six seconds again rather than the remainder." },
 
-    { "do": "wait", "seconds": 7, "onTheClock": true },
+    { "do": "wait", "seconds": 4, "onTheClock": true },
+    { "do": "expectNotice", "says": "Separated", "held": false },
+    { "do": "describe", "stage": "5-four-seconds-in-and-still-there",
+      "note": "THE OTHER EDGE: four real seconds after the pointer left, and the line is still up. Its own life is six, so this is the half that catches a line going EARLY. Nothing in the walk set could see that before: an ordinary wait is back in a tenth of a second, so a pill cut to one second would have passed every walk we have." },
+
+    { "do": "wait", "seconds": 3, "onTheClock": true },
     { "do": "expectNotice", "absent": true },
-    { "do": "describe", "stage": "5-and-then-it-goes",
-      "note": "THE POINT: the fresh clock ran out and the line left by itself. A hold that never ended would have left it on screen for good, which is the bug this walk exists to catch." }
+    { "do": "describe", "stage": "6-and-then-it-goes",
+      "note": "THE POINT: seven seconds in, the fresh clock has run out and the line left by itself. Together with the step before it, the six seconds are now boxed in on both sides: still there at four, gone by seven. A hold that never ended would have left it on screen for good, which is the bug this walk exists to catch." }
   ]
 }

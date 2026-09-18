@@ -5279,3 +5279,21 @@
 {"t":"2026-09-18T04:13:43.162Z","ev":"task_note","id":"typing-in-the-find-field-does-not-freeze-a-long"}
 {"t":"2026-09-18T04:13:43.211Z","ev":"task_note","id":"typing-in-the-find-field-does-not-freeze-a-long"}
 {"t":"2026-09-18T04:13:54.396Z","ev":"task_done","id":"typing-in-the-find-field-does-not-freeze-a-long","from":"in_progress","note":"The layers list's slide is keyed to the whole list instead of to the rows on screen, so typing in the find field shows its results at once rather than sliding a hundred and seventy rows per letter. New PhotonzCore/LayerListSlide.swift (5 tests, written first), EditorState.wholePanelRows, one .animation in LayersListView. Per keystroke over 173 rows: 290ms of main thread down to 47 to 117ms; the acceptance walk's type step reports longest 19.3ms where the reading before was 329.3ms. The playtest type step now zeroes its meters so that number is the keystroke's own and not the screen capture two steps earlier. Scripts/test.sh green, separated-rows-say-their-words-walk, find-a-layer-walk, layers-lazy-rows-walk ok. Audit: queue/audits/2026-09-17-find-field-typing.json."}
+{"t":"2026-09-18T05:25:57.553Z","ev":"sweep_pass","walks":248,"passed":237,"failed":11,"seconds":4281,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":525}
+{"t":"2026-09-18T05:25:57.675Z","ev":"task_started","id":"the-experiments-window-sorts-its-flags-into-the","title":"The Experiments window sorts its flags into the parts of the app they belong to","priority":"p3-low"}
+{"t":"2026-09-18T05:52:01.212Z","ev":"task_walks","id":"the-experiments-window-sorts-its-flags-into-the","walks":["experiments-groups-walk"]}
+{"t":"2026-09-18T05:52:01.261Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:01.306Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:05.772Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:05.818Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:05.866Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:05.913Z","ev":"task_note","id":"the-experiments-window-sorts-its-flags-into-the"}
+{"t":"2026-09-18T05:52:21.045Z","ev":"task_done","id":"the-experiments-window-sorts-its-flags-into-the","from":"in_progress","note":"Flags in the Experiments window now sit under seventeen headings for the parts of the app they change (Capture first, The app itself last). FeatureArea + FeatureFlag.area (required, so a flag cannot be added without one) + FeatureFlagSettings.flagGroups in PhotonzCore, all 79 definitions stamped, ExperimentsDialog draws one Section per group; same rows, same switches, nothing defaulted differently. Verified: Scripts/test.sh green (8280 tests, 8 new in the Feature areas suite), Scripts/playtest/experiments-groups-walk.json passes and photographed the real window, and the flag-override walks (a-separation-arrives-shut, never-granting) still pass. Audit: queue/audits/2026-09-17-experiments-flag-groups.json. Commit 170e47f1, pushed."}
+{"t":"2026-09-18T07:04:02.200Z","ev":"sweep_pass","walks":249,"passed":238,"failed":11,"seconds":4281,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":526}
+{"t":"2026-09-18T07:04:02.321Z","ev":"task_started","id":"a-walk-can-wait-for-something-to-fade","title":"A walk can wait for something to fade","priority":"p3-low"}
+{"t":"2026-09-18T07:14:45.946Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
+{"t":"2026-09-18T07:14:45.994Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
+{"t":"2026-09-18T07:14:46.043Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
+{"t":"2026-09-18T07:14:46.091Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
+{"t":"2026-09-18T07:14:46.138Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
+{"t":"2026-09-18T07:14:48.768Z","ev":"task_walks","id":"a-walk-can-wait-for-something-to-fade","walks":["notice-waits-under-the-pointer-walk"]}

@@ -890,6 +890,46 @@ clock and see whether it comes back:
 PHOTONZ_PLAYTEST_PACE=full Scripts/playtest.sh <walk.json> --no-build
 ```
 
+### When the walk is about a clock, not about work
+
+Watching is the right default because a wait almost always means "let the
+editor finish". It is exactly wrong for the handful of walks about something
+that leaves **by itself**. The line at the foot of the canvas goes six seconds
+after it arrives whether the app is busy or not, and an app with nothing left to
+do is quiet in a tenth of a second, so an ordinary `wait` of eight seconds comes
+back having proved nothing about the six. That is a walk that reads green while
+the thing it was written to check never happened.
+
+`onTheClock` spends the whole number instead:
+
+```json
+{ "do": "wait", "seconds": 7, "onTheClock": true }
+```
+
+**Box the clock in from both sides.** One wait plus one claim only ever catches
+half of what can go wrong. A notice that stopped fading fails "it has gone by
+seven"; a notice cut from six seconds to one passes it comfortably, because by
+seven seconds it is indeed gone. Both halves need a step:
+
+```json
+{ "do": "wait", "seconds": 4, "onTheClock": true },
+{ "do": "expectNotice", "says": "Separated" },
+
+{ "do": "wait", "seconds": 3, "onTheClock": true },
+{ "do": "expectNotice", "absent": true }
+```
+
+Still there at four, gone by seven. `notice-waits-under-the-pointer-walk.json`
+is the worked example, and it does the same either side of a pointer resting on
+the pill.
+
+Two things to keep in mind when you write one. The seconds are real, so they
+come straight off the sweep: use the smallest pair that still brackets the
+number, and only in the walk that is genuinely about the clock. And count from
+the step, not from the moment the thing appeared — a `snapshot` between the two
+can eat a second of the budget, so leave slack rather than picking a bound that
+sits right on the edge.
+
 ## A step waits for the panel instead of racing it
 
 The dock builds its rows lazily and re-lays them out whenever a section opens
