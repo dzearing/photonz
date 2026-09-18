@@ -173,10 +173,17 @@ public enum TextRunSweep {
         }
 
         // 5 & 6. Does each look like words, and does it stand on its own?
+        // Biggest first, and on a tie whichever the picture offered first,
+        // which is reading order. The tie-break is not decoration: which of two
+        // overlapping runs is taken decides whether the other is dropped, so an
+        // order that wobbled would move the count of what is left in the
+        // picture. `sorted` is not promised to be stable, so the second key
+        // says it here rather than trusting it.
         var accepted: [CGRect] = []
-        for candidate in candidates.sorted(by: {
-            $0.box.width * $0.box.height > $1.box.width * $1.box.height
-        }) {
+        let area = candidates.map { $0.box.width * $0.box.height }
+        for candidate in candidates.indices
+            .sorted(by: { area[$0] == area[$1] ? $0 < $1 : area[$0] > area[$1] })
+            .map({ candidates[$0] }) {
             let box = candidate.box
             guard box.width >= Int(minElement.rounded()),
                   box.height >= Int((minElement * minHeightRatio).rounded()),
@@ -383,20 +390,34 @@ public enum TextRunSweep {
                 }
             }
         }
-        var boxes: [Int: Box] = [:]
+        // Gathered in the order the picture was READ, not in the order a
+        // dictionary happens to hand its values back.
+        //
+        // This used to be a `[Int: Box]` keyed by the root and returned as
+        // `Array(boxes.values)`. Swift reseeds its hashing every process, so
+        // that order was different in every run of the app: the pass above that
+        // takes the biggest runs first and drops anything overlapping one
+        // already taken then kept a different one of each overlapping pair, and
+        // the number of pieces Separate into Layers said it had left in the
+        // picture came out 355, 357 or 359 for the same screenshot. The
+        // dictionary stays, because looking a root up by key is not walking it;
+        // what it holds now is WHERE each run sits in the answer, and the
+        // answer is a list built as the segments are walked.
+        var boxes: [Box] = []
+        var placeOfRoot: [Int: Int] = [:]
         for (i, s) in segments.enumerated() {
             let root = find(i)
-            if var box = boxes[root] {
-                box.x0 = min(box.x0, s.x0)
-                box.x1 = max(box.x1, s.x1)
-                box.y0 = min(box.y0, s.y)
-                box.y1 = max(box.y1, s.y)
-                boxes[root] = box
-            } else {
-                boxes[root] = Box(x0: s.x0, y0: s.y, x1: s.x1, y1: s.y)
+            guard let place = placeOfRoot[root] else {
+                placeOfRoot[root] = boxes.count
+                boxes.append(Box(x0: s.x0, y0: s.y, x1: s.x1, y1: s.y))
+                continue
             }
+            boxes[place].x0 = min(boxes[place].x0, s.x0)
+            boxes[place].x1 = max(boxes[place].x1, s.x1)
+            boxes[place].y0 = min(boxes[place].y0, s.y)
+            boxes[place].y1 = max(boxes[place].y1, s.y)
         }
-        return Array(boxes.values)
+        return boxes
     }
 
     // MARK: - Is it a box rather than a line of text?

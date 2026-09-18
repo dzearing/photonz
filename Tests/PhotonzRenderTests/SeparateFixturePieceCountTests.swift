@@ -151,8 +151,18 @@ struct SeparateFixturePieceCountTests {
         #expect(taken.result.boxes.count == 30)
         // And everything it did not take is counted rather than dropped, so
         // the pill's number is the number still in the picture.
+        //
+        // 355 rather than the 357 pinned here until 2026-09-18. That number was
+        // never a fact about the picture: `TextRunSweep.components` handed its
+        // runs back in dictionary hash order, Swift reseeds that every process,
+        // and the pass that drops a run overlapping one already taken kept a
+        // different one each time. The same fixture came out 355, 357 or 359 in
+        // consecutive runs of this one test, so the suite was a coin toss. The
+        // order is now reading order and the answer is one number; 355 is what
+        // the picture actually holds, and it is what the seed-pinned run
+        // (SWIFT_DETERMINISTIC_HASHING=1) gave before the fix as well.
         #expect(taken.result.skipped == 8)
-        #expect(taken.result.crowded == 357)
+        #expect(taken.result.crowded == 355)
     }
 
     @Test func theDensePageLandsAsOneHundredAndSeventyThreeLayers() throws {
