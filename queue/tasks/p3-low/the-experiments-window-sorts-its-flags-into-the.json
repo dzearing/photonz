@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:55.446Z",
-  "updated": "2026-09-17T18:06:55.508Z",
+  "updated": "2026-09-18T05:52:21.044Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seventh manager pass carrying this as an open thread, which is what earns it a task under the follow-up bar rather than an eighth line in a report. Filed p3 deliberately, because nobody is stopped: the search field works, and 77 of the 79 definitions are enabledByDefaultIn [.next], so a person trying Next is not hunting for switches to turn on. What they are doing is turning ONE thing off to compare, and finding the flag an audit named.\n\nMeasured 2026-09-17: grep -c Definition( Sources/PhotonzCore/FeatureCatalog.swift is 79; releases: [.next] is 77; enabledByDefaultIn: [.next] is 77. Sources/PhotonzCore/FeatureFlag.swift line 214 says the order is catalog order and that is the order the dialog lists them in. FeatureFlag carries name, title, description, isEnabled, parameters and no group of any kind.\n\nFiles: Sources/PhotonzCore/FeatureFlag.swift (the new value, Codable and Sendable like the rest), Sources/PhotonzCore/FeatureCatalog.swift (every definition), Sources/Photonz/ExperimentsDialog.swift flagSection around line 128. Model and the test are PhotonzCore so they are test-first.",
@@ -31,6 +31,47 @@
     {
       "t": "2026-09-17T18:06:55.507Z",
       "note": "seq 1330 -> 50"
+    },
+    {
+      "t": "2026-09-18T05:25:57.673Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T05:52:01.210Z",
+      "note": "owns these walks: experiments-groups-walk"
+    },
+    {
+      "t": "2026-09-18T05:52:01.259Z",
+      "note": "Before building: walked the idea. A pile of 77 switches is not fixed by sorting alphabetically (you have to know the word) nor by a tree (a flag is one line, not a folder), so the shortest thing that pays off is one heading per part of the app, drawn in a deliberate order, with the search unchanged. Rejected as decorative: per-group counts, collapsible headings, an 'only what is off' filter. Rejected as beyond the ask: focusing the search field on open."
+    },
+    {
+      "t": "2026-09-18T05:52:01.304Z",
+      "note": "Shipped: FeatureArea in PhotonzCore (17 cases, declaration order is display order, each with a plain title), FeatureFlag.area required at every construction so a new flag cannot be added without one (compile error, stronger than a test), FeatureFlagSettings.flagGroups(matching:) which groups the search results and drops empty headings, all 79 catalog definitions stamped, and ExperimentsDialog drawing one Section per group. 8 new tests in the Feature areas suite; Scripts/test.sh green at 8280 tests."
+    },
+    {
+      "t": "2026-09-18T05:52:05.770Z",
+      "note": "Verified: Scripts/playtest/experiments-groups-walk.json opens the Experiments window through two new probe-only playtest actions (showExperiments/closeExperiments, same shape as showSettings) and photographs it by name. Real capture taken under a lock, labelled in the audit. Search narrowing is proved by unit test rather than by the walk: typing into that window needs a focus step, which a locked screen refuses, and a walk that asks for one would have taken no picture at all today."
+    },
+    {
+      "t": "2026-09-18T05:52:05.816Z",
+      "note": "Judgement recorded: the Experiments window is shared chrome, not a release experience. There is one of it and it edits both releases, so grouping lands for Current and Next together and nothing inside either release folder changed. Forking it into Next would have meant two copies of the one window that picks between them."
+    },
+    {
+      "t": "2026-09-18T05:52:05.864Z",
+      "note": "left rough (stays here, does not clear the follow-up bar): a flag row with settings indents its title to leave room for the disclosure chevron and a row without settings does not, so the left edge of the list zigzags between the two kinds. Visible in queue/audits/2026-09-17-experiments-groups-top.png between 'Capture toast timing' and 'Edit from the capture toast'. It predates this change (flagRow is untouched) and is cosmetic; it is in the audit's rough list so the user can react on the dashboard if it bothers them."
+    },
+    {
+      "t": "2026-09-18T05:52:05.911Z",
+      "note": "left rough: one full-suite run had 'A whole strip of moving previews fits inside one frame of the loop' (IconPreviewRenderTests.swift:249) record an issue; it passes alone and on the next full run, so it is a timing flake under load, not this change. Not filed: the loop already carries a task on runs that disagree with themselves."
+    },
+    {
+      "t": "2026-09-18T05:52:21.042Z",
+      "note": "Flags in the Experiments window now sit under seventeen headings for the parts of the app they change (Capture first, The app itself last). FeatureArea + FeatureFlag.area (required, so a flag cannot be added without one) + FeatureFlagSettings.flagGroups in PhotonzCore, all 79 definitions stamped, ExperimentsDialog draws one Section per group; same rows, same switches, nothing defaulted differently. Verified: Scripts/test.sh green (8280 tests, 8 new in the Feature areas suite), Scripts/playtest/experiments-groups-walk.json passes and photographed the real window, and the flag-override walks (a-separation-arrives-shut, never-granting) still pass. Audit: queue/audits/2026-09-17-experiments-flag-groups.json. Commit 170e47f1, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-18T05:25:57.672Z",
+  "walks": [
+    "experiments-groups-walk"
+  ],
+  "completed": "2026-09-18T05:52:21.043Z"
 }

@@ -1,0 +1,47 @@
+{
+  "id": "renaming-a-layer-stops-crashing-the-app",
+  "title": "Renaming a layer stops crashing the app",
+  "goal": "Rename any layer and the app quits on the spot, taking the document with it. It has done this since last night, it happens every single time, and it is one of the things people do most often in the layers list. Make renaming a layer just rename the layer.",
+  "epic": "ui-building",
+  "priority": "p0-critical",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T08:29:56.962Z",
+  "updated": "2026-09-18T08:30:18.813Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED. Not a hang: the app aborts.\n\nCause, off the crash report: Sources/Photonz/EditorState+LayersPanel.swift:499 is\n\n    func renameLayer(id: UUID, to name: String) {\n        perform { $0.renameLayer(id: id, to: name, readWords: readWordsForRows) }\n    }\n\nThe closure reads `readWordsForRows` (Sources/Photonz/EditorState+RunWords.swift:148), which reads `document`, while History.perform already holds `document` under exclusive access. Swift's exclusivity check fires and calls abort(). Read `readWordsForRows` into a local BEFORE perform and the overlap goes away; check the other perform closures added by the same commit for the same shape.\n\nStack (Photonz Probe-2026-09-18-012238.ips, and identical in the first one at 2026-09-17-192704):\n  swift_beginAccess\n  EditorState.history.getter\n  EditorState.document.getter\n  EditorState.readWordsForRows.getter\n  closure #1 in EditorState.renameLayer(id:to:)\n  History.perform(_:)\n  EditorState.perform(announcing:reportingLinkBreaks:_:)\n  EditorState.renameLayer(id:to:)\n  LayersListView.commitRename(id:)\n\nWhen it started: commit 4f83fd70 'What a reading found is saved with the document', 2026-09-17 19:14:32, which is where readWordsForRows was born. The walk sweep at 17:21 had unique-layer-names ok in 8s, duplicate-names ok in 10s, shared-component ok in 14s; the sweep at 19:15, the first after that commit, has all three at 186-187s FAILED no done.json, and every sweep since says the same. ~/Library/Logs/DiagnosticReports has three Photonz Probe crashes between 09-12 and 09-13, then nothing until 2026-09-17 19:27:04, then 21 of them in the next six hours.\n\nRun here at 2026-09-18 01:26 local, on HEAD 33132430:\n  $ Scripts/playtest-all.sh --no-build unique-layer-names\n  (wrote names-1-four-shapes, then nothing; no probe process left alive; a fresh\n   .ips at 01:27 with the stack above)\n\nThis also explains all seven of the 'no done.json' failures in the 2026-09-18T08:26Z partial sweep. Six of them call the renameSelectedLayer action, which is a straight call to editor.renameLayer; frame-name-rename and version-row-name reach the same commitRename by typing in the row. One bug, seven walks. Fold the result back into walks-that-fail-in-the-full-sweep.",
+  "acceptance": [
+    "Renaming a layer in the layers list renames it and the app stays up, with a separated document open and with an ordinary one",
+    "The seven scripted walks that die on this pass again: Scripts/playtest-all.sh --no-build unique-layer-names, duplicate-names, pasted-layer-name, placed-image-dedupe, frame-name-rename, version-row-name, shared-component",
+    "A test covers the crash itself, so renaming while a reading is held cannot silently come back",
+    "The try path: open any document, double click a layer's name in the panel, type a new one, press Return. Ships in Next behind next-a-separated-row-says-its-words, which is on by default",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T08:29:56.964Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-18T08:29:59.598Z",
+      "note": "seq 22 -> 1"
+    },
+    {
+      "t": "2026-09-18T08:30:18.812Z",
+      "note": "owns these walks: duplicate-names-walk, frame-name-rename-walk, pasted-layer-name-walk, placed-image-dedupe-walk, shared-component-walk, unique-layer-names-walk, version-row-name-walk"
+    }
+  ],
+  "walks": [
+    "duplicate-names-walk",
+    "frame-name-rename-walk",
+    "pasted-layer-name-walk",
+    "placed-image-dedupe-walk",
+    "shared-component-walk",
+    "unique-layer-names-walk",
+    "version-row-name-walk"
+  ]
+}

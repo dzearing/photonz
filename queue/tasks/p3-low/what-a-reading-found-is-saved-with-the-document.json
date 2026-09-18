@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:49.848Z",
-  "updated": "2026-09-17T18:06:49.911Z",
+  "updated": "2026-09-18T02:14:44.726Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Second manager pass carrying this, which is what earns it a task under the follow-up bar rather than another line in a report. From the rough list of queue/audits/2026-09-16-separated-row-says-its-words.json: the reading is not saved, so opening a document that already holds separated runs reads them again in the background; on a page of a hundred and forty runs that is a few hundred milliseconds of quiet work after the file opens.\n\np3 because nobody has reported noticing it. The two things that could make it matter are the wasted work on every open and the risk of a second reading disagreeing with the first, and the audit for this task should say which of those is real.\n\nFiles: Sources/PhotonzCore/TextReadingBatch.swift (Batch is not Codable and is not in Document), Sources/Photonz/EditorState+RunWords.swift line 85 where the detached read is kicked off, Sources/PhotonzCore/Document.swift. Flag next-read-every-label and the row-naming flag beside it.",
@@ -31,6 +31,55 @@
     {
       "t": "2026-09-17T18:06:49.910Z",
       "note": "seq 1330 -> 40"
+    },
+    {
+      "t": "2026-09-18T01:12:06.676Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-18T01:15:09.384Z",
+      "note": "Core landed: PhotonzDocument.readWords (ReadWords.swift), Codable, omitted when empty, filed outside history. 9 core tests green."
+    },
+    {
+      "t": "2026-09-18T02:02:41.388Z",
+      "note": "owns these walks: separated-rows-say-their-words-walk"
+    },
+    {
+      "t": "2026-09-18T02:02:55.601Z",
+      "note": "Adversarial review before building. The idea survives: the only visible payoff is a separated file opening already named instead of filling in over a second, and that is real. Three things the shortest version had to get right, and did. (1) A reading must not make the file look edited: it is filed through History.applyOutsideHistory AND the editor advances its saved baseline (EditorState.applyWithoutMarkingEdited), so no edited dot and no save prompt for words the app read to itself; the reading rides along with the next real save. (2) It must cost no undo step and must survive undo: applyOutsideHistory applies to every step on the stack, so undo a separation and re-run it and the reading is already there. (3) It must carry no pixels: the saved form is the bitmap's ref and the words, nothing else, asserted in a test. Rejected as decorative: pruning readings for bitmaps the document no longer holds (it would break re-separating being free, and it is a few KB), any new flag (the existing one already gates the whole feature), and any UI at all."
+    },
+    {
+      "t": "2026-09-18T02:02:55.646Z",
+      "note": "Measured, because the task asked which of the two costs is real. Both are, the first much more than the second. Wasted work: reading the dense page's 142 runs again after a save takes 3.1s of CPU in a release build (was 1.8s on the pre-save bitmaps, so the HEIC-decoded ones read slower); the app spreads a dozen over the cores at utility priority, so it lands as a few hundred ms of quiet work after every open. Disagreement: over two runs of the same 142 saved pictures, one run had one row change its answer (\"colours\" -> nothing at all, so the row goes back to saying Text 57) and the other run had none. Real, rare, and not stable between readings. File cost: dense page model 154 KB -> 179 KB beside 772 KB of pictures; settings pane 20 KB -> 22 KB beside 57 KB."
+    },
+    {
+      "t": "2026-09-18T02:02:55.694Z",
+      "note": "Perf check on the new write path, because filing now touches the whole undo stack. Measured 15 batches over a 180-layer document with 6 undo steps: 18ms total in a debug build. In the probe app the reading pass costs about 130ms more main-thread work spread over its 6 seconds (366ms -> 500ms of mainBusy) with the longest single pass unchanged at 38-39ms, so no new jank, and it is paid once instead of on every open."
+    },
+    {
+      "t": "2026-09-18T02:02:55.739Z",
+      "note": "left rough, did not earn a task: the playtest harness has no step that saves a document or reopens one, so no walk can drive the save-quit-open loop this task is about. Covered instead by a test that writes and reads a real .photonz package through PackageIO, which is the same code the app's own save uses. Considered committing a .photonz fixture with readings baked in so a walk could open it and photograph the named rows; rejected because it means committing a binary package that duplicates a PNG fixture already in the tree, for a check the package round-trip test already makes."
+    },
+    {
+      "t": "2026-09-18T02:02:55.786Z",
+      "note": "left rough, did not earn a task: readings are never pruned, so a document keeps what was read off a bitmap it no longer holds. That is deliberate (it is what makes undo-then-separate-again free) and costs a few kilobytes; nobody can see it. Worth revisiting only if a file is ever seen carrying a noticeable amount of dead words."
+    },
+    {
+      "t": "2026-09-18T02:02:55.833Z",
+      "note": "Watched under a lock and worth recording: a forced run showed the focus step working with the screen locked. Step 15 logged 'focus \"Find a layer\" now holds \"\"' and the typing that followed reached the right row, on a Mac locked for days. PlaytestLockSafety still refuses focus, so the walk is still reported as locked rather than run. Not changing that list on one observation from one field, but it is the evidence the next pass over lock safety wants: Sources/PhotonzCore/PlaytestLockSafety.swift, stepsThatSurviveALock."
+    },
+    {
+      "t": "2026-09-18T02:14:44.676Z",
+      "note": "Verified on the real app, not just in tests: the walk logs edited=False at the final step, after 142 readings have landed in the document and the separation has been undone. Deliberately removing the saved-baseline advance made that step fail with 'this window is holding unsaved changes', so the check is real and not vacuous."
+    },
+    {
+      "t": "2026-09-18T02:14:44.724Z",
+      "note": "PhotonzDocument.readWords (Sources/PhotonzCore/ReadWords.swift) keeps the words read off each bitmap with the document: Codable, sorted so the same readings are the same bytes, and omitted from a document nothing has been read off. EditorState+RunWords now skips anything already read and files what it finds through the new EditorState.applyWithoutMarkingEdited, which records no undo step and advances the saved baseline so a file never looks edited for work nobody did. Verified: 9 new core tests plus 3 in PhotonzRenderTests including a real .photonz write-and-reopen through PackageIO; full suite 8267 tests green; separated-rows-say-their-words-walk now passes all 36 steps with 4 real window captures, having never once run before (two faults in the walk fixed, and expectPicked widened to accept the name a row says). New expectEdited playtest step pins the no-dirty promise and was proved to catch its own regression. Measured for the audit: re-reading the dense page's 142 runs after a save costs 3.1s of CPU and is now zero; the model grows 154 KB -> 179 KB beside 772 KB of pictures; one of 142 rows changed its answer between readings in one of two runs. Audit: queue/audits/2026-09-17-what-a-reading-found-is-saved.json. Commit 4f83fd70, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-18T01:12:06.675Z",
+  "walks": [
+    "separated-rows-say-their-words-walk"
+  ],
+  "completed": "2026-09-18T02:14:44.725Z"
 }

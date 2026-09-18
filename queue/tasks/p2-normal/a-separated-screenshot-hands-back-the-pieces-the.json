@@ -1,0 +1,44 @@
+{
+  "id": "a-separated-screenshot-hands-back-the-pieces-the",
+  "title": "A separated screenshot hands back the pieces the walks were written for",
+  "goal": "Taking a screenshot apart now hands back more pieces than the checks written for it expect: one page comes back as 173 layers where 151 was the number, and on another page the first two boxes are no longer where the check looks for them. Find out whether the separation has started cutting too finely, which a person would see as a pile of extra layers, or whether the pieces are right and the checks are simply old, and settle it either way.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T08:30:16.554Z",
+  "updated": "2026-09-18T08:30:18.767Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED here at 2026-09-18 01:26 local on HEAD 33132430:\n\n  $ Scripts/playtest-all.sh --no-build separate-boxes\n  separate-boxes-walk   6s  FAILED  step 16 (expect): no row called \"Box 2\" is in the panel;\n                            the ones that are: Text 1, Box 4, Text 9, Fill, Box 3, Library\n  ==> 0 passed, 1 failed\n\nThe other three fail the same way in every sweep log from 2026-09-17-123336 onwards, which is as far back as queue/sweep/ goes:\n  separate-hierarchy-walk        step 13 (expect): no row called \"Box 2\"\n  separate-shadow-walk           step 15 (expect): no row called \"Box 2\"\n  separate-whole-screenshot-walk step 16 (expectLayers): 173 layers in the document, more than the 151 claimed\n\nAll four are lock safe and run in 5-7 seconds, so they are nothing to do with the locked screen and should not have been sitting behind the lock card inside walks-that-fail-in-the-full-sweep. Pulled out here so they can be claimed.\n\nTwo leads, and the first one is cheap to check: `expect row` only sees rows that are IN VIEW, which the separated-rows audit on 2026-09-17 already tripped over. separate-boxes-walk's own note says 'the list is long enough now that reaching the first card means scrolling to it', so Box 1 and Box 2 may simply have scrolled off and the walk needs a scrollPanel before the expect. That would make three of the four a stale-walk fix. It does NOT explain separate-whole-screenshot, which counts layers in the document and not rows on screen: 173 against 151 is 22 more pieces than the walk was written against, and that one is the question worth answering first.\n\nFixture: Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png. Walks: Scripts/playtest/separate-{boxes,hierarchy,shadow,whole-screenshot}-walk.json. Spec: docs/design/separate-into-layers.md. Cross-linked from walks-that-fail-in-the-full-sweep.",
+  "acceptance": [
+    "Say in the task log which it was: the separation cutting differently than it used to, or the four checks being out of date, with the commit that changed it if there is one",
+    "All four pass: Scripts/playtest-all.sh --no-build separate-boxes, separate-hierarchy, separate-shadow, separate-whole-screenshot",
+    "If the separation changed, the number of pieces it makes for each of the two fixture pages is pinned by a test so it cannot drift again unnoticed",
+    "The try path: open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, pick the Background row and run Separate into Layers. Ships in Next behind next-separate-into-layers, which is on by default",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T08:30:16.556Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-18T08:30:18.722Z",
+      "note": "seq 3010 -> 20"
+    },
+    {
+      "t": "2026-09-18T08:30:18.766Z",
+      "note": "owns these walks: separate-boxes-walk, separate-hierarchy-walk, separate-shadow-walk, separate-whole-screenshot-walk"
+    }
+  ],
+  "walks": [
+    "separate-boxes-walk",
+    "separate-hierarchy-walk",
+    "separate-shadow-walk",
+    "separate-whole-screenshot-walk"
+  ]
+}

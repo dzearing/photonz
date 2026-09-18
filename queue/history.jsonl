@@ -5298,3 +5298,23 @@
 {"t":"2026-09-18T07:14:46.138Z","ev":"task_note","id":"a-walk-can-wait-for-something-to-fade"}
 {"t":"2026-09-18T07:14:48.768Z","ev":"task_walks","id":"a-walk-can-wait-for-something-to-fade","walks":["notice-waits-under-the-pointer-walk"]}
 {"t":"2026-09-18T07:15:01.130Z","ev":"task_done","id":"a-walk-can-wait-for-something-to-fade","from":"in_progress","note":"The mechanism already existed: wait gained onTheClock in c6aa1536, ten hours before this task was filed, and notice-waits-under-the-pointer-walk already used it. Verified by running it. What was missing was the other edge and the documentation. That walk now boxes the six seconds in from both sides (still up at 4, gone by 7, same 7s of wall clock), proved not vacuous by cutting CopyConfirmation.actionLifetime to 2.0 and watching it fail at step 22 where the old walk passed. docs/design/playtest-harness.md gained 'When the walk is about a clock, not about work'. Declined the waitFor notice condition the notes asked for: it would pass a notice that fades too early, which is half the goal. Scripts/test.sh green, 8280 tests. Pushed as 7490f73f."}
+{"t":"2026-09-18T08:26:40.726Z","ev":"sweep_pass","walks":249,"passed":238,"failed":11,"seconds":4282,"complete":false,"screenLocked":true,"couldNotRun":277,"partial":true,"total":526}
+{"t":"2026-09-18T08:29:56.966Z","ev":"task_created","id":"renaming-a-layer-stops-crashing-the-app","priority":"p0-critical","title":"Renaming a layer stops crashing the app"}
+{"t":"2026-09-18T08:29:59.600Z","ev":"task_resequenced","id":"renaming-a-layer-stops-crashing-the-app","from":22,"to":1}
+{"t":"2026-09-18T08:29:59.647Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-18T08:30:16.558Z","ev":"task_created","id":"a-separated-screenshot-hands-back-the-pieces-the","priority":"p2-normal","title":"A separated screenshot hands back the pieces the walks were written for"}
+{"t":"2026-09-18T08:30:18.724Z","ev":"task_resequenced","id":"a-separated-screenshot-hands-back-the-pieces-the","from":3010,"to":20}
+{"t":"2026-09-18T08:30:18.768Z","ev":"task_walks","id":"a-separated-screenshot-hands-back-the-pieces-the","walks":["separate-boxes-walk","separate-hierarchy-walk","separate-shadow-walk","separate-whole-screenshot-walk"]}
+{"t":"2026-09-18T08:30:18.814Z","ev":"task_walks","id":"renaming-a-layer-stops-crashing-the-app","walks":["duplicate-names-walk","frame-name-rename-walk","pasted-layer-name-walk","placed-image-dedupe-walk","shared-component-walk","unique-layer-names-walk","version-row-name-walk"]}
+{"t":"2026-09-18T08:30:25.103Z","ev":"task_created","id":"the-row-of-icon-previews-stays-up-when-you-pick","priority":"p2-normal","title":"The row of icon previews stays up when you pick nothing"}
+{"t":"2026-09-18T08:30:30.865Z","ev":"task_resequenced","id":"the-row-of-icon-previews-stays-up-when-you-pick","from":3010,"to":30}
+{"t":"2026-09-18T08:30:30.917Z","ev":"task_created","id":"points-on-a-path-can-be-swept-up-with-a-box","priority":"p2-normal","title":"Points on a path can be swept up with a box"}
+{"t":"2026-09-18T08:30:35.558Z","ev":"task_resequenced","id":"points-on-a-path-can-be-swept-up-with-a-box","from":3010,"to":40}
+{"t":"2026-09-18T08:30:35.608Z","ev":"task_created","id":"the-pen-s-points-say-what-kind-of-point-they-are","priority":"p3-low","title":"The Pen's points say what kind of point they are as you draw"}
+{"t":"2026-09-18T08:30:42.341Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":1360,"to":1360}
+{"t":"2026-09-18T08:30:42.394Z","ev":"task_created","id":"a-screenshot-separated-before-today-only-has-to","priority":"p3-low","title":"A screenshot separated before today only has to be read once more"}
+{"t":"2026-09-18T08:30:46.017Z","ev":"task_resequenced","id":"a-screenshot-separated-before-today-only-has-to","from":1370,"to":1370}
+{"t":"2026-09-18T08:30:59.319Z","ev":"task_created","id":"a-walk-whose-app-died-says-the-app-died","priority":"p1-high","title":"A walk whose app died says the app died"}
+{"t":"2026-09-18T08:31:01.725Z","ev":"task_resequenced","id":"a-walk-whose-app-died-says-the-app-died","from":310,"to":10}
+{"t":"2026-09-18T08:31:28.791Z","ev":"objectives_updated","by":"manager","change":"design-system back to next: both tasks that earned its promotion on 2026-09-17 are done and it holds none"}
+{"t":"2026-09-18T08:31:52.698Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-18-0131.md"}
