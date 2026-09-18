@@ -1,0 +1,42 @@
+{
+  "id": "trim-a-recording-save-it-send-it-the-whole-flow",
+  "title": "Trim a recording, save it, send it: the whole flow works",
+  "goal": "Open a recording, trim it, and there is no way to save what you did. File Save is greyed out. Closing the window says there are unsaved changes, which proves the app knows there are. Pressing Save in that dialog does nothing and the window stays. The one job somebody opens a recording to do, trim it and send it to somebody, cannot be finished.",
+  "epic": "video-cutting",
+  "priority": "p0-critical",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T22:53:26.967Z",
+  "updated": "2026-09-18T22:53:39.343Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-18: \"i open a video. I trim it. I select file save. The save is disabled. I close the video and it still says 'do you want to save changes.' I click 'Save...' and it does nothing. so buggy. I just want to trim, save, send in teams.\"\n\nThis is the flow the 0.14 release led with (\"Saving a trimmed recording actually trims it\"), so it either regressed or never worked outside the case it was built against. Treat it as a break in something that shipped.\n\nWHAT I FOUND BY READING, three candidates, none confirmed. Reproduce before fixing: the symptoms do not all fit one cause, which usually means there are two faults, and fixing the loudest one will leave the other.\n\n1. The menu cannot see the video editor. EditorCommands.swift:40 reads the video editor through @FocusedValue(\\.videoEditorState), and Save is disabled by `editor?.document == nil && !(video?.canSave ?? false)`. If that focused value is nil for a recording window, Save is disabled no matter what the state says. The value is published at EditorWindowRoots.swift:61 with focusedSceneValue, but this app opens windows through AppCoordinator rather than as plain SwiftUI scenes, and there is already a note in the playtest harness that this app's Commands body only re-evaluates on focus events. THIS IS THE LEADING CANDIDATE because it explains the disabled menu item while the close dialog, which holds the state directly through WindowCloseGuard, correctly knows there are changes.\n\n2. isSaving stuck true. canSave is `isReady && url != nil && !isSaving` (VideoEditorState.swift:393) and save() returns completion(false) immediately when isSaving (around :412). That single flag would explain all three symptoms at once. It is reset on both the success and the catch path (around :437 and :444), so it can only stick if VideoAssetCommit.commit never returns. Check whether it can hang.\n\n3. The close dialog's Save calling a save that bails quietly. saveForClose calls save(), and save()'s first guard returns completion(true) - 'nothing loaded, nothing to lose' - when url is nil or isReady is false. A completion(true) there tells the dialog the save succeeded when nothing was written. That is a quiet lie and is worth removing whatever else is wrong: a save that did nothing should never report success.\n\nNote the contradiction that rules something out: hasUnsavedChanges (VideoEditorState.swift:387) itself guards on `isReady, url != nil`, and the user SAW the unsaved changes dialog, so both of those were true at that moment. That means canSave could only have been false through isSaving, or the menu never saw the state at all.\n\nWhile this is broken the way out is Save As, which maps to saveRecording(video, as: .mp4) and writes a fresh file, or Export. Say in the audit whether those worked, because if they did not this is bigger than the menu.",
+  "acceptance": [
+    "Reproduce the whole chain first, in a real build, and record each step: open a recording, trim it, look at File Save, close the window, press Save in the dialog. Say exactly what happened at each point and what the state was",
+    "After a trim, File Save is enabled and saving writes the trimmed recording",
+    "The close dialog's Save actually saves and then lets the window close, and if it cannot save it says why instead of doing nothing",
+    "What the menu believes and what the close dialog believes are the same thing: it is never possible for one to say there is nothing to save while the other says there are unsaved changes",
+    "The trimmed file that lands is the trimmed file: check the duration of what is on disk afterwards rather than trusting the app",
+    "It can then be sent: dragging it out, copying it, and Show in Finder all hand over the trimmed version",
+    "Saving twice, and saving after a second trim, both work, and undoing back to the original and saving restores the full length",
+    "A save that genuinely fails says so out loud and leaves the edits intact rather than silently losing them",
+    "A walk covers open, trim, save, and verifies the duration on disk",
+    "Audit under queue/audits/ with the flow captured end to end and the file durations before and after, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T22:53:26.969Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-18T22:53:39.297Z",
+      "note": "priority p2-normal -> p0-critical"
+    },
+    {
+      "t": "2026-09-18T22:53:39.342Z",
+      "note": "seq 3010 -> 1"
+    }
+  ]
+}
