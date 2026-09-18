@@ -52,22 +52,32 @@ struct SeparatedRowsSayTheirWordsTests {
                                          height: CGFloat(image.height)))])
         let id = document.layers[0].id
         var runs = 0, boxes = 0
-        let pieces = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
+        // The same two passes the command makes: every bitmap filed first, then
+        // each box pointed at the run of text that names it.
+        let bitmaps: [ImageRef?] = result.pieces.map { piece in
+            guard case .picture(let cut) = piece.body else { return nil }
+            return store.register(cut)
+        }
+        let namedAfter = SeparatedBoxNames.labels(
+            rects: result.pieces.map(\.rect),
+            isRunOfText: result.pieces.map { $0.kind == .text })
+        let pieces = result.pieces.enumerated().map { index, piece -> PhotonzDocument.SeparatedPiece in
             let isRun = piece.kind == .text
             if isRun { runs += 1 } else { boxes += 1 }
             let name = isRun ? "Text \(runs)" : "Box \(boxes)"
+            let label = namedAfter[index].flatMap { bitmaps[$0] }
             switch piece.body {
-            case .picture(let cut):
+            case .picture:
                 return PhotonzDocument.SeparatedPiece(
-                    frame: piece.rect, content: .picture(store.register(cut)),
-                    name: name, isRunOfText: isRun)
+                    frame: piece.rect, content: .picture(bitmaps[index]!),
+                    name: name, isRunOfText: isRun, labelledBy: label)
             case .shape(let shape):
                 return PhotonzDocument.SeparatedPiece(
                     frame: piece.rect,
                     content: .shape(fill: shape.fill, radii: shape.radii,
                                     borderWidth: shape.borderWidth,
                                     borderColor: shape.borderColor),
-                    name: name, isRunOfText: isRun)
+                    name: name, isRunOfText: isRun, labelledBy: label)
             }
         }
         _ = document.separateIntoLayers(id: id, patched: store.register(result.background),
@@ -105,16 +115,51 @@ struct SeparatedRowsSayTheirWordsTests {
                 "some rows still say a number: \(names)")
     }
 
+    /// The half of the list that is not words. A switch, a field and a button
+    /// are boxes with nothing written on them, and every one of them on this
+    /// pane sits inside or beside words a person can read.
+    @Test func everyBoxSaysTheWordsItHoldsOrSitsBeside() throws {
+        let taken = try #require(Self.settings)
+        let names = taken.document
+            .layerRows(expanded: taken.document.openableGroupIDs, selected: [],
+                       readWords: taken.words)
+            .map(\.name)
+        for words in ["Launch at login box", "Show in menu bar box",
+                      "Play sound on capture box", "Save captures to box",
+                      "File name prefix box", "Copy to clipboard box",
+                      "Reset box", "Save Changes box"] {
+            #expect(names.contains(words), "no row says \(words); the list says \(names)")
+        }
+        // The two cards are the only pieces on this pane with nothing to be
+        // named after: a card holding three labelled rows is not called after
+        // any one of them.
+        #expect(names.filter { $0.hasPrefix("Box ") }.count == 2,
+                "the numbered boxes left are \(names.filter { $0.hasPrefix("Box ") })")
+    }
+
+    /// The switch beside a row of words is reachable from the find field, and
+    /// tellable from the words themselves once it is.
+    @Test func typingAWordReachesTheSwitchBesideIt() throws {
+        let taken = try #require(Self.settings)
+        let hits = taken.document.layerRows(matching: "launch at login", selected: [],
+                                            readWords: taken.words).map(\.name)
+        #expect(hits.contains("Launch at login box"), "the find field reached \(hits)")
+        #expect(Set(hits).count == hits.count, "two rows read the same: \(hits)")
+    }
+
     @Test func typingAWordYouCanSeeReachesThePieceHoldingIt() throws {
         let taken = try #require(Self.settings)
         let hits = taken.document.layerRows(matching: "save ch", selected: [],
                                             readWords: taken.words)
-        #expect(hits.map(\.name) == ["Save Changes"])
+        // Both halves of the button: the words, and the box they are written
+        // on. Reaching the words alone was the old answer, and it left the
+        // piece somebody wanted to measure unreachable by name.
+        #expect(hits.map(\.name) == ["Save Changes", "Save Changes box"])
         // The word on the canvas, in any case, in any order, the same as every
         // other row: this is the find field's own rule, applying to a picture
         // of words for the first time.
         #expect(taken.document.layerRows(matching: "CHANGES save", selected: [],
-                                         readWords: taken.words).count == 1)
+                                         readWords: taken.words).count == 2)
     }
 
     @Test func nothingIsWrittenOntoTheCanvas() throws {

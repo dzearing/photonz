@@ -1,0 +1,33 @@
+{
+  "feature": "A separated switch says what it is",
+  "epic": "ui-building",
+  "summary": "Taking a settings pane apart used to hand back ten rows called Box 1 to Box 10, so finding the switch beside Launch at login meant clicking boxes on the canvas until the right one lit up. Every piece that sits inside or beside words now wears them: the switch on that row is \"Launch at login box\", the blue button is \"Save Changes box\", and only the two cards, which hold three labelled rows each and are named after none of them, keep a number.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-separate-into-layers, next-layer-groups and next-a-separated-row-says-its-words are on. The file is Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row in the Layers list and run Separate into Layers." },
+    { "do": "Wait about five seconds while the words are read off the pieces in the background." },
+    { "do": "Double click the green switch on the Launch at login row: it is inside the card, so one click picks the card and the second reaches the switch.",
+      "shot": "2026-09-18-boxnames-switch.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Read the row that lights up in the Layers list: \"Launch at login box\"." },
+    { "do": "Click the blue button on the canvas: one row called \"Save Changes box\", with its own words indented under it.",
+      "shot": "2026-09-18-boxnames-button.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Type \"launch\" into Find a layer: the words and the switch beside them both come back." },
+    { "do": "Press Command Z once: the whole separation goes back, names and all." }
+  ],
+  "evaluate": [
+    "Does \"Launch at login box\" read as the switch on that row, or does the word box get in the way of the words that matter?",
+    "The name column cuts a long name off at the end, so \"Play sound on capture box\" reads as \"Play sound on...\" and looks like the row of words above it. Is the row's own thumbnail enough to tell those two apart?",
+    "The two cards keep Box 1 and Box 2 because they hold three labelled rows each. Is a numbered card right, or should a card take the heading above it (General)?",
+    "The pill still says 9 runs of text and 10 boxes. Now that eight of the ten say words you can read, does 10 still read as a mistake?",
+    "Would you rather the switch were simply called \"Launch at login\", with the row's picture left to say which of the two rows is the switch?"
+  ],
+  "rough": [
+    "The name column is about fourteen characters wide at the dock's resting width, and it cuts the tail, which is exactly where the word box is. So on the longer rows the switch and its label read the same and only the thumbnail tells them apart. Putting the word in front instead would survive the cut and turn the column back into a wall of Box, which is what this task was filed to end, so it went to the back. Left in this task's log rather than filed: it is the naming trade the evaluate list above asks about directly, and the answer should be the user's.",
+    "A field UNDER its label is not named, only one beside it or inside it. No pane in the walk set has that shape, and pairing downwards is how a card ends up named after the heading above it, so the shortest honest rule shipped first.",
+    "The pictures here were taken with the Mac's screen locked. The window is the real one and the walk drove it for real; colours can read a shade dim.",
+    "Unrelated and now filed: Tests/PhotonzRenderTests/SeparateFixturePieceCountTests fails about half the time on a clean tree, with the dense page reporting 355, 357 or 359 pieces crowded out across runs of the same code. It makes a green test run a coin toss for everything the loop builds."
+  ]
+}

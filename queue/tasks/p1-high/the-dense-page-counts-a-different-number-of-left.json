@@ -1,0 +1,27 @@
+{
+  "id": "the-dense-page-counts-a-different-number-of-left",
+  "title": "The dense page counts a different number of leftovers every other run",
+  "goal": "Running the app tests is a coin toss right now: one test about taking a crowded screenshot apart passes, then fails, then passes, without a line of code changing in between. Anyone building anything sees a red test run about half the time and has to work out whether it is theirs, and a red run that means nothing is a run nobody trusts.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-18T13:32:03.734Z",
+  "updated": "2026-09-18T13:32:03.737Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on a CLEAN main (258d7422) with every local change stashed, four consecutive runs of Scripts/test.sh --filter theDensePageStopsAtTheCeiling:\n  run 1: FAILED  (taken.result.crowded -> 359) == 357\n  run 2: passed\n  run 3: FAILED  (taken.result.crowded -> 355) == 357\n  run 4: passed\nSo it is not a stale build and not a side effect of another test: one filter, one test, same binary.\n\nThe failing claim is Tests/PhotonzRenderTests/SeparateFixturePieceCountTests.swift:155, #expect(taken.result.crowded == 357) on Fixtures/dense-page-1x.png. runs.count (142), boxes.count (30, the ceiling) and skipped (8) are all steady in every run; only crowded moves, by two at a time.\n\nqueue/audits/2026-09-18-separate-into-layers.json says this was already chased once: the box sweep picked a winner out of a dictionary of votes and Swift reseeds its hashing per process, so ties were made to go to the lowest region number. That fixed some of it and clearly not all of it, so the remaining non-determinism is somewhere else in BoxSweep (Sources/PhotonzCore/BoxSweep.swift) - another Set or Dictionary walked in order, or work split across cores and gathered in arrival order. Because boxes.count sits exactly on SeparateBudget.maxBoxes, WHICH thirty boxes win changes what is left over, so the instability may be in the ordering of the candidates rather than in the counting.",
+  "acceptance": [
+    "Scripts/test.sh --filter theDensePageStopsAtTheCeiling passes ten times in a row on the same commit",
+    "The number of pieces the command says it left in a picture is the same every time that picture is taken apart, and a test pins that rather than pinning one lucky run",
+    "Scripts/test.sh is green end to end"
+  ],
+  "log": [
+    {
+      "t": "2026-09-18T13:32:03.736Z",
+      "note": "created (manual)"
+    }
+  ]
+}

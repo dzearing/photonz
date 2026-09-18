@@ -1550,6 +1550,21 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// leaves a run that can be read again.
     public var isARunOfText: Bool?
 
+    /// The picture whose WORDS name this layer: set on a box Separate into
+    /// Layers lifted off a screenshot, pointing at the run of text sitting
+    /// inside it or beside it on the same row (`SeparatedBoxNames`). Nil is
+    /// everything else, which is every layer in every document written before
+    /// this existed.
+    ///
+    /// A box has no words of its own — that is what makes it a box — so the
+    /// only honest name for it is the one a person would use out loud: the
+    /// switch beside Launch at login. It points at the PICTURE rather than
+    /// holding a name, for the same reason a run of text does not hold one:
+    /// the words are read off the pixels in the background, they are a guess
+    /// about a picture, and nothing about the document should change when one
+    /// arrives.
+    public var labelledBy: ImageRef?
+
     /// Whether a double click on this layer means "read these words": a run of
     /// text the separation lifted off a screenshot that nobody has read yet.
     ///
@@ -1611,6 +1626,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText
+        // And a copy of a named box is still named after the same words.
+        copy.labelledBy = labelledBy
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1642,6 +1659,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.effectStyleBindings = effectStyleBindings
         copy.motions = motions
         copy.isARunOfText = isARunOfText
+        copy.labelledBy = labelledBy
         map[id] = copy.id
         return copy
     }

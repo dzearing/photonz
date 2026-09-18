@@ -140,7 +140,19 @@ extension EditorState {
         let firstBox = LayerNaming.numberAfter(Self.separatedBoxName, taken: taken)
         var runs = 0, boxes = 0
         var bodyNames: [String] = []
-        let flat = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
+        // Every piece's bitmap is filed FIRST, before any piece is built, so a
+        // box can point at the picture of the words that name it: the label
+        // inside a button, the caption to the left of a switch
+        // (`SeparatedBoxNames`). Without this pass a box would have nothing to
+        // point at until the run beside it had already been made.
+        let bitmaps: [ImageRef?] = result.pieces.map { piece in
+            guard case .picture(let image) = piece.body else { return nil }
+            return store.register(image)
+        }
+        let namedAfter = SeparatedBoxNames.labels(
+            rects: result.pieces.map(\.rect),
+            isRunOfText: result.pieces.map { $0.kind == .text })
+        let flat = result.pieces.enumerated().map { index, piece -> PhotonzDocument.SeparatedPiece in
             let placed = CGRect(x: frame.minX + piece.rect.minX * sx,
                                 y: frame.minY + piece.rect.minY * sy,
                                 width: piece.rect.width * sx,
@@ -170,12 +182,19 @@ extension EditorState {
                 scaled.spread = shadow.spread * scale
                 return scaled
             }
+            // What this piece is named after, if anything: the run of text it
+            // holds or sits beside. A run of text is named after its own words
+            // and never after somebody else's.
+            let label = namedAfter[index].flatMap { bitmaps[$0] }
             switch piece.body {
             case .picture(let image):
                 bodyNames.append(Self.separatedPictureBodyName)
-                return PhotonzDocument.SeparatedPiece(frame: placed,
-                                                      ref: store.register(image), name: name,
-                                                      shadow: shadow, isRunOfText: isRun)
+                // Filed in the pass above, so the run beside a box and the box
+                // that names itself after it are pointing at the same bitmap.
+                let filed = bitmaps[index] ?? store.register(image)
+                return PhotonzDocument.SeparatedPiece(frame: placed, ref: filed, name: name,
+                                                      shadow: shadow, isRunOfText: isRun,
+                                                      labelledBy: label)
             case .shape(let shape):
                 bodyNames.append(Self.separatedShapeBodyName)
                 // The shape was read in image pixels; the layer lives in the
@@ -194,7 +213,7 @@ extension EditorState {
                                         bottomLeft: shape.radii.bottomLeft * scale),
                                     borderWidth: shape.borderWidth * scale,
                                     borderColor: shape.borderColor),
-                    name: name, shadow: shadow, isRunOfText: isRun)
+                    name: name, shadow: shadow, isRunOfText: isRun, labelledBy: label)
             }
         }
 
@@ -217,7 +236,7 @@ extension EditorState {
                     frame: piece.frame, content: piece.content, name: piece.name,
                     bodyName: bodyNames[node.index],
                     children: node.children.map(assemble), shadow: piece.shadow,
-                    isRunOfText: piece.isRunOfText)
+                    isRunOfText: piece.isRunOfText, labelledBy: piece.labelledBy)
             }
             pieces = result.nested.map(assemble)
         } else {

@@ -1,0 +1,146 @@
+{
+  "out": "/tmp/photonz-playtest/separated-boxes-say-their-words",
+  "seed": "THE SWITCH SAYS WHAT IT IS. Taking a settings pane apart hands back ten pieces that are not text: two cards, two buttons, four switches and two fields. They all used to arrive called Box 1 to Box 10, so the only way to find the switch beside Launch at login was to click boxes on the canvas until the right one lit up. Now every piece that sits inside or beside words wears them: the switch on that row is \"Launch at login box\", the blue button is \"Save Changes box\", and the two cards, which hold three labelled rows each and are named after none of them, keep their numbers. The walk separates the pane, waits while the words are read off the pictures in the background, then clicks the switch and the button ON THE CANVAS and asks what the list calls what it just picked.",
+  "setup": {
+    "forget": [
+      "groups"
+    ],
+    "flags": {
+      "next-a-row-says-its-words": true,
+      "next-a-separated-row-says-its-words": true,
+      "next-a-separation-arrives-shut": false
+    }
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-pieces-land",
+      "note": "The pane has come apart: nine runs of text and ten boxes over a repaired picture. The rows still say the numbers the command gave them, because reading the words has not started until this moment"
+    },
+    {
+      "do": "wait",
+      "seconds": 6
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-list-says-the-words",
+      "note": "THE FIRST TEST: the words have been read off the pictures in the background and the pieces that are not text wear them too. A switch has no words of its own, so it wears the ones on its row and says it is the box wearing them"
+    },
+    {
+      "do": "snapshot",
+      "name": "boxnames-1-the-list"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        1302,
+        191
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-switch-picked",
+      "note": "THE SECOND TEST, and the one this walk turns on: the green switch on the first row is inside the card, so a double click reaches it, and what it picks is a piece the list calls \"Launch at login box\". It used to be called Box 5, and nothing about it said which row it was on"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Launch at login box"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "boxnames-2-the-switch-picked"
+    },
+    {
+      "do": "click",
+      "at": [
+        357,
+        765
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-button-picked",
+      "note": "THE THIRD TEST: a box that HOLDS its words rather than sitting beside them is named the same way. Clicking the blue button picks the whole button, label and all, and the list calls it \"Save Changes box\", with the words themselves indented under it"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Save Changes box"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "boxnames-3-the-button-picked"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-press-takes-it-back",
+      "note": "THE LAST TEST: one press of undo and the pane is one picture again. Naming a box after the words beside it is worked out as the list is drawn, exactly as a run of text's own words are, so it costs no undo step of its own"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "boxnames-4-one-undo-and-its-whole"
+    }
+  ]
+}

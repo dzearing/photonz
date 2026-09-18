@@ -609,6 +609,46 @@ does not know it is a button, so it says the thing it knows. When the later
 slice reads the actual characters, the name becomes the words, and nothing else
 about this changes.
 
+### A box says the words it holds or sits beside
+
+The words half of that landed first, and it left the other half looking worse
+by comparison: a settings pane came apart into nine rows wearing what they say
+and ten rows called `Box 1` to `Box 10`, in one flat run, with a card, a button,
+a switch and a text field all carrying the same word and a number. Somebody
+redlining that pane wants the switch beside **Launch at login**, and the only
+way to find it was to click boxes on the canvas until the right one lit up.
+
+A box has no words of its own — that is what makes it a box — but it nearly
+always has words a person would name it BY. `SeparatedBoxNames.labels` picks
+which run of text those are, from rectangles alone:
+
+- **Inside it.** A box holding exactly one run of text and nothing else is a
+  button wearing its own label. A card holding three labelled rows is named
+  after none of them and keeps its number.
+- **Beside it, on the same row.** Among the pieces sharing its container — the
+  same `LayerNesting` tree the layers list is built from — the nearest run of
+  text to its left that overlaps it vertically by at least half the shorter of
+  the two, with nothing else on the row in between. To the right when there is
+  nothing to the left, which is what a checkbox before its label looks like.
+
+One run names at most one box, so a row holding a label and two controls never
+comes back saying the same thing twice: the nearer takes the words, the other
+keeps its number.
+
+The name is the words and then the word `box` — "Launch at login box" — because
+the row of the words themselves is right beside it and two rows reading the same
+thing would be the puzzle this exists to end. It is worked out as the list is
+drawn (`Layer.displayName(readWords:)`), from the picture the box points at
+(`Layer.labelledBy`), for the same reasons a run of text's own words are: the
+reading is a guess about pixels, it arrives in the background a moment after the
+command, it spends no undo step, and typing a name of your own ends it.
+
+On `Fixtures/settings-pane-2x.png` that is eight of the ten: four switches, two
+fields and two buttons wear their rows' words, and the two cards keep `Box 1`
+and `Box 2`. Pinned end to end on the real capture by
+`SeparatedRowsSayTheirWordsTests`, and the rule itself by
+`SeparatedBoxNamesTests`.
+
 
 ## A run of text becomes words you can retype
 

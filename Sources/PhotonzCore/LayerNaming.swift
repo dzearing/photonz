@@ -45,6 +45,11 @@ public enum LayerNaming {
             "Collage",
             newLayerName,
             PlacedImageNaming.clipboardName,
+            // What Separate into Layers calls a piece that is not text. It is
+            // here so a box that has since been given words to wear knows the
+            // number it is holding was the app's and not a person's
+            // (`SeparatedBoxNames`).
+            SeparatedBoxNames.stem,
         ]
 
     /// The stem an automatic name was made from ("Rectangle" for both
@@ -217,6 +222,16 @@ extension Layer {
             guard LayerNaming.isAutoName(name) else { return name }
             let words = LayerNaming.name(fromWords: text.string)
             return words.isEmpty ? name : words
+        }
+        // A box the separation lifted off a screenshot wears the words it sits
+        // inside or beside, and says it is the box wearing them: the switch on
+        // the Launch at login row is "Launch at login box", so it is findable
+        // in the list and never mistaken for the words themselves
+        // (`SeparatedBoxNames`).
+        if let labelledBy, !readWords.isEmpty, let read = readWords[labelledBy],
+           LayerNaming.isAutoName(name) {
+            let named = SeparatedBoxNames.name(fromWords: read)
+            return named.isEmpty ? name : named
         }
         // Only a run the separation lifted OFF a screenshot, so nothing can
         // rename an ordinary photograph after a word on a sign in it.

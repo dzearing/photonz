@@ -358,7 +358,13 @@ extension PhotonzDocument {
     /// off, no group is arranging anything, so no axis is owned by a flow and
     /// every rule counts as a rule of its own, exactly as it did before auto
     /// layout existed.
-    public func contentsSelection(layerIDs: [UUID], arranging: Bool = true) -> ContentsSelection {
+    ///
+    /// `readWords` is what the app has read off the pictures, so a heading calls
+    /// a separated group what the layers list calls it — "Contents of Save
+    /// Changes box" rather than "Contents of Box 4" over a row that says the
+    /// first (`Layer.displayName(readWords:)`).
+    public func contentsSelection(layerIDs: [UUID], arranging: Bool = true,
+                                  readWords: [ImageRef: String] = [:]) -> ContentsSelection {
         let picked = layerIDs.compactMap { layer(id: $0) }
         guard !picked.isEmpty else { return .none }
         let containers = picked.filter(\.isGroup)
@@ -371,7 +377,7 @@ extension PhotonzDocument {
                 let arrangement = arranging ? group.group?.layout : nil
                 return ContentsSelection.Group(
                     id: group.id,
-                    name: group.name,
+                    name: group.displayName(readWords: readWords),
                     isFrame: group.isFrame,
                     layout: group.workingLayout,
                     arrangement: arrangement,

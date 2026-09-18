@@ -854,10 +854,18 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         /// already means "change these words" can offer to read them
         /// (`Layer.isARunOfText`).
         public let isRunOfText: Bool
+        /// The picture of the words this piece is named after: the label inside
+        /// a button, the caption to the left of a switch. It goes on whatever
+        /// layer wears the piece's name, so a box that became a group to hold
+        /// its label is the thing that says the words (`SeparatedBoxNames`).
+        /// Nil on a run of text, which wears its own words, and on a box with
+        /// nothing beside it, which keeps its number.
+        public let labelledBy: ImageRef?
 
         public init(frame: CGRect, content: Content, name: String,
                     bodyName: String = "Picture", children: [SeparatedPiece] = [],
-                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false) {
+                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false,
+                    labelledBy: ImageRef? = nil) {
             self.frame = frame
             self.content = content
             self.name = name
@@ -865,14 +873,16 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             self.children = children
             self.shadow = shadow
             self.isRunOfText = isRunOfText
+            self.labelledBy = labelledBy
         }
 
         public init(frame: CGRect, ref: ImageRef, name: String,
                     bodyName: String = "Picture", children: [SeparatedPiece] = [],
-                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false) {
+                    shadow: ShadowStyle? = nil, isRunOfText: Bool = false,
+                    labelledBy: ImageRef? = nil) {
             self.init(frame: frame, content: .picture(ref), name: name,
                       bodyName: bodyName, children: children, shadow: shadow,
-                      isRunOfText: isRunOfText)
+                      isRunOfText: isRunOfText, labelledBy: labelledBy)
         }
 
         /// This piece and everything inside it.
@@ -951,7 +961,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             // A group casts one shadow from everything inside it, which for a
             // card and its own labels is the card's own outline.
             guard !piece.children.isEmpty else {
-                return body(piece, named: piece.name, shadowed: true)
+                var alone = body(piece, named: piece.name, shadowed: true)
+                alone.labelledBy = piece.labelledBy
+                return alone
             }
             // Everything inside a group is stored against the group's corner,
             // so one move carries the lot and nothing has to be kept in step.
@@ -966,6 +978,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             var group = Layer(name: piece.name,
                               content: .group(GroupContent(children: inside)),
                               frame: CGRect(origin: origin, size: .zero))
+            // The name is on the group, so the words it is named after are too:
+            // a button holding its label is one row saying what the button
+            // says, with the label indented under it.
+            group.labelledBy = piece.labelledBy
             if let shadow = piece.shadow { group.style.shadows = [shadow] }
             return group
         }

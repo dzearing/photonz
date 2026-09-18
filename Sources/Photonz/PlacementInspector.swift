@@ -229,13 +229,18 @@ struct PlacementInspector: View {
     }
 
     /// Who these rows are about, in the words of what is holding them.
+    ///
+    /// Named the way the layers list names it, so a piece inside a separated
+    /// button reads "This layer in Save Changes box" rather than naming a
+    /// number no row on screen is showing (`Layer.displayName(readWords:)`).
     private func heading(_ container: Layer) -> String {
+        let name = container.displayName(readWords: editorState.readWordsForRows)
         guard selection.count > 1 else {
-            return container.isFrame ? "This layer on \(container.name)"
-                                     : "This layer in \(container.name)"
+            return container.isFrame ? "This layer on \(name)"
+                                     : "This layer in \(name)"
         }
-        return container.isFrame ? "These \(selection.count) layers on \(container.name)"
-                                 : "These \(selection.count) layers in \(container.name)"
+        return container.isFrame ? "These \(selection.count) layers on \(name)"
+                                 : "These \(selection.count) layers in \(name)"
     }
 
     /// Whether the picked layers take the room their stack has left over, and

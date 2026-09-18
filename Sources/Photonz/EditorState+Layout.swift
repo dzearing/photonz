@@ -456,7 +456,8 @@ extension EditorState {
     var contentsSelection: ContentsSelection {
         guard let document else { return .none }
         return document.contentsSelection(layerIDs: orderedSelectedLayerIDs,
-                                          arranging: Experiments.shared.autoLayoutEnabled)
+                                          arranging: Experiments.shared.autoLayoutEnabled,
+                                          readWords: readWordsForRows)
     }
 
     /// What a group tells everything inside it to do when it is resized.
