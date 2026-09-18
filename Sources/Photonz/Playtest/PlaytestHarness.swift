@@ -2668,6 +2668,9 @@ private final class Run {
             case .showSettings: coordinator.showSettings()
             case .closeSettings:
                 NSApp.windows.first { $0.title == SettingsWindowModel.windowTitle }?.close()
+            case .showExperiments: coordinator.showExperiments()
+            case .closeExperiments:
+                NSApp.windows.first { $0.title == ExperimentsWindowController.windowTitle }?.close()
             case .readTutorialWindow, .pressTutorialStart:
                 break // handled above: neither needs an editor
             case .freshInstall, .oldInstall, .launchHook, .expectWelcome,

@@ -9,6 +9,9 @@ import SwiftUI
 /// window open, so the menu-bar agent owns it.
 @MainActor
 final class ExperimentsWindowController: NSObject, NSWindowDelegate {
+    /// What the window is called, which is how a walk photographs it by name.
+    static let windowTitle = "Experiments"
+
     private var window: NSWindow?
 
     func present(experiments: Experiments = .shared) {
@@ -19,7 +22,7 @@ final class ExperimentsWindowController: NSObject, NSWindowDelegate {
         }
         let hosting = NSHostingController(rootView: ExperimentsDialog(experiments: experiments))
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Experiments"
+        window.title = Self.windowTitle
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.setContentSize(CGSize(width: 560, height: 640))
         window.isReleasedWhenClosed = false

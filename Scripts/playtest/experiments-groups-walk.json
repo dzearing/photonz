@@ -1,0 +1,17 @@
+{
+  "out": "/tmp/photonz-playtest/experiments-groups-walk",
+  "seed": "Everything Next has built is behind a flag in the Experiments window, and there are seventy-seven of them. In one flat list, in the order somebody happened to add them, the window reads as a pile: nothing says which part of the app a flag belongs to, so turning one thing off to compare means scanning the lot. The flags now sit under headings for the part of the app they change, in a deliberate order, and this walk photographs that window so the grouping can be read.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    {"do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840},
+    {"do": "wait", "seconds": 1},
+
+    {"do": "action", "action": "showExperiments"},
+    {"do": "wait", "seconds": 1},
+    {"do": "describe", "stage": "1-top", "note": "the Experiments window as it opens: the release picker, the search field under a Flags for Next header, and the first headings of the flag list, Capture first, each flag under the part of the app it changes rather than in the order it was added"},
+    {"do": "snapshot", "name": "1-experiments-top", "window": "Experiments"},
+
+    {"do": "action", "action": "closeExperiments"},
+    {"do": "wait", "seconds": 0.5}
+  ]
+}

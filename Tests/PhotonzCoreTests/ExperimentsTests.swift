@@ -124,7 +124,7 @@ struct FeatureFlagTests {
 
     private func flag(enabled: Bool = false) -> FeatureFlag {
         FeatureFlag(
-            name: "demo", title: "Demo", description: "A flag for tests.",
+            name: "demo", title: "Demo", description: "A flag for tests.", area: .app,
             isEnabled: enabled,
             parameters: [
                 FeatureParameter(name: "count", label: "Count", value: .number(2),
@@ -167,10 +167,10 @@ struct FeatureFlagSettingsTests {
 
     private var catalog: [FeatureFlag] {
         [
-            FeatureFlag(name: "alpha", title: "Alpha", description: "First.", isEnabled: false,
+            FeatureFlag(name: "alpha", title: "Alpha", description: "First.", area: .app, isEnabled: false,
                         parameters: [FeatureParameter(name: "size", label: "Size", value: .number(4),
                                                       bounds: NumberBounds(minimum: 1, maximum: 8, step: 1))]),
-            FeatureFlag(name: "beta", title: "Beta", description: "Second.", isEnabled: true,
+            FeatureFlag(name: "beta", title: "Beta", description: "Second.", area: .app, isEnabled: true,
                         parameters: [FeatureParameter(name: "mode", label: "Mode",
                                                       value: .enumeration(cases: ["A", "B"], selection: "A"))]),
         ]
@@ -204,7 +204,7 @@ struct FeatureFlagSettingsTests {
 
     @Test func reconcileDropsFlagsThatAreNoLongerInTheCatalog() {
         let stale = FeatureFlagSettings(flags: [
-            FeatureFlag(name: "gone", title: "Gone", description: "Removed.", isEnabled: true, parameters: []),
+            FeatureFlag(name: "gone", title: "Gone", description: "Removed.", area: .app, isEnabled: true, parameters: []),
         ])
         let merged = stale.reconciled(with: catalog)
         #expect(merged.flags.map(\.name) == ["alpha", "beta"])
@@ -219,7 +219,7 @@ struct FeatureFlagSettingsTests {
 
     @Test func reconcileTakesCopyAndBoundsFromTheCatalogNotFromStorage() {
         let stale = FeatureFlagSettings(flags: [
-            FeatureFlag(name: "alpha", title: "Old name", description: "Old words.", isEnabled: true,
+            FeatureFlag(name: "alpha", title: "Old name", description: "Old words.", area: .app, isEnabled: true,
                         parameters: [FeatureParameter(name: "size", label: "Old label", value: .number(99))]),
         ])
         let merged = stale.reconciled(with: catalog)
@@ -233,7 +233,7 @@ struct FeatureFlagSettingsTests {
 
     @Test func reconcileFallsBackWhenAStoredValueChangedType() {
         let stale = FeatureFlagSettings(flags: [
-            FeatureFlag(name: "alpha", title: "Alpha", description: "First.", isEnabled: false,
+            FeatureFlag(name: "alpha", title: "Alpha", description: "First.", area: .app, isEnabled: false,
                         parameters: [FeatureParameter(name: "size", label: "Size", value: .string("big"))]),
         ])
         #expect(stale.reconciled(with: catalog).number("alpha", "size") == 4)
@@ -241,7 +241,7 @@ struct FeatureFlagSettingsTests {
 
     @Test func reconcileRejectsAnEnumSelectionThatIsNoLongerOffered() {
         let stale = FeatureFlagSettings(flags: [
-            FeatureFlag(name: "beta", title: "Beta", description: "Second.", isEnabled: true,
+            FeatureFlag(name: "beta", title: "Beta", description: "Second.", area: .app, isEnabled: true,
                         parameters: [FeatureParameter(name: "mode", label: "Mode",
                                                       value: .enumeration(cases: ["A", "B", "C"], selection: "C"))]),
         ])
@@ -673,7 +673,7 @@ struct ExperimentsStoreTests {
         // exists, and nothing about the flags that do.
         let defaults = InMemoryExperimentsDefaults()
         let stale = FeatureFlagSettings(flags: [
-            FeatureFlag(name: "retired", title: "Retired", description: "Gone.", isEnabled: true, parameters: []),
+            FeatureFlag(name: "retired", title: "Retired", description: "Gone.", area: .app, isEnabled: true, parameters: []),
         ])
         defaults.setExperimentsData(try JSONEncoder().encode(stale),
                                     forKey: ExperimentsStore.settingsKey(for: .current))
@@ -696,5 +696,84 @@ struct ExperimentsStoreTests {
         let store = ExperimentsStore(defaults: InMemoryExperimentsDefaults())
         store.update(.next) { $0.setEnabled(true, for: FeatureCatalog.releaseTagFlag) }
         #expect(store.settings(for: .next).isEnabled(FeatureCatalog.releaseTagFlag))
+    }
+}
+
+@Suite("Feature areas")
+struct FeatureAreaTests {
+
+    /// The flags that belong to the app around the work rather than to any one
+    /// part of it. This list is the guard rail: a new flag that has not thought
+    /// about where it belongs ends up here, and this test fails until it picks
+    /// a real part of the app (or is genuinely app chrome and joins the list).
+    private let appChrome: Set<String> = [
+        FeatureCatalog.releaseTagFlag,
+        FeatureCatalog.tutorialsFlag,
+        FeatureCatalog.setupTakesNoForAnAnswerFlag,
+        FeatureCatalog.settingsWindowFlag,
+    ]
+
+    @Test func everyFlagIsDrawnUnderExactlyOneHeading() {
+        for release in Release.allCases {
+            let settings = FeatureCatalog.defaultSettings(for: release)
+            let grouped = settings.flagGroups().flatMap(\.flags).map(\.name)
+            #expect(Set(grouped) == Set(settings.flags.map(\.name)))
+            #expect(grouped.count == settings.flags.count)
+        }
+    }
+
+    @Test func headingsFollowTheDeclaredOrder() {
+        let areas = FeatureCatalog.defaultSettings(for: .next).flagGroups().map(\.area)
+        #expect(areas == FeatureArea.displayOrder.filter(areas.contains))
+        #expect(areas.first == .capture)
+    }
+
+    @Test func withinAHeadingTheFlagsKeepCatalogOrder() {
+        let settings = FeatureCatalog.defaultSettings(for: .next)
+        for group in settings.flagGroups() {
+            let catalogOrder = settings.flags.filter { $0.area == group.area }.map(\.name)
+            #expect(group.flags.map(\.name) == catalogOrder)
+        }
+    }
+
+    @Test func everyHeadingHasSomethingUnderIt() {
+        let areas = Set(FeatureCatalog.defaultSettings(for: .next).flagGroups().map(\.area))
+        #expect(areas == Set(FeatureArea.allCases))
+    }
+
+    @Test func onlyTheAppsOwnChromeSitsUnderTheAppHeading() {
+        let underApp = FeatureCatalog.flags(for: .next).filter { $0.area == .app }.map(\.name)
+        #expect(Set(underApp) == appChrome)
+    }
+
+    @Test func searchNarrowsAcrossHeadingsAndEmptyOnesDoNotDraw() {
+        let settings = FeatureCatalog.defaultSettings(for: .next)
+        let groups = settings.flagGroups(matching: "measure")
+        #expect(!groups.isEmpty)
+        #expect(groups.allSatisfy { !$0.flags.isEmpty })
+        // Same flags as the flat search, regrouped: the headings reorder them.
+        #expect(Set(groups.flatMap(\.flags).map(\.name))
+            == Set(settings.flags(matching: "measure").map(\.name)))
+        #expect(groups.count < FeatureArea.allCases.count)
+        #expect(settings.flagGroups(matching: "zzzznothing").isEmpty)
+    }
+
+    @Test func everyAreaTitleIsPlainWordsAndUnique() {
+        let titles = FeatureArea.allCases.map(\.title)
+        #expect(Set(titles).count == titles.count)
+        #expect(titles.allSatisfy { !$0.isEmpty && $0.first!.isUppercase })
+    }
+
+    @Test func stateSavedBeforeFlagsHadAreasStillLoads() throws {
+        // Written by a build where FeatureFlag had no `area` at all.
+        let json = Data("""
+        {"flags":[{"name":"\(FeatureCatalog.releaseTagFlag)","title":"Old","description":"Old.","isEnabled":true,"parameters":[]}]}
+        """.utf8)
+        let stored = try JSONDecoder().decode(FeatureFlagSettings.self, from: json)
+        #expect(stored.flag(named: FeatureCatalog.releaseTagFlag)?.isEnabled == true)
+        // And reconciling puts the catalog's own area back on it.
+        let live = stored.reconciled(with: FeatureCatalog.flags(for: .next))
+        #expect(live.flag(named: FeatureCatalog.releaseTagFlag)?.area == .app)
+        #expect(live.isEnabled(FeatureCatalog.releaseTagFlag))
     }
 }

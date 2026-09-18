@@ -1,0 +1,27 @@
+{
+  "feature": "Experiments flags grouped by the part of the app they change",
+  "epic": "ui-building",
+  "summary": "The Experiments window used to list all seventy-seven Next flags in one run, in the order they happened to be added. They now sit under seventeen headings for the parts of the app they change, so the window reads as a map of what Next is instead of a pile, and finding the one flag you want to switch off means going to its part of the app rather than scanning the lot.",
+  "setup": "Photonz Dev, menu bar icon, Experiments…. The release picker is already on Next, and nothing about which flags are on has changed.",
+  "try": [
+    { "do": "Open the Experiments window from the menu bar menu (Experiments…).", "shot": "2026-09-17-experiments-groups-top.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Read the first heading under the search field: Capture, with the three capture flags under it." },
+    { "do": "Scroll the whole list once, top to bottom, reading only the headings: Capture, The canvas, Selecting and moving, Layers, Separating a screenshot, Copy and paste, Measure and redline, Drawing, The panel, Appearance and color, Layout and alignment, Tools, Library and components, Icons, Motion and video, Export, The app itself." },
+    { "do": "Pick a feature you have used lately and find its switch by going to the heading you would expect it under, without typing." },
+    { "do": "Type \"measure\" in the search field and watch which headings survive." },
+    { "do": "Clear the search and check the list comes back whole, in the same order." },
+    { "do": "Switch the release row to Current and back to Next: Current's two flags are grouped the same way." }
+  ],
+  "evaluate": [
+    "Reading only the headings top to bottom, does the window tell you what Next is?",
+    "When you went looking for one flag, did you land on the right heading first try, or did you have to hunt?",
+    "Is the order of the headings the order you would go looking in, or would you move some of them?",
+    "Are any two headings close enough in meaning that you would not know which one holds the flag you want?",
+    "With seventeen headings, is the list still too long to scan, or is scrolling past a heading you do not care about enough?"
+  ],
+  "rough": [
+    "Headings do not collapse and carry no count, so the window is still one long scroll. Adding either would be a new control, which this task ruled out on purpose; it is the obvious next step if scrolling still annoys.",
+    "Two headings are judgement calls: The panel holds the Appearance-and-Effects split and the section chooser, and Appearance and color holds copying a look plus the two color flags. A flag about the panel's color rows could be argued into either.",
+    "A flag row with settings behind a disclosure indents its title to leave room for the chevron; a row without settings does not, so the left edge of the list zigzags between the two kinds. That predates this change and is untouched by it."
+  ]
+}

@@ -129,19 +129,32 @@ struct ExperimentsDialog: View {
 
     // MARK: - Flags
 
-    private var visibleFlags: [FeatureFlag] { settings.flags(matching: query) }
+    /// The flags on screen, under the part of the app each one changes. Seventy
+    /// nine switches in one list is a pile; under headings it is a map of what
+    /// the release contains, and a search that hits nothing in a part of the
+    /// app leaves no empty heading behind.
+    private var flagGroups: [FeatureFlagGroup] { settings.flagGroups(matching: query) }
 
+    @ViewBuilder
     private var flagSection: some View {
+        searchSection
+        ForEach(flagGroups) { group in
+            Section(group.area.title) {
+                ForEach(group.flags) { flag in
+                    flagRow(flag)
+                }
+            }
+        }
+    }
+
+    private var searchSection: some View {
         Section {
             searchField
-            if visibleFlags.isEmpty {
+            if flagGroups.isEmpty {
                 Text("No flags match what you typed.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
-            }
-            ForEach(visibleFlags) { flag in
-                flagRow(flag)
             }
         } header: {
             HStack {

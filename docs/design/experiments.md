@@ -118,17 +118,32 @@ scenes come and go.
 screen). Selecting a release row only changes which flags you are looking at;
 switching is a separate, explicit button.
 
-The flag list is a word wheel: a search field narrows it as you type
-(`FeatureFlagSettings.flags(matching:)`, every term has to match). A flag is an
-on/off switch first, so its parameters stay collapsed behind a disclosure until
-you go looking for them. Opened, each parameter gets the control its type asks
+The flag list is grouped by the part of the app each flag changes. Every flag
+names a `FeatureArea` in the catalog, and the window draws one heading per area
+in the order the cases are declared (Capture, The canvas, Selecting and moving,
+Layers, Separating a screenshot, Copy and paste, Measure and redline, Drawing,
+The panel, Appearance and color, Layout and alignment, Tools, Library and
+components,
+Icons, Motion and video, Export, The app itself). With seventy-nine flags a flat
+list reads as a pile; under headings it reads as a map of what a release
+contains. `FeatureFlagSettings.flagGroups(matching:)` does the grouping, and an
+area with nothing matching the search is left out rather than drawn empty.
+
+The flag list is also a word wheel: a search field narrows it as you type
+(`FeatureFlagSettings.flags(matching:)`, every term has to match, across every
+heading). A flag is an on/off switch first, so its parameters stay collapsed
+behind a disclosure until you go looking for them. Opened, each parameter gets the control its type asks
 for: stepper + field for numbers, text field for strings, switch for booleans,
 pop-up for enumerations.
 
 ## Adding a flag
 
-1. Add a `Definition` to `FeatureCatalog`, with its releases and where it starts
-   on, plus name constants.
+1. Add a `Definition` to `FeatureCatalog`, with the part of the app it changes
+   (`area:`, required — the compiler will not let you leave it out), its
+   releases and where it starts on, plus name constants. If it genuinely belongs
+   to the app around the work rather than to any one part of it, `area: .app`
+   also needs its name added to the list in `FeatureAreaTests`, which is what
+   stops a flag landing there by default.
 2. Read it at the call site through `Experiments.shared` (add a small reader in
    the "Flag readers" extension so the call site stays one line, with a fallback
    that behaves exactly like stock Photonz).

@@ -165,18 +165,42 @@ public struct FeatureFlag: Codable, Sendable, Hashable, Identifiable {
     public let title: String
     /// What turning this on actually does, in plain words.
     public let description: String
+    /// The part of the app this flag changes. The Experiments window groups by
+    /// it, so every flag names one rather than the window guessing from words.
+    public let area: FeatureArea
     public var isEnabled: Bool
     public private(set) var parameters: [FeatureParameter]
 
     public var id: String { name }
 
     public init(name: String, title: String, description: String,
-                isEnabled: Bool, parameters: [FeatureParameter] = []) {
+                area: FeatureArea, isEnabled: Bool,
+                parameters: [FeatureParameter] = []) {
         self.name = name
         self.title = title
         self.description = description
+        self.area = area
         self.isEnabled = isEnabled
         self.parameters = parameters
+    }
+
+    // Explicit coding so state written before flags carried an area still
+    // loads: only the enabled bit and the parameter values ever come from
+    // storage, and everything else is replaced from the catalog on the way in
+    // (`reconciled(with:)`), so an old file missing `area` is not a reason to
+    // throw a person's settings away.
+    private enum CodingKeys: String, CodingKey {
+        case name, title, description, area, isEnabled, parameters
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        area = (try? container.decode(FeatureArea.self, forKey: .area)) ?? .app
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        parameters = try container.decodeIfPresent([FeatureParameter].self, forKey: .parameters) ?? []
     }
 
     public func parameter(named name: String) -> FeatureParameter? {
@@ -268,6 +292,19 @@ public struct FeatureFlagSettings: Codable, Sendable, Hashable {
             let haystack = ([flag.title, flag.name, flag.description]
                 + flag.parameters.map(\.label)).joined(separator: " ").lowercased()
             return terms.allSatisfy { haystack.contains($0) }
+        }
+    }
+
+    /// The same flags the search returns, gathered under their areas in
+    /// `FeatureArea` order, which is the order the Experiments window draws its
+    /// headings in. An area with no matching flag is left out entirely, so a
+    /// search never leaves an empty heading behind, and within an area the
+    /// flags keep catalog order.
+    public func flagGroups(matching query: String = "") -> [FeatureFlagGroup] {
+        let matches = flags(matching: query)
+        return FeatureArea.displayOrder.compactMap { area in
+            let inArea = matches.filter { $0.area == area }
+            return inArea.isEmpty ? nil : FeatureFlagGroup(area: area, flags: inArea)
         }
     }
 

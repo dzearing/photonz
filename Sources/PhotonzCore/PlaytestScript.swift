@@ -591,6 +591,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// same markers the panel's do, so a walk presses "Ask Me Again" with an
     /// ordinary `press` step and claims things about it with `expect`.
     case showSettings, closeSettings
+    /// Open (or close) the Experiments window, where the release is picked and
+    /// its feature flags are switched. It is an ordinary app window, so a walk
+    /// photographs it by name:
+    /// `{ "do": "snapshot", "name": "flags", "window": "Experiments" }`.
+    case showExperiments, closeExperiments
     /// Read the Tutorials window the way a screen reader does, and press the
     /// first guide's own button the way a keyboard does. The window is an
     /// ordinary SwiftUI surface with no playtest markers in it, so this is how
