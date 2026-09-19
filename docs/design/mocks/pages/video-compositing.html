@@ -48,7 +48,7 @@
 #video-compositing .canvas>.selwrap{width:fit-content}
 
 /* ---------- the timeline dock ---------- */
-#tlDock{--gutter:58px;flex:0 0 auto;max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:92px;flex:0 0 auto;max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -93,11 +93,11 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   .cstage{width:360px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   .cstage{width:250px}
   .tlbar .now{display:none}
 }
@@ -341,17 +341,17 @@
       </div>
       <div class="tlz">
         <div class="tlgrid">
-          <div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="ruler"></div></div></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> V4</span>
+          <div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="ruler"></div></div></div>
+          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> colour grade</span>
             <div class="lane"><div class="clip grade" data-layer="grade" style="left:0;width:100%">colour grade</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-component"></i> V3</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-component"></i> Matte shape</span>
             <div class="lane"><div class="clip vcp-matte" data-layer="matte" style="left:0;width:100%">Matte shape</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V2</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> subject</span>
             <div class="lane"><div class="clip fg sel" data-layer="fg" style="left:0;width:100%">subject.mov</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> background</span>
             <div class="lane"><div class="clip bg" data-layer="bg" style="left:0;width:100%">beach.mov</div></div>
           </div>
           <div class="playstrip"><div class="playhead" id="phead"></div></div>

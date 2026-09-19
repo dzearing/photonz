@@ -18261,3 +18261,65 @@ refuses under a locked screen and forcing it photographs nothing).
 Next: the panel-column over-subscription rule is deliberately unwritten. It is
 folded into `appearance-is-below-the-fold-again-because-the-p` as an acceptance
 item, because the user's card on that task settles what the rule should say.
+
+## 2026-09-19 — Video, drawn against the app that exists
+
+The design pass the user asked for on 2026-09-18 ("We really need to ensure that
+we refine the design and ensure things flow with the rest of the app well"),
+done before any of the video chain is built.
+
+**The finding.** Video needs almost no new chrome. The timing strip that shipped
+on 2026-09-15 for animated icons already groups its lanes under the layer they
+belong to, already collapses to a rail, and its own source already says video
+can take it as it stands. What video needs is for the recording window to stop
+being a separate little player, and for fourteen clickthroughs to stop drawing a
+numbered track model the app does not have.
+
+**The main correction.** All fourteen video pages delete the **Layers** group
+from the dock, and `video.html` says why: the list was "a second rendering of
+what you had just clicked". The complaint is real and the conclusion is wrong —
+"this lens" is language §1 forbids, two views of one model is what canvas,
+layers and panel already are, and a video document is full of layers with no
+time (background, adjustment, matte, component master) that would then have no
+row anywhere. There is also no lever:
+`PanelSectionVisibility.optionalSections` deliberately omits Layers. The pages
+were corrected, not left standing.
+
+**The numbers**, and they are the honest part.
+`Tests/PhotonzCoreTests/DockWithTimeTests.swift`, eight tests, run the real
+`DockHeightBudget` against the heights measured off the running app on
+2026-09-15. Today, largest window: the panel asks for 962 of 968 and fits, by six
+points. The bottom dock is a full width band under the canvas AND the dock, so
+it takes 88 points for a recording just opened and 235 at its ceiling, leaving
+733. The same selection is then **189 points over**, and on a laptop window
+(453 left) it is over 280 over. Not one of those points is a section video
+added: a clip picked in a five layer document asks for 922, six LESS than a
+piece of text asks for today, and the Captions section — the only section video
+adds — costs 163 because it is a list and lists give way. Railing the strip
+buys back 205, more than Captions costs.
+
+**Landed.** `docs/design/video-surface.md` (the pass), `pages/video-shell.html`
+(the whole surface drawn against the real shell, at three window sizes and with
+no time at all), `comp-video` §07 (the row primitive that was never drawn even
+though every page draws one), UX-PATTERNS **D18** (a timeline row is a layer and
+is called what that layer is called; a property lane is its child; a split adds
+a piece not a row; a clip's sound lives inside the clip) and **D19** ("timeline
+when time" is existence and automatic, a mode is visibility and picked, and they
+compose). Three DS consolidations: `.tlbar` promoted out of three pages that had
+each written it by hand, the row label column widened 58 → 92 with `--tl-label`
+so the ruler and playhead can never drift from it again, and `.track.sub` for a
+property lane replacing the `.kft` two pages had invented locally. Fifteen pages
+relabelled; `video.html`'s wrong caption rewritten; `time-compare`'s "video does
+not move" line marked overtaken.
+
+**Open.** One decision card: what happens to trim-and-send once a recording
+opens in the ordinary window — keep the fast lane, one window always, or one
+window with a Trim tool in it (recommended). The design cannot settle it because
+it is a question about how the app should feel, and because one answer throws
+away a flow that shipped the day before.
+
+Next: the card. After it, `a-document-can-have-time` at seq 20, which now
+carries one extra acceptance item (a layer row draws a bar when it occupies
+time), and `cut-arrange-and-retime` whose acceptance item 1 was corrected — "two
+ordinary layers" after a split means a row per cut and an unusable timeline
+after five of them.

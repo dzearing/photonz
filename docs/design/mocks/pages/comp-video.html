@@ -27,12 +27,13 @@
     <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Video</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
 
     <p class="docintro">Time needs its own primitives, and they are the ones most likely to get re-invented per page because they look like decoration. They are not. Each one here encodes a rule about how editing in time actually works, and the most important of them is that <b>a transition is not a clip</b>. The workspace that uses these is <b data-target="video">Video workspace</b>; the scenario that argues the overlap model is <b data-target="video-transition-wt">Add a transition</b>.</p>
+    <p class="docintro"><b>Added 2026-09-19, and it is the rule every page here broke.</b> A row is a <b>layer</b>, named with that layer's own name, in that layer's own letters, in the same order as the layers list beside it. There are no numbered tracks: fourteen pages drew <code>V1</code>, <code>V2</code>, <code>Gfx</code> and <code>Audio</code>, which is a track model this app does not have and which cost them the Layers group to make room for. The specimens below are named for layers now, and &sect;07 is the primitive that was missing. See <b data-target="video-shell">Video, in the window you already have</b> and <code>docs/design/video-surface.md</code>.</p>
 
     <!-- 1 · THE CLIP -->
     <div class="docblk">
       <div class="docspec">
         <div class="cv-stage">
-          <div class="track"><span class="tl">V1</span>
+          <div class="track"><span class="tl">Story</span>
             <div class="lane abs cv-lane">
               <div class="clip cv-clipA" style="left:0;width:46%"><span class="lbl">screen-recording</span>
                 <span class="kfm" style="left:22%"></span><span class="kfm" style="left:58%"></span>
@@ -58,7 +59,7 @@
     <div class="docblk">
       <div class="docspec">
         <div class="cv-stage">
-          <div class="track"><span class="tl">V1</span>
+          <div class="track"><span class="tl">Story</span>
             <div class="lane abs cv-lane">
               <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
               <div class="clip cv-clipB" style="left:49%;width:51%"><span class="lbl">B</span></div>
@@ -83,7 +84,7 @@
     <div class="docblk">
       <div class="docspec">
         <div class="cv-stage">
-          <div class="track"><span class="tl">V1</span>
+          <div class="track"><span class="tl">Story</span>
             <div class="lane abs cv-lane" style="margin-top:8px;margin-bottom:8px">
               <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
               <div class="clip cv-clipB" style="left:49%;width:51%"><span class="lbl">B</span></div>
@@ -113,7 +114,7 @@
         <div class="cv-two">
           <div class="cv-stage">
             <div class="mlabel">A fade, inside one clip</div>
-            <div class="track"><span class="tl">V1</span>
+            <div class="track"><span class="tl">Story</span>
               <div class="lane abs cv-lane">
                 <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
                 <div class="clip blk" style="left:49%;width:8%;background:#05060a;border:1px solid #2a2f45;color:#8b93b5"></div>
@@ -176,6 +177,53 @@
           <span class="no">Invent a transition picker. It is <code>.libtile</code> with a thumbnail.</span>
         </div>
         <p class="docapi"><b>API</b> <code>.libtile.tt</code> · thumbnails <code>.th-diss/.th-dip/.th-slide/.th-push/.th-morph/.th-cut</code> · <code>[disabled]</code> when there is not enough spare.</p>
+      </div>
+    </div>
+
+
+    <!-- 7 · THE ROW -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="track"><span class="tl"><i class="ic xs ic-text"></i> Lower third</span>
+            <div class="lane abs cv-lane">
+              <div class="clip" style="left:8%;width:26%;background:#242a40;border:1px solid #3b4468"><span class="lbl">Everything, in one place</span></div>
+            </div>
+          </div>
+          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> Story</span>
+            <div class="lane abs cv-lane">
+              <div class="clip cv-clipA sel" style="left:0;width:46%"><span class="lbl">intro</span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+              <div class="clip cv-clipB" style="left:46%;width:54%"><span class="lbl">demo</span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+              <button class="editpt" style="left:46%" aria-label="Edit point"></button>
+            </div>
+          </div>
+          <div class="track sub"><span class="tl">Opacity</span>
+            <div class="lane abs" style="height:18px">
+              <span style="position:absolute;left:0;width:22%;top:2px;bottom:2px;border-radius:5px;
+                    background:color-mix(in srgb,var(--accent) 34%,transparent);
+                    border:1px solid color-mix(in srgb,var(--accent) 60%,transparent)"></span>
+            </div>
+          </div>
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
+            <div class="lane abs cv-lane">
+              <div class="clip aud" style="left:4%;width:90%"><span class="wave">
+                <i style="height:7px"></i><i style="height:13px"></i><i style="height:5px"></i><i style="height:16px"></i><i style="height:9px"></i><i style="height:18px"></i><i style="height:6px"></i><i style="height:12px"></i><i style="height:17px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:5px"></i><i style="height:11px"></i><i style="height:17px"></i><i style="height:7px"></i><i style="height:13px"></i><i style="height:19px"></i><i style="height:6px"></i><i style="height:15px"></i><i style="height:9px"></i>
+              </span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">07</div><h3 class="docname">The row, and what it is called</h3>
+        <p class="docrule">A row is a <b>layer</b>. It carries the layer's own name and the layer's own icon, and the rows run in the same order as the layers list in the dock, because they are the same list read a different way. A layer that occupies time draws a <b>bar</b>; a layer that does not draws a bare heading with its property lanes under it. That one rule covers a clip and an animated icon without forking the component.</p>
+        <p class="docrule">Two shots laid end to end are <b>two pieces of one row</b>, not two rows. Splitting never adds a row, which is what stops a timeline growing a row per cut, and the seam between them is an <b>edit point</b> (&sect;02). A <b>property lane</b> is a child of the layer whose property it is, indented under it, never a sibling of a clip.</p>
+        <div class="docdd">
+          <span class="do">Name the row for the layer. The label column is 92px, the same as the shipping strip.</span>
+          <span class="no">Number the rows. <code>V1</code>, <code>V2</code> and <code>Gfx</code> are names that appear nowhere else in the document, and an empty <code>Audio</code> track is a row for a layer that does not exist.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.track &gt; .tl + .lane</code> · <code>.track.sub</code> for a property lane · <code>--tl-label</code> sets the label column · the sound of a clip is a <code>.wave</code> inside its own <code>.clip</code>, until it is separated.</p>
       </div>
     </div>
 

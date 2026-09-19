@@ -68,9 +68,9 @@
    document with many tracks: past that the dock scrolls rather than eating the
    canvas it is supposed to be describing. */
 #tlDock{flex:0 0 auto;max-height:58%;overflow:auto;padding:0;display:flex;flex-direction:column}
-.tlbar{display:flex;align-items:center;gap:var(--s1);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
-.tlbar .tstrip{display:inline-flex;align-items:center;gap:2px}
-.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+/* .tlbar, .tlbar .tstrip and .tlbar .lbl moved into
+   shared/components/inspector.css on 2026-09-19: three pages had written them
+   out by hand and every other page using the class rendered it unstyled. */
 /* the live readout moved up here from the deleted Keyframes header: it answers
    "what is the value under the playhead right now", which is a property of the
    timeline as a whole, not of a panel that no longer exists */
@@ -281,14 +281,14 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   .tlgrid .track .tl .trk-auto{font-size:9px}
   .kfplot{height:68px}
   #video .vframe{width:300px;height:169px}
   #video .vframe .title{font-size:20px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:58px}
+  #tlDock{--gutter:92px}
   .tlbar .lbl{display:none}
   .tlbar .kfread{display:none}
   #video .vframe{width:216px;height:122px}
@@ -644,7 +644,7 @@
     <div class="c"><div class="lab">The idea</div><p>Video is not another app. It is the same document with a time dimension, so the shell is unchanged and only two regions are added: the <b>transport bar</b> and the <b>timeline dock</b>. Each surface answers exactly one question: the timeline says <b>when</b> (clips, cuts, and a key mark on the clip), the detail pane says <b>what</b> (every property, its value, and whether it is keyed here). Neither repeats the other.</p></div>
     <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a clip on the timeline and the ring on the canvas, the row in <b>Layers</b>, and the <b>Properties</b> group all follow. The media pool is not its own widget: it is <b>Library, scope Media</b>, the same group that holds components and styles everywhere else.</p></div>
     <div class="c"><div class="lab g2">Scope call · deferred</div><p>Basic video already ships (trim, crop, export). This timeline is its own later chapter, walled off so it never gates image and UI creation.</p></div>
-    <div class="c"><div class="lab g2">Resolved - what the dock is for</div><p>Two things were unclear and they turned out to be one thing. <b>Layers listed the same seven objects, in the same five groups, in the same order as the timeline</b> - a second rendering of what you had just clicked, so the dock read as having no job. It is gone from this lens; where there is a timeline, the timeline <i>is</i> the layer list. That frees the dock to be the thing it should have been: the <b>clip detail pane</b>. And because it lists <b>every animatable property</b> rather than only the keyed ones, "how do I animate this?" has a visible answer on a clip nobody has touched - the dim diamond on its row.</p></div>
+    <div class="c"><div class="lab g2">Corrected 2026-09-19 - Layers does not leave</div><p>This page used to say Layers was "a second rendering of what you had just clicked" and removed it from the dock. <b>The complaint was right and the conclusion was wrong.</b> Two views of one model is what the app always does, and a video document is full of layers that do not occupy time - a background, an adjustment, a matte, a component master - which would have no row anywhere. There is also no lever: <code>PanelSectionVisibility.optionalSections</code> deliberately does not list Layers, so nothing can hide it. The duplication is the point: one list, read two ways, with the timeline's rows named for the same layers in the same order. See <b data-target="video-shell">Video, in the window you already have</b> and <code>docs/design/video-surface.md</code> &sect;3.</p></div>
   </div>
 </section>
 </main>
@@ -684,10 +684,9 @@
     var views = [
       function(){ return '<div class="lead">Blank project</div>'+
         '<div class="timeline">'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span><div class="lane empty"></div></div>'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span><div class="lane empty"></div></div>'+
+          '<div class="track"><span class="tl" aria-hidden="true"></span><div class="lane empty"></div></div>'+
         '</div>'+
-        '<div class="emptyhint" style="margin-top:var(--gap-sm)">A 1920 x 1080 timeline with no clips. Import media, or open a capture from history, to begin.</div>'; },
+        '<div class="emptyhint" style="margin-top:var(--gap-sm)">A 1920 x 1080 timeline with nothing in it. There are no rows yet, because a row is a layer and there are no layers. Import media, or open a capture from history, to begin.</div>'; },
       function(){ return '<div class="lead">Library · scope Media<span style="color:var(--faint);font-weight:520;text-transform:none;letter-spacing:0"> · the media pool is a panel group, not its own widget</span></div>'+
         '<div class="libgrid">'+
           tile("intro.mov","0:06","linear-gradient(135deg,#12c2e9,#7c4dff)")+
@@ -698,17 +697,16 @@
         '<div class="ehint" style="margin-top:var(--gap-sm)">Three ways in, always all present: <b>Import</b>, drag and drop onto the panel or the canvas, and <b>Capture</b>, which lands new recordings here.</div>'; },
       function(){ return '<div class="lead">First clip lands</div>'+
         '<div class="timeline">'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span><div class="lane drop"><div class="clip v1" style="width:40%">intro.mov</div></div></div>'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span><div class="lane empty"></div></div>'+
+          '<div class="track"><span class="tl"><i class="ic xs ic-film"></i> intro</span><div class="lane drop"><div class="clip v1" style="width:40%">intro.mov</div></div></div>'+
         '</div>'+
-        '<div class="ehint" style="margin-top:var(--gap-sm)">Drag a tile from Library onto a track. Its length on the timeline is its duration.</div>'; },
+        '<div class="ehint" style="margin-top:var(--gap-sm)">Drag a tile from Library onto the timeline. It arrives as a layer, so it brings its own row, named after itself, and its length on the timeline is its duration.</div>'; },
       function(){ return '<div class="lead">Arranged</div>'+
         '<div class="timeline">'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-component"></i> Title</span><div class="lane"><div class="clip comp" style="width:34%;margin-left:6%">lower-third</div></div></div>'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span><div class="lane"><div class="clip v1" style="width:40%">intro</div><div class="clip v2" style="width:44%">demo</div></div></div>'+
-          '<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span><div class="lane"><div class="clip aud" style="width:92%">music.wav</div></div></div>'+
+          '<div class="track"><span class="tl"><i class="ic xs ic-component"></i> lower-third</span><div class="lane"><div class="clip comp" style="width:34%;margin-left:6%">lower-third</div></div></div>'+
+          '<div class="track"><span class="tl"><i class="ic xs ic-film"></i> Story</span><div class="lane"><div class="clip v1" style="width:40%">intro</div><div class="clip v2" style="width:44%">demo</div></div></div>'+
+          '<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> music</span><div class="lane"><div class="clip aud" style="width:92%">music.wav</div></div></div>'+
         '</div>'+
-        '<div class="ehint" style="margin-top:var(--gap-sm)">Layer, trim, and keyframe. This is the state the editor below opens in.</div>'; }
+        '<div class="ehint" style="margin-top:var(--gap-sm)">Three layers, three rows, the same three names the layers list shows. Two shots laid end to end are two pieces of one row, which is what the app already calls them.</div>'; }
     ];
     var setStep = function(n){
       n = clamp(n,0,3);
@@ -725,13 +723,13 @@
 
   /* ---------------- TIMELINE MODEL ---------------- */
   var tracks = [
-    {name:'<i class="ic xs ic-component"></i> Title', kind:"comp", clips:[{id:"c1",t:0.6,dur:5.4,label:"Lower-third",cls:"comp",icon:"ic-component"}]},
-    {name:'<i class="ic xs ic-image"></i> V1', kind:"video", clips:[{id:"c2",t:0,dur:5.7,label:"clip-01",cls:"v1",icon:"ic-image"},{id:"c3",t:6.3,dur:6.6,label:"clip-02",cls:"v2",speed:"1.5x",icon:"ic-image"}], trans:[{t:6.0,dur:0.6,name:"Cross dissolve"}]},
-    {name:'<i class="ic xs ic-layers"></i> V2', kind:"ov", clips:[{id:"c4",t:4.5,dur:3.9,label:"b-roll · PiP",cls:"ov",icon:"ic-layers"}]},
-    {name:"CAP", auto:true, kind:"cap", clips:[{id:"c5",t:1.2,dur:4.2,label:"Capture, design",cls:"txt",icon:"ic-text"},{id:"c6",t:6.6,dur:5.1,label:"automate",cls:"txt",icon:"ic-text"}]},
-    {name:'<i class="ic xs ic-audio"></i> Audio', kind:"aud", clips:[{id:"c7",t:0,dur:13.8,label:"music.wav",cls:"aud",wave:true,icon:"ic-audio"}]}
+    {name:'<i class="ic xs ic-component"></i> Lower-third', kind:"comp", clips:[{id:"c1",t:0.6,dur:5.4,label:"Lower-third",cls:"comp",icon:"ic-component"}]},
+    {name:'<i class="ic xs ic-film"></i> Story', kind:"video", clips:[{id:"c2",t:0,dur:5.7,label:"clip-01",cls:"v1",icon:"ic-image"},{id:"c3",t:6.3,dur:6.6,label:"clip-02",cls:"v2",speed:"1.5x",icon:"ic-image"}], trans:[{t:6.0,dur:0.6,name:"Cross dissolve"}]},
+    {name:'<i class="ic xs ic-layers"></i> b-roll · PiP', kind:"ov", clips:[{id:"c4",t:4.5,dur:3.9,label:"b-roll · PiP",cls:"ov",icon:"ic-layers"}]},
+    {name:"Captions", auto:true, kind:"cap", clips:[{id:"c5",t:1.2,dur:4.2,label:"Capture, design",cls:"txt",icon:"ic-text"},{id:"c6",t:6.6,dur:5.1,label:"automate",cls:"txt",icon:"ic-text"}]},
+    {name:'<i class="ic xs ic-audio"></i> music', kind:"aud", clips:[{id:"c7",t:0,dur:13.8,label:"music.wav",cls:"aud",wave:true,icon:"ic-audio"}]}
   ];
-  var trackTitle = {comp:"Title",video:"V1",ov:"V2",cap:"Captions",aud:"Audio"};
+  var trackTitle = {comp:"Lower-third",video:"Story",ov:"b-roll · PiP",cap:"Captions",aud:"music"};
   var selClip = "c1";
 
   var grid = document.getElementById("tlGrid");

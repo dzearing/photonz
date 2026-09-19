@@ -33,7 +33,7 @@
 #video-speed .state-note{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:10px;letter-spacing:.05em;color:rgba(255,255,255,.7);font-weight:560}
 
 /* ---------- the timeline dock: source vs retimed, plus the speed curve ---------- */
-#video-speed #tlDock{--gutter:58px;flex:0 0 auto;max-height:400px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#video-speed #tlDock{--gutter:92px;flex:0 0 auto;max-height:400px;overflow:auto;padding:0;display:flex;flex-direction:column}
 #video-speed .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 #video-speed .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 #video-speed .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -92,13 +92,13 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #video-speed #tlDock{--gutter:52px;max-height:360px}
+  #video-speed #tlDock{--gutter:76px;max-height:360px}
   #video-speed .sframe{width:320px;height:160px}
   #video-speed .sbadge .big{font-size:20px}
   #video-speed .scplot{height:104px}
 }
 @container shell (max-width:620px){
-  #video-speed #tlDock{--gutter:52px}
+  #video-speed #tlDock{--gutter:76px}
   #video-speed .sframe{width:232px;height:116px}
   #video-speed .sbadge{left:8px;bottom:8px;padding:var(--s1) var(--s2)}
   #video-speed .sbadge .big{font-size:15px}

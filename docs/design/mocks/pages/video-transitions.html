@@ -29,7 +29,7 @@
 .tbadge b{font-weight:700}
 
 /* ---------- the timeline dock: two clips and the shared .xband on the cut ---------- */
-#video-transitions #tlDock{--gutter:58px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#video-transitions #tlDock{--gutter:92px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
 #video-transitions .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 #video-transitions .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 #video-transitions .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -60,13 +60,13 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #video-transitions #tlDock{--gutter:52px}
+  #video-transitions #tlDock{--gutter:76px}
   .tstage{width:400px;height:225px}
   .tlayer h3{font-size:24px}
   .tlayer{padding:var(--s4)}
 }
 @container shell (max-width:620px){
-  #video-transitions #tlDock{--gutter:52px}
+  #video-transitions #tlDock{--gutter:76px}
   .tstage{width:272px;height:153px}
   .tlayer h3{font-size:17px}
   .tlayer p{display:none}
@@ -336,10 +336,10 @@
         </div>
         <div class="tlz">
           <div class="tlgrid">
-            <div class="track"><span class="tl">Time</span>
+            <div class="track"><span class="tl" aria-hidden="true"></span>
               <div class="lane rlane"><div class="ruler" id="ruler"></div></div>
             </div>
-            <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="track"><span class="tl"><i class="ic xs ic-image"></i> intro</span>
               <div class="lane abs" id="track">
                 <div class="clip v1" style="left:0;width:52%"><span class="lbl">clip-01</span><span class="tc">0:00</span></div>
                 <div class="clip v2" style="left:52%;width:48%"><span class="lbl">clip-02</span><span class="tc">0:06</span></div>

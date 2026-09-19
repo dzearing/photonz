@@ -1,6 +1,16 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.9. §4 gains "A control that can only act over part of its range",
+**Status: v2.0. Gains D18 and D19, from the video design pass
+(`docs/design/video-surface.md`, 2026-09-19). D18: a timeline row is a LAYER and
+is named what that layer is named, so the numbered track model fourteen video
+pages had drawn is wrong and so is their deletion of the Layers group to make
+room for it; it also settles what a property lane is a child of, that splitting
+adds a piece rather than a row, and where a clip's sound is drawn. D19: "timeline
+when time" is about EXISTENCE and is automatic, a mode is about VISIBILITY and is
+picked, and they compose rather than being one mechanism described twice — with
+the bottom dock's cost to the panel stated as a number that a test holds. Both
+were written from fourteen pages that agreed with each other and disagreed with
+the app, and the pages were corrected rather than left standing. v1.9: §4 gains "A control that can only act over part of its range",
 the row the ladder never had: a control that works, and simply does not reach
 everywhere, is neither dimmed nor removed. The refused stretch of its track is
 drawn spent and its fill starts at the wall, so a knob resting on a floor of 18
@@ -2649,3 +2659,82 @@ Canonical pages: `pages/icon-animate-wt.html` (the Motion entry's Curve row and
 the drawn curve), `pages/video.html` (the default for new keys, and the curve
 leaving a selected key), `pages/lang-motion.html` (the list itself, beside the
 three interface tokens it shares its shapes with).
+
+---
+
+### D18 — A timeline row is a LAYER, and it is called what that layer is called
+
+Added 2026-09-19 by the video design pass (`docs/design/video-surface.md`).
+Fourteen video pages had drawn a numbered track model — `V1`, `V2`, `V3`, `V4`,
+`Gfx`, `Audio` — and every one of them deleted the **Layers** group from the
+dock to make room for it. Both halves of that are wrong, and they are wrong
+together: the track names are the reason the list looked redundant.
+
+**The rule.** A row in the bottom dock is one layer of the document. It carries
+that layer's own name, in that layer's own letters, with that layer's own icon,
+and the rows run in the same order as the Layers group in the dock, because they
+are the same list read a different way. There are no numbered rows, because
+`V1` is a name that appears nowhere else in the document and a person whose
+layers are called `settings-capture` and `Lower third` cannot connect the two.
+
+Four consequences, and each one settled a disagreement between pages:
+
+1. **A layer draws a bar when it occupies time, and a bare heading when it does
+   not.** `MotionStrip.swift` says today that *"a layer row is a HEADING and not
+   a bar: the layer itself does not occupy time, the properties on it do"* —
+   true of a bell that rotates, false of a clip, which is exactly a start and an
+   end. One rule covers both and the component does not fork.
+2. **A property lane is a CHILD of the layer whose property it is** (`.track.sub`),
+   indented under it, never a sibling of a clip. `video-move-wt` and
+   `video-zoom-wt` had each invented `.track.kft` for this locally.
+3. **Two shots laid end to end are two pieces of one row, not two rows.**
+   Splitting never adds a row, which is what stops a timeline growing a row per
+   cut, and the seam between them is an edit point (`comp-video` §02). "Pieces"
+   is the word the shipping app already says on its own trim bar.
+4. **A clip's sound is drawn inside that clip**, as a strip along the bottom of
+   its own bar, until you separate it. Afterwards it is its own layer with its
+   own name and its own row. A permanent empty `Audio` track is a row for a
+   layer that does not exist.
+
+**Layers never leaves the dock, and it cannot.** Two views of one model is the
+app's normal condition — canvas, Layers and Properties already all follow one
+selection — and a video document is full of layers that do not occupy time: a
+background, an adjustment, a matte, a component master. Delete Layers and those
+have no row anywhere. There is also no lever to pull:
+`PanelSectionVisibility.optionalSections` deliberately does not list Layers, so
+no mode, no preset and no switch can take it away.
+
+The label column is **92px** (`--tl-label` on `.timeline`, matching
+`MotionStripView.labelWidth`) and it is **not uppercased**: the Layers list
+beside it does not uppercase, and shouting somebody's file name back at them is
+not a style. Canonical pages: `pages/comp-video.html` §07 (the primitive),
+`pages/video-shell.html` (the whole surface).
+
+---
+
+### D19 — "Timeline when time" and a mode are different questions, and they compose
+
+Added 2026-09-19 with D18. Two mechanisms were being described as one:
+
+- **"Timeline when time" is about EXISTENCE, and it is automatic.** The bottom
+  dock exists because the document has a duration (§1, region 8). Nobody chooses
+  it, and nothing can turn it off, because turning it off would hide the
+  document.
+- **A mode, or a section preset, is about VISIBILITY, and it is picked.** It
+  says which of the surfaces that exist are on screen right now.
+
+So a mode may open or rail the timeline in a document that has one. It may never
+conjure one in a document that does not, and it may never take one away — the
+most it can do is rail it, which leaves the row that says what you are still
+editing (D9). The panel already splits exactly this way:
+`PanelSectionVisibility.Situation` carries facts about the DOCUMENT and the
+per-section switches carry what the person chose.
+
+**The cost of the bottom dock is a fact, not a preference, and it has a number.**
+The strip is a full-width region under the canvas AND the dock, so the dock
+loses the whole of its height: 88 points for a recording just opened, 235 at its
+ceiling, which leaves a 968 point dock with 733. A panel that fits today at 962
+of 968 is then 189 points over, and on a laptop window it is over 280 over. A
+surface that wants permanent room in the panel in a document with time has to
+argue against those numbers. `Tests/PhotonzCoreTests/DockWithTimeTests.swift`
+holds the arithmetic, so it stays true or the suite goes red.

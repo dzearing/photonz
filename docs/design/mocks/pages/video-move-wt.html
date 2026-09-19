@@ -36,8 +36,6 @@
   #video-move-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
 
   /* keyframe lanes · the same timeline, one row per animated property */
-  #video-move-wt .track.kft{margin:2px 0}
-  #video-move-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
   #video-move-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
   #video-move-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
     border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
@@ -333,14 +331,14 @@
 
         <div class="timeline" id="timeline" data-tl-summary="Sparkle · 0:04 / 0:08" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-sparkle"></i> Gfx</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-sparkle"></i> Sparkle</span>
             <div class="lane abs">
               <div class="clip gfx" id="clipArt" style="left:22%;width:28%" tabindex="0" role="button">Sparkle</div>
             </div>
           </div>
 
           <!-- the keyframe lane: the "keyframe editor" is just the timeline -->
-          <div class="track kft wt-off" id="lanePos"><span class="tl">Position</span>
+          <div class="track sub wt-off" id="lanePos"><span class="tl">Position</span>
             <div class="lane rlane kfl">
               <span class="kfseg wt-off" id="segPos" style="left:22%;width:22%"></span>
               <span class="kfd wt-off" id="kdP1" style="left:22%"></span>
@@ -348,11 +346,11 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> screen-recording</span>
             <div class="lane abs"><div class="clip v1" style="left:0;width:100%">screen-recording</div></div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
             <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
           <div class="playhead" id="playhead" style="--t:0.0"></div>

@@ -1,0 +1,56 @@
+{
+  "id": "refine-the-video-design-so-it-reads-as-the-same-when-you-open-a-recording-to-tri",
+  "taskId": "refine-the-video-design-so-it-reads-as-the-same",
+  "question": "When you open a recording to trim it and send it, should you get the focused trim bar you have now, or the full editor?",
+  "context": "Photonz shipped 'Trim a recording, save it, send it' on 2026-09-19. It opens a recording in its own window: a picture, a floating dark bar, and a strip of pieces. The video design pass says that window should become the ordinary Photonz window with time in it, because a recording is a document and a clip is a layer. That is settled. What is not settled is what happens to the quick trim flow inside it, and that is a question about how the app should feel rather than how it should be built. See queue/decisions/ for the pictures.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep the fast lane",
+      "summary": "Opening a recording still lands you in the quick trim view you have today: a big picture, handles you drag, and Done. A Show timeline control opens the full editor whenever you want it, and the document is the same document either way.",
+      "pros": [
+        "The job you actually do most stays one drag and one click",
+        "Nothing you have now gets slower or busier",
+        "The full editor is still one control away"
+      ],
+      "cons": [
+        "Two ways to look at the same recording, and you have to learn that the second one exists",
+        "The video features are behind a door somebody has to open"
+      ],
+      "mitigation": "The control is on screen, not in a menu, and it says what it opens. Once you have opened it for a document, it stays open for that document."
+    },
+    {
+      "id": "b",
+      "label": "One window, always",
+      "summary": "Opening a recording lands you in the ordinary Photonz window with a timeline along the bottom. Trimming is dragging the ends of the clip on that timeline, the same gesture as trimming anything else. There is no separate trim view.",
+      "pros": [
+        "One way to do everything, and it is the way the rest of the app already works",
+        "Every video feature is visible the moment you open a recording",
+        "Nothing to discover: your layers, tools and panel are where they always are"
+      ],
+      "cons": [
+        "Trim and send, which is the quick job, is now done in a busier window",
+        "The handles, Reset and Done that shipped on 2026-09-19 go away"
+      ],
+      "mitigation": "The timeline opens at its shortest for a recording that has not been cut: one row, a strip about a finger high. Trim still has its own keyboard shortcut and the clip is already picked when the window opens."
+    },
+    {
+      "id": "c",
+      "label": "One window, with a trim mode in it",
+      "summary": "Opening a recording lands you in the ordinary window, and Trim is a tool you pick, like Crop. Picking it puts the handles on the clip and shows Reset, Cancel and Done, exactly as they look now, but inside the real window rather than a separate one.",
+      "pros": [
+        "One window, and the fast job keeps the controls that make it fast",
+        "Trim behaves like Crop, which is a thing you already know",
+        "Nothing that shipped yesterday is thrown away, it moves"
+      ],
+      "cons": [
+        "A mode to enter, so trim-and-send is one click longer than it is today",
+        "Two ways to change a clip length: the handles in trim, and dragging the edge on the timeline"
+      ],
+      "mitigation": "Trim is the tool your hand is already on when a recording opens, so the extra click is not there in practice. Both ways to change the length show the same numbers and the same result."
+    }
+  ],
+  "recommended": "c",
+  "status": "pending",
+  "created": "2026-09-19T17:38:29.928Z"
+}

@@ -41,7 +41,7 @@
 .autoflag{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;z-index:3;box-shadow:0 6px 16px -6px rgba(157,108,255,.6)}
 
 /* ---------- the timeline dock: a caption track on shared primitives ---------- */
-#tlDock{--gutter:58px;flex:0 0 auto;max-height:300px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:92px;flex:0 0 auto;max-height:300px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .trk-auto{display:inline-flex;align-items:center;gap:5px;color:var(--comp);font-size:10px;font-weight:640;white-space:nowrap}
@@ -96,12 +96,12 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   #video-captions .vframe{width:300px;height:169px}
   .tlbar .now{display:none}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   #video-captions .vframe{width:216px;height:122px}
   .tlbar .trk-auto{display:none}
 }
@@ -507,7 +507,7 @@
     if(!gen){ renderEmpty(); return; }
     body.innerHTML =
       '<div class="tlz"><div class="tlgrid" id="tlGrid">'+
-        '<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
+        '<div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
         '<div class="track"><span class="tl">Cues</span><div class="lane cuelane" id="cueLane"></div></div>'+
         '<div class="track"><span class="tl"><span class="trk-auto"><i class="ic xs ic-captions"></i>Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'+
         '<div class="playstrip"><div class="playhead" id="capHead"><span class="head"></span></div></div>'+

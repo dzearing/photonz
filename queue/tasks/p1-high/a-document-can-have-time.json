@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-19T15:35:09.055Z",
+  "updated": "2026-09-19T17:39:58.250Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same"
   ],
@@ -19,6 +19,7 @@
     "A document can carry a duration, and a layer in it can have a point where it starts and a point where it ends",
     "Opening a recording opens the ordinary editor with time showing, not a different window: the same layers list, the same panel, the same tools",
     "A timeline appears when the document has time and is absent when it does not, and the audit shows both",
+    "A layer row on the timing strip draws a BAR when the layer has an in and an out and a bare heading when it does not, so the icon strip and the video timeline stay one component (UX-PATTERNS D18)",
     "Play, pause and scrubbing work, and what is drawn at a moment is what the renderer composites for that moment",
     "A clip is a layer: it can be picked in the layers list, named, hidden, reordered, styled and given effects like any other layer, and the audit proves each",
     "Everything the old video editor could do can still be done: trim, crop, revert to original, and export, each checked and named in the audit",
@@ -44,6 +45,10 @@
     {
       "t": "2026-09-19T15:35:09.054Z",
       "note": "seq 1 -> 20"
+    },
+    {
+      "t": "2026-09-19T17:39:58.249Z",
+      "note": "ONE CHANGE TO THE SHIPPED STRIP, from the video design pass (2026-09-19). MotionStrip.swift says today: 'A layer row is a HEADING and not a bar: the layer itself does not occupy time, the properties on it do.' True of a bell that rotates, false of a clip, which is exactly a start and an end. The rule becomes: a layer draws a BAR when it has an in and an out, and a heading when it does not. One rule, both jobs, and the component does not fork - which matters because the icon timing strip and the video timeline are the same component (see a-strip-across-the-bottom-shows-every-moving-par, done). Everything else the video timeline needs already ships: MotionStripGroup already carries layerName and groups lanes under the layer they belong to, and motionStripPhase already has open / row / none. What must NOT be shared is the ruler: an icon repeats, a video finishes. Design: docs/design/video-surface.md; drawing: docs/design/mocks/pages/video-shell.html; budget: Tests/PhotonzCoreTests/DockWithTimeTests.swift."
     }
   ]
 }

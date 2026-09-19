@@ -26,7 +26,7 @@
 .va-meter .mpeak{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;transform:translateX(-1px)}
 
 /* ---------- the timeline dock: audio lanes on the shared time axis ---------- */
-#tlDock{--gutter:58px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:92px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -67,13 +67,13 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   #video-audio .vframe{width:300px;height:169px}
   .vurow .nm{width:52px}
   .tlgrid .track .lane.alane{height:72px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
+  #tlDock{--gutter:76px}
   #video-audio .vframe{width:216px;height:122px}
   .vurow .nm{display:none}
   .tlbar .now{display:none}
@@ -467,7 +467,7 @@
 
   function buildTimeline(){
     if(!grid) return;
-    var h='<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="aRuler"></div></div></div>';
+    var h='<div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="aRuler"></div></div></div>';
     S.tracks.forEach(function(tr){
       h+='<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> '+tr.name+'</span>'+
          '<div class="lane alane" data-lane="'+tr.id+'">'+

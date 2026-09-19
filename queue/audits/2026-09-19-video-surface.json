@@ -1,0 +1,32 @@
+{
+  "feature": "Video, drawn against the app that exists",
+  "epic": "video-cutting",
+  "summary": "The video design is now worked out against the window the app actually has, rather than an empty one: the timeline is the strip that already ships for animated icons, its rows are named for layers instead of V1 and V2, the Layers group stays, and the one section video adds is Captions. What it costs the panel is measured rather than asserted.",
+  "setup": "Nothing to install. The design is three things to read and one page to walk: docs/design/video-surface.md, http://127.0.0.1:8791/index.html#video-shell, and UX-PATTERNS D18 and D19. The arithmetic runs as Tests/PhotonzCoreTests/DockWithTimeTests.swift, eight tests.",
+  "try": [
+    { "do": "Look at what ships today first, so the rest has something to be compared against.", "shot": "2026-09-19-video-surface-before-idle.png" },
+    { "do": "Look at the same window in trim mode. Note that the accent outline means the piece you are HOLDING in the first picture and the range you are KEEPING in this one.", "shot": "2026-09-19-video-surface-before-trim.png" },
+    { "do": "Open the design page and read block 01: a recording just opened, in the ordinary window. Your layers list, your tools, your panel, a transport, one row.", "shot": "2026-09-19-video-surface-after-recording.png" },
+    { "do": "Read block 02, a real edit. Check that every row in the timeline has the same name as a row in the Layers list above it, in the same order.", "shot": "2026-09-19-video-surface-after-busy.png" },
+    { "do": "Read block 03 and decide whether you agree that deleting the Layers group was the wrong answer to a real complaint.", "shot": "2026-09-19-video-surface-row-names.png" },
+    { "do": "Read the four figures under block 02: 962, 235, 189, 205. They say video's own sections are cheap and the band across the bottom is not.",
+      "shotNote": "" },
+    { "do": "Answer the decision card: what happens to trim-and-send once a recording opens in the ordinary window." }
+  ],
+  "evaluate": [
+    "Looking at block 02, can you tell which row in the timeline is which layer without being told?",
+    "Does a recording opening into the full editor feel like the same app, or like being handed somebody's video tool?",
+    "The Clip section says what the clip reads, its volume and its speed, and nothing about when it starts or ends. Does that feel like something missing, or like the same call you made about Position and Size?",
+    "The strip takes 235 points off a panel that only just fits. Is the answer really 'put the strip away when you want the panel', or does that feel like being made to choose?",
+    "One section is added, Captions, and it behaves like Measurements. Is Captions the word you would look for?"
+  ],
+  "rough": [
+    "NO REAL SCREENSHOT OF THIS SURFACE EXISTS IN THE APP, because the surface is a design and the app has not built it. The two before pictures are real window captures from a playtest on an unlocked screen; the three after pictures are the mock page, and they say so. Nothing here is a render passed off as the app.",
+    "The walk-through in section 8 of the design doc is the runner's own, not a person's. Acceptance item 7 asked for somebody who has used Photonz but not this, and nobody was available. Six places where prediction fails are written down; a real walk-through is still owed.",
+    "The label column is 92 points, which is what the shipping strip uses, and 'settings-capture' does not fit in it. It ellipses in the mock exactly as it would in the app. That is honest and it is still not good: a layer name is the one thing in that column and it gets cut.",
+    "Splitting a clip does not add a row, it adds a PIECE. That contradicts the build task cut-arrange-and-retime, whose acceptance says the two halves are 'ordinary layers'. Two halves that are two rows means a timeline growing a row per cut, which is unusable after five. The task needs its wording corrected before it is built.",
+    "The Graph group is still in video.html's dock. The design says a value graph belongs in the bottom dock with everything else about time, but moving it is building rather than designing, so the page keeps it and the rule stands against it.",
+    "The ruler row in video.html is still labelled 'Time'. A ruler is not a row and should carry no name; it is generated in that page's script rather than its markup and was left.",
+    "The panel is 189 points over in a video document at the largest window and over 280 on a laptop. Video did not cause it and this pass does not fix it."
+  ]
+}

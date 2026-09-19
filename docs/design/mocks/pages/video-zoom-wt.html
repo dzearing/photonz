@@ -36,8 +36,6 @@
   #video-zoom-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
 
   /* keyframe lanes · the same timeline, one row per animated property */
-  #video-zoom-wt .track.kft{margin:2px 0}
-  #video-zoom-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
   #video-zoom-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
   #video-zoom-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
     border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
@@ -311,18 +309,18 @@
 
         <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:18" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> screen-recording</span>
             <div class="lane abs"><div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div></div>
           </div>
 
-          <div class="track kft wt-off" id="laneScale"><span class="tl">Scale</span>
+          <div class="track sub wt-off" id="laneScale"><span class="tl">Scale</span>
             <div class="lane rlane kfl">
               <span class="kfseg wt-off" id="segScale" style="left:16.7%;width:11.1%"></span>
               <span class="kfd wt-off" id="kdS1" style="left:16.7%"></span>
               <span class="kfd wt-off" id="kdS2" style="left:27.8%"></span>
             </div>
           </div>
-          <div class="track kft wt-off" id="laneCentre"><span class="tl">Centre</span>
+          <div class="track sub wt-off" id="laneCentre"><span class="tl">Centre</span>
             <div class="lane rlane kfl">
               <span class="kfseg wt-off" id="segCentre" style="left:16.7%;width:11.1%"></span>
               <span class="kfd wt-off" id="kdC1" style="left:16.7%"></span>
@@ -330,7 +328,7 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
             <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
           <div class="playhead" id="playhead" style="--t:0"></div>
