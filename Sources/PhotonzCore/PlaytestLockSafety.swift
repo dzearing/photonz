@@ -53,6 +53,18 @@ public enum PlaytestLockSafety {
     ///   three times over ("3 pieces, piece 2 picked, window 8.00s, trim
     ///   open"). That un-refuses the video walks whose only blocked step was
     ///   this one.
+    /// - `trim-save-send-walk`, 42 steps forced under a lock on 2026-09-19:
+    ///   expectStoredRecording. It opens the recording's own FILE with
+    ///   AVFoundation and measures it, and looks for the preserved original
+    ///   beside it with FileManager. Neither is a control and neither is a
+    ///   name, so a lock has nothing to take away: the four readings in that
+    ///   walk came back 8.00s, 4.00s, 2.00s and 8.00s exactly as the saves
+    ///   should have left them.
+    /// - `close-a-trimmed-recording-walk`, 18 steps forced under a lock on
+    ///   2026-09-19: expectWindows. It counts the app's own windows by their
+    ///   titles, which the app sets itself and a lock cannot take away, so it
+    ///   correctly reported the recording's window gone after the save closed
+    ///   it.
     /// - `delete-key-drops-a-piece-walk`, 27 steps forced under a lock on
     ///   2026-09-17: shortcut. It reads the menu bar in the app's own process
     ///   and compares key equivalents, which are the app's own data and not an
@@ -74,7 +86,8 @@ public enum PlaytestLockSafety {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
-        "expectEdited", "expectPath", "expectPicked", "expectRecording", "hover", "key", "measureMode", "move",
+        "expectEdited", "expectPath", "expectPicked", "expectRecording", "expectStoredRecording",
+        "expectWindows", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         "snapshot",

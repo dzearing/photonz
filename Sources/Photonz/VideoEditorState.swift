@@ -382,15 +382,28 @@ final class VideoEditorState {
     /// True while a save's re-encode is in flight.
     private(set) var isSaving = false
 
-    /// Whether closing this window would lose work — the same question
-    /// `EditorState.hasUnsavedChanges` answers for an image.
-    var hasUnsavedChanges: Bool {
-        guard isReady, url != nil else { return false }
-        return VideoSaveState.needsSave(edits: exportEdits, committed: committedEdits)
+    /// Completions waiting on the commit that is already running. A second ⌘S,
+    /// or the close sheet's Save pressed while the first one is still
+    /// encoding, joins the queue instead of being told "no" — being told no is
+    /// what "I click Save and it does nothing" looked like from the outside.
+    private var waitingOnSave: [@MainActor (Bool) -> Void] = []
+
+    /// What Save means for this window right now: the ONE answer the File menu
+    /// and the close confirmation both read, so they can never contradict each
+    /// other (`SaveAffordance`).
+    var saveAffordance: SaveAffordance {
+        .forDocument(isLoaded: isReady && url != nil,
+                     hasChanges: VideoSaveState.needsSave(edits: exportEdits,
+                                                          committed: committedEdits),
+                     isSaving: isSaving)
     }
 
-    /// True when there is a save to perform (drives ⌘S / the Save button).
-    var canSave: Bool { isReady && url != nil && !isSaving }
+    /// Whether closing this window would lose work — the same question
+    /// `EditorState.hasUnsavedChanges` answers for an image.
+    var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
+
+    /// True when File ▸ Save is live (drives ⌘S / the Save button).
+    var canSave: Bool { saveAffordance.isSaveEnabled }
 
     /// ⌘S: **commit** the trim/crop into the stored recording, so the file that
     /// history hands out — drag, clipboard, anything reading it — is the
@@ -403,13 +416,18 @@ final class VideoEditorState {
     /// confirmation keeps the window open rather than dropping the edits.
     func save(completion: (@MainActor (Bool) -> Void)? = nil) {
         guard let mediaURL = url, isReady else {
-            completion?(true) // nothing loaded, nothing to lose
+            // Saying "saved" here was a quiet lie: nothing was written, and the
+            // close confirmation took it as permission to shut the window.
+            // Nothing is loaded, so there is nothing to lose either, but the
+            // answer has to be no.
+            completion?(false)
             return
         }
-        // Never claim "saved" while an earlier commit is still running — edits
-        // made since it started would be dropped on the floor.
+        // A commit is already encoding. Wait for it rather than answering no:
+        // pressing Save twice, or pressing it in the close sheet while ⌘S is
+        // still running, must not read as a dead button.
         guard !isSaving else {
-            completion?(false)
+            if let completion { waitingOnSave.append(completion) }
             return
         }
         let edits = exportEdits
@@ -440,10 +458,12 @@ final class VideoEditorState {
                 // duration pill.
                 capture?.store.reload()
                 completion?(true)
+                finishWaitingSaves(saved: true)
             } catch {
                 isSaving = false
                 presentSaveFailure(error)
                 completion?(false)
+                finishWaitingSaves(saved: false)
             }
         }
     }
@@ -469,12 +489,26 @@ final class VideoEditorState {
         rebuildPlayer(resumeAt: 0, keepPlaying: false)
     }
 
+    /// Answer everyone who pressed Save while this commit was running.
+    private func finishWaitingSaves(saved: Bool) {
+        let waiting = waitingOnSave
+        waitingOnSave = []
+        for completion in waiting { completion(saved) }
+    }
+
+    /// A save that failed has to SAY so. Nothing is lost when it does: the trim
+    /// is still in the window and the recording on disk is untouched, so the
+    /// message leads with that rather than with the machinery, and it names the
+    /// way out. Silence here is what "I click Save and it does nothing" felt
+    /// like from the outside (reported 2026-09-18).
     private func presentSaveFailure(_ error: Error) {
         NSLog("Couldn't save the recording: \(error)")
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Couldn't save the recording"
-        alert.informativeText = String(describing: error)
+        alert.messageText = "Couldn't save \u{201C}\(windowTitle)\u{201D}"
+        alert.informativeText = "Your edits are still here and the recording on disk has not "
+            + "changed. Try saving again, or use File \u{25B8} Save As to write a copy somewhere "
+            + "else.\n\n\(error.localizedDescription)"
         alert.addButton(withTitle: "OK")
         if let hostWindow {
             alert.beginSheetModal(for: hostWindow, completionHandler: nil)

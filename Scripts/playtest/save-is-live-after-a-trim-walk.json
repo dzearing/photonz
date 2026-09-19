@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/save-is-live-after-a-trim-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "seconds": 4 },
+
+    { "do": "shortcut", "key": "h", "modifiers": ["shift", "command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "menus", "stage": "save-after-a-trim", "menu": "File" },
+    { "do": "describe", "stage": "1-menu-read", "note": "The Capture History overlay is holding key, which is the only way a walk gets a live menu bar out of an app macOS will not put in front. File now reads the real document: Save must not be dimmed on a recording that has just been trimmed. On a locked Mac nothing can hold key, every window command reads dimmed whatever the app thinks, and this walk is refused rather than believed" },
+
+    { "do": "shortcut", "key": "s", "modifiers": ["command"], "menuItem": "Save" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectStoredRecording", "seconds": 4, "original": true },
+    { "do": "describe", "stage": "2-command-s-saved-it", "note": "THE TEST: the chord went to File ▸ Save, the item was live enough to have an action behind it, and the file on disk came back four seconds long. That is the whole of the 2026-09-18 report, end to end, through the menu a person uses" }
+  ]
+}

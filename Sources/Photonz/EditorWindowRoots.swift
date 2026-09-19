@@ -18,6 +18,12 @@ struct ImageEditorRootView: View {
         EditorView()
             .environment(editorState)
             .focusedSceneValue(\.editorState, editorState)
+            // What Save means in this window, recomputed here — inside a view
+            // body, which IS re-run when the editor changes — so the menu is
+            // told rather than having to notice (`FocusedSaveTarget`).
+            .focusedSceneValue(\.saveTarget,
+                               FocusedSaveTarget(editor: editorState,
+                                                 affordance: editorState.saveAffordance))
             .navigationTitle(editorState.windowTitle)
             // Standard document behavior: confirm before closing with unsaved
             // edits, and show the edited dot in the close button meanwhile.
@@ -59,6 +65,13 @@ struct VideoEditorRootView: View {
         VideoEditorView()
             .environment(state)
             .focusedSceneValue(\.videoEditorState, state)
+            // A recording reads its own length a moment AFTER its window opens,
+            // so a menu that only caught up on focus events was born dimmed and
+            // stayed that way. Publishing the affordance from here changes the
+            // focused value when the clip lands, and the menu re-reads itself.
+            .focusedSceneValue(\.saveTarget,
+                               FocusedSaveTarget(editor: state,
+                                                 affordance: state.saveAffordance))
             .navigationTitle(state.windowTitle)
             // Same document behavior as an image window: confirm before closing
             // with an uncommitted trim/crop, and show the edited dot meanwhile.

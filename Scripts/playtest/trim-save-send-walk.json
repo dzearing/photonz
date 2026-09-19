@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/trim-save-send-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8 },
+    { "do": "expectStoredRecording", "seconds": 8, "original": false },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "seconds": 4 },
+    { "do": "expectStoredRecording", "seconds": 8 },
+    { "do": "describe", "stage": "1-trimmed-not-saved", "note": "an eight second recording trimmed to the middle four. The window says four seconds and the file on disk is still eight, which is exactly right: nothing is committed until Save" },
+    { "do": "snapshot", "name": "1-trimmed-not-saved" },
+
+    { "do": "action", "action": "videoSave" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectStoredRecording", "seconds": 4, "original": true },
+    { "do": "describe", "stage": "2-saved", "note": "THE TEST: the file on disk is now four seconds long, not eight, so dragging it out, copying it or showing it in the Finder hands over the trim. The untouched original is preserved beside it, so the trim can still be undone" },
+    { "do": "snapshot", "name": "2-saved" },
+
+    { "do": "action", "action": "videoSave" },
+    { "do": "expectStoredRecording", "seconds": 4, "original": true },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "seconds": 2 },
+    { "do": "action", "action": "videoSave" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectStoredRecording", "seconds": 2, "original": true },
+    { "do": "describe", "stage": "3-trimmed-again", "note": "a second trim on top of the first saves to two seconds rather than stacking onto already trimmed pixels: the edit is always measured against the preserved original" },
+
+    { "do": "action", "action": "videoRevertToOriginal" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSave" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectStoredRecording", "seconds": 8, "original": true },
+    { "do": "describe", "stage": "4-back-to-the-whole-clip", "note": "Revert to Original and save puts the whole eight seconds back on disk, so a trim saved by mistake is not the end of the recording" },
+    { "do": "snapshot", "name": "4-whole-clip-back" }
+  ]
+}

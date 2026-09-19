@@ -3259,4 +3259,108 @@ struct PlaytestScriptTests {
             """)
         }
     }
+
+    // MARK: - What the recording on disk says
+
+    // A walk that trims and saves has to be able to ask the FILE, not the app.
+    // The whole point of the save is that the media history hands out is the
+    // trimmed media, and an app that believes it saved is exactly the thing
+    // under suspicion.
+    @Test("An expectStoredRecording step claims how long the file on disk is")
+    func expectStoredRecordingClaimsTheDuration() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectStoredRecording", "seconds": 6 } ] }
+        """)
+        guard case .expectStoredRecording(let seconds, let within, let original) = script.steps[0] else {
+            Issue.record("expectStoredRecording"); return
+        }
+        #expect(seconds == 6)
+        #expect(within == 0.3)
+        #expect(original == nil)
+        #expect(script.steps[0].name == "expectStoredRecording")
+        #expect(PlaytestStep.names.contains("expectStoredRecording"))
+    }
+
+    @Test("An expectStoredRecording step can widen how close the duration must be")
+    func expectStoredRecordingTakesATolerance() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectStoredRecording", "seconds": 6, "within": 1 } ] }
+        """)
+        guard case .expectStoredRecording(_, let within, _) = script.steps[0] else {
+            Issue.record("expectStoredRecording"); return
+        }
+        #expect(within == 1)
+    }
+
+    // The hidden original is what makes the edit reversible, so a walk has to
+    // be able to say it is there (or that it is not, before the first save).
+    @Test("An expectStoredRecording step can claim the untouched original beside it")
+    func expectStoredRecordingClaimsTheOriginal() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectStoredRecording", "original": true } ] }
+        """)
+        guard case .expectStoredRecording(let seconds, _, let original) = script.steps[0] else {
+            Issue.record("expectStoredRecording"); return
+        }
+        #expect(seconds == nil)
+        #expect(original == true)
+    }
+
+    @Test("An expectStoredRecording step has to claim something")
+    func expectStoredRecordingNeedsAClaim() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectStoredRecording" } ] }
+            """)
+        }
+    }
+
+    @Test("A negative tolerance is refused when the script is read")
+    func expectStoredRecordingRefusesANegativeTolerance() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectStoredRecording", "seconds": 6, "within": -1 } ] }
+            """)
+        }
+    }
+
+    // MARK: - Saving a recording from a walk
+
+    @Test("A walk can run the save a recording's Command S runs")
+    func videoSaveIsAnAction() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "action", "action": "videoSave" } ] }
+        """)
+        guard case .action(let action) = script.steps[0] else {
+            Issue.record("action"); return
+        }
+        #expect(action == .videoSave)
+        #expect(action.drivesRecording)
+    }
+
+    // The close sheet is its own path into the save, and it is the one the
+    // user's report says does nothing, so a walk has to be able to press it.
+    @Test("A walk can press Save in the close confirmation")
+    func videoSaveForCloseIsAnAction() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "action", "action": "videoCloseAndSave" } ] }
+        """)
+        guard case .action(let action) = script.steps[0] else {
+            Issue.record("action"); return
+        }
+        #expect(action == .videoCloseAndSave)
+        #expect(action.drivesRecording)
+    }
+
+    @Test("A walk can put the whole recording back the way Revert to Original does")
+    func videoRevertToOriginalIsAnAction() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "action", "action": "videoRevertToOriginal" } ] }
+        """)
+        guard case .action(let action) = script.steps[0] else {
+            Issue.record("action"); return
+        }
+        #expect(action == .videoRevertToOriginal)
+        #expect(action.drivesRecording)
+    }
 }

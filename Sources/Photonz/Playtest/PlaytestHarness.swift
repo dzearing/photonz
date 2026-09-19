@@ -9,6 +9,7 @@
 //  * At runtime only the probe bundle (AppInfo.flavor == .probe) ever reads a
 //    script. The dev app a person works in carries the code but never runs it.
 #if PHOTONZ_PLAYTEST
+import AVFoundation
 import AppKit
 import ScreenCaptureKit
 import PhotonzCore
@@ -1509,6 +1510,12 @@ private final class Run {
                                     seconds: seconds, starts: starts, caught: caught),
                  state: describe())
 
+        case .expectStoredRecording(let seconds, let within, let original):
+            note(number, step.name,
+                 try await checkStoredRecording(seconds: seconds, within: within,
+                                                original: original),
+                 state: describe())
+
         case .expectFeet(let layerName, let start, let end, let reads, let within):
             note(number, step.name,
                  try checkFeet(layerName, start: start, end: end, reads: reads, within: within),
@@ -2072,6 +2079,50 @@ private final class Run {
             try await adoptRecording(opened, step: step.name,
                                      subject: "the sample recording", number: number)
 
+        // Saving is its own case because it has to be WAITED for: a commit
+        // re-encodes, and every one of these steps is only worth anything once
+        // the file on disk has actually changed.
+        case .action(let action) where action == .videoSave || action == .videoCloseAndSave:
+            let video = try requireRecording()
+            let before = video.saveAffordance
+            let window = video.hostWindow
+            let started = Date()
+            var answer: Bool?
+            if action == .videoSave {
+                video.performSave { answer = $0 }
+            } else {
+                // Exactly what pressing Save in the close confirmation runs,
+                // window close and all — the path the 2026-09-18 report says
+                // did nothing.
+                video.performSave { saved in
+                    answer = saved
+                    if saved { window?.close() }
+                }
+            }
+            try await poll("the save to finish", within: 120) { answer != nil }
+            let took = Date().timeIntervalSince(started)
+            guard answer == true else {
+                throw Failure(description: "\(action.rawValue) reported that it did NOT save "
+                    + "(it was \(before.rawValue) before the press). The window keeps its edits; "
+                    + "a person sees a dialog that will not go away.")
+            }
+            note(number, step.name,
+                 "\(action.rawValue): was \(before.rawValue), saved in "
+                     + "\(String(format: "%.1f", took))s, now \(video.saveAffordance.rawValue)"
+                     + (action == .videoCloseAndSave
+                        ? ", and the window closed" : ""),
+                 state: describe())
+
+        case .action(let action) where action == .videoRevertToOriginal:
+            let video = try requireRecording()
+            guard video.canRevertToOriginal else {
+                throw Failure(description: "Revert to Original is not offered: there is no preserved "
+                    + "original to go back to yet, so nothing has ever been saved over this recording")
+            }
+            video.revertToOriginal()
+            note(number, step.name, "put the whole recording back: \(video.saveAffordance.rawValue)",
+                 state: describe())
+
         case .action(let action) where action.drivesRecording:
             let video = try requireRecording()
             switch action {
@@ -2096,6 +2147,7 @@ private final class Run {
                 try dragTrimHandle(video, .start, pointsFromCut: 3, freed: true)
             case .videoDragTrimEndNearCut: try dragTrimHandle(video, .end, pointsFromCut: 5)
             case .videoDragTrimRelease: video.endTrimHandleDrag()
+            case .videoSave, .videoCloseAndSave, .videoRevertToOriginal: break // handled above
             default: break
             }
             // Cutting re-points the player at a composition of the kept
@@ -2777,6 +2829,7 @@ private final class Run {
                  .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
                  .videoDragTrimFreedNearCut,
                  .videoDragTrimEndNearCut, .videoDragTrimRelease,
+                 .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
             }
@@ -6884,6 +6937,44 @@ private final class Run {
         case .start: video.dragTrimIn(toTimeline: target - away, freed: freed)
         case .end: video.dragTrimOut(toTimeline: target + away, freed: freed)
         }
+    }
+
+    /// What the recording's FILE says, which is the only thing that settles
+    /// whether a save saved. The app is not asked: the media on disk is opened
+    /// and measured, and the hidden original beside it is looked for by hand.
+    private func checkStoredRecording(seconds: Double?, within: Double,
+                                      original: Bool?) async throws -> String {
+        let video = try requireRecording()
+        guard let url = video.url else {
+            throw Failure(description: "the recording has no file yet, so there is nothing on disk to read")
+        }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw Failure(description: "there is no file at \(url.path): the recording the walk "
+                + "trimmed is not on disk at all")
+        }
+        let asset = AVURLAsset(url: url)
+        let stored = try await asset.load(.duration).seconds
+        let hasOriginal = VideoOriginals.exists(for: url)
+        let saying = "\(url.lastPathComponent) on disk is "
+            + "\(String(format: "%.2f", stored))s long"
+            + (hasOriginal ? ", with the untouched original preserved beside it"
+                           : ", with no original preserved beside it")
+
+        var wrong: [String] = []
+        if let seconds, abs(seconds - stored) > within {
+            wrong.append("the stored recording is \(String(format: "%.2f", stored))s long, not "
+                + "\(String(format: "%.2f", seconds))s — what the app believes it saved and what "
+                + "is actually in the file are different things")
+        }
+        if let original, original != hasOriginal {
+            wrong.append(hasOriginal
+                ? "the untouched original IS preserved beside it, and the walk said it would not be"
+                : "the untouched original is NOT preserved beside it, so the edit cannot be undone")
+        }
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + ". \(saying)")
+        }
+        return saying
     }
 
     private func requireRecording() throws -> VideoEditorState {

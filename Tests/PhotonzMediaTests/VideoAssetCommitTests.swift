@@ -142,4 +142,44 @@ struct VideoAssetCommitTests {
         let drift = abs((after ?? .distantPast).timeIntervalSince(before ?? .distantFuture))
         #expect(drift < 1, "history sorts by creation date — a save must not reshuffle the recording")
     }
+
+    // MARK: - A save that cannot happen
+
+    // A failed save must FAIL, loudly, and leave everything as it was: the
+    // recording untouched on disk and the edits still in the window. The app
+    // reads the thrown error back to the person in an alert; the thing under
+    // test here is that it throws at all rather than reporting a quiet
+    // success, which is what "I click Save and it does nothing" was made of.
+    @Test func aSaveWithNothingToReadFromFailsRatherThanReportingSuccess() async throws {
+        let (dir, media) = try await makeRecording()
+        defer { TestClip.cleanUp(dir) }
+        let full = await TestClip.duration(of: media)
+        let edits = VideoEdits(trim: VideoTrim(inPoint: 1, outPoint: 2, duration: full))
+        let plan = try #require(VideoCommitPlanner.plan(mediaURL: media, edits: edits))
+
+        // The recording goes away between the plan and the commit, which is
+        // what a file deleted, renamed or unmounted underneath you looks like.
+        try FileManager.default.removeItem(at: media)
+
+        await #expect(throws: (any Error).self) {
+            try await VideoAssetCommit.commit(plan)
+        }
+    }
+
+    // Nothing half-written is left behind either: a failed commit must not
+    // leave a preserved "original" that a later save would then edit FROM,
+    // which would quietly make the failure permanent.
+    @Test func aFailedSaveLeavesNoOriginalBehindForTheNextSaveToTrust() async throws {
+        let (dir, media) = try await makeRecording()
+        defer { TestClip.cleanUp(dir) }
+        let full = await TestClip.duration(of: media)
+        let edits = VideoEdits(trim: VideoTrim(inPoint: 1, outPoint: 2, duration: full))
+        let plan = try #require(VideoCommitPlanner.plan(mediaURL: media, edits: edits))
+        try FileManager.default.removeItem(at: media)
+
+        _ = try? await VideoAssetCommit.commit(plan)
+
+        #expect(!VideoOriginals.exists(for: media),
+                "a commit that never ran must not leave a preserved original behind")
+    }
 }

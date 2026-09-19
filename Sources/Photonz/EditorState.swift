@@ -1184,8 +1184,17 @@ final class EditorState {
     @ObservationIgnored weak var hostWindow: NSWindow?
 
     /// Whether closing this window would lose work.
-    var hasUnsavedChanges: Bool {
-        ClosePrompt.needsSavePrompt(current: document, savedBaseline: savedDocument)
+    var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
+
+    /// What Save means for this window right now: the ONE answer the File menu
+    /// and the close confirmation both read, so they can never contradict each
+    /// other (`SaveAffordance`). An image save is synchronous, so there is no
+    /// commit in flight to report.
+    var saveAffordance: SaveAffordance {
+        .forDocument(isLoaded: document != nil,
+                     hasChanges: ClosePrompt.needsSavePrompt(current: document,
+                                                             savedBaseline: savedDocument),
+                     isSaving: false)
     }
 
     /// The document was persisted somewhere the user considers safe (package

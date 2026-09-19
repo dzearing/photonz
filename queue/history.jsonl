@@ -5491,3 +5491,7 @@
 {"t":"2026-09-19T15:44:58.591Z","ev":"task_resequenced","id":"the-piece-you-picked-is-the-faintest-block-on-th","from":3010,"to":5}
 {"t":"2026-09-19T15:44:58.638Z","ev":"task_resequenced","id":"saving-a-recording-somewhere-else-goes-through-t","from":3020,"to":15}
 {"t":"2026-09-19T15:45:51.736Z","ev":"manager","filed":2,"readyBefore":11,"readyAfter":12,"report":"2026-09-19-0845.md"}
+{"t":"2026-09-19T15:46:06.824Z","ev":"manager_pass","exit":0,"ready":12}
+{"t":"2026-09-19T15:46:06.870Z","ev":"task_started","id":"trim-a-recording-save-it-send-it-the-whole-flow","title":"Trim a recording, save it, send it: the whole flow works","priority":"p0-critical"}
+{"t":"2026-09-19T15:49:39.805Z","ev":"task_note","id":"trim-a-recording-save-it-send-it-the-whole-flow"}
+{"t":"2026-09-19T16:28:06.962Z","ev":"task_walks","id":"trim-a-recording-save-it-send-it-the-whole-flow","walks":["trim-save-send-walk","close-a-trimmed-recording-walk","save-is-live-after-a-trim-walk"]}

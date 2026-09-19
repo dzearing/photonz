@@ -30,6 +30,42 @@ extension FocusedValues {
     }
 }
 
+/// What Save would act on in the key window, and what it would mean there.
+///
+/// The menu used to reach for the image editor and the video editor separately
+/// and then reason about the pair, which had two faults in one expression: the
+/// action preferred the image editor while the dimming preferred whichever one
+/// had something to save, so with both kinds of window open Save could look
+/// live and do nothing to the recording in front of you. And because it read
+/// the state objects directly, the menu only caught up on a focus event — a
+/// recording that finished loading a moment after its window appeared kept the
+/// dimmed Save it was born with.
+///
+/// This is one focused value, published by whichever window root is in front,
+/// carrying both the thing to save and the answer to "what does Save mean here"
+/// (`SaveAffordance`). It is `Equatable`, so the window's own view — which IS
+/// re-run when the editor changes — hands SwiftUI a different value the moment
+/// the affordance changes, and the menu re-reads itself.
+struct FocusedSaveTarget: Equatable {
+    let editor: any SaveableEditor
+    let affordance: SaveAffordance
+
+    static func == (lhs: FocusedSaveTarget, rhs: FocusedSaveTarget) -> Bool {
+        lhs.editor === rhs.editor && lhs.affordance == rhs.affordance
+    }
+}
+
+struct FocusedSaveTargetKey: FocusedValueKey {
+    typealias Value = FocusedSaveTarget
+}
+
+extension FocusedValues {
+    var saveTarget: FocusedSaveTarget? {
+        get { self[FocusedSaveTargetKey.self] }
+        set { self[FocusedSaveTargetKey.self] = newValue }
+    }
+}
+
 /// The app's menu-bar command set. App-level actions (capture, New, Open, About)
 /// go through the resident `AppCoordinator` so they work with no window open;
 /// document actions target the focused editor window (`editor`), disabling when
@@ -38,6 +74,29 @@ struct EditorCommands: Commands {
     let coordinator: AppCoordinator
     @FocusedValue(\.editorState) private var editor: EditorState?
     @FocusedValue(\.videoEditorState) private var video: VideoEditorState?
+    /// What ⌘S acts on in the key window, and whether it is live there. One
+    /// value read by both the action and the dimming, so they can never ask
+    /// different questions (see `FocusedSaveTarget`).
+    @FocusedValue(\.saveTarget) private var saveTarget: FocusedSaveTarget?
+
+    /// The resolved answer to "what would Save do here", read by the Save
+    /// action AND by its dimming so the two can never disagree.
+    ///
+    /// The fallback is belt and braces rather than decoration: if the focused
+    /// value has not arrived for some window, Save falls back to whichever
+    /// state object is in front, which is what it used to do. Losing the
+    /// focused value can then cost a menu that is a moment stale; it can never
+    /// cost a Save that is dimmed on a document with work in it, which is the
+    /// failure this whole change is about.
+    private var focusedSave: FocusedSaveTarget? {
+        if let saveTarget { return saveTarget }
+        if let editor, editor.document != nil {
+            return FocusedSaveTarget(editor: editor, affordance: editor.saveAffordance)
+        }
+        if let video { return FocusedSaveTarget(editor: video, affordance: video.saveAffordance) }
+        if let editor { return FocusedSaveTarget(editor: editor, affordance: editor.saveAffordance) }
+        return nil
+    }
 
     /// True when a text field/inline editor is focused — text-editing commands
     /// must keep their system meaning there.
@@ -199,15 +258,16 @@ struct EditorCommands: Commands {
             // written into the capture file; for a recording it's the trim/crop
             // baked into the stored MP4 (the original is preserved alongside,
             // so it stays reversible).
-            Button("Save") {
-                if let editor { editor.saveDocument() } else { video?.save() }
-            }
+            Button("Save") { focusedSave?.editor.performSave { _ in } }
             .keyboardShortcut("s", modifiers: .command)
-            .disabled(editor?.document == nil && !(video?.canSave ?? false))
+            .disabled(!(focusedSave?.affordance.isSaveEnabled ?? false))
             // For a recording, "save a copy somewhere else" IS the MP4 export —
             // same panel, same re-encode, no second flow to discover.
+            // Same order in the action as in the dimming below, which is the
+            // fault the plain Save had: an action that preferred the image
+            // editor under a test that preferred whoever had something to save.
             Button("Save As…") {
-                if let editor { editor.saveDocumentAs() }
+                if editor?.document != nil { editor?.saveDocumentAs() }
                 else if let video { coordinator.saveRecording(video, as: .mp4) }
             }
             .keyboardShortcut("s", modifiers: [.command, .shift])

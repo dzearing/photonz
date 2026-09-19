@@ -622,6 +622,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Cutting a recording into pieces: put a cut where the playhead is, throw
     /// away the piece the playhead is in, and take the last one back.
     case videoCut, videoDeletePiece, videoUndoEdit
+    /// Saving, the three ways a person reaches it. `videoSave` is what ⌘S and
+    /// File ▸ Save run. `videoCloseAndSave` is the close confirmation's own
+    /// Save button, which is a different path into the same commit and the one
+    /// the 2026-09-18 report says did nothing. `videoRevertToOriginal` puts the
+    /// whole clip back, so a walk can show a save undone as well as done.
+    case videoSave, videoCloseAndSave, videoRevertToOriginal
     /// Playback, driven the way space does.
     case videoPlay, videoPause
     /// The start handle dragged by hand towards the first cut in the
@@ -666,6 +672,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoCopyGIF,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
+             .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
              .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
              .videoDragTrimFreedNearCut,
              .videoDragTrimEndNearCut, .videoDragTrimRelease: true
@@ -1980,6 +1987,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// optional; the step has to make at least one.
     case expectRecording(pieces: Int?, picked: Int?, keeps: Int?, seconds: Double?,
                          starts: Double?, caught: Bool?)
+    /// What the recording's FILE on disk says, which is the only thing that
+    /// settles whether a save saved. `seconds` is how long the stored media
+    /// must now be, `within` how close that has to be, and `original` whether
+    /// the untouched original is preserved beside it (what makes the edit
+    /// reversible). The app is not asked: the file is opened and measured.
+    case expectStoredRecording(seconds: Double?, within: Double, original: Bool?)
     /// Which tutorial shelves must be on offer right now, and which must not,
     /// by the name a person reads ("Redlining").
     ///
@@ -2377,7 +2390,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
@@ -2434,6 +2447,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
         case .expectRecording: "expectRecording"
+        case .expectStoredRecording: "expectStoredRecording"
         case .expectTutorialTracks: "expectTutorialTracks"
         case .expectFeet: "expectFeet"
         case .expectRegion: "expectRegion"
@@ -2939,6 +2953,22 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectRecording(pieces: pieces, picked: picked, keeps: keeps, seconds: seconds,
                                     starts: starts, caught: caught)
+        case "expectStoredRecording":
+            let seconds = fields["seconds"] != nil ? try f.number("seconds") : nil
+            if let seconds, seconds < 0 {
+                throw f.invalid("seconds", "a recording cannot be \(seconds) seconds long")
+            }
+            let within = fields["within"] != nil ? try f.number("within") : 0.3
+            guard within >= 0 else {
+                throw f.invalid("within", "how close the duration has to be is zero or more, not \(within)")
+            }
+            let original = try f.optionalFlag("original")
+            guard seconds != nil || original != nil else {
+                throw f.invalid("seconds", "expectStoredRecording has to claim something about the "
+                    + "file on disk: \"seconds\" for how long the stored recording is now, or "
+                    + "\"original\" for whether the untouched original is preserved beside it")
+            }
+            self = .expectStoredRecording(seconds: seconds, within: within, original: original)
         case "expectTutorialTracks":
             let with = try f.optionalStrings("with")
             let without = try f.optionalStrings("without")

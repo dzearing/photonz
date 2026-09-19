@@ -1,23 +1,43 @@
 import AppKit
+import PhotonzCore
 import SwiftUI
 
-/// What the close confirmation needs from an editor window, so image and video
-/// windows behave identically: both know whether they are dirty, what they are
-/// called, and how to save. Saving is completion-based because committing a
-/// video re-encodes (the image path just calls back immediately).
+/// What the File menu and the close confirmation need from an editor window, so
+/// image and video windows behave identically: both know what Save means for
+/// them right now, what they are called, and how to save. Saving is
+/// completion-based because committing a video re-encodes (the image path just
+/// calls back immediately).
+///
+/// `saveAffordance` is the single answer BOTH surfaces read. Before it, the menu
+/// worked out whether Save was live and the close sheet separately worked out
+/// whether to ask, and the two could contradict each other: a recording could
+/// show a dimmed Save and then insist on the way out that there were unsaved
+/// changes (reported 2026-09-18). `SaveAffordance` holds them together and
+/// proves it in a test.
 @MainActor
 protocol SaveableEditor: AnyObject {
-    var hasUnsavedChanges: Bool { get }
+    var saveAffordance: SaveAffordance { get }
     var windowTitle: String { get }
     var hostWindow: NSWindow? { get set }
+    /// What File ▸ Save runs, and what the close confirmation's Save button
+    /// runs: one method, so the two can never do different things.
     /// `completion(true)` once the document is saved (or had nothing to save);
-    /// `completion(false)` when the save was cancelled or failed, so the window
-    /// stays open instead of dropping the edits.
-    func saveForClose(completion: @escaping @MainActor (Bool) -> Void)
+    /// `completion(false)` when the save was cancelled, failed, or could not
+    /// run at all.
+    func performSave(completion: @escaping @MainActor (Bool) -> Void)
+}
+
+extension SaveableEditor {
+    /// Whether closing this window would lose work.
+    var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
 }
 
 extension EditorState: SaveableEditor {
-    func saveForClose(completion: @escaping @MainActor (Bool) -> Void) {
+    func performSave(completion: @escaping @MainActor (Bool) -> Void) {
+        guard document != nil else {
+            completion(false) // nothing open: Save cannot have done anything
+            return
+        }
         saveDocument()
         // A cancelled Save-As panel leaves the document dirty.
         completion(!hasUnsavedChanges)
@@ -25,7 +45,7 @@ extension EditorState: SaveableEditor {
 }
 
 extension VideoEditorState: SaveableEditor {
-    func saveForClose(completion: @escaping @MainActor (Bool) -> Void) {
+    func performSave(completion: @escaping @MainActor (Bool) -> Void) {
         save { completion($0) }
     }
 }
@@ -185,7 +205,7 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
                 // A cancelled Save-As panel (or a failed video commit) leaves
                 // the document dirty — the window stays open rather than
                 // silently dropping the edits.
-                editorState.saveForClose { saved in
+                editorState.performSave { saved in
                     if saved {
                         window.close() // close(), not performClose(): skip re-asking
                         completion?(true)

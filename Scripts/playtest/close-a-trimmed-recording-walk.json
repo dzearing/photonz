@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/close-a-trimmed-recording-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "seconds": 4 },
+    { "do": "describe", "stage": "1-trimmed", "note": "trimmed and not saved, so closing the window has to stop and ask" },
+    { "do": "snapshot", "name": "1-trimmed" },
+
+    { "do": "action", "action": "videoCloseAndSave" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectStoredRecording", "seconds": 4, "original": true },
+    { "do": "expectWindows", "titled": "Tutorial Sample.mp4", "count": 0 },
+    { "do": "describe", "stage": "2-saved-and-closed", "note": "THE TEST, and the exact thing the 2026-09-18 report says did nothing: pressing Save in the close confirmation writes the trim into the file and lets the window go. Four seconds on disk, no window left" }
+  ]
+}

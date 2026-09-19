@@ -1,0 +1,27 @@
+{
+  "feature": "Trim a recording, save it, send it",
+  "epic": "video-cutting",
+  "summary": "Trimming a recording and pressing Save now writes the trim into the recording itself, so the file you drag out, copy, or reveal in the Finder is the short version. Save in the File menu and Save in the close dialog are now the same answer, so one can no longer be greyed out while the other insists there are unsaved changes.",
+  "setup": "Photonz Dev, release Next. Open any recording from capture history (or Help > Tutorials > Trim a recording, which brings its own eight second clip).",
+  "try": [
+    { "do": "Open a recording, drag the trim handles in, and press Done.", "shot": "2026-09-19-trim-save-1-not-saved.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Open the File menu and check that Save is not greyed out." },
+    { "do": "Press Command S and watch the save arrow on the controller disappear.", "shot": "2026-09-19-trim-save-2-saved.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Open capture history, right click the recording and choose Show in Finder, then check its duration in the Finder." },
+    { "do": "Drag that recording straight out of history into Teams or a Finder window and confirm the short version arrives." },
+    { "do": "Trim it again, then close the window and press Save in the dialog: it should save and the window should go." },
+    { "do": "Reopen it, press the Revert to Original button, and save: the whole clip comes back.", "shot": "2026-09-19-trim-save-3-whole-clip-back.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." }
+  ],
+  "evaluate": [
+    "When you press Save, is it clear that anything happened? The save arrow vanishing is the only sign, and there is no Saved message.",
+    "Closing the window and pressing Save saves and closes in one go. Would you rather it also told you where the file now is?",
+    "Is Revert to Original findable? It only appears once a save has happened, and it sits on the floating controller rather than in a menu.",
+    "On a long recording the save takes real seconds and shows only a small spinner on the controller. Is that enough, or does it need a progress bar?",
+    "Save now stays live on a recording with nothing changed, the way it does in most Mac apps. Does a live Save with nothing to do read as broken to you?"
+  ],
+  "rough": [
+    "Nothing says a save succeeded. The save arrow disappears and that is all. On a recording that takes several seconds to commit, the gap between pressing Save and the arrow going is filled by a 28 point spinner on the floating controller, which is easy to miss and is very likely what 'I click Save and it does nothing' felt like.",
+    "The one claim in this task I could not check on a real screen: File > Save being live after a trim. The Mac locked partway through this work, and a locked Mac gives the app no focus, which makes macOS leave every window command dimmed no matter what the app thinks. I measured it live BEFORE the change (Save read enabled on a trimmed recording) and left a walk behind that fails if it is ever dimmed, but that walk needs an unlocked screen and has not run on one yet.",
+    "Saving is still all or nothing per window. There is no way to save a trim to a NEW file from the keyboard without going through Save As and its panel."
+  ]
+}
