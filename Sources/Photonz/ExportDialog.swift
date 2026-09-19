@@ -404,7 +404,7 @@ struct ExportDialog: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: ExportSheetMetrics.spacing) {
             // Not "Export Image": one of the four answers is not a picture.
             Text("Export")
                 .font(.headline)
@@ -518,12 +518,12 @@ struct ExportDialog: View {
                 .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(20)
+        .padding(ExportSheetMetrics.padding)
         // Wide enough for the format row to hold its name and five buttons on
         // one line. At 320 the segments took every point there was and the word
         // beside them came out stacked two letters a line; the rest of the
         // sheet, the hand-off lines especially, reads better with the room too.
-        .frame(width: 380)
+        .frame(width: ExportSheetMetrics.width)
         // The last card of the SVG guide points at this sheet, so it sits
         // beside the sheet rather than over the row it is talking about.
         .tutorialAnchor(.dialog(.export))
@@ -580,23 +580,12 @@ struct ExportDialog: View {
         .onChange(of: qualityPercent) { refreshPictureSize() }
     }
 
-    /// One row of the sheet: what it is called on the left, and the control it
-    /// names beside it.
-    ///
-    /// The label is never allowed to wrap, and it holds a column wide enough
-    /// for the short names, so Export, Format, Scale and Quality read down the
-    /// sheet with their controls starting in the same place. A name longer than
-    /// the column — "Where it is going" — widens its own row rather than
-    /// breaking, and rather than pushing every other control across.
+    /// One row of the sheet. The row itself is `ExportSheetRow`, shared with
+    /// the sheet a recording leaves through so the two cannot drift apart.
     @ViewBuilder
     private func labelledRow<Control: View>(_ name: String,
                                             @ViewBuilder control: () -> Control) -> some View {
-        HStack(spacing: 10) {
-            Text(name)
-                .fixedSize()
-                .frame(minWidth: 56, alignment: .leading)
-            control()
-        }
+        ExportSheetRow(name, control: control)
     }
 
     /// The quality to write at, and what the file weighs there.

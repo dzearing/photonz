@@ -125,6 +125,11 @@ struct VideoEditorView: View {
             if result == .handled { reveal() }
             return result
         }
+        // The same sheet a picture leaves through, with the recording's formats
+        // in it (Next, `next-recording-export-sheet`).
+        .sheet(isPresented: Bindable(state).isExportSheetPresented) {
+            RecordingExportDialog()
+        }
     }
 
     // MARK: - Auto-hide

@@ -651,6 +651,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case videoDragTrimEndNearCut
     /// Let go of the handle being dragged.
     case videoDragTrimRelease
+    /// Open the recording's Export sheet, the way ⇧⌘S and File ▸ Export… do,
+    /// already showing one of the three formats. Asked for here rather than by
+    /// pressing the format row, so a walk can photograph GIF on a Mac whose
+    /// screen is locked, and so photographing GIF never decides what the NEXT
+    /// walk's Export opens on.
+    case videoExportSheet, videoExportSheetAsGIF, videoExportSheetAsHEIC
+    /// Shut the Export sheet the way Cancel does, so a walk can show that
+    /// choosing a format and then backing out writes nothing.
+    case videoExportSheetCancel
+    /// Crop the recording to the middle half of its frame, which is a real
+    /// crop's outcome without a walk having to know how big the clip is. What
+    /// lets a walk check that a saved copy comes out at the CROP's size rather
+    /// than the recording's.
+    case videoCropMiddle
 
     /// Whether this action drives the GUIDE rather than a window: pressing the
     /// callout's own button. A guide can be running over a recording's window,
@@ -675,7 +689,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
              .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
              .videoDragTrimFreedNearCut,
-             .videoDragTrimEndNearCut, .videoDragTrimRelease: true
+             .videoDragTrimEndNearCut, .videoDragTrimRelease,
+             .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
+             .videoExportSheetCancel, .videoCropMiddle: true
         default: false
         }
     }
@@ -1695,6 +1711,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// photographed at a quality other than the one it opens on, and it checks
     /// the remembering at the same time.
     case exportQuality(format: String, percent: Int)
+    /// Write the open recording out to a real file, exactly as pressing
+    /// Export… on its sheet and choosing a place would, then READ the file back
+    /// and check it.
+    ///
+    /// The save box cannot be driven by a walk, so this runs the same writer
+    /// the box hands to and then opens what landed: how long it runs, how big
+    /// its picture is, and what it weighs. That is the difference between a
+    /// walk that trusts the app about the trim and the crop and one that finds
+    /// out. `copied` claims the fast path: an untouched recording going out as
+    /// MP4 is a verbatim file copy, so the bytes on disk must match the
+    /// recording's own, and a re-encode that has quietly crept in fails here.
+    case writeRecording(name: String, format: String, quality: String,
+                        seconds: Double?, within: Double,
+                        width: Double?, height: Double?, copied: Bool?)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -2392,7 +2422,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dropComponent",
         "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
     ]
 
     /// The `do` name this step answers to.
@@ -2429,6 +2459,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .writeSVG: "writeSVG"
         case .writePicture: "writePicture"
         case .exportQuality: "exportQuality"
+        case .writeRecording: "writeRecording"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -2663,6 +2694,15 @@ public enum PlaytestStep: Sendable, Equatable {
         case "exportQuality":
             self = .exportQuality(format: try f.string("format"),
                                   percent: Int(try f.number("percent")))
+        case "writeRecording":
+            self = .writeRecording(name: try f.string("name"),
+                                   format: try f.optionalString("format") ?? "mp4",
+                                   quality: try f.optionalString("quality") ?? "standard",
+                                   seconds: try f.optionalNumber("seconds"),
+                                   within: try f.optionalNumber("within") ?? 0.4,
+                                   width: try f.optionalNumber("width"),
+                                   height: try f.optionalNumber("height"),
+                                   copied: try f.optionalFlag("copied"))
         case "menuShot":
             self = .menuShot(menu: try f.string("menu"), name: try f.string("name"),
                              ticked: try f.optionalStrings("ticked"),

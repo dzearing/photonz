@@ -217,6 +217,15 @@ struct EditorCommands: Commands {
                       && TutorialLauncher.frontEditor() == nil)
     }
 
+    /// Whether Export… has a recording to open the sheet on.
+    ///
+    /// Written out rather than inlined so the action and the dimming read off
+    /// the same test: the plain Save had them disagree once, and the item
+    /// looked alive while doing nothing.
+    private func offersRecordingExportSheet(_ video: VideoEditorState?) -> Bool {
+        Experiments.shared.recordingExportSheetEnabled && (video?.isReady ?? false)
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
@@ -261,14 +270,22 @@ struct EditorCommands: Commands {
             Button("Save") { focusedSave?.editor.performSave { _ in } }
             .keyboardShortcut("s", modifiers: .command)
             .disabled(!(focusedSave?.affordance.isSaveEnabled ?? false))
-            // For a recording, "save a copy somewhere else" IS the MP4 export —
-            // same panel, same re-encode, no second flow to discover.
+            // For a recording, "save a copy somewhere else" IS the export, so
+            // it goes through the one Export sheet rather than a second flow to
+            // discover (Next, `next-recording-export-sheet`). With the flag off
+            // it is the bare save box with MP4 already decided, as before.
             // Same order in the action as in the dimming below, which is the
             // fault the plain Save had: an action that preferred the image
             // editor under a test that preferred whoever had something to save.
             Button("Save As…") {
                 if editor?.document != nil { editor?.saveDocumentAs() }
-                else if let video { coordinator.saveRecording(video, as: .mp4) }
+                else if let video {
+                    if Experiments.shared.recordingExportSheetEnabled {
+                        video.isExportSheetPresented = true
+                    } else {
+                        coordinator.saveRecording(video, as: .mp4)
+                    }
+                }
             }
             .keyboardShortcut("s", modifiers: [.command, .shift])
             .disabled(editor?.document == nil && !(video?.isReady ?? false))
@@ -284,9 +301,16 @@ struct EditorCommands: Commands {
             .disabled(editor?.document == nil)
             Divider()
             // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
-            Button("Export…") { editor?.isExportDialogPresented = true }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
-                .disabled(editor?.document == nil)
+            // One Export command for both editors: a picture and a recording
+            // leave the app through the same sheet and the same key.
+            Button("Export…") {
+                if editor?.document != nil { editor?.isExportDialogPresented = true }
+                else if let video, Experiments.shared.recordingExportSheetEnabled {
+                    video.isExportSheetPresented = true
+                }
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .disabled(editor?.document == nil && !(offersRecordingExportSheet(video)))
             // Copy Merged took this key and moved next to Copy in Edit, where
             // the difference between the two copies is readable. Off, the
             // picture-of-everything copy stays here as Copy Image.
@@ -390,26 +414,40 @@ struct EditorCommands: Commands {
             Button("Revert to Original") { video?.revertToOriginal() }
                 .disabled(!(video?.canRevertToOriginal ?? false))
             Divider()
-            Button("Export MP4…") {
-                if let video { coordinator.saveRecording(video, as: .mp4) }
-            }
-            .disabled(!hasVideo)
-            Menu("Export GIF") {
-                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                    Button(quality.label) {
-                        if let video { coordinator.saveRecording(video, as: .gif, quality: quality) }
+            // One way out, not three. The format and the size preset are
+            // chosen ON the sheet, where you can see what they cost, rather
+            // than in a submenu you had to get right before the save box
+            // appeared (Next, `next-recording-export-sheet`). No key of its
+            // own: File ▸ Export… carries ⇧⌘E for both editors.
+            if Experiments.shared.recordingExportSheetEnabled {
+                Button("Export…") { video?.isExportSheetPresented = true }
+                    .disabled(!hasVideo)
+            } else {
+                Button("Export MP4…") {
+                    if let video { coordinator.saveRecording(video, as: .mp4) }
+                }
+                .disabled(!hasVideo)
+                Menu("Export GIF") {
+                    ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                        Button(quality.label) {
+                            if let video {
+                                coordinator.saveRecording(video, as: .gif, quality: quality)
+                            }
+                        }
                     }
                 }
-            }
-            .disabled(!hasVideo)
-            Menu("Export HEIC") {
-                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                    Button(quality.label) {
-                        if let video { coordinator.saveRecording(video, as: .heic, quality: quality) }
+                .disabled(!hasVideo)
+                Menu("Export HEIC") {
+                    ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                        Button(quality.label) {
+                            if let video {
+                                coordinator.saveRecording(video, as: .heic, quality: quality)
+                            }
+                        }
                     }
                 }
+                .disabled(!hasVideo)
             }
-            .disabled(!hasVideo)
         }
 
         // Cut/copy/paste/select-all target layers — except while an inline text

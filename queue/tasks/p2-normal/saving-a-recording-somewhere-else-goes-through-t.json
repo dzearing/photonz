@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T15:44:22.291Z",
-  "updated": "2026-09-19T16:28:42.065Z",
+  "updated": "2026-09-19T19:52:38.593Z",
   "deps": [
     "trim-a-recording-save-it-send-it-the-whole-flow"
   ],
@@ -40,6 +40,34 @@
     {
       "t": "2026-09-19T16:28:42.064Z",
       "note": "Noticed while fixing the trim/save flow on 2026-09-19: ⇧⌘S on a recording is the only route to a copy, and it goes straight to a bare NSSavePanel with the format already decided. Worth knowing for this task: the action behind that menu item and its dimming used to disagree about which editor they were talking about (the action preferred the image editor unconditionally), which is now fixed in EditorCommands, so whatever replaces the panel can trust that Save As is talking about the recording in front of you."
+    },
+    {
+      "t": "2026-09-19T19:31:39.617Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-19T19:33:39.302Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) Walking it as a first-timer: record, trim, hit ⇧⌘S to send it to somebody. Today that is a bare save box with MP4 already decided. The picture flow is Export sheet then save box, two dialogs, and nobody complains about that, so putting a sheet in front of the recording's save box costs a keystroke and buys the format choice and the size. Consistent, so build it. (2) What the picture sheet assumes that video cannot deliver: the weigher. ExportSizer really encodes the picture, a few hundred ms. There is no honest equivalent for a GIF or a HEIC, because weighing one IS encoding the whole recording, minutes for a long clip. So the sheet must degrade honestly rather than show a formula. Decision taken: MP4 unedited is EXACT (it is a verbatim file copy, so it is the source file's own byte count); MP4 edited is ABOUT, from the source file's own bytes-per-second times the kept seconds times the pixel-area ratio when cropped, both measured ratios rather than invented constants, and the word 'about' is on the line; GIF and HEIC say what they do know (output pixels, frame rate, kept length) and say plainly that the size is not known until it is written. That is acceptance item 4 read literally. (3) Cut as decorative: no scale row (1x/2x means nothing for a recording), no Include the background row, no Where it is going row. Three rows only: Format, Quality for the two formats that have one, and the size line where the picture sheet's size line sits. (4) Shortest version with the same value: the sheet only CHOOSES. Export… still hands off to the existing NSSavePanel and the existing exporter, so no export engine is touched and the fast path stays the fast path. (5) Collision found: File ▸ Export… (⇧⌘E) is dimmed whenever there is no image document, so today a recording window has no Export command at all and the three Export items live in the Video menu instead. With the flag on, ⇧⌘E opens the recording sheet in a video window, the Video menu's three Export items collapse to one Export…, and Save As on a recording opens the same sheet. That is acceptance items 1 and 2. (6) MP4 quality stays out, exactly as the task says: no new knobs, and the sheet shows no Quality row for MP4 the same way it shows no slider for PNG."
+    },
+    {
+      "t": "2026-09-19T19:52:11.775Z",
+      "note": "owns these walks: recording-export-sheet-walk"
+    },
+    {
+      "t": "2026-09-19T19:52:22.934Z",
+      "note": "BUILT AND VERIFIED. Core: Sources/PhotonzCore/RecordingExport.swift decides what the sheet may say (21 tests, Tests/PhotonzCoreTests/RecordingExportTests.swift, written before the code). Sheet: Sources/Photonz/RecordingExportDialog.swift; its rows and metrics come from the new Sources/Photonz/ExportSheetRow.swift, which ExportDialog now uses too, so the picture sheet renders identically and the two cannot drift. Wiring in EditorCommands: Save As on a recording, File ▸ Export… (⇧⌘E now alive in a video window) and a single Video ▸ Export… replacing the three Export items, all flag gated on next-recording-export-sheet. AppCoordinator.saveRecording split into the save box plus writeRecording(_:as:quality:to:), which is the part a walk can call. ACCEPTANCE, item by item. 1 and 2: the sheet opens with MP4, GIF and HEIC in one segmented row, photographed for each. 3: the size preset is a Quality row beside the format, gone entirely for MP4 exactly as the slider is gone for PNG. 4: an untouched MP4 is a verbatim copy so its size is EXACT (the sheet read 'MP4 Video · 130 KB' and the file that landed was 130 KB); a trimmed or cropped one says 'about', from the recording's own bytes per second times the pixel share, both measured (the sheet said 'about 16 KB' and 16531 bytes landed); GIF and HEIC say 'size not known until it is written' rather than a guess, while everything else about them is live — pressing Small moved the line from 800 × 500 · 15 fps to 480 × 300 · 10 fps. 5: Cancel after trying three formats and a preset left the recording at 8s, the file on disk at 8s and no preserved original, because nothing was committed. 6: writeRecording opens the file that landed — 'recording-export-trimmed.mp4 is 16 KB, it runs 4.0s at 640 × 400 px, re-encoded', against a 1280 × 800 8s recording, so trim and crop both reached the disk rather than being taken on the app's word. 7: 'recording-export-whole.mp4 runs 8.0s at 1280 × 800 px, byte for byte the recording itself, so nothing was re-encoded'. 8: png-export-size, png-export-background, export-quality, export-webp, svg-export and the four other svg export walks all still pass. 10: Scripts/playtest/recording-export-sheet-walk.json, 55 steps, ok in 12s, five real screen captures. 11: queue/audits/2026-09-19-recording-export-sheet.json with four captures beside it. Scripts/test.sh green."
+    },
+    {
+      "t": "2026-09-19T19:52:29.509Z",
+      "note": "REVIEW OF THE BUILT THING, and what is left rough. Ran it as a person would, on the probe, with the sheet photographed at every format. What is good: the sheet is three short rows and two lines, it reads as the picture sheet, and the preset finally SHOWS what it does — in the submenu you picked High or Small blind, and here the line under it answers 800 × 500 · 15 fps or 480 × 300 · 10 fps before you commit. What is left rough, each with where it went. (a) There is still no way to make an MP4 smaller: the sheet can say 200 MB and offer nothing to do about it. The task put that deliberately out of scope and said it needs a decision card rather than a runner's guess, and I agree — the sheet delivers real value without it, so I did not open a card on my own initiative. It is the first item of the audit's rough list, where the user's reaction becomes the task. NOT filed. (b) The sheet is headed Export even when you reached it through Save As. Deliberate: for a recording, saving a copy somewhere else IS the export and there is only one sheet. A wording choice worth disagreeing with, so it is in the audit rather than in a task. (c) The estimate is measured off the recording itself, which on the synthetic eight second sample was within three percent; a busy screen recording may drift further, which is what the word 'about' is carrying. In the audit for the user to judge. (d) LEFT ROUGH, no task: the keyboard and menu routes in (⇧⌘S, File ▸ Export…, Video ▸ Export…) were wired and read but never PRESSED, because the Mac's screen was locked for this whole run and macOS freezes a background app's menu bar under a lock — save-is-live-after-a-trim-walk failed on exactly that in the same session, and the standing p1 confirm-file-save-is-live-on-a-trimmed-recording already covers 'somebody has to press this on an unlocked screen'. Everything on the sheet itself, and every file it writes, was driven and read back for real. It is try step 2 of the audit and the last line of its rough list. (e) LEFT ROUGH, no task: three export walks and one trim walk failed in this session and all four fail on step kinds a lock is known to stop — panelMenu in icon-export-animated-walk, a tutorial waitFor in tutorial-export-a-spec-list-walk and tutorial-save-export-copy-walk, and a window-scoped ⌘S in save-is-live-after-a-trim-walk. Artifacts of forcing the walks, not findings, and none of them touches this code path."
+    },
+    {
+      "t": "2026-09-19T19:52:38.592Z",
+      "note": "One behaviour change worth knowing, outside the sheet. The fast path used to copy the file with try? and no reporting, so a copy that failed (no room, no permission on the folder) did nothing at all and said nothing. It now runs through the same Task as the re-encode, so a failure reaches reportExportFailure and the person is told. The cost is that isExportingRecording flickers true for the length of a file copy, which is what the progress affordance is for anyway."
     }
+  ],
+  "started": "2026-09-19T19:31:39.616Z",
+  "walks": [
+    "recording-export-sheet-walk"
   ]
 }

@@ -174,6 +174,8 @@ public enum FeatureCatalog {
 
     public static let cutRecordingFlag = "next-cut-a-recording"
 
+    public static let recordingExportSheetFlag = "next-recording-export-sheet"
+
     public static let lineEndsFlag = "next-line-ends"
 
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
@@ -595,6 +597,16 @@ public enum FeatureCatalog {
                     name: animatedSVGExportFlag,
                     title: "An animated icon leaves the app as an animated SVG",
                     description: "Export asks where the file is going before it asks for a format, because that is the question that decides whether the animation survives the trip and it is the one most people can answer. Four destinations: a web page, a README on a code host, a design tool and an app bundle. A web page gets an animated SVG, and the motion, the repeat, the curve and the colours are written into the file itself as text, so the icon keeps swinging in an image tag, stays sharp at every size and is small enough to read. The other three cannot run it: a code host cleans what it is given and gets a picture instead, and a design tool and an app take the shapes and draw their own motion. The sheet says which of those it is, and lists what makes the trip and what does not, including the one thing nothing carries: an icon in a page receives no clicks, so whatever it reacts to is the page's job. The format picker sits right where it always did and the destination simply moves it, so nothing is taken away from somebody who knows what they want. Needs SVG export and the Motion list, and a drawing with nothing moving in it exports exactly the file it did before. Off means Export never asks about the destination and an SVG is always a still one.",
+                    area: .export,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: recordingExportSheetFlag,
+                    title: "A recording leaves through the same Export sheet as everything else",
+                    description: "Saving a copy of a recording goes through the same Export sheet every picture in the app already goes through, instead of a bare system save box with the format already decided for you. Shift Command S on a recording, or Export in the Video menu, opens the sheet: MP4, GIF and HEIC sit side by side in one row rather than being three separate menu items you had to choose between before the save box appeared, and the size and frame rate preset that GIF and HEIC have moved out of a submenu and onto the sheet beside the format, where you can see what it does. Under the format the sheet says how big the picture will be, how fast it runs, and how much of the recording is in it, so a trim is legible right where the file is about to be written. Under that it says what the file will weigh. An untouched recording saved as video is copied rather than re-encoded, so that number is exact; a trimmed or cropped one is worked out from what this very recording already costs per second and per pixel, and the line says about, because it is an estimate and not a promise. A GIF or a HEIC is written frame by frame into a different kind of file, and nothing about the recording predicts its size, so rather than invent a number the sheet says the size comes with the file. Cancel writes nothing. Off means Save As on a recording opens the save box straight away as it always did, and the three Export items stay in the Video menu.",
                     area: .export,
                     isEnabled: false,
                     parameters: []),

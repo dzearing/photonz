@@ -1,0 +1,126 @@
+{
+  "out": "/tmp/photonz-playtest/recording-export-sheet-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8 },
+
+    { "do": "action", "action": "videoExportSheet" },
+    { "do": "wait", "seconds": 1.0 },
+    {
+      "do": "describe",
+      "stage": "1-the-sheet-at-all",
+      "note": "THE TEST: a recording now leaves the app through the same Export sheet a picture does, instead of a bare system save box with the format already decided. Format, then what the file will be, then what it will weigh, in the places the picture sheet puts them"
+    },
+    { "do": "snapshot", "name": "recording-export-1-mp4" },
+    { "do": "expect", "control": "What it will be", "present": true },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "1-the-sheet-at-all" },
+
+    { "do": "press", "control": "GIF" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-gif-on-the-same-sheet",
+      "note": "GIF is one press away rather than a different menu item, and picking it grows the Quality row the submenu used to hold. The line under it says what the preset does, live: 800 by 500 at 15 fps"
+    },
+    { "do": "snapshot", "name": "recording-export-2-gif" },
+    { "do": "panel", "stage": "2-gif-on-the-same-sheet" },
+
+    { "do": "press", "control": "Small" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "3-the-preset-does-something-visible",
+      "note": "Small asked for, and the line underneath answers 480 by 300 at 10 fps. That is the whole reason the preset moved out of a submenu: in a submenu you picked it blind"
+    },
+    { "do": "snapshot", "name": "recording-export-3-gif-small" },
+    { "do": "panel", "stage": "3-the-preset-does-something-visible" },
+
+    { "do": "press", "control": "HEIC" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "4-heic-too",
+      "note": "the third format, same sheet, same two lines. All three are now reachable from one place instead of from three menu items"
+    },
+    { "do": "snapshot", "name": "recording-export-4-heic" },
+    { "do": "panel", "stage": "4-heic-too" },
+
+    { "do": "action", "action": "videoExportSheetCancel" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8 },
+    { "do": "expectStoredRecording", "seconds": 8, "original": false },
+    {
+      "do": "describe",
+      "stage": "5-cancel-wrote-nothing",
+      "note": "three formats and a preset tried on, then Cancel. The recording is still eight seconds, the file on disk is still eight seconds, and no original was preserved because nothing was ever committed"
+    },
+
+    {
+      "do": "writeRecording",
+      "name": "recording-export-whole",
+      "format": "mp4",
+      "seconds": 8,
+      "width": 1280,
+      "height": 800,
+      "copied": true
+    },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoCropMiddle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectRecording", "seconds": 4 },
+
+    { "do": "action", "action": "videoExportSheet" },
+    { "do": "wait", "seconds": 1.2 },
+    {
+      "do": "describe",
+      "stage": "6-the-trim-is-legible-on-the-sheet",
+      "note": "the same recording trimmed to its middle four seconds and cropped to the middle of its frame. The sheet says 640 by 400 px, 0:04 of 0:08, so what is about to be written is readable where it is about to be written. The weight says about, because a re-encode is an estimate and not a promise"
+    },
+    { "do": "snapshot", "name": "recording-export-5-trimmed-and-cropped" },
+    { "do": "expect", "control": "What it will be", "present": true },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "panel", "stage": "6-the-trim-is-legible-on-the-sheet" },
+    { "do": "action", "action": "videoExportSheetCancel" },
+    { "do": "wait", "seconds": 0.5 },
+
+    {
+      "do": "writeRecording",
+      "name": "recording-export-trimmed",
+      "format": "mp4",
+      "seconds": 4,
+      "width": 640,
+      "height": 400,
+      "copied": false
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-file-that-lands",
+      "note": "THE OTHER TEST: the file really written, opened and measured. Four seconds not eight, 640 by 400 not 1280 by 800, so the trim and the crop reached the file rather than only the app. It is not a copy of the recording either, which is what proves the re-encode ran"
+    },
+
+    {
+      "do": "writeRecording",
+      "name": "recording-export-trimmed-gif",
+      "format": "gif",
+      "quality": "small",
+      "width": 480,
+      "height": 300
+    },
+    {
+      "do": "describe",
+      "stage": "8-the-gif-too",
+      "note": "the same edits out as an animated GIF at the Small preset. The crop is 640 by 400 and Small caps the long side at 480, so the frames land at 480 by 300: the preset is a cap rather than a size, and the crop is carried into the GIF as well as into the video"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T15:44:12.353Z",
-  "updated": "2026-09-19T19:20:05.417Z",
+  "updated": "2026-09-19T19:20:23.434Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED by picture and confirmed in the code, manager pass 2026-09-19 on HEAD e9d6b163, unlocked screen.\n\nThe picture: queue/manager/shots/2026-09-19-video-three-pieces.png, lifted from Scripts/playtest/trim-with-pieces-walk.json step 1 (Scripts/playtest-all.sh --no-build trim, 8 passed). Three pieces. The first two are solid mid grey. The third, which is the picked one, is a dark empty box with a thin accent outline, and it reads as a hole in the strip rather than as a highlight.\n\nThe code, Sources/Photonz/CutStrip.swift block(isSelected:playedFraction:) around lines 86 to 98. Each block is three layers: a base fill of .primary.opacity(isSelected ? 0.3 : 0.18), then a played overlay across playedFraction of the width which is accent at 0.75 when picked and .primary.opacity(0.55) when not, then a 1.5 point accent strokeBorder only when picked. In a dark window .primary is white, so the numbers come out:\n  picked, not yet played   = white 0.30 + a 1.5pt outline\n  not picked, played       = white 0.55\nThat is the whole bug in two numbers. Being picked is worth +0.12 of fill and a hairline; having been played is worth +0.37. The 2026-09-17-video-cutting-trim-pick audit predicted this in its rough list, in its own words, and could not check it because the Mac was locked: \"The colour choice is the thing to look at first and the thing least possible to check... It may be too quiet there.\" It is quieter than that audit thought, because the comparison is not against an unplayed neighbour, it is against a played one.\n\nWhy it matters rather than being a nit: CutStrip's own doc comment says \"there is no separate clip selection either: the piece under the playhead is the piece you are holding, and Delete drops the one you are looking at\". The only thing on screen saying which piece Delete takes is this drawing, and the user's reported flow is cut, pick, delete, save, send.\n\nOne related thing from the same audit, NOT a separate task, worth keeping in mind while choosing the drawing: dragging a trim handle moves the playhead, and the playhead is what picks a piece, so a handle drag silently changes which piece Delete would take. The model is right; it just means the pick needs to be legible while a handle is moving.\n\nThis surface is retired eventually by a-document-can-have-time, which replaces the strip with a real timeline. Do it anyway: that is days of work away, the user is cutting recordings today, and the lesson (progress must not outshout selection) is one the new timeline lanes inherit.",
@@ -63,10 +63,15 @@
     {
       "t": "2026-09-19T19:20:05.416Z",
       "note": "left rough, none of it clearing the follow-up bar: (1) brightness and colour now say two different things on the strip and nothing on screen says so, so the pale end of the picked block could be misread as a second kind of selection; (2) the white hairline over a fully watched picked block is the thinnest contrast margin in the drawing, same shape of risk as the accent outline it replaced; (3) a pick is still marked one way on the strip and another under the trim handles, now deliberate and explained but still two marks for one idea; (4) the video controller fades 2.4s after the last thing that woke it and a scrub does not wake it, so a walk that seeks and then photographs gets a window with no controller in it. That is harness friction rather than a user-facing bug, because a person scrubbing has the pointer in the reveal band which pins it. The recipe that works is videoPlay then videoPause (the isPlaying change calls reveal()) then the seek, then the snapshot, all inside the 2.4s; picked-piece-reads-first-walk does that before every shot."
+    },
+    {
+      "t": "2026-09-19T19:20:23.432Z",
+      "note": "The picked piece now reads first on the cut strip. Progress keeps brightness alone and gets quieter (neutral 0.12 base, 0.23 watched); the pick takes the accent colour, 22pt against 18pt, and a white hairline. Numbers and the never-quieter rule live in PhotonzCore/CutStripBlockStyle.swift with 6 tests; CutStrip.swift just draws them. Verified on real window captures in dark and light, before and after: picked went from luminance 57 vs 152 to 109 vs 107. Scripts/test.sh green (8342 tests), cut walks 6 passed, trim walks 8 passed, 4 refused for the locked screen. Audit: queue/audits/2026-09-19-picked-piece-reads-first.json. Commit db6436ea, pushed."
     }
   ],
   "started": "2026-09-19T19:01:40.730Z",
   "walks": [
     "picked-piece-reads-first-walk"
-  ]
+  ],
+  "completed": "2026-09-19T19:20:23.433Z"
 }

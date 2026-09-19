@@ -902,6 +902,45 @@ final class VideoEditorState {
         !exportCuts.isWholeClip || (crop?.isCropped(videoSize: naturalSize) ?? false)
     }
 
+    /// Whether the Export sheet is up over this window (Next,
+    /// `next-recording-export-sheet`). The sheet only chooses; the save box and
+    /// the exporter behind it are the ones that always ran.
+    var isExportSheetPresented = false
+
+    #if PHOTONZ_PLAYTEST
+    /// The format a walk asked the Export sheet to open on, so a walk can
+    /// photograph GIF without naming a control. Taken once.
+    var playtestOpensExportOnRecordingFormat: RecordingFormat?
+    /// The size preset a walk asked the Export sheet to open at. Taken once.
+    var playtestOpensExportAtQuality: VideoExportQuality?
+    #endif
+
+    /// Everything the Export sheet needs to say what it is about to write.
+    ///
+    /// Read once when the sheet opens rather than on every pass SwiftUI makes:
+    /// it stats the file on disk, and the recording cannot change while a sheet
+    /// is up over its own window, which is the same thing the picture sheet's
+    /// weigher already assumes.
+    var exportSource: RecordingExport.Source {
+        let cropped = crop?.isCropped(videoSize: naturalSize) == true ? crop?.outputSize : nil
+        return RecordingExport.Source(sourceDuration: originalDuration,
+                                      keptDuration: exportCuts.timelineDuration,
+                                      sourceSize: naturalSize,
+                                      cropSize: cropped,
+                                      fileBytes: editSourceBytes,
+                                      isEdited: hasEdits)
+    }
+
+    /// What the file the export reads from weighs, in bytes, or zero when it
+    /// cannot be read. Zero is what takes the estimate off the sheet rather
+    /// than putting a nought on it.
+    private var editSourceBytes: Int {
+        guard let editSourceURL,
+              let values = try? editSourceURL.resourceValues(forKeys: [.fileSizeKey]),
+              let bytes = values.fileSize else { return 0 }
+        return bytes
+    }
+
     /// The kind of applied edit an undo step reverts, carrying its user-facing
     /// name for the action-specific Undo tooltip.
     private enum EditKind {

@@ -18323,3 +18323,35 @@ carries one extra acceptance item (a layer row draws a bar when it occupies
 time), and `cut-arrange-and-retime` whose acceptance item 1 was corrected — "two
 ordinary layers" after a split means a row per cut and an unusable timeline
 after five of them.
+
+## 2026-09-19 — A recording leaves through the Export sheet
+
+Saving a copy of a recording used to be the one way out of the app that had no
+sheet in front of it: ⇧⌘S built an `NSSavePanel` by hand with MP4 already
+decided, and the two other formats lived behind three separate menu items, two
+of which carried a size preset you picked blind before the box appeared. Nothing
+anywhere said what the file would weigh, on the one kind of file most likely to
+be too big to send.
+
+It now opens the same sheet a picture opens (Next,
+`next-recording-export-sheet`). `RecordingExport` (PhotonzCore, 21 tests) owns
+what the sheet is allowed to SAY: an untouched recording going out as MP4 is a
+verbatim file copy so its size is exact; a trimmed or cropped one is an estimate
+measured off the recording's own bytes-per-second and pixel share, and the line
+says "about"; a GIF or a HEIC cannot be weighed without writing it, so the sheet
+says that in words rather than inventing a number. `RecordingExportDialog` is
+the sheet, and `ExportSheetRow` is now shared with `ExportDialog` so the two
+cannot drift a point apart. `AppCoordinator.saveRecording` split into the save
+box and `writeRecording`, which is the part a walk can call.
+
+`recording-export-sheet-walk` covers it end to end, and the part worth having is
+the new `writeRecording` step: it runs the real exporter and then OPENS the file
+that landed to read its length, its pixel size and its bytes. So the walk proves
+the trim and the crop reached the disk (4.0s at 640 × 400, re-encoded) and that
+an untouched recording is still byte-for-byte copied rather than re-encoded,
+instead of taking the app's word for either. Watched running with the screen
+locked, so it joined `stepsThatSurviveALock`.
+
+Next: the sheet can now tell you a recording weighs 200 MB and still offers
+nothing to do about it. Making an MP4 smaller is a new control and it is in the
+audit's rough list for the user to call.

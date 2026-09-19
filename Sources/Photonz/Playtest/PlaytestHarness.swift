@@ -13,6 +13,7 @@ import AVFoundation
 import AppKit
 import ScreenCaptureKit
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 
 @MainActor
@@ -1363,6 +1364,14 @@ private final class Run {
                  + "(\(ExportQuality.fileSize(bytes: data.count))), weighed in \(took) ms"
                  + ", \(corners)")
 
+        case .writeRecording(let name, let format, let quality, let seconds, let within,
+                             let width, let height, let copied):
+            note(number, step.name,
+                 try await writeRecordingFile(name: name, format: format, quality: quality,
+                                              seconds: seconds, within: within,
+                                              width: width, height: height, copied: copied),
+                 state: describe())
+
         case .exportQuality(let format, let percent):
             guard ExportQuality.applies(toFormat: format) else {
                 throw Failure(description: "\(format) has no quality to set")
@@ -2136,6 +2145,39 @@ private final class Run {
                         ? ", and the window closed" : ""),
                  state: describe())
 
+        // The Export sheet a recording leaves through. Opening it is what a
+        // person does with ⇧⌘S or File ▸ Export…; the format is asked for here
+        // rather than pressed, so a walk can photograph GIF with the screen
+        // locked and so photographing one format never decides what the next
+        // walk opens on.
+        case .action(let action) where action == .videoExportSheet
+            || action == .videoExportSheetAsGIF || action == .videoExportSheetAsHEIC:
+            let video = try requireRecording()
+            guard Experiments.shared.recordingExportSheetEnabled else {
+                throw Failure(description: "the Export sheet for a recording is switched off "
+                    + "(\(FeatureCatalog.recordingExportSheetFlag)), so ⇧⌘S still opens the bare "
+                    + "save box and there is no sheet to open")
+            }
+            let asked: RecordingFormat = switch action {
+            case .videoExportSheetAsGIF: .gif
+            case .videoExportSheetAsHEIC: .heic
+            default: .mp4
+            }
+            video.playtestOpensExportOnRecordingFormat = asked
+            video.isExportSheetPresented = true
+            await sleep(0.6)
+            note(number, step.name, "the Export sheet is up on \(asked.displayName)",
+                 state: describe())
+
+        case .action(let action) where action == .videoExportSheetCancel:
+            let video = try requireRecording()
+            guard video.isExportSheetPresented else {
+                throw Failure(description: "there is no Export sheet up to cancel")
+            }
+            video.isExportSheetPresented = false
+            await sleep(0.4)
+            note(number, step.name, "the Export sheet is closed", state: describe())
+
         case .action(let action) where action == .videoRevertToOriginal:
             let video = try requireRecording()
             guard video.canRevertToOriginal else {
@@ -2170,7 +2212,15 @@ private final class Run {
                 try dragTrimHandle(video, .start, pointsFromCut: 3, freed: true)
             case .videoDragTrimEndNearCut: try dragTrimHandle(video, .end, pointsFromCut: 5)
             case .videoDragTrimRelease: video.endTrimHandleDrag()
+            case .videoCropMiddle:
+                let whole = video.naturalSize
+                video.beginCrop()
+                video.setCropRect(CGRect(x: whole.width / 4, y: whole.height / 4,
+                                         width: whole.width / 2, height: whole.height / 2))
+                video.commitCrop()
             case .videoSave, .videoCloseAndSave, .videoRevertToOriginal: break // handled above
+            case .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
+                 .videoExportSheetCancel: break // handled above
             default: break
             }
             // Cutting re-points the player at a composition of the kept
@@ -2853,6 +2903,8 @@ private final class Run {
                  .videoDragTrimFreedNearCut,
                  .videoDragTrimEndNearCut, .videoDragTrimRelease,
                  .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
+                 .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
+                 .videoExportSheetCancel, .videoCropMiddle,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
             }
@@ -6998,6 +7050,126 @@ private final class Run {
             throw Failure(description: wrong.joined(separator: "; ") + ". \(saying)")
         }
         return saying
+    }
+
+    /// Write the open recording out and then READ BACK what landed.
+    ///
+    /// The save box cannot be driven by a walk, so this hands the exporter the
+    /// same recording, format and preset the sheet's Export… button hands it,
+    /// and then opens the file: how long it runs, how big its picture is, what
+    /// it weighs. A walk that only asked the app whether it had saved would
+    /// never notice a trim that did not reach the file.
+    private func writeRecordingFile(name: String, format: String, quality: String,
+                                    seconds: Double?, within: Double,
+                                    width: Double?, height: Double?,
+                                    copied: Bool?) async throws -> String {
+        let video = try requireRecording()
+        guard let recordingFormat = RecordingFormat(rawValue: format) else {
+            throw Failure(description: "\(format) is not a format a recording is written as: "
+                + RecordingExport.formats.map(\.rawValue).joined(separator: ", "))
+        }
+        guard let preset = VideoExportQuality(rawValue: quality) else {
+            throw Failure(description: "\(quality) is not a size preset: "
+                + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+        }
+        guard let sourceURL = video.editSourceURL else {
+            throw Failure(description: "the recording has no file to read from yet")
+        }
+        let source = video.exportSource
+        let said = RecordingExport.sizeLine(format: recordingFormat, source: source)
+        let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
+        let started = Date()
+        do {
+            try await coordinator.writeRecording(video, as: recordingFormat,
+                                                 quality: preset, to: destination)
+        } catch {
+            throw Failure(description: "writing the recording as \(format) failed: \(error)")
+        }
+        let took = Int(Date().timeIntervalSince(started) * 1000)
+
+        guard let landed = try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              landed > 0 else {
+            throw Failure(description: "nothing usable landed at \(destination.lastPathComponent)")
+        }
+        var facts = ["\(destination.lastPathComponent) is "
+                     + "\(ExportQuality.fileSize(bytes: landed)) (\(landed) bytes), "
+                     + "written in \(took) ms"]
+        var wrong: [String] = []
+
+        // Length and picture size read off the file, not off the app.
+        if recordingFormat == .mp4 {
+            let asset = AVURLAsset(url: destination)
+            let ran = (try? await asset.load(.duration).seconds) ?? 0
+            let size = await VideoExporter.orientedNaturalSize(of: destination)
+            facts.append("it runs \(Self.round2(ran))s at "
+                         + "\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
+            if let seconds, abs(seconds - ran) > within {
+                wrong.append("the file that landed runs \(Self.round2(ran))s, not "
+                    + "\(Self.round2(seconds))s, so the trim did not reach it")
+            }
+            if let width, abs(width - Double(size.width)) > 2 {
+                wrong.append("the file that landed is \(Int(size.width.rounded())) px wide, not "
+                    + "\(Int(width.rounded())), so the crop did not reach it")
+            }
+            if let height, abs(height - Double(size.height)) > 2 {
+                wrong.append("the file that landed is \(Int(size.height.rounded())) px tall, not "
+                    + "\(Int(height.rounded())), so the crop did not reach it")
+            }
+        } else {
+            // An animated picture: how many frames and how big each one is,
+            // read out of the file the same way a viewer would.
+            let (frames, size) = animatedFacts(of: destination)
+            facts.append("it holds \(frames) frame\(frames == 1 ? "" : "s") at "
+                         + "\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
+            if let width, abs(width - Double(size.width)) > 2 {
+                wrong.append("each frame is \(Int(size.width.rounded())) px wide, not "
+                    + "\(Int(width.rounded()))")
+            }
+            if let height, abs(height - Double(size.height)) > 2 {
+                wrong.append("each frame is \(Int(size.height.rounded())) px tall, not "
+                    + "\(Int(height.rounded()))")
+            }
+        }
+
+        // The fast path claim: an untouched recording going out as MP4 is a
+        // file copy, so it must weigh exactly what the recording weighs.
+        if let copied {
+            let sourceBytes = (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            let identical = landed == sourceBytes && sourceBytes > 0
+            facts.append(identical
+                ? "byte for byte the recording itself, so nothing was re-encoded"
+                : "re-encoded: the recording itself is "
+                    + "\(ExportQuality.fileSize(bytes: sourceBytes))")
+            if copied != identical {
+                wrong.append(copied
+                    ? "this was supposed to be the fast path, a verbatim copy, and the file that "
+                        + "landed is \(landed) bytes against the recording's \(sourceBytes): "
+                        + "something is re-encoding a recording nobody edited"
+                    : "this was supposed to be a re-encode and the file that landed is byte for "
+                        + "byte the recording, so the edits were dropped")
+            }
+        }
+
+        // What the sheet promised, beside what arrived, so an estimate that
+        // drifts is visible in the log rather than only in somebody's inbox.
+        facts.append("the sheet said \"\(said)\"")
+
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + ". "
+                + facts.joined(separator: "; "))
+        }
+        return facts.joined(separator: "; ")
+    }
+
+    /// How many frames an animated GIF or HEIC holds and how big they are,
+    /// read straight out of the file.
+    private func animatedFacts(of url: URL) -> (frames: Int, size: CGSize) {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return (0, .zero) }
+        let frames = CGImageSourceGetCount(source)
+        guard let first = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            return (frames, .zero)
+        }
+        return (frames, CGSize(width: first.width, height: first.height))
     }
 
     private func requireRecording() throws -> VideoEditorState {

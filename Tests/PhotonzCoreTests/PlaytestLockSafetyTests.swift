@@ -111,6 +111,19 @@ struct PlaytestLockSafetyTests {
         #expect(!PlaytestLockSafety.stepsALockStops.contains("writePicture"))
     }
 
+    /// Writing a RECORDING to disk is the same kind of thing: it hands the
+    /// exporter the open recording and then opens the file that landed to read
+    /// its length and its pixel size. No name is asked for at any point.
+    /// Watched on 2026-09-19 under a lock: `recording-export-sheet-walk` ran
+    /// all 55 of its steps, three of them `writeRecording`, and each read back
+    /// the right thing — 8.0s at 1280 × 800 byte for byte the recording, then
+    /// 4.0s at 640 × 400 re-encoded, then a 40 frame GIF at 480 × 300.
+    @Test("Writing a recording to disk needs no name, so a lock cannot stop it")
+    func writingARecordingRunsUnderALock() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("writeRecording"))
+        #expect(!PlaytestLockSafety.stepsALockStops.contains("writeRecording"))
+    }
+
     /// `expectRecording` asks the open recording what it is made of — how many
     /// pieces, which one is picked, how long the trim window is, whether the
     /// handles are open. Every one of those is read off the app's own state,

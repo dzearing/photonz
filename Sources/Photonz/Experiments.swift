@@ -427,6 +427,15 @@ extension Experiments {
     /// stored file and there is nothing left to switch off.
     var cutRecordingEnabled: Bool { isEnabled(FeatureCatalog.cutRecordingFlag) }
 
+    /// `next-recording-export-sheet`: whether saving a copy of a recording goes
+    /// through the Export sheet every picture already goes through, rather than
+    /// a bare save box with the format decided by which menu item was picked.
+    /// Off puts the three Export items back in the Video menu and sends Save As
+    /// straight to the save box.
+    var recordingExportSheetEnabled: Bool {
+        isEnabled(FeatureCatalog.recordingExportSheetFlag)
+    }
+
     /// `next-motion-strip`: whether the timing strip runs across the bottom of
     /// the window. It NEEDS the Motion list, because with no way to tell a
     /// layer to move there is never anything to draw a bar for: a strip that

@@ -227,6 +227,18 @@ public enum VideoExportQuality: String, CaseIterable, Sendable, Codable {
         case .small: return "Small (10 fps, ≤480px)"
         }
     }
+
+    /// The name on a segmented row, where there is no room for the numbers and
+    /// no need for them: the Export sheet writes the frame rate and the pixel
+    /// size on the line underneath, live, so the preset says what it does by
+    /// doing it.
+    public var shortLabel: String {
+        switch self {
+        case .high: return "High"
+        case .standard: return "Standard"
+        case .small: return "Small"
+        }
+    }
 }
 
 public enum AnimatedExportPlanner {

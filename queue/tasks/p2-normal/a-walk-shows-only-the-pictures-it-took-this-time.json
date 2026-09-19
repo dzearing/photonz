@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T09:54:49.376Z",
-  "updated": "2026-09-19T15:35:09.472Z",
+  "updated": "2026-09-19T19:31:26.317Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-18 02:49 while building the crash reporting in a-walk-whose-app-died-says-the-app-died.\n\nThe probe was built with the layer-rename fix reverted (git checkout 6bfe4969^ -- Sources/Photonz/EditorState.swift Sources/PhotonzCore/History.swift), so unique-layer-names-walk aborts at step 17 (renameSelectedLayer). Its last log line is step 16:\n\n  [16 wait] 0.5s asked, quiet after 0.10s\n\nand the run photographed exactly one thing, step 13:\n\n  [0 capture] names-1-four-shapes-sc.png 2800x2056\n\nyet the folder it printed at the end held six pictures:\n\n  ==> Output: /tmp/photonz-playtest/unique-layer-names\n  log.json\n  names-1-four-shapes-sc.png\n  names-1-four-shapes.png\n  names-2-after-rename-sc.png\n  names-2-after-rename.png\n  names-3-after-paste-sc.png\n  names-3-after-paste.png\n\nnames-2 and names-3 are from an earlier passing run: those steps never ran. Scripts/playtest.sh only does `rm -f \"$OUT/done.json\"` before launching (line 51), so everything else from the last run survives.\n\nWhy it matters beyond tidiness: an audit is required to ship a real -sc.png from a walk, and the runner writing that audit picks the file out of this folder. A crashed or cut-short run hands it a picture of an app that was working, taken minutes or days earlier, with nothing to say so. Clearing the folder (or writing each run into its own subfolder) is the fix; if renders are cleared, keep in mind a walk that fails at step 2 should still leave the one picture it took.",
@@ -38,7 +38,33 @@
     {
       "t": "2026-09-19T15:35:09.471Z",
       "note": "seq 30 -> 10"
+    },
+    {
+      "t": "2026-09-19T19:20:37.016Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-19T19:31:09.294Z",
+      "note": "Reproduced on the pre-fix probe: planted 9-from-an-older-run-sc.png in /tmp/photonz-playtest/toolbar-row-narrow, re-ran toolbar-row-narrow-walk --no-build, and the planted picture was still in the folder's listing at the end."
+    },
+    {
+      "t": "2026-09-19T19:31:09.343Z",
+      "note": "Fix: a run empties its output folder before it writes anything (PlaytestHarness.prepareOutput). How much of the folder it may claim is PlaytestOutputFolder in PhotonzCore, unit tested (10 tests): its own folder under /tmp/photonz-playtest goes whole minus hidden files; a folder anywhere else is assumed shared (a walk could point out at the folder holding the other 530 walk scripts) so only log.json, done.json and the three menu-shot notes go, and the run says in its log that other pictures there may be old. The clearing is said in the log's first line."
+    },
+    {
+      "t": "2026-09-19T19:31:09.391Z",
+      "note": "Verified all three acceptance items: a walk stopping at step 4 left only 1-took-this-one{,-sc}.png plus log/done and neither planted picture; a completed toolbar-row-narrow-walk left exactly its two pictures, their offscreen twins, two panel readings, log.json and done.json; two runs back to back listed identical file sets. Scripts/test.sh: 8352 tests in 669 suites, all passing. Scripts/playtest-all.sh --no-build narrow: 6 passed, 0 failed, 2 could not run (screen locked, pre-existing)."
+    },
+    {
+      "t": "2026-09-19T19:31:12.083Z",
+      "note": "left rough: a walk refused because the screen is locked clears its folder before it discovers it cannot run, so a Mac that stays locked gradually empties the folders of every name-dependent walk. Deliberate (a refusal took no pictures, so leaving an older run's under a fresh done.json is the confusion this fixes) and in the audit's rough list; not filed."
+    },
+    {
+      "t": "2026-09-19T19:31:26.315Z",
+      "note": "A run empties its output folder before it writes anything, so a folder holds only that run's pictures. Rule in PlaytestOutputFolder (PhotonzCore, 10 unit tests), applied in PlaytestHarness.prepareOutput and said in the log's first line; Scripts/playtest.sh also clears a stale log.json for the case where the app dies before the harness starts. Reproduced on the pre-fix probe, then verified: a walk failing at step 4 left only the picture it reached, a completed walk left exactly its own files, two runs in a row left identical sets. Scripts/test.sh green (8352 tests); playtest-all --no-build narrow 6 passed / 0 failed / 2 refused by the lock. Audit: queue/audits/2026-09-19-a-walk-shows-only-its-own-pictures.json. Full sweep requested. Commit c16eba7f."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-19T19:20:37.015Z",
+  "completed": "2026-09-19T19:31:26.316Z"
 }

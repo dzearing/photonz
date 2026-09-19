@@ -391,47 +391,55 @@ final class AppCoordinator {
         // Read from the edit source (the preserved original once one exists) so
         // the window's edits apply to full-length media rather than stacking on
         // an already-committed trim; name the file after the recording.
-        guard let recordingURL = state.url, let sourceURL = state.editSourceURL else { return }
+        guard let recordingURL = state.url, state.editSourceURL != nil else { return }
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.savePanelType]
-        panel.nameFieldStringValue = recordingURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
+        // The recording's own name wearing the chosen format's extension, so
+        // picking GIF on the sheet does not open the box on a .mp4 name.
+        panel.nameFieldStringValue = RecordingExport.suggestedFileName(
+            recording: recordingURL.lastPathComponent, format: format)
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
+        isExportingRecording = true
+        Task {
+            do {
+                try await writeRecording(state, as: format, quality: quality, to: url)
+            } catch {
+                reportExportFailure(error)
+            }
+            isExportingRecording = false
+        }
+    }
+
+    /// Write the recording open in `state` to `url`, honoring its trim, its
+    /// cuts and its crop. No panel and no reporting: this is the part both the
+    /// save box and a scripted walk need, so a walk can check the file that
+    /// actually lands rather than trusting what the app says it wrote.
+    ///
+    /// An untouched recording going out as MP4 is copied verbatim — no
+    /// re-encode, so it is instant and byte-identical. Everything else is a
+    /// real re-encode.
+    func writeRecording(_ state: VideoEditorState, as format: RecordingFormat,
+                        quality: VideoExportQuality, to url: URL) async throws {
+        guard let sourceURL = state.editSourceURL else { throw CocoaError(.fileNoSuchFile) }
         let cuts = state.exportCuts
         let crop = state.crop
-        let edited = state.hasEdits
+        let source = state.exportSource
 
+        if RecordingExport.copiesVerbatim(format: format, source: source) {
+            try? FileManager.default.removeItem(at: url)
+            try FileManager.default.copyItem(at: sourceURL, to: url)
+            return
+        }
         if format == .mp4 {
-            if !edited {
-                // Fast path: no trim/crop → verbatim copy, no re-encode.
-                try? FileManager.default.removeItem(at: url)
-                try? FileManager.default.copyItem(at: sourceURL, to: url)
-                return
-            }
-            isExportingRecording = true
-            Task {
-                do {
-                    try await VideoExporter.exportMP4(from: sourceURL, to: url, cuts: cuts, crop: crop)
-                } catch {
-                    reportExportFailure(error)
-                }
-                isExportingRecording = false
-            }
+            try await VideoExporter.exportMP4(from: sourceURL, to: url, cuts: cuts, crop: crop)
         } else {
-            isExportingRecording = true
-            Task {
-                do {
-                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
-                                                           crop: crop, cuts: cuts,
-                                                           targetFPS: quality.targetFPS,
-                                                           maxDimension: quality.maxDimension)
-                } catch {
-                    reportExportFailure(error)
-                }
-                isExportingRecording = false
-            }
+            try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
+                                                   crop: crop, cuts: cuts,
+                                                   targetFPS: quality.targetFPS,
+                                                   maxDimension: quality.maxDimension)
         }
     }
 

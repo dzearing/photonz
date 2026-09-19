@@ -91,7 +91,7 @@ public enum PlaytestLockSafety {
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         "snapshot",
-        "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeSVG",
+        "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.
