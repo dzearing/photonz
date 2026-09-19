@@ -1,0 +1,25 @@
+{
+  "feature": "File Save on a trimmed recording",
+  "epic": "video-cutting",
+  "summary": "The bug reported on 2026-09-18 is gone, and this is the first time anyone has looked at the actual File menu on an unlocked screen to say so: with a recording trimmed from eight seconds to four, Save and Save As read normal rather than greyed out, Command S reaches Save and runs it, and the file on disk comes back four seconds long with the untouched original kept beside it.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Trim a recording brings its own eight second clip, or open any recording from capture history.",
+  "try": [
+    { "do": "Open a recording and drag the trim handles in so it is shorter, then press Done." },
+    { "do": "Open the File menu and look at Save: it should read normal, not greyed out." },
+    { "do": "Press Command S." },
+    { "do": "Watch the controller: the timeline should still read 0:00.00 to the trimmed length.", "shot": "2026-09-19-save-is-live-after-a-trim-sc.png" },
+    { "do": "Open capture history, right click the recording, choose Show in Finder, and check its duration there." },
+    { "do": "Open the File menu again: Save should still be there and Save to Capture History still greyed out." }
+  ],
+  "evaluate": [
+    "On a clip a few minutes long the save takes real seconds. Between pressing Command S and it finishing, is there enough on screen to tell you it is working?",
+    "The File menu now keeps Save live even when there is nothing left to save. Does that read as normal to you, or as the menu lying?",
+    "Save to Capture History stays greyed out on a recording because it only takes pictures. Is that obvious from the menu, or does it just look broken?",
+    "Export is now live on a recording, alongside Save. Do those two read as clearly different things from the menu alone?"
+  ],
+  "rough": [
+    "There is still nothing that says a save succeeded, which is the same rough edge the 2026-09-19 trim-save audit raised. This confirmation did not change it.",
+    "The walk that proves all of this cannot run while the Mac is locked, because it reads the real menu bar and a locked Mac leaves every window command greyed out whatever the app thinks. So this answer needs somebody logged in, and it is not something a sweep can produce overnight.",
+    "The screen was unlocked for the menu read and the save, and locked again before the walk could be run green end to end in one go. The two halves were each seen on an unlocked screen, a few minutes apart."
+  ]
+}

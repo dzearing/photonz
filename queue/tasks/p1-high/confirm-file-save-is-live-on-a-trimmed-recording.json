@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 320,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T16:29:22.875Z",
-  "updated": "2026-09-19T18:55:13.023Z",
+  "updated": "2026-09-19T21:24:57.117Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The walk is deliberately refused under a lock: it carries a menus step, which is what makes the harness refuse it, and its own describe step says why. Do not force it with PHOTONZ_ALLOW_LOCKED_WALK=1 and read the result as an answer, because a forced run under a lock reads every window command as dimmed and would fail for reasons that have nothing to do with the app.\n\nBackground for whoever picks this up: the whole live-menu trick is the Capture History overlay. The probe is launched with open -g so the app is never the front app, and SwiftUI then freezes the menu bar at its launch state. Pressing shift-command-H opens the history overlay, which takes key, and once any window of the app is key the focused values fill in and the bar reads the real document. That is what the walk does before it reads the menu.\n\nMeasured live BEFORE the fix, on an unlocked screen at about 08:55 on 2026-09-19: File read Save and Save As undimmed on a trimmed recording, with Save to Capture History and Export dimmed. So the mechanism worked then; this is confirming the replacement did not break it. EditorCommands.focusedSave keeps a fallback to the old state objects for exactly that reason.",
@@ -58,11 +58,47 @@
     {
       "t": "2026-09-19T18:55:13.022Z",
       "note": "Could not confirm: the screen is locked. The walk was refused at its menus step and a single forced run proved the lock is the reason (nothing takes key, the menu bar stays frozen), so there is no answer to be had tonight. Steps 1 to 11 did run and the trim itself is green. Held out of the queue until somebody logs in, and it returns by itself then."
+    },
+    {
+      "t": "2026-09-19T21:09:29.331Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-19T21:24:45.524Z",
+      "note": "ANSWERED, on an unlocked screen. Ran 'Scripts/playtest.sh Scripts/playtest/save-is-live-after-a-trim-walk.json' unforced with the Grants line reading 'screen unlocked'. Step 14 (menus) read the LIVE File menu: Save ⌘S and Save As… ⇧⌘S both undimmed, Save to Capture History ⌥⌘S dimmed, Close ⌘W dimmed, with Capture History holding key exactly as the task notes predicted. Step 16: 'command+s reached File ▸ Save and it ran'. So the 2026-09-18 report is fixed and the user is not stuck."
+    },
+    {
+      "t": "2026-09-19T21:24:52.627Z",
+      "note": "Acceptance item 2, one deviation and it is correct: Export… reads UNDIMMED, not dimmed as the acceptance says. That wording predates commit 60c74070 'A recording leaves through the same Export sheet as everything else' which landed at 12:55 today and deliberately gives a recording the Export sheet. Save to Capture History is still dimmed, which is the image-only row the item was really about. recording-export-sheet-walk is green, so this is the intended new behaviour and not a regression."
+    },
+    {
+      "t": "2026-09-19T21:24:52.676Z",
+      "note": "The walk still went red, at step 18, and the app was not the reason: 'the stored recording is 8.00s long, not 4.00s'. Reproduced the cause rather than guessing. A commit re-encodes off the main thread; ⌘S through the menu hands that work over and returns; a 'wait' step ends the moment the app goes quiet and an encode keeps the app quiet. Log timestamps: ⌘S at t=4.589, the check at t=4.689, so the file was read 0.10s after the press. Ran the identical walk with three more waits and a snapshot after the press (/tmp/pz-diag/save-timing.json): at t=5.411, 0.83s after the same ⌘S, 'Tutorial Sample.mp4 on disk is 4.00s long, with the untouched original preserved beside it', walk ok. So the save works through the menu; the walk was racing it."
+    },
+    {
+      "t": "2026-09-19T21:24:52.723Z",
+      "note": "Fixed in a00e69bf: expectStoredRecording re-reads the file until it agrees with the claim or 20s run out, fresh AVURLAsset each pass so it can see the file change. A claim already true ('still 8s, nothing committed') is answered on the first read and costs nothing, so trim-save-send-walk takes the same ~10s it did before. The videoSave action path was never affected because it already waits on its own completion, which is why every walk saving through it passed while the one walk saving the way a PERSON does could not. Verified: trim-save-send-walk ok 9s, close-a-trimmed-recording-walk ok 6s, recording-export-sheet-walk ok 12s, Scripts/test.sh 8374 tests in 670 suites pass."
+    },
+    {
+      "t": "2026-09-19T21:24:52.770Z",
+      "note": "What is NOT confirmed: one green end-to-end run of the named walk. The Mac re-locked between the diagnosis and the fix (verified with ioreg CGSSessionScreenIsLocked, and the walk was refused again at step 14), and a bounded 7 minute poll for it to come back found it still locked. Both halves of acceptance item 1 were each seen on an unlocked screen a few minutes apart rather than in one run. No new task filed for the re-run: a full sweep is already pending and runs this walk the moment somebody logs in, and walks-that-fail-in-the-full-sweep owns whatever it reports. Audit at queue/audits/2026-09-19-save-is-live-after-a-trim.json with a real window capture taken unlocked."
+    },
+    {
+      "t": "2026-09-19T21:24:52.864Z",
+      "note": "left rough: nothing still says a save SUCCEEDED, which the 2026-09-19 trim-save audit already raised in its own rough list and this run did not change. Not filed separately: it is already in that audit for the user to react to."
+    },
+    {
+      "t": "2026-09-19T21:24:54.471Z",
+      "note": "no longer needs somebody at the Mac; claimable whether or not the screen is locked"
+    },
+    {
+      "t": "2026-09-19T21:24:57.115Z",
+      "note": "Confirmed on an unlocked screen: File Save is NOT greyed out after a trim. The live menu dump reads Save ⌘S and Save As… ⇧⌘S undimmed and Save to Capture History ⌥⌘S dimmed, ⌘S reached File ▸ Save and ran it, and the recording came back 4.00s on disk with the untouched original preserved. The 2026-09-18 report is fixed. The walk was also failing for a reason that was not the app (it read the file 0.10s after ⌘S, racing an off-main-thread re-encode); fixed in a00e69bf so expectStoredRecording waits for the file to agree. trim-save-send, close-a-trimmed-recording and recording-export-sheet walks green, Scripts/test.sh 8374 tests pass. Audit: queue/audits/2026-09-19-save-is-live-after-a-trim.json."
     }
   ],
   "walks": [
     "save-is-live-after-a-trim-walk"
   ],
-  "started": "2026-09-19T18:44:16.861Z",
-  "waitsForUnlockedScreen": true
+  "started": "2026-09-19T21:09:29.330Z",
+  "completed": "2026-09-19T21:24:57.116Z"
 }
