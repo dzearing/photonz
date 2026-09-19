@@ -313,9 +313,32 @@ private final class Run {
 
     // MARK: - Output
 
+    /// Empties the folder this run writes into, BEFORE it writes anything.
+    ///
+    /// Everything left here is read afterwards as this run's: an audit ships a
+    /// real `<name>-sc.png` picked out of this folder by name. A run used to
+    /// delete only `done.json`, so a walk that stopped at step 17 sat among the
+    /// pictures of a healthier run days earlier with nothing to tell them
+    /// apart, and the picture an audit shipped could be of an app that worked.
+    ///
+    /// How much of the folder this run may claim is decided in
+    /// `PlaytestOutputFolder`, where it is unit tested: its own folder under
+    /// the scratch root goes whole, a folder shared with anything else loses
+    /// only the files a run writes under a fixed name.
     private func prepareOutput() {
-        try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
-        try? FileManager.default.removeItem(at: out.appendingPathComponent("done.json"))
+        let fm = FileManager.default
+        try? fm.createDirectory(at: out, withIntermediateDirectories: true)
+        let entries = (try? fm.contentsOfDirectory(atPath: out.path)) ?? []
+        let leftovers = PlaytestOutputFolder.leftovers(in: out, named: entries)
+        for name in leftovers {
+            try? fm.removeItem(at: out.appendingPathComponent(name))
+        }
+        // Said in the log's FIRST line, before the script is even parsed, so a
+        // walk too broken to run still says on the record that what is in its
+        // folder is its own.
+        if let said = PlaytestOutputFolder.clearedSaid(count: leftovers.count, in: out) {
+            note(0, "output", said)
+        }
     }
 
     /// Appends a log line and rewrites `log.json`, so a run that dies mid-way
@@ -8356,10 +8379,13 @@ private final class Run {
     /// point — with any older picture of the same step deleted.
     ///
     /// An audit ships `<name>-sc.png` by file name, copied out of the walk's
-    /// output folder, and a walk overwrites rather than empties that folder. So
-    /// a run whose capture failed used to leave yesterday's photograph sitting
-    /// under today's name, ready to be copied into an audit as if it were this
-    /// build. Stale evidence is worse than none.
+    /// output folder, so a picture under a name nothing took this time is the
+    /// one thing that must never be left lying there. Since 2026-09-19 a run
+    /// empties its folder before it starts (`prepareOutput`), which covers the
+    /// old way this happened — yesterday's photograph under today's name; this
+    /// still covers the one inside a single run, where an earlier step
+    /// photographed the same name successfully and a later one could not.
+    /// Stale evidence is worse than none.
     private func captureFailed(_ name: String, _ reason: String) {
         captures.refused(name)
         let stale = out.appendingPathComponent("\(name)-sc.png")

@@ -1,0 +1,50 @@
+{
+  "feature": "A walk shows only the pictures it took this time",
+  "epic": "unmanned-loop",
+  "summary": "A scripted run now empties its output folder before it starts, so every picture sitting in that folder is one this run took. A walk that stopped part way used to leave the photographs of a healthier run days earlier beside its own, and an audit picks the picture it ships out of that folder by file name.",
+  "setup": "A terminal in the repo. Nothing to install and nothing in the app to turn on; every command below drives the probe bundle and never touches the dev app.",
+  "try": [
+    {
+      "do": "Run: Scripts/playtest.sh Scripts/playtest/toolbar-row-narrow-walk.json --no-build",
+      "shot": "2026-09-19-walk-folder-clearing-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it.",
+      "note": "The listing at the end is eight files: two pictures at two steps, their offscreen twins, the two panel readings, log.json and done.json."
+    },
+    {
+      "do": "Plant a picture from a run that never happened: cp /tmp/photonz-playtest/toolbar-row-narrow/1-narrow-sc.png /tmp/photonz-playtest/toolbar-row-narrow/9-from-an-older-run-sc.png"
+    },
+    {
+      "do": "Run the same walk again: Scripts/playtest.sh Scripts/playtest/toolbar-row-narrow-walk.json --no-build",
+      "note": "The planted picture is gone from the listing. Before this change it stayed, indistinguishable from the ones this run took."
+    },
+    {
+      "do": "Read the first line of the log: node -e 'console.log(JSON.parse(require(\"fs\").readFileSync(\"/tmp/photonz-playtest/toolbar-row-narrow/log.json\"))[0].note)'",
+      "note": "It says how many files an earlier run left and that every picture in the folder is this run's."
+    },
+    {
+      "do": "Write a walk that stops part way: printf '%s' '{\"out\":\"/tmp/photonz-playtest/stops-part-way\",\"steps\":[{\"do\":\"blank\",\"canvas\":[800,600]},{\"do\":\"wait\",\"seconds\":0.4},{\"do\":\"snapshot\",\"name\":\"1-took-this-one\"},{\"do\":\"open\",\"file\":\"/tmp/no-such-file.png\"},{\"do\":\"snapshot\",\"name\":\"2-never-got-here\"}]}' > /tmp/stops-part-way-walk.json"
+    },
+    {
+      "do": "Give it two pictures it did not take: mkdir -p /tmp/photonz-playtest/stops-part-way && touch /tmp/photonz-playtest/stops-part-way/2-never-got-here-sc.png /tmp/photonz-playtest/stops-part-way/3-from-a-healthier-run-sc.png"
+    },
+    {
+      "do": "Run it: Scripts/playtest.sh /tmp/stops-part-way-walk.json --no-build",
+      "note": "It fails at step 4 and its folder holds one picture, the one it reached, plus its log and verdict. Neither planted picture survives."
+    },
+    {
+      "do": "Run the same walk twice and compare: cd /tmp/photonz-playtest/toolbar-row-narrow && /bin/ls -1 | sort",
+      "note": "The same set of names both times."
+    }
+  ],
+  "evaluate": [
+    "When you open a walk's folder, is it now obvious that everything in it came from the run you just did?",
+    "A walk refused because the screen was locked clears its folder too, so it leaves a done.json and no pictures at all. Is empty the right answer there, or would you rather the last real pictures stayed?",
+    "The clearing is said in the log's first line rather than in what the run prints to the terminal. Is that the right place, or should the run say it on screen?",
+    "A walk that points its output at a folder it shares with something else keeps everything but its own log and verdict, and says so in the log. Is that the right amount of caution?"
+  ],
+  "rough": [
+    "A walk refused by a locked screen clears its folder before it discovers it cannot run, so a Mac that stays locked gradually empties the folders of every name-dependent walk. That is deliberate: a refusal took no pictures, so leaving an older run's pictures under a fresh done.json is the very confusion this fixes. Left in the task log rather than filed.",
+    "If the app dies before the harness starts at all, nothing inside the app can clear the folder; the launcher removes the old log and verdict for that case, but any picture from the previous run would remain. Reaching that needs a build that crashes at launch, which nothing currently does.",
+    "The picture in this audit was taken on a locked Mac, so its colours can read dimmed. It is the real window."
+  ]
+}

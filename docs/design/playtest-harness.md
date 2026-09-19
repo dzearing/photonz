@@ -97,6 +97,25 @@ points to write a new one.
 
 ## What you get back
 
+**A run's folder holds that run's files and nothing else.** Before it writes a
+line, a walk EMPTIES the folder it is about to write into, so the pictures in it
+are the ones this run took. It used to delete only `done.json`, which read as
+harmless and was not: a walk that stopped at step 17 sat in a folder still
+holding step 20's photograph from a healthier run days earlier, with nothing on
+the file to say which run it came from, and an audit ships a `-sc.png` picked
+out of that folder by name. The first line of every `log.json` says what was
+cleared. A walk refused because the screen was locked clears the folder too: it
+took no pictures, so it leaves none, rather than leaving yesterday's under
+today's `done.json`.
+
+How much of the folder a run may claim is decided in `PlaytestOutputFolder`
+(PhotonzCore, unit tested). Its own folder under `/tmp/photonz-playtest` is
+emptied whole, hidden files aside. A folder anywhere else is assumed to be
+shared with something that is not this walk — a folder beside the walk scripts
+would be shared with 500 of them — so only the files a run writes under a fixed
+name go (`log.json`, `done.json`, the menu shot notes), and the run says in its
+log that any other picture there may be old.
+
 Everything lands in the script's `out` folder. A walk that names none gets
 `/tmp/photonz-playtest/<walk name>`: never a folder inside the repository,
 because renders and captures run to megabytes and a default that lands in the

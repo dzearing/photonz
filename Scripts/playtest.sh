@@ -48,7 +48,12 @@ OUT="$(node -e '
   console.log(path.isAbsolute(out) ? out : path.resolve(dir, out));
 ' "$SCRIPT_ABS")"
 mkdir -p "$OUT"
-rm -f "$OUT/done.json"
+# The run empties this folder itself the moment the harness starts, so the
+# pictures in it are the ones it took (PlaytestOutputFolder). These two go here
+# as well, because they are what THIS script waits on and reads back: an app
+# that dies before the harness ever starts would otherwise leave the last run's
+# verdict and log sitting here, ready to be read as this one's.
+rm -f "$OUT/done.json" "$OUT/log.json"
 
 # When the app dies, the reason is in a crash report macOS drops into
 # ~/Library/Logs/DiagnosticReports a second or two later. Remember when this run
