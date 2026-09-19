@@ -1,0 +1,41 @@
+{
+  "id": "saving-a-recording-somewhere-else-goes-through-t",
+  "title": "Saving a recording somewhere else goes through the same sheet everything else does",
+  "goal": "Every picture and every icon in Photonz leaves through one Export sheet: you pick the format there, you see the choices that format has, and the sheet tells you what the file is going to weigh before you commit to it. A recording is the one thing in the app that does none of that. Save As on a recording throws a bare system save box at you with the format already decided, no choices, and no idea how big the thing you are about to send is going to be. A screen recording is the file most likely to be too big to send, so it is the worst one to say nothing about.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-19T15:44:22.291Z",
+  "updated": "2026-09-19T15:44:58.637Z",
+  "deps": [
+    "trim-a-recording-save-it-send-it-the-whole-flow"
+  ],
+  "blockedBy": [],
+  "notes": "FOUND BY READING, manager pass 2026-09-19, HEAD e9d6b163. Not a crash, so no reproduction run: the two code paths are simply different and can be read side by side.\n\nThe picture path: Sources/Photonz/ExportDialog.swift. It carries the format rows, the quality control, and a weigher that encodes the picture off the main actor to say what it will really weigh (byteCount, weighing, weighed, saysWhatTheVectorWeighs around lines 91 to 340). Two tasks landed that behaviour deliberately and recently: da51700a \"A PNG says what it will weigh before you save it\" and a4a7dbf7 \"An SVG says what it will weigh too\". So the pattern is established, shipped and not speculative.\n\nThe recording path: AppCoordinator.saveRecording at AppCoordinator.swift:389. It builds an NSSavePanel by hand, sets allowedContentTypes from a format that was already chosen by which menu item you picked, runs it modally, and exports. No sheet, no weight, no choices. The format is decided in EditorCommands.swift around 334 to 348, where MP4, GIF and HEIC are three separate menu items and only GIF and HEIC carry a quality submenu. MP4 has no quality control at all: VideoExporter.exportMP4 is pinned to AVAssetExportPresetHighestQuality (VideoExporter.swift around :208).\n\nWhy this is not competitor parity dressing. The user described the whole job on 2026-09-18 as \"I just want to trim, save, send in teams\", and the thing that stops a screen recording being sent is its size. The app already decided that saying what a file will weigh is worth doing; this is carrying that decision to the one format where it bites hardest, not inventing a new idea.\n\nDELIBERATELY OUT OF SCOPE, and say so in the audit: choosing a SMALLER mp4, by resolution or bitrate, is a new control the user has not asked for and it needs a decision card before anybody builds it. This task is about one way out of the app, not about new knobs. If the runner comes to believe the size choice is the whole point, stop and open a card rather than build it.\n\nWHY IT DEPENDS ON THE p0: trim-a-recording-save-it-send-it-the-whole-flow works on saveRecording as the current way out (\"while this is broken the way out is Save As\"). Landing a rewrite of that path underneath it would collide. Let the p0 finish first.",
+  "acceptance": [
+    "Saving a copy of a recording opens the same Export sheet as a picture does, with the recording formats in it rather than a bare save box",
+    "The formats a recording already supports are all reachable from that one sheet instead of from three different menu items: video, animated GIF and HEIC",
+    "The quality choice that GIF and HEIC already have lives in the sheet beside the format, where the picture quality control lives, rather than in a submenu you pick before the save box appears",
+    "The sheet says what the file will weigh wherever it can honestly say it, using the weighing the sheet already does; where it genuinely cannot know without encoding the whole recording, it says what it does know and does not invent a number",
+    "Cancelling the sheet writes nothing and leaves the recording and its edits exactly as they were",
+    "A saved copy carries the trim and the crop, checked by reading the duration and the dimensions of the file that lands rather than trusting the app",
+    "Exporting an untrimmed recording still takes the fast path and does not re-encode",
+    "The picture export sheet is unchanged: every existing export walk still passes",
+    "Ships behind a named flag so it can be turned off, and the try steps are in the task log: open a recording from History, choose Save As, and the sheet appears",
+    "A walk covers opening the sheet from a recording and saving a copy",
+    "Audit under queue/audits/ with the sheet photographed for each format, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-19T15:44:22.293Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-19T15:44:58.636Z",
+      "note": "seq 3020 -> 15"
+    }
+  ]
+}

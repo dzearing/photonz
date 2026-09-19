@@ -1,0 +1,53 @@
+{
+  "id": "a-hundred-and-fifteen-walks-fail-on-code-that-pa-while-the-loop-is-working-throug",
+  "taskId": "a-hundred-and-fifteen-walks-fail-on-code-that-pa",
+  "question": "While the loop is working through the night, should it stop your Mac locking itself?",
+  "context": "Asked again on 2026-09-19 because the first version of this card, from 2026-09-15, offered an option that has since been built and is no longer a choice. The question underneath it has not been answered and is four days old.",
+  "options": [
+    {
+      "id": "awake-while-working",
+      "label": "Keep it awake while the loop works",
+      "summary": "For as long as the loop is actually building something, your Mac will not go to sleep and will not lock itself. The screen stays lit. Stop the loop and your Mac goes straight back to its normal behaviour.",
+      "pros": [
+        "The app is really tested every night instead of only on the days you are at the machine",
+        "A break shows up in the hours after it lands rather than the next morning",
+        "Nothing has to change about how you use the Mac"
+      ],
+      "cons": [
+        "Your screen stays lit and your Mac stays unlocked while the loop runs, which on some nights is all night"
+      ],
+      "mitigation": "It only ever holds while the loop is running, it is the same kind of request a video player makes while a film is playing, and it can neither wake nor unlock a Mac that has already gone."
+    },
+    {
+      "id": "awake-for-the-sweep",
+      "label": "Keep it awake only while the tests are running",
+      "summary": "Your Mac locks and sleeps as it always has. The one exception is the full test run itself, which holds the Mac awake for the hour or so it takes and then lets go, so the run finishes instead of dying half way.",
+      "pros": [
+        "Your Mac is unlocked for about an hour a night rather than all of it",
+        "The one thing that actually needs the screen is the only thing that gets it",
+        "The rest of the night is exactly as it is today"
+      ],
+      "cons": [
+        "A test run can only start if the Mac happens to be unlocked when it comes round, so some nights it still will not run at all"
+      ],
+      "mitigation": "The loop asks for a run after every batch of work, so a request that cannot be served stays waiting and is served the moment you unlock."
+    },
+    {
+      "id": "leave-it",
+      "label": "Leave my Mac alone",
+      "summary": "Nothing about your Mac changes. Lock it and the testing stops, says so plainly, and catches up the moment you unlock. A night with the Mac locked is a night where nothing checks the app.",
+      "pros": [
+        "Your Mac behaves exactly as you have set it up to behave",
+        "Nothing new to trust"
+      ],
+      "cons": [
+        "Work that lands overnight is checked by unit tests only, and the last time that ran for three days the first thing you tried in the app was broken"
+      ],
+      "mitigation": "The dashboard already says how long it has been since the app was really tested, so a quiet night is visible rather than a surprise.",
+      "declines": true
+    }
+  ],
+  "recommended": "awake-while-working",
+  "status": "pending",
+  "created": "2026-09-19T15:44:44.933Z"
+}

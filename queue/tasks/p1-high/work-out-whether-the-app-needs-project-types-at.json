@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-19T15:35:09.424Z",
+  "updated": "2026-09-19T15:44:02.030Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -139,6 +139,10 @@
     {
       "t": "2026-09-19T15:35:09.423Z",
       "note": "seq 30 -> 100"
+    },
+    {
+      "t": "2026-09-19T15:44:02.029Z",
+      "note": "Manager pass 2026-09-19: half of the decision card on this task has been settled by something else, so whoever picks it up after the user answers should not build that half twice. The card separates option a (modes now, the video chain later) from option b (modes and the whole chain) precisely because the chain needed 'a recording to become a layer in an ordinary document', which the card calls expensive and not yet committed to. On 2026-09-18 the user made video the focus, and a-document-can-have-time is now filed, sequenced second in p1, and its acceptance item 2 is exactly that: opening a recording opens the ordinary editor with time showing, same layers list, same panel, same tools. So the video chain is being paid for regardless of which option is chosen here, and the only live question left on the card is the one about modes themselves. The card was NOT withdrawn, because that question is genuinely open and taking the card down would leave this task blocked with nothing to answer."
     }
   ],
   "started": "2026-09-15T17:02:48.204Z"

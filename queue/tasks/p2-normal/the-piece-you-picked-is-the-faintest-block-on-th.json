@@ -1,0 +1,36 @@
+{
+  "id": "the-piece-you-picked-is-the-faintest-block-on-th",
+  "title": "The piece you picked is the faintest block on the strip",
+  "goal": "Cut a recording into pieces and the piece you are holding, the one Delete takes, is drawn dimmer than the pieces you are not holding. A piece you have already played through is a solid mid grey block; the piece you just picked, before the playhead has moved into it, is a nearly empty dark box with a thin coloured outline round it. So the strongest thing on the strip says how far you have watched, and the faintest thing on it says what is about to be deleted. Make the picked piece the one that reads first.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-19T15:44:12.353Z",
+  "updated": "2026-09-19T15:44:58.590Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED by picture and confirmed in the code, manager pass 2026-09-19 on HEAD e9d6b163, unlocked screen.\n\nThe picture: queue/manager/shots/2026-09-19-video-three-pieces.png, lifted from Scripts/playtest/trim-with-pieces-walk.json step 1 (Scripts/playtest-all.sh --no-build trim, 8 passed). Three pieces. The first two are solid mid grey. The third, which is the picked one, is a dark empty box with a thin accent outline, and it reads as a hole in the strip rather than as a highlight.\n\nThe code, Sources/Photonz/CutStrip.swift block(isSelected:playedFraction:) around lines 86 to 98. Each block is three layers: a base fill of .primary.opacity(isSelected ? 0.3 : 0.18), then a played overlay across playedFraction of the width which is accent at 0.75 when picked and .primary.opacity(0.55) when not, then a 1.5 point accent strokeBorder only when picked. In a dark window .primary is white, so the numbers come out:\n  picked, not yet played   = white 0.30 + a 1.5pt outline\n  not picked, played       = white 0.55\nThat is the whole bug in two numbers. Being picked is worth +0.12 of fill and a hairline; having been played is worth +0.37. The 2026-09-17-video-cutting-trim-pick audit predicted this in its rough list, in its own words, and could not check it because the Mac was locked: \"The colour choice is the thing to look at first and the thing least possible to check... It may be too quiet there.\" It is quieter than that audit thought, because the comparison is not against an unplayed neighbour, it is against a played one.\n\nWhy it matters rather than being a nit: CutStrip's own doc comment says \"there is no separate clip selection either: the piece under the playhead is the piece you are holding, and Delete drops the one you are looking at\". The only thing on screen saying which piece Delete takes is this drawing, and the user's reported flow is cut, pick, delete, save, send.\n\nOne related thing from the same audit, NOT a separate task, worth keeping in mind while choosing the drawing: dragging a trim handle moves the playhead, and the playhead is what picks a piece, so a handle drag silently changes which piece Delete would take. The model is right; it just means the pick needs to be legible while a handle is moving.\n\nThis surface is retired eventually by a-document-can-have-time, which replaces the strip with a real timeline. Do it anyway: that is days of work away, the user is cutting recordings today, and the lesson (progress must not outshout selection) is one the new timeline lanes inherit.",
+  "acceptance": [
+    "The piece the playhead is in is the block that reads first on the strip, at a glance, before anything else on it: it is never dimmer than a piece that is not picked",
+    "Progress within a piece still reads, but it stops outshouting which piece is picked",
+    "Checked in both light and dark, on a real window, not judged from the code: put a before and an after picture in the audit with a recording cut into at least three pieces and the picked one not yet played",
+    "Checked in the two cases that flip it: the picked piece fully played, and the picked piece not played at all",
+    "The strip keeps meaning one thing: an outline in the accent colour on this strip means picked, and the audit says what that now looks like next to trim mode, where the accent outline round a range means kept",
+    "Ships behind the flag that already carries cutting, next-cut-a-recording, which is on by default in Next. To try it: open a recording from History, press B twice while it plays to make three pieces, click the first piece, and look at the strip under the picture",
+    "The existing cut and trim walks still pass: Scripts/playtest-all.sh --no-build cut and --no-build trim",
+    "Audit under queue/audits/, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-19T15:44:12.355Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-19T15:44:58.589Z",
+      "note": "seq 3010 -> 5"
+    }
+  ]
+}

@@ -52,6 +52,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-15T10:04:44.910Z"
+  "status": "withdrawn",
+  "created": "2026-09-15T10:04:44.910Z",
+  "withdrawn": {
+    "reason": "One of its three answers, 'tell me when it has gone blind', was built on 2026-09-17 as the-dashboard-says-when-the-loop-has-gone-blind and shipped in 3619a09b: the dashboard already says how long it has been since the app was really tested. The card was offering a choice that was already true, and picking it would have closed the question without changing anything. The question underneath is still live and still unanswered after four days, so it has been re-asked with honest options rather than simply taken down: see a-hundred-and-fifteen-walks-fail-on-code-that-pa-while-the-loop-is-working-throug.",
+    "at": "2026-09-19T15:44:53.816Z"
+  }
 }
