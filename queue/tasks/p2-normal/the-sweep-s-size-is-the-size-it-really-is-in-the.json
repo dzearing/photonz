@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-18T12:09:15.447Z",
-  "updated": "2026-09-19T22:38:49.055Z",
+  "updated": "2026-09-19T22:39:04.535Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-18 digest's rule scrub.\n\nCommand:\n  /bin/ls Scripts/playtest/*.json | wc -l\n  grep -n 322 CLAUDE.md queue/README.md queue/sweep/README.md queue/bin/sweep.sh\n\nOutput:\n  526\n  CLAUDE.md:38: 'it is 322 walks and about 52 minutes'\n  queue/bin/sweep.sh:5: 'are 322 of them and the last measured run did 247 in 40m 21s'\n  queue/bin/sweep.sh:182: 'would leave 322 walks timing out one after'\n  queue/sweep/README.md:4: '322 of them, about 52 minutes'\n  queue/README.md:25: 'all 322 scripted walks, about 52 minutes'\n\nThe cap arithmetic, from queue/sweep/latest.json (began 11:13:29Z, ended 12:05:03Z, 3094s): 249 walks ran in full and 277 were refused in about a second each, so a real walk costs about 11.3s. A full 526 at that rate is about 99 minutes against a cap of 120 (PHOTONZ_SWEEP_MAX_MINUTES in queue/bin/sweep.sh), which is roughly 17 per cent of headroom. The walks that only run unlocked are the ones that drive menus and named controls, so there is no reason to assume they are the fast ones. Nothing is broken today because every sweep since 2026-09-14 has been a partial; the first full one is where it would show.",
@@ -68,7 +68,12 @@
     {
       "t": "2026-09-19T22:38:49.054Z",
       "note": "left rough: the first of three Scripts/test.sh runs reported 1 issue in 8374 tests and I did not capture which; the two runs after it were fully green. This task changes no Swift at all (git diff --stat: only markdown, shell, node and the CI yaml), so it cannot be from here, and with no test name and no output it is below the bar for filing a bug."
+    },
+    {
+      "t": "2026-09-19T22:39:04.533Z",
+      "note": "The sweep's size is counted by queue/bin/sweep-size.mjs (532 walks, 11.96s each, 106 minutes) rather than typed in; all eleven places that quote it say one generated sentence and CI fails when any drifts. The cap is now walks x 20s floored at two hours (177 min, 67% headroom) instead of a flat 120 that a 106-minute sweep had closed to 14 minutes. Verified live: narrowed sweep clean under the derived cap; a forced cap records complete:false/timedOut:true/failed:[] and says DID NOT FINISH (stopped on the clock). Also fixed the two-hour caffeinate hold, which a full sweep had outgrown, and the caffeinate the forced stop was orphaning. Scripts/test.sh green, four sweep drills green. Commit 3b667b40."
     }
   ],
-  "started": "2026-09-19T22:23:54.071Z"
+  "started": "2026-09-19T22:23:54.071Z",
+  "completed": "2026-09-19T22:39:04.534Z"
 }
