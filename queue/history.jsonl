@@ -5525,3 +5525,12 @@
 {"t":"2026-09-19T18:54:57.157Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
 {"t":"2026-09-19T18:55:12.979Z","ev":"task_note","id":"confirm-file-save-is-live-on-a-trimmed-recording"}
 {"t":"2026-09-19T18:55:13.024Z","ev":"task_pending","id":"confirm-file-save-is-live-on-a-trimmed-recording","from":"in_progress","note":"Could not confirm: the screen is locked. The walk was refused at its menus step and a single forced run proved the lock is the reason (nothing takes key, the menu bar stays frozen), so there is no answer to be had tonight. Steps 1 to 11 did run and the trim itself is green. Held out of the queue until somebody logs in, and it returns by itself then."}
+{"t":"2026-09-19T19:01:40.569Z","ev":"sweep_pass","walks":519,"passed":21,"failed":498,"seconds":361,"complete":false,"screenLocked":true,"couldNotRun":11,"partial":true,"total":530}
+{"t":"2026-09-19T19:01:40.733Z","ev":"task_started","id":"the-piece-you-picked-is-the-faintest-block-on-th","title":"The piece you picked is the faintest block on the strip","priority":"p2-normal"}
+{"t":"2026-09-19T19:19:58.260Z","ev":"task_walks","id":"the-piece-you-picked-is-the-faintest-block-on-th","walks":["picked-piece-reads-first-walk"]}
+{"t":"2026-09-19T19:19:58.311Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}
+{"t":"2026-09-19T19:19:58.362Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}
+{"t":"2026-09-19T19:19:58.409Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}
+{"t":"2026-09-19T19:20:05.325Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}
+{"t":"2026-09-19T19:20:05.372Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}
+{"t":"2026-09-19T19:20:05.418Z","ev":"task_note","id":"the-piece-you-picked-is-the-faintest-block-on-th"}

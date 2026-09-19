@@ -22,8 +22,10 @@ struct CutStrip: View {
     @State private var wasPlayingBeforeDrag = false
 
     /// Blocks are taller than the scrubber's track: they are things to point
-    /// at, not a line to read a position off.
-    private let blockHeight: CGFloat = 22
+    /// at, not a line to read a position off. The row is as tall as the
+    /// tallest block, which is the picked one, so picking a different piece
+    /// never changes the height of the strip.
+    private let blockHeight: CGFloat = CutStripBlockStyle.rowHeight
     private let hitHeight: CGFloat = 24
     /// The visible cut between two pieces.
     private let joinGap: CGFloat = 4
@@ -41,9 +43,11 @@ struct CutStrip: View {
                     let range = state.cuts.timelineRange(ofPiece: index) ?? (0, 0)
                     let x = CGFloat(range.start / duration) * width
                     let w = CGFloat(piece.duration / duration) * width
-                    block(isSelected: index == selected,
-                          playedFraction: playedFraction(in: range, playhead: state.currentTime))
-                        .frame(width: max(2, w - joinGap), height: blockHeight)
+                    let style = CutStripBlockStyle.block(
+                        isPicked: index == selected,
+                        playedFraction: playedFraction(in: range, playhead: state.currentTime))
+                    block(style)
+                        .frame(width: max(2, w - joinGap), height: style.height)
                         .offset(x: x + joinGap / 2)
                 }
 
@@ -75,30 +79,48 @@ struct CutStrip: View {
             )
             .playtestHover { hovering = $0 }
             .animation(.easeOut(duration: 0.12), value: hovering)
+            // Crossing a join hands the pick to the next piece. Easing that
+            // hand-over keeps the strip from snapping under the playhead.
+            .animation(.easeOut(duration: 0.14), value: selected)
         }
         .frame(height: hitHeight)
         .accessibilityLabel("Recording pieces")
         .accessibilityValue(pieceSummary)
     }
 
-    /// One piece. The played part of it is brighter, the same way the scrubber
-    /// fills behind its thumb, so progress still reads at a glance; the piece
-    /// the playhead is in wears the accent so there is never a question about
-    /// what Delete would take.
-    private func block(isSelected: Bool, playedFraction: Double) -> some View {
-        GeometryReader { geo in
+    /// One piece.
+    ///
+    /// Two things are being said here and they used to be said the same way,
+    /// which is how the picked piece ended up the faintest block on the strip.
+    /// Brightness now says one thing only: how far into this piece you have
+    /// watched. Being the picked piece — the one Delete would take — is said
+    /// three other ways instead, none of which progress ever uses: the block
+    /// is drawn in the accent colour, it is taller than its neighbours, and it
+    /// wears a white hairline. The numbers behind all of that, and the rule
+    /// that the picked block can never be quieter than one that is not, live
+    /// in `CutStripBlockStyle` where they are unit tested.
+    private func block(_ style: CutStripBlockStyle) -> some View {
+        let shape = RoundedRectangle(cornerRadius: CutStripBlockStyle.cornerRadius)
+        return GeometryReader { geo in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(.primary.opacity(isSelected ? 0.3 : 0.18))
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(isSelected ? AnyShapeStyle(Color.accentColor.opacity(0.75))
-                                     : AnyShapeStyle(Color.primary.opacity(0.55)))
-                    .frame(width: geo.size.width * CGFloat(playedFraction))
-                RoundedRectangle(cornerRadius: 5)
-                    .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
+                shape.fill(paint(style.tint).opacity(style.baseOpacity))
+                shape.fill(paint(style.playedTint).opacity(style.playedOpacity))
+                    .frame(width: geo.size.width * CGFloat(style.playedFraction))
+                if style.strokeWidth > 0 {
+                    shape.strokeBorder(paint(.lift).opacity(style.strokeOpacity),
+                                       lineWidth: style.strokeWidth)
+                }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 5))
+        .clipShape(shape)
+    }
+
+    private func paint(_ tint: CutStripTint) -> Color {
+        switch tint {
+        case .neutral: .primary
+        case .accent: .accentColor
+        case .lift: .white
+        }
     }
 
     private func playedFraction(in range: (start: TimeInterval, end: TimeInterval),

@@ -1,0 +1,31 @@
+{
+  "feature": "The piece you picked reads first on the cut strip",
+  "epic": "video-cutting",
+  "summary": "Cut a recording into pieces and the block the eye lands on is now the piece you are holding, the one Delete would take. It used to be the opposite: a piece you had already watched was a solid pale block while the piece you had just picked was a near empty box, so the loudest thing on the strip was how far you had got and the faintest was what was about to be deleted.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Cut a recording into pieces and drop the one you do not want\" (next-cut-a-recording), on by default. You need a recording: use the menu-bar recorder, or open any clip from the capture history.",
+  "try": [
+    { "do": "Open a recording and press space to stop it." },
+    { "do": "Press B half way in, then again three quarters in, so it is in three pieces.", "shot": "2026-09-19-picked-piece-after-dark-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Without playing anything, look at the strip and say which piece Delete would take. Compare it with the old drawing.", "shot": "2026-09-19-picked-piece-before-dark-sc.png", "shotNote": "The same moment before this change, for comparison. Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Click into the middle of the first block, so the piece you are holding is one you are part way through.", "shot": "2026-09-19-picked-piece-after-part-played-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press space and let it run to the end of a piece, so the picked block is full.", "shot": "2026-09-19-picked-piece-after-played-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Switch the Mac to light appearance and look at the same three pieces again.", "shot": "2026-09-19-picked-piece-after-light-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press the scissors button to open the trim handles, and compare how the pick is marked there with how it is marked on the strip." },
+    { "do": "Press Escape, then Delete, and check that the piece that went is the one you had been looking at." }
+  ],
+  "evaluate": [
+    "With three pieces on screen and none of them played, does your eye go to the picked one first?",
+    "Once a piece is full, can you still see the hairline that says it is picked, or does it wash out into the pale blue?",
+    "The pieces you are not holding are now much quieter than they were. Can you still tell how far through the recording you have watched?",
+    "The picked block is four points taller than the others. Does that read as emphasis, or does the strip look uneven?",
+    "On the strip a pick is a blue block with a white hairline; under the trim handles it is a white hairline and nothing else, because blue in there already means the range you are keeping. Does a pick feel like the same idea in both places?",
+    "Dragging a trim handle moves the playhead, so it changes which piece is picked. Now that the pick is loud, is that change something you notice, or something that startles you?"
+  ],
+  "rough": [
+    "Every picture here was taken with the Mac's screen locked, so colours can read slightly dimmed. The comparison inside each picture is unaffected, because both the picked block and its neighbours are dimmed the same way, and the numbers underneath were measured off these captures: the picked block is 22 points tall against 18 for the rest, and in dark it now measures marginally brighter than a fully watched neighbour (109 against 107) where it used to be less than half as bright (57 against 152).",
+    "Brightness and colour now say two different things on this strip, but the strip does not say so anywhere. Somebody who never watches a piece play may read the pale end of the picked block as a second kind of selection rather than as progress.",
+    "The picked block's hairline is white at 0.9 over a fill that is pale blue once the piece has been watched. It reads in the captures, but it is the thinnest margin in the whole drawing, and it is the same case that made the old accent outline fail.",
+    "Nothing changed under the trim handles. A pick is marked one way on the strip and another way in trim mode, which is now deliberate and explained, but it is still two marks for one idea.",
+    "The video controller fades out 2.4 seconds after the last thing that woke it, and a scrub does not wake it, so a walk that seeks and then photographs gets a window with no controller in it. It cost two runs of this walk to work out. Left as a note rather than a task: see the task log."
+  ]
+}
