@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T15:44:22.291Z",
-  "updated": "2026-09-19T19:52:38.593Z",
+  "updated": "2026-09-19T19:55:49.745Z",
   "deps": [
     "trim-a-recording-save-it-send-it-the-whole-flow"
   ],
@@ -64,10 +64,15 @@
     {
       "t": "2026-09-19T19:52:38.592Z",
       "note": "One behaviour change worth knowing, outside the sheet. The fast path used to copy the file with try? and no reporting, so a copy that failed (no room, no permission on the folder) did nothing at all and said nothing. It now runs through the same Task as the re-encode, so a failure reaches reportExportFailure and the person is told. The cost is that isExportingRecording flickers true for the length of a file copy, which is what the progress affordance is for anyway."
+    },
+    {
+      "t": "2026-09-19T19:55:49.743Z",
+      "note": "A recording now leaves through the same Export sheet a picture does: MP4, GIF and HEIC in one segmented row, the size preset beside the format instead of in a submenu you picked blind, and two lines saying what the file will be and what it will weigh. Where a number is honest it is there — an untouched MP4 is a verbatim copy so its size is exact, a trimmed or cropped one says 'about' from the recording's own measured cost per second and per pixel — and where it is not, GIF and HEIC say the size comes with the file rather than guessing. Behind next-recording-export-sheet; Save As, File Export and a single Video Export all reach it. Shipped in 60c74070. Verified: Scripts/test.sh green (8374 tests, 21 new on RecordingExport written first); recording-export-sheet-walk 55/55 with five real captures; its new writeRecording step OPENS the file that landed and read 8.0s at 1280x800 byte-for-byte copied, then 4.0s at 640x400 re-encoded, so the trim and the crop are checked on disk rather than taken on the app's word; every existing export walk still passes. Audit queue/audits/2026-09-19-recording-export-sheet.json."
     }
   ],
   "started": "2026-09-19T19:31:39.616Z",
   "walks": [
     "recording-export-sheet-walk"
-  ]
+  ],
+  "completed": "2026-09-19T19:55:49.744Z"
 }
