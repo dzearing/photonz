@@ -134,4 +134,35 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)
         #expect(PlaytestLockSafety.canRunLocked(steps))
     }
+
+    /// A `menus` step is still refused, and the reason it gave was wrong. It
+    /// used to say it "opens a real menu", which it does not: it reads
+    /// `NSApp.mainMenu` inside the app's own process and never pops anything
+    /// up. That sent a runner on 2026-09-19 to read the harness source to find
+    /// out what the real objection was, on a task whose whole job was reading
+    /// one menu.
+    ///
+    /// The real objection is the frozen menu bar. A walk never brings the probe
+    /// to the front, so the only thing that ever gives it a live menu is one of
+    /// its own windows taking key. A locked Mac gives nothing key: forced on
+    /// 2026-09-19, `save-is-live-after-a-trim-walk` opened the Capture History
+    /// overlay as usual and the menu reading still came back "nothing in the
+    /// probe has focus", which is the step admitting its own answer is worth
+    /// nothing. So what is dimmed reads dimmed whatever the document says.
+    @Test("A menus step is refused for the frozen menu bar, not for opening a menu")
+    func menusIsRefusedForTheRightReason() {
+        let why = PlaytestLockSafety.lockTrouble(with: .menus(stage: "file", menu: "File"))
+        #expect(why != nil)
+        #expect(why?.contains("opens a real menu") == false)
+        // it names what actually goes wrong: nothing can take key, so every
+        // window command reads dimmed
+        #expect(why?.contains("key") == true)
+        #expect(why?.contains("dimmed") == true)
+        // ...while the three that really do put a menu on screen keep that reason
+        for step in [PlaytestStep.menuShot(menu: "File", name: "a-file", ticked: [], unticked: []),
+                     .rightClick(on: "Background", at: nil, shot: nil, choose: nil,
+                                 ticked: [], unticked: [])] {
+            #expect(PlaytestLockSafety.lockTrouble(with: step)?.contains("opens a real menu") == true)
+        }
+    }
 }

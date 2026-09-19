@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-19T16:29:22.875Z",
-  "updated": "2026-09-19T16:29:22.878Z",
+  "updated": "2026-09-19T18:55:13.023Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The walk is deliberately refused under a lock: it carries a menus step, which is what makes the harness refuse it, and its own describe step says why. Do not force it with PHOTONZ_ALLOW_LOCKED_WALK=1 and read the result as an answer, because a forced run under a lock reads every window command as dimmed and would fail for reasons that have nothing to do with the app.\n\nBackground for whoever picks this up: the whole live-menu trick is the Capture History overlay. The probe is launched with open -g so the app is never the front app, and SwiftUI then freezes the menu bar at its launch state. Pressing shift-command-H opens the history overlay, which takes key, and once any window of the app is key the focused values fill in and the bar reads the real document. That is what the walk does before it reads the menu.\n\nMeasured live BEFORE the fix, on an unlocked screen at about 08:55 on 2026-09-19: File read Save and Save As undimmed on a trimmed recording, with Save to Capture History and Export dimmed. So the mechanism worked then; this is confirming the replacement did not break it. EditorCommands.focusedSave keeps a fallback to the old state objects for exactly that reason.",
@@ -22,9 +22,47 @@
     {
       "t": "2026-09-19T16:29:22.877Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-19T18:44:16.862Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-19T18:54:42.591Z",
+      "note": "needs somebody at the Mac: held out of the queue while the screen is locked, and back in it the moment somebody logs in. the walk reads the File menu, and a locked Mac gives no window key, so every window command reads dimmed whatever the document says"
+    },
+    {
+      "t": "2026-09-19T18:54:47.118Z",
+      "note": "Could not confirm: the Mac's screen is locked and nothing can unlock it. Ran the walk properly (no force): 'Scripts/playtest.sh Scripts/playtest/save-is-live-after-a-trim-walk.json' -> status locked, exit 3, refused at step 14 (menus). Grants line: 'probe Screen Recording granted · this terminal Accessibility denied · screen locked'."
+    },
+    {
+      "t": "2026-09-19T18:54:47.164Z",
+      "note": "Forced it ONCE, to find out whether anything could be salvaged rather than to get a verdict, and it settled the question: the menu read came back 'nothing in the probe has focus, so this menu bar is frozen at the state it was built in at launch'. The Capture History window WAS open (windows open: Item-0, Tutorial Sample.mp4, Capture History) and still nothing held key. So the trick this walk turns on does not work under a lock, exactly as the task notes said, and step 16 then failed with 'command+s is File > Save, but that item has no action behind it'. That failure is about the lock and is NOT read as a verdict on the app. Menu dump kept at /tmp/photonz-playtest/save-is-live-after-a-trim-walk/menus-save-after-a-trim.txt."
+    },
+    {
+      "t": "2026-09-19T18:54:47.211Z",
+      "note": "What DID run under the lock, for whoever picks this up: steps 1 to 11 all passed, so the trim itself is fine on this build. openSampleRecording, videoPause, videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone and then 'expectRecording seconds 4' green. The only thing still unwitnessed is the menu."
+    },
+    {
+      "t": "2026-09-19T18:54:50.980Z",
+      "note": "Rather than strand or spin this task, added the mechanism it needed. A task may now carry \"waitsForUnlockedScreen\": true (queue.mjs needs-screen <id> on|off). It stays pending and visible, readyTasks holds it out of the queue while CGSSessionScreenIsLocked is true, and it comes back by itself the moment somebody logs in. The two endings it replaces both have precedent: blocked with no card stranded witness-the-capture-dim-in-another-tool-on-an-un from 2026-09-03 to 2026-09-05 until a triage pass noticed by hand, and pending would have had the loop re-claim this every pass to rediscover the same lock. The lock reading FAILS OPEN, so a broken check can only let work through, never hide it. Drill: node queue/bin/screen-gate-drill.mjs (10 checks, green). Dashboard rows say 'waiting for somebody at the Mac' instead of showing a stale log line."
+    },
+    {
+      "t": "2026-09-19T18:54:51.026Z",
+      "note": "Fixed a wrong explanation that cost this run a forced walk to see through. The refusal for a menus step said it 'opens a real menu', which it does not: PlaytestHarness.readMenuBar reads NSApp.mainMenu inside the app's own process and never pops anything up. The real objection is the frozen menu bar, and that is what it says now. menuShot, panelMenu and rightClick do open real menus and keep the old reason. Test: PlaytestLockSafetyTests 'A menus step is refused for the frozen menu bar, not for opening a menu'. Also corrected the same sentence in queue/bin/runner-prompt.md."
+    },
+    {
+      "t": "2026-09-19T18:55:12.977Z",
+      "note": "Terminal state is pending, not blocked, and that is deliberate: with the gate above, pending now MEANS 'waiting for somebody at the Mac' rather than 'the loop is ignoring it'. Blocked would need a decision card, and there is no product question here to ask the user, only a locked screen. Verified against the real queue: readyTasks does not offer this task while the screen is locked, and the dashboard row reads 'waiting for somebody at the Mac'. No audit written: nothing shippable was confirmed, and there is no picture to be had of a menu nothing can open."
+    },
+    {
+      "t": "2026-09-19T18:55:13.022Z",
+      "note": "Could not confirm: the screen is locked. The walk was refused at its menus step and a single forced run proved the lock is the reason (nothing takes key, the menu bar stays frozen), so there is no answer to be had tonight. Steps 1 to 11 did run and the trim itself is green. Held out of the queue until somebody logs in, and it returns by itself then."
     }
   ],
   "walks": [
     "save-is-live-after-a-trim-walk"
-  ]
+  ],
+  "started": "2026-09-19T18:44:16.861Z",
+  "waitsForUnlockedScreen": true
 }

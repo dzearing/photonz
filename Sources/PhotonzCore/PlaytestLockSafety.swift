@@ -114,6 +114,20 @@ public enum PlaytestLockSafety {
             + "screen at the right size with the right tooltip"
         let menu = "opens a real menu, and an open menu is a window of its own that the app can "
             + "neither drive nor photograph while the login window is up"
+        // A `menus` step opens nothing: it reads NSApp.mainMenu inside the
+        // app's own process. What stops it is the frozen menu bar. A walk
+        // never brings the probe to the front, so the only thing that ever
+        // gives it a live bar is one of its own windows taking key, and a
+        // locked Mac gives nothing key. Forced on 2026-09-19,
+        // `save-is-live-after-a-trim-walk` opened the Capture History overlay
+        // exactly as it does unlocked and the reading still came back "nothing
+        // in the probe has focus", which is the step saying its own answer is
+        // worthless. Saying "opens a real menu" instead sent that day's runner
+        // into the harness source to find the real objection.
+        let frozenBar = "reads the menu bar, and a locked Mac gives no window of the app key. "
+            + "SwiftUI only fills a window-scoped command in for a window that has focus, so every "
+            + "one of them reads dimmed and empty however the document changes, and the step itself "
+            + "says so rather than pretending ('nothing in the probe has focus')"
         let tutorial = "needs a tutorial card, and a card is not drawn while the login window is "
             + "over the app, so it would wait for something that never appears"
         let unproven = "has never been watched running with the screen locked, so it is refused "
@@ -122,7 +136,7 @@ public enum PlaytestLockSafety {
         var stops: [String: String] = [
             "focus": accessibility,
             "expectField": accessibility,
-            "menus": menu,
+            "menus": frozenBar,
             "menuShot": menu,
             "panelMenu": menu,
             "rightClick": menu,

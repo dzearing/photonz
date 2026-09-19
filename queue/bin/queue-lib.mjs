@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, append
 import { join, dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
 // throwaway copy instead, which is how the runner-failure drill
@@ -173,6 +174,9 @@ export function taskRow(t) {
   if (t.updated) row.updated = t.updated;
   if (t.completed) row.completed = t.completed;
   if (t.parked) row.parked = true;
+  // says WHY a pending task is not being claimed, so it does not read as stuck
+  const screen = waitingForScreen(t);
+  if (screen) row.waitingForScreen = screen;
   // the dialog header names the release, and it opens from the row, so this
   // rides along rather than arriving a beat later and changing under the eye
   if (t.release) row.release = t.release;
@@ -407,6 +411,24 @@ export function setWalks(id, walks) {
   return t;
 }
 
+// Say that this task can only be answered with somebody logged in at the Mac.
+// It stays pending and visible; it simply is not claimed while the screen is
+// locked, and it returns to the queue by itself once it is unlocked.
+export function setNeedsUnlockedScreen(id, needs, why = '') {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  const was = t.waitsForUnlockedScreen === true;
+  if (needs) t.waitsForUnlockedScreen = true; else delete t.waitsForUnlockedScreen;
+  if (was !== !!needs) {
+    appendLog(t, needs
+      ? `needs somebody at the Mac: held out of the queue while the screen is locked, and back in it the moment somebody logs in${why ? `. ${why}` : ''}`
+      : 'no longer needs somebody at the Mac; claimable whether or not the screen is locked');
+  }
+  saveTask(t);
+  appendEvent('task_needs_screen', { id, needs: !!needs });
+  return t;
+}
+
 export function setSeq(id, seq) {
   if (typeof seq !== 'number' || !isFinite(seq)) throw new Error(`bad seq ${seq}`);
   const t = findTask(id);
@@ -536,9 +558,65 @@ function settleAnsweredBlock(t, note = '', reason = 'answered while this was sti
 }
 
 // Every pending task whose deps are all done, in claim order.
+// ---- tasks that need somebody at the Mac ------------------------------------
+// A few tasks can only be answered with the screen unlocked. Confirming that
+// File ▸ Save is not greyed out after a trim is the one that forced this: a
+// locked Mac gives the app no key window, SwiftUI then leaves every
+// window-scoped command dimmed and empty whatever the document says, and the
+// walk that reads the menu is refused rather than believed
+// (Sources/PhotonzCore/PlaytestLockSafety.swift).
+//
+// Before this, such a task had two endings and both were bad. Marked `blocked`
+// with no decision card it stranded: nothing but an answer returns a task to
+// the queue, and witness-the-capture-dim-in-another-tool-on-an-un sat that way
+// from 2026-09-03 to 2026-09-05 until a triage pass noticed by hand. Left
+// `pending` it spun: the loop re-claimed it every pass and burned a runner
+// cycle re-discovering the same lock.
+//
+// So a task may say `"waitsForUnlockedScreen": true`. It stays pending, it
+// stays visible, and it is simply not READY while the screen is locked, which
+// means it comes back by itself the moment somebody logs in.
+const SCREEN_CACHE_MS = 5000;
+let screenCache = { at: 0, locked: false };
+
+// Whether the Mac's screen is locked right now, the same reading
+// queue/bin/sweep.sh takes. FAIL-OPEN on purpose: anything unexpected reads as
+// unlocked, so a broken lock check can only ever let a task run, never hide one
+// forever. PHOTONZ_SCREEN_LOCKED overrides it for drills.
+export function screenIsLocked() {
+  const forced = process.env.PHOTONZ_SCREEN_LOCKED;
+  if (forced != null && forced !== '') return forced === '1' || forced === 'true';
+  const t = Date.now();
+  if (t - screenCache.at < SCREEN_CACHE_MS) return screenCache.locked;
+  let locked = false;
+  try {
+    const out = execFileSync('ioreg', ['-n', 'Root', '-d1', '-a'], { encoding: 'utf8', timeout: 4000 });
+    const at = out.indexOf('CGSSessionScreenIsLocked');
+    locked = at >= 0 && /^\s*<true\/>/.test(out.slice(at + 'CGSSessionScreenIsLocked</key>'.length));
+  } catch {
+    locked = false;
+  }
+  screenCache = { at: t, locked };
+  return locked;
+}
+
+// Throws away the cached reading so a drill can watch the real one happen twice.
+export function forgetScreenReading() { screenCache = { at: 0, locked: false }; }
+
+// Why this task is pending and not ready, or null when nothing is holding it.
+export function waitingForScreen(t) {
+  // Only ever true of a task that is WAITING. One being worked on, or finished,
+  // is not being held back by anything, and saying so on its row would read as
+  // the loop refusing to touch it.
+  return t && t.status === 'pending' && t.waitsForUnlockedScreen && screenIsLocked()
+    ? 'waiting for somebody at the Mac: this one can only be answered with the screen unlocked'
+    : null;
+}
+
 export function readyTasks(tasks = readAllTasks()) {
   const doneIds = new Set(tasks.filter((t) => t.status === 'done').map((t) => t.id));
-  const ready = tasks.filter((t) => t.status === 'pending' && (t.deps || []).every((d) => doneIds.has(d)));
+  const ready = tasks.filter((t) => t.status === 'pending' && (t.deps || []).every((d) => doneIds.has(d))
+    && !waitingForScreen(t));
   ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
   return ready;
 }

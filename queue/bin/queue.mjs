@@ -23,6 +23,12 @@
 //                                            failing list says so instead of guessing it from the
 //                                            task's wording. --none says the walks it names are only
 //                                            examples. With no arguments it prints what the task says
+//   node queue/bin/queue.mjs needs-screen <id> [on|off] ["why"]
+//                                            this task can only be answered with somebody logged in
+//                                            at the Mac (a menu reading, a live screenshot). It stays
+//                                            pending and visible, is not claimed while the screen is
+//                                            locked, and returns to the queue by itself once it is
+//                                            unlocked. With no argument it says which it is
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
@@ -149,6 +155,19 @@ try {
         : [];
       if (missing.length) console.error(`No such walk: ${missing.join(', ')} (${library}/<name>.json). Recorded anyway; fix it if that is a typo.`);
       out(q.setWalks(args[0], list).id);
+      break;
+    }
+    case 'needs-screen': {
+      if (!args[0]) throw new Error('usage: queue.mjs needs-screen <id> [on|off] ["why"]');
+      const t = q.readTaskDetail(args[0]);
+      if (!t) throw new Error(`no task ${args[0]}`);
+      if (args.length === 1) {
+        out(t.waitsForUnlockedScreen
+          ? `needs somebody at the Mac; the screen is ${q.screenIsLocked() ? 'LOCKED, so it is waiting' : 'unlocked, so it is claimable'}`
+          : 'claimable whether or not the screen is locked');
+        break;
+      }
+      out(q.setNeedsUnlockedScreen(args[0], args[1] !== 'off', args.slice(2).join(' ')).id);
       break;
     }
     case 'priority':

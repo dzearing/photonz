@@ -1129,13 +1129,21 @@
       h += '<span class="db-sicon s-' + esc(st) + '"><i class="ic ' + STATUS_ICON[st] + '"></i></span>';
       h += '<span class="db-seq">' + (t.seq != null ? t.seq : '') + '</span>';
       h += '<span class="db-pri ' + t.priority.slice(0, 2) + '">' + t.priority.slice(0, 2).toUpperCase() + '</span>';
-      h += '<span class="db-title">' + esc(t.title) + (lastNote(t) ? '<span class="db-sub">' + esc(lastNote(t)) + '</span>' : '') + '</span>';
+      // A task held back for somebody at the Mac says so instead of showing its
+      // last log line: it is pending and never claimed, which otherwise reads
+      // as the loop ignoring it.
+      var sub = t.waitingForScreen || lastNote(t);
+      h += '<span class="db-title">' + esc(t.title) + (sub ? '<span class="db-sub">' + esc(sub) + '</span>' : '') + '</span>';
       h += '<span class="db-meta">' + rel(t.completed || t.updated) + '</span>';
       h += '</div>';
       return h;
     }).join('');
   }
-  function statusWord(t) { return t.parked ? 'parked' : STATUS_LABEL[t.status]; }
+  function statusWord(t) {
+    if (t.parked) return 'parked';
+    if (t.waitingForScreen) return 'waiting for an unlocked screen';
+    return STATUS_LABEL[t.status];
+  }
 
   // ---- task detail overlay ----------------------------------------------
   // Everything the queue knows about one task, plus the controls that used to
