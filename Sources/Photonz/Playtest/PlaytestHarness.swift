@@ -7014,42 +7014,84 @@ private final class Run {
         }
     }
 
+    /// How long the file on disk is given to catch up with a save before the
+    /// claim about it is called wrong.
+    ///
+    /// A commit re-encodes, off the main thread, and the step that started it
+    /// comes back the instant the work is handed over rather than when the
+    /// file changes. `videoSave` waits for its own completion and so never had
+    /// this problem; a save pressed the way a PERSON presses it — ⌘S through
+    /// the File menu — has nobody to wait on, and `wait` is no help because it
+    /// ends as soon as the app goes quiet and an encode keeps the app quiet.
+    /// So save-is-live-after-a-trim-walk read the file about a tenth of a
+    /// second after ⌘S, found the old eight seconds still there and reported
+    /// that Save had done nothing, on a build where it worked: giving it eight
+    /// tenths more was enough for the same file to read four seconds. A claim
+    /// that is going to come true is now waited for instead of raced.
+    ///
+    /// Twenty seconds is far longer than the sample has ever taken (about half
+    /// a second for a four second clip) and short enough that a save which
+    /// genuinely never lands still fails the walk quickly.
+    private static let storedRecordingSettles: Double = 20
+
     /// What the recording's FILE says, which is the only thing that settles
     /// whether a save saved. The app is not asked: the media on disk is opened
     /// and measured, and the hidden original beside it is looked for by hand.
+    ///
+    /// The file is read again until it agrees with the claim or
+    /// `storedRecordingSettles` runs out, so a walk that checks straight after
+    /// ⌘S is answered by the save that finishes rather than by the one that
+    /// has not started. A claim that is ALREADY true — "the file is still
+    /// eight seconds, nothing was committed" — is answered on the first read
+    /// and costs nothing.
     private func checkStoredRecording(seconds: Double?, within: Double,
                                       original: Bool?) async throws -> String {
         let video = try requireRecording()
         guard let url = video.url else {
             throw Failure(description: "the recording has no file yet, so there is nothing on disk to read")
         }
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            throw Failure(description: "there is no file at \(url.path): the recording the walk "
-                + "trimmed is not on disk at all")
-        }
-        let asset = AVURLAsset(url: url)
-        let stored = try await asset.load(.duration).seconds
-        let hasOriginal = VideoOriginals.exists(for: url)
-        let saying = "\(url.lastPathComponent) on disk is "
-            + "\(String(format: "%.2f", stored))s long"
-            + (hasOriginal ? ", with the untouched original preserved beside it"
-                           : ", with no original preserved beside it")
-
+        let started = Date()
+        let deadline = started.addingTimeInterval(Self.storedRecordingSettles)
+        var saying = ""
         var wrong: [String] = []
-        if let seconds, abs(seconds - stored) > within {
-            wrong.append("the stored recording is \(String(format: "%.2f", stored))s long, not "
-                + "\(String(format: "%.2f", seconds))s — what the app believes it saved and what "
-                + "is actually in the file are different things")
+        while true {
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "there is no file at \(url.path): the recording the walk "
+                    + "trimmed is not on disk at all")
+            }
+            // A fresh asset every pass: AVURLAsset remembers what it read the
+            // first time, and the whole point here is to see the file change.
+            let asset = AVURLAsset(url: url)
+            let stored = try await asset.load(.duration).seconds
+            let hasOriginal = VideoOriginals.exists(for: url)
+            saying = "\(url.lastPathComponent) on disk is "
+                + "\(String(format: "%.2f", stored))s long"
+                + (hasOriginal ? ", with the untouched original preserved beside it"
+                               : ", with no original preserved beside it")
+
+            wrong = []
+            if let seconds, abs(seconds - stored) > within {
+                wrong.append("the stored recording is \(String(format: "%.2f", stored))s long, not "
+                    + "\(String(format: "%.2f", seconds))s — what the app believes it saved and what "
+                    + "is actually in the file are different things")
+            }
+            if let original, original != hasOriginal {
+                wrong.append(hasOriginal
+                    ? "the untouched original IS preserved beside it, and the walk said it would not be"
+                    : "the untouched original is NOT preserved beside it, so the edit cannot be undone")
+            }
+            if wrong.isEmpty { break }
+            guard Date() < deadline else {
+                throw Failure(description: wrong.joined(separator: "; ")
+                    + ". \(saying), and it still read that way "
+                    + "\(String(format: "%.0f", Self.storedRecordingSettles))s later, so this is "
+                    + "a save that did not happen rather than one still encoding")
+            }
+            await sleep(0.1)
         }
-        if let original, original != hasOriginal {
-            wrong.append(hasOriginal
-                ? "the untouched original IS preserved beside it, and the walk said it would not be"
-                : "the untouched original is NOT preserved beside it, so the edit cannot be undone")
-        }
-        guard wrong.isEmpty else {
-            throw Failure(description: wrong.joined(separator: "; ") + ". \(saying)")
-        }
-        return saying
+        let waited = Date().timeIntervalSince(started)
+        guard waited >= 0.15 else { return saying }
+        return saying + ", after \(String(format: "%.1f", waited))s of waiting for the save to land"
     }
 
     /// Write the open recording out and then READ BACK what landed.
