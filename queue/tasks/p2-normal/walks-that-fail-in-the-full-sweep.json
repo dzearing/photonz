@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 130,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-18T14:24:41.550Z",
+  "updated": "2026-09-19T15:35:09.884Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre",
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
@@ -435,6 +435,14 @@
     {
       "t": "2026-09-18T14:24:41.549Z",
       "note": "sweep 2026-09-18T14:24:41Z: nothing failing in the 250 of 527 walks that ran"
+    },
+    {
+      "t": "2026-09-19T15:35:02.658Z",
+      "note": "Triage 2026-09-19: the interrupted sweep of 2026-09-18T14:43Z (queue/sweep/2026-09-18-074310.log) reported measure-chip-snap-walk FAILED in 1s with 'no done.json' at walk 26 of the 126 it reached. Ran it on its own just now with the screen unlocked: Scripts/playtest-all.sh measure-chip-snap -> 1 passed, 0 failed, 14s. So that one was a flake of the killed run, not a break, and it is not on the failing list for this task. Worth knowing for the pattern: a walk that dies before it starts reports the same 'no done.json' a genuinely broken one does, and 1s versus 14s is the only tell."
+    },
+    {
+      "t": "2026-09-19T15:35:09.883Z",
+      "note": "seq 130 -> 100"
     }
   ],
   "walks": [],

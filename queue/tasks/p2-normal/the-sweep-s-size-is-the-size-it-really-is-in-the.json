@@ -4,12 +4,12 @@
   "goal": "Four places tell whoever is working here that the full walk sweep is 322 walks and about 52 minutes. There are 526 walks and the last measured run puts a full one nearer a hundred minutes. That number is not decoration: it is the whole reason a task runner is forbidden to start a sweep, and it is what the sweep's own two hour stop was set against back when a sweep was under an hour. Put the real size in the places that quote it, and check the stop still has room, because the first full sweep after the screen is unlocked is the one that finds out.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-18T12:09:15.447Z",
-  "updated": "2026-09-18T12:09:34.261Z",
+  "updated": "2026-09-19T15:35:09.518Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-18 digest's rule scrub.\n\nCommand:\n  /bin/ls Scripts/playtest/*.json | wc -l\n  grep -n 322 CLAUDE.md queue/README.md queue/sweep/README.md queue/bin/sweep.sh\n\nOutput:\n  526\n  CLAUDE.md:38: 'it is 322 walks and about 52 minutes'\n  queue/bin/sweep.sh:5: 'are 322 of them and the last measured run did 247 in 40m 21s'\n  queue/bin/sweep.sh:182: 'would leave 322 walks timing out one after'\n  queue/sweep/README.md:4: '322 of them, about 52 minutes'\n  queue/README.md:25: 'all 322 scripted walks, about 52 minutes'\n\nThe cap arithmetic, from queue/sweep/latest.json (began 11:13:29Z, ended 12:05:03Z, 3094s): 249 walks ran in full and 277 were refused in about a second each, so a real walk costs about 11.3s. A full 526 at that rate is about 99 minutes against a cap of 120 (PHOTONZ_SWEEP_MAX_MINUTES in queue/bin/sweep.sh), which is roughly 17 per cent of headroom. The walks that only run unlocked are the ones that drive menus and named controls, so there is no reason to assume they are the fast ones. Nothing is broken today because every sweep since 2026-09-14 has been a partial; the first full one is where it would show.",
@@ -28,6 +28,14 @@
     {
       "t": "2026-09-18T12:09:34.260Z",
       "note": "seq 35 -> 40"
+    },
+    {
+      "t": "2026-09-19T15:35:02.704Z",
+      "note": "Triage 2026-09-19: the numbers to write in, measured. The last completed sweep (queue/sweep/latest.json) ran 250 lock-safe walks in 3094 seconds, 51 minutes, and counted 527 walks in the set with 277 it could not run. So the lock-safe half alone is about the 52 minutes the docs quote for the WHOLE set, and a full run is nearer a hundred. Places that still say 322 walks and about 52 minutes include CLAUDE.md's build-and-test table and the header comment of queue/bin/sweep.sh, which is also where the two-hour cap is justified against 'a good sweep is about 52 minutes'."
+    },
+    {
+      "t": "2026-09-19T15:35:09.517Z",
+      "note": "seq 40 -> 20"
     }
   ]
 }

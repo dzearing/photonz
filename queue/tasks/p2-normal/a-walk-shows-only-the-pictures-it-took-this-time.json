@@ -4,12 +4,12 @@
   "goal": "When a scripted run of the app is re-run, the pictures it took last time are still sitting in its output folder. A run that stopped early leaves a folder full of pictures from a healthier run, and whoever reads it, agent or person, cannot tell which run any of them came from. The pictures in a run folder should be that run's pictures and nothing else.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T09:54:49.376Z",
-  "updated": "2026-09-18T12:08:26.287Z",
+  "updated": "2026-09-19T15:35:09.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-18 02:49 while building the crash reporting in a-walk-whose-app-died-says-the-app-died.\n\nThe probe was built with the layer-rename fix reverted (git checkout 6bfe4969^ -- Sources/Photonz/EditorState.swift Sources/PhotonzCore/History.swift), so unique-layer-names-walk aborts at step 17 (renameSelectedLayer). Its last log line is step 16:\n\n  [16 wait] 0.5s asked, quiet after 0.10s\n\nand the run photographed exactly one thing, step 13:\n\n  [0 capture] names-1-four-shapes-sc.png 2800x2056\n\nyet the folder it printed at the end held six pictures:\n\n  ==> Output: /tmp/photonz-playtest/unique-layer-names\n  log.json\n  names-1-four-shapes-sc.png\n  names-1-four-shapes.png\n  names-2-after-rename-sc.png\n  names-2-after-rename.png\n  names-3-after-paste-sc.png\n  names-3-after-paste.png\n\nnames-2 and names-3 are from an earlier passing run: those steps never ran. Scripts/playtest.sh only does `rm -f \"$OUT/done.json\"` before launching (line 51), so everything else from the last run survives.\n\nWhy it matters beyond tidiness: an audit is required to ship a real -sc.png from a walk, and the runner writing that audit picks the file out of this folder. A crashed or cut-short run hands it a picture of an app that was working, taken minutes or days earlier, with nothing to say so. Clearing the folder (or writing each run into its own subfolder) is the fix; if renders are cleared, keep in mind a walk that fails at step 2 should still leave the one picture it took.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-18T12:08:26.286Z",
       "note": "Triage 2026-09-18: moved from the back of p2 to third. A run folder that still holds an earlier run's pictures makes every audit photograph ambiguous, and an audit is the user's only window into what shipped, so this ranks above the features behind it."
+    },
+    {
+      "t": "2026-09-19T15:35:09.471Z",
+      "note": "seq 30 -> 10"
     }
   ],
   "walks": []

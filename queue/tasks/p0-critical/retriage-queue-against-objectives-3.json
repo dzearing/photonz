@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-18T15:10:43.072Z",
-  "updated": "2026-09-18T15:10:43.075Z",
+  "updated": "2026-09-19T15:34:37.777Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.",
@@ -21,6 +21,11 @@
     {
       "t": "2026-09-18T15:10:43.074Z",
       "note": "created (dashboard retriage button)"
+    },
+    {
+      "t": "2026-09-19T15:34:37.775Z",
+      "note": "Done by the daily triage pass of 2026-09-19. The retriage the button asked for had already been carried out by the manager pass at 15:10Z on 2026-09-18 (objectives rewritten, video made the focus, seven video tasks filed at p1) and is completed by today's triage: every open task carries an epic, all four priorities are resequenced to clean steps of ten, one duplicate is merged, and one new loop bug is filed. Leaving it open would have put a runner on a pass that had already run twice."
     }
-  ]
+  ],
+  "completed": "2026-09-19T15:34:37.776Z"
 }

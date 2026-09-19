@@ -47,6 +47,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-17T10:56:44.833Z"
+  "status": "withdrawn",
+  "created": "2026-09-17T10:56:44.833Z",
+  "withdrawn": {
+    "reason": "The question it asks (should the pieces of a recording be reorderable?) is settled: the epic it belongs to is called 'Cutting and arranging: blade, trim, and place clips with confidence', and on 2026-09-18 the user made video the focus and the clickthroughs the direction, after which the task 'Cut, arrange and retime what is on the timeline' was filed with arranging in its title. Reordering is now an acceptance item on that task, so there is nothing left to ask. The card's second question, whether video should go next at all, was answered by the user in the same breath.",
+    "at": "2026-09-19T15:34:47.185Z"
+  }
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T10:56:38.608Z",
-  "updated": "2026-09-18T12:09:34.635Z",
+  "updated": "2026-09-19T15:34:47.266Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective gap rather than a bug. The video-cutting epic is titled \"Cutting and arranging: blade, trim, and place clips with confidence\" and it has had exactly two tasks since the user answered \"Start video now\" on 2026-09-15: cutting into pieces, and keeping the pieces visible while trimming. Arranging is not built anywhere. Sources/PhotonzCore/VideoCuts.swift holds VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), and no way to move a piece; the pieces array is in play order and timeline time is derived from it, so a move is a reorder of that array and everything downstream already reads through it. Sources/Photonz/TrimTimeline.swift draws the blocks. Filed with a card because dragging a piece to a new place is a new gesture on the strip that the user has not asked for by name, and the card also asks whether this is where video should go next at all.",
@@ -47,6 +47,18 @@
     {
       "t": "2026-09-18T12:09:34.634Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-09-19T15:34:47.210Z",
+      "note": "the question \"You can cut a recording into pieces and drop one. Should you be able to put the pieces in a different order?\" was taken down without an answer: The question it asks (should the pieces of a recording be reorderable?) is settled: the epic it belongs to is called 'Cutting and arranging: blade, trim, and place clips with confidence', and on 2026-09-18 the user made video the focus and the clickthroughs the direction, after which the task 'Cut, arrange and retime what is on the timeline' was filed with arranging in its title. Reordering is now an acceptance item on that task, so there is nothing left to ask. The card's second question, whether video should go next at all, was answered by the user in the same breath.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-09-19T15:34:47.217Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-09-19T15:34:47.265Z",
+      "note": "duplicate of cut-arrange-and-retime-what-is-on-the-timeline; its findings and its VideoCuts.swift reading are folded into that task's log and reordering is now an acceptance item there. Its decision card is withdrawn."
     }
   ]
 }

@@ -1,0 +1,43 @@
+{
+  "id": "a-sweep-that-is-cut-short-still-counts-and-the-a",
+  "title": "A sweep that is cut short still counts, and the ask for it survives",
+  "goal": "The full walk sweep is the only thing that tells the loop whether the change it just made broke the app, and asking for one is how a task runner hands that job over. If the loop is killed while a sweep is running, the ask disappears with it: the sweep is claimed at the moment it starts, nothing is written down unless it reaches the end, and no trace of the request is left behind. Yesterday that ate a sweep of 126 walks and the request that asked for it, and nothing has checked the app since. A sweep that is interrupted should still say what it managed to check, and an ask that was never served should still be waiting when the loop comes back.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-19T15:34:56.696Z",
+  "updated": "2026-09-19T15:35:13.610Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED FROM THE RECORD, on this machine, today.\\n\\nWhat happened: the loop started a sweep at 2026-09-18T14:43:10Z (queue/sweep/2026-09-18-074310.log). It got through 126 walks. The loop process then died at about 15:09Z, external to the sweep, and did not come back until it was started by hand at 2026-09-19T15:31Z.\\n\\nWhat that left behind, checked just now:\\n  $ ls queue/sweep/requested.json   ->  does not exist\\n  $ node -e (read latest.json) -> {began: 2026-09-18T13:33:07Z, ended: 2026-09-18T14:24:41Z, walks: 250, head: e2e5687fe}\\n  $ grep -c (walk result lines) queue/sweep/2026-09-18-074310.log  ->  126\\n  $ grep FAILED queue/sweep/2026-09-18-074310.log -> measure-chip-snap-walk  1s  FAILED  no done.json\\n\\nSo: the last recorded sweep is the one BEFORE the interrupted one, at the commit before last; 126 walk results including one failure were thrown away; and because sweep.sh run does mv -f requested.json .claimed.json before it starts (queue/bin/sweep.sh, the run branch), there is no pending request left for the loop to serve. queue/bin/sweep.sh status now says a sweep was last run against e2e5687f and that none is pending, which is true and is exactly the problem: commit ebbcfc3f has never been swept and nobody is going to.\\n\\n(The one FAILED walk was checked: Scripts/playtest-all.sh measure-chip-snap passes on its own in 14s, so it was a flake of the killed run, not a break. That evidence is logged on walks-that-fail-in-the-full-sweep.)\\n\\nTHE SHAPE OF THE FIX, not prescribed but the ground it has to cover. The claim is right - a request arriving during a sweep belongs to the next one - so do not stop claiming. Put the claimed requests back if the run never finished, or write the run down as it goes rather than only at the end, or both. There is already a partial-run path for the locked-screen case that records what it reached (complete: false, partial: true), so an interrupted run has somewhere honest to land; queue/bin/sweep-report.mjs already refuses to write anything for a run that got through no walk at all and already leaves the standing task open when a run did not cover the set. Prefer reusing that to inventing a second kind of incomplete sweep.",
+  "acceptance": [
+    "Kill a sweep part way, by hand, and prove both halves: what it reached is recorded like any other partial run, and the request that asked for it is pending again when the loop comes back",
+    "A sweep that got through no walk at all still records nothing and still leaves the request pending, so a probe that cannot launch does not read as a clean run",
+    "An interrupted sweep never reads as the state of the walk set: whatever the dashboard and sweep.sh status say about it says how much of the set it covered",
+    "A failing walk seen by an interrupted run is not silently dropped: say where it goes, and make the next sweep able to tell a real break from a flake in a killed run",
+    "Do it with the sweep narrowed by PHOTONZ_SWEEP_ARGS so this is provable in a minute rather than by burning a real sweep",
+    "The standing walk task is not closed by an interrupted run under any circumstances",
+    "Say in the task log what happens to the 2026-09-18 request that was lost, and re-ask for it if it is still wanted"
+  ],
+  "log": [
+    {
+      "t": "2026-09-19T15:34:56.698Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-19T15:35:02.612Z",
+      "note": "Checked the two open tasks the filing warning named, and neither covers this. walks-that-fail-in-the-full-sweep is about walks that fail and what to do with each of them; this is about a sweep whose results and whose request both vanish when the loop is killed, whether or not anything failed. a-hundred-and-fifteen-walks-fail-on-code-that-pa is about a walk answering differently while the screen is locked; this happens with the screen in any state."
+    },
+    {
+      "t": "2026-09-19T15:35:09.976Z",
+      "note": "seq 3010 -> 120"
+    },
+    {
+      "t": "2026-09-19T15:35:13.609Z",
+      "note": "seq 120 -> 25"
+    }
+  ]
+}

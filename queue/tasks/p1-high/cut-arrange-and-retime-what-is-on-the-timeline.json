@@ -4,12 +4,12 @@
   "goal": "Building a video is mostly cutting: split a take where the fumble is, throw the bad part away, slide what is left, hold on a frame, and speed a boring stretch up. Make all of that direct, reversible and quick, on the timeline, without anything being destroyed.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 2,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-18T15:15:43.166Z",
+  "updated": "2026-09-19T15:35:09.101Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -18,6 +18,7 @@
   "acceptance": [
     "A clip can be split where the playhead is, and the two halves are ordinary layers that still read the same source",
     "Clips can be trimmed from either end, moved, and snapped to each other, to the playhead and to the ends of the document",
+    "A clip can be picked up and dropped into a different place in the order, with the timeline showing where it is going to land while you drag, and what plays, what the playhead reads and what an export writes all agree with the new order straight away",
     "Nothing is destroyed: a trim can be pulled back out to the media that is still there, proved by trimming in and then back out to the original length",
     "A frame can be held: a clip whose in and out are the same frame drops onto the timeline like any other clip",
     "A clip can be sped up or slowed down, and the audit shows what happens to its audio when it is",
@@ -38,6 +39,14 @@
     {
       "t": "2026-09-18T15:15:43.166Z",
       "note": "deps set: the document gets time first"
+    },
+    {
+      "t": "2026-09-19T15:34:44.381Z",
+      "note": "Triage 2026-09-19: absorbed put-the-pieces-of-a-recording-in-a-different-ord, which asked for exactly the arranging half of this task and was dropped as a duplicate. What it knew, worth keeping: Sources/PhotonzCore/VideoCuts.swift holds VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:) and no way to move a piece; the pieces array is already in play order and timeline time is derived from it, so a move is a reorder of that array and everything downstream reads through it. Sources/Photonz/TrimTimeline.swift draws the blocks today. That is the OLD editor, which a-document-can-have-time retires, so build the reorder on the new timeline rather than on the strip, and check the old trim strip does not survive with a second way to do it. Reordering is now an acceptance item here."
+    },
+    {
+      "t": "2026-09-19T15:35:09.100Z",
+      "note": "seq 2 -> 30"
     }
   ]
 }

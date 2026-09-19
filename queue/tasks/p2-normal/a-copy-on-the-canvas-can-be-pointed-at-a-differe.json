@@ -4,12 +4,12 @@
   "goal": "Building a screen means trying things: this row wants a Primary Button here and a Secondary one there, this card wants a different badge. Today a copy of a component is stuck being a copy of that component. The only way to change your mind is to delete it, drag the other one out of the Library, and put back by hand every size, every bit of room and every knob you had set. On a screen with twenty copies on it that is the difference between exploring a layout and committing to one.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 110,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:07:03.226Z",
-  "updated": "2026-09-18T12:09:34.728Z",
+  "updated": "2026-09-19T15:35:09.931Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Ninth manager pass carrying this as an open thread with no card ever opened against it. That is the actual failure being corrected here: the thread kept being recorded and never turned into a question the user could answer.\n\nThe gap is stated in the spec itself, docs/design/ui-building.md, What the first version deliberately does not do: Detach is one way, there is no re-attach. Nothing in that list covers swapping which main a copy follows, and nothing in Sources/PhotonzCore/ComponentInstances.swift offers it.\n\nBLOCKED ON ITS CARD. This adds something visible that the user has not asked for, and the shape of it is exactly the product question: whether it is a row in the Component section, a drop of one tile onto an existing copy, or something else. Do not build it before the card is answered.\n\nOne of the card options is do not build it, marked declines, because a tool where you delete and redo is a defensible answer for a first version and the user should be able to say so.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-18T12:09:34.727Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-09-19T15:35:09.930Z",
+      "note": "seq 140 -> 110"
     }
   ]
 }

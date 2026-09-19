@@ -4,12 +4,12 @@
   "goal": "Video brings a transport, a timeline with lanes, waveforms, channel strips, transition settings and caption lists. That is a lot of new surface arriving at once, into a panel that is already too full. Before any of it is built, work the design through against the rest of the app so it lands as more of Photonz rather than a video editor bolted to the side.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.5,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:16:17.258Z",
-  "updated": "2026-09-19T15:32:06.996Z",
+  "updated": "2026-09-19T15:35:27.941Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-18, immediately after shifting priority to video: \"We really need to ensure that we refine the design and ensure things flow with the rest of the app well.\"\n\nThis comes FIRST, before the foundation task, because the panel has just taught everybody what happens otherwise. Three days ago the same user sat down with the component panel and said it was \"completely cluttered and hard to read and unpredictable. total mess\", and the measuring backed them: 1052 points of sections against a 968 point viewport, with Position and Size never wholly on screen at any window size. Six tasks came out of that. Video adds more surface than components did. Doing the same thing twice would be a choice.\n\nWhat the panel just learned, and what video must not undo:\n- A section is named for the job it does, in words somebody already knows. The app invented Adjustable and Versions and the user could not say what either was for.\n- A section that needs a paragraph inside it to explain itself is misnamed; the paragraph is the symptom.\n- A grid of number boxes is the laziest answer. One row with a way into the detail, and a Mixed state when the parts differ.\n- Things that are set by dragging do not deserve permanent room in the panel: Position and Size left it entirely.\n- Panes can be hidden, and there is an automatic mode showing what the selection actually needs.\nEvery one of those applies to a channel strip, a transition's settings and a caption list as much as it did to a component.\n\nWhat exists to build on rather than restart: fifteen clickthroughs under docs/design/mocks/pages (video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed) plus comp-video, which is the time primitives page and says its own purpose out loud: \"Time needs its own primitives, and they are the ones most likely to get re-invented per page because they look like decoration. They are not.\" The user was explicit that these are ideas rather than specs, so refine them, contradict them where they are wrong, and say where and why.\n\nAlso read the pane-load study (work-out-whether-the-right-hand-pane-is-carrying, done) whose page is docs/design/mocks/pages/pane-load.html: it already measured the dock and already recommended a timing strip across the bottom with Motion staying in the panel. That recommendation was made for animation and video inherits the same question, so either follow it or say why video changes the answer.\n\nAnd the modes work (work-out-whether-the-app-needs-project-types-at) is the other half of this: if a mode is a preset of what is showing, then 'the video surface appears when the document has time' and 'the video mode shows these panes' are the same mechanism described twice. Reconcile them rather than building two.",
@@ -45,6 +45,14 @@
     {
       "t": "2026-09-19T15:32:06.995Z",
       "note": "Put back to p1 on 2026-09-19: a retriage had dropped this to p2, which would have left the video foundation blocked behind every other p1 since it depends on this. The user asked for the design pass specifically ('We really need to ensure that we refine the design and ensure things flow with the rest of the app well') and video is the focus."
+    },
+    {
+      "t": "2026-09-19T15:35:09.008Z",
+      "note": "seq 0.5 -> 10"
+    },
+    {
+      "t": "2026-09-19T15:35:27.940Z",
+      "note": "Design review 2026-09-19: the shell vocabulary already answers most of this, so start there instead of deriving it again. docs/design/mocks/shared/UX-PATTERNS.md section 1 states the rule as 'timeline when time': the timeline dock and transport bar appear only when the document has time, and the bottom dock is item 8 of the regions list with the transport (.transport: volume, skip, play, scrubber with in and out marks, timecodes) above the timeline (.timeline). D8 settles what may sit on the transport row (time controls only, and it gives the table of where everything else goes: a mode to the tool strip, something about the selection next to that selection, something scoped to the timeline to the timeline's own local bar .tlbar). D10 settles that a property list shows what CAN be animated rather than what is. Section 1's responsive rules already say what the transport does at a narrow window. So the finding for this task is not that the vocabulary is missing, it is that the shipped surface does not follow it: a recording today opens its own editor window with its own trim strip, which is the one shape section 1 forbids. Reconcile the fifteen pages against these rules, and where a page and a rule disagree say which one is wrong and change it rather than leaving both."
     }
   ]
 }

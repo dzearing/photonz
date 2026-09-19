@@ -4,12 +4,12 @@
   "goal": "Every video needs words on it, and typing them out by hand while scrubbing is the worst job in editing. Have the app listen to the audio and write the captions, let them be corrected and restyled like any other text, and let a title be a text layer that happens to have a start and an end.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 4,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.757Z",
-  "updated": "2026-09-18T15:15:43.166Z",
+  "updated": "2026-09-19T15:35:09.194Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-18T15:15:43.166Z",
       "note": "deps set: the document gets time first"
+    },
+    {
+      "t": "2026-09-19T15:35:09.193Z",
+      "note": "seq 4 -> 50"
     }
   ]
 }

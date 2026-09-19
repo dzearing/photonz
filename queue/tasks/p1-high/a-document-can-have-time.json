@@ -4,12 +4,12 @@
   "goal": "Video is a separate little editor that opens one clip and lets you trim it. Everything the clickthroughs describe needs the opposite: one document that happens to have a duration, where a clip is a layer with an in and an out, the transport and the timeline appear because the document has time, and everything the app already does to layers keeps working. Build that, and let the old video editor retire into it.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 1,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-18T15:16:34.738480Z",
+  "updated": "2026-09-19T15:35:09.055Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same"
   ],
@@ -40,6 +40,10 @@
     {
       "t": "2026-09-18T15:16:34.738480Z",
       "note": "deps: the design pass comes first, at the user request"
+    },
+    {
+      "t": "2026-09-19T15:35:09.054Z",
+      "note": "seq 1 -> 20"
     }
   ]
 }

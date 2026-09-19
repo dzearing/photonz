@@ -4,12 +4,12 @@
   "goal": "Open a recording, trim it, and there is no way to save what you did. File Save is greyed out. Closing the window says there are unsaved changes, which proves the app knows there are. Pressing Save in that dialog does nothing and the window stays. The one job somebody opens a recording to do, trim it and send it to somebody, cannot be finished.",
   "epic": "video-cutting",
   "priority": "p0-critical",
-  "seq": 1,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T22:53:26.967Z",
-  "updated": "2026-09-18T22:53:39.343Z",
+  "updated": "2026-09-19T15:35:08.964Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-18: \"i open a video. I trim it. I select file save. The save is disabled. I close the video and it still says 'do you want to save changes.' I click 'Save...' and it does nothing. so buggy. I just want to trim, save, send in teams.\"\n\nThis is the flow the 0.14 release led with (\"Saving a trimmed recording actually trims it\"), so it either regressed or never worked outside the case it was built against. Treat it as a break in something that shipped.\n\nWHAT I FOUND BY READING, three candidates, none confirmed. Reproduce before fixing: the symptoms do not all fit one cause, which usually means there are two faults, and fixing the loudest one will leave the other.\n\n1. The menu cannot see the video editor. EditorCommands.swift:40 reads the video editor through @FocusedValue(\\.videoEditorState), and Save is disabled by `editor?.document == nil && !(video?.canSave ?? false)`. If that focused value is nil for a recording window, Save is disabled no matter what the state says. The value is published at EditorWindowRoots.swift:61 with focusedSceneValue, but this app opens windows through AppCoordinator rather than as plain SwiftUI scenes, and there is already a note in the playtest harness that this app's Commands body only re-evaluates on focus events. THIS IS THE LEADING CANDIDATE because it explains the disabled menu item while the close dialog, which holds the state directly through WindowCloseGuard, correctly knows there are changes.\n\n2. isSaving stuck true. canSave is `isReady && url != nil && !isSaving` (VideoEditorState.swift:393) and save() returns completion(false) immediately when isSaving (around :412). That single flag would explain all three symptoms at once. It is reset on both the success and the catch path (around :437 and :444), so it can only stick if VideoAssetCommit.commit never returns. Check whether it can hang.\n\n3. The close dialog's Save calling a save that bails quietly. saveForClose calls save(), and save()'s first guard returns completion(true) - 'nothing loaded, nothing to lose' - when url is nil or isReady is false. A completion(true) there tells the dialog the save succeeded when nothing was written. That is a quiet lie and is worth removing whatever else is wrong: a save that did nothing should never report success.\n\nNote the contradiction that rules something out: hasUnsavedChanges (VideoEditorState.swift:387) itself guards on `isReady, url != nil`, and the user SAW the unsaved changes dialog, so both of those were true at that moment. That means canSave could only have been false through isSaving, or the menu never saw the state at all.\n\nWhile this is broken the way out is Save As, which maps to saveRecording(video, as: .mp4) and writes a fresh file, or Export. Say in the audit whether those worked, because if they did not this is bigger than the menu.",
@@ -37,6 +37,15 @@
     {
       "t": "2026-09-18T22:53:39.342Z",
       "note": "seq 3010 -> 1"
+    },
+    {
+      "t": "2026-09-19T15:34:40.910Z",
+      "note": "Triage 2026-09-19: marked source=user. It was filed from the user's own words on 2026-09-18, so their report IS the evidence and it keeps the top of the queue without a reproduction attached. Also: the screen is unlocked again as of this morning, so unlike every video-cutting task built between 2026-09-15 and 2026-09-18 this one can be driven and photographed by hand. Do that: the four audits behind this feature (2026-09-15-video-cutting, 2026-09-16-video-cutting-trim, 2026-09-17-video-cutting-trim-catch, 2026-09-17-video-cutting-trim-free) all say nobody ever saw it drawn, and the 2026-09-15 one lists 'press Command S and reopen the recording from history' as a step it never ran."
+    },
+    {
+      "t": "2026-09-19T15:35:08.963Z",
+      "note": "seq 1 -> 10"
     }
-  ]
+  ],
+  "source": "user"
 }
