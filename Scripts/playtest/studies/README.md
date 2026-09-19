@@ -2,7 +2,8 @@
 
 Walks kept out of the sweep on purpose. `Scripts/playtest-all.sh` and
 `queue/bin/sweep.sh` both glob `Scripts/playtest/*.json`, which does not reach
-this folder, so nothing in here runs in the 322-walk set.
+this folder, so nothing in here runs in the walk set proper
+(about 530 walks and about 105 minutes; `queue/bin/sweep-size.mjs` counts it).
 
 A walk belongs here when it **measures** rather than **asserts**: it exists to
 read numbers out of the running app for a study, and it has no claim that could

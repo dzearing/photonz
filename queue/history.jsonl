@@ -5559,3 +5559,12 @@
 {"t":"2026-09-19T21:24:52.866Z","ev":"task_note","id":"confirm-file-save-is-live-on-a-trimmed-recording"}
 {"t":"2026-09-19T21:24:54.473Z","ev":"task_needs_screen","id":"confirm-file-save-is-live-on-a-trimmed-recording","needs":false}
 {"t":"2026-09-19T21:24:57.118Z","ev":"task_done","id":"confirm-file-save-is-live-on-a-trimmed-recording","from":"in_progress","note":"Confirmed on an unlocked screen: File Save is NOT greyed out after a trim. The live menu dump reads Save ⌘S and Save As… ⇧⌘S undimmed and Save to Capture History ⌥⌘S dimmed, ⌘S reached File ▸ Save and ran it, and the recording came back 4.00s on disk with the untouched original preserved. The 2026-09-18 report is fixed. The walk was also failing for a reason that was not the app (it read the file 0.10s after ⌘S, racing an off-main-thread re-encode); fixed in a00e69bf so expectStoredRecording waits for the file to agree. trim-save-send, close-a-trimmed-recording and recording-export-sheet walks green, Scripts/test.sh 8374 tests pass. Audit: queue/audits/2026-09-19-save-is-live-after-a-trim.json."}
+{"t":"2026-09-19T22:23:53.949Z","ev":"sweep_pass","walks":262,"passed":261,"failed":1,"seconds":3515,"complete":false,"screenLocked":true,"couldNotRun":270,"partial":true,"total":532}
+{"t":"2026-09-19T22:23:54.074Z","ev":"task_started","id":"the-sweep-s-size-is-the-size-it-really-is-in-the","title":"The sweep's size is the size it really is, in the docs and in its own time limit","priority":"p2-normal"}
+{"t":"2026-09-19T22:38:48.767Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:48.817Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:48.865Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:48.913Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:48.962Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:49.009Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
+{"t":"2026-09-19T22:38:49.056Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}

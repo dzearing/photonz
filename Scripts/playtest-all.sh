@@ -17,7 +17,8 @@
 # crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
-# The whole set is now 322 walks, about 52 minutes, and it is GATED behind
+# The whole set is now about 530 walks and about 105 minutes (counted by
+# queue/bin/sweep-size.mjs, never typed in), and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
 # has its background work killed at 600s, and eight of the twenty recorded
 # runner failures are a runner that started this script and was terminated
@@ -40,14 +41,16 @@ for arg in "$@"; do
   esac
 done
 
-# The whole set costs about 52 minutes, which is five times the 600s ceiling on
-# a task runner's background work, so running it from inside a task ends with
+# The whole set is
+# about 530 walks and about 105 minutes, which is eleven times the 600s ceiling
+# on a task runner's background work, so running it from inside a task ends with
 # the runner terminated and its task handed back unfinished. Point whoever did
 # that at the way that survives instead of letting them start the run.
 if (( ${#PATTERNS[@]} == 0 )) && [[ "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
   cat >&2 <<'EOM'
-!! Refusing to run all 300+ walks here: it takes about 52 minutes, and a task
-!! runner's background work is terminated at 600s, so this run would be killed
+!! Refusing to run the whole walk set here: it is
+!! about 530 walks and about 105 minutes, and a task runner's background work
+!! is terminated at 600s, so this run would be killed
 !! and the task that started it would be handed back unfinished.
 !!
 !! Ask the go loop for a sweep instead. It runs between tasks, where nothing
@@ -94,17 +97,39 @@ fi
 # a process doing work, it is bounded by -t as well as by the trap below, and it
 # can neither wake nor unlock a screen. Nothing here fights a person who locked
 # the Mac on purpose; the walks simply say they could not run.
+#
+# How long to hold for is SIZED FROM THE SET, not written down. It was a flat two
+# hours, chosen when a sweep was 52 minutes; by 2026-09-19 the set was 532 walks
+# and a full sweep 106 minutes, so a run a little slower than usual would have
+# outlived its own hold, let the screen idle into a lock with a hundred walks to
+# go, and reported every one of them as refused. The hold has to outlast the
+# sweep's wall-clock CAP rather than a good sweep, so it is that plus ten
+# minutes for the probe build (queue/bin/sweep-size.mjs --awake-seconds).
 AWAKE=""
+awake_seconds() {
+  if [[ -n "${PHOTONZ_WALK_AWAKE_SECONDS:-}" ]]; then echo "$PHOTONZ_WALK_AWAKE_SECONDS"; return; fi
+  queue/bin/sweep-size.mjs --awake-seconds 2>/dev/null || echo 11400
+}
+# The hold outlives a SIGKILL, and the sweep's wall-clock stop is a SIGKILL: the
+# trap below cannot run then, so the caffeinate is orphaned and holds the Mac
+# awake for the rest of its -t. Seen for real on 2026-09-19, three hours of hold
+# left behind by one forced stop. So the pid is written where the caller asked
+# for it, and whoever forced the stop puts it down by pid rather than reaching
+# for pkill, which would also kill a caffeinate the user started themselves.
 hold_awake() {
   command -v caffeinate >/dev/null 2>&1 || return 0
-  caffeinate -d -i -t "${PHOTONZ_WALK_AWAKE_SECONDS:-7200}" &
+  caffeinate -d -i -t "$(awake_seconds)" &
   AWAKE=$!
+  [[ -n "${PHOTONZ_WALK_AWAKE_PIDFILE:-}" ]] && echo "$AWAKE" > "$PHOTONZ_WALK_AWAKE_PIDFILE"
+  return 0
 }
 release_awake() {
+  [[ -n "${PHOTONZ_WALK_AWAKE_PIDFILE:-}" ]] && rm -f "$PHOTONZ_WALK_AWAKE_PIDFILE"
   [[ -n "$AWAKE" ]] || return 0
   kill "$AWAKE" 2>/dev/null
   wait "$AWAKE" 2>/dev/null
   AWAKE=""
+  return 0
 }
 trap release_awake EXIT INT TERM
 hold_awake

@@ -28,6 +28,18 @@ jobs:
           fi
           echo "queue/playtest.lock is not tracked."
 
+      # Eleven files tell whoever is working here how big the walk sweep is, and
+      # that number is the whole reason a task runner may not start one. Typed
+      # in by hand it went stale: on 2026-09-19 every one of them still said 322
+      # walks and 52 minutes while the set had grown to 532 and a full run to an
+      # hour and three quarters. It is counted now, and this is what stops the
+      # next hundred walks making them wrong again in silence.
+      - name: The sweep's size is the size it really is
+        run: |
+          node queue/bin/sweep-size.mjs
+          node queue/bin/sweep-size.mjs --check
+          node queue/bin/sweep-size-drill.mjs
+
       - name: Swift version
         run: swift --version
 

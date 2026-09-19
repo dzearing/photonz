@@ -260,8 +260,10 @@ settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 
   return 0
 }
 
-# The full walk sweep, run BETWEEN tasks. A runner cannot run it: 322 walks is
-# about 52 minutes and a runner's background work is terminated at 600s, which
+# The full walk sweep, run BETWEEN tasks. A runner cannot run it: the set is
+# about 530 walks and about 105 minutes (queue/bin/sweep-size.mjs counts it, so
+# this comment cannot go stale on its own) and a runner's background work is
+# terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07
 # 16:22 and 2026-09-08 00:03 among them). So a runner asks with
 # `queue/bin/sweep.sh request`, and the loop does the waiting here, in its own
@@ -272,9 +274,16 @@ sweep_pass() {
   # With the screen locked only the walks that never ask for a control by name
   # can run, which is about half the set and about forty minutes. Say which of
   # the two is happening, because one of them leaves most of the set unchecked.
-  local what="the full walk sweep (about 50 minutes)"
+  # How long to say it takes, worked out from this machine's own recorded
+  # sweeps (queue/bin/sweep-size.mjs) rather than written down here. The two
+  # numbers written here were fifty and forty minutes, set when the set was
+  # half the size it is now.
+  local full part what
+  full=$(queue/bin/sweep-size.mjs --minutes 2>/dev/null || echo 105)
+  part=$(queue/bin/sweep-size.mjs --partial-minutes 2>/dev/null || echo 55)
+  what="the full walk sweep (about $full minutes)"
   if ioreg -n Root -d1 -a 2>/dev/null | grep -A1 CGSSessionScreenIsLocked | grep -q "<true/>"; then
-    what="the part of the walk sweep a locked screen cannot touch (about 40 minutes)"
+    what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
   fi
   echo "[go-loop] $(date +%T) walk sweep requested; running $what before the next task" | tee -a "$LOG"
   Q busy "running $what before the next task"

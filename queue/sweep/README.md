@@ -1,8 +1,9 @@
 # queue/sweep
 
-The full walk sweep runs every scripted walk in `Scripts/playtest`. There are
-322 of them, about 52 minutes, and this folder is where the go loop hands that
-run back and forth with the task runners.
+The full walk sweep runs every scripted walk in `Scripts/playtest`:
+about 530 walks and about 105 minutes,
+counted by `queue/bin/sweep-size.mjs` rather than written down here. This folder
+is where the go loop hands that run back and forth with the task runners.
 
 Nothing in here except this file is tracked by git: it is runtime state.
 
@@ -14,9 +15,9 @@ Nothing in here except this file is tracked by git: it is runtime state.
 
 ## Why a runner never runs the sweep itself
 
-A task runner's background work is terminated at 600s. The sweep is five times
-that, so a runner that starts one is killed waiting for it and its task is
-handed back unfinished. Eight of the twenty recorded runner failures are this,
+A task runner's background work is terminated at 600s. The sweep is
+eleven times the 600s ceiling, so a runner that starts one is killed waiting
+for it and its task is handed back unfinished. Eight of the twenty recorded runner failures are this,
 including 2026-09-07 16:22 ("The full walk sweep is still running (it re-runs
 all 253 walks)") and 2026-09-08 00:03 ("Background tasks still running after
 600s; terminating"). Every one of those tasks was finished later by another

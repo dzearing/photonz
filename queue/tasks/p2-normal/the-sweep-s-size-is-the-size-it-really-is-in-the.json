@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-18T12:09:15.447Z",
-  "updated": "2026-09-19T15:35:09.518Z",
+  "updated": "2026-09-19T22:38:49.055Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-18 digest's rule scrub.\n\nCommand:\n  /bin/ls Scripts/playtest/*.json | wc -l\n  grep -n 322 CLAUDE.md queue/README.md queue/sweep/README.md queue/bin/sweep.sh\n\nOutput:\n  526\n  CLAUDE.md:38: 'it is 322 walks and about 52 minutes'\n  queue/bin/sweep.sh:5: 'are 322 of them and the last measured run did 247 in 40m 21s'\n  queue/bin/sweep.sh:182: 'would leave 322 walks timing out one after'\n  queue/sweep/README.md:4: '322 of them, about 52 minutes'\n  queue/README.md:25: 'all 322 scripted walks, about 52 minutes'\n\nThe cap arithmetic, from queue/sweep/latest.json (began 11:13:29Z, ended 12:05:03Z, 3094s): 249 walks ran in full and 277 were refused in about a second each, so a real walk costs about 11.3s. A full 526 at that rate is about 99 minutes against a cap of 120 (PHOTONZ_SWEEP_MAX_MINUTES in queue/bin/sweep.sh), which is roughly 17 per cent of headroom. The walks that only run unlocked are the ones that drive menus and named controls, so there is no reason to assume they are the fast ones. Nothing is broken today because every sweep since 2026-09-14 has been a partial; the first full one is where it would show.",
@@ -36,6 +36,39 @@
     {
       "t": "2026-09-19T15:35:09.517Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-09-19T22:23:54.072Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-19T22:38:48.765Z",
+      "note": "Adversarial review before building. The task asks for four numbers to be corrected; correcting them is what the last two people to touch those sentences did, and they were stale again within a fortnight. So the number is COUNTED now, by queue/bin/sweep-size.mjs, from two files git already tracks: the walk count off Scripts/playtest/*.json (the exact glob playtest-all.sh iterates, so it cannot drift from what a sweep runs) and the seconds a walk costs out of the sweep_pass records in queue/history.jsonl. It was eleven places quoting it, not four."
+    },
+    {
+      "t": "2026-09-19T22:38:48.815Z",
+      "note": "Measured, not guessed: 532 walks; 11.96s a walk (median of the last ten recorded sweeps, refusals priced out at 0.9s each); a full sweep 106 minutes; the lock-safe part 56 minutes against the 59 the last one actually took. One run already in the history (2026-09-19T19:01, 519 walks in 361s, the probe failing to build) is thrown out by a plausibility filter, and the median rather than the mean keeps the one 16.3s/walk sweep from moving everything."
+    },
+    {
+      "t": "2026-09-19T22:38:48.863Z",
+      "note": "The cap had to be raised and is now derived. A flat 120 minutes against a 106-minute sweep is 14 minutes of slack, so the first full sweep after the screen unlocked would have been cut off part way and recorded as a run that did not finish. It is now walks x 20s, floored at two hours: 177 minutes today, 67 per cent headroom, still stopping a wedged probe (180s a walk) 59 walks in. 20s is 67 per cent above the usual and 23 per cent above the slowest real sweep ever recorded. PHOTONZ_SWEEP_MAX_SECONDS and PHOTONZ_SWEEP_MAX_MINUTES still override."
+    },
+    {
+      "t": "2026-09-19T22:38:48.911Z",
+      "note": "Second time limit found and fixed, unasked. Scripts/playtest-all.sh held the Mac awake with caffeinate -t 7200, set when a sweep was 52 minutes. A 106-minute sweep is inside twenty minutes of that, and a slow one (16.3s a walk = 144 minutes) outlives it: the hold expires, the screen idles into a lock, and every remaining walk that looks a control up by name is refused. That is the exact failure mode CLAUDE.md warns about from 2026-09-14. The hold is now the cap plus ten minutes."
+    },
+    {
+      "t": "2026-09-19T22:38:48.960Z",
+      "note": "And the caffeinate leak that came with it. The forced stop is a SIGKILL, so playtest-all.sh's EXIT trap never runs and its caffeinate is orphaned: I left a three-hour hold on the user's Mac the first time I forced the cap, and killed it by pid. playtest-all.sh now writes the pid where PHOTONZ_WALK_AWAKE_PIDFILE says, sweep.sh kills exactly that pid after a forced stop and checks with kill -0 that it is gone. Never pkill: that would kill a caffeinate the user started. Verified by forcing the cap again, output read 'Released the hold keeping the Mac awake' and pgrep found nothing."
+    },
+    {
+      "t": "2026-09-19T22:38:49.007Z",
+      "note": "left rough: sweep.sh's progress line reports against the whole set even when PHOTONZ_SWEEP_ARGS narrows the run, so a three-walk drill says 'at walk 1 of 532'. Only the drill path sees it, a real sweep is never narrowed, so it did not earn a task."
+    },
+    {
+      "t": "2026-09-19T22:38:49.054Z",
+      "note": "left rough: the first of three Scripts/test.sh runs reported 1 issue in 8374 tests and I did not capture which; the two runs after it were fully green. This task changes no Swift at all (git diff --stat: only markdown, shell, node and the CI yaml), so it cannot be from here, and with no test name and no output it is below the bar for filing a bug."
     }
-  ]
+  ],
+  "started": "2026-09-19T22:23:54.071Z"
 }
