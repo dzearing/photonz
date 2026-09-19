@@ -1,0 +1,30 @@
+{
+  "id": "confirm-file-save-is-live-on-a-trimmed-recording",
+  "title": "Confirm File Save is live on a trimmed recording, on an unlocked screen",
+  "goal": "The user reported on 2026-09-18 that File Save was greyed out after trimming a recording. The fix landed on 2026-09-19 and everything it touches was checked against the file on disk, but the one thing nobody could look at is the menu itself: a locked Mac gives the app no focus, and macOS then leaves every window command greyed out whatever the app thinks. Somebody has to look at the File menu on an unlocked screen and confirm Save is not greyed out after a trim. If it still is, the user is still stuck and this goes back to the top of the queue.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 320,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-19T16:29:22.875Z",
+  "updated": "2026-09-19T16:29:22.878Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The walk is deliberately refused under a lock: it carries a menus step, which is what makes the harness refuse it, and its own describe step says why. Do not force it with PHOTONZ_ALLOW_LOCKED_WALK=1 and read the result as an answer, because a forced run under a lock reads every window command as dimmed and would fail for reasons that have nothing to do with the app.\n\nBackground for whoever picks this up: the whole live-menu trick is the Capture History overlay. The probe is launched with open -g so the app is never the front app, and SwiftUI then freezes the menu bar at its launch state. Pressing shift-command-H opens the history overlay, which takes key, and once any window of the app is key the focused values fill in and the bar reads the real document. That is what the walk does before it reads the menu.\n\nMeasured live BEFORE the fix, on an unlocked screen at about 08:55 on 2026-09-19: File read Save and Save As undimmed on a trimmed recording, with Save to Capture History and Export dimmed. So the mechanism worked then; this is confirming the replacement did not break it. EditorCommands.focusedSave keeps a fallback to the old state objects for exactly that reason.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/save-is-live-after-a-trim-walk.json runs on an unlocked screen and passes: the chord reaches a live File Save and the recording on disk comes back four seconds long",
+    "The File menu dump the walk writes shows Save and Save As undimmed, and the image-only rows (Save to Capture History, Export) dimmed, which is how you know it is the recording the menu is reading",
+    "If Save reads dimmed, say what the menu dump shows and reopen trim-a-recording-save-it-send-it-the-whole-flow rather than starting a new diagnosis"
+  ],
+  "log": [
+    {
+      "t": "2026-09-19T16:29:22.877Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "save-is-live-after-a-trim-walk"
+  ]
+}

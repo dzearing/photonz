@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-19T15:44:22.291Z",
-  "updated": "2026-09-19T15:44:58.637Z",
+  "updated": "2026-09-19T16:28:42.065Z",
   "deps": [
     "trim-a-recording-save-it-send-it-the-whole-flow"
   ],
@@ -36,6 +36,10 @@
     {
       "t": "2026-09-19T15:44:58.636Z",
       "note": "seq 3020 -> 15"
+    },
+    {
+      "t": "2026-09-19T16:28:42.064Z",
+      "note": "Noticed while fixing the trim/save flow on 2026-09-19: ⇧⌘S on a recording is the only route to a copy, and it goes straight to a bare NSSavePanel with the format already decided. Worth knowing for this task: the action behind that menu item and its dimming used to disagree about which editor they were talking about (the action preferred the image editor unconditionally), which is now fixed in EditorCommands, so whatever replaces the panel can trust that Save As is talking about the recording in front of you."
     }
   ]
 }

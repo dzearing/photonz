@@ -1,0 +1,31 @@
+{
+  "id": "saving-a-recording-says-it-saved",
+  "title": "Saving a recording says it saved",
+  "goal": "When you save a trimmed recording, nothing tells you it worked. A small save arrow on the floating controller quietly disappears and that is the whole confirmation. On a recording long enough for the save to take real seconds, the only sign anything is happening is a tiny spinner in the same spot, which is easy to miss, and the user described exactly that as \"I click Save and it does nothing\". Saving should say so, the way copying a recording already does.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3010,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-19T16:28:31.689Z",
+  "updated": "2026-09-19T16:28:31.692Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing trim-a-recording-save-it-send-it-the-whole-flow on 2026-09-19. The machinery already exists: AppCoordinator.toasts.presentProgress / dismissProgress and presentCopyToast are what the GIF copy path uses (AppCoordinator.swift around :305). VideoEditorState has no route to the coordinator today, which is why the save path has none of it; VideoEditorView.saveButton (around :474) is where the spinner lives now.\n\nThe close-confirmation case is the interesting one: the sheet dismisses, the save runs, and the window closes when it lands. For a long recording that is several seconds of a window sitting there apparently doing nothing before it vanishes.",
+  "acceptance": [
+    "Saving a recording ends with a visible confirmation that names the recording, in the same toast family the copy and capture confirmations already use",
+    "While the save is running there is a progress indication that is readable from across the window, not a 28 point spinner on the floating controller",
+    "A save that takes under about half a second does not flash a progress indication at all, so short saves stay quiet",
+    "The confirmation appears for all three ways into a save: the controller button, Command S, and Save in the close confirmation"
+  ],
+  "log": [
+    {
+      "t": "2026-09-19T16:28:31.691Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "trim-save-send-walk"
+  ]
+}
