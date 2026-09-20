@@ -55,6 +55,10 @@
 //                                            record how a runner ended; prints shell vars
 //                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN/REASON) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
+//   node queue/bin/queue.mjs devapp [--json]
+//                                            how far "dist/Photonz Dev.app" is behind the code and
+//                                            why nothing is rebuilding it. Prints nothing when the
+//                                            app is current. Never touches the app or the lock
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -255,6 +259,17 @@ try {
       // person was told), rather than one more retry inside a stall they have
       // already been told about.
       out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''} NOTIFY=${r.notify ? 1 : 0} STALLHOURS=${r.stallHours || 0}`);
+      break;
+    }
+    // One plain line about how far "dist/Photonz Dev.app" is behind the code,
+    // and why nobody is rebuilding it. Silent when it is current, so a script
+    // can call it unconditionally. Exits 0 either way: this reports, it never
+    // fails a build and it never touches the app or the lock.
+    case 'devapp': {
+      const st = q.devAppState();
+      if (args[0] === '--json') { out(st); break; }
+      const line = q.devAppSentence(st);
+      if (line) out(line[0].toUpperCase() + line.slice(1));
       break;
     }
     case 'event':

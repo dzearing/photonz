@@ -5656,3 +5656,16 @@
 {"t":"2026-09-20T08:39:09.394Z","ev":"task_created","id":"the-dev-app-says-how-far-behind-it-is","priority":"p1-high","title":"The dev app says how far behind it is"}
 {"t":"2026-09-20T08:39:12.564Z","ev":"task_resequenced","id":"the-dev-app-says-how-far-behind-it-is","from":340,"to":5}
 {"t":"2026-09-20T08:39:47.817Z","ev":"manager","filed":6,"readyBefore":2,"readyAfter":8,"report":"queue/manager/2026-09-20-0139.md"}
+{"t":"2026-09-20T08:40:00.208Z","ev":"manager_pass","exit":0,"ready":8}
+{"t":"2026-09-20T08:40:00.257Z","ev":"task_started","id":"the-dev-app-says-how-far-behind-it-is","title":"The dev app says how far behind it is","priority":"p1-high"}
+{"t":"2026-09-20T08:46:16.603Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.652Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.702Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.753Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.804Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.854Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.904Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:16.956Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:17.005Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:17.056Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
+{"t":"2026-09-20T08:46:23.811Z","ev":"task_done","id":"the-dev-app-says-how-far-behind-it-is","from":"in_progress","note":"The dashboard hero now says 'dev app 12 commits behind · lock held 2 days' over an amber strip with the whole story, and the same sentence (queue.mjs devapp, from devAppState in queue-lib.mjs) is printed by refresh-dev-app.sh on every bail and by testing.sh. Nothing built, signed, quit, relaunched or cleared; the lock is still held. Verified live on the real dashboard (screenshot in the audit) and end to end in a throwaway repo for the unlocked branch. dev-app-drill.mjs (31 checks) green, Scripts/test.sh green (8413 tests). Audit: queue/audits/2026-09-20-dev-app-behind.json"}

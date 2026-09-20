@@ -38,12 +38,23 @@ say() { echo "[refresh-dev-app] $*"; }
 # Someone is using the app: leave it alone. Both tests are cheap and both fail
 # open, because refusing to refresh is always safer than yanking a window away
 # from somebody mid-drag.
+#
+# Bailing is correct and it used to be the whole story, which is how the app on
+# disk got two days and twelve commits old in September 2026 with nobody told:
+# the bail was written to queue/loop.log thirteen times and nowhere a person
+# looks. So every bail now also says how far behind that leaves the app. The
+# sentence comes from queue.mjs so the loop log and the dashboard cannot drift
+# apart, and it prints nothing when the app is already current.
+behind() { node queue/bin/queue.mjs devapp 2>/dev/null | while IFS= read -r l; do say "$l"; done; }
+
 if [[ -f queue/playtest.lock ]]; then
   say "someone is using the dev app (queue/playtest.lock); leaving it alone"
+  behind
   exit 0
 fi
 if lsappinfo front 2>/dev/null | grep -q "photonz.dev"; then
   say "the dev app is frontmost, so somebody is working in it; leaving it alone"
+  behind
   exit 0
 fi
 

@@ -51,6 +51,10 @@
   #dashboard .db-herr code{display:block;font-family:var(--mono);font-size:10.5px;color:var(--dim);
     margin-top:var(--s2);white-space:pre-wrap;word-break:break-word;line-height:1.5}
   #dashboard .db-herr p{margin:var(--s2) 0 0;font-size:11.5px;color:var(--dim);line-height:1.5}
+  /* A command named inside the explanation, not quoted output: stays in the run
+     of the sentence rather than taking a line of its own like .db-herr code. */
+  #dashboard .db-herr p code.db-inline{display:inline;margin:0;font-size:10.5px;color:var(--fg);
+    background:color-mix(in srgb,var(--fg) 8%,transparent);border-radius:3px;padding:0 3px}
   /* Same strip, amber: the loop is working, but on an older copy of itself. */
   #dashboard .db-herr.warn{border-top-color:color-mix(in srgb,var(--warn) 30%,transparent);
     background:color-mix(in srgb,var(--warn) 8%,transparent)}
@@ -60,6 +64,10 @@
   #dashboard .db-beat .db-sweep.blind{color:var(--crit)}
   #dashboard .db-beat .db-left{color:var(--warn)}
   #dashboard .db-beat .db-left.stuck{color:var(--crit)}
+  /* The app the user actually opens, when it is behind the code. Amber, because
+     nothing is broken: the build is just old, and that is the thing that looks
+     like a bug when nobody says it. */
+  #dashboard .db-beat .db-old{color:var(--warn)}
   #dashboard .db-hero .db-what{min-width:0;flex:1}
   #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
@@ -918,6 +926,54 @@
     return '<br><span class="db-left' + (F.stuck ? ' stuck' : '') + '" title="' + esc(L.restore || L.why || '') + '">' + esc(t) + '</span>';
   }
 
+  // "dist/Photonz Dev.app" is the app the user opens to look at what the loop
+  // built, and it is the one thing on this page that is not part of the loop.
+  // It went two days and twelve commits stale in September 2026 behind a
+  // forgotten queue/playtest.lock: the loop was right to leave it alone, the
+  // refresh said so thirteen times in queue/loop.log, and the user opened the
+  // app, could not find the fix they had reported, and read the app as broken.
+  function devAppLine() {
+    var D = S.devApp;
+    if (!D || !D.stale) return '';
+    var t = 'dev app ' + D.behind + ' commit' + (D.behind === 1 ? '' : 's') + ' behind';
+    if (D.lock.held) t += ' · lock held ' + span(D.lock.since);
+    return '<br><span class="db-old" title="' + esc(D.lock.held
+      ? 'The loop is not rebuilding it because queue/playtest.lock is held.'
+      : 'Nothing is holding it, so the refresh should already have closed this.') + '">' + esc(t) + '</span>';
+  }
+
+  // The full version, in the same strip the stale-script and locked-screen
+  // warnings use. It never offers a button: releasing the lock is a person's
+  // call, because the lock is the only thing that stops the loop quitting the
+  // app out from under somebody mid-drag.
+  function devAppStrip() {
+    var D = S.devApp;
+    if (!D || !D.stale) return '';
+    var h = '<div class="db-herr warn"><i class="ic ic-warning"></i><div>';
+    h += '<b>The app you open is ' + D.behind + ' commit' + (D.behind === 1 ? '' : 's') + ' behind the code</b>';
+    // Prose, so the durations are spelled out ("2 days ago") rather than the
+    // terse form the beat line above uses ("2d ago").
+    h += '<p>“Photonz Dev” was built ' + esc(span(D.builtAt)) + ' ago and ' + D.behind
+      + (D.behind === 1 ? ' commit has' : ' commits have') + ' changed the app since'
+      + (D.newest ? ', the newest ' + esc(span(D.newest.at)) + ' ago' : '') + '. '
+      + 'Anything in those is not in the app on your machine yet, so a fix you are looking for can be missing from a build that is only old. ';
+    if (D.lock.held) {
+      h += 'The loop is leaving it alone because <code class="db-inline">queue/playtest.lock</code> says somebody is working in the app, and that lock has been held for '
+        + esc(span(D.lock.since)) + '. ';
+      if (D.lock.forgotten) h += 'A lock held that long has probably been forgotten. ';
+      h += 'Nothing here releases it for you, because it is what stops the loop quitting the app out from under you while you are drawing. Run <code class="db-inline">'
+        + esc(D.lock.release) + '</code> when you are done in there, and the loop rebuilds the app after the next task that lands code.';
+    } else {
+      // Nothing is holding it and it is still behind past the grace window, so
+      // the refresh is not doing its job: that is the thing to look at, not the
+      // build. See REFRESH_GRACE in queue-lib.
+      h += 'Nothing is holding the dev app, so the refresh should have closed this ' + esc(span(D.oldest.at))
+        + ' ago. Check that the go loop is running and that <code class="db-inline">queue/bin/refresh-dev-app.sh</code> is not failing; run it by hand to have the app now.';
+    }
+    h += '</p></div></div>';
+    return h;
+  }
+
   // The loop is a zsh script and zsh parses one once, so a fix landed in it
   // reaches nothing until the process restarts. The loop restarts itself onto
   // a new copy between tasks; this covers what that cannot: the long minutes
@@ -952,7 +1008,7 @@
     else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
     h += '</div>';
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked';
-    h += '<br>' + sweepLine() + leftoversLine() + '</div>';
+    h += '<br>' + sweepLine() + leftoversLine() + devAppLine() + '</div>';
     h += '</div>';
     if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) {
       var LS = L.lastError;
@@ -984,6 +1040,7 @@
       h += '</div></div>';
     }
     h += scriptStrip(L);
+    h += devAppStrip();
     h += blindStrip();
     h += '</div>';
 

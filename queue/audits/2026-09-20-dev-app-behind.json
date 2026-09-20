@@ -1,0 +1,28 @@
+{
+  "feature": "The dev app says how far behind it is",
+  "epic": "unmanned-loop",
+  "summary": "The dashboard and the loop now say out loud when \"Photonz Dev\" on your disk is older than the code, how many commits behind it is, and that a held playtest lock is the reason. Nothing releases the lock for you.",
+  "setup": "The dashboard at http://127.0.0.1:8791, Summary tab. Nothing to turn on. Right now the lock really is held and the app really is 12 commits behind, so the warning is live.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791 and read the top right of the Summary hero, under the walk sweep line.", "shot": "2026-09-20-dev-app-behind-1.png" },
+    { "do": "Read the amber strip under the hero: how old the build is, how many commits changed the app since, and that the lock is why." },
+    { "do": "Run queue/bin/testing.sh in a terminal. Under \"holding since\" it prints the same sentence." },
+    { "do": "Run queue/bin/refresh-dev-app.sh. It refuses on the lock, prints the same sentence, and leaves the app alone." },
+    { "do": "If you are done working in the app, run queue/bin/testing.sh off, then queue/bin/refresh-dev-app.sh to rebuild it now." },
+    { "do": "Reload the dashboard. With the app current, the strip and the hero line are both gone." }
+  ],
+  "evaluate": [
+    "Does the strip tell you what to do next without already knowing what the playtest lock is?",
+    "Is amber right for an app two days and twelve commits old, or should that be red?",
+    "Would naming the newest commit's subject (\"A turning layer says where its pivot is once\") help you spot that your own reported fix is missing, or is the count enough?",
+    "Did the small amber line in the hero corner catch your eye at all, or did you only see the strip?",
+    "With nothing holding the lock the page stays quiet for 30 minutes while the refresh compiles. Too long, too short?"
+  ],
+  "rough": [
+    "The picture is the dashboard in a browser, not the app. This task changed the dashboard and two loop scripts and touched no app code, so no scripted walk applies and none was run.",
+    "It stacks under the locked-screen strip, so on a Mac that is both locked and holding the lock you get two amber strips at once. They say different things, but it is a lot of amber.",
+    "It says how many commits are missing, never which. \"12 commits behind\" is honest but it cannot tell you your Save fix is one of them.",
+    "The 30 minute quiet window before an unlocked gap is called out is a guess at how long a refresh takes, not a measurement.",
+    "A commit landing in the same second the bundle was written reads as older than the build. A build takes minutes, so this cannot happen in a real refresh, but it is worth knowing the comparison is that tight."
+  ]
+}

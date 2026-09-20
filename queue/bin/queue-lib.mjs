@@ -1299,6 +1299,135 @@ export function leftoversState() {
   };
 }
 
+// ---- how far behind is the dev app? -----------------------------------------
+// "dist/Photonz Dev.app" is the app the user opens to look at what the loop has
+// built. The loop rebuilds it between tasks, and it correctly REFUSES to while
+// queue/playtest.lock is held, because overriding that lock once quit the app
+// out from under somebody mid-drag (see the top of queue/bin/refresh-dev-app.sh).
+//
+// What was missing was honesty. On 2026-09-18 a lock was taken and left, the
+// refresh bailed thirteen times saying so only in queue/loop.log, and two days
+// later the app on disk was twelve commits old with the Save fix the user had
+// reported still missing from it. They opened the app, did not find their fix,
+// and the app read as broken when it was only old.
+//
+// So this works out the gap and says it, and it does not fix it: nothing here
+// builds, signs, quits, relaunches or clears anything. The lock is what
+// protects a person from their own build loop, and only a person takes it off.
+const DEV_APP_BIN = join('dist', 'Photonz Dev.app', 'Contents', 'MacOS', 'Photonz Dev');
+const PLAYTEST_LOCK = join(QUEUE, 'playtest.lock');
+// A lock is somebody in the app; a lock still held a day later is somebody who
+// closed their laptop. Both stop the refresh, and only one of them is news.
+const LOCK_FORGOTTEN_AFTER = 24 * 3600 * 1000;
+// With nothing holding the lock the refresh IS coming: the loop runs it right
+// after the task that landed the code, and it spends minutes compiling before
+// the bundle's date moves. Saying "1 commit behind" for the length of every
+// build would put an amber strip on the page every twenty minutes for a thing
+// already fixing itself, and a warning that cries wolf is one nobody reads. So
+// an unlocked gap is only news once the refresh has had its chance and the app
+// is STILL behind: the loop is stopped, the refresh is off, or it is failing.
+// A held lock says it at once, because there the gap is not closing at all.
+const REFRESH_GRACE = 30 * 60 * 1000;
+const mtimeISO = (file) => { try { return new Date(statSync(file).mtimeMs).toISOString(); } catch { return null; } };
+
+// Commits touching the app's own source since the bundle was built. Kept apart
+// from devAppState so the drill can hand it a list instead of needing a repo.
+//
+// This is the only expensive part, and devAppState runs inside aggregateState,
+// which the dashboard polls every four seconds forever. A `git log` subprocess
+// fifteen times a minute for the life of the machine is not a price this line
+// is worth, so the answer is held for a few seconds and thrown away the moment
+// the bundle's date moves. The lock and the bundle's date are plain stats and
+// stay live.
+const COMMITS_TTL = 15 * 1000;
+let commitsCache = { key: null, at: 0, rows: [] };
+export function forgetDevAppCommits() { commitsCache = { key: null, at: 0, rows: [] }; }
+export function devAppCommitsSince(builtAt, repo = REPO) {
+  if (!builtAt) return [];
+  const key = `${repo}\u0000${builtAt}`;
+  if (commitsCache.key === key && Date.now() - commitsCache.at < COMMITS_TTL) return commitsCache.rows;
+  const rows = readCommitsSince(builtAt, repo);
+  commitsCache = { key, at: Date.now(), rows };
+  return rows;
+}
+function readCommitsSince(builtAt, repo) {
+  try {
+    const out = execFileSync('git', ['log', `--since=${builtAt}`, '--format=%H%x00%ct%x00%s',
+      '--', 'Sources', 'Package.swift', 'Package.resolved'], { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return out.split('\n').filter(Boolean).map((l) => {
+      const [sha, ct, subject] = l.split('\0');
+      return { sha, at: new Date(Number(ct) * 1000).toISOString(), subject: subject || '' };
+    });
+  } catch { return []; }
+}
+
+export function devAppState({ at = Date.now(), builtAt = mtimeISO(join(REPO, DEV_APP_BIN)), commits = null } = {}) {
+  const lockSince = mtimeISO(PLAYTEST_LOCK);
+  // The lock says who took it in its first line; testing.sh writes it and a
+  // hand-made lock may not, so a missing name is normal rather than an error.
+  let lockText = '';
+  if (lockSince) { try { lockText = readFileSync(PLAYTEST_LOCK, 'utf8'); } catch { lockText = ''; } }
+  const heldBy = ((lockText.match(/\bby (\S+)/) || [])[1] || '').replace(/\.$/, '');
+  const lock = {
+    held: lockSince !== null,
+    since: lockSince,
+    who: heldBy,
+    // Nothing anywhere acts on this. It is the sentence a person needs, and the
+    // command is theirs to run: the lock is the only thing standing between the
+    // loop and the window somebody is drawing in.
+    forgotten: lockSince !== null && at - Date.parse(lockSince) > LOCK_FORGOTTEN_AFTER,
+    release: 'queue/bin/testing.sh off',
+  };
+  const present = builtAt !== null;
+  const since = present ? (commits === null ? devAppCommitsSince(builtAt) : commits)
+    .filter((c) => Date.parse(c.at) > Date.parse(builtAt)) : [];
+  const newest = since.length ? since.reduce((a, b) => (Date.parse(b.at) > Date.parse(a.at) ? b : a)) : null;
+  const oldest = since.length ? since.reduce((a, b) => (Date.parse(b.at) < Date.parse(a.at) ? b : a)) : null;
+  const behind = since.length;
+  const overdue = oldest !== null && at - Date.parse(oldest.at) > REFRESH_GRACE;
+  return {
+    present,
+    builtAt,
+    behind,
+    newest,
+    oldest,
+    lock,
+    // behind is the fact; stale is whether it is worth saying out loud yet.
+    stale: behind > 0 && (lock.held || overdue),
+    // Why it is behind decides what a person should do about it: release the
+    // lock, or look at why the refresh has not closed the gap on its own.
+    reason: behind > 0 ? (lock.held ? 'locked' : (overdue ? 'not-refreshed' : 'refresh-pending')) : null,
+  };
+}
+
+// The same words the dashboard shows, in one plain line, so the loop log and
+// the page cannot drift apart. Empty when there is nothing to say.
+export function devAppSentence(state = devAppState(), at = Date.now()) {
+  if (!state || !state.stale) return '';
+  const n = state.behind;
+  let s = `your dev app is ${n} commit${n === 1 ? '' : 's'} behind: it was built ${ago(state.builtAt, at)}`;
+  if (state.newest) s += ` and the newest change to the app landed ${ago(state.newest.at, at)}`;
+  s += '. ';
+  if (state.reason === 'locked') {
+    s += `The loop is leaving it alone because queue/playtest.lock says somebody is working in the app, and that lock has been held for ${dur(state.lock.since, at)}. `;
+    if (state.lock.forgotten) s += 'A lock held that long has probably been forgotten. ';
+    s += `Nothing releases it for you, because it is what stops the loop quitting the app out from under you: run ${state.lock.release} when you are done in there.`;
+  } else {
+    s += `Nothing is holding the dev app, so the refresh should have closed this ${dur(state.oldest.at, at)} ago: check that the go loop is running and that queue/bin/refresh-dev-app.sh is not failing. Run it by hand to have the app now.`;
+  }
+  return s;
+}
+// Same two shapes the dashboard has ("2 days ago" and "2 days"), so the line in
+// the loop log and the line on the page read as the same sentence.
+const dur = (iso, at = Date.now()) => {
+  if (!iso) return 'a while';
+  const s = (at - Date.parse(iso)) / 1000;
+  if (s < 3600) { const m = Math.max(1, Math.round(s / 60)); return `${m} minute${m === 1 ? '' : 's'}`; }
+  if (s < 86400) { const h = Math.round(s / 3600); return `${h} hour${h === 1 ? '' : 's'}`; }
+  const d = Math.round(s / 86400); return `${d} day${d === 1 ? '' : 's'}`;
+};
+const ago = (iso, at = Date.now()) => ((at - Date.parse(iso || 0)) / 1000 < 90 && iso ? 'just now' : `${dur(iso, at)} ago`);
+
 // ---- objectives -------------------------------------------------------------
 // The ordered epic tree that steers triage. Order IS priority; nesting is
 // sub-epics. The dashboard's Objectives tab edits this wholesale.
@@ -1488,6 +1617,10 @@ export function aggregateState({ tasks: includeTasks = true } = {}) {
     // again on every four-second poll
     sweep: sweepState(history),
     leftovers: leftoversState(),
+    // The app the user actually opens. Says nothing at all when it is current,
+    // which is the normal case; see devAppState for why it is only ever a
+    // report and never a fix.
+    devApp: devAppState(),
     // list rows only, see taskRow: the poll used to carry every task's whole
     // log and was three megabytes fifteen times a minute
     ...(includeTasks ? { tasks } : {}),

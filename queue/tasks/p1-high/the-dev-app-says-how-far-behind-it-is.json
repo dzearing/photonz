@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:39:09.390Z",
-  "updated": "2026-09-20T08:39:12.563Z",
+  "updated": "2026-09-20T08:46:23.810Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED here on 2026-09-20:\n\n  $ ls -l \"dist/Photonz Dev.app/Contents/MacOS/\"\n  -rwxr-xr-x  40522176 Sep 18 07:43 Photonz Dev\n  $ cat queue/playtest.lock\n  Someone is working in the dev app. Created 2026-09-18 08:09 by testing.sh.\n  $ git log --since=\"2026-09-18T08:09\" --oneline -- Sources/ | wc -l\n  12\n  $ grep -c \"someone is using the dev app\" queue/loop.log\n  13\n\nSo the binary is from 07:43 on 2026-09-18, the lock was taken 26 minutes later, and twelve commits have touched Sources since. Among the things missing from the app on disk: the Save fix for the bug the user reported (72dd8ffa and 08e6450d), the recording Export sheet (60c74070), the picked-piece visibility (db6436ea) and both icon fixes from last night. The refresh has bailed thirteen times and said so only in queue/loop.log.\n\nNothing on the dashboard knows the lock exists: grep for playtest.lock across queue/ and site/ finds refresh-dev-app.sh, testing.sh, runner-prompt.md and a pile of task and audit text, and no dashboard code at all.\n\nThe manager pass on 2026-09-19 checked this same theory and correctly killed it, because at that point the newest Sources commit was ebbcfc3f at 07:42 on 2026-09-18 and the binary was 07:43, so the hold had cost nothing. It wrote the condition that would make it real into a task log. That condition has now happened.\n\nDo NOT make the refresh override the lock. That was tried and it is why the lock exists: on 2026-09-15 the loop quit the app out from under the user while they were drawing with the Pen. The whole reasoning is at the top of queue/bin/refresh-dev-app.sh. The fix is honesty, not force.",
@@ -30,7 +30,57 @@
     {
       "t": "2026-09-20T08:39:12.562Z",
       "note": "seq 340 -> 5"
+    },
+    {
+      "t": "2026-09-20T08:40:00.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T08:46:16.601Z",
+      "note": "reproduced the task's claim before building: devAppState on the real repo reports behind 12, built 2026-09-18T14:43Z, lock held since 2026-09-18T15:09Z, forgotten true. Same numbers the task file recorded."
+    },
+    {
+      "t": "2026-09-20T08:46:16.650Z",
+      "note": "adversarial review BEFORE building, on the idea: (1) the obvious fix is to make the refresh override the lock; the task forbids it and the history at the top of refresh-dev-app.sh is why, so the whole feature is a report and never a fix. (2) A warning that appears on every build is one nobody reads: the refresh compiles for minutes, so an unlocked gap would flash amber on the page every twenty minutes for a thing already fixing itself. That is why an unlocked gap is only called out after a 30 minute grace window, while a HELD lock says it at once (there the gap is not closing at all). (3) Shortest version that delivers the value: one derived state in queue-lib, one line in the hero, one strip, and the same sentence printed by the two scripts, rather than a new page or a badge anywhere else."
+    },
+    {
+      "t": "2026-09-20T08:46:16.700Z",
+      "note": "built: devAppState/devAppSentence in queue-lib.mjs (behind count from git log over Sources+Package.swift since the bundle binary's mtime; lock held/since/forgotten from queue/playtest.lock's mtime and first line), devApp on aggregateState, devAppLine + devAppStrip on the dashboard hero, 'queue.mjs devapp' as the one plain sentence, printed by refresh-dev-app.sh on both of its bails and by testing.sh when you ask whether you are holding."
+    },
+    {
+      "t": "2026-09-20T08:46:16.751Z",
+      "note": "verified acceptance 1-4 live: dashboard hero reads 'dev app 12 commits behind · lock held 2 days' over an amber strip naming the build's age, the 12 commits, the newest one, the lock, how long it has been held and that it has probably been forgotten, ending on 'queue/bin/testing.sh off'. Screenshot at queue/audits/2026-09-20-dev-app-behind-1.png. refresh-dev-app.sh run for real: it bails on the lock and prints the same sentence, exit 0, and did not touch the bundle."
+    },
+    {
+      "t": "2026-09-20T08:46:16.802Z",
+      "note": "verified acceptance 5: nothing added builds, signs, quits, relaunches or clears anything; refresh-dev-app.sh's bail is unchanged except for the extra say lines, and the drill asserts the lock file survives reading the state. Neither dist/Photonz Dev.app nor queue/playtest.lock was written during this task."
+    },
+    {
+      "t": "2026-09-20T08:46:16.852Z",
+      "note": "verified acceptance 6 (the try path) in a throwaway repo at /tmp with its own queue, a fake old bundle binary and a git history: with the lock held, one commit under Sources/ took the report from 4 commits behind to 5. The same repo with no lock held renders the other branch of the strip ('nothing is holding the dev app, so the refresh should have closed this'), checked in a second dashboard instance on port 8799. Both cleaned up; no server or repo left behind."
+    },
+    {
+      "t": "2026-09-20T08:46:16.902Z",
+      "note": "tests: node queue/bin/dev-app-drill.mjs (new, 31 checks) all pass; audit-index-drill, state-poll-drill and decision-drill still pass; Scripts/test.sh green, 8413 tests in 672 suites."
+    },
+    {
+      "t": "2026-09-20T08:46:16.954Z",
+      "note": "perf: devAppState runs inside aggregateState, which the dashboard polls every 4s forever, and the git log is 42ms. Cached for 15s keyed on the bundle's date, so it is one subprocess a quarter-minute instead of fifteen a minute; 30 calls now take 66ms total. forgetDevAppCommits drops it; the drill covers the cache."
+    },
+    {
+      "t": "2026-09-20T08:46:17.003Z",
+      "note": "left rough (none clears the follow-up bar; searched 'dev app behind stale build', 'playtest.lock', 'two amber strips hero' and found only this task): the strip stacks under the locked-screen strip so a Mac that is both locked and holding the lock shows two amber strips at once; it says how many commits are missing but never which, so it cannot tell you your own reported fix is one of them; the 30 minute grace window is a guess at how long a refresh takes rather than a measurement; a commit landing in the same second the bundle was written reads as older than the build, which cannot happen in a real refresh because a build takes minutes. All four are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-20T08:46:17.054Z",
+      "note": "the picture in the audit is the dashboard in a browser, not the app: this task changed the dashboard and two loop scripts and touched no app code, so no scripted walk applies and none was run. No sweep requested."
+    },
+    {
+      "t": "2026-09-20T08:46:23.808Z",
+      "note": "The dashboard hero now says 'dev app 12 commits behind · lock held 2 days' over an amber strip with the whole story, and the same sentence (queue.mjs devapp, from devAppState in queue-lib.mjs) is printed by refresh-dev-app.sh on every bail and by testing.sh. Nothing built, signed, quit, relaunched or cleared; the lock is still held. Verified live on the real dashboard (screenshot in the audit) and end to end in a throwaway repo for the unlocked branch. dev-app-drill.mjs (31 checks) green, Scripts/test.sh green (8413 tests). Audit: queue/audits/2026-09-20-dev-app-behind.json"
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-20T08:40:00.254Z",
+  "completed": "2026-09-20T08:46:23.809Z"
 }

@@ -34,6 +34,11 @@ LOCKTEXT
   *)
     if [[ -f "$LOCK" ]]; then
       print -- "holding since $(stat -f '%Sm' "$LOCK")"
+      # Holding is the point, so it is not a warning. What IS worth saying is
+      # the price: a lock left on for two days in September 2026 left the app
+      # twelve commits old and the user thought the app was broken. This is
+      # silent while the app is current.
+      node queue/bin/queue.mjs devapp 2>/dev/null
     else
       print -- "not holding: the loop may refresh the dev app"
     fi

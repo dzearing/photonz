@@ -180,3 +180,34 @@ The hero carries a line under the sweep whenever a record is open: amber for
 files set aside, red when git refused to stash them, because in that case they
 really are still in the tree waiting for the next task to commit them. Drill:
 `queue/bin/leftovers-drill.sh`.
+
+## How far behind the dev app is
+
+`dist/Photonz Dev.app` is the app the user opens to look at what the loop built,
+and it is the one thing on this page that is not part of the loop. The loop
+rebuilds it between tasks and REFUSES to while `queue/playtest.lock` is held,
+because overriding that lock once quit the app out from under somebody drawing
+with the Pen. That refusal is right and it used to be the whole story: on
+2026-09-18 a lock was taken and left, the refresh bailed thirteen times saying so
+only in `queue/loop.log`, and two days later the app on disk was twelve commits
+old with the Save fix the user had reported still missing from it. They opened
+the app, did not find their fix, and read the app as broken when it was only old.
+
+So the hero says it. Under the sweep line: `dev app 12 commits behind · lock held
+2 days`, amber, and an amber strip under the hero with the whole of it: when the
+bundle was built, how many commits have changed `Sources/` since and how long
+ago the newest one landed, that the lock is the reason, how long it has been
+held, and, past a day, that a lock held that long has probably been forgotten.
+It never offers a button. Releasing the lock is a person's call, because the
+lock is the only thing standing between the loop and the window somebody is
+drawing in; the strip hands over `queue/bin/testing.sh off` and stops there.
+With no lock held the same strip says the loop rebuilds it after the next task
+that lands app code, which is a thing that clears itself.
+
+The same sentence, from the same code, is what `queue/bin/refresh-dev-app.sh`
+prints on every bail (so `loop.log` says it too) and what `queue/bin/testing.sh`
+prints when you ask whether you are still holding. It says nothing at all while
+the app is current, which is the normal case. `node queue/bin/queue.mjs devapp`
+is the sentence on demand; `devAppState` in `queue-lib.mjs` is where it is
+worked out, and it only ever reports: nothing in this path builds, signs, quits,
+relaunches or clears anything. Drill: `queue/bin/dev-app-drill.mjs`.
