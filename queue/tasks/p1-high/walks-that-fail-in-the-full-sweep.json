@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-20T14:51:16.271Z",
+  "updated": "2026-09-20T14:51:25.826Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -106,13 +106,9 @@
       "note": "sweep 2026-09-14T05:18:56Z: 3 failing (contents-for-several-walk, dock-picked-first-walk, layers-lazy-rows-walk)"
     },
     {
-      "t": "2026-09-20T14:51:16.270Z",
-      "note": "... 13 earlier entries elided",
-      "elided": 13
-    },
-    {
-      "t": "2026-09-14T22:27:44.943Z",
-      "note": "sweep 2026-09-14T22:27:44Z: 5 failing (icon-stroke-weight-walk, layers-lazy-rows-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk)"
+      "t": "2026-09-20T14:51:25.825Z",
+      "note": "... 14 earlier entries elided",
+      "elided": 14
     },
     {
       "t": "2026-09-14T22:59:50.530Z",
@@ -505,6 +501,10 @@
     {
       "t": "2026-09-20T14:51:16.269Z",
       "note": "WHERE THIS STANDS after the 2026-09-20 batches. Of the 57 walks the two full sweeps agreed on: 12 are fixed and green twice each here (frame-second-screen, combine-shapes, shapes-into-one-path, pen-width-before-you-draw, screen-columns, columns-follow-the-screen, columns-follow-the-padding, tutorial-padding-and-columns, tutorial-tour, tutorial-finish, panel-section-drag, pen-hands-back); 1 more was found already passing on today's main and needs nothing (find-what-stayed-a-picture); 5 carry a correction that CANNOT be finished on this Mac (icon-export-animated, motion-swings-a-layer, motion-one-play-rule, tutorial-get-the-timing-right, tutorial-make-something-move: each opens the Add Motion menu, and an icon-only menu has no name while the screen is locked); 1 is diagnosed and handed to its own task (turn-two-shapes-into-pictures, now owned by a-shape-that-was-turned-into-a-picture-and-undon); and 2 were already fixed by another task before this one started (motion-pivot, motion-pivot-in-a-corner). That leaves 36 unread: motion-colour-picker, motion-loop-preview, motion-strip-way-back, motion-timing-strip, tutorial-two-parts-out-of-phase, tutorial-start-on-an-icon-frame, button-hug, library-drag, redline-with-components, retype-label, size-limits, colour-onto-an-off-part, component-whole-path, copy-a-look, copy-wording, crop-rounds-the-card, effects-room-for-the-one-you-opened, join-two-pen-paths, measure-row-menu, name-field-handback, panel-grip, panel-reads-the-marquee, piece-geometry, position-and-size-on-screen, read-every-label, separate-dark-window, separate-reads-text-study, separate-turn-into-text, shared-component-scale, style-on-a-copy, text-style-row-drop, tick-leads, turned-piece, type-the-last-three-numbers, width-reads-back, wrap-at-a-ceiling. Five of those (name-field-handback, shared-component-scale, width-reads-back, wrap-at-a-ceiling, measure-row-menu) fail on focus or rightClick, which a lock stops outright, so they need a logged-in Mac. A sweep was asked for. This task goes back to pending rather than done: it is the standing task the sweep writes its result into, and marking it done makes the next sweep file a duplicate (see the 2026-09-17 entry about walks-that-fail-in-the-full-sweep-2 and -3)."
+    },
+    {
+      "t": "2026-09-20T14:51:25.824Z",
+      "note": "Three batches landed and are pushed (c6312521). 12 of the 57 walks fixed and green twice each, 1 found already passing, 5 corrected but unprovable on a locked Mac, 1 handed to its own task; 36 left to read. Two real app bugs fixed on the way: the Columns section only arrived once columns were already on, and Take the Tour pointed its fifth card at a section that left the dock. Audit: queue/audits/2026-09-20-columns-and-the-tour.json. A full sweep is requested. Back to pending because this is the standing task every sweep writes its result into."
     }
   ],
   "walks": [
