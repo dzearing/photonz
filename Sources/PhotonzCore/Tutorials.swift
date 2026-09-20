@@ -282,7 +282,12 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// The panel sections a guide is allowed to name. Kept here rather than
     /// read off the app so the catalogue check is a plain unit test: a guide
     /// pointing at a section nobody promised fails before anybody sees it.
-    public static let knownPanelSections = ["layers", "geometry", "arrange", "annotation",
+    /// "geometry" is deliberately absent. Position and Size moved out of the
+    /// dock into a popover, so the section is never drawn, and the tour went on
+    /// pointing at it until 2026-09-20: its card could not appear, and the tour
+    /// stopped on its second-to-last step. A name nothing hangs on is worse
+    /// than no name, so it is off the promise.
+    public static let knownPanelSections = ["layers", "arrange", "annotation",
                                             "text", "measurements", "library", "component",
                                             "effects", "color", "canvas", "placement",
                                             // A picked screen's own size and surface, and

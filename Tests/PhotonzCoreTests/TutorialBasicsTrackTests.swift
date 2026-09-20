@@ -12,6 +12,23 @@ struct TutorialBasicsTrackTests {
 
     private var basics: [TutorialGuide] { TutorialCatalog.guides(in: .basics) }
 
+    // MARK: The tour
+
+    /// The tour's fifth card pointed at the Position and Size section, which
+    /// left the dock for a popover and is never drawn. A card whose anchor is
+    /// not in the window does not appear, so the tour stopped dead on its
+    /// second-to-last step for everybody who took it.
+    ///
+    /// Its replacement has to be something on screen with NOTHING picked,
+    /// because the card before it can be skipped: Appearance and the rest
+    /// arrive with a selection, and the panel itself is always there.
+    @Test func theTourPointsItsSettingsCardAtSomethingThatIsAlwaysOnScreen() throws {
+        let tour = try #require(TutorialCatalog.guide(id: TutorialCatalog.tourID))
+        let step = try #require(tour.steps.first { $0.id == "properties" })
+        #expect(step.anchor == .panel)
+        #expect(step.anchor != .panelSection("geometry"))
+    }
+
     // MARK: The track itself
 
     @Test func theTrackWalksSomebodyFromNothingToAFinishedHandoff() {

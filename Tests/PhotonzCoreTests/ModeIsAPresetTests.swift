@@ -58,7 +58,7 @@ struct ModeIsAPresetTests {
         PanelSectionVisibility.Situation(documentHasMeasurement: true,
                                          documentHasComponent: true,
                                          documentHasContainer: true,
-                                         documentHasColumns: true,
+                                         documentHasFrame: true,
                                          isLibraryAskedFor: false)
     }
 

@@ -7,7 +7,7 @@
     { "do": "selectRow", "row": "Background" },
     { "do": "snapshot", "name": "dock-at-rest" },
     { "do": "dragSection", "section": "Layers", "past": "Measure Tool", "stop": "touching", "hold": "only-touching" },
-    { "do": "dragSection", "section": "Layers", "past": "Position & Size", "hold": "carrying-layers-down" },
+    { "do": "dragSection", "section": "Layers", "past": "Measure Tool", "hold": "carrying-layers-down" },
     { "do": "snapshot", "name": "layers-landed" },
     { "do": "dragSection", "section": "Layers", "past": "Measure Tool", "hold": "carrying-layers-back" },
     { "do": "snapshot", "name": "layers-back-on-top" },

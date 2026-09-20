@@ -73,7 +73,7 @@
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "width": 2 },
-    { "do": "expectLayers", "count": 2 },
+    { "do": "expectLayers", "count": 3 },
     { "do": "describe", "stage": "8-second-stroke", "note": "the second stroke of the icon matches the first without a trip to the panel, which is the whole point of setting the weight up front" },
     { "do": "snapshot", "name": "8-second-stroke" },
     { "do": "render", "name": "9-final-render" }

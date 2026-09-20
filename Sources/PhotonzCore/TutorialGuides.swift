@@ -54,9 +54,13 @@ public enum TutorialGuides {
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "properties",
-                anchor: .panelSection("geometry"),
+                // The panel itself, not a section in it: the card before this
+                // one can be skipped without picking anything, and every
+                // section that answers for a picked layer is absent until
+                // something is picked.
+                anchor: .panel,
                 title: "Its settings show up here",
-                body: "Position and size for whatever you picked, with the rest of its settings under them. Change one and the picture changes as you go.",
+                body: "Pick something and this panel fills with its settings, under the list. Change one and the picture changes as you go.",
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(

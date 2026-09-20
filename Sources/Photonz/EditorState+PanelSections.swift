@@ -31,7 +31,10 @@ extension EditorState {
                     situation.documentHasComponent = true
                 }
                 if layer.isGroup { situation.documentHasContainer = true }
-                if layer.columns?.isVisible == true { situation.documentHasColumns = true }
+                // A screen, whether or not it has been given any columns yet:
+                // the tick box that gives it some is inside the section this
+                // decides (`PanelSectionVisibility`).
+                if layer.isFrame { situation.documentHasFrame = true }
                 if situation.isSettled { return }
                 scan(layer.children)
                 if situation.isSettled { return }

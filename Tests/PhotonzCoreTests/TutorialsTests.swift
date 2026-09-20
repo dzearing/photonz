@@ -73,7 +73,14 @@ struct TutorialsTests {
         #expect(TutorialAnchor.tool(.measure) == TutorialAnchor("tool.measure"))
         #expect(TutorialAnchor.panelSection("layers") == TutorialAnchor("panel.layers"))
         #expect(TutorialAnchor.all.contains(TutorialAnchor.tool(.select)))
-        #expect(TutorialAnchor.all.contains(TutorialAnchor.panelSection("geometry")))
+        #expect(TutorialAnchor.all.contains(TutorialAnchor.panelSection("layers")))
+        // "geometry" is NOT promised any more. Position and Size left the dock
+        // for a popover, so the section exists in the enum and is never drawn;
+        // the tour went on pointing at it and its card could not appear at all,
+        // which stopped three walks and anybody taking the tour (2026-09-20).
+        // A name the app never hangs on anything has to be off the promise, or
+        // the catalogue check waves the next one through too.
+        #expect(!TutorialAnchor.all.contains(TutorialAnchor.panelSection("geometry")))
         #expect(TutorialAnchor.panelSection("layers").panelSectionID == "layers")
         #expect(TutorialAnchor.tool(.measure).panelSectionID == nil)
     }

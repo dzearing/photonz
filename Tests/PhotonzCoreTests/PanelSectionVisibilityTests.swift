@@ -70,6 +70,23 @@ import Testing
         #expect(PanelSectionVisibility.isShown("measurements", choices: choices, in: measuring))
     }
 
+    /// Columns is the same shape of trap as Motion, and was written the wrong
+    /// way round until 2026-09-20: the section only arrived once a screen was
+    /// already SHOWING its columns, and the tick box that starts them is inside
+    /// it. Somebody who drew a screen and went looking for columns found
+    /// nothing, and the app's own Padding and Columns tutorial pointed at a
+    /// section that was not on screen. It waits for a screen instead, which is
+    /// the fact that makes columns mean anything at all.
+    @Test func columnsArriveWithTheFirstScreenNotWithTheFirstColumns() {
+        let choices = PanelSectionVisibility.Choices()
+        #expect(!PanelSectionVisibility.isShown("columns", choices: choices, in: emptyHanded),
+                "no screen in the document, so there is nothing for columns to be on")
+        var hasScreen = emptyHanded
+        hasScreen.documentHasFrame = true
+        #expect(PanelSectionVisibility.isShown("columns", choices: choices, in: hasScreen),
+                "a screen with no columns yet still brings the section, because the tick box that turns them on is the section's own first row")
+    }
+
     /// Motion is deliberately NOT gated on the document already moving. The plus
     /// on its own header is how the first motion is made, and the timing strip
     /// only exists once something moves, so a rule that hid the section would
@@ -118,7 +135,7 @@ import Testing
         everything.documentHasMeasurement = true
         everything.documentHasComponent = true
         everything.documentHasContainer = true
-        everything.documentHasColumns = true
+        everything.documentHasFrame = true
         everything.isLibraryAskedFor = true
         let before = PanelSectionVisibility.optionalSections.filter {
             PanelSectionVisibility.isShown($0, choices: choices, in: everything)

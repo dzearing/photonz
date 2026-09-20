@@ -24,7 +24,7 @@
 
     { "do": "expectBox", "layer": "Frame 2", "at": [1600, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
     { "do": "expectBox", "layer": "Frame", "at": [80, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
-    { "do": "expectLayers", "count": 2 },
+    { "do": "expectLayers", "count": 3 },
     { "do": "snapshot", "name": "frame-second-screen-2-two" },
     { "do": "render", "name": "frame-second-screen-2-two-doc" },
 
@@ -32,7 +32,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "3-undone", "note": "one undo takes the second screen and the room it needed back together" },
     { "do": "expectBox", "layer": "Frame", "at": [80, 38], "size": [1440, 1024], "reachable": true, "within": 1 },
-    { "do": "expectLayers", "count": 1 },
+    { "do": "expectLayers", "count": 2 },
     { "do": "snapshot", "name": "frame-second-screen-3-undone" }
   ]
 }

@@ -45,8 +45,10 @@ public enum PanelSectionVisibility {
         /// The document holds something that puts other things somewhere: a
         /// screen, or a group.
         public var documentHasContainer: Bool
-        /// A screen in the document is showing its columns.
-        public var documentHasColumns: Bool
+        /// The document holds a screen. Not "a screen is showing its columns":
+        /// the tick box that turns columns on lives inside the Columns section,
+        /// so waiting for columns to be visible hid the only door to them.
+        public var documentHasFrame: Bool
         /// View ▸ Show Library has asked for the shelf.
         public var isLibraryAskedFor: Bool
 
@@ -55,18 +57,18 @@ public enum PanelSectionVisibility {
         /// of it: they are known before the walk starts.
         public var isSettled: Bool {
             documentHasMeasurement && documentHasComponent
-                && documentHasContainer && documentHasColumns
+                && documentHasContainer && documentHasFrame
         }
 
         public init(documentHasMeasurement: Bool = false,
                     documentHasComponent: Bool = false,
                     documentHasContainer: Bool = false,
-                    documentHasColumns: Bool = false,
+                    documentHasFrame: Bool = false,
                     isLibraryAskedFor: Bool = false) {
             self.documentHasMeasurement = documentHasMeasurement
             self.documentHasComponent = documentHasComponent
             self.documentHasContainer = documentHasContainer
-            self.documentHasColumns = documentHasColumns
+            self.documentHasFrame = documentHasFrame
             self.isLibraryAskedFor = isLibraryAskedFor
         }
     }
@@ -107,8 +109,14 @@ public enum PanelSectionVisibility {
         // holds a screen or a group.
         case "placement":
             return situation.documentHasContainer
+        // Laying out on a screen. It waits for a SCREEN, not for columns: the
+        // tick box that starts them is the section's own first row, so waiting
+        // for them to be visible hid the only door to them, exactly the trap
+        // Motion below was kept out of. Found on 2026-09-20, when three walks
+        // and the Padding and Columns tutorial all reached for a section that
+        // could never be there yet.
         case "columns":
-            return situation.documentHasColumns
+            return situation.documentHasFrame
         // Motion, Arrange and Shadow have no job to wait for. Automatic says
         // yes, and the point of listing them is that you can say no.
         //
