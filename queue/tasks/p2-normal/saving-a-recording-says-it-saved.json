@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3010,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T16:28:31.689Z",
-  "updated": "2026-09-20T02:40:46.468Z",
+  "updated": "2026-09-20T02:50:14.149Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing trim-a-recording-save-it-send-it-the-whole-flow on 2026-09-19. The machinery already exists: AppCoordinator.toasts.presentProgress / dismissProgress and presentCopyToast are what the GIF copy path uses (AppCoordinator.swift around :305). VideoEditorState has no route to the coordinator today, which is why the save path has none of it; VideoEditorView.saveButton (around :474) is where the spinner lives now.\n\nThe close-confirmation case is the interesting one: the sheet dismisses, the save runs, and the window closes when it lands. For a long recording that is several seconds of a window sitting there apparently doing nothing before it vanishes.",
@@ -35,10 +35,24 @@
     {
       "t": "2026-09-20T02:40:46.467Z",
       "note": "Built and verified. New walk saving-a-recording-says-so-walk: 43 steps, all green, with two real pictures of the app (the window after the save, and the toast itself). It proves all three ways in — the arrow on the controller, Command S, and Save in the close confirmation — each end with a named confirmation in the corner, and that the quick save flashed no progress at all. Three pieces of harness had to exist for that: expectToast (a walk could not see a toast before, because each one is its own panel), a Command S stand-in in PlaytestMenuStandIn (File > Save is dimmed for a walk's whole run, so the chord could only report the frozen menu bar back at itself), and a title on the toast panels so snapshot can photograph one. expectToast was watched running forced under a lock and read back the real line, so it is now on the lock-safe list with a test saying why."
+    },
+    {
+      "t": "2026-09-20T02:50:11.385Z",
+      "note": "Second review, on the built thing. Fixed while reviewing: the progress toast was wearing the GIF path's wand glyph, which says transformation rather than writing, so a save's bar now carries a document-with-an-arrow. Decided and left alone: a save that writes nothing stays SILENT (Command S on an already-saved recording), because saying 'saved' when nothing was written is a lie in the other direction and repeated presses would stack toasts; it is in the audit's evaluate list for the user to overrule. Left rough, filed nowhere because nothing is broken and no open task covers it: the progress bar has been proved but never seen, since the eight second sample saves in about two tenths of a second and nothing in the walk set saves slower than the half second that draws one. Its policy and the encoder count feeding it are both tested (SaveFeedbackTests, VideoAssetCommitTests.aCommitReportsHowFarThroughTheEncodeItIs on a real re-encode). Also left rough: the toast in the shipped picture shows a generic film icon because the tutorial sample is not in capture history; a recording you made shows its own poster frame."
+    },
+    {
+      "t": "2026-09-20T02:50:11.433Z",
+      "note": "walks trim-save-send-walk -> trim-save-send-walk, saving-a-recording-says-so-walk"
+    },
+    {
+      "t": "2026-09-20T02:50:14.147Z",
+      "note": "Saving a recording now says so in the bottom-right toast stack: a named confirmation with the recording's thumbnail when it lands, a progress bar with the encoder's own count once a save runs past half a second, and nothing at all for the quick ones. All three ways in (the controller arrow, Command S, Save in the close confirmation) go through one path and say the same thing. Behind next-saving-a-recording-says-so, on by default in Next. Verified: 8405 tests green; saving-a-recording-says-so-walk 43 steps green with two real pictures of the app (the window after the save and the toast itself), plus the save, trim, recording and close walks (13 passed, 0 failed, 6 refused by the lock). Audit: queue/audits/2026-09-19-saving-says-it-saved.json. Committed 08e6450d and pushed."
     }
   ],
   "walks": [
-    "trim-save-send-walk"
+    "trim-save-send-walk",
+    "saving-a-recording-says-so-walk"
   ],
-  "started": "2026-09-20T02:18:01.119Z"
+  "started": "2026-09-20T02:18:01.119Z",
+  "completed": "2026-09-20T02:50:14.148Z"
 }
