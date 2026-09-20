@@ -56,7 +56,7 @@
     { "do": "expectPath", "anchors": 3, "closed": true, "curves": 0 },
     { "do": "expectLayers", "count": 3 },
     { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
-    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "expectPicked", "layers": ["Path 2"] },
     { "do": "snapshot", "name": "2-two-shapes-two-presses" },
     { "do": "describe", "stage": "6-second-shape", "note": "two shapes for two presses of P, and the second lands picked with the pointer in hand like the first. A five shape icon costs five presses of P, which is what the other ten drawing tools already cost" },
 
@@ -69,7 +69,7 @@
     { "do": "action", "action": "redo" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectLayers", "count": 3 },
-    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "expectPicked", "layers": ["Path 2"] },
     { "do": "describe", "stage": "8-redo-brings-the-pick-back", "note": "redo puts the shape back and puts it back picked, so the step after a redo is the work rather than a re-pick" },
 
     { "do": "key", "key": "p" },

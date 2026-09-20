@@ -63,6 +63,8 @@
 
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.3 },
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "tool", "tool": "rectSelect" },
     { "do": "drag", "from": [600, 160], "to": [750, 380] },
     { "do": "wait", "seconds": 0.6 },
