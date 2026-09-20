@@ -1137,7 +1137,7 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 
 // ---- the full walk sweep ----------------------------------------------------
 // A runner cannot run the whole walk set: it is
-// about 530 walks and about 105 minutes, and a runner's background work is cut
+// about 530 walks and about 100 minutes, and a runner's background work is cut
 // off at 600s. So it asks with queue/bin/sweep.sh request and the loop runs one
 // between tasks. Requests that nothing ever serves used to be invisible: seven
 // of them sat unserved for three days because the loop had no code to run
@@ -1171,6 +1171,13 @@ export function sweepState(history = null) {
       partial: !!(latest && latest.partial),
       couldNotRun: latest.couldNotRun || 0,
       total: latest.total || 0,
+      // A run that was CUT SHORT, and which of the two ways. Interrupted means
+      // whoever was running it went away: on 2026-09-18 the loop was killed 126
+      // walks into a sweep and the page said nothing at all, because the record
+      // was only ever written at the end. Both now reach the page, and both say
+      // how much of the set they covered rather than a bare number of walks.
+      interrupted: !!latest.interrupted,
+      timedOut: !!latest.timedOut,
     } : null,
     // When the app last had a whole-app check behind it: null unless the screen
     // is locking sweeps out right now.

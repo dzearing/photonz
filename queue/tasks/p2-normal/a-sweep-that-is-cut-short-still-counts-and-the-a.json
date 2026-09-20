@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 25,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-19T15:34:56.696Z",
-  "updated": "2026-09-19T15:44:36.116Z",
+  "updated": "2026-09-20T00:35:21.224Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED FROM THE RECORD, on this machine, today.\\n\\nWhat happened: the loop started a sweep at 2026-09-18T14:43:10Z (queue/sweep/2026-09-18-074310.log). It got through 126 walks. The loop process then died at about 15:09Z, external to the sweep, and did not come back until it was started by hand at 2026-09-19T15:31Z.\\n\\nWhat that left behind, checked just now:\\n  $ ls queue/sweep/requested.json   ->  does not exist\\n  $ node -e (read latest.json) -> {began: 2026-09-18T13:33:07Z, ended: 2026-09-18T14:24:41Z, walks: 250, head: e2e5687fe}\\n  $ grep -c (walk result lines) queue/sweep/2026-09-18-074310.log  ->  126\\n  $ grep FAILED queue/sweep/2026-09-18-074310.log -> measure-chip-snap-walk  1s  FAILED  no done.json\\n\\nSo: the last recorded sweep is the one BEFORE the interrupted one, at the commit before last; 126 walk results including one failure were thrown away; and because sweep.sh run does mv -f requested.json .claimed.json before it starts (queue/bin/sweep.sh, the run branch), there is no pending request left for the loop to serve. queue/bin/sweep.sh status now says a sweep was last run against e2e5687f and that none is pending, which is true and is exactly the problem: commit ebbcfc3f has never been swept and nobody is going to.\\n\\n(The one FAILED walk was checked: Scripts/playtest-all.sh measure-chip-snap passes on its own in 14s, so it was a flake of the killed run, not a break. That evidence is logged on walks-that-fail-in-the-full-sweep.)\\n\\nTHE SHAPE OF THE FIX, not prescribed but the ground it has to cover. The claim is right - a request arriving during a sweep belongs to the next one - so do not stop claiming. Put the claimed requests back if the run never finished, or write the run down as it goes rather than only at the end, or both. There is already a partial-run path for the locked-screen case that records what it reached (complete: false, partial: true), so an interrupted run has somewhere honest to land; queue/bin/sweep-report.mjs already refuses to write anything for a run that got through no walk at all and already leaves the standing task open when a run did not cover the set. Prefer reusing that to inventing a second kind of incomplete sweep.",
@@ -42,6 +42,52 @@
     {
       "t": "2026-09-19T15:44:36.115Z",
       "note": "left rough by the manager pass 2026-09-19, related to this task but not filed as its own, because checking it took the harm away.\n\nqueue/playtest.lock has been held since 2026-09-18 08:09, taken by queue/bin/testing.sh, which is the switch that tells the loop to leave dist/Photonz Dev.app alone. Nothing surfaces that anywhere: grepping the whole repo for playtest.lock finds only Scripts/build-app.sh, queue/bin/testing.sh and queue/bin/refresh-dev-app.sh, so the dashboard, queue-lib aggregate state and the digest all say nothing about it. The hold has no expiry either. So the loop can be quietly refusing to refresh the user's app for days while the dashboard reads healthy.\n\nWhy it is not filed: it has cost nothing so far, and that was checked rather than assumed. The last commit touching Sources is ebbcfc3f at 07:42 on 2026-09-18 and the dev app binary is dated 07:43 on 2026-09-18, so the dev bundle is current; the loop has landed only queue commits since, because it was dead for sixteen hours. Nobody has reviewed a stale build. Under the follow-up bar that makes it a thing that could go wrong rather than a thing a person has hit, so it goes here.\n\nIt stops being hypothetical the moment the loop lands app code with the hold still on, which is the next task it claims. A pass that sees the hold still held AND app commits after the last refresh should file it then, and the shape of the fix is probably the same shape as this task: say on the dashboard that the hold is on and how long it has been on, the way the sweep now says it was cut short."
+    },
+    {
+      "t": "2026-09-20T00:22:16.090Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T00:34:59.412Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-20T00:34:59.465Z",
+      "note": "ADVERSARIAL REVIEW BEFORE BUILDING. The task's own shape note offered three routes: put the claimed requests back, write the run down as it goes, or both. Writing as it goes was the tempting one and it is the wrong one on its own: latest.json is what the dashboard, sweep.sh status and the standing task all read, so a file rewritten every fifteen seconds would mean the dashboard spends 105 minutes of every sweep showing a run in progress as if it were the last result, and a reader would have no way to tell 'sweep at walk 40' from 'sweep stopped at walk 40'. The other trap was to stop claiming. That would hand a sweep the requests that arrived while it was running, so a change landing mid-sweep would be recorded as swept when it was never touched. So: keep claiming, keep recording at the end, and make the CLAIM carry enough about the run that a later pass can finish the job for a run that died. That is one new file and no change at all to the happy path."
+    },
+    {
+      "t": "2026-09-20T00:34:59.516Z",
+      "note": "Built. queue/sweep/.claimed.json now carries the run's identity as well as its requests (pid, began, which log it is writing, the set size, the head sha, and the pid of playtest-all.sh itself). Two ways it gets settled: (1) a signal to sweep.sh no longer kills it, a handler stops the run, records it and exits 4; (2) for a SIGKILL, which gets no handler, the new queue/bin/sweep-recover.mjs runs at the top of every sweep.sh verb and picks up a claim whose process is gone. Both go through the same recordSweep() the live path uses, so nothing downstream has to know which happened. sweep-record.mjs is now a module with a thin CLI; sweep-parse.mjs learned 'interrupted' alongside 'timedOut' and learned to name the walk that was still running when the stop landed (a killed log ends in a bare padded name with no verdict)."
+    },
+    {
+      "t": "2026-09-20T00:34:59.567Z",
+      "note": "FOUND WHILE PROVING IT, fixed here: a SIGKILL to sweep.sh does NOT kill playtest-all.sh. It is a background job, so it is orphaned and carries on through the rest of the set with nobody recording it, holding the Mac awake by the caffeinate it started: at a full sweep's size that is an hour and three quarters of the user's machine spent on an answer that will be thrown away. I watched an orphan survive a kill in my own proof run. Recovery now puts it down by the two pids the claim wrote (never pkill: the user's own dev app and their own caffeinate look identical to a pattern), releases the hold and puts the probe away, and only when the run really is still going, because sweep-recover runs on every sweep.sh verb and quitting the probe on a tidy repo would pull it out from under a task runner driving it."
+    },
+    {
+      "t": "2026-09-20T00:35:08.890Z",
+      "note": "PROVED BY HAND, twice, with the sweep narrowed so it costs a minute (acceptance 1 and 5). PHOTONZ_QUEUE_DIR=/tmp/swqproof PHOTONZ_SWEEP_ARGS='--no-build caliper' queue/bin/sweep.sh run, killed after two walks had answered.\n  kill -TERM -> sweep.sh exit 4. 'Walk sweep INTERRUPTED at walk 2'. latest.json: walks 2, complete false, interrupted true, unfinished caliper-click-holds-walk. requested.json back with the request in it. claim gone. Released the hold keeping the Mac awake.\n  kill -KILL -> sweep.sh exit 137. Immediately after: no latest.json, no requested.json, .claimed.json left behind, orphaned run still going. The next sweep.sh verb printed 'Its run (pid 5361) is STILL GOING with nobody recording it. Stopping it. / Released the hold keeping the Mac awake. / Put the probe app away. / A sweep was left half-done: it claimed 1 request(s) ... / 1 request(s) put back'. latest.json and requested.json both right afterwards.\nOne round happened to catch a CRASHED walk (caliper-catches-a-drawn-edge-walk) and filed it onto a standing task in the temp queue marked UNCONFIRMED, which is the behaviour acceptance 4 asks for. Chased it as the contract requires: it crashed twice more on --no-build against the bundle my SIGKILL round had left behind, then passed three times in a row after a clean Scripts/probe-app.sh build. Not an app bug, a casualty of the kill, and exactly why a cut-short run's failures are recorded as unconfirmed rather than as breaks."
+    },
+    {
+      "t": "2026-09-20T00:35:08.943Z",
+      "note": "ACCEPTANCE, item by item.\n 1 killed by hand, both signals, both halves shown above.\n 2 a run that answered nothing records NOTHING (recordSweep's nothingToSay: walks 0 AND couldNotRun 0), so a probe that cannot launch leaves the last real sweep standing, and its request still goes back. A LOCKED run with nothing through is deliberately not covered by that rule: being turned away by every walk is news and the dashboard counts the blind spell from those records.\n 3 sweep.sh status, the standing task's notes block and the dashboard line all count a cut-short run against the set: 'walk sweep interrupted at 126 of 532 walks 20h ago · 1 failing · 1 more asked for'. A narrowed run has no set to count against and says '2 walks', never '2 of 2', which read as complete coverage before I fixed it.\n 4 the failures go onto the standing task through the same sweep-report.mjs, on their own lines marked UNCONFIRMED with the reason and the 2026-09-18 measure-chip-snap-walk precedent, plus 'Never finished: <walk>' for the one that was in flight. They are its own lines and not appended to the 'Failing walks (N):' line, because previousFailures() reads that line back and splits it on commas.\n 5 done throughout with PHOTONZ_SWEEP_ARGS.\n 6 sweep-report.mjs already refused to close the standing task for complete === false; drilled so it stays that way.\n 7 below."
+    },
+    {
+      "t": "2026-09-20T00:35:08.995Z",
+      "note": "THE 2026-09-18 REQUEST: nothing owed, it has already been served. It was re-asked at 2026-09-19T15:35:05Z by the runner that filed this task ('Re-asking for the sweep that was lost...'), and the full sweep that finished at 2026-09-20T00:22:15Z served it along with two others: 532 walks, 475 passed, 57 failing, against head 1f0a4738. So the gap the task was filed about is closed and no re-ask is needed. I am not asking for a sweep for THIS change either: it touches queue/ machinery, docs and CI only, no Sources, so no walk can see it."
+    },
+    {
+      "t": "2026-09-20T00:35:09.049Z",
+      "note": "Verification: 41 checks in the new queue/bin/sweep-interrupt-drill.mjs, all green, and it is in CI next to sweep-parse-drill.mjs (which was not in CI before). All nine queue drills green (sweep-parse, sweep-notes, sweep-line, sweep-size, sweep-interrupt, screen-gate, state-poll, decision, audit-index). Scripts/test.sh green. No Swift touched.\nTwo side fixes it was not worth filing separately: sweep.sh exited 1 on every clean sweep (a trailing false arithmetic test), which now matters because an interrupted run exits 4, so it says exit 0 out loud; and 'cat $RUNLOG' ran the killed log's truncated last line into whatever printed next.\nAlso ran queue/bin/sweep-size.mjs --write: the sweep that landed at 00:22 moved the measured size from 105 to 100 minutes and the ceiling multiple from eleven to ten, so --check was failing against the new history.jsonl. Numbers only, eleven files, and committed together with history.jsonl so CI sees a consistent pair."
+    },
+    {
+      "t": "2026-09-20T00:35:21.172Z",
+      "note": "left rough, not filed: right after the SIGKILL round of my proof, caliper-catches-a-drawn-edge-walk CRASHED three times running under Scripts/playtest.sh --no-build ('the app quit part way through and left no crash report'), then passed three times in a row after one clean Scripts/probe-app.sh build. So a probe left behind by a killed sweep can hand the next --no-build run phantom crashes, which is exactly the thing a runner is told to chase. It does not earn its own task for two reasons: I could not separate a damaged bundle from a probe instance the SIGKILL left half-alive, so I would be filing a hypothesis; and the most likely cause is now cleaned up here, because recovery puts the orphaned run, the caffeinate and the probe away before anything else touches the sweep. If a runner meets a crash it cannot reproduce after a clean build, this is the note to find."
+    },
+    {
+      "t": "2026-09-20T00:35:21.223Z",
+      "note": "left rough, not filed: the progress line a narrowed run prints while it is going still counts against the whole set ('walk sweep: 2 of 532 walks done', 'INTERRUPTED at walk 2 of 532'). Only the live note is wrong; everything recorded and everything read back says the right thing. Pre-existing, cosmetic, and only ever seen by somebody deliberately narrowing a sweep to test this machinery."
     }
-  ]
+  ],
+  "started": "2026-09-20T00:22:16.089Z",
+  "walks": []
 }

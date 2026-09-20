@@ -40,6 +40,16 @@ jobs:
           node queue/bin/sweep-size.mjs --check
           node queue/bin/sweep-size-drill.mjs
 
+      # The sweep is the only thing that says whether what the loop just built
+      # broke the app, and on 2026-09-18 a killed loop threw away 126 walk
+      # answers AND the request that asked for them, so nothing checked the app
+      # for a day. These hold the reading of a run and the picking-up of a
+      # killed one honest.
+      - name: A sweep that is cut short still counts
+        run: |
+          node queue/bin/sweep-parse-drill.mjs
+          node queue/bin/sweep-interrupt-drill.mjs
+
       - name: Swift version
         run: swift --version
 

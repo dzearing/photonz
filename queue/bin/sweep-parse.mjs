@@ -9,8 +9,13 @@
 //              touch and the rest were refused (PlaytestLockSafety). Real
 //              counts for a real part of the set, and never the whole of it.
 //   locked     the screen was locked and not one walk got through.
-//   cut short  it was stopped on the clock part way. What it never reached is
-//              unknown, not passing.
+//   cut short  it was stopped part way, either on the clock or because whoever
+//              was running it died. What it never reached is unknown, not
+//              passing, and what failed in its last moments is not confirmed
+//              either: a stop takes the probe app down with it, so the walk in
+//              flight and the one after it fail for the stop rather than for
+//              the app. A cut-short run names its failures as UNCONFIRMED and
+//              leaves confirming them to the next full sweep.
 //
 // The partial one is why this file exists. The Mac was locked from 2026-09-15
 // and the sweep filed NOTHING for three days rather than report on half a set,
@@ -32,13 +37,29 @@ const CRASH_WHY = /^ {4}([a-z0-9][a-z0-9-]*): (\S.*)$/;
 // locked run prints prose at the same indent, and a sentence must never be read
 // as the name of a failing walk.
 const LISTED = /^ {4}([a-z0-9][a-z0-9-]*)$/;
+// A walk that was started and never finished: its name, padded, and nothing
+// after it. Only ever read off the LAST line of a log, so a stray name
+// elsewhere is not mistaken for one.
+const UNFINISHED_LINE = /^([a-z0-9][a-z0-9-]*) *$/;
 
-export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
+export function parseSweepLog(text, { total = 0, timedOut = false, interrupted = false } = {}) {
   const lines = String(text || '').split('\n');
   const seen = [];
   for (const l of lines) {
     const m = l.match(WALK_LINE);
     if (m) seen.push({ name: m[1], verdict: m[3] });
+  }
+  // The walk that was RUNNING when the stop arrived. playtest-all prints the
+  // name padded to forty columns and only fills in the verdict when the walk is
+  // over, so a killed run ends in a bare name with no verdict. Naming it matters
+  // twice: it is not a pass, and it is the walk most likely to be a casualty of
+  // the stop rather than a break.
+  let unfinished = null;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (!lines[i].length) continue;
+    const m = lines[i].match(UNFINISHED_LINE);
+    if (m) unfinished = m[1];
+    break;
   }
   const counts = text.match(COUNTS);
   // A walk whose APP DIED. It is a failure and is filed like one, and it is
@@ -95,7 +116,12 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
     refusedWalks: seen.filter((w) => w.verdict === 'COULD NOT RUN').map((w) => w.name),
     couldNotRun,
     crashed,
-    total: total || ran + couldNotRun,
+    // How big the SET was. A run that covered it can count itself from what it
+    // ran; a run that was cut short cannot, and inferring it that way is how a
+    // narrowed run killed after two walks came out as "2 of 2 walks", which
+    // reads as complete coverage. Unknown is 0, and the sentences leave the
+    // "of N" off rather than making one up.
+    total: total || ((timedOut || interrupted) ? 0 : ran + couldNotRun),
     screenLocked,
     // A partial sweep is one that has something to report AND something it
     // could not reach. Locked with nothing through is not partial: there is no
@@ -103,12 +129,29 @@ export function parseSweepLog(text, { total = 0, timedOut = false } = {}) {
     partial: screenLocked && ran > 0,
     // Complete means the counts ARE the state of the walk set. A run with
     // refusals in it never is, however many walks it got through.
-    complete: Boolean(counts) && !timedOut && couldNotRun === 0,
+    complete: Boolean(counts) && !timedOut && !interrupted && couldNotRun === 0,
     timedOut: Boolean(timedOut),
+    // The run did not stop itself: whoever was running it went away. On
+    // 2026-09-18 the loop was killed 126 walks into a sweep and every one of
+    // those answers was thrown away, along with the request that asked for it.
+    interrupted: Boolean(interrupted),
+    // The walk that was in flight when the stop landed, if the log ends
+    // mid-line. Not a pass and not a failure: it never finished.
+    unfinished: (timedOut || interrupted) ? unfinished : null,
   };
 }
 
 const took = (seconds) => (seconds >= 60 ? `${Math.round(seconds / 60)}m` : `${seconds}s`);
+
+// Why a run stopped part way. The two reasons read very differently: a sweep
+// that hit its own clock cap is usually a wedged probe, while a sweep that was
+// interrupted says nothing about the app at all, only that whoever was running
+// it went away.
+export function cutShortBecause(r) {
+  if (r.interrupted) return ' (the run was interrupted: whoever was running it went away)';
+  if (r.timedOut) return ' (stopped on the clock)';
+  return '';
+}
 
 // The app dying is the loudest thing a sweep can find, and the loop only ever
 // reads the first sentence, so it goes there rather than in a line underneath.
@@ -149,9 +192,15 @@ function sweepSentencesPlain(r) {
   }
   if (r.complete === false) {
     return [
-      `Last sweep ${when} DID NOT FINISH${r.timedOut ? ' (stopped on the clock)' : ''}: `
-        + `it reached ${r.walks} walks in ${took(r.seconds || 0)}, of which ${r.passed} passed.`,
-      `The walks it never reached are unknown, not passing. Ask for another sweep if you need the whole set.`,
+      `Last sweep ${when} DID NOT FINISH${cutShortBecause(r)}: `
+        + `it reached ${r.walks}${r.total ? ` of ${r.total}` : ''} walks in ${took(r.seconds || 0)}, of which ${r.passed} passed.`,
+      `The walks it never reached are unknown, not passing.`
+        + (r.failed.length
+          ? ` The ${r.failed.length} that failed are UNCONFIRMED: a run that stops takes the probe app down with it, `
+            + `so a walk failing in its last moments may be a casualty of the stop. The next full sweep decides.`
+            + (r.unfinished ? ` ${r.unfinished} never finished at all.` : '')
+          : ''),
+      `The request that asked for this sweep is pending again; the loop runs another one.`,
     ];
   }
   return [`Last sweep ${when}: ${r.passed}/${r.walks} walks passed in ${took(r.seconds || 0)}.`];

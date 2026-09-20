@@ -1,3 +1,5 @@
+import { cutShortBecause } from './sweep-parse.mjs';
+
 // The notes on the standing "walks that fail in the full sweep" task, split
 // into the part a sweep owns and the part a person owns.
 //
@@ -71,7 +73,7 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
       ? `Last sweep ${result.ended} ran only the part of the walk set a locked screen cannot touch: ${result.walks} of ${result.total} walks ran in ${minutes} minutes, of which ${result.passed} passed. The other ${result.couldNotRun} were refused because the screen is locked, and those are unknown, not passing.`
         + (failed.length ? ` This list is the failures in the part that ran, not the state of the walk set.` : ``)
       : result.complete === false
-        ? `Last sweep ${result.ended} DID NOT FINISH${result.timedOut ? ' (stopped on the clock)' : ''}: it reached ${result.walks} walks in ${minutes} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
+        ? `Last sweep ${result.ended} DID NOT FINISH${cutShortBecause(result)}: it reached ${result.walks}${result.total ? ` of ${result.total}` : ''} walks in ${minutes} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
         : `Last sweep ${result.ended}: ${result.passed} of ${result.walks} walks passed in ${minutes} minutes.`,
     ``,
     // Nothing failing is a RESULT and gets written down like one. Until
@@ -88,6 +90,36 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
           ? `Failing walks: none. Nothing failed in what this run reached, and the walks it never reached are unknown, not passing. This is not the walk set passing.`
           : `Failing walks: none. Every walk in the set passed.`,
   ];
+
+  // A run that was cut short took the probe app down with it, so the walk in
+  // flight and the ones around it fail for the stop rather than for the app. On
+  // 2026-09-18 a killed sweep's one failure, measure-chip-snap-walk, passed on
+  // its own in 14s the next day. So a cut-short run's list is a list of
+  // SUSPECTS and says so, and the next sweep that covers the set is what turns
+  // a suspect into a break.
+  //
+  // It is its OWN line and never appended to the list above: previousFailures()
+  // reads that line back and splits it on commas, so a sentence on the end of
+  // it would come back as half a dozen walks with names like "so a walk failing
+  // in its last moments may be a casualty of the stop rather than a break".
+  if (result.complete === false && failed.length) {
+    lines.push(
+      ``,
+      `Those ${failed.length} are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,`,
+      `so a walk failing in its last moments may be a casualty of the stop rather than a break.`,
+      `Re-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.`,
+    );
+  }
+
+  // The walk that was RUNNING when the stop landed never answered at all. It is
+  // neither a pass nor a failure and would otherwise just be missing from every
+  // list here, which reads as a pass.
+  if (result.unfinished) {
+    lines.push(
+      ``,
+      `Never finished: ${result.unfinished} was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.`,
+    );
+  }
 
   // A crash is in that list like any other failure and means something else
   // entirely: the app was GONE, so the open document went with it and no walk
@@ -124,7 +156,9 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
         `Not run this time and still failing from the last check (${carried.length}): ${carried.join(', ')}`,
         result.partial
           ? `Those walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.`
-          : `This run stopped before reaching them. They are unread, not fixed.`,
+          : result.interrupted
+            ? `This run was interrupted before reaching them. They are unread, not fixed.`
+            : `This run stopped before reaching them. They are unread, not fixed.`,
       );
     }
   }

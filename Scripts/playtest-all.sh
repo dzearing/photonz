@@ -17,7 +17,7 @@
 # crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
-# The whole set is now about 530 walks and about 105 minutes (counted by
+# The whole set is now about 530 walks and about 100 minutes (counted by
 # queue/bin/sweep-size.mjs, never typed in), and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
 # has its background work killed at 600s, and eight of the twenty recorded
@@ -42,14 +42,14 @@ for arg in "$@"; do
 done
 
 # The whole set is
-# about 530 walks and about 105 minutes, which is eleven times the 600s ceiling
+# about 530 walks and about 100 minutes, which is ten times the 600s ceiling
 # on a task runner's background work, so running it from inside a task ends with
 # the runner terminated and its task handed back unfinished. Point whoever did
 # that at the way that survives instead of letting them start the run.
 if (( ${#PATTERNS[@]} == 0 )) && [[ "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
   cat >&2 <<'EOM'
 !! Refusing to run the whole walk set here: it is
-!! about 530 walks and about 105 minutes, and a task runner's background work
+!! about 530 walks and about 100 minutes, and a task runner's background work
 !! is terminated at 600s, so this run would be killed
 !! and the task that started it would be handed back unfinished.
 !!

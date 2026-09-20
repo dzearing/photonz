@@ -261,7 +261,7 @@ settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 
 }
 
 # The full walk sweep, run BETWEEN tasks. A runner cannot run it: the set is
-# about 530 walks and about 105 minutes (queue/bin/sweep-size.mjs counts it, so
+# about 530 walks and about 100 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
 # terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07

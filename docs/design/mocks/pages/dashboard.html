@@ -846,7 +846,13 @@
       return '<span class="db-sweep blind" title="Unlock the Mac and the loop runs one between tasks.">' + esc(b) + '</span>';
     }
     var t = 'walk sweep ' + W.last.passed + '/' + W.last.walks + ' ' + rel(W.last.ended);
-    if (!W.last.complete) t = 'walk sweep cut short at ' + W.last.walks + ' walks ' + rel(W.last.ended);
+    // A cut-short run counts itself AGAINST THE SET. "cut short at 126 walks"
+    // reads like a number somebody chose; "126 of 532" says how much of the app
+    // went unchecked, which is the whole point of saying it was cut short.
+    if (!W.last.complete) {
+      t = 'walk sweep ' + (W.last.interrupted ? 'interrupted' : 'cut short')
+        + ' at ' + W.last.walks + (W.last.total ? ' of ' + W.last.total : '') + ' walks ' + rel(W.last.ended);
+    }
     else if (W.last.failed) t += ' · ' + W.last.failed + ' failing';
     if (W.pending) t += ' · ' + W.pending + ' more asked for';
     return '<span class="' + cls + '">' + t + '</span>';

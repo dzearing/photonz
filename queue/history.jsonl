@@ -5569,3 +5569,17 @@
 {"t":"2026-09-19T22:38:49.009Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
 {"t":"2026-09-19T22:38:49.056Z","ev":"task_note","id":"the-sweep-s-size-is-the-size-it-really-is-in-the"}
 {"t":"2026-09-19T22:39:04.536Z","ev":"task_done","id":"the-sweep-s-size-is-the-size-it-really-is-in-the","from":"in_progress","note":"The sweep's size is counted by queue/bin/sweep-size.mjs (532 walks, 11.96s each, 106 minutes) rather than typed in; all eleven places that quote it say one generated sentence and CI fails when any drifts. The cap is now walks x 20s floored at two hours (177 min, 67% headroom) instead of a flat 120 that a 106-minute sweep had closed to 14 minutes. Verified live: narrowed sweep clean under the derived cap; a forced cap records complete:false/timedOut:true/failed:[] and says DID NOT FINISH (stopped on the clock). Also fixed the two-hour caffeinate hold, which a full sweep had outgrown, and the caffeinate the forced stop was orphaning. Scripts/test.sh green, four sweep drills green. Commit 3b667b40."}
+{"t":"2026-09-19T22:39:21.071Z","ev":"loop_reloaded","from":"7b2690f9eb67","to":"d6b938e3bdf0"}
+{"t":"2026-09-19T22:39:21.340Z","ev":"loop_started","pid":3680}
+{"t":"2026-09-20T00:22:15.960Z","ev":"sweep_pass","walks":532,"passed":475,"failed":57,"seconds":6174,"complete":true}
+{"t":"2026-09-20T00:22:16.092Z","ev":"task_started","id":"a-sweep-that-is-cut-short-still-counts-and-the-a","title":"A sweep that is cut short still counts, and the ask for it survives","priority":"p2-normal"}
+{"t":"2026-09-20T00:34:59.414Z","ev":"task_walks","id":"a-sweep-that-is-cut-short-still-counts-and-the-a","walks":[]}
+{"t":"2026-09-20T00:34:59.467Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:34:59.518Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:34:59.569Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:08.892Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:08.945Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:08.997Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:09.051Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:21.174Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}
+{"t":"2026-09-20T00:35:21.225Z","ev":"task_note","id":"a-sweep-that-is-cut-short-still-counts-and-the-a"}

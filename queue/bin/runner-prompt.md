@@ -81,7 +81,7 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
-  The whole set is about 530 walks and about 105 minutes, which is eleven times the 600s
+  The whole set is about 530 walks and about 100 minutes, which is eleven times the 600s
   ceiling on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including

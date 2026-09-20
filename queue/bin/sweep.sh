@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 530 walks and about 105 minutes. That size is COUNTED, not remembered:
+# about 530 walks and about 100 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -43,6 +43,12 @@ Q() { node queue/bin/queue.mjs "$@"; }
 mkdir -p "$SDIR"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+
+# A sweep that was left half-done by a loop that died is picked up HERE, before
+# anything reads the state, so nobody ever sees the gap. Silent when there is
+# nothing to pick up, and it leaves a sweep that is genuinely still running
+# completely alone (queue/bin/sweep-recover.mjs checks the pid).
+queue/bin/sweep-recover.mjs --quiet
 
 # Whether the Mac's screen is locked right now. The login window does not stop
 # the app being drawn, driven or photographed; what it takes away is the NAME on
@@ -138,7 +144,7 @@ summary)
   if [[ -s "$LATEST" ]]; then
     node -e '
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial, total: r.total || 0 } : {}) }));
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, total: r.total || 0, ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
     ' "$LATEST"
   else
     echo '{}'
@@ -156,12 +162,38 @@ run)
   RUNLOG="$SDIR/$stamp.log"
   # Claim the request before running: a request that arrives DURING the sweep
   # belongs to the next one, not to this one.
+  #
+  # The claim also carries the run's IDENTITY: which process is running it,
+  # when it began, which log it is writing, how big the set is. Until
+  # 2026-09-19 it carried only the requests, so a run that was killed left a
+  # file that said nothing about what it had been doing, and the next run
+  # deleted it. queue/bin/sweep-recover.mjs reads these fields to finish the
+  # job a dead run did not.
   CLAIMED="$SDIR/.claimed.json"
-  if [[ -s "$REQ" ]]; then mv -f "$REQ" "$CLAIMED"; else echo '{"requests":[]}' > "$CLAIMED"; fi
-
   began_s=$SECONDS
   began=$(now)
   TOTAL_WALKS=$(ls Scripts/playtest/*.json 2>/dev/null | wc -l | tr -d ' ')
+  # How big the set is, for "224 of 532 walks ran". A run narrowed with
+  # PHOTONZ_SWEEP_ARGS covers a handful on purpose, so it reports no set size
+  # rather than pretending the rest of the set was refused. Decided HERE rather
+  # than after the run, because the claim carries it too and a recovery reading
+  # a claim that said 532 would report a narrowed run against the whole set.
+  SET_SIZE=$TOTAL_WALKS
+  [[ -n "${PHOTONZ_SWEEP_ARGS:-}" ]] && SET_SIZE=0
+  HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
+  node -e '
+    const fs = require("fs");
+    const [req, claimed, ...rest] = process.argv.slice(1);
+    const [pid, began, logPath, logRel, total, head] = rest;
+    let doc = { requests: [] };
+    try { doc = JSON.parse(fs.readFileSync(req, "utf8")); } catch {}
+    if (!Array.isArray(doc.requests)) doc.requests = [];
+    fs.writeFileSync(claimed, JSON.stringify({
+      requests: doc.requests, pid: Number(pid), began, logPath, logRel,
+      total: Number(total) || 0, head: head || null,
+    }, null, 2) + "\n");
+    try { fs.unlinkSync(req); } catch {}
+  ' "$REQ" "$CLAIMED" "$$" "$began" "$SDIR/$stamp.log" "queue/sweep/$stamp.log" "$SET_SIZE" "$HEAD_SHA"
   echo "==> Walk sweep started $began, logging to $RUNLOG"
   # With the screen locked only the walks that never ask for a control by name
   # can run. Say which of the two runs is happening, in the live note as well as
@@ -194,6 +226,76 @@ run)
   # a sweep it cannot survive.
   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh ${SWEEP_ARGS[@]+"${SWEEP_ARGS[@]}"} > "$RUNLOG" 2>&1 &
   SWEEP_PID=$!
+  # Write the run itself into the claim, now that it has a pid.
+  #
+  # A SIGKILL to this script does NOT kill playtest-all.sh: it is a background
+  # job, so it is orphaned and carries on for the rest of the set, with nobody
+  # watching it, nobody recording it, and the caffeinate it started holding the
+  # Mac awake for as long as it runs. At a full sweep's size that is an hour and
+  # three quarters of the user's machine spent on a sweep whose answer will be
+  # thrown away. queue/bin/sweep-recover.mjs puts it down by these two pids,
+  # never with pkill.
+  node -e '
+    const fs = require("fs");
+    const [claimed, runPid, awake] = process.argv.slice(1);
+    try {
+      const doc = JSON.parse(fs.readFileSync(claimed, "utf8"));
+      doc.runPid = Number(runPid); doc.awakePidFile = awake;
+      fs.writeFileSync(claimed, JSON.stringify(doc, null, 2) + "\n");
+    } catch {}
+  ' "$CLAIMED" "$SWEEP_PID" "$AWAKE_PIDFILE"
+
+  # Putting a running sweep down: kill the child, release the hold keeping the
+  # Mac awake, and put the probe app away. Used by the clock cap below and by
+  # the signal handler, because a sweep stopped by a signal leaves exactly the
+  # same mess as one stopped by the clock.
+  stop_the_run() {
+    kill -TERM "$SWEEP_PID" 2>/dev/null
+    sleep 2
+    kill -KILL "$SWEEP_PID" 2>/dev/null
+    # A SIGKILL leaves playtest-all.sh's EXIT trap unrun, so the caffeinate it
+    # started to hold the Mac awake is orphaned and holds it for the rest of
+    # its clock: three hours, at the size the cap now is. Put it down by the
+    # pid it wrote down, never with pkill, which would also kill one the user
+    # started. Then check it is really gone.
+    if [[ -s "$AWAKE_PIDFILE" ]]; then
+      AWAKE_PID=$(cat "$AWAKE_PIDFILE")
+      kill "$AWAKE_PID" 2>/dev/null
+      sleep 1
+      if kill -0 "$AWAKE_PID" 2>/dev/null; then
+        echo "!! The caffeinate holding the Mac awake (pid $AWAKE_PID) would not go. Kill it by hand."
+      else
+        echo "==> Released the hold keeping the Mac awake."
+      fi
+      rm -f "$AWAKE_PIDFILE"
+    fi
+    # playtest.sh leaves the probe app up when it is killed mid-walk. This is
+    # the sanctioned way to put it down; never reach for pkill, which is one
+    # typo away from killing the user's dev app.
+    Scripts/probe-app.sh --quit >/dev/null 2>&1
+  }
+
+  # A sweep that is ASKED to stop still owes an answer.
+  #
+  # On 2026-09-18 the loop was killed 126 walks into a sweep. Everything about
+  # that run was written down only at the end, so 126 answers and one failing
+  # walk went in the bin, and the requests it had claimed went with them: the
+  # loop came back a day later saying no sweep was pending and the last one was
+  # against the commit before last. Nothing had checked the app and nothing was
+  # going to.
+  #
+  # So a signal no longer kills this script. It sets a flag, the watch loop
+  # below sees it within its fifteen seconds, and the run goes down the same
+  # path a run stopped on the clock goes down: what it reached is recorded,
+  # marked as a run that did not finish, and the requests it claimed go back on
+  # the pile. A SIGKILL still gets no say, which is what
+  # queue/bin/sweep-recover.mjs is for.
+  INTERRUPTED=0
+  on_signal() {
+    INTERRUPTED=1
+    echo "!! Asked to stop. Putting the sweep down and writing down what it reached (up to 15s)."
+  }
+  trap on_signal INT TERM HUP
 
   # A wall-clock cap, SIZED FROM THE SET rather than written down.
   #
@@ -238,38 +340,25 @@ run)
       echo "==> walk sweep: $DONE_N of $TOTAL_WALKS walks done"
       Q note "walk sweep: $DONE_N of $TOTAL_WALKS walks done" >/dev/null 2>&1
     fi
+    if (( INTERRUPTED )); then
+      echo "!! Walk sweep INTERRUPTED at walk $DONE_N of $TOTAL_WALKS. What it reached is recorded below and the request that asked for it goes back on the pile."
+      stop_the_run
+      break
+    fi
     if (( SECONDS - began_s > CAP )); then
       TIMED_OUT=1
       echo "!! Walk sweep passed its ${CAP}s cap at walk $DONE_N of $TOTAL_WALKS; stopping it."
-      kill -TERM "$SWEEP_PID" 2>/dev/null
-      sleep 2
-      kill -KILL "$SWEEP_PID" 2>/dev/null
-      # A SIGKILL leaves playtest-all.sh's EXIT trap unrun, so the caffeinate it
-      # started to hold the Mac awake is orphaned and holds it for the rest of
-      # its clock: three hours, at the size this cap now is. Put it down by the
-      # pid it wrote down, never with pkill, which would also kill one the user
-      # started. Then check it is really gone.
-      if [[ -s "$AWAKE_PIDFILE" ]]; then
-        AWAKE_PID=$(cat "$AWAKE_PIDFILE")
-        kill "$AWAKE_PID" 2>/dev/null
-        sleep 1
-        if kill -0 "$AWAKE_PID" 2>/dev/null; then
-          echo "!! The caffeinate holding the Mac awake (pid $AWAKE_PID) would not go. Kill it by hand."
-        else
-          echo "==> Released the hold keeping the Mac awake."
-        fi
-        rm -f "$AWAKE_PIDFILE"
-      fi
-      # playtest.sh leaves the probe app up when it is killed mid-walk. This is
-      # the sanctioned way to put it down; never reach for pkill, which is one
-      # typo away from killing the user's dev app.
-      Scripts/probe-app.sh --quit >/dev/null 2>&1
+      stop_the_run
       break
     fi
   done
   wait "$SWEEP_PID" 2>/dev/null
   SWEEP_CODE=$?
   cat "$RUNLOG"
+  # A killed run's log ends mid-line, with the name of the walk that was still
+  # going and no newline, so without this the next thing printed lands on the
+  # end of it: "caliper-click-holds-walk Last sweep ... DID NOT FINISH".
+  [[ -s "$RUNLOG" && -n "$(tail -c1 "$RUNLOG" 2>/dev/null)" ]] && echo
 
   took=$(( SECONDS - began_s ))
 
@@ -282,33 +371,61 @@ run)
   # all, which meant three days of silence while half the set was running fine.
   #
   # The request goes back on the pile either way: a full sweep is still owed.
-  HEAD_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
   if (( SWEEP_CODE == 3 )); then
     echo "!! The Mac's screen is locked, so this sweep covered only the part of the set a lock"
     echo "   cannot touch. What ran is real; what was refused is unknown, not passing."
     echo "   The request stays pending; the loop runs a full one once the screen is unlocked."
   fi
-  # How big the set is, for "224 of 521 walks ran". A run narrowed with
-  # PHOTONZ_SWEEP_ARGS covers a handful on purpose, so it reports its own size
-  # rather than pretending the rest of the set was refused.
-  SET_SIZE=$TOTAL_WALKS
-  [[ -n "${PHOTONZ_SWEEP_ARGS:-}" ]] && SET_SIZE=0
   queue/bin/sweep-record.mjs "$RUNLOG" "$LATEST" "$CLAIMED" "$REQ" \
-    "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT" "$SET_SIZE" "$HEAD_SHA"
+    "$began" "$(now)" "$took" "queue/sweep/$stamp.log" "$TIMED_OUT" "$SET_SIZE" "$HEAD_SHA" "$INTERRUPTED"
 
   rm -f "$CLAIMED"
+  trap - INT TERM HUP
 
   # Keep the last ten run logs. One is ~30KB and a sweep can be asked for
   # several times a day, so unbounded they become another loop.log.
   ls -t "$SDIR"/*.log 2>/dev/null | tail -n +11 | while IFS= read -r old; do rm -f "$old"; done
 
+  # Did this run get written down at all? A run cut short before a single walk
+  # answered records nothing, so latest.json still holds the run BEFORE it, and
+  # everything below has to ask before it reads numbers out of that file. Until
+  # 2026-09-19 it did not ask, so a run stopped at walk zero printed the
+  # previous sweep's counts as its own and filed them onto the standing task a
+  # second time.
+  RECORDED=0
+  [[ -s "$LATEST" ]] && [[ "$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).began||"")}catch{console.log("")}' "$LATEST")" == "$began" ]] && RECORDED=1
+
+  if (( ! RECORDED )); then
+    if (( INTERRUPTED )); then
+      echo "==> Walk sweep INTERRUPTED after $((took / 60))m $((took % 60))s before a single walk answered."
+    elif (( TIMED_OUT )); then
+      echo "==> Walk sweep STOPPED ON THE CLOCK after $((took / 60))m $((took % 60))s at its ${CAP}s cap, before a single walk answered."
+    else
+      echo "==> Walk sweep ended after $((took / 60))m $((took % 60))s without a single walk answering."
+    fi
+    echo "    Nothing is written down: a run with no answers is not a clean sweep, and the last recorded one stays the last recorded one."
+    echo "    The request that asked for it is pending again."
+    (( SWEEP_CODE == 3 )) && exit 3
+    (( INTERRUPTED )) && exit 4
+    exit 0
+  fi
+
   FAILCOUNT=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).failed.length)' "$LATEST")
+  REACHED=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).walks)' "$LATEST")
   # "finished in 17s, 0 failing" is what a run STOPPED ON THE CLOCK printed here
   # until 2026-09-19, and it reads exactly like a clean sweep. A run that was cut
   # short has not finished and its zero is not a result, so it says which it was.
-  if (( TIMED_OUT )); then
+  # "of 532" only when 532 is really the set this run was against. A narrowed
+  # run has no set to count itself against and says so by leaving it out.
+  OF_SET=""
+  (( SET_SIZE > 0 )) && OF_SET=" of $SET_SIZE"
+  if (( INTERRUPTED )); then
+    echo "==> Walk sweep INTERRUPTED after $((took / 60))m $((took % 60))s: it reached $REACHED$OF_SET walks, $FAILCOUNT of them failing."
+    (( FAILCOUNT )) && echo "    Those failures are UNCONFIRMED: a stop takes the probe app down with it, so a walk failing in the last moments may be a casualty of the stop."
+    echo "    The rest were never run: unknown, not passing. The request is pending again and the loop runs another sweep."
+  elif (( TIMED_OUT )); then
     echo "==> Walk sweep STOPPED ON THE CLOCK after $((took / 60))m $((took % 60))s at its ${CAP}s cap."
-    echo "    It reached $(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).walks)' "$LATEST") walks, $FAILCOUNT of them failing."
+    echo "    It reached $REACHED$OF_SET walks, $FAILCOUNT of them failing."
     echo "    The rest were never run: unknown, not passing."
   else
     echo "==> Walk sweep finished in $((took / 60))m $((took % 60))s, $FAILCOUNT failing"
@@ -328,11 +445,20 @@ run)
   # still open, the new result is appended to it instead of filing a duplicate
   # every time the sweep runs. A clean one refreshes the same block with its own
   # numbers, so the block can never keep naming walks the latest sweep passed,
-  # and closes the task if it covered the whole set. It never files a task.
+  # and closes the task if it covered the whole set. It never files a task, and
+  # it never closes one for a run that did not cover the set, so an interrupted
+  # run cannot retire the standing walk task however green its part looks.
   node queue/bin/sweep-report.mjs "$LATEST"
 
   # Exit 3 still means the set was not covered, for anything that reads it.
   (( SWEEP_CODE == 3 )) && exit 3
+  # Exit 4: the run was interrupted. Its answers are real and its request is
+  # pending again, so this is not a failure of the sweep machinery.
+  (( INTERRUPTED )) && exit 4
+  # Said out loud because it cannot be left to fall out of the last test: an
+  # arithmetic test that is false exits 1, so until 2026-09-19 every clean sweep
+  # ended with a status of 1. Nothing read it, and now something does.
+  exit 0
   ;;
 
 *)
