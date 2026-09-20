@@ -3260,6 +3260,42 @@ struct PlaytestScriptTests {
         }
     }
 
+    // MARK: - Is the picture on screen drawn at the size it is shown at?
+
+    @Test("An expectSharp step claims the canvas is drawn at the size it is shown at")
+    func expectSharpClaimsTheSharpCopy() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSharp" } ] }
+        """)
+        guard case .expectSharp(let absent, let within) = script.steps[0] else {
+            Issue.record("expectSharp"); return
+        }
+        #expect(absent == false)
+        #expect(within == 3)
+        #expect(script.steps[0].name == "expectSharp")
+    }
+
+    @Test("An expectSharp step can claim there is no sharp copy at all")
+    func expectSharpCanClaimNone() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSharp", "absent": true, "within": 0.5 } ] }
+        """)
+        guard case .expectSharp(let absent, let within) = script.steps[0] else {
+            Issue.record("expectSharp"); return
+        }
+        #expect(absent)
+        #expect(within == 0.5)
+    }
+
+    @Test("A negative wait for the sharp copy is refused when the script is read")
+    func expectSharpRefusesANegativeWait() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectSharp", "within": -1 } ] }
+            """)
+        }
+    }
+
     // MARK: - What the recording on disk says
 
     // A walk that trims and saves has to be able to ask the FILE, not the app.

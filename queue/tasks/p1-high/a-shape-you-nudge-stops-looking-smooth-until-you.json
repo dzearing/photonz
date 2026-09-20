@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 330,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T05:03:43.181Z",
-  "updated": "2026-09-20T05:04:52.992Z",
+  "updated": "2026-09-20T06:22:25.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-20, not read off code. Found while working an-icon-frame-s-guides-stop-looking-like-a-secon, and NOT caused by it: the same pictures come out of a build with that change stashed.\n\nCommand: Scripts/playtest.sh /tmp/blocky-probe.json (script inlined below). Four window captures in /tmp/photonz-playtest/blocky-probe, side by side at /tmp/abcd.png:\n  a-fresh-sc.png        a 10 point ellipse just drawn on a 24 point icon frame at 3200%: smooth.\n  b-moved-inside-sc.png the same ellipse dragged from (800,550) to (801,551), one document point, nowhere near the frame's edge: drawn in 1-document-pixel blocks with a stepped, anti-aliased fringe.\n  c-settled-sc.png      three seconds later, after clicking empty canvas so nothing is picked: still blocky.\n  d-rezoomed-sc.png     zoomToFit then pinch back to 32x: smooth again.\n\nSo it is a raster cached at the wrong resolution that survives the move and any wait, and only a zoom change throws it away. Photographed while the Mac was locked; the lock dims colours but not shapes, and the blocks are geometry.\n\nNot yet checked: whether it also happens to a shape that is not inside a frame, or on a screen-sized frame rather than an icon one. It was only ever tried on a 24 point icon frame.\n\nThe walk script:\n{ \"out\": \"/tmp/photonz-playtest/blocky-probe\", \"setup\": { \"forget\": [\"shapes\", \"frames\"] }, \"steps\": [ blank 1600x1100, newFrameDialog, press 24 in Icons, press Add Frame, tool ellipse, drag (795,545)->(805,555), tool select, snapshot a-fresh, drag (800,550)->(801,551), snapshot b-moved-inside, wait 3, click (600,300), snapshot c-settled, zoomToFit, pinch to 32, snapshot d-rezoomed ] }",
@@ -30,7 +30,42 @@
     {
       "t": "2026-09-20T05:04:52.991Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-20T06:08:37.272Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T06:22:17.405Z",
+      "note": "Adversarial review before building. This is a defect, not a mock, so the review was of the fix rather than of the idea. Shortest version that delivers the value: one didSet on dragPreview, no new state, no polling, no new render pass. The obvious alternative — call refreshCrispTile at the one place the scheduler callback clears the sprite — was rejected because it misses every other route that drops a sprite (discardDragPreview on an undo or a content edit under a live drag, a document being closed), and each of those would have left the same blocky picture behind. Cost checked: the sharp copy is asked for once per drag, not once per mouse move, because the sprite comes down once."
+    },
+    {
+      "t": "2026-09-20T06:22:21.136Z",
+      "note": "walks none -> nudge-stays-sharp-walk"
+    },
+    {
+      "t": "2026-09-20T06:22:21.183Z",
+      "note": "Cause found, not guessed. The canvas draws a SHARP COPY of what is in the window over the stretched composite when zoomed past 1:1 (EditorState.refreshCrispTile, flag next-crisp-zoom). It deliberately refuses to draw one while a drag sprite is floating. A pointer drag's commit submits its document while the sprite is STILL UP (clearPreviewAfterNextFrame, so the layer does not flash back to where it started), so that submit's request for a sharp copy was thrown away — and the sprite coming down a frame later asked for nothing. The canvas was then showing the document's own pixels magnified nearest, which at 3200% is exactly the 1-document-pixel blocks in the report. Only a zoom change asked again (viewport didSet), which is why zooming out and back repaired it."
+    },
+    {
+      "t": "2026-09-20T06:22:21.231Z",
+      "note": "Fix: Sources/Photonz/EditorState.swift, a didSet on dragPreview that asks for the sharp copy again the moment a sprite comes down. Next only: the whole sharp-copy path is behind next-crisp-zoom."
+    },
+    {
+      "t": "2026-09-20T06:22:25.857Z",
+      "note": "New walk step so a picture is not the only witness: expectSharp (PhotonzCore PlaytestScript, unit tested; harness checkSharp). It asks the editor whether it has a sharp copy and which camera that copy was drawn for, waits up to 3s for one, and fails naming what the canvas has instead. Watched working with the screen LOCKED on 2026-09-20 — it answered right twice in one forced run, passing before the nudge and failing after it — so it is now in PlaytestLockSafety.stepsThatSurviveALock and the walk runs unforced."
+    },
+    {
+      "t": "2026-09-20T06:22:25.904Z",
+      "note": "Verified. Before the fix, forced under a lock: 'step 16 (expectSharp): the canvas is not showing a sharp copy of what is in the window at 3200.0%: there is none'. After it, Scripts/playtest/nudge-stays-sharp-walk.json runs unforced and green twice, 29 steps, four real window captures, with expectSharp passing straight after a pointer nudge, after clicking empty canvas, and after an arrow-key nudge (64.0 pixels per document point at 3200%, after 0.0s). Scripts/test.sh: 8412 tests in 672 suites passed. Also green: icon-frame-walk, crisp-zoom-walk, and the seven runnable drag walks (live-color-drag, multi-drag, option-drag-copy, screen-drag-cue, words-drag)."
+    },
+    {
+      "t": "2026-09-20T06:22:25.953Z",
+      "note": "Left rough, no task filed: the sharp copy is still asked for 90ms after whatever changed, so on a slow machine there can be a frame or two of the blown-up picture between letting go and it landing. That delay predates this bug, is deliberate (it stops a whole window of pixels being spent per keystroke), and nobody has reported noticing it. It is in the audit's rough list, where the user can disagree."
     }
   ],
-  "walks": []
+  "walks": [
+    "nudge-stays-sharp-walk"
+  ],
+  "started": "2026-09-20T06:08:37.271Z"
 }

@@ -2196,6 +2196,22 @@ public enum PlaytestStep: Sendable, Equatable {
     /// holds at every zoom. Left off it is one point: the points are on the
     /// shape, not near it.
     case expectChrome(within: CGFloat)
+    /// CLAIMS that the canvas is showing the picture drawn at the size it is
+    /// being shown at, rather than a document-sized picture blown up.
+    ///
+    /// Zoomed past 1:1 the canvas lays a sharp copy of what is in the window
+    /// over the stretched composite (`refreshCrispTile`). Without it, every
+    /// shape on screen is whatever the document's own pixels make of it, which
+    /// at 3200% is 1-document-pixel blocks with a stepped fringe: a circle
+    /// drawn on a 24 point icon frame stops looking like a circle.
+    ///
+    /// A picture cannot settle this on its own, and nor can a person's patience:
+    /// the sharp copy lands about a tenth of a second after whatever changed,
+    /// so the step waits up to `within` seconds (three unless said otherwise)
+    /// for it and fails naming what the canvas is showing instead.
+    /// `absent: true` is the other claim, for at or below 1:1 where a second
+    /// copy would buy nothing.
+    case expectSharp(absent: Bool, within: Double)
     /// What the pill riding under a drag says right now, or that there is no
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
@@ -2461,7 +2477,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
     ]
@@ -2525,6 +2541,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
+        case .expectSharp: "expectSharp"
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
@@ -2979,6 +2996,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a distance on screen is zero or more, not \(within)")
             }
             self = .expectChrome(within: CGFloat(within))
+        case "expectSharp":
+            let absent = try f.optionalFlag("absent") ?? false
+            let within = try f.optionalNumber("within") ?? 3
+            guard within >= 0 else {
+                throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
+            }
+            self = .expectSharp(absent: absent, within: within)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

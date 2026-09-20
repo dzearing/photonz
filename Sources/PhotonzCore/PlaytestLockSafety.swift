@@ -76,6 +76,13 @@ public enum PlaytestLockSafety {
     ///   accessibility name, so it named its item correctly ("delete is Video
     ///   ▸ Delete This Piece") and ran the chord's stand-in. It never opens a
     ///   menu, so the thing a lock really stops does not arise.
+    /// - `nudge-stays-sharp-walk`, 16 steps forced under a lock on
+    ///   2026-09-20: expectSharp. It asks the editor whether it has a sharp
+    ///   copy of what is in the window and which camera that copy was drawn
+    ///   for, both of which are the app's own state inside the app's own
+    ///   process. It answered correctly twice in one run under the lock: it
+    ///   passed before a shape was nudged and failed after it, which is the
+    ///   bug it was written for.
     /// - `tool-tips`, `segment-tooltips-walk`, `history-tooltips-walk`,
     ///   `panel-toggle-titlebar-walk`, `path-points-under-the-pen-walk` and
     ///   `marquee-answers-to-m-walk`, all green on a Mac locked since
@@ -93,6 +100,10 @@ public enum PlaytestLockSafety {
         "expectMeasures", "expectNotice",
         "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
         "expectStoredRecording",
+        // Watched on 2026-09-20, forced under a lock: it asks the editor for
+        // the sharp copy it is drawing and the camera it was drawn for, which
+        // are its own state and not a name.
+        "expectSharp",
         // Watched on 2026-09-19, forced under a lock: it asks the app's own
         // toast controller what the corner is saying, so there is no name to
         // look up and nothing for a lock to take away.

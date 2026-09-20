@@ -1586,6 +1586,10 @@ private final class Run {
                      + "\(Self.round1(now))pt now, asked for \(Self.round1(within))pt",
                  state: describe())
 
+        case .expectSharp(let absent, let within):
+            note(number, step.name, try await checkSharp(absent: absent, within: within),
+                 state: describe())
+
         case .expectLanding(let near, let within, let absent):
             note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
                  state: describe())
@@ -4149,6 +4153,55 @@ private final class Run {
                 + "the document are: \(inTheDocument)")
         }
         return "icon previews for \"\(named)\" at \(list(showing)), as claimed"
+    }
+
+    /// Whether the canvas is showing the picture drawn at the size it is being
+    /// shown at, rather than a document-sized picture blown up.
+    ///
+    /// Waits for it, because it never arrives with the frame: the sharp copy is
+    /// asked for a tenth of a second after whatever changed and drawn off the
+    /// main thread. A step that read the state the instant it ran would pass
+    /// or fail on the machine's mood.
+    private func checkSharp(absent: Bool, within: Double) async throws -> String {
+        let editor = try requireEditor()
+        func reading() -> (tile: CrispTile?, matches: Bool) {
+            guard let tile = editor.crispTile else { return (nil, false) }
+            return (tile, editor.crispTileViewport == editor.viewport)
+        }
+        func zoom() -> String {
+            guard let viewport = editor.viewport else { return "no camera" }
+            return "\(Self.round1(viewport.zoom * 100))%"
+        }
+        if absent {
+            // Nothing to wait for: give the app the same beat it would have had
+            // to draw one, then claim it did not.
+            await sleep(min(within, 1))
+            let now = reading()
+            guard now.tile == nil else {
+                throw Failure(description: "the canvas IS showing a sharp copy of what is in the "
+                    + "window, drawn at \(Self.round1(now.tile?.scale ?? 0)) pixels per document "
+                    + "point, and this step claims there should be none at \(zoom())")
+            }
+            return "no sharp copy at \(zoom()), as claimed"
+        }
+        let began = CACurrentMediaTime()
+        while CACurrentMediaTime() - began < within {
+            let now = reading()
+            if let tile = now.tile, now.matches {
+                let waited = Self.round1(CGFloat(CACurrentMediaTime() - began))
+                return "the canvas is drawn at the size it is shown at: \(Self.round1(tile.scale)) "
+                    + "pixels per document point over \(Self.round1(tile.region.width))×"
+                    + "\(Self.round1(tile.region.height)) points at \(zoom()), after \(waited)s"
+            }
+            await sleep(0.05)
+        }
+        let now = reading()
+        let instead = now.tile == nil
+            ? "there is none, so every shape on screen is the document's own pixels blown up"
+            : "the one it has was drawn for a different camera and is not being shown"
+        throw Failure(description: "the canvas is not showing a sharp copy of what is in the "
+            + "window at \(zoom()): \(instead). Waited \(Self.round1(CGFloat(within)))s. A shape drawn on "
+            + "an icon frame reads as 1-document-pixel blocks like this.")
     }
 
     private func checkPicked(_ layers: [String]) throws -> String {

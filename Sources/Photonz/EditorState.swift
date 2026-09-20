@@ -901,7 +901,20 @@ final class EditorState {
     /// Cheap drag preview: underlay + sprite the canvas composites in Core
     /// Animation, so mouse moves cost zero Core Image work. Nil until the
     /// session's two renders finish (the full-submit path covers the gap).
-    var dragPreview: DragPreview?
+    var dragPreview: DragPreview? {
+        didSet {
+            // A floated sprite is the one thing that stops the sharp copy of
+            // what you can see being drawn (`refreshCrispTile` skips a drag),
+            // so when the sprite comes down the sharp copy has to be asked for
+            // again. Nothing else asks: a drag's own commit submits its
+            // document while the sprite is still up, deliberately, so that the
+            // layer does not flash back to where it started, which left the
+            // canvas showing the document's own pixels blown up until the zoom
+            // next changed. At 3200% on an icon frame that is a circle in
+            // 1-document-pixel blocks, for as long as you care to look at it.
+            if dragPreview == nil, oldValue != nil { refreshCrispTile() }
+        }
+    }
     /// Renders preview sessions off the scheduler's queue.
     let previewRenderer = DocumentRenderer()
     var dragPreviewGeneration = 0

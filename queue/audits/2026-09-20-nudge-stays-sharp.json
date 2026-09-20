@@ -1,0 +1,25 @@
+{
+  "feature": "A nudged shape stays smooth",
+  "epic": "icon-grid",
+  "summary": "Moving a shape with the pointer while zoomed in no longer flattens it into blocks. Before this, one drag of a circle on a 24 point icon frame at 3200% turned it into visible squares that stayed until you changed the zoom.",
+  "setup": "Photonz Dev, Experiments window, release Next. Crisp zoom is on by default (next-crisp-zoom).",
+  "try": [
+    { "do": "Open a blank canvas and choose Layer, New Frame, then the 24 size under Icons, then Add Frame." },
+    { "do": "Pick the Ellipse tool and drag a small circle inside the frame." },
+    { "do": "Press V for the pointer and look at the circle's edge: it should be a smooth curve." },
+    { "do": "Drag the circle one point to the right and let go.", "shot": "2026-09-20-nudge-stays-sharp.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Look at the edge again without touching the zoom: it should be the same smooth curve." },
+    { "do": "Click empty canvas so nothing is picked, wait a few seconds, and look once more." },
+    { "do": "Nudge it again with the arrow keys and with the pointer a few more times, at different zooms." }
+  ],
+  "evaluate": [
+    "Does the shape ever flicker into blocks on the way through a drag, even for one frame?",
+    "Is the circle after the nudge exactly as smooth as the one you drew?",
+    "Does the sharpness come back fast enough that you never notice it being away?",
+    "Does dragging feel any slower than before?"
+  ],
+  "rough": [
+    "The sharp copy is still drawn about a tenth of a second after the drag ends, so on a very slow machine there may be a brief moment of the blown-up picture between letting go and it landing. That delay is deliberate and predates this fix.",
+    "The screen was locked for this run, so the pictures are real but their colours can read dimmed."
+  ]
+}
