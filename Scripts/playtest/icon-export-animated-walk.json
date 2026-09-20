@@ -15,7 +15,7 @@
 
     { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
     { "do": "wait", "seconds": 1 },
-    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation From", "present": true },
     { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
     { "do": "describe", "stage": "1-it-swings", "note": "one shape, told to turn: it swings out one way, through where it was drawn, and back, for ever. That is what has to survive being handed over." },
     { "do": "panel", "stage": "1-it-swings" },
@@ -43,7 +43,7 @@
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Rotation", "present": false },
+    { "do": "expect", "field": "Rotation From", "present": false },
     { "do": "describe", "stage": "5-undone", "note": "and the motion comes off in one undo, which puts the document back to a still drawing that exports exactly the still file it always did." }
   ]
 }

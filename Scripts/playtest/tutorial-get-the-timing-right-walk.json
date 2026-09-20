@@ -19,7 +19,7 @@
     { "do": "click", "at": [360, 240] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "how-long-it-takes", "timeout": 6 },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation From", "present": true },
     { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s" },
     { "do": "expect", "control": "Preview", "reads": "playing" },
     { "do": "describe", "stage": "2-the-row", "note": "the swing as one row, read back as a sentence: what it goes from, what it goes to, and how long that takes. Under it are the five things that decide how it plays." },

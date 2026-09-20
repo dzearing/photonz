@@ -88,12 +88,18 @@ struct EffectsListInspector: View {
     /// something the plus's own hover tip already says word for word ("Add an
     /// effect: a shadow, a glow, a border or a blur") and the menu itself lists
     /// the moment you press it.
+    private static let nothingYet = "Nothing yet. Add one with the plus above."
+
     private var empty: some View {
-        Text("Nothing yet. Add one with the plus above.")
+        Text(Self.nothingYet)
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Effects Empty")
+            // Said out loud for the same reason the Motion list says its own
+            // empty line: `expect field` reads typing boxes and readouts, and a
+            // line of prose is neither until it says so.
+            .panelReadout(Self.nothingYet)
             .panelStartProbe(.row, owner: "Effects empty")
     }
 

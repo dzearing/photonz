@@ -15,7 +15,7 @@
     { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
     { "do": "wait", "seconds": 1 },
     { "do": "describe", "stage": "1-adding-plays-it", "note": "THE FIRST OF THREE. Adding a motion plays it, so the answer to \"did that do anything\" is on screen before you read a single field." },
-    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation From", "present": true },
     { "do": "expect", "control": "Preview", "reads": "playing" },
     { "do": "panel", "stage": "1-adding-plays-it" },
     { "do": "snapshot", "name": "1-adding-a-motion-plays-it" },

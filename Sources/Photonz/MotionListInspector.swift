@@ -42,27 +42,37 @@ struct MotionListInspector: View {
     /// reads as broken, and the plus on the header is small enough to be missed
     /// the first time.
     private var empty: some View {
-        Text("Nothing moves yet. Add one with the plus above.")
+        Text(Self.nothingYet)
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Motion Empty")
+            // Said out loud, or a walk cannot tell this line from a Motion
+            // section that failed to draw anything at all: `expect field` reads
+            // typing boxes and readouts, and a line of prose is neither until
+            // it says so (`PanelReadoutProbe`).
+            .panelReadout(Self.nothingYet)
             .panelStartProbe(.row, owner: "Motion empty")
     }
+
+    private static let nothingYet = "Nothing moves yet. Add one with the plus above."
 
     /// The line for a selection of two or more. The section above this one
     /// speaks for everything picked, so a Motion section that simply left the
     /// panel read as the second click having broken something. It stays and
     /// says what to do instead.
     private var oneLayerOnly: some View {
-        Text("Motion is set on one layer at a time, because the numbers it "
-             + "animates are that layer's own. Pick a single layer to add one.")
+        Text(Self.oneAtATime)
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Motion One Layer")
+            .panelReadout(Self.oneAtATime)
             .panelStartProbe(.row, owner: "Motion one layer")
     }
+
+    private static let oneAtATime = "Motion is set on one layer at a time, because the numbers it "
+        + "animates are that layer's own. Pick a single layer to add one."
 }
 
 /// One entry: a switch, the property's name, its curve drawn small, the
@@ -103,6 +113,11 @@ private struct MotionRowView: View {
                 .truncationMode(.tail)
                 .padding(.leading, ColorPartLayout.nameLeading)
                 .playtestField("\(motion.property.title) Summary")
+                // The sentence, said out loud to a walk. It is a SwiftUI Text,
+                // which publishes nothing a walk can read, so without this the
+                // one line that says what the motion DOES was invisible to
+                // every walk that tried to claim it.
+                .panelReadout(motion.summary)
             if !isFolded {
                 OwnedSettings(owner: motion.property.title) { settings }
                     .compositingGroup()

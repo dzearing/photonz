@@ -34,7 +34,7 @@
     { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "the-bobblehead", "timeout": 8 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "field": "Rotation From", "present": true },
     { "do": "expect", "control": "Around", "reads": "Its centre" },
     { "do": "describe", "stage": "4-the-bobblehead", "note": "THE PICTURE TO LOOK AT: one press and it moves, and it moves WRONG. It is turning about its own middle, so the crown goes one way while the lip goes the other. Nothing about the angles is wrong. The point it turns about is." },
     { "do": "wait", "seconds": 0.2 },
