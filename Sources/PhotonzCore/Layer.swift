@@ -1548,6 +1548,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// a piece away throws none away.
     public var time: LayerTime?
 
+    /// The pieces this layer's stretch is cut into, when somebody has cut it
+    /// (`ClipPieces.swift`). Nil is the ordinary case and always means the
+    /// same thing: one piece, playing at the speed it was recorded, which is
+    /// exactly what `time` already says. So a clip nobody has cut writes
+    /// nothing extra, and every document written before this existed reads
+    /// back identical.
+    ///
+    /// Read it through `clipPieces` and write it through `setClipPieces`,
+    /// which keeps `time` in step. The pieces are the truth about what plays;
+    /// `time` is where the row sits and how long it runs for.
+    public internal(set) var cuts: ClipPieces?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1635,6 +1647,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.motions = motions
         // ...and it occupies the same stretch of time, for the same reason.
         copy.time = time
+        // A copy of a clip somebody has cut is still cut: the pieces come
+        // along with the stretch they are pieces of.
+        copy.cuts = cuts
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText
