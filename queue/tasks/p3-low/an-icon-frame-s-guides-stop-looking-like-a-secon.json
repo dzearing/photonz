@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-17T23:08:09.347Z",
-  "updated": "2026-09-20T05:08:14.246Z",
+  "updated": "2026-09-20T05:08:31.027Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-17, not read off code.\n\nCommand: Scripts/playtest.sh Scripts/playtest/icon-keylines-walk.json\nResult: status ok, lockSafe true, 6 real window captures. The picture is queue/audits/2026-09-17-keyline-vs-selection.png (copied out of /tmp/photonz-playtest/icon-keylines-walk/icon-keylines-2-drawn-sc.png). It shows an ellipse selected inside a 24 point icon frame at 3200%: a violet dashed rectangle with a rounded violet dashed squircle inside it (the keyline margin) and, concentric with them, a blue dashed rectangle with square grips (the selection). Same kind of mark, different colour and dash rhythm. Photographed while the Mac was locked, so colours can read dimmed; the shapes are unaffected.\n\nThe audit that shipped it said the same thing (queue/audits/2026-09-14-icon-keylines.json rough three) and its evaluate item two asks the user outright: \"Does the margin read as a guide at a glance, or does it read as part of the selection sitting next to it?\"\n\nThe rule this now breaks is D16 rule 3 in docs/design/mocks/shared/UX-PATTERNS.md, scrubbed on 2026-09-17 by two-rules-in-ux-patterns-get-scrubbed-a-callout: two guides that can be on at once differ in KIND, and so does a guide against anything on the canvas that is not a guide. The selection outline owns the traced border.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-20T05:08:14.244Z",
       "note": "The keyline margin is now a violet wash filling the band between the frame's edge and the live area, and the square a boxy glyph fills is four hairlines that run off the frame's edges, so the selection outline is the only traced rectangle on the canvas. The circle keyline keeps its dashes, being a circle. Geometry lives in PhotonzCore (IconKeylineGuides.frame, centerGuideLines, squareGuideLines, five new tests written first); drawing in Sources/Photonz/CanvasIconKeylines.swift. Verified: Scripts/test.sh green at 8409 tests, icon-keylines-walk ok with 8 real window captures including two new stages, every other icon walk and clamped-corner-wall-walk green. Audit queue/audits/2026-09-20-icon-keylines-read-as-guides.json. Commit 533f5448."
+    },
+    {
+      "t": "2026-09-20T05:08:31.026Z",
+      "note": "No sweep requested: the change is confined to the icon keyline chrome layer and to IconKeylineGuides, which nothing outside CanvasIconKeylines.swift reads. Every walk that draws an icon frame was re-run by hand and is green, and two document renders plus an SVG confirm the guides still cannot reach a picture."
     }
   ],
   "walks": [
