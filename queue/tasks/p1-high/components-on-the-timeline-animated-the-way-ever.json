@@ -4,12 +4,12 @@
   "goal": "The thing that would make this better than other video editors is that what you draw and what you edit are the same document. A component you built, an icon you drew, a title you styled: put any of them on the timeline, give it a start and an end, and animate it with the same moves you animate anything else with.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:43.070Z",
-  "updated": "2026-09-19T15:35:09.288Z",
+  "updated": "2026-09-20T12:25:32.748Z",
   "deps": [
     "a-document-can-have-time",
     "transitions-at-a-cut-and-effects-you-can-control"
@@ -42,6 +42,10 @@
     {
       "t": "2026-09-19T15:35:09.287Z",
       "note": "seq 6 -> 70"
+    },
+    {
+      "t": "2026-09-20T12:25:32.747Z",
+      "note": "seq 70 -> 90"
     }
   ]
 }

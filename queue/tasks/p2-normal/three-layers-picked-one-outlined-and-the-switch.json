@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:33.757Z",
-  "updated": "2026-09-20T08:38:35.876Z",
+  "updated": "2026-09-20T11:28:16.479Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED, not read. Run at 2026-09-20 on HEAD 43910970 against the probe built at 00:36:\n\n  $ Scripts/playtest-all.sh --no-build switch-says-mixed\n  switch-says-mixed-walk   8s  FAILED  step 34 (expect): the control called \"Switch\" in \"@outline\" reads \"Outline, on\", not \"mixed\"\n  ==> 0 passed, 1 failed\n\nNot a sweep casualty: it failed on its own here, and it is the ONLY failure in each of the last four full sweeps (02:18, 06:08, 07:22 and 08:35 on 2026-09-20), and it appears in every sweep log back to 2026-09-19 10:45. So it is a steady regression rather than a flake.\n\nThis is shipped behaviour that came back: a-switch-says-mixed-the-way-every-other-control is done, and its whole point was that a switch facing a mixed selection should say Mixed out loud like every other control in the panel rather than showing a plain state. The walk step that fails is step 34 of Scripts/playtest/switch-says-mixed-walk.json, which picks three layers with one outlined and expects the Outline switch to read mixed.\n\nStart by finding what changed: the Outline row moved out of Appearance recently (outline-leaves-appearance-and-an-effect-s-colo, done) and the shape parts work rearranged that section, so the mixed reading is most likely computed somewhere the new row does not ask. Reproduce first, then fix.\n\nThe standing sweep task walks-that-fail-in-the-full-sweep cannot pick this up: it is blocked behind two other tasks and has been for days, which is how one steady failure sat through ten sweeps unowned.",
@@ -33,10 +33,41 @@
     {
       "t": "2026-09-20T08:38:35.875Z",
       "note": "owns these walks: switch-says-mixed-walk"
+    },
+    {
+      "t": "2026-09-20T11:01:03.795Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T11:05:08.163Z",
+      "note": "REPRODUCED and root-caused, and it is NOT the panel. Ran the walk on HEAD 7ba6c9b6 (locked screen, lockSafe walk, so the run counts): step 34 fails the same way. The log's own state dump says why: after step 30's sweep the selection is still ['Path'], one layer, so the Outline row reading 'on' is HONEST. Two scratch walks isolated it: sweep three pen-drawn closed paths with NOTHING picked -> ['Path','Path 2','Path 3'] and the Outline row reads 'mixed' exactly as the task asks; sweep the same band while ONE path is picked -> selection unchanged, no band committed at all. Same walk with rectangles instead of paths works both ways, so it is paths only. Bisected by sweep log: switch-says-mixed-walk was ok in the 2026-09-19 15:39 sweep and FAILED in the 19:50 one; 459e7ffc 'Points on a path can be swept up with a box' landed at 18:24. That commit makes a band drawn while a path shows its points sweep the POINTS and never the layers (CanvasPathEdit.beginPathPointSweep), so with any path picked you can no longer rubber-band several layers at all. (The task note's claim that it fails back to 2026-09-19 10:45 is wrong: the three sweeps before 19:50 all record it ok.)"
+    },
+    {
+      "t": "2026-09-20T11:27:32.794Z",
+      "note": "walks switch-says-mixed-walk -> switch-says-mixed-walk, sweep-past-a-picked-path-walk"
+    },
+    {
+      "t": "2026-09-20T11:27:44.707Z",
+      "note": "Adversarial review before building. The mock is not the source here, the collision between two shipped gestures is: with a path picked, Select shows its points, and 459e7ffc gave the points EVERY band drawn on bare canvas. Walked it as a first-timer: draw three shapes, click one, throw a box round all three, and nothing happens at all, with no cursor, no band look and no message saying why. A gesture that silently does nothing is worse than one that does the wrong thing. Shortest fix that keeps both gestures: let the band itself say which it is. A box that has gone right round something ELSE is about the layers; a box that has reached nothing but this shape is about this shape's points, the box round the WHOLE shape included, which is how you take all of its points at once. No new modifier, no new mode, no fork. Rejected: cmd to sweep layers (undiscoverable); splitting Select into two tools like Illustrator (a much bigger product change, and the audit asks the user about it instead); deciding by where the press started (the two walks' bands start the same distance out, so it cannot tell them apart)."
+    },
+    {
+      "t": "2026-09-20T11:27:49.562Z",
+      "note": "Shipped. PhotonzCore gains PhotonzDocument.layerIDs(swept:besides:inside:) — the layers a band goes right round, the path whose points are showing excepted — with four tests in PathPointSweepTests. CanvasPathEdit reads it live: while the band grows, a non-empty catch hands the gathered points back and CanvasDisplay draws the band in the layer band's own look with the caught layers outlined, so letting go is never a surprise; at mouse-up a band holding layers commits exactly as the ordinary band does (plain replaces via commitSelection, shift adds via onAddSweptLayers), latched to the level read at the press. Only reachable with next-reshape-a-path on, so Current never had the regression and is untouched. Verified: Scripts/test.sh 8464 tests green; switch-says-mixed-walk ok; sweep-up-path-points-walk, shift-sweep-add-walk, sweep-in-group-walk, sweep-points-on-a-screen-walk, path-reshape-walk, pen-draws-a-path-walk and the marquee/band/select/group/icon batches all ok (~45 walks, no failures, the rest locked out by name lookup). New walk Scripts/playtest/sweep-past-a-picked-path-walk.json states all three answers out loud, with three real window captures. New core test PathPartsTests.threeWithOneOutlineAreMixed pins the Outline row reading Mixed over three paths with one line. Audit: queue/audits/2026-09-20-sweep-past-a-picked-path.json."
+    },
+    {
+      "t": "2026-09-20T11:27:52.548Z",
+      "note": "Left rough, none of it clearing the follow-up bar. (1) The rule is decided by what the box goes ROUND, so a small shape sitting between the points you are sweeping flips the box to a layer box; the band says so live, and nobody is stopped by it, so it is an audit line for the user to react to rather than a task. (2) Whether picking layers and picking points should be two tools (the Illustrator split) instead of one Select is a product question for the user; it is an evaluate line in the audit, not something to file against myself. (3) No picture of a half-drawn band exists in the audit: a walk photographs the window between steps, not mid-drag. (4) This task's own notes said the failure ran back to the 2026-09-19 10:45 sweep; the sweep logs at 12:56, 14:25 and 15:39 all record the walk ok, so that line was wrong and the regression is one commit old. Not worth a task, but worth not trusting next time."
+    },
+    {
+      "t": "2026-09-20T11:28:16.477Z",
+      "note": "The panel was honest: the bug was the SELECTION. A box swept while a path is picked went to the path's points and never to the layers (459e7ffc, 2026-09-19 18:24), so picking three shapes was impossible once one was picked and the Outline row was reading one layer. Now a box that has gone right round something else hands itself to the layers, live, and a box that reaches nothing but the picked shape still gathers its points. Shipped in a9d99413: PhotonzCore.layerIDs(swept:besides:inside:) with tests, CanvasPathEdit + CanvasDisplay wiring, next-reshape-a-path only so Current is untouched. Verified with Scripts/test.sh (8464 green), switch-says-mixed-walk ok, and about 45 sweep/path/pen/marquee/band/select/group/icon walks with no failures. New walk sweep-past-a-picked-path-walk and new test PathPartsTests.threeWithOneOutlineAreMixed pin it. Audit with three real window captures: queue/audits/2026-09-20-sweep-past-a-picked-path.json. Full sweep requested."
     }
   ],
   "walks": [
-    "switch-says-mixed-walk"
+    "switch-says-mixed-walk",
+    "sweep-past-a-picked-path-walk"
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-20T11:01:03.794Z",
+  "completed": "2026-09-20T11:28:16.478Z"
 }

@@ -5674,3 +5674,56 @@
 {"t":"2026-09-20T10:05:00.219Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
 {"t":"2026-09-20T10:05:00.266Z","ev":"task_note","id":"a-document-can-have-time"}
 {"t":"2026-09-20T10:05:00.314Z","ev":"task_walks","id":"time-lives-in-the-document-and-a-layer-can-have","walks":[]}
+{"t":"2026-09-20T10:05:27.610Z","ev":"task_note","id":"time-lives-in-the-document-and-a-layer-can-have"}
+{"t":"2026-09-20T10:05:27.656Z","ev":"task_note","id":"time-lives-in-the-document-and-a-layer-can-have"}
+{"t":"2026-09-20T10:05:27.705Z","ev":"task_note","id":"time-lives-in-the-document-and-a-layer-can-have"}
+{"t":"2026-09-20T10:05:27.754Z","ev":"task_done","id":"time-lives-in-the-document-and-a-layer-can-have","from":"in_progress","note":"The document can carry a duration and a layer an in and an out, in PhotonzCore/DocumentTime.swift: pure, value typed, Sendable, Codable, tests first. A layer row on the timing strip is a BAR when it has an in and an out and a heading when it does not, and MotionStripRuler gained a documentMS form with no headroom, so the icon strip and the video timeline are one component. drawn(atTimeMS:) composites a frame at a moment with no renderer change; 0.02ms to pick the moment, 16.8ms to composite it, written into docs/progress/perf.md. The recording window's strip measures through that same ruler now, proved pixel-identical by test, with trim, delete, undo, revert and export all re-run and passing on real screenshots. 8459 tests green. Audit: queue/audits/2026-09-20-time-in-the-document.json. Acceptance 8's try path (a recording opening in the ordinary editor so the TIMING strip shows a bar per piece) is not built and cannot be: it needs the decision card that a-document-can-have-time is blocked on, and the log says so."}
+{"t":"2026-09-20T11:01:03.665Z","ev":"sweep_pass","walks":260,"passed":259,"failed":1,"seconds":3319,"complete":false,"total":538,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T11:01:03.797Z","ev":"task_started","id":"three-layers-picked-one-outlined-and-the-switch","title":"Three layers picked, one outlined, and the switch says they all are","priority":"p2-normal"}
+{"t":"2026-09-20T11:05:08.165Z","ev":"task_note","id":"three-layers-picked-one-outlined-and-the-switch"}
+{"t":"2026-09-20T11:27:32.796Z","ev":"task_walks","id":"three-layers-picked-one-outlined-and-the-switch","walks":["switch-says-mixed-walk","sweep-past-a-picked-path-walk"]}
+{"t":"2026-09-20T11:27:44.709Z","ev":"task_note","id":"three-layers-picked-one-outlined-and-the-switch"}
+{"t":"2026-09-20T11:27:49.564Z","ev":"task_note","id":"three-layers-picked-one-outlined-and-the-switch"}
+{"t":"2026-09-20T11:27:52.550Z","ev":"task_note","id":"three-layers-picked-one-outlined-and-the-switch"}
+{"t":"2026-09-20T11:28:16.480Z","ev":"task_done","id":"three-layers-picked-one-outlined-and-the-switch","from":"in_progress","note":"The panel was honest: the bug was the SELECTION. A box swept while a path is picked went to the path's points and never to the layers (459e7ffc, 2026-09-19 18:24), so picking three shapes was impossible once one was picked and the Outline row was reading one layer. Now a box that has gone right round something else hands itself to the layers, live, and a box that reaches nothing but the picked shape still gathers its points. Shipped in a9d99413: PhotonzCore.layerIDs(swept:besides:inside:) with tests, CanvasPathEdit + CanvasDisplay wiring, next-reshape-a-path only so Current is untouched. Verified with Scripts/test.sh (8464 green), switch-says-mixed-walk ok, and about 45 sweep/path/pen/marquee/band/select/group/icon walks with no failures. New walk sweep-past-a-picked-path-walk and new test PathPartsTests.threeWithOneOutlineAreMixed pin it. Audit with three real window captures: queue/audits/2026-09-20-sweep-past-a-picked-path.json. Full sweep requested."}
+{"t":"2026-09-20T12:23:05.113Z","ev":"sweep_pass","walks":261,"passed":261,"failed":0,"seconds":3274,"complete":false,"total":539,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T12:25:03.381Z","ev":"task_created","id":"a-clip-splits-into-pieces-and-the-pieces-can-be","priority":"p1-high","title":"A clip splits into pieces, and the pieces can be moved"}
+{"t":"2026-09-20T12:25:12.649Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T12:25:26.015Z","ev":"task_reprioritized","id":"walks-that-fail-in-the-full-sweep","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-20T12:25:26.111Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-20T12:25:32.364Z","ev":"task_resequenced","id":"refine-the-video-design-so-it-reads-as-the-same","from":10,"to":10}
+{"t":"2026-09-20T12:25:32.412Z","ev":"task_resequenced","id":"a-document-can-have-time","from":20,"to":20}
+{"t":"2026-09-20T12:25:32.460Z","ev":"task_resequenced","id":"a-clip-splits-into-pieces-and-the-pieces-can-be","from":30,"to":30}
+{"t":"2026-09-20T12:25:32.509Z","ev":"task_resequenced","id":"cut-arrange-and-retime-what-is-on-the-timeline","from":30,"to":40}
+{"t":"2026-09-20T12:25:32.558Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":100,"to":50}
+{"t":"2026-09-20T12:25:32.606Z","ev":"task_resequenced","id":"audio-you-can-separate-add-see-and-shape","from":40,"to":60}
+{"t":"2026-09-20T12:25:32.655Z","ev":"task_resequenced","id":"captions-that-write-themselves-and-titles-that-b","from":50,"to":70}
+{"t":"2026-09-20T12:25:32.702Z","ev":"task_resequenced","id":"transitions-at-a-cut-and-effects-you-can-control","from":60,"to":80}
+{"t":"2026-09-20T12:25:32.749Z","ev":"task_resequenced","id":"components-on-the-timeline-animated-the-way-ever","from":70,"to":90}
+{"t":"2026-09-20T12:25:32.797Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":80,"to":100}
+{"t":"2026-09-20T12:25:32.845Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":90,"to":110}
+{"t":"2026-09-20T12:25:32.894Z","ev":"task_resequenced","id":"work-out-whether-the-app-needs-project-types-at","from":100,"to":120}
+{"t":"2026-09-20T12:25:32.943Z","ev":"task_resequenced","id":"a-recording-can-be-made-small-enough-to-send","from":5,"to":10}
+{"t":"2026-09-20T12:25:32.990Z","ev":"task_resequenced","id":"a-shape-you-turned-still-shows-its-points","from":10,"to":20}
+{"t":"2026-09-20T12:25:33.039Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":20,"to":30}
+{"t":"2026-09-20T12:25:33.088Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":30,"to":40}
+{"t":"2026-09-20T12:25:33.137Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":60,"to":50}
+{"t":"2026-09-20T12:25:33.187Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":70,"to":60}
+{"t":"2026-09-20T12:25:33.235Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":80,"to":70}
+{"t":"2026-09-20T12:25:33.284Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":90,"to":80}
+{"t":"2026-09-20T12:25:33.332Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":110,"to":90}
+{"t":"2026-09-20T12:25:33.381Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":30,"to":10}
+{"t":"2026-09-20T12:25:33.429Z","ev":"task_resequenced","id":"a-screenshot-separated-before-today-only-has-to","from":40,"to":20}
+{"t":"2026-09-20T12:26:21.381Z","ev":"task_created","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","priority":"p2-normal","title":"A menu that says Custom lets you get back to Custom"}
+{"t":"2026-09-20T12:26:26.176Z","ev":"task_created","id":"the-guide-rule-says-that-a-guide-never-closes-a","priority":"p3-low","title":"The guide rule says that a guide never closes a rectangle"}
+{"t":"2026-09-20T12:26:32.636Z","ev":"task_note","id":"a-document-can-have-time"}
+{"t":"2026-09-20T12:26:37.314Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-20T12:26:43.732Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":90,"to":100}
+{"t":"2026-09-20T12:26:43.779Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":80,"to":90}
+{"t":"2026-09-20T12:26:43.827Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":70,"to":80}
+{"t":"2026-09-20T12:26:43.876Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":60,"to":70}
+{"t":"2026-09-20T12:26:43.922Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":50,"to":60}
+{"t":"2026-09-20T12:26:43.969Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":40,"to":50}
+{"t":"2026-09-20T12:26:44.017Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":35,"to":40}
+{"t":"2026-09-20T12:27:31.971Z","ev":"triage","summary":"25 open (was 22): filed 3 (1 p1 focus split, 1 p2 menu finding, 1 p3 rule scrub), promoted 1 p2 to p1, removed 1 wrong dependency, rewrote 1 acceptance list, folded 2 findings into existing tasks, resequenced all three priorities to steps of 10; claimable 5 to 9; merged 0, reset 0, dropped 0"}
+{"t":"2026-09-20T12:27:31.998Z","ev":"digest","file":"2026-09-20.md"}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:22.178Z",
-  "updated": "2026-09-20T10:05:00.313Z",
+  "updated": "2026-09-20T10:05:27.753Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SPLIT OUT of a-document-can-have-time by the manager pass on 2026-09-20, and this is the half that does NOT need the pending decision card.\n\nWhy the split. The design pass landed on 2026-09-19 as 72a2a75c with docs/design/video-surface.md, and it left exactly one question open: what happens to the trim-and-send fast lane once a recording opens in the ordinary window. That question decides where a recording OPENS. It does not touch the model underneath, the strip drawing, or the renderer. With the whole foundation sitting behind that card the focus epic had two claimable tasks this morning and then zero, so the model half comes out and can be built now.\n\nWhat stays behind in a-document-can-have-time, which now depends on this: opening a recording in the ordinary editor, the timeline appearing because the document has time, a clip being an ordinary layer you can pick and name and style, retiring VideoEditorState and VideoEditorView, and docs/design/video.md. None of that can be honestly built before the card is answered; all of it becomes straightforward once this lands.\n\nFiles. PhotonzCore has NO notion of time, duration, tracks or keyframes today. Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift are the app for a recording, with TrimTimeline and PlaybackScrubber bound to VideoEditorState rather than to a reusable model. Sources/Photonz/MotionStripView.swift is the strip; MotionStrip.swift says today that a layer row is a heading and not a bar, which is true of a bell that rotates and false of a clip, and the rule becomes: a bar when it has an in and an out, a heading when it does not.\n\nRead docs/design/video-surface.md first. It is the answer the rest of this set builds against, and it already settled where the transport and the timeline live, what the panel budget is, and how the fifteen clickthroughs reconcile.\n\nKeep the scope tight: no transitions, no audio lanes, no captions, no keyframes. Those are siblings and each will push back on the model; the model is right when they can be added without reopening it.",
@@ -48,9 +48,26 @@
     {
       "t": "2026-09-20T10:05:00.312Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-20T10:05:27.608Z",
+      "note": "Built and verified. PhotonzCore/DocumentTime.swift (LayerTime, Layer.time, PhotonzDocument.durationMS/hasTime/documentDurationMS/timelineLengthMS/drawn(atTimeMS:), VideoCutList.layerTimes()); MotionStripGroup.bar plus MotionStripRuler(documentMS:); MotionStripView draws the bar and drops the restart mark for a ruler that does not repeat; CutStrip re-pointed at the shared ruler. 63 new tests written before the code, 8459 green overall. Perf: picking the moment 0.02ms, compositing that frame 16.8ms, in docs/progress/perf.md."
+    },
+    {
+      "t": "2026-09-20T10:05:27.654Z",
+      "note": "Adversarial review of the built thing, on the real app. Ran the recording walks with real pictures: cut-a-recording, trim-with-pieces, trim-catches-on-a-cut, trim-handle-freed-from-a-cut, trim-keeps-the-piece-you-picked, trim-cancel-after-a-delete, trim-save-send, close-a-trimmed-recording and undo-while-trimming all pass, so trim, delete, undo, revert and the export sheet are unmoved by the re-point, and the pictures show the pieces landing exactly where they did. redline-walk ran all 70 steps and photographed an editor with no timeline in it, which is acceptance 6. One thing the review changed: hasMotionStrip gated the strip on next-motion-strip, which would have taken a video's timeline away with the Motion flag off and with it the document. A document with time is now gated on next-cut-a-recording instead, and the icon strip's gate is untouched."
+    },
+    {
+      "t": "2026-09-20T10:05:27.703Z",
+      "note": "Left rough, not filed because open tasks already cover both: the bar cannot be dragged yet (folded into cut-arrange-and-retime-what-is-on-the-timeline, with a note that LayerTime.withIn/withOut/moved(toInMS:) are written and tested for it), and nothing can make a document with time until a recording opens in the ordinary editor (folded into a-document-can-have-time). Nothing broken was found, so no new task was filed. A full sweep is requested: all nine motion-* walks need a control by name and the Mac has been locked throughout, so none of them could run here."
+    },
+    {
+      "t": "2026-09-20T10:05:27.751Z",
+      "note": "The document can carry a duration and a layer an in and an out, in PhotonzCore/DocumentTime.swift: pure, value typed, Sendable, Codable, tests first. A layer row on the timing strip is a BAR when it has an in and an out and a heading when it does not, and MotionStripRuler gained a documentMS form with no headroom, so the icon strip and the video timeline are one component. drawn(atTimeMS:) composites a frame at a moment with no renderer change; 0.02ms to pick the moment, 16.8ms to composite it, written into docs/progress/perf.md. The recording window's strip measures through that same ruler now, proved pixel-identical by test, with trim, delete, undo, revert and export all re-run and passing on real screenshots. 8459 tests green. Audit: queue/audits/2026-09-20-time-in-the-document.json. Acceptance 8's try path (a recording opening in the ordinary editor so the TIMING strip shows a bar per piece) is not built and cannot be: it needs the decision card that a-document-can-have-time is blocked on, and the log says so."
     }
   ],
   "source": "manager",
   "started": "2026-09-20T09:46:26.827Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-20T10:05:27.752Z"
 }

@@ -4,12 +4,12 @@
   "goal": "A cut can be hard, or one shot can become another. Make a transition a real thing that lives at the cut between two clips, with its behaviour and its length there to adjust, and let the effects a layer already has be controlled across time rather than being one fixed setting for the whole clip.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 60,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.920Z",
-  "updated": "2026-09-19T15:35:09.242Z",
+  "updated": "2026-09-20T12:25:32.701Z",
   "deps": [
     "cut-arrange-and-retime-what-is-on-the-timeline"
   ],
@@ -41,6 +41,10 @@
     {
       "t": "2026-09-19T15:35:09.241Z",
       "note": "seq 5 -> 60"
+    },
+    {
+      "t": "2026-09-20T12:25:32.700Z",
+      "note": "seq 60 -> 80"
     }
   ]
 }

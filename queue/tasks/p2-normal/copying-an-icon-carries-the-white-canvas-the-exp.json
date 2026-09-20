@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:51:54.319Z",
-  "updated": "2026-09-19T15:35:09.794Z",
+  "updated": "2026-09-20T12:26:43.826Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing an-icon-exported-as-a-picture-can-come-out-with (2026-09-17). Repro of the composite that Copy puts on the clipboard: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-forced.json --no-build wrote png-export-background-3-file-with-canvas.png, which is the same render EditorState.copyCompositeToClipboard uses (previewRenderer.render(document, store:), no background answer anywhere on that path), and reading its corner back gave top-left (5,5) rgba [255, 255, 255, 255]. The export path in the same walk wrote [0, 0, 0, 0]. The smallest fix is to let the copy take the same SVGExport.Background answer the sheet holds, through PhotonzDocument.drawn(with:flatImages:) (PhotonzCore) the way ExportSizer does; the open question is whether a copy should ask at all or simply always leave a flat canvas out, which is a UX call worth a decision card rather than a guess. PNG and TIFF both go on the pasteboard and both hold alpha.",
@@ -58,6 +58,14 @@
     {
       "t": "2026-09-19T15:35:09.793Z",
       "note": "seq 100 -> 80"
+    },
+    {
+      "t": "2026-09-20T12:25:33.233Z",
+      "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-09-20T12:26:43.825Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "started": "2026-09-17T07:12:37.731Z"

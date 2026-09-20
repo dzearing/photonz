@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-20T10:05:00.265Z",
+  "updated": "2026-09-20T12:26:32.635Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same",
     "time-lives-in-the-document-and-a-layer-can-have"
@@ -26,7 +26,8 @@
     "A document with no time behaves exactly as it does today, proved by the existing walks passing untouched",
     "docs/design/video.md written: the model, what a clip is, what time is, and what the old video editor became",
     "Ships behind next-cut-a-recording; the try path is: open a recording from History and it opens in the ordinary editor with the timeline across the bottom",
-    "audit written under queue/audits/ with a recording opened in the ordinary editor, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+    "audit written under queue/audits/ with a recording opened in the ordinary editor, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not",
+    "Playing and scrubbing hold their frame rate on a real recording: the cost of compositing one frame is measured and written into docs/progress/perf.md, and if a frame cannot be built inside its budget the audit says so plainly rather than shipping a timeline that stutters"
   ],
   "log": [
     {
@@ -56,6 +57,14 @@
     {
       "t": "2026-09-20T10:05:00.264Z",
       "note": "The model half landed on 2026-09-20 in time-lives-in-the-document-and-a-layer-can-have. PhotonzCore now has DocumentTime.swift: LayerTime (in, out, source offset, source length), PhotonzDocument.durationMS/hasTime/documentDurationMS/timelineLengthMS, and drawn(atTimeMS:) which hands the renderer an ordinary document with whatever is off screen at that moment hidden and everything moving sampled there. MotionStripGroup gained a bar, so a layer row is a bar when it has an in and an out and a heading when it does not, and MotionStripRuler gained a documentMS form with no headroom and no restart mark. VideoCutList.layerTimes() projects a cut recording straight into it. What is left here is unchanged and still needs the card: opening a recording in the ordinary editor, a clip being an ordinary layer, and retiring VideoEditorState/VideoEditorView. One wiring note for whoever picks this up: EditorState.hasMotionStrip now returns true for a document with time gated on next-cut-a-recording rather than on next-motion-strip, so a video keeps its timeline with the Motion flag off."
+    },
+    {
+      "t": "2026-09-20T12:25:32.410Z",
+      "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-20T12:26:32.634Z",
+      "note": "PERF, folded in by the daily digest of 2026-09-20 and added to acceptance. queue/audits/2026-09-20-time-in-the-document.json measured compositing one frame of video at a moment at 16.8ms on this machine, against the repo target of 16ms, with picking the moment free at 0.02ms. That is the ordinary cold full-render path, so it is not a new cost, but it is the cost per FRAME once this task makes play and scrub real: 16.8ms leaves no headroom at 60fps and very little at 30 once anything else is happening. Measure it before claiming playback works, and say the number in the audit."
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Turn a shape even one degree and its points vanish: there is no way to round a corner or move a point without straightening it first, putting it back, and hoping it landed where it was. An icon is full of pieces sitting at an angle, so this is the one shape you most want to reshape and the one you cannot. Give a turned path its points back.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 10,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:48.991Z",
-  "updated": "2026-09-20T08:38:52.433Z",
+  "updated": "2026-09-20T12:25:32.989Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today this is a deliberate refusal rather than a bug, and the reason is written into CanvasPathEdit.swift line 110: \"Neither does one on a SLANT: reshaping moves the box the shape sits in, a turn is measured about the middle of that box, and a point dragged out on a turned path would therefore swing the whole shape round under the hand.\" The refusal is in one place, the layer.transform.isIdentity clause of CanvasNSView.editablePath (Sources/Photonz/CanvasPathEdit.swift:116), and the chip that explains it is PathEditHint.turned, read in EditorState+PathEdit.swift.\n\nSo the work is the hard part the refusal was standing in for: take the press through the inverse of the layer transform so a point is dragged in the shape own coordinates, and when the shape box has to change, recompute the turn about the NEW middle so the drawing does not rotate under the hand. pathLocalPoint in the same file is the single place the press is converted today and it subtracts the frame origin and nothing else.\n\nDo the same for the point sweep box (pathPointSweep in the same file), which currently collects points by testing screen positions.\n\nFlagged twice as an unchanged older rough edge: the 2026-09-19-sweep-up-path-points audit says \"A path that has been turned still shows no points at all, so none of this reaches one\", and the reshape work before it said the same. It matters to icon-svg specifically, because drawing an elaborate glyph means angled pieces and this is exactly where a point needs nudging.\n\nNo decision card: the points already exist and already behave, this only widens where they appear.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-20T08:38:52.432Z",
       "note": "seq 3020 -> 10"
+    },
+    {
+      "t": "2026-09-20T12:25:32.988Z",
+      "note": "seq 10 -> 20"
     }
   ],
   "source": "manager"

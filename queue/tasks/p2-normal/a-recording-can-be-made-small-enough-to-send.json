@@ -4,12 +4,12 @@
   "goal": "A screen recording is the file most likely to be too big to send, and MP4 is the one format in the Export sheet with nothing you can do about it. The sheet can already tell you a recording will weigh 200 MB; it offers you High, Standard and Small for a GIF and nothing at all for an MP4. Give MP4 the same three choices, so a clip you want to put in a chat can be made to fit.",
   "epic": "video-share",
   "priority": "p2-normal",
-  "seq": 5,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:42.128Z",
-  "updated": "2026-09-20T08:38:48.943Z",
+  "updated": "2026-09-20T12:25:32.942Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is NOT a new control. VideoExportQuality already exists in Sources/PhotonzCore/Recording.swift with high, standard and small, each carrying a targetFPS and a maxDimension, and RecordingExportDialog already draws the Quality row as a segmented picker. The row is hidden for MP4 by RecordingExport.offersQuality, which the file itself comments as \"MP4 has none yet\". So this is finishing the row that shipped on 2026-09-19, not adding a new one, and it does not need a decision card.\n\nWhat actually has to change: VideoExporter.exportMP4 is pinned to AVAssetExportPresetHighestQuality, so there is nothing behind the choice yet. Map the three presets onto real encode settings and keep the fast path: an untouched recording exported at the top choice is still a verbatim file copy and must stay one.\n\nThe estimate. RecordingExport.sizeLine already works an MP4 estimate out from what the recording itself costs per second and per pixel, and on the eight second sample it said \"about 16 KB\" against 16,531 bytes landing. Re-check it per preset rather than trusting the one that exists.\n\nComes from the 2026-09-19-recording-export-sheet audit rough list, word for word: \"There is still no way to make an MP4 smaller. The sheet can now tell you a recording will weigh 200 MB and offers you nothing to do about it.\" The user who asked for the whole trim-and-send flow ended their sentence with \"send in teams\", which is the case this serves.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-20T08:38:48.942Z",
       "note": "seq 3020 -> 5"
+    },
+    {
+      "t": "2026-09-20T12:25:32.941Z",
+      "note": "seq 5 -> 10"
     }
   ],
   "source": "manager"

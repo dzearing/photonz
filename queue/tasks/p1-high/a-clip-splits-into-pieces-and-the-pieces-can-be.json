@@ -1,0 +1,38 @@
+{
+  "id": "a-clip-splits-into-pieces-and-the-pieces-can-be",
+  "title": "A clip splits into pieces, and the pieces can be moved",
+  "goal": "Cutting is most of editing a recording: split a take where the fumble is, throw the bad piece away, slide what is left along, hold on a frame, and speed a dull stretch up. Work out and build the rules for all of that on their own, ahead of the timeline that shows them, so that the moment the open-a-recording question is answered the cutting underneath already works and is proved.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T12:25:03.377Z",
+  "updated": "2026-09-20T12:25:32.459Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of cut-arrange-and-retime-what-is-on-the-timeline by the daily triage of 2026-09-20, the same way the model half of a-document-can-have-time came out as time-lives-in-the-document-and-a-layer-can-have earlier the same day. WHY: every p1 in the queue is blocked or waiting on a dependency, and the whole video chain hangs on one pending decision card about where a recording opens. The cutting RULES do not depend on that answer, so they can be built now. WHERE IT STANDS: Sources/PhotonzCore/VideoCuts.swift already has VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), pieces held in play order, and no way to move one. Sources/PhotonzCore/DocumentTime.swift landed on 2026-09-20 with LayerTime (in, out, source offset, source length) and withIn/withOut/moved(toInMS:). This task is where those two meet: one piece model the new timeline will drive. WHAT IT MUST NOT DO: build the timeline gesture, move where a recording opens, or touch the old video editor. Those stay in cut-arrange-and-retime-what-is-on-the-timeline behind the card. UX-PATTERNS D18 and docs/design/video-surface.md settle the shape: a split adds a PIECE to a row, never a second row.",
+  "acceptance": [
+    "A clip can be split at a moment into two pieces of the same clip, each with its own start and end, both still reading the same recording, and either piece can be split again",
+    "Pieces can be put in a different order, and what plays and what an export would write follow the new order with nothing else to change",
+    "Taking a piece out says what happens to the gap it leaves, and the same rule holds wherever a piece is removed or made longer",
+    "Trimming never destroys anything: a piece pulled in and back out returns to exactly what it started as, proved by a test",
+    "A held frame is a piece whose start and end are the same moment, and it behaves like any other piece",
+    "A piece can be given a speed, and what that does to its length and to its sound is written down and tested",
+    "Each of these is one step of undo",
+    "All of it is pure, value-typed and tested first, with no app or drawing types involved, and the tests come before the code",
+    "Nothing changes on screen and every walk that exists today still passes, untouched",
+    "The notes say exactly what is left for the timeline gesture task to do"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T12:25:03.379Z",
+      "note": "created (triage)"
+    },
+    {
+      "t": "2026-09-20T12:25:32.458Z",
+      "note": "seq 30 -> 30"
+    }
+  ]
+}

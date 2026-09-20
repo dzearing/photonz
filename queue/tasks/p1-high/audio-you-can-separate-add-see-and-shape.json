@@ -4,12 +4,12 @@
   "goal": "A recording arrives with its sound welded to its picture. Let the two come apart, let other sound be brought in, and let both be seen and shaped on the same timeline, so a voiceover can survive a cut to the picture over it and music can sit under the whole thing.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 40,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.610Z",
-  "updated": "2026-09-19T15:35:09.148Z",
+  "updated": "2026-09-20T12:25:32.605Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -41,6 +41,10 @@
     {
       "t": "2026-09-19T15:35:09.147Z",
       "note": "seq 3 -> 40"
+    },
+    {
+      "t": "2026-09-20T12:25:32.604Z",
+      "note": "seq 40 -> 60"
     }
   ]
 }
