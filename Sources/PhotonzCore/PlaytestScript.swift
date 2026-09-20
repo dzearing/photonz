@@ -324,6 +324,15 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// put the strip away and did not put it back would hand every later walk
     /// a window with no strip in it, and no walk could say why.
     case motion
+    /// The components put on the shelf every document shares. It is a file
+    /// rather than a setting, so it is emptied by hand (`PlaytestSetupRunner`),
+    /// and it belongs here because a machine that has never run Photonz has
+    /// nothing on that shelf. The harness already hands the shelf back at the
+    /// end of a walk, but a walk that is killed part way through never reaches
+    /// that, and what it shared is then on the shelf of every walk that follows
+    /// it on that machine, for good. It is offered ahead of the app's own five
+    /// starters, so what that leak really broke was `pickFirstComponent`.
+    case shelf
     /// Which of the app's questions have been told not to ask again. A walk
     /// that ticks "Don't ask again" and does not forget it leaves that question
     /// silent for every walk after it, and none of them could say why.

@@ -73,6 +73,10 @@ extension PlaytestMemory {
             [TutorialController.progressKey]
         case .motion:
             [EditorState.motionStripOpenKey]
+        case .shelf:
+            // Not a setting at all: the shared shelf is a file, emptied in
+            // `perform` beside the settings it names.
+            []
         case .questions:
             SilenceableQuestion.all.map(\.storageKey)
         }
@@ -133,6 +137,13 @@ struct PlaytestSetupRunner {
             if setup.forget.contains(.frames) { IconKeylinesStore.shared.reload() }
             if setup.forget.contains(.panel) { PanelSectionVisibilityStore.shared.reload() }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
+            // The shared shelf is a file rather than a setting, so it is
+            // emptied here by hand. The shelf it had is already on record
+            // above, so `restoreSharedShelf` still hands the machine back
+            // exactly what it found.
+            if setup.forget.contains(.shelf) {
+                SharedComponentStore.shared.replace(with: SharedComponentShelf())
+            }
             said.append("forgot \(setup.forget.map(\.rawValue).joined(separator: ", "))"
                         + " (\(keys.count) settings)")
         }

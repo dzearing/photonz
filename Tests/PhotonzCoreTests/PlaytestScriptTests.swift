@@ -2828,6 +2828,37 @@ struct PlaytestScriptTests {
         #expect(script.setup.forget == PlaytestMemory.allCases)
     }
 
+    // The shared component shelf is a FILE rather than a remembered setting,
+    // and until 2026-09-20 nothing in `forget` reached it. A walk that shared a
+    // component and was then killed part way through — a timeout, a crash, the
+    // 180s cap — left its component on the shelf of every walk that ever ran
+    // after it on that machine, because the tidy-up that puts the shelf back
+    // only runs when the walk reaches its end. Four stale "Save Button"s had
+    // collected on the probe that way, and because the shelf is offered ahead
+    // of the app's own five, `pickFirstComponent` picked one of THOSE, which
+    // the drag and drop steps cannot place: five walks failed with "no
+    // component is picked on the Library shelf". "all" means a machine that has
+    // never run Photonz, and such a machine has an empty shared shelf, so the
+    // leak heals itself at the start of the next walk that asks.
+    @Test("Forgetting everything empties the shared component shelf too")
+    func setupForgetsTheSharedShelf() throws {
+        #expect(PlaytestMemory.allCases.contains(.shelf))
+        let script = try decode("""
+        { "setup": { "forget": ["all"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget.contains(.shelf))
+    }
+
+    @Test("A walk can name the shared shelf on its own")
+    func setupForgetsOnlyTheSharedShelf() throws {
+        let script = try decode("""
+        { "setup": { "forget": ["shelf"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget == [.shelf])
+    }
+
     @Test("A walk with no setup block asks for nothing")
     func noSetupBlockIsEmptySetup() throws {
         let script = try decode("{ \"steps\": [ { \"do\": \"blank\" } ] }")
@@ -2978,7 +3009,7 @@ struct PlaytestScriptTests {
     @Test func everyMemoryNameIsAPlainWord() throws {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
                 == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid",
-                    "frames", "tutorials", "motion", "questions"])
+                    "frames", "tutorials", "motion", "shelf", "questions"])
     }
 
     @Test func waitForReadsASectionByItsHeaderText() {
