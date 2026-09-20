@@ -130,17 +130,67 @@ struct IconKeylineTests {
             == CGRect(x: 2, y: 2, width: 8, height: 8))
     }
 
-    @Test("The square's corners round by the same amount the margin does")
-    func squareCorners() {
-        #expect(IconKeylines.squareCornerRadius(forSide: 24) == 2)
-        #expect(IconKeylines.squareCornerRadius(forSide: 48) == 4)
-        // Never more than a circle's worth: a radius that outgrew the square
-        // would draw the circle twice.
-        for side in [CGFloat(6), 8, 12, 16, 24, 512] {
-            if let box = IconKeylines.guides(in: square(side))?.squareKeyline {
-                #expect(IconKeylines.squareCornerRadius(forSide: side) <= box.width / 2)
+    // MARK: - Marked out as a guide, not as a selection
+
+    @Test("The margin is a band to wash over, not an outline to trace")
+    func marginIsABand() {
+        // A traced rectangle on the live area is the selection's own kind of
+        // mark (UX-PATTERNS D16 rule 3: the selection outline owns the traced
+        // border), so the margin is handed over as the two rectangles a wash
+        // fills between: the frame, and the hole in it.
+        let box = CGRect(x: 300, y: 120, width: 24, height: 24)
+        let guides = IconKeylines.guides(in: box)
+        #expect(guides?.frame == box)
+        #expect(guides?.liveArea == CGRect(x: 302, y: 122, width: 20, height: 20))
+    }
+
+    @Test("The square is handed over as four hairlines that run off the frame's edges")
+    func squareIsFourHairlines() {
+        let guides = IconKeylines.guides(in: CGRect(x: 300, y: 120, width: 24, height: 24))
+        // Square is x 303...321, y 123...141; frame is x 300...324, y 120...144.
+        #expect(guides?.squareGuideLines == [
+            IconKeylineLine(from: CGPoint(x: 303, y: 120), to: CGPoint(x: 303, y: 144)),
+            IconKeylineLine(from: CGPoint(x: 321, y: 120), to: CGPoint(x: 321, y: 144)),
+            IconKeylineLine(from: CGPoint(x: 300, y: 123), to: CGPoint(x: 324, y: 123)),
+            IconKeylineLine(from: CGPoint(x: 300, y: 141), to: CGPoint(x: 324, y: 141)),
+        ])
+    }
+
+    @Test("Every square hairline runs the whole way across the frame, so none of them closes a rectangle")
+    func hairlinesNeverClose() {
+        for side in [CGFloat(12), 16, 24, 32, 48, 64, 512] {
+            let box = CGRect(x: 0, y: 0, width: side, height: side)
+            guard let guides = IconKeylines.guides(in: box) else {
+                Issue.record("no guides at \(side)")
+                continue
+            }
+            #expect(guides.squareGuideLines.count == 4)
+            for line in guides.squareGuideLines {
+                let vertical = line.from.x == line.to.x
+                if vertical {
+                    #expect(line.from.y == box.minY)
+                    #expect(line.to.y == box.maxY)
+                } else {
+                    #expect(line.from.x == box.minX)
+                    #expect(line.to.x == box.maxX)
+                }
             }
         }
+    }
+
+    @Test("A frame with no square has no square hairlines either")
+    func tinyFramesHaveNoHairlines() {
+        #expect(IconKeylines.guides(in: square(6))?.squareGuideLines == [])
+        #expect(IconKeylines.guides(in: square(8))?.squareGuideLines == [])
+    }
+
+    @Test("The center lines run the whole frame, not just the live area")
+    func centerLinesRunTheFrame() {
+        let guides = IconKeylines.guides(in: CGRect(x: 300, y: 120, width: 24, height: 24))
+        #expect(guides?.centerGuideLines == [
+            IconKeylineLine(from: CGPoint(x: 312, y: 120), to: CGPoint(x: 312, y: 144)),
+            IconKeylineLine(from: CGPoint(x: 300, y: 132), to: CGPoint(x: 324, y: 132)),
+        ])
     }
 
     // MARK: - Which frames get them at all

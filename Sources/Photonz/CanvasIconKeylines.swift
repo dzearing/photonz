@@ -11,8 +11,20 @@ import PhotonzCore
 /// can never land in an export, a copied picture or an SVG, and the document
 /// carries nothing at all for it — the frame's size is the whole input.
 ///
-/// Three things make it behave:
+/// Four things make it behave:
 ///
+/// - **Never a traced border.** The margin is a WASH filling the band between
+///   the frame's edge and the live area, and the square a boxy glyph fills is
+///   four hairlines that run off the edges of the frame. Neither closes a
+///   rectangle, so the selection outline is the only thing on the canvas that
+///   draws a hard line round the edge of something, which is how you know what
+///   your next gesture will act on. The first version traced the live area as
+///   a dashed rectangle, and since a new icon frame arrives selected, the very
+///   first thing anybody saw was two dashed rectangles a few points apart
+///   meaning completely different things (task
+///   `an-icon-frame-s-guides-stop-looking-like-a-secon`, UX-PATTERNS D16 rule
+///   3). The circle keeps its dashes: a circle is not a selection and never
+///   reads as one.
 /// - **Dashes, over the drawing.** Everything else the canvas draws on a
 ///   picture is solid: the grid's hairlines, a column wash, a frame's edge. A
 ///   dash is the one mark nobody can mistake for something they drew, which
@@ -38,11 +50,11 @@ extension CanvasNSView {
     /// edge rather than as a margin.
     private static let smallestDrawableIcon: CGFloat = 24
 
-    /// How far apart two dashed outlines have to be ON SCREEN before they read
-    /// as two guides rather than as one thickened one. Below it the square and
-    /// the circle are left off and the frame shows the margin and the center
-    /// lines alone, which is the same rule the frame itself already follows
-    /// when it gets too small to have an inside.
+    /// How far apart the square's hairlines and the circle have to be ON
+    /// SCREEN before they read as two guides rather than as one thickened one.
+    /// Below it both are left off and the frame shows the margin wash and the
+    /// center lines alone, which is the same rule the frame itself already
+    /// follows when it gets too small to have an inside.
     private static let smallestGuideGap: CGFloat = 3
 
     /// How wide the casing under the dashes is. Wide enough to show either side
@@ -67,57 +79,63 @@ extension CanvasNSView {
             guard onScreen.intersects(bounds),
                   onScreen.width >= Self.smallestDrawableIcon else { continue }
 
+            // The margin: the band between the frame's edge and the live area,
+            // washed. An even-odd path with the frame outside and the live
+            // area as the hole, so the guide says "not in here" by covering
+            // the gutter rather than by drawing a line somebody has to work
+            // out which side of it they belong on.
+            let outer = pixelAlignedFill(onScreen)
+            let inner = pixelAlignedFill(viewRect(forDocRect: guides.liveArea, in: viewport))
+            guard inner.width >= 2, inner.height >= 2 else { continue }
+            let band = CGMutablePath()
+            band.addRect(outer)
+            band.addRect(inner)
+
             let path = CGMutablePath()
-            let live = pixelAligned(viewRect(forDocRect: guides.liveArea, in: viewport))
-            guard live.width >= 2, live.height >= 2 else { continue }
-            path.addRect(live)
-            // The two center lines, run the whole width and height of the frame
-            // rather than of the live area: the middle of the icon is the
-            // middle of the icon, and a line that stopped at the margin would
-            // be describing the live area twice.
-            let across = pixelAligned(onScreen)
-            let center = viewport.viewPoint(fromDocument: CGPoint(x: guides.centerX,
-                                                                  y: guides.centerY))
-            let x = center.x.rounded() + 0.5
-            let y = center.y.rounded() + 0.5
-            path.move(to: CGPoint(x: x, y: across.minY))
-            path.addLine(to: CGPoint(x: x, y: across.maxY))
-            path.move(to: CGPoint(x: across.minX, y: y))
-            path.addLine(to: CGPoint(x: across.maxX, y: y))
+            for line in guides.centerGuideLines {
+                addIconKeylineLine(line, to: path, in: viewport)
+            }
 
             // The two shapes that make a boxy glyph and a round one look the
             // same size. They are the finest thing on the frame — the square
             // sits a single document point inside the live area — so they only
-            // come out once there is enough room on screen for the two dashed
-            // outlines to read as two.
+            // come out once there is enough room on screen to tell them apart.
             if iconKeylineShapesFit(frameSide: box.width, onScreenWidth: onScreen.width) {
                 let circle = pixelAligned(viewRect(forDocRect: guides.circleKeyline, in: viewport))
                 if circle.width >= 2, circle.height >= 2 { path.addEllipse(in: circle) }
-                if let squareBox = guides.squareKeyline {
-                    let square = pixelAligned(viewRect(forDocRect: squareBox, in: viewport))
-                    if square.width >= 2, square.height >= 2 {
-                        let scale = onScreen.width / box.width
-                        let radius = min(IconKeylines.squareCornerRadius(forSide: box.width) * scale,
-                                         min(square.width, square.height) / 2)
-                        path.addRoundedRect(in: square, cornerWidth: radius, cornerHeight: radius)
-                    }
+                for line in guides.squareGuideLines {
+                    addIconKeylineLine(line, to: path, in: viewport)
                 }
             }
 
-            // Casing first, ink on top: two strokes of the same path, so the
-            // dashes line up exactly and the casing reads as a halo rather
-            // than as a second guide.
+            // Wash first, then casing, then ink. The casing and the ink are
+            // two strokes of the same path, so the dashes line up exactly and
+            // the casing reads as a halo rather than as a second guide.
+            let wash = iconKeylineLayer(reusing: drawn.count)
+            wash.path = band
+            wash.fillRule = .evenOdd
+            wash.fillColor = iconKeylineWash(on: frame)
+            wash.strokeColor = nil
+            wash.lineWidth = 0
+            wash.lineDashPattern = nil
+            wash.isHidden = false
+            drawn.append(wash)
+
             let casing = iconKeylineLayer(reusing: drawn.count)
             casing.path = path
+            casing.fillColor = nil
             casing.strokeColor = iconKeylineCasing(on: frame)
             casing.lineWidth = Self.casingWidth
+            casing.lineDashPattern = Self.dashPattern
             casing.isHidden = false
             drawn.append(casing)
 
             let shape = iconKeylineLayer(reusing: drawn.count)
             shape.path = path
+            shape.fillColor = nil
             shape.strokeColor = iconKeylineInk(on: frame)
             shape.lineWidth = 1
+            shape.lineDashPattern = Self.dashPattern
             shape.isHidden = false
             drawn.append(shape)
         }
@@ -149,19 +167,51 @@ extension CanvasNSView {
                height: max(0, rect.height.rounded() - 1))
     }
 
+    /// A rectangle to FILL, on whole view points. No half point here: a fill
+    /// wants its edges on the pixel boundary, where a stroke wants its centre
+    /// on the pixel.
+    private func pixelAlignedFill(_ rect: CGRect) -> CGRect {
+        let minX = rect.minX.rounded(), minY = rect.minY.rounded()
+        return CGRect(x: minX, y: minY,
+                      width: max(0, rect.maxX.rounded() - minX),
+                      height: max(0, rect.maxY.rounded() - minY))
+    }
+
+    /// One guide hairline, mapped onto the screen and snapped so it comes out
+    /// as one crisp line. Axis aligned by construction, so the constant side
+    /// lands on a pixel centre and the ends land on whole points.
+    private func addIconKeylineLine(_ line: IconKeylineLine,
+                                    to path: CGMutablePath,
+                                    in viewport: Viewport) {
+        let a = viewport.viewPoint(fromDocument: line.from)
+        let b = viewport.viewPoint(fromDocument: line.to)
+        if abs(a.x - b.x) <= abs(a.y - b.y) {
+            let x = ((a.x + b.x) / 2).rounded() + 0.5
+            path.move(to: CGPoint(x: x, y: min(a.y, b.y).rounded()))
+            path.addLine(to: CGPoint(x: x, y: max(a.y, b.y).rounded()))
+        } else {
+            let y = ((a.y + b.y) / 2).rounded() + 0.5
+            path.move(to: CGPoint(x: min(a.x, b.x).rounded(), y: y))
+            path.addLine(to: CGPoint(x: max(a.x, b.x).rounded(), y: y))
+        }
+    }
+
+    /// A long dash with a short gap. It is no longer what tells a guide from
+    /// the selection — nothing dashed here traces a border any more, so there
+    /// is nothing to confuse — but a dash still says "the app drew this, you
+    /// did not", which is what it is for.
+    private static let dashPattern: [NSNumber] = [5, 3]
+
     /// A guide layer, made once and then reused: a canvas of frames redraws on
     /// every scroll, and rebuilding layers per frame is how a scroll gets
-    /// expensive.
+    /// expensive. Every property that varies by role — wash, casing or ink —
+    /// is set at the call site rather than here, because a reused layer may
+    /// come back in a different role when the number of icon frames changes.
     private func iconKeylineLayer(reusing index: Int) -> CAShapeLayer {
         let existing = iconKeylineLayerGroup.sublayers ?? []
         if index < existing.count, let shape = existing[index] as? CAShapeLayer { return shape }
         let shape = CAShapeLayer()
         shape.fillColor = nil
-        // A long dash with a short gap, and deliberately NOT the fine even
-        // rhythm the selection outline uses: a new icon frame arrives selected,
-        // so the first thing anybody ever sees is these dashes next to those
-        // ones, and at the first attempt the two read as one system.
-        shape.lineDashPattern = [5, 3]
         iconKeylineLayerGroup.addSublayer(shape)
         return shape
     }
@@ -192,6 +242,23 @@ extension CanvasNSView {
             if let converted = violet.usingColorSpace(.sRGB) { ink = converted.cgColor }
         }
         return ink
+    }
+
+    /// The wash that fills the margin band. The same violet as the hairlines,
+    /// sunk far enough that everything under it stays completely readable: it
+    /// has to say "keep your drawing out of here" without hiding the bit of
+    /// drawing that has strayed into it, which is the one thing somebody looks
+    /// at the margin to check. Stronger on a dark frame than on a pale one,
+    /// for the same reason the ink is.
+    private func iconKeylineWash(on frame: Layer) -> CGColor {
+        let violet = surfaceIsPale(on: frame)
+            ? NSColor(calibratedRed: 0.42, green: 0.26, blue: 0.85, alpha: 0.13)
+            : NSColor(calibratedRed: 0.72, green: 0.60, blue: 1.0, alpha: 0.18)
+        var wash = violet.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            if let converted = violet.usingColorSpace(.sRGB) { wash = converted.cgColor }
+        }
+        return wash
     }
 
     /// The stroke that goes UNDER the dashes, in the opposite tone: white

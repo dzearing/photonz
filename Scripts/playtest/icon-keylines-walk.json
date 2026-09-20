@@ -22,6 +22,13 @@
     { "do": "render", "name": "icon-keylines-2-drawn-doc" },
     { "do": "writeSVG", "name": "icon-keylines-2-drawn" },
 
+    { "do": "drag", "from": [800, 550], "to": [795, 547] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2b-stray", "note": "the circle nudged up and to the left until it crosses out of the live area: the wash is light enough that the part of the drawing that has strayed into the margin stays plainly visible through it, which is the one thing somebody looks at the margin to check" },
+    { "do": "snapshot", "name": "icon-keylines-2b-stray" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+
     { "do": "action", "action": "hideIconKeylines" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "3-off", "note": "View, Show Icon Keylines off: the frame is a plain square again and the circle is untouched" },
@@ -31,6 +38,13 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "4-back", "note": "back on, in the same place" },
     { "do": "snapshot", "name": "icon-keylines-4-back" },
+
+    { "do": "pinch", "to": 2 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4a-wash", "note": "pinched down to 200%, where the frame is 48 points across: the margin is still a wash round the inside of the frame and the center lines still cross, but the square's hairlines and the circle stay off, because at this size they would land on each other. The picked shape's outline is still the only traced rectangle on the canvas." },
+    { "do": "snapshot", "name": "icon-keylines-4a-wash" },
+    { "do": "pinch", "to": 32 },
+    { "do": "wait", "seconds": 0.6 },
 
     { "do": "action", "action": "zoomIn" },
     { "do": "action", "action": "zoomIn" },

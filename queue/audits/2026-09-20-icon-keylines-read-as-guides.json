@@ -1,0 +1,28 @@
+{
+  "feature": "An icon frame's guides read as guides",
+  "epic": "icon-grid",
+  "summary": "An icon frame's margin is now a soft violet band washed round the inside of the frame instead of a dashed rectangle, and the square a boxy glyph fills is four hairlines that run off the frame's edges. Nothing the app draws to help you place things closes a rectangle any more, so the only outlined rectangle on the canvas is the thing you have picked.",
+  "setup": "Photonz Dev, Experiments window, release Next. Frames and icon keylines are on by default; View has Show Icon Keylines if you want to switch them off.",
+  "try": [
+    { "do": "File, New Frame, pick 24 under Icons, click Add Frame.", "shot": "2026-09-20-keylines-new-frame.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Without clicking anything else, point at the new frame's selection. It is the outlined rectangle with the square grips; the lavender band inside it is the margin." },
+    { "do": "Draw an ellipse inside the frame with the ellipse tool, then switch back to the pointer.", "shot": "2026-09-20-keylines-shape-picked.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Drag the ellipse up and to the left until part of it sits under the lavender band, and look at whether you can still see the part that has strayed." },
+    { "do": "Pinch or zoom down to about 200%, where the frame is 48 points across.", "shot": "2026-09-20-keylines-zoomed-out.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Zoom back in to 3200% and watch the circle and the four hairlines come back." },
+    { "do": "Switch View, Show Icon Keylines off and on again." }
+  ],
+  "evaluate": [
+    "On a brand new icon frame, can you tell in one look which rectangle your next click will act on?",
+    "Does the lavender band read as the app telling you where not to draw, rather than as something painted onto the icon?",
+    "With a shape straying into the margin, can you still see the part of it that has gone out of bounds clearly enough to judge it?",
+    "The square a boxy glyph fills is now four lines crossing the frame rather than a rounded outline. Is that clearer, or has the frame got busier than it was?",
+    "At 200% the margin is a thin rim and the square and circle are gone. Is that the right amount to show at that size?"
+  ],
+  "rough": [
+    "The square keyline no longer shows its corner rounding. It used to be drawn as a rounded rectangle, and a rounded rectangle is exactly the mark a guide is not allowed to make, so the 2-unit rounding a real icon set gives a boxy glyph is simply not on the frame any more. Corner ticks would have put it back and would have put the traced feel back with it.",
+    "The wash on a DARK icon frame was not looked at. Its strength follows the frame's own paint the same way the hairline ink already did, and the walk only ever makes a white frame, so the dark case is reasoned rather than seen.",
+    "Found while testing, not caused by this change and filed separately as `a-shape-you-nudge-stops-looking-smooth-until-you`: nudge any shape one point at 3200% and it turns into visible blocks and stays that way until you change the zoom. The same pictures come out of a build with this change stashed.",
+    "All eight pictures were taken with the Mac's screen locked, so the colours in them can read dimmed. The shapes and positions are unaffected, and the wash is judged on shape and placement here rather than on exact tone."
+  ]
+}

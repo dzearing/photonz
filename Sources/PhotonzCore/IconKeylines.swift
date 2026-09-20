@@ -27,9 +27,22 @@ import Foundation
 /// square encloses a fifth less ink and reads as shrunken beside it. Those two
 /// carry nearly all of the effect, so the frame stops there — the wide and tall
 /// rectangles a full keyline set also has were left off on purpose, as four
-/// dashed outlines stacked in one small square is more to look past than it is
+/// outlines stacked in one small square is more to look past than it is
 /// worth. (Decided by the user on 2026-09-15: "Just the square and the
 /// circle".)
+///
+/// ## None of it draws a border round anything
+///
+/// The margin is handed over as two rectangles to WASH the band between, and
+/// the square as four hairlines that run off the edges of the frame, because
+/// the selection outline owns the traced border: it is the one mark on the
+/// canvas that draws a hard line round the exact edge of a thing, and that is
+/// how you know what your next gesture will act on. The first version of this
+/// traced the live area as a dashed rectangle, and a new icon frame arrives
+/// selected, so the first thing anybody saw was two dashed rectangles a few
+/// points apart meaning completely different things. See UX-PATTERNS D16 rule
+/// 3 and task `an-icon-frame-s-guides-stop-looking-like-a-secon`. The circle
+/// is exempt by its shape: nothing reads a circle as a selection.
 ///
 /// ## What it deliberately is not
 ///
@@ -57,11 +70,6 @@ public enum IconKeylines {
     /// of the two.
     public static let keylineSquareSide: CGFloat = 18
 
-    /// How far the square's corners round, in artboard units. The same amount
-    /// the margin is wide at 24, which is what a real icon set rounds a boxy
-    /// glyph by, and enough that the square never reads as a second live area.
-    public static let keylineSquareCorner: CGFloat = 2
-
     /// The margin between a frame's edge and its live area, on every side, in
     /// document points. A twelfth of the frame, on whole points.
     public static func margin(forSide side: CGFloat) -> CGFloat {
@@ -74,16 +82,6 @@ public enum IconKeylines {
     public static func squareInset(forSide side: CGFloat) -> CGFloat {
         guard side.isFinite, side > 0 else { return 0 }
         return (side * (artboardSide - keylineSquareSide) / (2 * artboardSide)).rounded()
-    }
-
-    /// How far the square keyline's corners round, in document points. Never
-    /// more than half the square's own width, since a radius that outgrew the
-    /// square would be drawing the circle a second time.
-    public static func squareCornerRadius(forSide side: CGFloat) -> CGFloat {
-        guard side.isFinite, side > 0 else { return 0 }
-        let radius = (side * keylineSquareCorner / artboardSide).rounded()
-        let squareSide = side - 2 * squareInset(forSide: side)
-        return max(0, min(radius, squareSide / 2))
     }
 
     /// Everything drawn on a frame sitting here on the canvas, or nil for a
@@ -107,14 +105,36 @@ public enum IconKeylines {
         // circle are the whole story.
         let inset = squareInset(forSide: box.width)
         let square = inset > margin ? box.insetBy(dx: inset, dy: inset) : nil
-        return IconKeylineGuides(liveArea: live,
+        return IconKeylineGuides(frame: box,
+                                 liveArea: live,
                                  squareKeyline: square,
                                  centerX: box.midX, centerY: box.midY)
     }
 }
 
+/// One hairline a guide draws, in canvas coordinates.
+///
+/// A line rather than a rectangle on purpose: a guide is not allowed to trace
+/// a hard border round the edge of anything, because that is the selection
+/// outline's one job (UX-PATTERNS D16 rule 3). Where a guide has to mark an
+/// area out it does it with a wash over what is outside, or with hairlines
+/// that run off the edges of the frame and so never close.
+public struct IconKeylineLine: Hashable, Sendable {
+    public var from: CGPoint
+    public var to: CGPoint
+
+    public init(from: CGPoint, to: CGPoint) {
+        self.from = from
+        self.to = to
+    }
+}
+
 /// One icon frame's guides, in canvas coordinates.
 public struct IconKeylineGuides: Hashable, Sendable {
+    /// The whole icon frame. The margin is marked by washing the band between
+    /// this and the live area, so both rectangles are needed to draw it, and
+    /// every hairline below runs from one edge of this to the other.
+    public var frame: CGRect
     /// The square every glyph in a set keeps its drawing inside.
     public var liveArea: CGRect
     /// The square a boxy glyph fills, or nil on a frame with no room for one
@@ -132,8 +152,41 @@ public struct IconKeylineGuides: Hashable, Sendable {
     /// frame size instead of drifting apart as the margin rounds.
     public var circleKeyline: CGRect { liveArea }
 
-    public init(liveArea: CGRect, squareKeyline: CGRect? = nil,
+    /// The two lines through the middle of the frame, edge to edge. They run
+    /// the whole frame rather than the live area: the middle of the icon is
+    /// the middle of the icon, and a line that stopped at the margin would be
+    /// describing the live area a second time.
+    public var centerGuideLines: [IconKeylineLine] {
+        [IconKeylineLine(from: CGPoint(x: centerX, y: frame.minY),
+                         to: CGPoint(x: centerX, y: frame.maxY)),
+         IconKeylineLine(from: CGPoint(x: frame.minX, y: centerY),
+                         to: CGPoint(x: frame.maxX, y: centerY))]
+    }
+
+    /// The square a boxy glyph fills, marked the way a guide is allowed to
+    /// mark an area: four hairlines sitting on its edges and running out to
+    /// the edges of the frame. Left, right, top, bottom; empty on a frame with
+    /// no room for a square.
+    ///
+    /// This is what an icon keyline sheet has always looked like, and it is
+    /// also the reason the square can never be mistaken for a selection: the
+    /// lines cross and carry on past, so there is no closed rectangle anywhere
+    /// on the frame but the one round the thing you have picked.
+    public var squareGuideLines: [IconKeylineLine] {
+        guard let square = squareKeyline else { return [] }
+        return [IconKeylineLine(from: CGPoint(x: square.minX, y: frame.minY),
+                                to: CGPoint(x: square.minX, y: frame.maxY)),
+                IconKeylineLine(from: CGPoint(x: square.maxX, y: frame.minY),
+                                to: CGPoint(x: square.maxX, y: frame.maxY)),
+                IconKeylineLine(from: CGPoint(x: frame.minX, y: square.minY),
+                                to: CGPoint(x: frame.maxX, y: square.minY)),
+                IconKeylineLine(from: CGPoint(x: frame.minX, y: square.maxY),
+                                to: CGPoint(x: frame.maxX, y: square.maxY))]
+    }
+
+    public init(frame: CGRect, liveArea: CGRect, squareKeyline: CGRect? = nil,
                 centerX: CGFloat, centerY: CGFloat) {
+        self.frame = frame
         self.liveArea = liveArea
         self.squareKeyline = squareKeyline
         self.centerX = centerX

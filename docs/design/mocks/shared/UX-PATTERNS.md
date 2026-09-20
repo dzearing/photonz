@@ -2514,12 +2514,12 @@ avoids it the same five ways:
 
   The case that forced the second half (added 2026-09-17, audit
   `2026-09-14-icon-keylines` rough three; its own evaluate item two puts the
-  same question to the user): an icon frame's keyline margin ships as a violet
+  same question to the user): an icon frame's keyline margin shipped as a violet
   dashed rectangle, and a frame you have just made arrives SELECTED, so the
-  first thing anybody sees is two dashed rectangles a few points apart meaning
+  first thing anybody saw was two dashed rectangles a few points apart meaning
   completely different things. They were told apart by making the guide's dashes
   longer than the selection's, which is a difference of degree. At a glance, and
-  at any distance, it still reads as one selection drawn wrong.
+  at any distance, it still read as one selection drawn wrong.
 
   **The selection outline owns the traced border.** It is the one piece of
   canvas chrome that draws a hard line round the exact edge of a thing, with
@@ -2529,10 +2529,18 @@ avoids it the same five ways:
   wash over the part that is outside it, or hairlines running out to the edges
   of the frame. The test is asked of a picture rather than of a stylesheet:
   with the frame selected, point at the selection. If a person has to look
-  twice, the guide is wearing the selection's clothes. The shipped keyline
-  margin disagrees with this and is filed as
-  `an-icon-frame-s-guides-stop-looking-like-a-secon`, with the picture, rather
-  than being re-described here as though it were fine.
+  twice, the guide is wearing the selection's clothes.
+
+  The app agrees as of 2026-09-20, task
+  `an-icon-frame-s-guides-stop-looking-like-a-secon`, audit
+  `2026-09-20-icon-keylines-read-as-guides`: the keyline margin is now a wash
+  filling the band between the frame's edge and the live area, and the square a
+  boxy glyph fills is four hairlines that run off the edges of the frame, so
+  neither closes a rectangle. The circle keyline keeps its dashed outline and is
+  exempt by its shape, since nothing reads a circle as a selection. Worth
+  copying if you hit the same problem: the wash turned out to say "keep your
+  drawing out of here" more directly than the outline ever had, because there is
+  no line to work out which side of you belong on.
 - **Judged against the surface it lies on, not against the app's theme.** A
   white screen in a dark app is still white, so the columns strengthen on a dark
   screen and fade on a light one.
