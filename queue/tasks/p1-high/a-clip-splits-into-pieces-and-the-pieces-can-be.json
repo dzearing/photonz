@@ -5,14 +5,14 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T12:25:03.377Z",
-  "updated": "2026-09-20T12:25:32.459Z",
+  "updated": "2026-09-20T13:05:20.920Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Split out of cut-arrange-and-retime-what-is-on-the-timeline by the daily triage of 2026-09-20, the same way the model half of a-document-can-have-time came out as time-lives-in-the-document-and-a-layer-can-have earlier the same day. WHY: every p1 in the queue is blocked or waiting on a dependency, and the whole video chain hangs on one pending decision card about where a recording opens. The cutting RULES do not depend on that answer, so they can be built now. WHERE IT STANDS: Sources/PhotonzCore/VideoCuts.swift already has VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), pieces held in play order, and no way to move one. Sources/PhotonzCore/DocumentTime.swift landed on 2026-09-20 with LayerTime (in, out, source offset, source length) and withIn/withOut/moved(toInMS:). This task is where those two meet: one piece model the new timeline will drive. WHAT IT MUST NOT DO: build the timeline gesture, move where a recording opens, or touch the old video editor. Those stay in cut-arrange-and-retime-what-is-on-the-timeline behind the card. UX-PATTERNS D18 and docs/design/video-surface.md settle the shape: a split adds a PIECE to a row, never a second row.",
+  "notes": "Split out of cut-arrange-and-retime-what-is-on-the-timeline by the daily triage of 2026-09-20, the same way the model half of a-document-can-have-time came out as time-lives-in-the-document-and-a-layer-can-have earlier the same day. WHY: every p1 in the queue is blocked or waiting on a dependency, and the whole video chain hangs on one pending decision card about where a recording opens. The cutting RULES do not depend on that answer, so they can be built now. WHERE IT STANDS: Sources/PhotonzCore/VideoCuts.swift already has VideoCutList with split(atTimeline:), removePiece(at:) and keep(fromTimeline:), pieces held in play order, and no way to move one. Sources/PhotonzCore/DocumentTime.swift landed on 2026-09-20 with LayerTime (in, out, source offset, source length) and withIn/withOut/moved(toInMS:). This task is where those two meet: one piece model the new timeline will drive. WHAT IT MUST NOT DO: build the timeline gesture, move where a recording opens, or touch the old video editor. Those stay in cut-arrange-and-retime-what-is-on-the-timeline behind the card. UX-PATTERNS D18 and docs/design/video-surface.md settle the shape: a split adds a PIECE to a row, never a second row.\n\nWHAT LANDED 2026-09-20 (commit eea276fe): Sources/PhotonzCore/ClipPieces.swift, 45 tests in Tests/PhotonzCoreTests/ClipPiecesTests.swift, written first. ClipPiece holds three numbers - sourceInMS, lengthMS, speedPercent (0 means a held frame) - and which of them is STORED is the whole design: the length is stored because it is the number a person drags, and what the piece reads from the file follows from it, so a trim pulled in and back out returns the identical piece and a split's halves add up exactly. The cost of that choice, written on atSpeed and tested: a piece taken to another speed and back can come back a millisecond different, because half of an odd number of milliseconds is not one. ClipPieces is the list, laid end to end, never empty, with split/remove/move/trimStart/trimEnd/holdFrame/setSpeed plus playback (what a player and an exporter read) and ClipPieces(cutList:) so the recording window's VideoCutList arrives in the same shape. On the layer it is Layer.cuts, nil for every clip nobody has cut, read through clipPieces and written through setClipPieces which keeps layer.time in step; so an uncut clip writes nothing extra and every document written before this reads back identical (tested). Six PhotonzDocument edits, each one History.perform step and so one undo (tested, all six).\n\nLEFT FOR cut-arrange-and-retime-what-is-on-the-timeline (the same words are on that task's log): (1) the blade, the drag, piece selection, and which piece is selected after a cut - the model does not decide that; (2) clamping: the edits REFUSE an out-of-range trim rather than guessing, so the drag clamps first with trimStartRange(ofPiece:)/trimEndRange(ofPiece:), whose 'out' is nil when nothing stops it; (3) drawing a held frame, a retimed piece and spare media on the bar; (4) a speed control, the only one of the six with no obvious gesture; (5) snapping, which VideoCutSnapping.swift already does in seconds and will want saying in milliseconds; (6) a document-level 'which piece is at this moment' helper, two lines the gesture will write for itself.\n\nDELIBERATELY NOT IN THE MODEL, so a later task knows it needs a card first: a hole INSIDE a clip cannot be written down at all (remove closes the join, lengthening pushes the rest along), so a 'lift, leaving a gap' gesture is a model change; also absent on purpose are reverse speed, pitch correction while retiming, ripple across OTHER layers, and roll trim (moving a join without changing the clip's length).",
   "acceptance": [
     "A clip can be split at a moment into two pieces of the same clip, each with its own start and end, both still reading the same recording, and either piece can be split again",
     "Pieces can be put in a different order, and what plays and what an export would write follow the new order with nothing else to change",
@@ -33,6 +33,37 @@
     {
       "t": "2026-09-20T12:25:32.458Z",
       "note": "seq 30 -> 30"
+    },
+    {
+      "t": "2026-09-20T12:27:50.172Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T12:51:11.058Z",
+      "note": "Adversarial review before building. (1) The gap question is the one real UX fork: ripple (close the hole) vs lift (leave one). Ripple wins and I did not open a card, because the design already answers it three times over: the goal says 'slide what is left along', D18 lays pieces end to end, video-surface §7 files video-cut-wt's open-a-gap-then-drag-it-shut as wrong, and VideoCutList already closes by construction. A hole INSIDE a clip is now unrepresentable, which is the honest cost and is written in the notes for the timeline task. (2) The mock's numbered-track model is already overruled by D18, so a split adds a piece to a row: the piece list hangs off the layer, not off a new object. (3) Cut as decorative: no reverse speed, no pitch correction, no cross-layer ripple, no roll trim, no transitions. Each would have been a guess about a surface nobody has drawn. (4) Shortest version that still delivers: one value type plus six document edits, no app code, nothing on screen."
+    },
+    {
+      "t": "2026-09-20T13:05:16.031Z",
+      "note": "Adversarial review of the built thing, on the model rather than a screen (there is no screen: this task's own acceptance says nothing changes on one). Two things read clumsy and one is fixed. FIXED: the trim edits refuse an out-of-range drag rather than clamping it, which would have made a gesture freeze at the start of the drag instead of stopping at the wall, so trimStartRange/trimEndRange were added and tested - the gesture clamps with them and the edit still refuses. LEFT ROUGH, noted for the gesture task rather than filed: the document edits mix vocabularies (splitClip and holdFrame take a moment on the document's clock, the other four take a piece index) and there is no one-liner for 'which piece is at this moment', which the blade will want; both are two lines the gesture will write for itself and neither is visible to a person. Also left rough: nothing tells the caller which piece resulted from a cut, because which piece stays selected is a gesture decision and guessing it here would be the model deciding a UX question."
+    },
+    {
+      "t": "2026-09-20T13:05:16.080Z",
+      "note": "No audit written, on purpose. An audit exists so the user can try a thing and judge it, and this task's acceptance says nothing changes on screen: there is no step a person could take. The feature it feeds, cutting on the timeline, gets the audit when the gesture lands. Verification instead: 45 new tests written before the code, the full suite green at 8509 tests in 675 suites, and 12 trim and save walks run untouched (8 trim + 4 save passed, 0 failed; 6 more were refused because the Mac's screen is locked and they look a control up by name)."
+    },
+    {
+      "t": "2026-09-20T13:05:16.130Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-20T13:05:20.865Z",
+      "note": "Found on the way and filed as a-test-run-says-what-is-wrong-with-the-code-not (p2): Scripts/test.sh reported 20 broken tests and a signal 11 on code that was fine, because adding one stored property to Layer left the build folder half rebuilt and PhotonzRenderTests reading a Layer at the old field offsets. Proved three ways - with the change 20 failures, with the files moved out 11 passed, rm -rf .build with the change back in 11 passed and then 8509 passed. Worth its own task because it is the command every runner has to have green before it commits, and it looked exactly like a memory bug in the app."
+    },
+    {
+      "t": "2026-09-20T13:05:20.918Z",
+      "note": "The cutting rules ship as Sources/PhotonzCore/ClipPieces.swift with 45 tests written first (Tests/PhotonzCoreTests/ClipPiecesTests.swift), commit eea276fe, pushed to main. A clip is a list of pieces laid back to back: split at a moment (either half splits again, nothing copied), reorder (what plays and what an export writes follow, nothing else to change), remove (the gap closes and everything after slides up, the same rule as lengthening), trim either edge reversibly, hold on a frame (a piece whose start and end in the recording are the same moment, silent, otherwise like any other piece), and give a piece a speed (it keeps the frames, changes how long they take, and its sound goes with the picture). The pieces hang off the layer as an optional Layer.cuts per D18, nil for every clip nobody has cut, so an uncut clip writes nothing extra and old documents read back identical. Each edit is one History.perform step, so each is one undo - all six tested. Verified: full suite green at 8509 tests in 675 suites, 12 trim and save walks passed untouched with 0 failures (6 more refused by a locked screen), nothing in Sources/Photonz touched so nothing on screen changed. No audit: there is nothing on screen to try, and the notes and the gesture task's log say exactly what is left for it."
     }
-  ]
+  ],
+  "started": "2026-09-20T12:27:50.171Z",
+  "walks": [],
+  "completed": "2026-09-20T13:05:20.919Z"
 }

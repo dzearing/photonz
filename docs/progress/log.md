@@ -18441,3 +18441,29 @@ of them could run; a full sweep is requested.
 time yet. Both are folded into the tasks that already own them
 (`cut-arrange-and-retime-what-is-on-the-timeline`, `a-document-can-have-time`).
 The audit is `queue/audits/2026-09-20-time-in-the-document.json`.
+
+## 2026-09-20 — A clip splits into pieces
+
+Built the cutting rules for video on their own, ahead of the timeline that will
+show them (`a-clip-splits-into-pieces-and-the-pieces-can-be`, commit eea276fe).
+
+`Sources/PhotonzCore/ClipPieces.swift`: a clip is a list of pieces laid back to
+back in play order. A piece is where in the recording it starts, how long it
+runs for, and how fast it plays; a held frame is a piece with speed nought,
+reading one frame. Split, reorder, remove, trim, hold and retime, each one
+`History.perform` step and so one undo. The gap rule is one sentence over all of
+them: **remove closes the join and lengthening pushes the rest along, and a hole
+inside a clip cannot be written down at all.**
+
+Per UX-PATTERNS D18 a split adds a piece to a row and never a second row, so the
+pieces hang off the layer (`Layer.cuts`, nil for every clip nobody has cut).
+Nothing on screen changed and no app code was touched. 45 tests, written first;
+the full suite is green at 8509; 12 trim and save walks ran untouched.
+
+**Next:** `cut-arrange-and-retime-what-is-on-the-timeline` is now the gesture
+only — the blade, the drag, piece selection, and drawing a held frame and spare
+media on the bar. Its log says exactly what the model already does for it.
+
+**Open question worth an answer:** a test run can report twenty broken tests and
+a crash on code that is fine, when the build folder is left half rebuilt after a
+core type gains a field. Filed as `a-test-run-says-what-is-wrong-with-the-code-not`.
