@@ -76,8 +76,11 @@
     },
     { "do": "expect", "row": "General", "present": true },
     { "do": "expect", "row": "Save Changes", "present": true },
-    { "do": "expect", "row": "Text 5", "present": true },
     { "do": "snapshot", "name": "label-6-two-of-nine" },
+    { "do": "describe", "stage": "5b-the-other-seven-are-still-pictures", "note": "Only the pair was read, so the middle of the pane is still Text 2 to Text 8. The list holds nineteen rows and shows ten, and a claim about a row is a claim about the panel, so this picks one of the seven to bring it into view before reading its row back." },
+    { "do": "selectRow", "row": "Text 5" },
+    { "do": "waitFor", "condition": "layerRowInView", "value": "Text 5", "timeout": 4 },
+    { "do": "expect", "row": "Text 5", "present": true },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 1.2 },
     {

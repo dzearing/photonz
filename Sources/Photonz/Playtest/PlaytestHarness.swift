@@ -7823,6 +7823,22 @@ private final class Run {
     /// animation. The walk's own window and anything hung off it, since a
     /// popover or a tooltip is a window of its own.
     private func isRestless() -> String? {
+        // Work the editor started and has not finished, running off the main
+        // thread where the meter cannot see it: reading a picture apart, and
+        // reading the words in a run (`EditorState.separationsInFlight` covers
+        // both). Each lands back on the main actor and CHANGES THE DOCUMENT, so
+        // a wait that goes quiet before it lands hands the next step a document
+        // the command has not touched yet. That is what made
+        // separate-dark-window-walk read one layer where fifty four were on
+        // their way: the action fired, the main thread went idle inside 100ms
+        // because the sweep was off it, and the walk's four second wait
+        // collapsed to a tenth of a second (found 2026-09-20). The same walk
+        // passed when it opened the row menu instead, purely because opening a
+        // menu took long enough for the sweep to land.
+        if let editor, !editor.separationsInFlight.isEmpty {
+            let count = editor.separationsInFlight.count
+            return "the editor is still reading \(count) picture\(count == 1 ? "" : "s") apart"
+        }
         guard let window else { return nil }
         for w in [window] + (window.childWindows ?? []) {
             if w.viewsNeedDisplay { return "viewsNeedDisplay" }

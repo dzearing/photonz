@@ -64,13 +64,13 @@
     },
     {
       "do": "expect",
-      "row": "Text 9",
+      "row": "Save Changes",
       "present": true
     },
     {
       "do": "describe",
       "stage": "2-separated",
-      "note": "the nine runs are their own layers, named Text 1 to Text 9 because nothing has read the words yet"
+      "note": "the nine runs are their own layers, and each row already says the words in it, read off the pixels for its NAME (SeparatedBoxNames). A name is all that was read: every one of them is still a PICTURE of a label until Turn into Text, and the dock proves it by offering no Text section on any of them."
     },
     {
       "do": "snapshot",
@@ -82,11 +82,16 @@
     },
     {
       "do": "selectRow",
-      "row": "Text 9"
+      "row": "Save Changes"
     },
     {
       "do": "wait",
       "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Text section",
+      "present": false
     },
     {
       "do": "menus",
@@ -104,7 +109,7 @@
     {
       "do": "describe",
       "stage": "3-white-on-blue-becomes-words",
-      "note": "THE SECOND TEST: Text 9 was WHITE words on a solid blue button. The row is now called Save Changes, the pill names the face the words were set in, and the canvas is identical because the words went back exactly where they were"
+      "note": "THE SECOND TEST: this run is WHITE words on a solid blue button, the hardest reading on the page. It is real text now, and the dock says so: the Text section with its face, its size and its alignment buttons is there, where a moment ago there was none. The pill names the face the words were set in, and the canvas is identical because the words went back exactly where they were"
     },
     {
       "do": "expect",
@@ -113,8 +118,8 @@
     },
     {
       "do": "expect",
-      "row": "Text 9",
-      "present": false
+      "control": "Text section",
+      "present": true
     },
     {
       "do": "snapshot",
@@ -126,7 +131,7 @@
     },
     {
       "do": "selectRow",
-      "row": "Text 1"
+      "row": "General"
     },
     {
       "do": "wait",
@@ -235,12 +240,25 @@
     {
       "do": "describe",
       "stage": "6-undone",
-      "note": "THE FIFTH TEST: one press takes the retyping back and the next takes the reading back, so the heading is a picture called Text 1 again"
+      "note": "THE FIFTH TEST: one press takes the retyping back and the next takes the reading back, so the heading is a picture of the word General again: its row says the words the separation read for its name, and the dock offers no Text section because there is no text to set"
     },
     {
       "do": "expect",
-      "row": "Text 1",
+      "row": "General",
       "present": true
+    },
+    {
+      "do": "selectRow",
+      "row": "General"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Text section",
+      "present": false
     },
     {
       "do": "snapshot",
