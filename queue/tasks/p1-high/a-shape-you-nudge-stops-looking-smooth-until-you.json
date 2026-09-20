@@ -1,0 +1,36 @@
+{
+  "id": "a-shape-you-nudge-stops-looking-smooth-until-you",
+  "title": "A shape you nudge stops looking smooth until you change the zoom",
+  "goal": "Draw a circle on an icon frame, zoom right in, and it is smooth. Nudge it one point with the pointer and the same circle turns into visible blocks, as though it had been flattened to pixels, and it stays that way however long you wait or whatever you click. Zoom out and back in and it is smooth again. Anybody drawing an icon works zoomed in and moves things constantly, so this is most of the time.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T05:03:43.181Z",
+  "updated": "2026-09-20T05:04:52.992Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe on 2026-09-20, not read off code. Found while working an-icon-frame-s-guides-stop-looking-like-a-secon, and NOT caused by it: the same pictures come out of a build with that change stashed.\n\nCommand: Scripts/playtest.sh /tmp/blocky-probe.json (script inlined below). Four window captures in /tmp/photonz-playtest/blocky-probe, side by side at /tmp/abcd.png:\n  a-fresh-sc.png        a 10 point ellipse just drawn on a 24 point icon frame at 3200%: smooth.\n  b-moved-inside-sc.png the same ellipse dragged from (800,550) to (801,551), one document point, nowhere near the frame's edge: drawn in 1-document-pixel blocks with a stepped, anti-aliased fringe.\n  c-settled-sc.png      three seconds later, after clicking empty canvas so nothing is picked: still blocky.\n  d-rezoomed-sc.png     zoomToFit then pinch back to 32x: smooth again.\n\nSo it is a raster cached at the wrong resolution that survives the move and any wait, and only a zoom change throws it away. Photographed while the Mac was locked; the lock dims colours but not shapes, and the blocks are geometry.\n\nNot yet checked: whether it also happens to a shape that is not inside a frame, or on a screen-sized frame rather than an icon one. It was only ever tried on a 24 point icon frame.\n\nThe walk script:\n{ \"out\": \"/tmp/photonz-playtest/blocky-probe\", \"setup\": { \"forget\": [\"shapes\", \"frames\"] }, \"steps\": [ blank 1600x1100, newFrameDialog, press 24 in Icons, press Add Frame, tool ellipse, drag (795,545)->(805,555), tool select, snapshot a-fresh, drag (800,550)->(801,551), snapshot b-moved-inside, wait 3, click (600,300), snapshot c-settled, zoomToFit, pinch to 32, snapshot d-rezoomed ] }",
+  "acceptance": [
+    "A shape nudged with the pointer at 3200% looks exactly as smooth straight after the drag as it did before it",
+    "The shape stays smooth with nothing picked and after several seconds, without needing a zoom change to repair it",
+    "A walk photographs a shape before a nudge and after it, and the two are the same shape at the same smoothness"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T05:03:43.183Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-20T05:03:52.510Z",
+      "note": "The four pictures are kept in the repo as queue/audits/2026-09-20-nudge-goes-blocky.png, left to right: just drawn (smooth), nudged one point (blocky), three seconds later with nothing picked (still blocky), zoomed out and back (smooth). The /tmp copies will not last.\n\nThe walk script, verbatim, to drop anywhere and run with Scripts/playtest.sh:\n\n{\n  \"out\": \"/tmp/photonz-playtest/blocky-probe\",\n  \"setup\": { \"forget\": [\"shapes\", \"frames\"] },\n  \"steps\": [\n    { \"do\": \"blank\", \"canvasWidth\": 1600, \"canvasHeight\": 1100, \"width\": 1240, \"height\": 900 },\n    { \"do\": \"action\", \"action\": \"newFrameDialog\" },\n    { \"do\": \"wait\", \"seconds\": 0.9 },\n    { \"do\": \"press\", \"control\": \"24\", \"in\": \"Icons\" },\n    { \"do\": \"wait\", \"seconds\": 0.3 },\n    { \"do\": \"press\", \"control\": \"Add Frame\" },\n    { \"do\": \"wait\", \"seconds\": 1.2 },\n    { \"do\": \"tool\", \"tool\": \"ellipse\" },\n    { \"do\": \"drag\", \"from\": [795, 545], \"to\": [805, 555] },\n    { \"do\": \"tool\", \"tool\": \"select\" },\n    { \"do\": \"wait\", \"seconds\": 0.8 },\n    { \"do\": \"snapshot\", \"name\": \"a-fresh\" },\n    { \"do\": \"drag\", \"from\": [800, 550], \"to\": [801, 551] },\n    { \"do\": \"wait\", \"seconds\": 1.0 },\n    { \"do\": \"snapshot\", \"name\": \"b-moved-inside\" },\n    { \"do\": \"wait\", \"seconds\": 3.0 },\n    { \"do\": \"click\", \"at\": [600, 300] },\n    { \"do\": \"wait\", \"seconds\": 1.5 },\n    { \"do\": \"snapshot\", \"name\": \"c-settled\" },\n    { \"do\": \"action\", \"action\": \"zoomToFit\" },\n    { \"do\": \"wait\", \"seconds\": 0.8 },\n    { \"do\": \"pinch\", \"to\": 32 },\n    { \"do\": \"wait\", \"seconds\": 1.0 },\n    { \"do\": \"snapshot\", \"name\": \"d-rezoomed\" }\n  ]\n}"
+    },
+    {
+      "t": "2026-09-20T05:04:52.991Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}

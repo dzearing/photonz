@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T23:08:09.347Z",
-  "updated": "2026-09-18T12:08:26.100Z",
+  "updated": "2026-09-20T05:08:14.246Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-17, not read off code.\n\nCommand: Scripts/playtest.sh Scripts/playtest/icon-keylines-walk.json\nResult: status ok, lockSafe true, 6 real window captures. The picture is queue/audits/2026-09-17-keyline-vs-selection.png (copied out of /tmp/photonz-playtest/icon-keylines-walk/icon-keylines-2-drawn-sc.png). It shows an ellipse selected inside a 24 point icon frame at 3200%: a violet dashed rectangle with a rounded violet dashed squircle inside it (the keyline margin) and, concentric with them, a blue dashed rectangle with square grips (the selection). Same kind of mark, different colour and dash rhythm. Photographed while the Mac was locked, so colours can read dimmed; the shapes are unaffected.\n\nThe audit that shipped it said the same thing (queue/audits/2026-09-14-icon-keylines.json rough three) and its evaluate item two asks the user outright: \"Does the margin read as a guide at a glance, or does it read as part of the selection sitting next to it?\"\n\nThe rule this now breaks is D16 rule 3 in docs/design/mocks/shared/UX-PATTERNS.md, scrubbed on 2026-09-17 by two-rules-in-ux-patterns-get-scrubbed-a-callout: two guides that can be on at once differ in KIND, and so does a guide against anything on the canvas that is not a guide. The selection outline owns the traced border.",
@@ -27,9 +27,27 @@
     {
       "t": "2026-09-18T12:08:26.099Z",
       "note": "seq 1340 -> 10"
+    },
+    {
+      "t": "2026-09-20T04:44:57.992Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T04:45:54.684Z",
+      "note": "pre-build review. Looked at the shipped picture (queue/audits/2026-09-17-keyline-vs-selection.png) rather than only the code. Three marks are concentric there: the violet dashed live-area rect, a violet dashed squircle, and the blue dashed selection rect with grips. The one that actually collides is the LIVE AREA rect: it is the outermost violet mark, axis aligned, and sits a few points off the selection. The squircle is rounded but it is still a traced rectangle, so it fails the same rule by the letter. The circle is an ellipse and can never be read as a selection, so it stays as it is. Plan: margin becomes a violet WASH filling the band between the frame edge and the live area (no traced edge at all, which also says 'do not draw here' more directly than an outline ever did); the square becomes four hairlines on its edges running out to the frame's edges, the keyline-sheet form D16 names; the circle and the two center lines are unchanged. Cut from the plan: corner-radius arc ticks to keep the squircle's rounding. They would be decorative and would put a traced feel straight back, so the 2-unit corner rounding guidance is dropped and recorded as a loss. Kept: the on-screen gap gate that holds the square and circle back when zoomed out, because its real job is density, not dash collision."
+    },
+    {
+      "t": "2026-09-20T05:04:53.048Z",
+      "note": "post-build review, on the probe with real window captures.\n\nWhat landed. PhotonzCore: IconKeylineGuides now carries the frame itself and hands out centerGuideLines and squareGuideLines as IconKeylineLine values, all four square lines running frame edge to frame edge so none of them closes. Five new tests, written first, including one that walks every icon size and asserts each hairline reaches both edges of the frame. CanvasIconKeylines: three layers per frame instead of two, the new one an even-odd fill of frame-minus-live-area in violet at 0.13 (pale surface) or 0.18 (dark), no stroke at all. The dashed rhythm and the casing stay for the lines and the circle.\n\nRemoved rather than left dead: IconKeylines.squareCornerRadius and keylineSquareCorner, plus their test. With the square drawn as hairlines nothing rounds any more, and a tested public function describing a rounding the app does not do is worse than no function.\n\nVerified, not assumed. Scripts/test.sh green, 8409 tests. icon-keylines-walk ok with 8 real window captures. Every other icon walk plus clamped-corner-wall-walk re-run: 6 passed, 0 failed, 3 could not run because the screen is locked and they look a control up by name (icon-export-animated, icon-width-row-reads-true, tutorial-start-on-an-icon-frame). The two document renders and the SVG written mid-walk contain only white and the shape's red, no violet anywhere, so the guide still cannot reach a picture (D16 rule 4).\n\nTwo stages added to the walk, because the old one could not have told me either of these. 2b-stray drags the shape until it crosses into the margin and photographs it, which is the one thing somebody looks at the margin to check and was never covered. 4a-wash pinches to exactly 200% and photographs the in-between size, where the wash is a thin rim and the square and circle are correctly absent; the walk had only ever shown the two extremes.\n\nWhere the mock and the old build were wrong, and what I did instead: nothing in the design study draws this, so the argument was between the shipped outline and D16. The wash turned out to be better than a like-for-like swap, not just compliant: an outline makes you work out which side of the line you belong on, and a filled gutter just says keep out.\n\nReviewed as a first-time user on the finished build: a new icon frame arrives selected and there is now exactly one outlined rectangle with grips on the canvas, with the margin as a band inside it. Nothing to work out.\n\nLeft rough, in the audit and not filed: the square keyline's corner rounding is gone for good (a rounded rectangle is precisely the mark D16 forbids a guide, and corner ticks would smuggle the traced feel back), and the wash on a dark icon frame is reasoned rather than seen, since no walk makes one. Neither is something a person hits and both are recorded in the audit's rough list where the user can push back.\n\nFiled separately, reproduced first and proven not to be mine: a-shape-you-nudge-stops-looking-smooth-until-you. Nudging any shape one point at 3200% renders it in visible blocks until the zoom changes. I stashed this task's three source files, rebuilt, re-ran the walk, and got the identical picture, so it is pre-existing. Evidence kept at queue/audits/2026-09-20-nudge-goes-blocky.png with the verbatim repro script in that task's log.\n\nUX-PATTERNS D16 rule 3 updated: it named this task as an open violation of itself, and now records the app as agreeing, with the one transferable lesson about a wash beating an outline."
+    },
+    {
+      "t": "2026-09-20T05:08:14.244Z",
+      "note": "The keyline margin is now a violet wash filling the band between the frame's edge and the live area, and the square a boxy glyph fills is four hairlines that run off the frame's edges, so the selection outline is the only traced rectangle on the canvas. The circle keyline keeps its dashes, being a circle. Geometry lives in PhotonzCore (IconKeylineGuides.frame, centerGuideLines, squareGuideLines, five new tests written first); drawing in Sources/Photonz/CanvasIconKeylines.swift. Verified: Scripts/test.sh green at 8409 tests, icon-keylines-walk ok with 8 real window captures including two new stages, every other icon walk and clamped-corner-wall-walk green. Audit queue/audits/2026-09-20-icon-keylines-read-as-guides.json. Commit 533f5448."
     }
   ],
   "walks": [
     "icon-keylines-walk"
-  ]
+  ],
+  "started": "2026-09-20T04:44:57.991Z",
+  "completed": "2026-09-20T05:08:14.245Z"
 }
