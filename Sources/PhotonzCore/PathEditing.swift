@@ -408,3 +408,64 @@ extension PathBuilder {
         return fitted
     }
 }
+
+// MARK: - Sweeping a box over the points
+
+extension PathContent {
+
+    /// The points inside `rect`, in the shape's own coordinates.
+    ///
+    /// It is the POINTS a box gathers and not the runs between them: a box
+    /// drawn across the middle of an edge, touching neither end of it, takes
+    /// nothing. A point exactly on the boundary is in, because a box drawn to
+    /// land on a point is a box meant to take it, and a box of no size at all
+    /// still takes what it landed on rather than nothing.
+    public func anchorIndices(in rect: CGRect) -> Set<Int> {
+        let box = rect.standardized
+        var caught: Set<Int> = []
+        for (index, anchor) in anchors.enumerated() {
+            let p = anchor.point
+            guard p.x >= box.minX, p.x <= box.maxX, p.y >= box.minY, p.y <= box.maxY else {
+                continue
+            }
+            caught.insert(index)
+        }
+        return caught
+    }
+
+    /// Which picked points have their levers on screen, and therefore which
+    /// levers a press can catch.
+    ///
+    /// One point picked shows its two levers; a crowd shows none. Levers are
+    /// drawn per picked point, so a box that sweeps up thirty of them would
+    /// otherwise put sixty arms and sixty more dots over the shape you are
+    /// trying to see — the exact thing drawing them per point avoids in the
+    /// first place. A lever that is not drawn is not a target either, or a
+    /// press in clear air near that crowd would catch something invisible.
+    public static func leversShowing(for picked: Set<Int>) -> Set<Int> {
+        picked.count == 1 ? picked : []
+    }
+}
+
+/// What a box swept over a path's points leaves picked.
+///
+/// The rule is the one a rubber band over LAYERS already follows
+/// (`BareCanvasPress`), in the one place both ends of the gesture can ask it:
+/// ⇧ means "and these too", and a plain sweep is the whole answer, including
+/// when the answer is none of them.
+public enum PathPointSweep {
+
+    /// The points picked once a box that took in `caught` is let go, starting
+    /// from what was already picked.
+    ///
+    /// A plain sweep REPLACES, even with an empty catch: a box thrown round
+    /// clear air means "none of them", which is what a click in clear air has
+    /// always meant to the points of a path. ⇧ never takes anything away, so a
+    /// ⇧ sweep that catches nothing is the one sweep that changes nothing, and
+    /// adding is adding rather than toggling — sweeping back over a point that
+    /// is already picked leaves it picked.
+    public static func selection(caught: Set<Int>, startingFrom existing: Set<Int>,
+                                 adding: Bool) -> Set<Int> {
+        adding ? existing.union(caught) : caught
+    }
+}

@@ -2150,9 +2150,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// built by cutting one circle out of another has exactly two, and a walk
     /// that only counted its points would pass on a solid disc with the same
     /// number of them (`PathCombining.swift`).
+    /// `picked` is how many of its points are PICKED right now, which is the
+    /// only way a walk can claim a box swept over them took the ones it went
+    /// round: the shape itself is unchanged by picking anything.
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
                     smooth: Int?, halfSmooth: Int?, rings: Int?, width: CGFloat?,
-                    fill: String?, ink: String?, anchorAt: PlaytestAnchorClaim?)
+                    fill: String?, ink: String?, picked: Int?,
+                    anchorAt: PlaytestAnchorClaim?)
     /// How far the points and levers drawn on the picked path may be from the
     /// shape the canvas is actually drawing, in screen points, at the worst
     /// moment of the drag that just ran.
@@ -2869,6 +2873,7 @@ public enum PlaytestStep: Sendable, Equatable {
             let smooth = try f.optionalNumber("smooth")
             let halfSmooth = try f.optionalNumber("halfSmooth")
             let rings = try f.optionalNumber("rings")
+            let picked = try f.optionalNumber("picked")
             let closed = try f.optionalFlag("closed")
             // Where one named point ENDED UP, which is the only way a walk can
             // claim that dragging it did anything: a reshaped path has the same
@@ -2902,19 +2907,21 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             guard anchors != nil || closed != nil || curves != nil || smooth != nil
                     || halfSmooth != nil || rings != nil || width != nil || fill != nil
-                    || ink != nil || anchorAt != nil else {
+                    || ink != nil || picked != nil || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
                     + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
                     + "how many of its points are smooth bends, \"halfSmooth\" for how many "
                     + "curve on one side only, \"rings\" for how many separate loops it is "
-                    + "made of, \"width\" for the weight its "
+                    + "made of, \"picked\" for how many of its points are picked, "
+                    + "\"width\" for the weight its "
                     + "line came out at, \"fill\" or \"ink\" for the colours it came out "
                     + "wearing, or \"anchor\" and \"near\" for "
                     + "where one point ended up")
             }
             for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth),
-                                   ("halfSmooth", halfSmooth), ("rings", rings)] {
+                                   ("halfSmooth", halfSmooth), ("rings", rings),
+                                   ("picked", picked)] {
                 guard let value else { continue }
                 guard value >= 0, value == value.rounded() else {
                     throw f.invalid(field, "a number of \(field) is a whole number, zero or more, not \(value)")
@@ -2926,6 +2933,7 @@ public enum PlaytestStep: Sendable, Equatable {
                                halfSmooth: halfSmooth.map { Int($0) },
                                rings: rings.map { Int($0) },
                                width: width.map { CGFloat($0) }, fill: fill, ink: ink,
+                               picked: picked.map { Int($0) },
                                anchorAt: anchorAt)
         case "expectLanding":
             let absent = try f.optionalFlag("absent") ?? false

@@ -5592,3 +5592,10 @@
 {"t":"2026-09-20T00:51:52.457Z","ev":"task_note","id":"the-row-of-icon-previews-stays-up-when-you-pick"}
 {"t":"2026-09-20T00:51:52.508Z","ev":"task_note","id":"the-row-of-icon-previews-stays-up-when-you-pick"}
 {"t":"2026-09-20T00:51:52.557Z","ev":"task_note","id":"the-row-of-icon-previews-stays-up-when-you-pick"}
+{"t":"2026-09-20T00:58:31.054Z","ev":"task_done","id":"the-row-of-icon-previews-stays-up-when-you-pick","from":"in_progress","note":"The icon previews row now survives picking nothing. PhotonzDocument.iconPreviewFrameID(picked:pointerIn:remembered:) in PhotonzCore asks what is picked, falls back to the icon frame under the pointer (the Width row's own rule), and failing both keeps the last icon either named, dropping it when the frame leaves the document. EditorState remembers it from the selection and pointer didSets. Verified: 8379 tests green; new 77-step icon-previews-stay-with-nothing-picked-walk and the updated icon-preview-walk both pass unforced on a locked Mac with six real window captures; all six runnable icon walks and layer-pick-latency-walk green. New playtest step expectIconPreviews, proven lock-safe. Audit: queue/audits/2026-09-19-icon-previews-stay-up.json. Commit 019dbdf5, pushed."}
+{"t":"2026-09-20T00:58:46.120Z","ev":"task_started","id":"points-on-a-path-can-be-swept-up-with-a-box","title":"Points on a path can be swept up with a box","priority":"p2-normal"}
+{"t":"2026-09-20T01:23:49.702Z","ev":"task_walks","id":"points-on-a-path-can-be-swept-up-with-a-box","walks":["sweep-up-path-points-walk","sweep-points-on-a-screen-walk"]}
+{"t":"2026-09-20T01:23:49.752Z","ev":"task_note","id":"points-on-a-path-can-be-swept-up-with-a-box"}
+{"t":"2026-09-20T01:23:55.436Z","ev":"task_note","id":"points-on-a-path-can-be-swept-up-with-a-box"}
+{"t":"2026-09-20T01:23:55.485Z","ev":"task_note","id":"points-on-a-path-can-be-swept-up-with-a-box"}
+{"t":"2026-09-20T01:23:55.531Z","ev":"task_note","id":"points-on-a-path-can-be-swept-up-with-a-box"}

@@ -54,6 +54,25 @@ struct PathAnchorDrag {
     }
 }
 
+/// A box being swept over the points of a path.
+///
+/// An icon of any real detail has thirty or forty points, and gathering one
+/// side of it a ⇧ click at a time is thirty clicks with no mistakes allowed.
+/// This is the gesture every drawing tool has had for thirty years: drag a box
+/// across the points you want and take them all at once.
+struct PathPointSweepDrag {
+    let layerID: UUID
+    /// The layer's corner when the press landed, so the box can be read in the
+    /// shape's own coordinates.
+    let origin: CGPoint
+    /// ⇧: the catch is added to what was already picked.
+    let adding: Bool
+    /// What was picked when the press landed, which is what an abandoned
+    /// sweep puts back.
+    let before: Set<Int>
+    var drag: MarqueeDrag
+}
+
 extension CanvasNSView {
 
     // MARK: - What is showing
@@ -119,8 +138,15 @@ extension CanvasNSView {
     func pathEditMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
         guard let viewport, let picked = editablePath else { return false }
         let local = pathLocalPoint(p, layer: picked.layer)
-        guard let target = picked.content.editTarget(at: local, zoom: viewport.zoom,
-                                                     handlesShowing: pathAnchorSelection) else {
+        guard let target = picked.content.editTarget(
+            at: local, zoom: viewport.zoom,
+            handlesShowing: PathContent.leversShowing(for: pathAnchorSelection)) else {
+            // A press off the shape, where a rubber band would otherwise have
+            // started, sweeps a box over the POINTS instead of over the
+            // layers. Nothing is let go yet: the release says whether this was
+            // a box or a click, and a click in clear air still means what it
+            // always did.
+            if beginPathPointSweep(at: p, picked: picked, event: event) { return true }
             // A press in clear air lets the points go, so the next arrow key
             // moves the layer again rather than a point nobody can see is
             // still picked. The press itself carries on to whatever it would
@@ -274,6 +300,140 @@ extension CanvasNSView {
     /// call the difference between a click and a drag.
     static let pathEditDragThreshold: CGFloat = 4
 
+    // MARK: - Sweeping a box over the points
+
+    /// A press off the shape, with its points showing: starts a box over the
+    /// POINTS. True when the sweep took the press.
+    ///
+    /// The space it claims is the space a rubber band would otherwise have
+    /// been drawn in — bare canvas, or the empty surface of a screen — and
+    /// nothing else. A press on the outline still picks the shape up, a press
+    /// inside a FILLED one still moves it, and a press on another layer still
+    /// picks that layer. So the only thing that changed meaning is a band
+    /// drawn while a path is showing its points, which could not previously be
+    /// drawn at all without throwing the path away first.
+    ///
+    /// Select only. With the Pen in hand a press off the points starts the
+    /// next shape, which is the Pen's whole job and is what its chip promises.
+    private func beginPathPointSweep(at p: CGPoint,
+                                     picked: (id: UUID, layer: Layer, content: PathContent),
+                                     event: NSEvent) -> Bool {
+        guard Experiments.shared.reshapePathEnabled, tool == .select, event.clickCount == 1,
+              pressWouldDrawABand(at: p) else { return false }
+        pathPointSweep = PathPointSweepDrag(
+            layerID: picked.id, origin: picked.layer.frame.origin,
+            adding: event.modifierFlags.contains(.shift),
+            before: pathAnchorSelection,
+            drag: MarqueeDrag(anchor: MarqueeDrag.corner(at: p)))
+        refreshOverlays()
+        return true
+    }
+
+    /// Whether a press here is one that would have started a rubber band: bare
+    /// canvas, or the empty surface of a screen (`screenSurfacePress`). Those
+    /// are the two places a band belongs, so those are the two places the
+    /// point sweep takes over.
+    private func pressWouldDrawABand(at p: CGPoint) -> Bool {
+        guard let viewport else { return false }
+        if groupAwarePick(at: p, zoom: viewport.zoom) == nil { return true }
+        if groupSelectionEnabled,
+           case .sweep? = document?.screenSurfacePress(
+               at: p, zoom: viewport.zoom, picked: pickedLayerIDs,
+               captionPillSize: Self.captionPillSizing) {
+            return true
+        }
+        return false
+    }
+
+    /// The box as it grows. The points it has caught so far are picked LIVE,
+    /// so the answer is on the shape before the button comes up rather than
+    /// after it.
+    func pathPointSweepDragged(to p: CGPoint) {
+        guard var sweep = pathPointSweep else { return }
+        sweep.drag.update(to: MarqueeDrag.corner(at: p))
+        pathPointSweep = sweep
+        pathAnchorSelection = PathPointSweep.selection(caught: pathPointSweepCatch(sweep),
+                                                       startingFrom: sweep.before,
+                                                       adding: sweep.adding)
+        refreshPathEditChrome()
+        refreshOverlays()
+    }
+
+    /// The release. True when a sweep was in flight.
+    ///
+    /// A box that never travelled is a click in clear air, and it still means
+    /// everything it has always meant: the points are let go, and so is the
+    /// layer, so one click off the shape is still the way out of reshaping.
+    @discardableResult
+    func pathPointSweepMouseUp(atZoom zoom: CGFloat) -> Bool {
+        guard let sweep = pathPointSweep else { return false }
+        pathPointSweep = nil
+        if sweep.drag.isClick(atZoom: zoom) {
+            pathAnchorSelection = []
+            refreshPathEditChrome()
+            announcePathEditHint()
+            // ⇧ takes nothing away, on a path's points as on anything else, so
+            // a ⇧ click that missed leaves both the points and the layer
+            // exactly as they were.
+            guard !sweep.adding else {
+                refreshOverlays()
+                return true
+            }
+            // A plain click off the shape is the gesture that means "nothing",
+            // and it means it at both levels: the points let go, and so does
+            // the layer. Word for word what a click on bare canvas does when
+            // no path is showing its points (`mouseUp`), so one click is still
+            // the whole way out of reshaping.
+            selectedLayerFrame = nil
+            onSelectLayer(nil)
+            commitSelection(nil, capture: true)
+            return true
+        }
+        pathAnchorSelection = PathPointSweep.selection(caught: pathPointSweepCatch(sweep),
+                                                       startingFrom: sweep.before,
+                                                       adding: sweep.adding)
+        refreshPathEditChrome()
+        announcePathEditHint()
+        refreshOverlays()
+        return true
+    }
+
+    /// Lets go of a sweep in flight and puts back what was picked before it,
+    /// which is what Escape means everywhere else a drag can be abandoned.
+    @discardableResult
+    func pathPointSweepCancel() -> Bool {
+        guard let sweep = pathPointSweep else { return false }
+        pathPointSweep = nil
+        pathAnchorSelection = sweep.before
+        refreshPathEditChrome()
+        announcePathEditHint()
+        refreshOverlays()
+        return true
+    }
+
+    /// The points inside the box right now, asked in the shape's own
+    /// coordinates.
+    private func pathPointSweepCatch(_ sweep: PathPointSweepDrag) -> Set<Int> {
+        guard let content = document?.canvasLayer(id: sweep.layerID)?.path else { return [] }
+        let box = pathPointSweepRect(sweep)
+        return content.anchorIndices(in: CGRect(x: box.minX - sweep.origin.x,
+                                                y: box.minY - sweep.origin.y,
+                                                width: box.width, height: box.height))
+    }
+
+    /// The box on the canvas right now, in document coordinates.
+    ///
+    /// Not `MarqueeDrag.selectionRect`, which is the LAYER band's answer: that
+    /// one clamps to the canvas and calls a box of no height empty, and a
+    /// sweep straight across a row of points is exactly a box of no height. A
+    /// line drawn through three points is a gesture that means those three
+    /// points, and a path can reach past the edge of the canvas besides.
+    func pathPointSweepRect(_ sweep: PathPointSweepDrag) -> CGRect {
+        CGRect(x: sweep.drag.anchor.x, y: sweep.drag.anchor.y,
+               width: sweep.drag.current.x - sweep.drag.anchor.x,
+               height: sweep.drag.current.y - sweep.drag.anchor.y).standardized
+    }
+
     // MARK: - The keys
 
     /// Delete with points picked takes THOSE points out rather than the whole
@@ -385,11 +545,11 @@ extension CanvasNSView {
     /// Draws the points of the picked path, and the levers of the points that
     /// are picked within it.
     ///
-    /// Levers only appear for the points you have picked, which is the whole
-    /// answer to a shape disappearing under its own scaffolding: an icon with
-    /// twenty points wears twenty small dots rather than twenty dots, forty
-    /// arms and forty more dots. It is what Figma does, and it is why you can
-    /// still see what you are editing.
+    /// Levers only appear for the ONE point you have picked, which is the
+    /// whole answer to a shape disappearing under its own scaffolding: an icon
+    /// with twenty points wears twenty small dots rather than twenty dots,
+    /// forty arms and forty more dots. It is what Figma does, and it is why
+    /// you can still see what you are editing.
     func refreshPathEditChrome() {
         guard let viewport, let picked = editablePath else {
             for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer] {
@@ -422,9 +582,13 @@ extension CanvasNSView {
         let accent = NSColor.controlAccentColor.cgColor
 
         // The levers first, so the arms run UNDER the dots rather than across
-        // them.
+        // them. They belong to ONE picked point: a box that sweeps up thirty
+        // of them would otherwise bury the shape under sixty arms and sixty
+        // more dots (`PathContent.leversShowing`), which is the very thing
+        // drawing them per picked point avoids.
         let levers = CGMutablePath()
-        for index in pathAnchorSelection.sorted() where content.anchors.indices.contains(index) {
+        let showingLevers = PathContent.leversShowing(for: pathAnchorSelection)
+        for index in showingLevers.sorted() where content.anchors.indices.contains(index) {
             let anchor = content.anchors[index]
             let centre = chromePoint(anchor.point)
             for end in [anchor.controlIn, anchor.controlOut] where end != anchor.point {

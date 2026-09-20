@@ -1,0 +1,29 @@
+{
+  "feature": "Sweep up the points of a path with a box",
+  "epic": "icon-vector",
+  "summary": "With a shape's points showing, drag a box off the shape and every point inside it is picked at once. Gathering one side of a thirty point icon was thirty shift clicks, and one miss started over.",
+  "setup": "Photonz Dev, release Next, Experiments window. Flags next-vector-paths and next-reshape-a-path are on by default.",
+  "try": [
+    { "do": "Press P and click five corners of a shape, then click the first one again to close it. The Pen hands back to Select and the points are on it." },
+    { "do": "Drag a box from empty canvas across the three points along the top. The box goes solid blue and fills in the points it is holding while the button is still down.", "shot": "2026-09-19-sweep-up-path-points-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Hold Shift and drag a second box over one more point. It joins the first three rather than replacing them." },
+    { "do": "Drag any one of the picked points. All four travel together and the fifth stays put.", "shot": "2026-09-19-sweep-up-path-points-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Command Z. One undo puts all four back." },
+    { "do": "Sweep a box again and press Delete. Those points go and the outline closes over the gaps." },
+    { "do": "Drag a box round empty space, then click once off the shape. The first lets the points go, the second lets the shape go too." }
+  ],
+  "evaluate": [
+    "Is dragging off the shape what your hand reaches for, or did you expect to have to switch to something first?",
+    "Does the box going solid blue tell you what it has caught before you let go, or do you still let go to find out?",
+    "With several points picked the levers disappear, so only the dots remain. Does that read as calm, or as something missing?",
+    "One click off the shape drops the points AND the shape. Is that one step too many at once, or the way out you wanted?",
+    "Now that empty space is where you drag a box, does the lack of a corner to scale the shape by bother you?"
+  ],
+  "rough": [
+    "The chip now opens with \"Drag a point to reshape, or a box to pick several\", which is the only place the box is named. Nothing on the canvas suggests it.",
+    "A box only picks points whose dot is inside it. Crossing a curve between two points takes neither, which is what Figma does and not what Illustrator's lasso does.",
+    "Inside a filled shape a press still moves the shape, so a box has to start outside it. On an open or unfilled path you can start anywhere, which means the same gesture begins in two different places depending on the shape.",
+    "A path that has been turned still shows no points at all, so none of this reaches one. That is an older rough edge, unchanged.",
+    "These pictures were taken with the Mac's screen locked: the window is real and drawn for real, but colours can read a little dimmed."
+  ]
+}

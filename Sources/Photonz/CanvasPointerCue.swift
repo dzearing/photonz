@@ -175,8 +175,9 @@ extension CanvasNSView {
         guard let viewport, let picked = editablePath else { return nil }
         let local = CGPoint(x: p.x - picked.layer.frame.minX,
                             y: p.y - picked.layer.frame.minY)
-        switch picked.content.editTarget(at: local, zoom: viewport.zoom,
-                                         handlesShowing: pathAnchorSelection) {
+        switch picked.content.editTarget(
+            at: local, zoom: viewport.zoom,
+            handlesShowing: PathContent.leversShowing(for: pathAnchorSelection)) {
         case .anchor, .handle: return (.grab, .identity)
         case .segment, nil: return nil
         }

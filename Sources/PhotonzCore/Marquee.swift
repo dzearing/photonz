@@ -154,6 +154,14 @@ public enum MarqueeIntent: Equatable, Sendable {
         BareCanvasPress.sweepDecidesSelection(caught: caught) ? .picksLayers : .picksPixels
     }
 
+    /// The same question for a box swept over the POINTS of a path rather
+    /// than over layers. A point is a thing you pick, so a box holding some
+    /// looks exactly like a box holding layers; one holding none is still a
+    /// box that has said WHERE and not WHAT.
+    public static func sweeping(caughtPoints: Int) -> MarqueeIntent {
+        caughtPoints > 0 ? .picksLayers : .picksPixels
+    }
+
     /// What the box that has already landed did. `targetsPixels` is the flag
     /// the editor keeps for exactly this distinction, so a box that is still
     /// on screen after the button came up goes on saying what it said while

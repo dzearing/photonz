@@ -3092,7 +3092,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "halfSmooth": 2 } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, let half, _, _, _, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, let half, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(half == 2)
@@ -3113,7 +3113,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "rings": 2 } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, let rings, _, _, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, let rings, _, _, _, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(rings == 2)
@@ -3178,7 +3178,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "#2D7FF9", "ink": "#2D7FF9" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, let ink, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "#2D7FF9")
@@ -3192,7 +3192,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPath", "fill": "none" } ] }
         """)
-        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
+        guard case .expectPath(_, _, _, _, _, _, _, _, let fill, _, _, _) = script.steps[0] else {
             Issue.record("expectPath"); return
         }
         #expect(fill == "none")

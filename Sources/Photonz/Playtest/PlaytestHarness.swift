@@ -1558,11 +1558,12 @@ private final class Run {
                  state: describe())
 
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
-                         let halfSmooth, let rings, let width, let fill, let ink, let anchorAt):
+                         let halfSmooth, let rings, let width, let fill, let ink, let picked,
+                         let anchorAt):
             note(number, step.name,
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
                                smooth: smooth, halfSmooth: halfSmooth, rings: rings, width: width,
-                               fill: fill, ink: ink, anchorAt: anchorAt),
+                               fill: fill, ink: ink, picked: picked, anchorAt: anchorAt),
                  state: describe())
 
         case .expectReadout(let says, let absent):
@@ -4706,7 +4707,7 @@ private final class Run {
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
                            curves: Int?, smooth: Int?, halfSmooth: Int?, rings: Int?,
-                           width: CGFloat?, fill: String?, ink: String?,
+                           width: CGFloat?, fill: String?, ink: String?, picked: Int?,
                            anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -4784,6 +4785,18 @@ private final class Run {
         if let halfSmooth, halves != halfSmooth {
             throw Failure(description: "\(shape), \(halves) of them curved on one side only "
                 + "— not the \(halfSmooth) claimed")
+        }
+        // How many of its points are picked right now. Canvas state rather
+        // than document state — what is picked is a fact about this window,
+        // like a marquee — so it is asked of the canvas, and it is the only
+        // way a walk can claim a box swept over the points took them.
+        if let picked {
+            let canvas = try requireCanvas()
+            let holding = canvas.pathAnchorSelection.count
+            guard holding == picked else {
+                throw Failure(description: "\(shape), \(holding) of them picked — not the "
+                    + "\(picked) claimed")
+            }
         }
         // Where one named point ended up, asked in the space the walk wrote it
         // in. A path's anchors are stored against its own corner, so the claim

@@ -607,6 +607,7 @@ extension CanvasNSView {
         // marquee, else the committed region.
         var antsDocPath: CGPath?
         var marqueeRect: CGRect? // the arrow marquee's live rubber-band rect
+        var pointSweepRect: CGRect? // the band being swept over a path's points
         if let session = regionOutlineDrag {
             // Outline-only move: the ants slide with the pointer.
             let delta = roundedDelta(from: session.start, to: session.current)
@@ -627,6 +628,13 @@ extension CanvasNSView {
             let rect = marquee.selectionRect(in: viewport.documentSize)
             antsDocPath = rect.map { CGPath(rect: $0, transform: nil) }
             marqueeRect = rect
+        } else if let sweep = pathPointSweep {
+            // A box swept over a path's POINTS. It is the same band drawn the
+            // same way, because it is the same gesture aimed one level in: the
+            // difference is what it catches, which the band already says by
+            // how it looks.
+            pointSweepRect = pathPointSweepRect(sweep)
+            antsDocPath = pointSweepRect.map { CGPath(rect: $0, transform: nil) }
         } else {
             antsDocPath = selection?.path
         }
@@ -660,11 +668,16 @@ extension CanvasNSView {
             intent = .picksPixels
         } else if marquee != nil {
             intent = .sweeping(caught: caught)
+        } else if pointSweepRect != nil {
+            // The band over points says what it has caught exactly as the band
+            // over layers does: it goes solid and washes blue the moment it is
+            // holding something, so letting go is never a surprise.
+            intent = .sweeping(caughtPoints: pathAnchorSelection.count)
         } else {
             intent = .resting(targetsPixels: selectionTargetsPixels)
         }
         applyMarqueeBandStyle(Experiments.shared.marqueeIntentEnabled ? intent : .picksPixels,
-                              whileDrawing: marquee != nil)
+                              whileDrawing: marquee != nil || pointSweepRect != nil)
         refreshMultiSelectOutlines(caught: caught, sweeping: marquee != nil && marqueeRect != nil)
     }
 

@@ -218,7 +218,11 @@ extension CanvasNSView {
             return
         }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
-            // Points picked inside a path let go first, so Escape steps back
+            // A box being swept over a path's points is a drag in flight, so
+            // it is let go before anything else: it puts back what was picked
+            // when it started, the way every abandoned drag here does.
+            if pathPointSweepCancel() { return }
+            // Points picked inside a path let go next, so Escape steps back
             // out of reshaping before it steps out of the selection.
             if pathEditEscape() { return }
             // The pivot crosshair, let go of part way: the mount goes back

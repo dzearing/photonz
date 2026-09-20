@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:30.913Z",
-  "updated": "2026-09-19T15:35:09.655Z",
+  "updated": "2026-09-20T01:23:55.530Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the Known rough edges list in docs/design/vector-paths.md: 'Points cannot be swept up with a marquee, only gathered with SHIFT click. On a shape with thirty points that is thirty clicks.'\n\nNo card, on purpose: this is not a new control or a new mark on screen, it is the absence of a gesture every vector tool has had for thirty years, and the user asked for the Pen on 2026-09-13 specifically to build elaborate SVG icons, which is the case where thirty clicks bites. If the runner finds it cannot be done without adding something visible, open a card then.\n\nOne thing to settle while doing it, from the same rough list: 'A path cannot be scaled by dragging any more once its points show.' A sweep starting on empty space is the gesture that would otherwise be free for a scale handle, so say in the audit which one that space belongs to.\n\nReshaping chrome and hit testing: Sources/Photonz around the path reshape tool; docs/design/vector-paths.md section 'Reshaping one' (line 474) is the spec.",
@@ -42,6 +42,35 @@
     {
       "t": "2026-09-19T15:35:09.654Z",
       "note": "seq 70 -> 50"
+    },
+    {
+      "t": "2026-09-20T00:58:46.118Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T01:23:49.700Z",
+      "note": "owns these walks: sweep-up-path-points-walk, sweep-points-on-a-screen-walk"
+    },
+    {
+      "t": "2026-09-20T01:23:49.750Z",
+      "note": "Adversarial review before building: (1) a first-time user drags off the shape and expects a box, so the gesture needs no teaching, but the space it takes was already spoken for by the LAYER band, which used to throw the path away on press; (2) the Pen owns every press while it is in hand, so the sweep is Select only or the Pen could not draw a second shape; (3) inside a FILLED path a press moves the shape, so a box has to start off it; (4) the shortest version that delivers the value is anchors-inside-the-box, no lasso and no crossing rule; (5) nothing new is drawn on screen, the existing rubber band is reused, so no new chrome was invented."
+    },
+    {
+      "t": "2026-09-20T01:23:55.434Z",
+      "note": "Review of the built thing, on the probe: the band reads right mid-gesture (solid blue, washed, picked dots filled in live), and with several points picked the levers stand down so the shape is not buried. Two things I changed away from the plain reading of the task. (1) 'Dragging on empty space' is narrowed to 'where a rubber band would have been drawn': bare canvas or a screen's own empty surface. Inside a FILLED path a press still moves the shape, because that is what it has always done and taking it would cost more than it gives. (2) Levers now show for ONE picked point only, in the chrome and in the hit test alike (PathContent.leversShowing), because a box that sweeps up thirty points would otherwise put sixty arms and sixty more dots over the drawing."
+    },
+    {
+      "t": "2026-09-20T01:23:55.483Z",
+      "note": "Settled, as the task asked: the empty space round a path belongs to the box that sweeps up its points. A scale-by-dragging grab, if it is ever wanted, has to be a corner OF THE BOX rather than the room around it. Written into docs/design/vector-paths.md under 'The box, and the space it claims', and the audit asks the user whether the missing scale grab bothers them rather than guessing."
+    },
+    {
+      "t": "2026-09-20T01:23:55.529Z",
+      "note": "left rough (no task, does not clear the bar): the box gesture is named only on the chip ('Drag a point to reshape, or a box to pick several') and nothing on the canvas suggests it; a box takes only points whose dot is inside it, so crossing a curve between two points takes neither (Figma's rule, not Illustrator's lasso); a turned path still shows no points at all, which is an older rough edge unchanged. The scale-by-dragging gap is deliberately NOT filed: the audit asks the user whether they miss it, and building a speculative grab before that answer is what the 'validate before building' rule is for."
     }
+  ],
+  "started": "2026-09-20T00:58:46.117Z",
+  "walks": [
+    "sweep-up-path-points-walk",
+    "sweep-points-on-a-screen-walk"
   ]
 }

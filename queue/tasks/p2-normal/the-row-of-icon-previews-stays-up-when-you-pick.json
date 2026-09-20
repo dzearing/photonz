@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:25.099Z",
-  "updated": "2026-09-20T00:51:52.556Z",
+  "updated": "2026-09-20T00:58:31.053Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Straight from the rough list of queue/audits/2026-09-17-icon-width-row-nothing-picked.json: 'The icon previews strip still vanishes the moment you pick nothing, for the same reason the Width row used to go wrong: it only knows which icon it is showing from what is picked. It was left alone here so this change stayed to one row.'\n\nThe code says the same. Sources/Photonz/EditorState+IconPreviews.swift:\n\n    var iconPreviewFrameID: UUID? {\n        guard iconPreviewsEnabled, let document, let id = selectedLayerID else { return nil }\n        return document.iconFrameID(containing: id)\n    }\n\nNo selectedLayerID, no frame, and iconPreviewTiles returns [] so the strip draws nothing.\n\nThe answer already exists one file away: with-nothing-picked-the-pen-s-width-row-still-sa (done, commit 2c1a4bc4) taught the Width row to fall back to the icon frame UNDER THE POINTER when nothing is picked. Reuse that, do not invent a second rule. That task's audit also records the one flaw worth not repeating: sweep the pointer out of the frame onto bare canvas and the row can read stale, so decide deliberately what the previews show when the pointer is over neither.\n\nDrawing surface: Sources/Photonz/IconPreviewsStrip.swift, Sources/Photonz/IconPreviewsOverlay.swift.",
@@ -66,11 +66,16 @@
     {
       "t": "2026-09-20T00:51:52.555Z",
       "note": "New playtest step kind expectIconPreviews (sides, or absent:true): reads the editor's own strip and fails with which icon it is speaking for and which icon frames the document holds. Forced under a lock on 2026-09-19 it ran clean through all 77 steps, so it was added to PlaytestLockSafety.stepsThatSurviveALock with that evidence written into the doc comment, and the walk now runs unforced on a locked Mac (lockSafe true, 6 real window captures)."
+    },
+    {
+      "t": "2026-09-20T00:58:31.051Z",
+      "note": "The icon previews row now survives picking nothing. PhotonzDocument.iconPreviewFrameID(picked:pointerIn:remembered:) in PhotonzCore asks what is picked, falls back to the icon frame under the pointer (the Width row's own rule), and failing both keeps the last icon either named, dropping it when the frame leaves the document. EditorState remembers it from the selection and pointer didSets. Verified: 8379 tests green; new 77-step icon-previews-stay-with-nothing-picked-walk and the updated icon-preview-walk both pass unforced on a locked Mac with six real window captures; all six runnable icon walks and layer-pick-latency-walk green. New playtest step expectIconPreviews, proven lock-safe. Audit: queue/audits/2026-09-19-icon-previews-stay-up.json. Commit 019dbdf5, pushed."
     }
   ],
   "started": "2026-09-20T00:38:18.944Z",
   "walks": [
     "icon-previews-stay-with-nothing-picked-walk",
     "icon-preview-walk"
-  ]
+  ],
+  "completed": "2026-09-20T00:58:31.052Z"
 }

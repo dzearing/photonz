@@ -909,6 +909,7 @@ final class CanvasNSView: NSView {
             guard selectedLayerID != oldValue else { return }
             pathAnchorSelection = []
             pathAnchorDrag = nil
+            pathPointSweep = nil
         }
     }
     /// Selected layer's frame in document coordinates (committed state).
@@ -1009,6 +1010,8 @@ final class CanvasNSView: NSView {
     var pathAnchorSelection: Set<Int> = []
     /// A point or a lever being dragged right now.
     var pathAnchorDrag: PathAnchorDrag?
+    /// A box being swept over the points of the picked path right now.
+    var pathPointSweep: PathPointSweepDrag?
     /// Every point of the picked path, as a dot each: round for a smooth bend,
     /// square for a hard corner.
     let pathAnchorsLayer = CAShapeLayer()

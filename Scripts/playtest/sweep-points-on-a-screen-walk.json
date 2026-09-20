@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/sweep-points-on-a-screen-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [240, 100], "to": [840, 500], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [120, 560] },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [400, 200] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [600, 200] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [600, 400] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [403, 203] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 4, "closed": true },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
+    { "do": "describe", "stage": "1-drawn", "note": "a four point shape drawn on a screen, picked, with its points showing" },
+
+    { "do": "drag", "from": [320, 150], "to": [700, 250], "steps": 12, "hold": "2-band-on-a-screen" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 4, "picked": 2 },
+    { "do": "describe", "stage": "2-swept", "note": "a box drawn across the SCREEN's own empty surface gathers the points of the path showing them, rather than sweeping up what is on the screen" },
+    { "do": "snapshot", "name": "3-two-picked-on-a-screen" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectPath", "anchors": 4, "picked": 0 },
+    { "do": "drag", "from": [320, 150], "to": [700, 250], "steps": 12 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "describe", "stage": "3-still-the-path", "note": "the screen underneath is never picked up by a box drawn while a path is showing its points: the path stays the thing being worked on" }
+  ]
+}

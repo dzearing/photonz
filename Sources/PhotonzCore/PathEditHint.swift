@@ -20,8 +20,8 @@ public enum PathEditHint {
 
     /// Nothing picked yet: how to get started, and the two double clicks that
     /// do the most.
-    public static let opening = "Drag a point to reshape. Double click a point to curve it, "
-        + "or the outline to add one."
+    public static let opening = "Drag a point to reshape, or a box to pick several. "
+        + "Double click a point to curve it, or the outline to add one."
 
     /// The same moment with the PEN in hand rather than Select: a finished
     /// path picked up again by pressing P over it. A shape no longer lands
@@ -66,9 +66,11 @@ public enum PathEditHint {
     public static let halfPicked = "This point curves on one side only. "
         + "Double click the point to curve both sides, or its lever to straighten it too."
 
-    /// Several points picked: the keys that reach all of them.
-    public static let severalPicked = "Arrow keys nudge the points you picked. "
-        + "Delete takes them out."
+    /// Several points picked, which is what a box swept over them leaves
+    /// behind: what now reaches ALL of them. Dragging comes first because it
+    /// is why you gathered them, and it is the one that is not a key.
+    public static let severalPicked = "Drag any of them to move them all. "
+        + "Arrow keys nudge, Delete takes them out."
 
     /// The line the chip leads with the instant a shape has been turned into a
     /// path, before you touch anything.

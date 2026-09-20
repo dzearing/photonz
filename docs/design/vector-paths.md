@@ -506,6 +506,7 @@ in the A field brings the points back.
 | Drag a point | It moves; the curves either side travel with it, because handles are offsets. |
 | Click a point | It is picked, and only IT shows its levers. |
 | ⇧ click | Gathers more points; arrow keys nudge every one of them, ⇧ by ten. |
+| Drag a box off the shape | Sweeps up every point inside it. ⇧ adds the catch to what is already picked; a box round nothing lets them all go; Escape part way gives them back. |
 | Drag a lever | Bends that side. On a smooth point the far lever swings round to match, keeping its own length. |
 | ⌥ drag a lever | The same, with the two sides freed from each other: the far one holds still. |
 | ⌥ click a lever | Pulls that lever in, so that side runs straight. A point curved on one side and straight on the other, which is what a rounded corner is made of. |
@@ -514,6 +515,34 @@ in the A field brings the points back.
 | Double click the outline | Adds a point exactly where you clicked. |
 | Delete | Takes the picked points out, the curve closing over the gap. With no point picked it still deletes the layer. |
 | Escape | Lets the points go, before it lets the layer go. |
+
+### The box, and the space it claims
+
+An icon of any real detail has thirty or forty points, so moving one side of it
+used to be thirty ⇧ clicks with no misses allowed. A box takes them all at once,
+and it is the gesture every drawing tool has had for thirty years, so there is
+nothing to learn.
+
+The space it claims is **the space a rubber band was already drawn in**: bare
+canvas, or the empty surface of a screen. Nothing else changed hands. A press on
+the outline still picks the shape up, a press inside a FILLED one still moves it,
+and a press on another layer still picks that layer, so the only gesture that
+means something new is the one that could not previously be made at all — a
+band, while a path is showing its points, used to throw the path away before it
+started. A plain click off the shape still means "nothing" at both levels: the
+points let go, and so does the layer, which keeps one click as the whole way out
+of reshaping. So **a scale handle cannot be hung on empty space**: if a path is
+ever to be scaled by dragging, the grab is a corner OF ITS BOX, not the room
+around it. The Position and Size fields scale one today, and that is still
+the only way.
+
+The band looks exactly like the band over layers and says the same thing live:
+dashed and marching while it is holding nothing, solid blue and washed the
+moment it is holding points, because the look is derived from the same call that
+decides the catch (`MarqueeIntent`). And levers stand down for a crowd — one
+picked point shows its two arms, several show none — or a box round thirty
+points would bury the shape under sixty arms and sixty more dots
+(`PathContent.leversShowing`). A lever that is not drawn is not a target either.
 
 A square dot is a hard corner, a round one is a smooth bend, and a rounded
 square is a point curved on ONE side only — half way between the two, which is
@@ -981,7 +1010,7 @@ the flag's description and nowhere else.
 * **A path cannot be scaled by dragging any more once its points show.** The
   Position and Size fields do it, and a group round it does it, but there is no
   corner to pull. Whether that is missed is the question the reshape audit asks.
-* **Points cannot be swept up with a marquee**, only gathered with ⇧ click. On a
-  shape with thirty points that is thirty clicks.
+  Wherever it lands, the grab is a corner of the box: the empty space round the
+  shape belongs to the box that sweeps up points (above).
 * **A turned path shows no points at all.** Straightening it is the way in, and
   nothing on screen says so.

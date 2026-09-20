@@ -719,6 +719,13 @@ extension CanvasNSView {
             pathEditMouseDragged(to: p, event: event)
             return
         }
+        // A box being swept over the points owns the rest of the gesture too:
+        // the press that started it landed off the shape, where a rubber band
+        // over LAYERS would otherwise have been drawn.
+        if pathPointSweep != nil {
+            pathPointSweepDragged(to: p)
+            return
+        }
         if tool == .pen {
             penMouseDragged(to: p, event: event)
             return
@@ -1106,6 +1113,10 @@ extension CanvasNSView {
                            event: event) {
             return
         }
+        // And the release of a box swept over the points, for the same reason
+        // and in the same place: it answers nothing when no sweep is in
+        // flight, so every other release is untouched.
+        if pathPointSweepMouseUp(atZoom: viewport.zoom) { return }
         if tool == .pen {
             penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
                        event: event)
