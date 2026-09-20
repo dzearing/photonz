@@ -5,16 +5,16 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-20T12:25:32.557Z",
+  "updated": "2026-09-20T14:51:16.271Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-20T12:23:04Z ran only the part of the walk set a locked screen cannot touch: 261 of 539 walks ran in 55 minutes, of which 261 passed. The other 278 were refused because the screen is locked, and those are unknown, not passing.\n\nFailing walks: none. Nothing failed in the part that ran, and the 278 walks the locked screen refused are unknown, not passing. This is not the walk set passing.\n\nNot run this time and still failing from the last check (54): button-hug-walk, colour-onto-an-off-part-walk, columns-follow-the-padding-walk, columns-follow-the-screen-walk, combine-shapes-walk, component-whole-path-walk, copy-a-look-walk, copy-wording-walk, crop-rounds-the-card-walk, frame-second-screen-walk, icon-export-animated-walk, join-two-pen-paths-walk, library-drag-walk, measure-row-menu-walk, motion-colour-picker-walk, motion-loop-preview-walk, motion-one-play-rule-walk, motion-pivot-in-a-corner-walk, motion-pivot-walk, motion-strip-way-back-walk, motion-swings-a-layer-walk, motion-timing-strip-walk, name-field-handback, panel-grip-walk, panel-reads-the-marquee-walk, panel-section-drag, pen-hands-back-walk, pen-width-before-you-draw-walk, piece-geometry-walk, position-and-size-on-screen-walk, read-every-label-walk, redline-with-components-walk, retype-label-walk, screen-columns-walk, separate-dark-window-walk, separate-reads-text-study-walk, separate-turn-into-text-walk, shapes-into-one-path-walk, shared-component-scale-walk, size-limits-walk, style-on-a-copy-walk, text-style-row-drop-walk, tick-leads-walk, turn-two-shapes-into-pictures-walk, turned-piece-walk, tutorial-finish-walk, tutorial-get-the-timing-right-walk, tutorial-make-something-move-walk, tutorial-padding-and-columns-walk, tutorial-start-on-an-icon-frame-walk, tutorial-tour-walk, tutorial-two-parts-out-of-phase-walk, type-the-last-three-numbers-walk, width-reads-back-walk\nThose walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.\n\nFull output: queue/sweep/2026-09-20-042830.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: points-on-a-path-can-be-swept-up-with-a-box: canvas mouse handling changed for every tool: a press off a picked path now starts a point sweep, and a plain click there deselects through the same call the bare-canvas click uses. Path, pen, marquee, sweep and selection walks all pass; the rest of the set has not been run against it.; saving-a-recording-says-it-saved: saving-a-recording-says-it-saved touched three shared surfaces: every toast panel now carries a title (so a walk can photograph one), the playtest vocabulary gained expectToast, and Command S now has a stand-in so the chord means save in any walk. The save and trim and recording walks were run and are green (13 passed, 0 failed, 6 refused by the lock), but a walk anywhere in the set that lists windows or presses Command S could see the difference.; a-shape-you-nudge-stops-looking-smooth-until-you: dragPreview now asks for the sharp copy when a sprite comes down, which fires on every drag in the app (move, resize, rotate, endpoints, regions, components), and a new walk step kind expectSharp joined the lock-safe list. The drag, icon and zoom walks are green; the rest of the set has not seen either change.; time-lives-in-the-document-and-a-layer-can-have: MotionStripView (the timing strip's layer row can now be a bar) and CutStrip (re-pointed at the shared document ruler) changed; all nine motion-* walks need a control by name and the Mac is locked, so none of them could run here. The eight recording walks that survive a lock all passed.; three-layers-picked-one-outlined-and-the-switch: the band drawn on bare canvas while a path is picked can now hand itself to the LAYERS (CanvasPathEdit mouse-up + CanvasDisplay band chrome), which touches the shared canvas press path. Sweep, path, pen, marquee, band, select, group and icon walks are green here (about 45 walks, 0 failures), but no walk outside those batches has seen it.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block asks each task first. A task that has named its walks\n(node queue/bin/queue.mjs walks <task id> <walk> ...) is taken at its word, and those lines say so.\nA walk nobody has claimed is still guessed at from the words in every open task, and those lines say\nthat too: read the task a guess points at before deciding a walk is not yours. If one of those tasks\nlands and its walk still fails in the next sweep, the walk comes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-20T14:02:02Z ran only the part of the walk set a locked screen cannot touch: 261 of 539 walks ran in 56 minutes, of which 261 passed. The other 278 were refused because the screen is locked, and those are unknown, not passing.\n\nFailing walks: none. Nothing failed in the part that ran, and the 278 walks the locked screen refused are unknown, not passing. This is not the walk set passing.\n\nNot run this time and still failing from the last check (54): button-hug-walk, colour-onto-an-off-part-walk, columns-follow-the-padding-walk, columns-follow-the-screen-walk, combine-shapes-walk, component-whole-path-walk, copy-a-look-walk, copy-wording-walk, crop-rounds-the-card-walk, frame-second-screen-walk, icon-export-animated-walk, join-two-pen-paths-walk, library-drag-walk, measure-row-menu-walk, motion-colour-picker-walk, motion-loop-preview-walk, motion-one-play-rule-walk, motion-pivot-in-a-corner-walk, motion-pivot-walk, motion-strip-way-back-walk, motion-swings-a-layer-walk, motion-timing-strip-walk, name-field-handback, panel-grip-walk, panel-reads-the-marquee-walk, panel-section-drag, pen-hands-back-walk, pen-width-before-you-draw-walk, piece-geometry-walk, position-and-size-on-screen-walk, read-every-label-walk, redline-with-components-walk, retype-label-walk, screen-columns-walk, separate-dark-window-walk, separate-reads-text-study-walk, separate-turn-into-text-walk, shapes-into-one-path-walk, shared-component-scale-walk, size-limits-walk, style-on-a-copy-walk, text-style-row-drop-walk, tick-leads-walk, turn-two-shapes-into-pictures-walk, turned-piece-walk, tutorial-finish-walk, tutorial-get-the-timing-right-walk, tutorial-make-something-move-walk, tutorial-padding-and-columns-walk, tutorial-start-on-an-icon-frame-walk, tutorial-tour-walk, tutorial-two-parts-out-of-phase-walk, type-the-last-three-numbers-walk, width-reads-back-walk\nThose walks look a control up by name, so the locked screen turned them away. They are unread, not fixed.\n\nFull output: queue/sweep/2026-09-20-060541.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: points-on-a-path-can-be-swept-up-with-a-box: canvas mouse handling changed for every tool: a press off a picked path now starts a point sweep, and a plain click there deselects through the same call the bare-canvas click uses. Path, pen, marquee, sweep and selection walks all pass; the rest of the set has not been run against it.; saving-a-recording-says-it-saved: saving-a-recording-says-it-saved touched three shared surfaces: every toast panel now carries a title (so a walk can photograph one), the playtest vocabulary gained expectToast, and Command S now has a stand-in so the chord means save in any walk. The save and trim and recording walks were run and are green (13 passed, 0 failed, 6 refused by the lock), but a walk anywhere in the set that lists windows or presses Command S could see the difference.; a-shape-you-nudge-stops-looking-smooth-until-you: dragPreview now asks for the sharp copy when a sprite comes down, which fires on every drag in the app (move, resize, rotate, endpoints, regions, components), and a new walk step kind expectSharp joined the lock-safe list. The drag, icon and zoom walks are green; the rest of the set has not seen either change.; time-lives-in-the-document-and-a-layer-can-have: MotionStripView (the timing strip's layer row can now be a bar) and CutStrip (re-pointed at the shared document ruler) changed; all nine motion-* walks need a control by name and the Mac is locked, so none of them could run here. The eight recording walks that survive a lock all passed.; three-layers-picked-one-outlined-and-the-switch: the band drawn on bare canvas while a path is picked can now hand itself to the LAYERS (CanvasPathEdit mouse-up + CanvasDisplay band chrome), which touches the shared canvas press path. Sweep, path, pen, marquee, band, select, group and icon walks are green here (about 45 walks, 0 failures), but no walk outside those batches has seen it.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block asks each task first. A task that has named its walks\n(node queue/bin/queue.mjs walks <task id> <walk> ...) is taken at its word, and those lines say so.\nA walk nobody has claimed is still guessed at from the words in every open task, and those lines say\nthat too: read the task a guess points at before deciding a walk is not yours. If one of those tasks\nlands and its walk still fails in the next sweep, the walk comes back here.\n",
   "acceptance": [
     "Every one of the 57 walks that failed in BOTH full sweeps of 2026-09-20 is read, and each is recorded as either the app being wrong or the walk being out of date",
     "A walk that was out of date is rewritten to check the same thing against the app as it is today, not deleted and not weakened",
@@ -106,37 +106,9 @@
       "note": "sweep 2026-09-14T05:18:56Z: 3 failing (contents-for-several-walk, dock-picked-first-walk, layers-lazy-rows-walk)"
     },
     {
-      "t": "2026-09-20T12:25:32.556Z",
-      "note": "... 6 earlier entries elided",
-      "elided": 6
-    },
-    {
-      "t": "2026-09-14T12:53:21.568Z",
-      "note": "TRIAGE 2026-09-14: layers-list-follows-pick-walk is NOT this task any more. It is the same panel-scroll mechanism as dock-picked-first-walk and it is now named in the acceptance of picking-a-text-layer-leaves-its-settings-below-t, which owns the whole cluster. Worth saying plainly: that walk arrived yesterday with picking-a-layer-brings-its-row-into-view, marked done at 03:56Z, and it has failed in every sweep since and fails on its own. A walk that has never passed a sweep since the task that shipped it is a regression, not a flake."
-    },
-    {
-      "t": "2026-09-14T12:53:21.612Z",
-      "note": "TRIAGE 2026-09-14, three tasks retired against this one after rerunning their walks on the current build, all ok: corner-radius-rounds-walk 17s ok (the-colour-popover-never-opens-in-the-corner-rad), text-style-walk 22s ok and text-style-arming-walk 22s ok (saving-a-text-style-leaves-the-text-section-with), and text-style-arming-walk again on its own, status ok, which is the walk that drives clicking a style tile with nothing selected (a-style-tile-clicked-with-nothing-selected-shoul). contents-for-several-walk also passes, 29s ok. If any of them comes back, it comes back here."
-    },
-    {
-      "t": "2026-09-14T12:53:48.879Z",
-      "note": "seq 330 -> 310"
-    },
-    {
-      "t": "2026-09-14T12:54:45.626Z",
-      "note": "seq 310 -> 340"
-    },
-    {
-      "t": "2026-09-14T14:59:22.143Z",
-      "note": "sweep 2026-09-14T14:59:22Z: 3 failing (effect-style-walk, layers-lazy-rows-walk, measure-row-menu-walk); stopped failing: dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk"
-    },
-    {
-      "t": "2026-09-14T18:06:16.243Z",
-      "note": "sweep 2026-09-14T18:06:16Z: 1 failing (measure-row-menu-walk); stopped failing: effect-style-walk, layers-lazy-rows-walk"
-    },
-    {
-      "t": "2026-09-14T20:44:26.338Z",
-      "note": "sweep 2026-09-14T20:44:26Z: 4 failing (icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk)"
+      "t": "2026-09-20T14:51:16.270Z",
+      "note": "... 13 earlier entries elided",
+      "elided": 13
     },
     {
       "t": "2026-09-14T22:27:44.943Z",
@@ -505,8 +477,55 @@
     {
       "t": "2026-09-20T12:25:32.555Z",
       "note": "seq 100 -> 50"
+    },
+    {
+      "t": "2026-09-20T14:02:02.330Z",
+      "note": "sweep 2026-09-20T14:02:02Z: nothing failing in the 261 of 539 walks that ran"
+    },
+    {
+      "t": "2026-09-20T14:02:02.534Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T14:06:57.164Z",
+      "note": "BATCH 1 (landed): four walks claimed a layer count that forgot the blank canvas's own Background layer, so each was off by one and none of them had ever passed since it was written. expectLayers counts every layer in the document including the locked Background, which other walks (pen-hands-back-walk) already allow for. Fixed the claims, not the app: frame-second-screen-walk (2->3, 1->2), combine-shapes-walk (5 claims), shapes-into-one-path-walk (5 claims), pen-width-before-you-draw-walk (1 claim). shapes-into-one-path-walk needed a second correction: the joined outline starts at the shape whose row the menu was opened on, so the triangle's top corner is point 1 and not point 0; both anchor claims now say 1 and the describe note says why. All four run green twice each, forced under a lock (PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh ... --no-build). Note for the lock list: rightClick and expectBox both ran correctly under the lock in these walks."
+    },
+    {
+      "t": "2026-09-20T14:23:38.726Z",
+      "note": "BATCH 2 (landed): two app bugs behind six of the 57, plus one stale walk. (1) The Columns section only arrived once a screen was already SHOWING its columns, and the tick box that starts them is that section's own first row, so a person who drew a screen and went looking for columns found nothing and the app's own Padding and Columns tutorial pointed at a section that could not be on screen. PanelSectionVisibility now waits for a SCREEN (Situation.documentHasColumns became documentHasFrame), which is the rule the file already states for Motion: a rule that hides the only door is not an automatic rule, it is a bug. Fixes screen-columns-walk, columns-follow-the-screen-walk, columns-follow-the-padding-walk, tutorial-padding-and-columns-walk. (2) Take the Tour's fifth card pointed at panel.geometry. Position and Size left the dock for a popover, so that anchor is never in the window, the card could not appear, and the tour stopped on its second-to-last step for everybody who took it. The card now points at the panel itself (the card before it can be skipped without picking anything, so every per-layer section can be absent) and its words no longer promise Position and Size; 'geometry' is off TutorialAnchor.knownPanelSections so the catalogue check cannot wave the next one through. Fixes tutorial-tour-walk and tutorial-finish-walk. (3) panel-section-drag dragged the Layers section past 'Position & Size', which is not a dock section any more; it drags past Measure Tool instead, which keeps the pair it was testing (a touch does not reorder, a drag past does). All seven walks green twice each under a forced lock; Scripts/test.sh green, 8511 tests."
+    },
+    {
+      "t": "2026-09-20T14:46:51.282Z",
+      "note": "BATCH 3 (partly landed, partly UNPROVED under the lock). Root cause found for the motion family: an 'expect field' step does not read the panel's playtestField markers at all. It reads real NSTextFields and the readouts a view says out loud through panelReadout (PlaytestHarness.panelReading). So 'Motion Empty', 'Motion One Layer', 'Effects Empty' and every '<Property> Summary' were markers no walk could ever claim, and 'Rotation' was never a field: the boxes are Rotation From, Rotation To, Around X, Around Y, Rotation Start, Rotation Over, Cycle Length. Fixed both ends. App: the Motion list's two prose lines and the Effects list's empty line now say themselves out loud with panelReadout, and a motion row's summary sentence does too, so a walk can claim the one line that says what a motion DOES. Walks: expect field 'Rotation' became 'Rotation From' in icon-export-animated, motion-swings-a-layer, motion-one-play-rule, tutorial-get-the-timing-right and tutorial-make-something-move, which is the same correction a-turning-layer-says-where-its-pivot-is-twice already made to the two pivot walks. PROVED: a purpose-built walk on the real probe claims Motion Empty and Effects Empty present, reads Motion Empty's sentence back word for word, and sees Motion Empty go when nothing is picked. one-unit-word-walk is still green, so the prose readouts do not upset the unit check. UNPROVED: every motion walk opens the Add Motion menu, and panelMenu cannot name an icon-only menu on a locked Mac (PlaytestPanelMenu.title falls back to accessibility when the button has no title, and a lock empties that). All nine motion-* and the two motion tutorials therefore stop at that step here, exactly as the thirteen effect-* walks do, which is the lock and not the change. Tried naming the plus with a playtestField so the menu could take its name from the row instead of accessibility: the marker registers but PlaytestPanelPress.fieldViews does not match it to the NSPopUpButton, so it did not work and was reverted. A sweep is the only thing that can settle these."
+    },
+    {
+      "t": "2026-09-20T14:51:11.390Z",
+      "note": "walks none -> frame-second-screen-walk, combine-shapes-walk, shapes-into-one-path-walk, pen-width-before-you-draw-walk, screen-columns-walk, columns-follow-the-screen-walk, columns-follow-the-padding-walk, tutorial-padding-and-columns-walk, tutorial-tour-walk, tutorial-finish-walk, panel-section-drag, pen-hands-back-walk, icon-export-animated-walk, motion-swings-a-layer-walk, motion-one-play-rule-walk, tutorial-get-the-timing-right-walk, tutorial-make-something-move-walk"
+    },
+    {
+      "t": "2026-09-20T14:51:16.269Z",
+      "note": "WHERE THIS STANDS after the 2026-09-20 batches. Of the 57 walks the two full sweeps agreed on: 12 are fixed and green twice each here (frame-second-screen, combine-shapes, shapes-into-one-path, pen-width-before-you-draw, screen-columns, columns-follow-the-screen, columns-follow-the-padding, tutorial-padding-and-columns, tutorial-tour, tutorial-finish, panel-section-drag, pen-hands-back); 1 more was found already passing on today's main and needs nothing (find-what-stayed-a-picture); 5 carry a correction that CANNOT be finished on this Mac (icon-export-animated, motion-swings-a-layer, motion-one-play-rule, tutorial-get-the-timing-right, tutorial-make-something-move: each opens the Add Motion menu, and an icon-only menu has no name while the screen is locked); 1 is diagnosed and handed to its own task (turn-two-shapes-into-pictures, now owned by a-shape-that-was-turned-into-a-picture-and-undon); and 2 were already fixed by another task before this one started (motion-pivot, motion-pivot-in-a-corner). That leaves 36 unread: motion-colour-picker, motion-loop-preview, motion-strip-way-back, motion-timing-strip, tutorial-two-parts-out-of-phase, tutorial-start-on-an-icon-frame, button-hug, library-drag, redline-with-components, retype-label, size-limits, colour-onto-an-off-part, component-whole-path, copy-a-look, copy-wording, crop-rounds-the-card, effects-room-for-the-one-you-opened, join-two-pen-paths, measure-row-menu, name-field-handback, panel-grip, panel-reads-the-marquee, piece-geometry, position-and-size-on-screen, read-every-label, separate-dark-window, separate-reads-text-study, separate-turn-into-text, shared-component-scale, style-on-a-copy, text-style-row-drop, tick-leads, turned-piece, type-the-last-three-numbers, width-reads-back, wrap-at-a-ceiling. Five of those (name-field-handback, shared-component-scale, width-reads-back, wrap-at-a-ceiling, measure-row-menu) fail on focus or rightClick, which a lock stops outright, so they need a logged-in Mac. A sweep was asked for. This task goes back to pending rather than done: it is the standing task the sweep writes its result into, and marking it done makes the next sweep file a duplicate (see the 2026-09-17 entry about walks-that-fail-in-the-full-sweep-2 and -3)."
     }
   ],
-  "walks": [],
-  "standing": "walk-sweep"
+  "walks": [
+    "frame-second-screen-walk",
+    "combine-shapes-walk",
+    "shapes-into-one-path-walk",
+    "pen-width-before-you-draw-walk",
+    "screen-columns-walk",
+    "columns-follow-the-screen-walk",
+    "columns-follow-the-padding-walk",
+    "tutorial-padding-and-columns-walk",
+    "tutorial-tour-walk",
+    "tutorial-finish-walk",
+    "panel-section-drag",
+    "pen-hands-back-walk",
+    "icon-export-animated-walk",
+    "motion-swings-a-layer-walk",
+    "motion-one-play-rule-walk",
+    "tutorial-get-the-timing-right-walk",
+    "tutorial-make-something-move-walk"
+  ],
+  "standing": "walk-sweep",
+  "started": "2026-09-20T14:02:02.533Z"
 }

@@ -1,0 +1,26 @@
+{
+  "feature": "Columns you can find, and a tour that finishes",
+  "epic": "unmanned-loop",
+  "summary": "Draw a screen and the Columns section is in the panel straight away, with the tick box that turns columns on, instead of appearing only after they were already on. Take the Tour and it reaches its last card instead of stopping two from the end.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: both are how the app behaves now.",
+  "try": [
+    { "do": "Open a new blank canvas and draw a screen with the Frame tool.", "shot": "2026-09-20-columns-arrive-with-a-screen.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Look down the panel for the Columns section. It is there, under Frame, with Show columns unticked." },
+    { "do": "Tick Show columns.", "shot": "2026-09-20-columns-drawn.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Untick it again, and check the Columns section stays where it is." },
+    { "do": "Open Help and choose Take the Tour." },
+    { "do": "Press Next through every card without clicking anything on the canvas." },
+    { "do": "Read the fifth card, the one headed \"Its settings show up here\", and check it points at the panel and finishes on \"That is the tour\"." }
+  ],
+  "evaluate": [
+    "On a screen with no columns yet, does Columns belong in the panel, or is it one section too many before you have asked for anything?",
+    "Is Show columns where you would look for it, or would you reach for the Layer menu first?",
+    "The tour's fifth card now says \"Pick something and this panel fills with its settings, under the list.\" Does that land when you have not picked anything?",
+    "The card points at the whole panel rather than one section in it. Is the highlight too big to mean anything?"
+  ],
+  "rough": [
+    "The tour's fifth card used to name Position and Size, which is a popover now. Rather than send the card to a section that is only there once you have picked something, it points at the panel. A better answer would be for the card before it to leave a layer picked, so this one can point at Appearance.",
+    "Nine motion walks and two motion tutorials could not be finished on this machine: every one of them opens the Add Motion plus, and an icon-only menu has no name to look up while the screen is locked. Their corrections are in but unproved until a sweep runs with somebody logged in.",
+    "Turning a shape into a picture, taking a piece out of it and undoing twice leaves a layer that answers Backspace with silence: no piece, no refusal. Filed as a-shape-that-was-turned-into-a-picture-and-undon."
+  ]
+}
