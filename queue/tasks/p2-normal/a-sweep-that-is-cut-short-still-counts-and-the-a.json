@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 25,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-19T15:34:56.696Z",
-  "updated": "2026-09-20T00:35:21.224Z",
+  "updated": "2026-09-20T00:38:03.229Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED FROM THE RECORD, on this machine, today.\\n\\nWhat happened: the loop started a sweep at 2026-09-18T14:43:10Z (queue/sweep/2026-09-18-074310.log). It got through 126 walks. The loop process then died at about 15:09Z, external to the sweep, and did not come back until it was started by hand at 2026-09-19T15:31Z.\\n\\nWhat that left behind, checked just now:\\n  $ ls queue/sweep/requested.json   ->  does not exist\\n  $ node -e (read latest.json) -> {began: 2026-09-18T13:33:07Z, ended: 2026-09-18T14:24:41Z, walks: 250, head: e2e5687fe}\\n  $ grep -c (walk result lines) queue/sweep/2026-09-18-074310.log  ->  126\\n  $ grep FAILED queue/sweep/2026-09-18-074310.log -> measure-chip-snap-walk  1s  FAILED  no done.json\\n\\nSo: the last recorded sweep is the one BEFORE the interrupted one, at the commit before last; 126 walk results including one failure were thrown away; and because sweep.sh run does mv -f requested.json .claimed.json before it starts (queue/bin/sweep.sh, the run branch), there is no pending request left for the loop to serve. queue/bin/sweep.sh status now says a sweep was last run against e2e5687f and that none is pending, which is true and is exactly the problem: commit ebbcfc3f has never been swept and nobody is going to.\\n\\n(The one FAILED walk was checked: Scripts/playtest-all.sh measure-chip-snap passes on its own in 14s, so it was a flake of the killed run, not a break. That evidence is logged on walks-that-fail-in-the-full-sweep.)\\n\\nTHE SHAPE OF THE FIX, not prescribed but the ground it has to cover. The claim is right - a request arriving during a sweep belongs to the next one - so do not stop claiming. Put the claimed requests back if the run never finished, or write the run down as it goes rather than only at the end, or both. There is already a partial-run path for the locked-screen case that records what it reached (complete: false, partial: true), so an interrupted run has somewhere honest to land; queue/bin/sweep-report.mjs already refuses to write anything for a run that got through no walk at all and already leaves the standing task open when a run did not cover the set. Prefer reusing that to inventing a second kind of incomplete sweep.",
@@ -86,8 +86,13 @@
     {
       "t": "2026-09-20T00:35:21.223Z",
       "note": "left rough, not filed: the progress line a narrowed run prints while it is going still counts against the whole set ('walk sweep: 2 of 532 walks done', 'INTERRUPTED at walk 2 of 532'). Only the live note is wrong; everything recorded and everything read back says the right thing. Pre-existing, cosmetic, and only ever seen by somebody deliberately narrowing a sweep to test this machinery."
+    },
+    {
+      "t": "2026-09-20T00:38:03.227Z",
+      "note": "A sweep that is killed now records what it reached and puts the request that asked for it back on the pile, both for a signal (sweep.sh handles it, records, exits 4) and for a SIGKILL (the new queue/bin/sweep-recover.mjs picks the claim up at the top of every sweep.sh verb). The claim carries the run's identity so a later pass can finish the job, and recovery also puts down the orphaned playtest-all, the caffeinate and the probe, which a SIGKILL otherwise leaves running for the rest of the set. A cut-short run says how much of the set it covered everywhere it is shown, its failures are recorded UNCONFIRMED with the walk that never finished named, a run that answered nothing records nothing, and the standing walk task is never closed by one. Proved by hand both ways with PHOTONZ_SWEEP_ARGS in a minute; queue/bin/sweep-interrupt-drill.mjs (41 checks) holds it and is in CI. The lost 2026-09-18 request was already re-asked and served by the 00:22 full sweep, so nothing is owed. Scripts/test.sh green, all nine queue drills green, pushed as ce6a802e."
     }
   ],
   "started": "2026-09-20T00:22:16.089Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-20T00:38:03.228Z"
 }
