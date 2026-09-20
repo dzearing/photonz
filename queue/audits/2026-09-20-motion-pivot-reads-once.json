@@ -1,0 +1,28 @@
+{
+  "feature": "A turning layer says where its pivot is once",
+  "epic": "icon-animate",
+  "summary": "A turn's Around row used to print the pivot's two numbers whenever the pivot was dragged somewhere with no name, and the At row an inch below printed the same two numbers again. Around now says Custom and leaves the position to At, so the value is stated once.",
+  "setup": "Photonz Dev, Experiments window, release Next. Motion is on by default. Draw one tall rectangle to stand in for a bell.",
+  "try": [
+    { "do": "Draw a tall rectangle, press Escape, then click it once to pick it." },
+    { "do": "Press the plus on the Motion header and choose Rotation." },
+    { "do": "Read the Around and At rows. Around says Its centre; At says the middle of the shape as two numbers." },
+    { "do": "Drag the crosshair labelled pivot from the middle of the shape to just above its top edge." },
+    { "do": "Read the two rows again. Around now says Custom, and only the At boxes carry the position.", "shot": "2026-09-20-motion-pivot-reads-once-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Open the Around menu and choose Top centre. It says Top centre again, and At follows it.", "shot": "2026-09-20-motion-pivot-reads-once-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Type 300 into the first At box and press Return. Around stays on Custom; only At changes." }
+  ],
+  "evaluate": [
+    "With the pivot somewhere of its own, does the panel now read as one setting rather than two?",
+    "Is Custom the right word here, or would you rather Around said something in the voice of its own list, like Its own spot?",
+    "Around is a menu whose current answer is not in the menu. Does that feel broken or ordinary?",
+    "Does At read as the place the position lives, now that it is the only row stating it?",
+    "The At boxes are still called Around X and Around Y to a screen reader. Does that matter to you?"
+  ],
+  "rough": [
+    "The word is Custom because the app already uses Custom for a size that is not one of the presets (New Frame, New Canvas), so it is one word for one idea. Its own spot would sit better beside Its centre and Top centre. Say which you want.",
+    "The two walks that drive the pivot by hand (motion-pivot-walk, motion-pivot-in-a-corner-walk) could not be re-run: they open the Add Motion menu, and a locked Mac cannot drive an open menu. They were both already failing before this change, on a separate break, and both are fixed here but unverified until the screen is unlocked.",
+    "Custom is a word the menu shows but does not offer: once you pick a named spot there is no way back to your own point except by dragging the crosshair again or typing into At. That is true of every menu with a custom value in it, and it is worth knowing before you pick Top centre to see what it looks like.",
+    "Both pictures here were taken on a Mac whose screen was locked, through a new walk written so the pivot panel can be photographed under a lock at all. Colours in them can read a shade dimmer than they are in person."
+  ]
+}

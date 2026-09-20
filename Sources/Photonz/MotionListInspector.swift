@@ -422,14 +422,18 @@ private struct MotionPivotSetting: View {
     private var box: CGRect { editorState.motionPivotHandle?.box ?? .zero }
     private var point: CGPoint { editorState.motionPivotPoint ?? .zero }
 
-    /// What the menu reads: the spot's name where it is on one, and the two
-    /// numbers where it is somewhere of its own, because a pivot dragged to
-    /// the mount of a bell has no name and "Custom" says nothing about where
-    /// it went.
-    private var reading: String {
-        if let named = editorState.motionPivotNamed { return named.title }
-        return "\(MotionEntry.text(Double(point.x))), \(MotionEntry.text(Double(point.y)))"
-    }
+    /// What the menu reads: the spot's name where the pivot is on one, and
+    /// "Custom" where it is somewhere of its own.
+    ///
+    /// It used to print the two numbers instead, on the grounds that "Custom"
+    /// says nothing about where the pivot went. What it actually said was the
+    /// SAME two numbers the At row prints an inch below it, so one value was
+    /// stated twice and neither reading told you anything the other did not.
+    /// Only one door is the readout ("One setting, two doors" in
+    /// UX-PATTERNS.md), and here that door is At: a menu of three spots cannot
+    /// set 142, so where it has no name to offer it says so in its own terms
+    /// and leaves the position to the row that exists to state it.
+    private var reading: String { (editorState.motionPivot ?? motion.turnsAbout).title }
 
     var body: some View {
         if isNumbers {

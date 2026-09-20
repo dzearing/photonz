@@ -581,8 +581,9 @@ numbers, and the At row directly beneath it prints the same two numbers
 in `MotionListInspector.settings`). **Only one door is the readout.** The other
 offers its choices, and where it has nothing to offer for the current value it
 says so in its own terms rather than repeating the reading from the row below.
-The shipped pivot rows disagree with that and are filed as
-`a-turning-layer-says-where-its-pivot-is-twice`.
+The pivot rows were corrected to that on 2026-09-20
+(`a-turning-layer-says-where-its-pivot-is-twice`): At states the position,
+Around says "Custom" where no name fits.
 
 **What two doors owe each other.**
 

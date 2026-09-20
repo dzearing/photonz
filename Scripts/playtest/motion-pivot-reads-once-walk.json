@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/motion-pivot-reads-once",
+  "seed": "One value, stated once. A turn's Motion row has two doors onto the point it turns about: Around, a menu of the three spots worth a name, and At, the two numbers. Both are honest doors — a menu cannot set 142 and two boxes cannot say \"its centre\" — but only one of them may be the READOUT. This walk opens a bell whose pivot has been dragged somewhere no name fits, and checks that Around says Custom while the At row alone carries 380, 140. Before this, Around printed those same two numbers an inch above the row that prints them. It is deliberately lock-safe: nothing in it opens a menu or asks accessibility for a name, so it photographs the panel on a Mac whose screen is locked, which is where the bug was first written up unphotographed.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/pivot-of-its-own.photonz", "width": 1320, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "click", "at": [380, 280] },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "reveal", "control": "Around", "in": "Rotation" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "describe", "stage": "1-a-pivot-of-its-own", "note": "THE PICTURE TO LOOK AT. The bell swings about a point above itself, which is where a bell hangs from and which no name fits. Around says Custom; the At row beneath it says 380, 140. One value, one readout." },
+    { "do": "expect", "control": "Around", "in": "Rotation", "reads": "Custom" },
+    { "do": "expect", "field": "Around X", "reads": "380" },
+    { "do": "expect", "field": "Around Y", "reads": "140" },
+    { "do": "panel", "stage": "1-a-pivot-of-its-own" },
+    { "do": "snapshot", "name": "1-around-says-custom" },
+
+    { "do": "describe", "stage": "2-the-named-spot", "note": "the crosshair is dragged back onto the middle of the shape, which IS a named spot, and Around has a name to offer again. The At row still reads the same point as numbers: the two doors answer different questions, they just stop answering the same one twice." },
+    { "do": "drag", "from": [380, 140], "to": [380, 280], "steps": 14 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "control": "Around", "in": "Rotation", "reads": "Its centre" },
+    { "do": "expect", "field": "Around X", "reads": "380" },
+    { "do": "expect", "field": "Around Y", "reads": "280" },
+    { "do": "panel", "stage": "2-the-named-spot" },
+    { "do": "snapshot", "name": "2-around-names-the-spot" }
+  ]
+}

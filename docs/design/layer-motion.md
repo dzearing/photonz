@@ -78,6 +78,13 @@ Three ways in, one value:
 | The **Around** menu | Its centre, Top centre, Bottom centre |
 | The **At** pair | two numbers on the canvas, for when a number is what you want |
 
+**At is the readout; Around is the offer.** Both rows show the one value, so
+only one of them may STATE it: the At boxes say where the pivot is, and Around,
+which has no name for a point dragged to the mount of a bell, says "Custom"
+rather than printing the same two numbers an inch above the row that prints
+them ("One setting, two doors" in `mocks/shared/UX-PATTERNS.md`). It shipped the
+other way on 2026-09-15 and was corrected on 2026-09-20.
+
 Grabbing the crosshair **starts the loop**, because a pivot cannot be judged on
 a still picture: with the layer sitting at nought degrees, changing what it
 turns around changes nothing you can see. That is one case of the one rule

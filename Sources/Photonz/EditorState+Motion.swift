@@ -234,12 +234,18 @@ extension EditorState {
     /// what the Around row types into. Nil where nothing is turning.
     var motionPivotPoint: CGPoint? { motionPivotHandle?.point }
 
-    /// The spot the pivot is sitting on, or nil where it is somewhere of its
-    /// own — what the Around menu shows as its current answer.
-    var motionPivotNamed: MotionPivot.Named? {
+    /// The pivot the Around menu is showing as its current answer: the one
+    /// under the hand while a drag is on, and the stored one otherwise. Nil
+    /// where nothing picked is turning.
+    ///
+    /// The whole pivot rather than just its named spot, because the menu asks
+    /// it for its title — a spot's name, or "Custom" where a drag has taken it
+    /// somewhere no name fits. The numbers for that spot belong to the At row
+    /// alone (`MotionPivotSetting.reading`).
+    var motionPivot: MotionPivot? {
         guard let motion = turningMotion else { return nil }
-        if let preview = motionPivotPreview, preview.motionID == motion.id { return preview.pivot.named }
-        return motion.turnsAbout.named
+        if let preview = motionPivotPreview, preview.motionID == motion.id { return preview.pivot }
+        return motion.turnsAbout
     }
 
     /// The pivot handle grabbed. The loop starts if it is not already running,

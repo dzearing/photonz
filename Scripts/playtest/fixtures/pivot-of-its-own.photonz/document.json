@@ -1,0 +1,115 @@
+{
+  "canvasSize" : [
+    820,
+    560
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "annotation" : {
+          "_0" : {
+            "arrowheadScale" : 1,
+            "arrowheadStyle" : "triangle",
+            "captionFontSize" : 20,
+            "captionPinned" : false,
+            "captionRoundness" : 1,
+            "colorHex" : "#2F6FED",
+            "cornerRadius" : 0,
+            "end" : [
+              0,
+              0
+            ],
+            "headColorHex" : "#2F6FED",
+            "lineEnd" : "round",
+            "shape" : "rectangle",
+            "start" : [
+              0,
+              0
+            ],
+            "strokePosition" : "inside",
+            "strokeWidth" : 0
+          }
+        }
+      },
+      "frame" : [
+        [
+          320,
+          180
+        ],
+        [
+          120,
+          200
+        ]
+      ],
+      "id" : "66D03615-B788-4E30-9991-B80EFD654E22",
+      "isLocked" : false,
+      "isVisible" : true,
+      "motions" : [
+        {
+          "curve" : {
+            "easeInOutSine" : {
+
+            }
+          },
+          "from" : {
+            "number" : {
+              "_0" : -12
+            }
+          },
+          "id" : "FAF65BF8-74CC-4E63-9E14-A0DB7210837A",
+          "isOn" : true,
+          "pivot" : {
+            "unit" : [
+              0.5,
+              -0.2
+            ]
+          },
+          "property" : "rotation",
+          "repeats" : {
+            "foreverThereAndBack" : {
+
+            }
+          },
+          "timing" : {
+            "durationMS" : 900,
+            "startMS" : 0
+          },
+          "to" : {
+            "number" : {
+              "_0" : 12
+            }
+          }
+        }
+      ],
+      "name" : "Bell",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#2F6FED",
+        "borderWidth" : 4,
+        "cornerRadius" : 0,
+        "effects" : [
+          {
+            "border" : {
+              "colorHex" : "#2F6FED",
+              "isOn" : true,
+              "position" : "inside",
+              "width" : 4
+            },
+            "kind" : "border"
+          }
+        ],
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 1
+}

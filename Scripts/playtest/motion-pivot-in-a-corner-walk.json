@@ -15,13 +15,14 @@
 
     { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
     { "do": "wait", "seconds": 1 },
-    { "do": "expect", "field": "Rotation", "present": true },
-    { "do": "expect", "control": "Around", "reads": "Its centre" },
+    { "do": "expect", "field": "Rotation From", "present": true },
+    { "do": "expect", "control": "Around", "in": "Rotation", "reads": "Its centre" },
 
     { "do": "drag", "from": [540, 305], "to": [420, 230], "steps": 14 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-parked-on-the-corner", "note": "the crosshair is dragged from the middle of the shape onto its top left corner, where the resize square already is. The Around row reading the corner's own numbers is the proof it got there." },
-    { "do": "expect", "control": "Around", "reads": "420, 230" },
+    { "do": "describe", "stage": "1-parked-on-the-corner", "note": "the crosshair is dragged from the middle of the shape onto its top left corner, where the resize square already is. The At boxes reading the corner's own numbers is the proof it got there." },
+    { "do": "expect", "field": "Around X", "reads": "420" },
+    { "do": "expect", "field": "Around Y", "reads": "230" },
     { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
     { "do": "snapshot", "name": "1-pivot-parked-on-a-corner" },
 
@@ -32,8 +33,9 @@
 
     { "do": "drag", "from": [420, 230], "to": [500, 300], "steps": 14 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-picked-up-again", "note": "THE BUG, and the whole of it. This press starts exactly on the corner. Before, it took hold of the corner square and resized the layer, and the pivot could never be moved from the picture again. Now the crosshair answers, and the Around row reads where it was taken. The box is the second half of the claim: 240 by 150, untouched, so nothing resized." },
-    { "do": "expect", "control": "Around", "reads": "500, 300" },
+    { "do": "describe", "stage": "3-picked-up-again", "note": "THE BUG, and the whole of it. This press starts exactly on the corner. Before, it took hold of the corner square and resized the layer, and the pivot could never be moved from the picture again. Now the crosshair answers, and the At boxes read where it was taken. The box is the second half of the claim: 240 by 150, untouched, so nothing resized." },
+    { "do": "expect", "field": "Around X", "reads": "500" },
+    { "do": "expect", "field": "Around Y", "reads": "300" },
     { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [240, 150], "within": 1 },
     { "do": "snapshot", "name": "3-crosshair-moved-off-the-corner" },
 
@@ -57,7 +59,7 @@
     { "do": "move", "at": [540, 230] },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "6-on-the-top-edge", "note": "the named spot a bell hangs from puts the crosshair on the middle of the top edge, which is where the top edge's own resize square is drawn. Same answer: the crosshair takes it." },
-    { "do": "expect", "control": "Around", "reads": "Top centre" },
+    { "do": "expect", "control": "Around", "in": "Rotation", "reads": "Top centre" },
     { "do": "expectCue", "says": "grab" },
     { "do": "snapshot", "name": "6-crosshair-on-the-top-edge" }
   ]

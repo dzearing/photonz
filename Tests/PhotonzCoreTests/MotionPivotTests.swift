@@ -63,6 +63,24 @@ struct MotionPivotTests {
         #expect(MotionPivot(unit: CGPoint(x: 0.5, y: -0.2)).named == nil)
     }
 
+    /// What the Around row reads.
+    ///
+    /// Around is the door that OFFERS the three spots; the At row beneath it
+    /// is the one that READS the position back. So a pivot somewhere of its
+    /// own says so in the menu's own terms, and never by printing the pair of
+    /// numbers the row below is already printing an inch away
+    /// (`a-turning-layer-says-where-its-pivot-is-twice`; the rule is "One
+    /// setting, two doors" in UX-PATTERNS.md).
+    @Test func theAroundRowNamesASpotOrSaysItIsCustom() {
+        #expect(MotionPivot.centre.title == "Its centre")
+        #expect(MotionPivot.topCentre.title == "Top centre")
+        #expect(MotionPivot.bottomCentre.title == "Bottom centre")
+        let ownSpot = MotionPivot(unit: CGPoint(x: 0.5, y: -0.2))
+        #expect(ownSpot.title == "Custom")
+        #expect(!ownSpot.title.contains(","),
+                "the two numbers belong to the At row alone")
+    }
+
     // MARK: - Reading a point off the canvas and putting it back
 
     /// The drag hands in a place on the canvas; the row hands in two typed
