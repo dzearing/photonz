@@ -49,22 +49,30 @@ public struct MotionStripLane: Identifiable, Hashable, Sendable {
     }
 }
 
-/// The lanes belonging to one layer, under a labelled hairline.
+/// The lanes belonging to one layer, under its row.
 ///
-/// A layer row is a HEADING and not a bar: the layer itself does not occupy
-/// time, the properties on it do. Drawing the layer as a bar of its own would
-/// be a bar with no start and no duration, which is a bar that lies.
+/// **A layer row carries a bar when the layer occupies time, and is a bare
+/// heading when it does not** (`docs/design/video-surface.md` §2). One rule,
+/// both jobs, no fork: a bell that rotates does not occupy time — the
+/// properties on it do, so a bar on its row would be a bar with no start and
+/// no duration, which is a bar that lies. A clip is exactly a start and an end,
+/// so its row is a bar and the lanes under it are what moves while it plays.
 public struct MotionStripGroup: Identifiable, Hashable, Sendable {
     public var layerID: UUID
     public var layerName: String
     public var lanes: [MotionStripLane]
+    /// The stretch of the document's time this layer occupies, nil for a layer
+    /// that is simply there the whole way through.
+    public var bar: LayerTime?
 
     public var id: UUID { layerID }
 
-    public init(layerID: UUID, layerName: String, lanes: [MotionStripLane]) {
+    public init(layerID: UUID, layerName: String, lanes: [MotionStripLane],
+                bar: LayerTime? = nil) {
         self.layerID = layerID
         self.layerName = layerName
         self.lanes = lanes
+        self.bar = bar
     }
 }
 
@@ -99,14 +107,18 @@ extension PhotonzDocument {
     public func motionStrip() -> [MotionStripGroup] {
         allLayers.compactMap { layer in
             let motions = layer.motions ?? []
-            guard !motions.isEmpty else { return nil }
+            // A row earns its place by having something to draw: a stretch of
+            // time, something moving, or both. A layer with neither is a
+            // labelled hairline with nothing under it.
+            guard !motions.isEmpty || layer.occupiesTime else { return nil }
             return MotionStripGroup(
                 layerID: layer.id,
                 layerName: layer.name,
                 lanes: motions.map {
                     MotionStripLane(layerID: layer.id, motionID: $0.id,
                                     title: $0.property.title, timing: $0.timing, isOn: $0.isOn)
-                })
+                },
+                bar: layer.time)
         }
     }
 
@@ -116,6 +128,12 @@ extension PhotonzDocument {
     public func motionStripEdges(excluding motionID: UUID) -> [MotionStripEdge] {
         var edges = [MotionStripEdge(ms: 0, name: MotionStripCopy.topOfTheLap, isStart: true)]
         for group in motionStrip() {
+            // A clip's own two ends are edges like any other, so a motion
+            // dragged along the strip can be landed on the cut it belongs to.
+            if let bar = group.bar {
+                edges.append(MotionStripEdge(ms: bar.inMS, name: group.layerName, isStart: true))
+                edges.append(MotionStripEdge(ms: bar.outMS, name: group.layerName, isStart: false))
+            }
             for lane in group.lanes where lane.motionID != motionID {
                 edges.append(MotionStripEdge(ms: lane.timing.startMS, name: group.layerName,
                                              isStart: true))
@@ -131,6 +149,9 @@ extension PhotonzDocument {
 public enum MotionStripCopy {
     public static let topOfTheLap = "the start"
     public static let title = "One cycle"
+    /// What the same strip is called when what it measures FINISHES rather
+    /// than starting over: a recording, not an icon.
+    public static let documentTitle = "Timeline"
     /// What the strip is called when it is not open: the name on the row left
     /// behind, so a person who put it away can see what they put away.
     public static let stripName = "Timing"
@@ -167,7 +188,11 @@ public enum MotionStripSummary {
         guard let group = spokenFor(groups: groups, selectedLayerID: selectedLayerID) else {
             return "\(groups.count) layers moving · \(lap)"
         }
-        return "\(group.layerName) · \(properties(of: group)) · \(lap)"
+        let moving = properties(of: group)
+        // A clip with nothing moving on it has no middle to say. An empty
+        // segment between two separators reads as a missing word.
+        guard !moving.isEmpty else { return "\(group.layerName) · \(lap)" }
+        return "\(group.layerName) · \(moving) · \(lap)"
     }
 
     /// The one layer the row can speak for: the picked one where it is moving,
@@ -202,10 +227,17 @@ public enum MotionStripSummary {
 /// bar would simply be clipped, which reads as a bug rather than as a fact
 /// about the animation.
 public struct MotionStripRuler: Hashable, Sendable {
-    /// How long one lap is.
+    /// How long one lap is. For a document that finishes, the document itself.
     public let cycleMS: Double
     /// How much time the strip's width covers, lap and headroom together.
     public let spanMS: Double
+    /// Whether what this ruler measures starts over when it gets to the end.
+    ///
+    /// True for an icon, which is what the headroom and the dashed line are
+    /// for. False for a document with a last frame: there is nothing past the
+    /// last frame to overrun into and nothing to restart, so the ruler ends
+    /// exactly where the picture does.
+    public let repeats: Bool
 
     /// How much room past the end of the lap, as a share of the lap. A third is
     /// enough to draw a bar that overruns by a tenth of a second and still
@@ -216,6 +248,17 @@ public struct MotionStripRuler: Hashable, Sendable {
         let cycle = Double(max(1, cycleMS))
         self.cycleMS = cycle
         self.spanMS = cycle * (1 + Self.headroom)
+        self.repeats = true
+    }
+
+    /// The ruler a document with a last frame gets: it measures the document
+    /// and stops. No headroom, because a bar cannot overrun a picture that has
+    /// ended, and no restart mark, because nothing restarts.
+    public init(documentMS: Int) {
+        let length = Double(max(1, documentMS))
+        self.cycleMS = length
+        self.spanMS = length
+        self.repeats = false
     }
 
     /// Where a millisecond falls across the strip's width, nought at the left
@@ -225,7 +268,9 @@ public struct MotionStripRuler: Hashable, Sendable {
     /// The other way round: the millisecond a fraction of the width lands on.
     public func ms(atFraction fraction: Double) -> Double { fraction * spanMS }
 
-    /// Where the dashed line goes: the moment the lap starts over.
+    /// Where the dashed line goes: the moment the lap starts over. It sits on
+    /// the right hand edge, and so is not drawn, for a ruler that does not
+    /// repeat.
     public var repeatsFraction: Double { fraction(ofMS: cycleMS) }
 
     /// One number written along the top.

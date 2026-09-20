@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-19T17:39:58.153Z",
+  "updated": "2026-09-20T10:05:00.217Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-19T17:39:58.152Z",
       "note": "ACCEPTANCE ITEM 1 NEEDS CORRECTING BEFORE THIS IS BUILT, from the video design pass (2026-09-19, docs/design/video-surface.md, UX-PATTERNS D18). It says a split makes 'two ordinary layers'. A timeline row is a layer, so two layers means two rows, which means a row per cut and an unusable timeline after five of them. The settled answer: splitting adds a PIECE to the same row, not a row. Each piece is separately selectable, trimmable, movable and carries its own effects, and the layers list shows the layer once with its piece count. 'Pieces' is the word the shipping trim bar already says on screen ('3 pieces'), so it is not a new one to teach. The seam between two pieces is an edit point (comp-video section 02), which is also what a transition attaches to."
+    },
+    {
+      "t": "2026-09-20T10:05:00.216Z",
+      "note": "The model this needs landed on 2026-09-20 in time-lives-in-the-document-and-a-layer-can-have: a layer carries LayerTime (in, out, and where in its own source that reads from, PhotonzCore/DocumentTime.swift), the document carries durationMS, and the timing strip already DRAWS a bar for a layer that has an in and an out. What is missing and belongs here is the grip: the bar has no gesture on it, so an in and an out cannot yet be dragged, and the design says they are never typed in the panel. LayerTime.withIn/withOut/moved(toInMS:) are written and tested for exactly that, and MotionStripDrag next door is the shape the gesture should take."
     }
   ]
 }

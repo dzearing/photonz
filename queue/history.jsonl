@@ -5669,3 +5669,8 @@
 {"t":"2026-09-20T08:46:17.005Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
 {"t":"2026-09-20T08:46:17.056Z","ev":"task_note","id":"the-dev-app-says-how-far-behind-it-is"}
 {"t":"2026-09-20T08:46:23.811Z","ev":"task_done","id":"the-dev-app-says-how-far-behind-it-is","from":"in_progress","note":"The dashboard hero now says 'dev app 12 commits behind · lock held 2 days' over an amber strip with the whole story, and the same sentence (queue.mjs devapp, from devAppState in queue-lib.mjs) is printed by refresh-dev-app.sh on every bail and by testing.sh. Nothing built, signed, quit, relaunched or cleared; the lock is still held. Verified live on the real dashboard (screenshot in the audit) and end to end in a throwaway repo for the unlocked branch. dev-app-drill.mjs (31 checks) green, Scripts/test.sh green (8413 tests). Audit: queue/audits/2026-09-20-dev-app-behind.json"}
+{"t":"2026-09-20T09:46:26.705Z","ev":"sweep_pass","walks":260,"passed":259,"failed":1,"seconds":3575,"complete":false,"total":538,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T09:46:26.830Z","ev":"task_started","id":"time-lives-in-the-document-and-a-layer-can-have","title":"Time lives in the document, and a layer can have an in and an out","priority":"p1-high"}
+{"t":"2026-09-20T10:05:00.219Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T10:05:00.266Z","ev":"task_note","id":"a-document-can-have-time"}
+{"t":"2026-09-20T10:05:00.314Z","ev":"task_walks","id":"time-lives-in-the-document-and-a-layer-can-have","walks":[]}

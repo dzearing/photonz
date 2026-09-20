@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-20T08:38:27.225Z",
+  "updated": "2026-09-20T10:05:00.265Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same",
     "time-lives-in-the-document-and-a-layer-can-have"
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-20T08:38:27.224Z",
       "note": "SPLIT by the manager pass 2026-09-20. The model half came out as time-lives-in-the-document-and-a-layer-can-have and can be built now: a duration on the document, an in and an out on a layer, the core model, the strip drawing a bar, the renderer compositing at a moment, and the recording window re-pointed at the shared model. What stays here is everything the pending trim-and-send card actually decides: where a recording OPENS, the timeline appearing in the ordinary window, a clip being an ordinary layer, and the retirement of VideoEditorState and VideoEditorView. Reason for the split: with the whole foundation behind one card the focus epic had zero claimable tasks this morning, and the card decides where a recording opens rather than what time IS."
+    },
+    {
+      "t": "2026-09-20T10:05:00.264Z",
+      "note": "The model half landed on 2026-09-20 in time-lives-in-the-document-and-a-layer-can-have. PhotonzCore now has DocumentTime.swift: LayerTime (in, out, source offset, source length), PhotonzDocument.durationMS/hasTime/documentDurationMS/timelineLengthMS, and drawn(atTimeMS:) which hands the renderer an ordinary document with whatever is off screen at that moment hidden and everything moving sampled there. MotionStripGroup gained a bar, so a layer row is a bar when it has an in and an out and a heading when it does not, and MotionStripRuler gained a documentMS form with no headroom and no restart mark. VideoCutList.layerTimes() projects a cut recording straight into it. What is left here is unchanged and still needs the card: opening a recording in the ordinary editor, a clip being an ordinary layer, and retiring VideoEditorState/VideoEditorView. One wiring note for whoever picks this up: EditorState.hasMotionStrip now returns true for a document with time gated on next-cut-a-recording rather than on next-motion-strip, so a video keeps its timeline with the Motion flag off."
     }
   ]
 }

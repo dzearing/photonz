@@ -36,16 +36,22 @@ struct CutStrip: View {
             let duration = max(state.duration, 0.0001)
             let width = max(1, geo.size.width)
             let selected = state.selectedPieceIndex
-            let playX = CGFloat(min(max(0, state.currentTime), duration) / duration) * width
+            // The recording's pieces said in the document's own units, measured
+            // by the SAME ruler the timing strip measures a document with
+            // (`DocumentTime.swift`). One arithmetic, two strips: when a
+            // recording opens as an ordinary document made of clip layers,
+            // nothing about where a piece lands has to be worked out twice.
+            let times = state.cuts.layerTimes()
+            let ruler = MotionStripRuler(documentMS: state.cuts.documentDurationMS)
+            let playX = width * ruler.fraction(ofMS: playheadMS(duration: duration))
 
             ZStack(alignment: .leading) {
-                ForEach(Array(state.cuts.pieces.enumerated()), id: \.offset) { index, piece in
-                    let range = state.cuts.timelineRange(ofPiece: index) ?? (0, 0)
-                    let x = CGFloat(range.start / duration) * width
-                    let w = CGFloat(piece.duration / duration) * width
+                ForEach(Array(times.enumerated()), id: \.offset) { index, time in
+                    let x = width * ruler.fraction(ofMS: Double(time.inMS))
+                    let w = width * ruler.fraction(ofMS: Double(time.lengthMS))
                     let style = CutStripBlockStyle.block(
                         isPicked: index == selected,
-                        playedFraction: playedFraction(in: range, playhead: state.currentTime))
+                        playedFraction: playedFraction(in: time, playheadMS: playheadMS(duration: duration)))
                     block(style)
                         .frame(width: max(2, w - joinGap), height: style.height)
                         .offset(x: x + joinGap / 2)
@@ -123,11 +129,15 @@ struct CutStrip: View {
         }
     }
 
-    private func playedFraction(in range: (start: TimeInterval, end: TimeInterval),
-                                playhead: TimeInterval) -> Double {
-        let length = range.end - range.start
-        guard length > 0 else { return 0 }
-        return min(max(0, (playhead - range.start) / length), 1)
+    /// Where the playhead is, in the document's own milliseconds and never
+    /// past the last frame.
+    private func playheadMS(duration: TimeInterval) -> Double {
+        Double(min(max(0, state.currentTime), duration) * 1000)
+    }
+
+    private func playedFraction(in time: LayerTime, playheadMS: Double) -> Double {
+        guard time.lengthMS > 0 else { return 0 }
+        return min(max(0, (playheadMS - Double(time.inMS)) / Double(time.lengthMS)), 1)
     }
 
     private var pieceSummary: String {

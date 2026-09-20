@@ -18,8 +18,15 @@ extension EditorState {
     /// chrome saying "nothing here" costs canvas and tells you what you already
     /// know by looking at the picture.
     var hasMotionStrip: Bool {
-        guard Experiments.shared.motionStripEnabled, let document else { return false }
-        return document.hasMotion
+        guard let document else { return false }
+        // Two jobs, one strip, and two different switches. A document with a
+        // duration has a row per clip whether or not anything on it is
+        // animated, so its timeline is part of cutting a recording and cannot
+        // depend on the Motion list existing — a video with the Motion flag off
+        // would otherwise lose its timeline and with it the document
+        // (`docs/design/video-surface.md` §2, §6).
+        if document.hasTime { return Experiments.shared.cutRecordingEnabled }
+        return Experiments.shared.motionStripEnabled && document.hasMotion
     }
 
     /// Whether it is on screen right now: there is one, and it has not been
@@ -52,11 +59,24 @@ extension EditorState {
     /// pointer instead of following it.
     var motionStripCycleMS: Int {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
-        return max(1, document?.motionCycleLengthMS ?? 1)
+        return max(1, document?.timelineLengthMS ?? 1)
     }
 
+    /// Whether this document finishes rather than repeating. A recording has a
+    /// last frame; an icon starts over.
+    var motionStripMeasuresADocument: Bool { document?.hasTime ?? false }
+
     /// The ruler the strip is drawn against.
-    var motionStripRuler: MotionStripRuler { MotionStripRuler(cycleMS: motionStripCycleMS) }
+    ///
+    /// Two rulers, and they are not interchangeable. A lap leaves a third of
+    /// itself spare past the end so a bar that overruns the restart has
+    /// somewhere to be drawn. A document has a last frame, so its ruler ends
+    /// where the picture does and there is no restart to mark.
+    var motionStripRuler: MotionStripRuler {
+        motionStripMeasuresADocument
+            ? MotionStripRuler(documentMS: motionStripCycleMS)
+            : MotionStripRuler(cycleMS: motionStripCycleMS)
+    }
 
     /// Whether the lap simply follows the longest motion.
     var motionCycleIsAutomatic: Bool { document?.motionCycleIsAutomatic ?? true }

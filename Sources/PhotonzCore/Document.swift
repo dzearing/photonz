@@ -54,6 +54,21 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// that loops is. It also means the ruler holds still while a bar is
     /// dragged along it, instead of rescaling under the hand that is dragging.
     public var motionCycleMS: Int?
+    /// How long this document runs for, in milliseconds, or nil for a document
+    /// with no time in it: the far commoner case, and every document anybody
+    /// has today (`DocumentTime.swift`).
+    ///
+    /// It has to be sayable rather than read off the layers, because a
+    /// duration that always ended with the last clip could never hold on a
+    /// frame after it. A document with a duration is a document with a
+    /// timeline; one without is exactly the window everybody has been using.
+    public var durationMS: Int? {
+        get { storedDurationMS }
+        // A document a millisecond long, or none, is not a document with time
+        // in it. Nought is how a duration gets cleared.
+        set { storedDurationMS = (newValue ?? 0) > 0 ? newValue : nil }
+    }
+    private var storedDurationMS: Int?
     /// What the app has read off the pictures in this document, so a separated
     /// run's row says its words the moment the file opens rather than after a
     /// second of background reading (`ReadWords.swift`).
@@ -80,7 +95,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
-        case gridOriginX, gridOriginY, motionCycleMS, readWords
+        case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -103,6 +118,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // cycle simply follows its longest motion saves byte for byte as it did
         // before laps could be written down at all.
         if let motionCycleMS { try c.encode(motionCycleMS, forKey: .motionCycleMS) }
+        // A document with no time in it writes no duration, so every picture
+        // saved before time existed is byte for byte what it was.
+        if let durationMS { try c.encode(durationMS, forKey: .durationMS) }
         // A document nothing has been read off writes no readings key, so one
         // saved before the app kept its reading is byte for byte what it was.
         if !readWords.isEmpty { try c.encode(readWords, forKey: .readWords) }
@@ -133,6 +151,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Nothing written means the lap follows the longest motion, which is
         // what every document written before this did.
         motionCycleMS = try c.decodeIfPresent(Int.self, forKey: .motionCycleMS)
+        // Nothing written means no time in the document, which is what every
+        // document written before this did.
+        storedDurationMS = try c.decodeIfPresent(Int.self, forKey: .durationMS)
         // Nothing written means nothing has been read off this document's
         // pictures yet, which is what every document written before this did:
         // it is read in the background on open, exactly as it was.

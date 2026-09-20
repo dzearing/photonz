@@ -97,6 +97,61 @@ struct RenderPerfTests {
         MachineSpeed.check("12MP/10-layer full render", medianMS: median, baselineMS: 26)
     }
 
+    /// **A frame of video.** The same 12MP document, given a duration and cut
+    /// into clips, composited at one moment of its own clock.
+    ///
+    /// The renderer needs nothing new to do it: `drawn(atTimeMS:)` hands back
+    /// an ordinary document with whatever is off screen at that moment hidden,
+    /// and compositing an ordinary document is what the renderer has always
+    /// done. So the only thing this measures is what asking for a moment COSTS
+    /// on top of a render — and the answer has to be small, because a video is
+    /// this question asked sixty times a second.
+    @Test func compositesAFrameOfVideoWithinBudget() {
+        let store = ImageStore()
+        var doc = makeBenchmarkDocument(store: store)
+        // Six seconds, with the nine layers over the background taking a second
+        // each, so at any moment the picture is the background and one clip.
+        for index in 1..<doc.layers.count {
+            doc.layers[index].time = LayerTime(inMS: (index - 1) * 667, outMS: index * 667)
+        }
+        doc.durationMS = 6000
+        #expect(doc.hasTime)
+        let renderer = DocumentRenderer()
+        #expect(renderer.render(doc.drawn(atTimeMS: 0), store: store) != nil)
+
+        // What asking for the moment costs on its own, away from the GPU.
+        var modelSamples: [Double] = []
+        var renderSamples: [Double] = []
+        let clock = ContinuousClock()
+        for round in 0..<10 {
+            let moment = round * 600
+            var frame = doc
+            modelSamples.append(ms(of: clock.measure { frame = doc.drawn(atTimeMS: moment) }))
+            renderSamples.append(ms(of: clock.measure { _ = renderer.render(frame, store: store) }))
+        }
+        modelSamples.sort()
+        renderSamples.sort()
+        let model = modelSamples[modelSamples.count / 2]
+        let render = renderSamples[renderSamples.count / 2]
+        print("[perf] 12MP/10-layer frame at a moment — "
+              + "picking the moment \(String(format: "%.2f", model))ms, "
+              + "compositing it \(String(format: "%.1f", render))ms, "
+              + "together \(String(format: "%.1f", model + render))ms "
+              + "against a 16ms budget")
+
+        // Working out WHICH layers are on screen is list arithmetic on ten
+        // layers. If it ever costs a millisecond, something in it has started
+        // touching pixels.
+        MachineSpeed.check("12MP/10-layer pick the moment", medianMS: model, baselineMS: 1)
+        MachineSpeed.check("12MP/10-layer composite a frame at a moment",
+                           medianMS: model + render, baselineMS: 18)
+    }
+
+    private func ms(of duration: Duration) -> Double {
+        Double(duration.components.seconds) * 1000
+            + Double(duration.components.attoseconds) / 1e15
+    }
+
     /// The same 12MP document with five of its layers wrapped in one styled
     /// group. A styled group composites its children into a private buffer
     /// before the group's own shadow and fade apply, which is the expensive

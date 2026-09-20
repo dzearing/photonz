@@ -18390,3 +18390,54 @@ in and ships two real pictures.
 
 Next: the progress bar has been proved but never seen, because nothing in the
 walk set saves slowly enough to draw one. The audit's rough list says so.
+
+## 2026-09-20 — Time lives in the document, and a layer can have an in and an out
+
+Queue task `time-lives-in-the-document-and-a-layer-can-have` (epic `video-cutting`),
+the half of `a-document-can-have-time` that does not need the pending decision card.
+
+**What landed.** `Sources/PhotonzCore/DocumentTime.swift`: `LayerTime` (an in, an
+out, and for a piece of a recording where in its own source that reads from and
+how long that source is), `Layer.time`, `PhotonzDocument.durationMS`, and the
+questions that follow from them — `hasTime`, `documentDurationMS`,
+`timelineLengthMS`, `lastDrawableTimeMS`, and `drawn(atTimeMS:)`, which hands back
+an ordinary document with whatever is off screen at that moment hidden and
+everything moving sampled there. The renderer needed no change at all: compositing
+an ordinary document is what it has always done.
+
+`MotionStripGroup` gained a `bar`, so **a layer row is a bar when it has an in and
+an out and a bare heading when it does not** — one rule, both jobs, which is what
+keeps the icon strip and the video timeline one component. `MotionStripRuler`
+gained a `documentMS` form with no headroom and no restart mark, because a
+document has a last frame and nothing to overrun into. `VideoCutList.layerTimes()`
+projects a cut recording straight into the model, round-tripped in tests.
+
+The recording window's strip is re-pointed at that shared ruler rather than
+dividing seconds by seconds on its own, and a test asserts the two agree to 1e-9
+so the re-point moved no pixels.
+
+**Two clocks, kept apart.** An icon repeats: motion timing is measured from the
+top of a lap and wraps, and the lap has room past it. A document finishes: a
+`LayerTime` is measured from the first frame and nothing wraps. The strip picks
+its ruler from `document.hasTime` and `drawn(atTimeMS:)` samples motion with the
+document's own length as the cycle, so nothing wraps inside a recording.
+
+**Perf.** A 12MP/10-layer document given a six second duration and cut into clips:
+picking the moment costs **0.02ms** (it is list arithmetic and never touches a
+pixel), compositing that frame costs **16.8ms** on the cold full-render path
+against 26.7ms for the same document with everything on screen. Recorded in
+`docs/progress/perf.md`; guarded by `compositesAFrameOfVideoWithinBudget`.
+
+**Verified.** 8459 tests green. The eight recording walks that survive a locked
+screen all passed (`cut-a-recording`, `trim-with-pieces`, `trim-catches-on-a-cut`,
+`trim-handle-freed-from-a-cut`, `trim-keeps-the-piece-you-picked`,
+`trim-cancel-after-a-delete`, `trim-save-send`, `close-a-trimmed-recording`,
+`undo-while-trimming`), with real pictures of the cut strip. `redline-walk` ran all
+70 steps and photographed an ordinary editor with no timeline in it. All nine
+`motion-*` walks need a control by name and the Mac was locked throughout, so none
+of them could run; a full sweep is requested.
+
+**What is next.** The bar cannot be dragged and nothing can make a document with
+time yet. Both are folded into the tasks that already own them
+(`cut-arrange-and-retime-what-is-on-the-timeline`, `a-document-can-have-time`).
+The audit is `queue/audits/2026-09-20-time-in-the-document.json`.

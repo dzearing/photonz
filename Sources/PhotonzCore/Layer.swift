@@ -1538,6 +1538,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// the layer stored here is always the one you can still drag.
     public var motions: [LayerMotion]?
 
+    /// The stretch of the document's timeline this layer occupies: a point
+    /// where it starts and a point where it ends (`DocumentTime.swift`). Nil
+    /// is a layer that is simply there the whole time, which is every layer in
+    /// every document written before this existed.
+    ///
+    /// Nothing here is ever pixels. A clip is this plus a reference to what it
+    /// plays, so cutting a recording into pieces copies no frames and throwing
+    /// a piece away throws none away.
+    public var time: LayerTime?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1623,6 +1633,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // A copy of a layer does what the original does: copying the look and
         // dropping the movement would be half a duplicate.
         copy.motions = motions
+        // ...and it occupies the same stretch of time, for the same reason.
+        copy.time = time
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText
@@ -1658,6 +1670,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.textStyleID = textStyleID
         copy.effectStyleBindings = effectStyleBindings
         copy.motions = motions
+        copy.time = time
         copy.isARunOfText = isARunOfText
         copy.labelledBy = labelledBy
         map[id] = copy.id

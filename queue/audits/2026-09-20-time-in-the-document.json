@@ -1,0 +1,28 @@
+{
+  "feature": "Time lives in the document",
+  "epic": "video-cutting",
+  "summary": "The document can now say how long it runs for, and a layer can say when it arrives and when it goes. Nothing new is on screen yet: this is the model the video timeline will be drawn from, and the one visible change is that the recording strip now measures itself with the same ruler the timing strip uses.",
+  "setup": "Photonz Probe (or Photonz Dev), release Next, next-cut-a-recording on by default. Nothing to switch on. A picture with no time in it is untouched, which is most of what there is to check.",
+  "try": [
+    { "do": "Open any screenshot in the editor. Look at the bottom of the window: there is no timeline and no transport, exactly as before.", "shot": "2026-09-20-time-in-the-document-no-timeline.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Draw a shape, open Motion on it and add a rotation. The timing strip appears with a labelled hairline over one lane, unchanged." },
+    { "do": "Open a recording from History." },
+    { "do": "Move the playhead into the middle and press B to cut it into two pieces.", "shot": "2026-09-20-time-in-the-document-two-pieces.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Click the first piece and watch it take the accent. The blocks are laid out by the shared document ruler now, and should land on exactly the pixels they always did.", "shot": "2026-09-20-time-in-the-document-piece-picked.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Delete to drop the piece you picked, then undo it. Trim a handle, apply it, revert it." },
+    { "do": "Save a copy of the recording through the export sheet and check the file plays." }
+  ],
+  "evaluate": [
+    "Does a picture with no time in it look and behave exactly as it did yesterday?",
+    "On the recording strip, does any piece sit even a pixel away from where it used to?",
+    "Does the playhead still line up with the join when you scrub across a cut?",
+    "Is 'a layer has an in and an out' the right shape for what you will want to do to a clip, or does a clip need something the model does not carry?"
+  ],
+  "rough": [
+    "There is no way to SEE the new bar yet. A document can carry time, and the timing strip draws a bar for a layer that has an in and an out, but nothing in the app can make a document with time until a recording opens in the ordinary editor. That half is blocked on the pending decision card in a-document-can-have-time. Everything about the bar is proved by tests and by nothing on screen, and this audit does not pretend otherwise.",
+    "The bar cannot be dragged. The design says an in and an out are set by dragging on the strip and never typed in the panel; the bar is drawn but it has no grip on it yet. That is the next task in the epic, and there is nothing to grip until the blocked half lands.",
+    "A frame of video composited at a moment costs 16.8ms on this machine, against the 16ms target. Picking the moment is free (0.02ms); the 16.8ms is the ordinary cold full-render path, which has been over 16ms since the first day it was measured and which playback will not use. Numbers in docs/progress/perf.md.",
+    "The recording window still has its own window, its own player and its own idea of what a piece is. It measures time through the shared ruler now, which is what could be done without deciding where a recording opens, and no more than that.",
+    "Every motion walk needs a control by name and the Mac has been locked throughout, so none of the nine could run here. The eight recording walks that survive a lock all passed. A full sweep is requested."
+  ]
+}

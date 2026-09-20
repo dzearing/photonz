@@ -90,12 +90,24 @@ struct MotionStripView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
+    /// What the strip is measuring: one lap of something that repeats, or a
+    /// document that finishes.
+    private var stripTitle: String {
+        editorState.motionStripMeasuresADocument
+            ? MotionStripCopy.documentTitle : MotionStripCopy.title
+    }
+
     /// As tall as it has to be for the lanes it holds, and no taller.
     private var bodyHeight: CGFloat {
         let groups = editorState.motionStripGroups
         let lanes = groups.reduce(0) { $0 + $1.lanes.count }
+        // A row with a bar in it is as tall as a lane; a bare heading is the
+        // short hairline row it always was.
+        let headings = groups.reduce(CGFloat(0)) {
+            $0 + ($1.bar == nil ? Self.layerRowHeight : Self.laneHeight)
+        }
         let content = MotionStripRulerView.height
-            + CGFloat(groups.count) * Self.layerRowHeight
+            + headings
             + CGFloat(lanes) * Self.laneHeight
             // Room over the top lane for the bracket a drag draws.
             + 10
@@ -106,11 +118,14 @@ struct MotionStripView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text(MotionStripCopy.title.uppercased())
+            Text(stripTitle.uppercased())
                 .font(.system(size: 10, weight: .semibold))
                 .kerning(0.7)
                 .foregroundStyle(.tertiary)
-            cycleField
+            // How long a LAP is, which is a number only a thing that repeats
+            // has. A document's length is what it is made of, so there is
+            // nothing here to type.
+            if !editorState.motionStripMeasuresADocument { cycleField }
             Spacer(minLength: 0)
             // How fast the playhead below crosses this ruler. It belongs on the
             // strip as well as on the previews card because motion is on every
@@ -297,14 +312,49 @@ private struct MotionStripGroupView: View {
                     .truncationMode(.middle)
                     .foregroundStyle(isPicked ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
-                Rectangle().fill(.separator).frame(height: 1)
+                if let bar = group.bar {
+                    clipBar(bar)
+                } else {
+                    Rectangle().fill(.separator).frame(height: 1)
+                }
             }
-            .frame(height: MotionStripView.layerRowHeight)
+            .frame(height: rowHeight)
             .playtestField("Timing \(group.layerName)")
             ForEach(group.lanes) { lane in
                 MotionStripLaneView(lane: lane, layerName: group.layerName, laneWidth: laneWidth)
             }
         }
+    }
+
+    /// A layer that occupies time gets a bar, and it needs the same room a lane
+    /// gets to draw one in. A layer that does not keeps the labelled hairline
+    /// it has always had (`docs/design/video-surface.md` §2).
+    private var rowHeight: CGFloat {
+        group.bar == nil ? MotionStripView.layerRowHeight : MotionStripView.laneHeight
+    }
+
+    /// The stretch of the document this layer occupies, drawn where it happens.
+    ///
+    /// The accent means SELECTED and nothing else, which is the one rule the
+    /// shipped recording strip broke: there it ringed the range being kept in
+    /// trim and the piece being held on the strip, so the same colour meant
+    /// keep in one place and drop in the other.
+    private func clipBar(_ bar: LayerTime) -> some View {
+        let ruler = editorState.motionStripRuler
+        let x = laneWidth * ruler.fraction(ofMS: Double(bar.inMS))
+        let width = laneWidth * ruler.fraction(ofMS: Double(bar.lengthMS))
+        return ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(.quaternary.opacity(0.5))
+                .frame(height: MotionStripView.barHeight)
+            RoundedRectangle(cornerRadius: 5)
+                .fill(isPicked ? AnyShapeStyle(Color.accentColor.opacity(0.85))
+                               : AnyShapeStyle(.secondary.opacity(0.45)))
+                .frame(width: max(2, width), height: MotionStripView.barHeight)
+                .offset(x: x)
+        }
+        .frame(width: laneWidth, alignment: .leading)
+        .panelReadout("\(group.layerName) \(bar.inMS) to \(bar.outMS) ms")
     }
 
     private var isPicked: Bool { editorState.selectedLayerID == group.layerID }
@@ -530,6 +580,7 @@ private struct MotionStripMarksView: View {
             // does, that is not a mess to tidy up: it is the motion still
             // finishing while the loop has already begun again, which is what a
             // lag in something that repeats IS.
+            if ruler.repeats {
             VStack(alignment: .leading, spacing: 0) {
                 Text("repeats")
                     .font(.system(size: 8.5, design: .monospaced))
@@ -542,6 +593,7 @@ private struct MotionStripMarksView: View {
                     .frame(maxHeight: .infinity)
             }
             .offset(x: laneWidth * ruler.repeatsFraction)
+            }
             if editorState.isMotionPlaying {
                 Rectangle()
                     .fill(Color.red)

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:22.178Z",
-  "updated": "2026-09-20T08:38:27.157Z",
+  "updated": "2026-09-20T10:05:00.313Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SPLIT OUT of a-document-can-have-time by the manager pass on 2026-09-20, and this is the half that does NOT need the pending decision card.\n\nWhy the split. The design pass landed on 2026-09-19 as 72a2a75c with docs/design/video-surface.md, and it left exactly one question open: what happens to the trim-and-send fast lane once a recording opens in the ordinary window. That question decides where a recording OPENS. It does not touch the model underneath, the strip drawing, or the renderer. With the whole foundation sitting behind that card the focus epic had two claimable tasks this morning and then zero, so the model half comes out and can be built now.\n\nWhat stays behind in a-document-can-have-time, which now depends on this: opening a recording in the ordinary editor, the timeline appearing because the document has time, a clip being an ordinary layer you can pick and name and style, retiring VideoEditorState and VideoEditorView, and docs/design/video.md. None of that can be honestly built before the card is answered; all of it becomes straightforward once this lands.\n\nFiles. PhotonzCore has NO notion of time, duration, tracks or keyframes today. Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift are the app for a recording, with TrimTimeline and PlaybackScrubber bound to VideoEditorState rather than to a reusable model. Sources/Photonz/MotionStripView.swift is the strip; MotionStrip.swift says today that a layer row is a heading and not a bar, which is true of a bell that rotates and false of a clip, and the rule becomes: a bar when it has an in and an out, a heading when it does not.\n\nRead docs/design/video-surface.md first. It is the answer the rest of this set builds against, and it already settled where the transport and the timeline live, what the panel budget is, and how the fifteen clickthroughs reconcile.\n\nKeep the scope tight: no transitions, no audio lanes, no captions, no keyframes. Those are siblings and each will push back on the model; the model is right when they can be added without reopening it.",
@@ -32,7 +32,25 @@
     {
       "t": "2026-09-20T08:38:27.156Z",
       "note": "seq 340 -> 15"
+    },
+    {
+      "t": "2026-09-20T09:46:26.828Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T09:48:04.135Z",
+      "note": "Adversarial review before building. (1) The strip today only exists when document.hasMotion, and only lists layers with motions; a clip has neither, so the existence test and the grouping both have to widen or a document made of clips draws an empty strip. (2) MotionStripRuler has a third of a lap of headroom past the end, which is right for a loop and wrong for a document with a last frame: a recording drawn on it would sit in the left two thirds with an empty third after it. The file already says so in its own header. So a second ruler, no headroom, no repeat mark. (3) Two clocks would collide if motion timing stayed cycle-relative in a document with a duration; keeping motionCycleLengthMS for sampling and a separate timelineLengthMS for the ruler keeps them apart and leaves the sibling transitions task free. (4) Adding a .video case to LayerContent would ripple through every exhaustive switch in the app and is the OTHER half of the split (a clip being an ordinary layer), so the source reference stays out: the time carries an offset into its source, never pixels."
+    },
+    {
+      "t": "2026-09-20T09:48:04.135Z",
+      "note": "Scope call against the acceptance. Items 1,2,3,4,6,7 are buildable now. Item 8s try path (open a recording, cut it, the TIMING strip shows a bar per piece) needs a recording to open in the ordinary editor, which is exactly what the pending decision card in a-document-can-have-time blocks, so it cannot be honestly built here. Item 5 is met in the sense that does not need the card: the recordings time is projected into the shared document-time model (VideoCutList -> duration plus a LayerTime per piece, round tripped in tests) and the recording windows own strip is re-pointed to measure through the SAME MotionStripRuler the timing strip uses, so both strips share one arithmetic. Re-pointing the recording window at a real document made of clip layers stays with the blocked half."
+    },
+    {
+      "t": "2026-09-20T10:05:00.312Z",
+      "note": "owns no walks; the ones it names are examples"
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-20T09:46:26.827Z",
+  "walks": []
 }
