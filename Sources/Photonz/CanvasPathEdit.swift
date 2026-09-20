@@ -70,6 +70,11 @@ struct PathPointSweepDrag {
     /// What was picked when the press landed, which is what an abandoned
     /// sweep puts back.
     let before: Set<Int>
+    /// The level the band is latched to, should it turn out to be about the
+    /// LAYERS after all: the group you have stepped inside, the screen the
+    /// press landed on, or nil out on the canvas. Read at the press, the same
+    /// moment the layer band reads it (`marqueeContext`).
+    let level: UUID?
     var drag: MarqueeDrag
 }
 
@@ -324,6 +329,7 @@ extension CanvasNSView {
             layerID: picked.id, origin: picked.layer.frame.origin,
             adding: event.modifierFlags.contains(.shift),
             before: pathAnchorSelection,
+            level: pathPointSweepLevel(at: p),
             drag: MarqueeDrag(anchor: MarqueeDrag.corner(at: p)))
         refreshOverlays()
         return true
@@ -345,6 +351,38 @@ extension CanvasNSView {
         return false
     }
 
+    /// Which list a band started here would pick from, were it to turn out to
+    /// be about the layers: the screen it was drawn on, or the group you have
+    /// stepped inside, or the top level. Word for word what the layer band
+    /// latches at its own press (`marqueeContext`).
+    private func pathPointSweepLevel(at p: CGPoint) -> UUID? {
+        guard groupSelectionEnabled else { return nil }
+        if let viewport, groupAwarePick(at: p, zoom: viewport.zoom) == nil { return groupContext }
+        if let viewport,
+           case .sweep(let screen)? = document?.screenSurfacePress(
+               at: p, zoom: viewport.zoom, picked: pickedLayerIDs,
+               captionPillSize: Self.captionPillSizing) {
+            return screen
+        }
+        return groupContext
+    }
+
+    /// The band on screen, read the way the LAYER band reads it: clamped to
+    /// the canvas, and nil when it is too small to have gone round anything.
+    private func pathPointSweepLayerBand(_ sweep: PathPointSweepDrag) -> CGRect? {
+        guard let viewport else { return nil }
+        return sweep.drag.selectionRect(in: viewport.documentSize)
+    }
+
+    /// The layers this band has gone right round, the shape whose points are
+    /// showing excepted. Non-empty means the band is about the LAYERS, and
+    /// that is the whole of how the two gestures are told apart
+    /// (`PhotonzDocument.layerIDs(swept:besides:inside:)`).
+    func pathPointSweepLayerCatch(_ sweep: PathPointSweepDrag) -> [UUID] {
+        guard let document, let band = pathPointSweepLayerBand(sweep) else { return [] }
+        return document.layerIDs(swept: band, besides: sweep.layerID, inside: sweep.level)
+    }
+
     /// The box as it grows. The points it has caught so far are picked LIVE,
     /// so the answer is on the shape before the button comes up rather than
     /// after it.
@@ -352,9 +390,16 @@ extension CanvasNSView {
         guard var sweep = pathPointSweep else { return }
         sweep.drag.update(to: MarqueeDrag.corner(at: p))
         pathPointSweep = sweep
-        pathAnchorSelection = PathPointSweep.selection(caught: pathPointSweepCatch(sweep),
-                                                       startingFrom: sweep.before,
-                                                       adding: sweep.adding)
+        // Once the box has gone right round something else it is a LAYER band,
+        // and it says so while it is still in flight: the points it had
+        // gathered are handed back, the outlines of what it holds come up, and
+        // the band takes the look the layer band wears (`CanvasDisplay`). So
+        // nothing about letting go is a surprise.
+        pathAnchorSelection = pathPointSweepLayerCatch(sweep).isEmpty
+            ? PathPointSweep.selection(caught: pathPointSweepCatch(sweep),
+                                       startingFrom: sweep.before,
+                                       adding: sweep.adding)
+            : sweep.before
         refreshPathEditChrome()
         refreshOverlays()
     }
@@ -387,6 +432,36 @@ extension CanvasNSView {
             selectedLayerFrame = nil
             onSelectLayer(nil)
             commitSelection(nil, capture: true)
+            return true
+        }
+        // A band that went right round something else on the canvas is the
+        // gesture everybody already knows, so it does what it has always done:
+        // those layers are picked up, and the shape whose points were showing
+        // lets go with them. Before this the points took every band drawn
+        // anywhere, so one picked path made sweeping up layers impossible
+        // (switch-says-mixed-walk, 2026-09-19).
+        if let band = pathPointSweepLayerBand(sweep), !pathPointSweepLayerCatch(sweep).isEmpty {
+            pathAnchorSelection = []
+            refreshPathEditChrome()
+            announcePathEditHint()
+            let region = SelectionRegion.rect(Geometry.pixelAligned(band))
+            if sweep.adding {
+                // ⇧ adds the catch to what was already picked, exactly as a
+                // ⇧-band drawn anywhere else does. The band itself comes down:
+                // it describes this sweep and not the whole selection.
+                if let region {
+                    if !selectionTargetsPixels { selection = nil }
+                    onAddSweptLayers(region, sweep.level)
+                } else {
+                    refreshOverlays()
+                }
+                return true
+            }
+            // A plain band replaces. The press kept its hands off the
+            // selection, so letting go of the old pick happens here.
+            onClickedNothing()
+            selectedLayerFrame = nil
+            commitSelection(region, capture: true, inside: sweep.level)
             return true
         }
         pathAnchorSelection = PathPointSweep.selection(caught: pathPointSweepCatch(sweep),

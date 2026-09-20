@@ -1,0 +1,26 @@
+{
+  "feature": "Sweeping up layers while a path is picked",
+  "epic": "ui-building",
+  "summary": "A box drawn round several shapes picks them up again even when one shape is already picked. For a day it did nothing at all, because a picked path took every box on the canvas for its own points, which is also why the Outline row was reading \"on\" over three shapes when only one had a line.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is the Select tool on bare canvas.",
+  "try": [
+    { "do": "Press P and click four corners to draw a closed shape, clicking back on the first corner to shut it. Do that three times, side by side." },
+    { "do": "Click the first shape once, so it is picked and showing its points." },
+    { "do": "Drag a box round that shape alone: its points fill in, and the shape stays the layer that is picked.", "shot": "2026-09-20-sweep-past-a-picked-path-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Now drag a box right round all three shapes: all three are picked and the points let go." },
+    { "do": "Look at the Outline row in Appearance: it says Mixed, with \"1 of the 3 selected layers has an outline\" under it.", "shot": "2026-09-20-sweep-past-a-picked-path-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Escape, click the first shape again, then hold Shift and drag a box round the other two: they join the one already picked.", "shot": "2026-09-20-sweep-past-a-picked-path-3.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press the Outline switch once: all three get a line, and one undo puts all three back." }
+  ],
+  "evaluate": [
+    "When your box crosses the second shape, the band changes from gathering points to holding layers. Did you see it change in time to stop, or did you only find out when you let go?",
+    "Is \"the box has gone right round something else\" the rule you would have guessed, or did you expect a box to always be about the shape you have picked?",
+    "A box round the whole of one picked shape still takes its points rather than the shape. Is that what you wanted there?",
+    "Does the Mixed word on the Outline row, plus the line under it, tell you what one press will do before you press it?"
+  ],
+  "rough": [
+    "The rule is decided by what the box goes round, which means a small shape sitting between the points you are sweeping will flip the box to a layer box. The band says so while you drag, but it is still a judgement the app makes for you rather than a mode you chose.",
+    "Photoshop and Illustrator split this across two tools: one arrow picks layers, another picks points. Photonz puts both on Select. This fix makes the two live together, it does not settle whether they should be one tool.",
+    "No live picture of a half-drawn band is in this audit: a walk photographs the window between steps, not during a drag."
+  ]
+}

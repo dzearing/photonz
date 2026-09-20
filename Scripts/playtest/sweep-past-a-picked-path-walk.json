@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/sweep-past-a-picked-path",
+  "seed": "A picked path shows its points, and a box drawn on the canvas then means one of two things. A box that reaches nothing but this shape is about THIS SHAPE: it gathers its points, the box thrown right round the whole shape included. A box that has gone right round something ELSE is the gesture everybody already knows: it picks those layers up, and this shape lets go with them. Holding shift adds the catch to what was already picked instead of starting over. This walk draws three closed paths, picks one, and asks for all three answers in turn. It exists because for one day the points took EVERY box: with any path picked, three shapes could not be swept up at all, and the gesture did nothing visible rather than doing the wrong thing (found through switch-says-mixed-walk, 2026-09-19).",
+  "setup": { "forget": ["shapes", "panel", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+
+    { "comment": "Three closed paths, each shut by clicking back on the corner it started from.", "do": "tool", "tool": "pen" },
+    { "do": "click", "at": [140, 150] },
+    { "do": "click", "at": [380, 150] },
+    { "do": "click", "at": [380, 320] },
+    { "do": "click", "at": [140, 150] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "pen" },
+    { "do": "click", "at": [420, 150] },
+    { "do": "click", "at": [660, 150] },
+    { "do": "click", "at": [660, 320] },
+    { "do": "click", "at": [420, 150] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "pen" },
+    { "do": "click", "at": [700, 150] },
+    { "do": "click", "at": [940, 150] },
+    { "do": "click", "at": [940, 320] },
+    { "do": "click", "at": [700, 150] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [350, 200] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "expectPath", "anchors": 3, "picked": 0 },
+
+    { "do": "drag", "from": [110, 120], "to": [400, 350], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "picked": 3 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "describe", "stage": "1-own-points", "note": "a box round nothing but this shape is about this shape: all three of its points at once, and the layer picked is still the one that was picked" },
+    { "do": "snapshot", "name": "1-own-points" },
+
+    { "do": "drag", "from": [110, 120], "to": [1000, 350], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Path", "Path 2", "Path 3"] },
+    { "do": "expectPath", "anchors": 3, "picked": 0 },
+    { "do": "describe", "stage": "2-all-three", "note": "the same box carried on past the other two shapes is about the LAYERS: all three picked, and the points let go with them" },
+    { "do": "snapshot", "name": "2-all-three" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [350, 200] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "drag", "from": [400, 120], "to": [1000, 350], "steps": 12, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Path", "Path 2", "Path 3"] },
+    { "do": "describe", "stage": "3-shift-adds", "note": "holding shift, a box round the other two ADDS them to the shape that was already picked, the way a shift box does everywhere else" },
+    { "do": "snapshot", "name": "3-shift-adds" }
+  ]
+}

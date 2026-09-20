@@ -96,6 +96,21 @@ struct PathPartsTests {
         #expect(row.reachNote?.contains("outline") == true)
     }
 
+    @Test("Three closed paths with ONE line between them still read as Mixed, never as on")
+    func threeWithOneOutlineAreMixed() {
+        // The exact shape of the report: three picked, one outlined. A row
+        // that reads plain "on" here says all three have a line, and a press
+        // on it would take the one line away instead of giving the other two
+        // one (switch-says-mixed-walk).
+        let row = rows([path(closed: true),
+                        path(closed: true, strokeWidth: 0),
+                        path(closed: true, strokeWidth: 0)])[1]
+        #expect(row.isMixed)
+        #expect(!row.isOn)
+        #expect(row.reachNote == "1 of the 3 selected layers has an outline. "
+                + "Switching this on gives the rest one too.")
+    }
+
     @Test("The row answers to a steady name a walk can write")
     func steadyName() {
         #expect(rows([path(closed: true)])[1].steadyNames == ["outline"])

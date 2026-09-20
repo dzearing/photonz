@@ -119,4 +119,60 @@ struct PathPointSweepTests {
         #expect(bend.editTarget(at: onTheLever, zoom: 1,
                                 handlesShowing: PathContent.leversShowing(for: [1, 2])) == nil)
     }
+
+    // MARK: - When the box is about the LAYERS instead
+
+    /// A closed triangle 240 wide and 170 tall, standing at `x`.
+    private func triangle(at x: CGFloat, named name: String) -> Layer {
+        var content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 240, y: 0)),
+                                            PathAnchor(point: CGPoint(x: 240, y: 170))],
+                                  isClosed: true, fill: Paint(hex: "#FF3B30"))
+        content.strokeWidth = 4
+        return Layer(name: name, content: .path(content),
+                     frame: CGRect(x: x, y: 150, width: 240, height: 170))
+    }
+
+    private func threeTriangles() -> (PhotonzDocument, [Layer]) {
+        let layers = [triangle(at: 140, named: "Path"),
+                      triangle(at: 420, named: "Path 2"),
+                      triangle(at: 700, named: "Path 3")]
+        return (PhotonzDocument(canvasSize: CGSize(width: 1100, height: 720), layers: layers),
+                layers)
+    }
+
+    /// The report this rule comes from: one shape picked, a box thrown round
+    /// all three, and nothing happened at all, because the band belonged to
+    /// the picked shape's points and there was no way to say otherwise
+    /// (switch-says-mixed-walk, 2026-09-19).
+    @Test func aBoxRoundTheOtherShapesIsAboutTheLayers() {
+        let (doc, layers) = threeTriangles()
+        let caught = doc.layerIDs(swept: CGRect(x: 100, y: 110, width: 900, height: 250),
+                                  besides: layers[0].id)
+        #expect(caught == [layers[1].id, layers[2].id])
+    }
+
+    /// ...and a box round nothing but the shape you are working on is still
+    /// about its points, which is how every point of it is taken at once.
+    @Test func aBoxRoundThisShapeAloneIsStillAboutItsPoints() {
+        let (doc, layers) = threeTriangles()
+        #expect(doc.layerIDs(swept: CGRect(x: 100, y: 110, width: 340, height: 250),
+                             besides: layers[0].id).isEmpty)
+    }
+
+    /// A box over clear air has caught no layer either, so it stays with the
+    /// points and means "none of them".
+    @Test func aBoxOverClearAirCatchesNoLayer() {
+        let (doc, layers) = threeTriangles()
+        #expect(doc.layerIDs(swept: CGRect(x: 100, y: 450, width: 300, height: 200),
+                             besides: layers[0].id).isEmpty)
+    }
+
+    /// A box that only CROSSES the other shapes has not gone round them, so it
+    /// is still the points' box: the same rule the layer band has always run.
+    @Test func crossingTheOtherShapesIsNotCatchingThem() {
+        let (doc, layers) = threeTriangles()
+        #expect(doc.layerIDs(swept: CGRect(x: 100, y: 110, width: 900, height: 120),
+                             besides: layers[0].id).isEmpty)
+    }
 }

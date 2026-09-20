@@ -411,6 +411,27 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// with two whole layers off the top of the document selected instead.
     /// Nil — or an id that is not a group you can be inside — is the top
     /// level, which is every sweep in a document without groups.
+    /// The layers a band drawn while a path is showing its POINTS would pick
+    /// up: everything it goes right round, except that path itself.
+    ///
+    /// A box drawn while a path shows its points means one of two things, and
+    /// this is what tells them apart. A box that has gone right round
+    /// something ELSE on the canvas is the gesture everybody already knows:
+    /// take those layers. A box that has reached nothing but this shape is
+    /// about this shape, so it gathers the shape's points — the box thrown
+    /// round the WHOLE shape included, which is how all of them are taken at
+    /// once.
+    ///
+    /// Without the exception, a path picked anywhere in the document took
+    /// every band on the canvas with it: three shapes could not be swept up
+    /// at all once one of them was picked, and the gesture did nothing
+    /// visible rather than doing the wrong thing (found through
+    /// switch-says-mixed-walk, 2026-09-19).
+    public func layerIDs(swept rect: CGRect, besides path: UUID,
+                         inside context: UUID? = nil) -> [UUID] {
+        layerIDs(fullyInside: rect, inside: context).filter { $0 != path }
+    }
+
     public func layerIDs(fullyInside rect: CGRect, inside context: UUID? = nil) -> [UUID] {
         guard rect.width > 0, rect.height > 0 else { return [] }
         // Out on the canvas, and anywhere there is no level to be inside: a

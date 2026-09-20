@@ -660,6 +660,12 @@ extension CanvasNSView {
         let caught: [UUID]
         if let document, marquee != nil, let rect = marqueeRect, regionDrag == nil {
             caught = document.layerIDs(fullyInside: rect, inside: marqueeContext)
+        } else if let sweep = pathPointSweep {
+            // A box swept while a path shows its points is about the LAYERS
+            // the moment it has gone right round one of them, and it has to
+            // look it before it is let go, not after
+            // (`pathPointSweepLayerCatch`).
+            caught = pathPointSweepLayerCatch(sweep)
         } else {
             caught = []
         }
@@ -671,14 +677,19 @@ extension CanvasNSView {
         } else if pointSweepRect != nil {
             // The band over points says what it has caught exactly as the band
             // over layers does: it goes solid and washes blue the moment it is
-            // holding something, so letting go is never a surprise.
-            intent = .sweeping(caughtPoints: pathAnchorSelection.count)
+            // holding something, so letting go is never a surprise. Once it is
+            // holding LAYERS it is the layer band's own question again.
+            intent = caught.isEmpty
+                ? .sweeping(caughtPoints: pathAnchorSelection.count)
+                : .sweeping(caught: caught)
         } else {
             intent = .resting(targetsPixels: selectionTargetsPixels)
         }
         applyMarqueeBandStyle(Experiments.shared.marqueeIntentEnabled ? intent : .picksPixels,
                               whileDrawing: marquee != nil || pointSweepRect != nil)
-        refreshMultiSelectOutlines(caught: caught, sweeping: marquee != nil && marqueeRect != nil)
+        refreshMultiSelectOutlines(caught: caught,
+                                   sweeping: (marquee != nil && marqueeRect != nil)
+                                       || pointSweepRect != nil)
     }
 
     /// The two looks a rubber band wears, and the whole of how you can tell
