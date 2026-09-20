@@ -4,14 +4,34 @@
   "summary": "A recording opened in the ordinary editor can now be trimmed there: Trim is a tool in Crop's slot, it puts a handle on each end of the clip's bar in the timeline, and one glass capsule says how much is kept and ends the session. Nothing is thrown away, so trimming again gives the frames back.",
   "setup": "Photonz Dev, Experiments window, release Next. Turn ON 'a recording is a document' and 'cut a recording', then open a screen recording. The old recording window is still what you get with that flag off, and it is still where Save, Export and Revert to Original live.",
   "try": [
-    { "do": "Open a recording. It lands in the ordinary editor with the clip picked and Trim already in hand: no click to pick either.", "shot": "2026-09-20-trim-handles.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
-    { "do": "Drag the handle at the left end of the clip's bar in the timeline inward, and watch the readout in the capsule." },
-    { "do": "Drag the handle at the right end inward. The frames outside the two handles go faint and say how long they are." },
-    { "do": "Press Reset in the capsule. The whole recording comes back without leaving the trim." },
-    { "do": "Press ⎋. The session goes and the clip is exactly as long as it was." },
-    { "do": "Press C to pick Trim up again, drag both handles in, and press ⏎. The recording is now as long as what you kept.", "shot": "2026-09-20-trim-spare.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
-    { "do": "Press C again. The whole recording is laid back out with the part you kept bright between the handles and the rest drawn as spare: nothing was thrown away." },
-    { "do": "Press ⎋, then ⌘Z. One undo puts the whole recording back." }
+    {
+      "do": "Open a recording. It lands in the ordinary editor with the clip picked and Trim already in hand: no click to pick either.",
+      "shot": "2026-09-20-trim-handles.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Drag the handle at the left end of the clip's bar in the timeline inward, and watch the readout in the capsule."
+    },
+    {
+      "do": "Drag the handle at the right end inward. The frames outside the two handles go faint and say how long they are."
+    },
+    {
+      "do": "Press Reset in the capsule. The whole recording comes back without leaving the trim."
+    },
+    {
+      "do": "Press ⎋. The session goes and the clip is exactly as long as it was."
+    },
+    {
+      "do": "Press C to pick Trim up again, drag both handles in, and press ⏎. The recording is now as long as what you kept.",
+      "shot": "2026-09-20-trim-spare.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Press C again. The whole recording is laid back out with the part you kept bright between the handles and the rest drawn as spare: nothing was thrown away."
+    },
+    {
+      "do": "Press ⎋, then ⌘Z. One undo puts the whole recording back."
+    }
   ],
   "evaluate": [
     "Opening straight into Trim: does that feel like the app reading your mind, or like it took a decision away from you?",
@@ -24,7 +44,7 @@
     "Save is still dimmed for a recording opened as a document, and Export and Revert to Original are still only in the old window. A card is up asking what ⌘S should do to a recording you have also drawn on, and the rest of this task waits on the answer.",
     "The capsule's In and Out are counted from the start of the recording, not from the document's clock. For a recording that is one clip those are the same number; for a clip sitting later on a timeline they would not be, and the capsule would disagree with the ruler above it.",
     "The mock said Crop should give its C up to the family. That cannot be done without taking C off Crop in the ungrouped bar, which is what the Current release ships, so both tools answer to C instead and the swap works out the same.",
-    "Cropping a recording no longer offers the four aspect locks from the tool button, because that slot's flyout is now the Crop/Trim family. Cropping a screenshot is untouched.",
+    "The slot's flyout now carries Crop and Trim at its head, then Crop's four aspect locks, then Resize Image. That is three kinds of row in one list, and whether it reads as one family or as a pile is worth a look.",
     "There is nothing on the CANVAS that says a trim is live. Crop darkens what it is about to lose; Trim's whole gesture is in the timeline, so the canvas just keeps showing the frame under the playhead."
   ]
 }
