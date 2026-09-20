@@ -251,10 +251,36 @@
       </div>
     </div>
 
+    <!-- 8 · TRIMMING A CLIP -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> settings-capture</span>
+            <div class="lane abs cv-lane">
+              <span class="tspare" style="left:0;width:14%">1.8s</span>
+              <div class="clip cv-clipA trimming" style="left:14%;width:62%"><span class="lbl">settings-capture</span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+              <span class="tspare" style="left:76%;width:24%">3.1s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">08</div><h3 class="docname">Trimming a clip</h3>
+        <p class="docrule">Trim is a <b>tool you pick</b>, in the same slot as Crop, in the window the document is already in (D20). While it is in hand the clip it has hold of shows <b>both handles at once</b> without hover, because the session is about the two ends together and a handle you have to go looking for is not a handle.</p>
+        <p class="docrule">The frames outside the in and the out are drawn <b>beside the clip, at the clip's own height, with their durations</b>. They are the same substance as the spare a transition spends (&sect;03), and drawing them is what makes the promise legible: <b>a trim throws nothing away</b>. Everything you see at the ends is still in the document and dragging back out gets it.</p>
+        <div class="docdd">
+          <span class="do">End it the way Crop ends: Cancel, then a primary button that says <b>Trim</b>. ⏎ trims, ⎋ puts the clip back.</span>
+          <span class="no">Ring the part being thrown away. The accent means "this is selected" everywhere else in the app, and the shipped recording window uses it for the kept range and the picked piece both.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.clip.trimming</code> · <code>.tspare</code> either side of it in the same <code>.lane.abs</code> · the session capsule is <code>.cnv &gt; .modebar</code>, drawn in full on <b data-target="video-shell">Video, in the window you already have</b>.</p>
+      </div>
+    </div>
+
     <div class="caption">
       <div class="c"><div class="lab">Why these are components</div><p>They look like decoration, so they get re-invented per page — the overlap band lived on exactly one page, scoped to its id, even though it carries the single most video-specific idea in the product. A primitive that encodes a rule has to be somewhere an author can find it, or the rule gets re-litigated every time.</p></div>
       <div class="c"><div class="lab g2">The one rule to keep</div><p>A transition is <b>not a clip</b>. It has no slot, it moves nothing, and it is paid for in spare media. Every visual decision here follows from that: the band draws on top, the spare draws outside, the dip is an outline, and the expanded rows exist so the claim can be checked.</p></div>
-      <div class="c"><div class="lab g2">Open question</div><p>Spare media is drawn only while the cut is selected. Should it be permanently visible at low contrast, so you can see which cuts have room before you pick one — or is that a timeline covered in dashes?</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Spare media is drawn only while the cut is selected, or while the Trim tool has the clip (&sect;08). Should it be permanently visible at low contrast, so you can see which cuts have room before you pick one — or is that a timeline covered in dashes?</p></div>
     </div>
   </section>
 </main>

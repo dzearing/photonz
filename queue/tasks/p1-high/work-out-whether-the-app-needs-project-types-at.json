@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 120,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-20T12:25:32.893Z",
+  "updated": "2026-09-20T17:34:06.752Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -147,6 +147,10 @@
     {
       "t": "2026-09-20T12:25:32.892Z",
       "note": "seq 100 -> 120"
+    },
+    {
+      "t": "2026-09-20T17:34:06.751Z",
+      "note": "decision \"Should a window have modes you swap, and should work made in one flow into another?\" resolved: Modes and the whole chain, video included"
     }
   ],
   "started": "2026-09-15T17:02:48.204Z"

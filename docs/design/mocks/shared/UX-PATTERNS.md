@@ -2747,3 +2747,55 @@ of 968 is then 189 points over, and on a laptop window it is over 280 over. A
 surface that wants permanent room in the panel in a document with time has to
 argue against those numbers. `Tests/PhotonzCoreTests/DockWithTimeTests.swift`
 holds the arithmetic, so it stays true or the suite goes red.
+
+---
+
+### D20 — A focused flow is a TOOL in the ordinary window, and it ends the way Crop ends
+
+Added 2026-09-20, answering the card *"When you open a recording to trim it and
+send it, should you get the focused trim bar you have now, or the full editor?"*
+The answer was **one window, with a trim mode in it**, and the rule generalises
+past trim.
+
+**A flow does not get its own window.** When a job needs its own gestures, it is
+a tool in the tool strip of the window the document is already in. A separate
+window means a second shell to learn, a second place for the layers list not to
+be, and a second set of chrome that drifts: the recording window had no tool
+bar, no layers list, no panel and no document name, which is the one shape §1
+forbids.
+
+**Every modal tool ends the same way**, because "where did my buttons go" is the
+question a second vocabulary creates. The shipped Crop is the pattern
+(`EditorView.cropActionBar`):
+
+| Part | What it is |
+| --- | --- |
+| the mode | a tool in the strip, lit while it is on, and its own letter leaves it |
+| the handles | on the thing whose bounds are changing, held up without hover |
+| the capsule | ONE glass capsule floating just clear of the tool bar: the tool's settings and readouts at the left, then **Cancel**, then a primary button **named for the verb** |
+| the keys | `⏎` commits, `⎋` cancels |
+
+So a crop ends with **Cancel · Crop** and a trim ends with **Cancel · Trim**.
+Never "Done": the button says what pressing it does, and a checkmark at the far
+end of a long bar was never what a first-timer reached for. A **Reset** belongs
+in the settings half of the capsule, not as a third action beside the other two,
+and only when the edit is cumulative (a clip may already have been trimmed;
+Reset means give the whole recording back).
+
+**A tool that only some documents can use joins an existing slot rather than
+taking a new one.** Trim joins Crop's: that slot is already *change the
+picture's bounds*, Trim is bounds in time, and the family's letter (`C`) walks
+to it the way `M` walks the marquee pair. The letter belongs to the FAMILY, not
+to either tool, exactly as the marquee pair has no letters of its own. Nothing a person has learned the
+position of moves, and no new letter is spent. Whether the second member is
+offered follows D19: the document has a duration, so the timeline and the tool
+appear on the same fact.
+
+**A quick gesture and a tool are allowed to overlap.** Dragging a clip's end
+with Select changes the out point; the Trim tool holds both ends up, draws the
+spare at each, prints the numbers and gives you `⎋`. Same values, same undo
+step. That is the same relation as dragging a layer's corner versus entering
+Crop, and it is not a duplicate to be removed.
+
+Canonical pages: `pages/video-shell.html` block 05, `pages/comp-video.html` §08.
+Full write-up: `docs/design/video-surface.md` §10.

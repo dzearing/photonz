@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-20T13:01:33.849Z",
+  "updated": "2026-09-20T17:52:19.889Z",
   "deps": [
     "a-document-can-have-time",
     "a-clip-splits-into-pieces-and-the-pieces-can-be"
@@ -68,6 +68,10 @@
     {
       "t": "2026-09-20T13:01:33.848Z",
       "note": "The cutting RULES are built and proved: Sources/PhotonzCore/ClipPieces.swift (45 tests in Tests/PhotonzCoreTests/ClipPiecesTests.swift), landed 2026-09-20 by a-clip-splits-into-pieces-and-the-pieces-can-be. This task is now the GESTURE only. What is already done for you: ClipPiece (sourceInMS + lengthMS + speedPercent, 0 = a held frame) and ClipPieces (the list, laid end to end, never empty), on Layer as an optional 'cuts' read through layer.clipPieces and written through layer.setClipPieces (which keeps layer.time in step). Six document edits, each one History.perform step: splitClip(id, atMS:) and holdFrame(id, atMS:forMS:) take DOCUMENT milliseconds (the playhead); removeClipPiece / moveClipPiece / trimClipStart / trimClipEnd / setClipSpeed take a piece index. clip.playback is what a player and an exporter read. WHAT IS LEFT: (1) the blade, the drag and the piece selection, including which piece is selected after a cut, which the model does not decide; (2) clamping - the edits REFUSE an out-of-range trim rather than guessing, so the drag clamps first with clip.trimStartRange(ofPiece:) / trimEndRange(ofPiece:), whose 'out' is nil when nothing stops it; (3) drawing a held frame, a retimed piece and spare media on the bar; (4) a speed control, which is the only one of the six with no obvious gesture; (5) snapping, which VideoCutSnapping.swift already does in seconds and will want saying in milliseconds. WHAT THE MODEL DELIBERATELY WILL NOT DO: a hole INSIDE a clip cannot be written down at all - remove closes the join and lengthening pushes the rest along, per D18 and video-cut-wt's own filed complaint - so a 'lift leaving a gap' gesture would need a model change and a card first. Also absent on purpose: reverse speed, pitch correction while retiming, ripple across OTHER layers, and roll trim (moving a join without changing the clip's length)."
+    },
+    {
+      "t": "2026-09-20T17:52:19.888Z",
+      "note": "The two ways to change a clip's length are reconciled in docs/design/video-surface.md §10.4, so this task does not have to pick one. Dragging a clip's end with Select is the quick nudge: it moves the in or the out and that is all you see. The Trim tool is a session: both ends held up, the spare at each end drawn with its duration, the numbers in the capsule, and ⎋ putting the clip back the way it was. Same values, same History step, same numbers on screen. That is the same relation as dragging a layer's corner versus entering Crop, so it is not a duplicate to remove."
     }
   ]
 }

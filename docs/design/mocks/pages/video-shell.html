@@ -116,7 +116,7 @@
               <div class="tstrip" data-radio=".tool" data-radio-class="on">
                 <button class="tool on" title="Select (V)"><i class="ic ic-cursor"></i></button>
                 <button class="tool" title="Blade — split at the playhead (B)"><i class="ic ic-blade"></i></button>
-                <button class="tool" title="Crop (C)"><i class="ic ic-crop"></i></button>
+                <button class="tool" title="Trim — Crop's slot, bounds in time (C)"><i class="ic ic-trim"></i></button>
                 <button class="tool" title="Text (T)"><i class="ic ic-text"></i></button>
                 <button class="tool ovf" title="Measure (M)"><i class="ic ic-measure"></i></button>
                 <button class="tool ovf" title="Shape (U)"><i class="ic ic-square"></i></button>
@@ -199,6 +199,8 @@
         </div>
       </div>
       <span class="vs-wincap">1680 × 1000 · the strip is 88 pt · the panel has 880 and asks for 474</span>
+
+      <p class="vs-note"><b>This is the window with Select in hand.</b> A recording actually opens with <b>Trim</b> in hand and the clip picked, which is block 05; this is the same window a moment after you trimmed it or put the tool down. The slot still shows Trim, because a slot shows the member you used last.</p>
 
       <p class="vs-note"><b>Everything here was already in the app.</b> The tool bar is the tool bar, with Blade added to the strip where every other tool lives. The panel is the panel, and the second section is named after what you picked, the way it says Text when text is picked. The sound of the clip is drawn <b>inside the clip</b>, not on a track of its own, because until you separate it the sound is part of that layer. And the timeline's rows are called what the layers list calls them.</p>
     </div>
@@ -499,11 +501,144 @@
       <p class="vs-note"><b>And the way out of a full panel is already on screen.</b> The strip collapses to one row that says what you are still editing — <code>settings-capture · 0:08 / 0:18</code> — which is <code>comp-video</code> §06 and D9, and it hands back 205 points. The app already has all three states: <code>motionStripPhase</code> is open, row, or none.</p>
     </div>
 
+    <!-- ══════════════ 5 · TRIM, ANSWERED ══════════════ -->
+    <div class="vs-blk">
+      <div class="vs-blk-h"><span class="vs-kind">05 · the answer</span><h3>Trim is a tool, in the window you already have</h3>
+        <span class="vs-sub">Answered on 2026-09-20: <b>one window, with a trim mode in it</b>. Opening a recording lands you in the ordinary window and Trim is a tool you pick, like Crop. Nothing that shipped on 2026-09-19 is thrown away; it moves, and it picks up the app's own words on the way.</span></div>
+
+      <div class="win tall cq shell vs-win" data-shell="settings-capture · 2560 × 1440 · 0:14" data-ws="video" data-status="Trim · 0:09 kept of 0:14">
+        <div class="edit lean" data-dock="open">
+          <div class="cnv">
+            <div class="canvas">
+              <div class="vs-shot">
+                <span class="vs-bar"></span>
+                <span class="vs-card"><span class="h">Finished</span><span class="big">240</span><span class="s">of 240 files</span><span class="pg"><i></i></span></span>
+              </div>
+            </div>
+            <div class="cnv-act">
+              <button class="tool" data-dock-toggle title="Show or hide the panel"><i class="ic ic-sidebar"></i></button>
+              <button class="tool" title="History"><i class="ic ic-history"></i></button>
+            </div>
+
+            <!-- THE SESSION CAPSULE. The same one Crop uses, in the same place:
+                 readouts and Reset in the settings half, then Cancel, then the
+                 verb. No "Done" anywhere. -->
+            <div class="modebar">
+              <span class="rd">In <b>0:02</b> · Out <b>0:11</b> · <b>0:09</b> kept</span>
+              <span class="tsep"></span>
+              <button class="btn ghost sm" title="Give the whole recording back">Reset</button>
+              <button class="btn sm" title="Leave the trim alone (⎋)">Cancel</button>
+              <button class="btn primary sm" title="Trim the clip (⏎)">Trim<span class="kbd">⏎</span></button>
+            </div>
+
+            <div class="tbar">
+              <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                <button class="tool" title="Select (V)"><i class="ic ic-cursor"></i></button>
+                <button class="tool" title="Blade — split at the playhead (B)"><i class="ic ic-blade"></i></button>
+                <button class="tool on" title="Trim — Crop's slot, bounds in time (C)"><i class="ic ic-trim"></i></button>
+                <button class="tool" title="Text (T)"><i class="ic ic-text"></i></button>
+                <button class="tool ovf" title="Measure (M)"><i class="ic ic-measure"></i></button>
+              </div>
+              <span class="tsep"></span>
+              <div class="zoomctl"><input class="zslider" type="range" min="25" max="400" value="100" aria-label="Zoom"><span class="val zval">100%</span></div>
+            </div>
+          </div>
+          <div class="splitter v" data-min="240" data-max="440"></div>
+          <div class="pdock">
+            <div class="dgrp" data-grp="layers" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">1</span></div>
+              <div class="dgrp-b">
+                <div class="lrow sel"><i class="ic ic-film"></i><span class="nm">settings-capture</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+            <div class="dgrp" data-grp="props" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Clip</span><span class="cnt">settings-capture</span></div>
+              <div class="dgrp-b">
+                <div class="irow split"><span class="rl">Reads</span><span class="val">settings-capture.mov</span></div>
+                <div class="irow split"><span class="rl">Volume</span>
+                  <span class="stepper sm"><input value="100" aria-label="Volume"><span class="k">%</span></span></div>
+                <div class="irow split"><span class="rl">Speed</span><span class="val">1.00×</span></div>
+              </div>
+            </div>
+            <div class="dgrp" data-grp="color" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Appearance</span></div>
+              <div class="dgrp-b">
+                <div class="irow split"><span class="rl">Opacity</span>
+                  <span class="stepper sm"><input value="100" aria-label="Opacity"><span class="k">%</span></span></div>
+                <div class="irow split"><span class="rl">Blend</span><span class="val">Normal</span></div>
+              </div>
+            </div>
+            <div class="dgrp" data-grp="effects" data-gh="sm">
+              <div class="dgrp-h"><span class="ttl">Motion</span><span class="cnt">nothing moves yet</span>
+                <button class="btn ghost icon sm" title="Animate a property"><i class="ic ic-plus"></i></button></div>
+              <div class="dgrp-b"><p class="note">Nothing on this clip moves. The plus offers what could.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+            <button class="btn ghost icon sm" title="Loop"><i class="ic ic-loop"></i></button>
+          </span>
+          <span class="tc cur">0:04</span>
+          <span class="scrub" role="slider" aria-label="Scrub" aria-valuenow="4" aria-valuemin="0" aria-valuemax="14" tabindex="0">
+            <span class="fill" style="width:29%"></span><span class="knob" style="left:29%"></span></span>
+          <span class="tc">0:14</span>
+        </div>
+
+        <div class="timeline" data-tl="open" data-tl-summary="settings-capture · trimming · 0:09 kept" style="min-height:0">
+          <div class="tlbar">
+            <span class="tstrip" data-radio=".tool" data-radio-class="on">
+              <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <button class="tool" title="Blade (B)"><i class="ic sm ic-blade"></i></button>
+              <button class="tool on" title="Trim (C)"><i class="ic sm ic-trim"></i></button>
+            </span>
+            <span class="tsep"></span>
+            <div class="seg"><button>Fit</button><button class="on">1×</button><button>2×</button><button>4×</button></div>
+            <span class="tspacer"></span>
+            <span class="lbl nm">settings-capture · 0:02 – 0:11</span>
+          </div>
+          <div class="ruler"><span>0s</span><span>2s</span><span>4s</span><span>6s</span><span>8s</span><span>10s</span><span>12s</span><span>14s</span></div>
+          <div class="track"><span class="tl" title="settings-capture"><i class="ic xs ic-film"></i> settings-capture</span>
+            <div class="lane abs">
+              <span class="tspare" style="left:0;width:14%">2.0s</span>
+              <div class="clip cl-shot sel trimming" style="left:14%;width:64%"><span class="lbl">settings-capture</span>
+                <span class="wave vs-inwave">
+                  <i style="height:4px"></i><i style="height:7px"></i><i style="height:3px"></i><i style="height:8px"></i><i style="height:5px"></i><i style="height:8px"></i><i style="height:3px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:7px"></i><i style="height:3px"></i><i style="height:5px"></i><i style="height:8px"></i><i style="height:4px"></i><i style="height:6px"></i>
+                </span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+              <span class="tspare" style="left:78%;width:22%">3.1s</span>
+            </div>
+          </div>
+          <span class="playhead" style="left:29%"></span>
+        </div>
+      </div>
+      <span class="vs-wincap">1680 × 1000 · Trim in hand, the clip picked, nothing thrown away</span>
+
+      <div class="vs-two">
+        <div class="vs-stage wrong">
+          <div class="mlabel">What the recording window says today</div>
+          <p class="vs-note" style="margin-top:6px">A row of three words and two glyphs: <b>Reset</b>, <b>Cancel</b>, <b>Done</b>, with undo and delete standing beside them. Idle, the same bar is nine unlabelled icons. Two languages one keystroke apart, and <b>Done</b> is a word that does not say what pressing it does.</p>
+        </div>
+        <div class="vs-stage right">
+          <div class="mlabel">What the app already says when a mode ends</div>
+          <p class="vs-note" style="margin-top:6px">Crop ends with <b>Cancel</b> and a primary button called <b>Crop</b>, on a glass capsule clear of the tool bar, ⏎ to commit and ⎋ to leave. So a trim ends with <b>Cancel</b> and <b>Trim</b>. One idiom, learned once, and the verb on the button is the thing that happens.</p>
+        </div>
+      </div>
+
+      <p class="vs-note"><b>Trim joins Crop's slot rather than taking one of its own.</b> That slot is already the family that changes the picture's bounds, with Resize Image at the foot of its flyout, and a trim is bounds in time. So <code>C</code> picks it and pressing <code>C</code> again swaps Crop for Trim, the way <code>M</code> swaps the box marquee for the ellipse. No slot anybody has learned the position of moves, and no new letter is spent. The second member is offered when the document has a duration, which is the same fact that put the timeline there.</p>
+      <p class="vs-note"><b>And trim-and-send does not get slower.</b> A recording that is one clip and has never been edited opens with the clip picked and Trim already in hand, so the flow is what it was: drag a handle, press ⏎, export. What is new is that the tool bar says which mode you are in and <code>V</code> leaves it, where today the only way out of trim is one of three buttons.</p>
+    </div>
+
     <div class="caption">
       <div class="c"><div class="lab">The idea</div><p>A document may have a duration, and a layer in it may have an in and an out. Everything else follows: a clip is a layer, a row is a layer, a property lane is a child of the layer whose property it is, and a transition belongs to the join rather than to either side. No track model, no media object, no lens.</p></div>
       <div class="c"><div class="lab g2">What is new</div><p>One panel section, Captions, shaped like Measurements and optional like it. One growth in the shipped strip: a layer row draws a bar when the layer occupies time. Everything else on this page is a component that already exists.</p></div>
       <div class="c"><div class="lab g2">What is not fixed</div><p>The panel is 189 points over in a video document at the largest window, and over 280 on a laptop. Video did not cause it and video does not fix it. The number is named so the build tasks do not discover it as a surprise.</p></div>
-      <div class="c"><div class="lab g2">Still to answer</div><p>What happens to trim-and-send, which shipped the day before this study. Does trimming stay a focused mode with handles and a Done button, or does it become dragging a clip's edge like every other edit? A decision card asks it.</p></div>
+      <div class="c"><div class="lab g2">What trim became</div><p>Answered 2026-09-20: one window, with a trim mode in it. Trim is a tool in Crop's slot, its handles are on the clip's own bar, and it ends the way Crop ends, with Cancel and a button that says Trim. Block 05, and <code>video-surface.md</code> &sect;10.</p></div>
     </div>
   </section>
 </main>

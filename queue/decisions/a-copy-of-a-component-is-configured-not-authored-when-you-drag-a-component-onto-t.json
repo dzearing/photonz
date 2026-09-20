@@ -66,6 +66,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-15T17:01:56.768Z"
+  "status": "resolved",
+  "created": "2026-09-15T17:01:56.768Z",
+  "answer": {
+    "choice": "a",
+    "note": "An Instance, not a copy. Changes to the component change instances, but you can right click and make unique?",
+    "resolved": "2026-09-20T17:35:06.016Z"
+  }
 }

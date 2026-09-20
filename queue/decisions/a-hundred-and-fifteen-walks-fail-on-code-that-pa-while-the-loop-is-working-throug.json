@@ -48,6 +48,11 @@
     }
   ],
   "recommended": "awake-while-working",
-  "status": "pending",
-  "created": "2026-09-19T15:44:44.933Z"
+  "status": "resolved",
+  "created": "2026-09-19T15:44:44.933Z",
+  "answer": {
+    "choice": "awake-while-working",
+    "note": "",
+    "resolved": "2026-09-20T17:32:21.376Z"
+  }
 }

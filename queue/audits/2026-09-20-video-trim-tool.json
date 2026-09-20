@@ -1,0 +1,30 @@
+{
+  "feature": "Trim, as a tool in the ordinary window",
+  "epic": "video-cutting",
+  "summary": "The last open question in the video design is answered: a recording no longer gets its own little window, and trimming becomes a tool you pick in Crop's slot, with its handles on the clip and its Cancel and Trim on the same glass capsule a crop ends on. Trim-and-send stays exactly as many moves as it is today.",
+  "setup": "Nothing to install. Three things to read and one page to walk: docs/design/video-surface.md §10, http://127.0.0.1:8791/index.html#video-shell block 05, and UX-PATTERNS D20. The primitive is comp-video §08.",
+  "try": [
+    { "do": "Look at the trim bar that ships today: Reset, Cancel, Done, and two glyphs standing beside them.", "shot": "2026-09-20-video-trim-before.png" },
+    { "do": "Open video-shell block 05 and find the capsule over the canvas. It says In, Out, how much is kept, then Reset, then Cancel and Trim.", "shot": "2026-09-20-video-trim-tool.png", "shotNote": "This is the mock page in a browser, not the app. The surface is a design and nothing has built it yet; the first picture is a real window capture." },
+    { "do": "Look at the tool bar in the same picture: Trim is lit, in the slot Crop was in, and V would leave it." },
+    { "do": "Look at the clip in the timeline: both handles are up, and the frames outside the in and the out are drawn beside it with their durations." },
+    { "do": "Read the two cards under the window: what the recording window says today, and what the app already says when a mode ends." },
+    { "do": "Read §10.3 in docs/design/video-surface.md, the four-row table, and check that trim-and-send is the same number of moves as today." },
+    { "do": "Read §10.5, the awkward corners, and say whether any of the five answers would surprise you." }
+  ],
+  "evaluate": [
+    "Crop is C. Pressing C again now hands you Trim in a document with time. Is that a helpful pair, or would you rather press C and always get Crop?",
+    "The button says Trim rather than Done. Reading it cold, does it say what pressing it does?",
+    "A recording opens with Trim already in hand. Does that feel like the app knowing what you came for, or like being put in a mode you did not ask for?",
+    "The handles are on the clip's bar at the bottom, not on the picture. Is that where your hand goes to shorten a recording?",
+    "The frames you trimmed off stay drawn beside the clip. Is that reassuring, or is it clutter on a timeline you wanted clean?"
+  ],
+  "rough": [
+    "NOTHING IS BUILT. This is the design pass for the video work, so every picture but the first is a mock page in a browser. The build is a-document-can-have-time, which now carries two acceptance items for it.",
+    "The Trim tool's glyph is a small rounded rectangle and does not obviously say trim at a glance. The icon library has ic-trim and this design uses it rather than drawing a new one; whether it reads is worth a look on the real bar.",
+    "Crop and Trim sharing C is the marquee pair's mechanism, and a box and an ellipse are far more alike than a crop and a trim. The slot shows which one is in hand and the capsule names the mode, and that may not be enough. It is the first evaluate question for that reason.",
+    "The capsule floats over the canvas, and in a video window the transport is already a band under it. At a small window those two plus the tool bar are three stacked things; --mb-lift exists so the capsule clears the bar, but nobody has drawn the narrow case.",
+    "§10 settles what trim is and not what send is. What Export offers a recording is video-share and is still unwritten.",
+    "The panel is still 189 points over in a video document at the largest window. Unchanged by this pass and not video's to fix."
+  ]
+}

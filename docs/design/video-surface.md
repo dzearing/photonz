@@ -1,8 +1,8 @@
 # Video, drawn against the app that exists
 
-**Status:** design pass, 2026-09-19. Written for the task *Refine the video
-design so it reads as the same app*, ahead of the five build tasks that follow
-it (`a-document-can-have-time`, `cut-arrange-and-retime-what-is-on-the-timeline`,
+**Status:** design pass, 2026-09-19; §10 added 2026-09-20 when the trim card
+came back answered. Written for the task *Refine the video design so it reads as
+the same app*, ahead of the five build tasks that follow it (`a-document-can-have-time`, `cut-arrange-and-retime-what-is-on-the-timeline`,
 `audio-you-can-separate-add-see-and-shape`,
 `captions-that-write-themselves-and-titles-that-b`,
 `transitions-at-a-cut-and-effects-you-can-control`,
@@ -44,6 +44,9 @@ the thing being redesigned, and five things are wrong with it.
    unlabelled glyphs with no grouping. In trim it is mostly words (Reset,
    Cancel, Done) with two glyphs left standing. The same bar, two languages, and
    the transition between them is the answer to "where did my buttons go".
+   Neither language is the app's: the ordinary editor ends a crop with
+   **Cancel** and a primary button named for the verb, on a glass capsule over
+   the canvas. §10 settles that trim ends the same way.
 3. **It is flat opaque dark**, not a glass surface, so it does not read as the
    same material as the app's other floating chrome.
 4. **The accent outline means the opposite of itself.** On the strip it rings
@@ -303,7 +306,7 @@ answer wins and what happens to the pages.
 
 | The question | Answered N ways | The answer | What changes |
 | --- | --- | --- | --- |
-| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **Yes.** §3. | `video.html`'s "Resolved" caption is wrong and is rewritten. The fourteen pages get Layers back. |
+| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **Yes.** §3. | `video.html`'s "Resolved" caption is wrong and is rewritten (done 2026-09-19). Putting the group back into the fourteen docks is a change to fourteen laid-out pages and their scripts, so it is filed rather than claimed: only `video-shell` draws it today. |
 | **What is a timeline row called?** | `V1 V2 V3 V4` · `Gfx` · `Audio` · `Source`/`Retimed` · `Position`/`Scale`/`Centre` · layer names (`pane-load`, and the shipped strip) | **The layer's own name, in the layer's own letters.** | `.track .tl` widens 58 → 92 to match `MotionStripView.labelWidth` and stops uppercasing somebody's layer name. Page labels change with it. |
 | **What can a row BE?** | a track · a property lane · a before/after comparison | **A layer, or a property lane nested under one.** Nothing else. | `video-speed`'s Source/Retimed rows are a diagram about retiming, not timeline rows, and belong inside the retime settings. `video-move-wt`/`video-zoom-wt` property lanes nest under their layer. |
 | **Where does the audio of a clip live?** | a permanent `Audio` track on six pages · welded to the clip on others | **Inside the clip's own row as a waveform, until you separate it; then it is its own layer with its own name and its own row.** | The permanent empty `Audio` track goes. |
@@ -359,8 +362,12 @@ So the build tasks know their edges.
 - **Not choosing a codec, a container, a frame rate or an export preset.** That
   is `video-share` and it is not designed here.
 - **Not designing the recorder.** How a capture starts and stops is unchanged.
-- **Not settling what happens to the trim-and-send flow** that shipped on
-  2026-09-19. That is a decision card, §10.
+- **Not building the trim tool.** §10 settles what it is and where it lives;
+  moving the recording window into the ordinary one is the build task
+  `a-document-can-have-time`, and the trim session moves with it.
+- **Not designing send.** What Export offers a recording, and what "send it"
+  means past Share, is `video-share`. §10 only says that trim hands off to the
+  ordinary export the rest of the app already uses.
 - **Not moving the Graph out of `video.html`'s dock.** §4 item 5 settles that a
   value graph belongs in the bottom dock, but the group on that page carries its
   own interaction code and relocating it is building. The page keeps it for now
@@ -374,3 +381,156 @@ So the build tasks know their edges.
 - **Not fixing the panel's 189 point overflow.** §4 item 6.
 - **Not deciding multi-camera, colour management, proxies or collaborative
   edit.** None of them are in the epic.
+
+---
+
+## 10. Trim, answered: a tool in the ordinary window
+
+The card asked what happens to trim-and-send once a recording opens in the
+ordinary window, and the answer on 2026-09-20 was **"One window, with a trim
+mode in it"**: opening a recording lands you in the ordinary window, and Trim is
+a tool you pick, like Crop.
+
+That settles the shape. What follows is what it costs and what it takes, worked
+out against the app rather than asserted, because "like Crop" is only an answer
+if Crop is copied exactly.
+
+### 10.1 What Crop actually does, since that is the promise
+
+`EditorView.cropActionBar` is the shipped idiom and it has four parts:
+
+1. **A tool in the strip.** `C` picks it, the button lights, and the canvas
+   changes what a drag means.
+2. **Handles on the thing whose bounds you are changing.** The picture.
+3. **One glass capsule floating just clear of the tool bar**, carrying the
+   tool's own settings (the aspect locks) and, at its right, **Cancel** and a
+   primary button named for the verb: **Crop**.
+4. **⏎ commits, ⎋ cancels**, and the capsule leaves with the mode.
+
+Note what is NOT there. No "Done": the button says the verb, because *"a
+checkmark at the far end of an 1100pt bar was never the thing a first-timer
+reached for"*. No "Reset" beside Cancel. The recording window's **Reset · Cancel
+· Done** is a third vocabulary, and §1 item 2 already counted it as one of the
+five things wrong with that window. Copying Crop means dropping it.
+
+### 10.2 Trim, then
+
+- **Where it lives:** Crop's slot. That slot is already the family *change the
+  picture's bounds* — Resize Image rides at the foot of its flyout — and Trim is
+  bounds in time. Crop and Trim become a `ToolGroup`, so **no slot in the bar
+  moves**, which is the rule `ToolBarLayout` states for every tool a flag adds.
+  The flyout reads Crop · Trim, with Resize Image still at its foot.
+- **Its letter:** `C`, and it belongs to the FAMILY rather than to either tool.
+  This is the marquee pair's mechanism exactly: `ToolGroup.tools(answeringTo:)`
+  hands a group letter the members that have no letter of their own, so Crop
+  gives up its own `c` to the family the way the box and ellipse marquees have
+  no letters and `M` stands for the pair. Then `C` hands you the member you used
+  last, `C` again swaps, and `⇧C` walks. (Leaving `c` on Crop instead would make
+  `C` mean Trim and nothing else, because the group branch is checked first.)
+  Photoshop has no trim tool to be compatible with, and this spends no new
+  letter.
+- **When it is offered:** when the document has a duration. This is D19:
+  existence is automatic, and the timeline and the tool appear on the same fact.
+  In a screenshot document the slot is Crop and pressing `C` twice does nothing
+  new, which means the family's ring is filtered to the members this document
+  can use before it is walked — the one thing `ToolGroup` does not do today, and
+  a line of it rather than a new mechanism.
+- **What it puts on screen:** the handles on **the clip's bar in the timeline**,
+  held up without hover, and the frames outside the clip's in and out drawn as
+  **spare** at both ends, with their durations (`comp-video` §01 `.edge`, §03
+  `.xspare`). The canvas keeps showing the frame under the playhead, which is
+  what you are keeping. Crop puts handles on the picture because the picture is
+  what it bounds; trim puts them on the bar for the same reason.
+- **Its capsule:** the same glass capsule Crop uses, in the same place, floating
+  clear of the tool bar. It reads `In 0:02 · Out 0:11 · 0:09 kept`, then
+  **Reset**, then **Cancel** and **Trim**. Reset earns its place here and not in
+  Crop's because a trim is cumulative: the clip you are trimming may already
+  have been trimmed, and Reset means give me the whole recording back. It is a
+  quiet button in the settings half of the capsule, not a third action beside
+  the other two.
+- **Its keys:** `⏎` trims, `⎋` cancels. The same two keys as Crop, and the same
+  meanings.
+
+### 10.3 The fast lane is kept by what the window opens as, not by a second view
+
+The chosen option says trim-and-send costs one more click than today, and its
+mitigation is that Trim is the tool your hand is already on. That has to be
+built, so it is stated here as a rule:
+
+**A recording that is one clip and has never been edited opens with the clip
+picked and Trim in hand.** More than one layer, or any edit in its history, and
+it opens with Select, like every other document. So the flow that shipped on
+2026-09-19 survives move for move:
+
+| Today, in its own window | After, in the ordinary window |
+| --- | --- |
+| Open the recording | Open the recording |
+| Drag a handle | Drag a handle |
+| Press Done | Press ⏎ |
+| Save / send | ⌘⇧E, the export the rest of the app uses |
+
+No extra click. The tool bar shows Trim lit, so the mode is visible rather than
+implied, and `V` leaves it — which is more than today's window offers, where the
+only way out of trim is one of three buttons.
+
+### 10.4 The two ways to change a clip's length, reconciled
+
+The chosen option's own con. Both exist and they are not the same gesture:
+
+- **Select, drag the end of a clip.** The quick nudge. It changes the in or the
+  out and that is all you see.
+- **Trim.** A session. Both ends are held up at once, the spare at each end is
+  drawn so you can see what there is to take back, the capsule says the numbers,
+  and ⎋ puts the clip back the way it was when you picked the tool.
+
+Same values, same undo step, same numbers on screen. The tool adds the preview
+and the way out, which is exactly the difference between dragging a layer's
+corner and entering Crop.
+
+### 10.5 The awkward corners, decided rather than left
+
+- **Trim with nothing picked** picks the topmost layer with time under the
+  playhead. In a just-opened recording that is the one clip, which is why the
+  fast lane needs no click at all.
+- **Trim on a layer with no time** (a background, an adjustment) does nothing
+  and says so where the capsule would be: *Pick a clip to trim*. The tool is not
+  hidden, because a tool that vanishes per selection is a slot that moves.
+- **Clicking another clip during a session** moves the session to it. Nothing is
+  lost and nothing is asked: the in and out are ordinary layer values, every
+  change is already one History step, and ⌘Z is the way back. ⎋ only ever
+  restores the clip you are on, and the capsule is the thing that says which one
+  that is.
+- **Nothing is thrown away, ever.** Trimming moves a clip's in and out. The
+  frames outside them stay in the document, which is what makes the spare
+  drawing honest and what answers §8's fourth prediction. A trim that deleted
+  frames would be the first destructive edit in the app.
+- **The strip of pieces stays a strip of pieces.** Splitting adds a piece to a
+  row, not a row (D18 item 3). Trim acts on the piece you picked.
+
+### 10.6 What this costs, so the build task is not surprised
+
+| What moves | Where it goes |
+| --- | --- |
+| `VideoEditorView`'s trim row (Reset · Cancel · Done) | one glass capsule shaped like `cropActionBar`, words changed |
+| The trim handles on the piece strip | `.edge` handles on the clip's bar in the timeline |
+| "Done" | "Trim", the verb, as the primary button |
+| The separate recording window | gone; a recording is a document, `a-document-can-have-time` |
+| `trimBeforeSession`, `resetTrimSelection`, `commitTrim`, `cancelTrim` | kept as they are, renamed to the tool's session |
+| `Tool.crop.shortcutKey` | becomes nil, and `ToolGroup` carries `c`, so anything printing Crop's key (the menu item, the tooltip) reads it off the family |
+
+**Eleven walks** exercise the shipped trim flow (`trim-*`, `undo-while-trimming`,
+`save-is-live-after-a-trim`, `close-a-trimmed-recording`, the two
+`tutorial-trim-a-recording` ones). They drive it through action ids —
+`videoTrimDone`, not a button called "Done" — so the ids survive the move, but
+every one of them opens the separate recording window and reads its strip, and
+those steps do not. They are rewritten in the commit that moves the window, or
+the build lands green against a surface nobody can see any more. Named in the
+build task, not fixed here.
+
+### 10.7 What §10 does not settle
+
+- **The recorder is unchanged.** How a capture starts and stops is not touched.
+- **Send is `video-share`.** Trim hands off to the export the rest of the app
+  already has.
+- **A trim tool for audio alone** is not a separate thing. A separated voice
+  track is a layer with an in and an out, so the same tool trims it.

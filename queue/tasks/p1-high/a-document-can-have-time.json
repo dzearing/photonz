@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-20T12:26:32.635Z",
+  "updated": "2026-09-20T17:54:11.437Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same",
     "time-lives-in-the-document-and-a-layer-can-have"
@@ -27,7 +27,9 @@
     "docs/design/video.md written: the model, what a clip is, what time is, and what the old video editor became",
     "Ships behind next-cut-a-recording; the try path is: open a recording from History and it opens in the ordinary editor with the timeline across the bottom",
     "audit written under queue/audits/ with a recording opened in the ordinary editor, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not",
-    "Playing and scrubbing hold their frame rate on a real recording: the cost of compositing one frame is measured and written into docs/progress/perf.md, and if a frame cannot be built inside its budget the audit says so plainly rather than shipping a timeline that stutters"
+    "Playing and scrubbing hold their frame rate on a real recording: the cost of compositing one frame is measured and written into docs/progress/perf.md, and if a frame cannot be built inside its budget the audit says so plainly rather than shipping a timeline that stutters",
+    "Trim arrives as a TOOL, not a window: it lives in Crop's slot (C picks it, C again swaps, offered only when the document has time), its handles are on the clip's bar with the spare drawn at both ends, and it ends on one capsule that reads Cancel then Trim, with ⏎ to trim and ⎋ to cancel. No Reset/Cancel/Done row survives the move. UX-PATTERNS D20 and docs/design/video-surface.md §10",
+    "The eleven walks that drive the shipped trim flow (trim-*, undo-while-trimming, save-is-live-after-a-trim, close-a-trimmed-recording, the two tutorial-trim-a-recording ones) are rewritten in the same commit that moves the window, and pass"
   ],
   "log": [
     {
@@ -65,6 +67,14 @@
     {
       "t": "2026-09-20T12:26:32.634Z",
       "note": "PERF, folded in by the daily digest of 2026-09-20 and added to acceptance. queue/audits/2026-09-20-time-in-the-document.json measured compositing one frame of video at a moment at 16.8ms on this machine, against the repo target of 16ms, with picking the moment free at 0.02ms. That is the ordinary cold full-render path, so it is not a new cost, but it is the cost per FRAME once this task makes play and scrub real: 16.8ms leaves no headroom at 60fps and very little at 30 once anything else is happening. Measure it before claiming playback works, and say the number in the audit."
+    },
+    {
+      "t": "2026-09-20T17:52:00.141Z",
+      "note": "TRIM IS SETTLED, and it is now two acceptance items on this task. The card 'when you open a recording to trim it and send it, should you get the focused trim bar you have now, or the full editor?' was answered on 2026-09-20 with 'One window, with a trim mode in it'. What that means concretely, worked out in docs/design/video-surface.md §10 and baked as UX-PATTERNS D20: Trim is a TOOL in Crop's slot (that slot is already 'change the picture's bounds', with Resize Image at the foot of its flyout, and a trim is bounds in time), so C picks it and C again swaps, no slot moves and no new letter is spent; the second member is offered when the document has a duration, same fact as the timeline (D19). Its handles are on the clip's BAR in the timeline, both up without hover, with the frames outside the in and out drawn as spare at both ends with their durations, because a trim throws nothing away. It ends the way the shipped Crop ends (EditorView.cropActionBar): one glass capsule clear of the tool bar, readouts and Reset in its settings half, then Cancel, then a primary button that says the verb, Trim. ⏎ trims, ⎋ cancels. 'Done' does not survive: the recording window's Reset/Cancel/Done is a third vocabulary. The fast lane is kept by what the window opens as, not by a second view: a recording that is one clip and has never been edited opens with the clip picked and Trim in hand, so trim-and-send is still drag a handle, ⏎, export. Drawn at pages/video-shell.html block 05 and pages/comp-video.html §08."
+    },
+    {
+      "t": "2026-09-20T17:54:11.436Z",
+      "note": "TUTORIAL COPY THAT HAS TO MOVE WITH THE CHROME, found while settling §10: TutorialGuides.swift:2148-2153, step 'keep-whats-between', anchored at .video(.trimDone), says \"Done throws the ends away and leaves you the middle.\" Two things wrong with it once trim is a tool. The button is not called Done any more, and the sentence is against the model: a trim moves a clip's in and out, the frames outside them stay in the document, and the design draws them at the ends precisely so that promise is visible. The anchor .video(.trimDone) and the tutorial ids are part of the same move."
     }
   ]
 }

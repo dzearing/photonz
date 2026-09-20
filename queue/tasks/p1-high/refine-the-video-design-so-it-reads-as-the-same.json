@@ -8,7 +8,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:16:17.258Z",
-  "updated": "2026-09-20T12:25:32.363Z",
+  "updated": "2026-09-20T17:53:06.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-18, immediately after shifting priority to video: \"We really need to ensure that we refine the design and ensure things flow with the rest of the app well.\"\n\nThis comes FIRST, before the foundation task, because the panel has just taught everybody what happens otherwise. Three days ago the same user sat down with the component panel and said it was \"completely cluttered and hard to read and unpredictable. total mess\", and the measuring backed them: 1052 points of sections against a 968 point viewport, with Position and Size never wholly on screen at any window size. Six tasks came out of that. Video adds more surface than components did. Doing the same thing twice would be a choice.\n\nWhat the panel just learned, and what video must not undo:\n- A section is named for the job it does, in words somebody already knows. The app invented Adjustable and Versions and the user could not say what either was for.\n- A section that needs a paragraph inside it to explain itself is misnamed; the paragraph is the symptom.\n- A grid of number boxes is the laziest answer. One row with a way into the detail, and a Mixed state when the parts differ.\n- Things that are set by dragging do not deserve permanent room in the panel: Position and Size left it entirely.\n- Panes can be hidden, and there is an automatic mode showing what the selection actually needs.\nEvery one of those applies to a channel strip, a transition's settings and a caption list as much as it did to a component.\n\nWhat exists to build on rather than restart: fifteen clickthroughs under docs/design/mocks/pages (video, video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-freeze-wt, video-title-wt, video-transition-wt, video-transitions, video-captions, video-audio, video-compositing, video-motion, video-speed) plus comp-video, which is the time primitives page and says its own purpose out loud: \"Time needs its own primitives, and they are the ones most likely to get re-invented per page because they look like decoration. They are not.\" The user was explicit that these are ideas rather than specs, so refine them, contradict them where they are wrong, and say where and why.\n\nAlso read the pane-load study (work-out-whether-the-right-hand-pane-is-carrying, done) whose page is docs/design/mocks/pages/pane-load.html: it already measured the dock and already recommended a timing strip across the bottom with Motion staying in the panel. That recommendation was made for animation and video inherits the same question, so either follow it or say why video changes the answer.\n\nAnd the modes work (work-out-whether-the-app-needs-project-types-at) is the other half of this: if a mode is a preset of what is showing, then 'the video surface appears when the document has time' and 'the video mode shows these panes' are the same mechanism described twice. Reconcile them rather than building two.",
@@ -84,8 +84,32 @@
     {
       "t": "2026-09-20T12:25:32.362Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-20T17:32:12.298Z",
+      "note": "decision \"When you open a recording to trim it and send it, should you get the focused trim bar you have now, or the full editor?\" resolved: One window, with a trim mode in it"
+    },
+    {
+      "t": "2026-09-20T17:47:50.125Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T17:52:58.042Z",
+      "note": "THE CARD CAME BACK ANSWERED: 'One window, with a trim mode in it' (option c, the recommended one), resolved 2026-09-20T17:32Z. This run folds the answer into the design rather than blocking again. ADVERSARIAL REVIEW OF THE ANSWER BEFORE DRAWING IT, which changed what got drawn: 'Trim is a tool like Crop' is only an answer if Crop is copied exactly, so I read the shipped Crop first (EditorView.cropActionBar). It is Cancel plus a PRIMARY BUTTON NAMED FOR THE VERB on one glass capsule clear of the tool bar, Return commits, Escape cancels, and there is no Done and no Reset beside them. The recording window's Reset/Cancel/Done is therefore a THIRD vocabulary, not the thing being preserved, and the option's 'exactly as they look now' had to be contradicted: keeping those three words would have moved the inconsistency into the main window instead of ending it. So the answer built is Cancel + Trim, with Reset demoted into the settings half of the capsule (a trim is cumulative, unlike a crop, so 'give the whole recording back' is worth keeping)."
+    },
+    {
+      "t": "2026-09-20T17:53:01.995Z",
+      "note": "WHAT LANDED THIS RUN. docs/design/video-surface.md §10 (Trim, answered): what Crop actually does and is copied from; Trim in Crop's slot as a ToolGroup so no slot moves and no new letter is spent (C picks, C again swaps, ⇧C walks, offered only when the document has a duration per D19); handles on the clip's bar with the spare at both ends and its durations; one capsule reading In · Out · kept, Reset, Cancel, Trim, with ⏎ and ⎋; the fast lane kept by what the window OPENS as (a recording that is one clip and has never been edited opens with the clip picked and Trim in hand, so trim-and-send is the same four moves as today, table in §10.3); the two ways to change a clip's length reconciled (§10.4); five awkward corners decided rather than left (§10.5: no clip picked, a layer with no time, clicking another clip mid-session, nothing ever thrown away, pieces stay pieces); what it costs the build in §10.6. UX-PATTERNS D20 generalises it: a focused flow is a tool in the ordinary window and every modal tool ends the same way, never with Done. Mocks: video-shell block 05 draws the whole thing against the real shell, comp-video §08 is the primitive, and the DS gained .clip.trimming, .tspare (video.css) and .cnv .modebar (toolbar.css) so nobody re-invents the session chrome per page."
+    },
+    {
+      "t": "2026-09-20T17:53:06.454Z",
+      "note": "REVIEW OF THE DRAWN THING, on the real pages in a browser at 1680 wide, both pages screenshotted. What is honest about it: the capsule stacks cleanly over the tool bar and reads as one thing; the clip being trimmed is the loudest thing in the strip and the discarded frames are hatched and quiet, which is the keep/drop confusion in the shipped window finally going the right way round; the panel is the same panel with the same four sections as block 01, so nothing about trim asks the dock for room. What I could not fix and left in the audit's rough list: ic-trim reads as a small rounded rectangle and may not say trim on a real bar; Crop and Trim sharing C is the marquee mechanism applied to two tools far less alike than a box and an ellipse marquee, so it is the first question the audit asks the user; and nobody has drawn the narrow window with the capsule, the transport and the tool bar all stacked (--mb-lift exists for it, unexercised)."
+    },
+    {
+      "t": "2026-09-20T17:53:06.507Z",
+      "note": "FILED, rather than left in this task: the-fourteen-video-pages-still-contradict-the-vi (p2). Fourteen of the fifteen video pages still have no Layers group in the dock, which D18 now forbids, and video-entry-wt still draws a clip's In and Out as a four box grid with a paragraph under it, which §2 and §5 both rule out. The 2026-09-19 pass corrected video.html's caption and renamed rows on fifteen pages but did NOT put the group back, and §7 of the design doc claimed it had; §7 now says what actually happened. Evidence in the task: a one line loop that counts the Layers group on every video page, 0 everywhere but video-shell."
     }
   ],
-  "started": "2026-09-19T17:28:22.866Z",
-  "status": "blocked"
+  "started": "2026-09-20T17:47:50.124Z",
+  "status": "in_progress"
 }

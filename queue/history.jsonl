@@ -5757,3 +5757,33 @@
 {"t":"2026-09-20T16:29:49.902Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-20T16:30:08.066Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-20T16:30:08.115Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Three batches landed and pushed: the shared component shelf leak (5 walks), the separate/text family (4, including a real off-main-thread race in the harness's settle rule), and three more corrections. 24 of the 57 are green, 21 left unread, 9 of those need somebody logged in. Full sweep requested. Back to pending because this is the standing task every sweep writes its result into."}
+{"t":"2026-09-20T17:07:21.898Z","ev":"task_created","id":"the-video-bar-s-buttons-say-what-they-do-in-the","priority":"p2-normal","title":"The video bar's buttons say what they do, in the app's own voice"}
+{"t":"2026-09-20T17:07:21.975Z","ev":"task_resequenced","id":"the-video-bar-s-buttons-say-what-they-do-in-the","from":3050,"to":5}
+{"t":"2026-09-20T17:32:12.262Z","ev":"decision_resolved","id":"refine-the-video-design-so-it-reads-as-the-same-when-you-open-a-recording-to-tri","taskId":"refine-the-video-design-so-it-reads-as-the-same","choice":"c"}
+{"t":"2026-09-20T17:32:12.300Z","ev":"task_unblocked","id":"refine-the-video-design-so-it-reads-as-the-same","decision":"refine-the-video-design-so-it-reads-as-the-same-when-you-open-a-recording-to-tri"}
+{"t":"2026-09-20T17:32:21.378Z","ev":"decision_resolved","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa-while-the-loop-is-working-throug","taskId":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","choice":"awake-while-working"}
+{"t":"2026-09-20T17:32:21.421Z","ev":"task_unblocked","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","decision":"a-hundred-and-fifteen-walks-fail-on-code-that-pa-while-the-loop-is-working-throug"}
+{"t":"2026-09-20T17:32:27.543Z","ev":"decision_resolved","id":"a-size-read-off-a-screenshot-is-the-size-the-typ-a-label-read-off-a-retina-screen","taskId":"a-size-read-off-a-screenshot-is-the-size-the-typ","choice":"true-size"}
+{"t":"2026-09-20T17:32:27.565Z","ev":"task_unblocked","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","decision":"a-size-read-off-a-screenshot-is-the-size-the-typ-a-label-read-off-a-retina-screen"}
+{"t":"2026-09-20T17:32:43.116Z","ev":"decision_resolved","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe-you-put-a-button-on-a-screen-and","taskId":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","choice":"a"}
+{"t":"2026-09-20T17:32:43.164Z","ev":"task_unblocked","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","decision":"a-copy-on-the-canvas-can-be-pointed-at-a-differe-you-put-a-button-on-a-screen-and"}
+{"t":"2026-09-20T17:32:49.297Z","ev":"decision_resolved","id":"copying-an-icon-carries-the-white-canvas-the-exp-copying-an-icon-should-the-white","taskId":"copying-an-icon-carries-the-white-canvas-the-exp","choice":"b"}
+{"t":"2026-09-20T17:32:49.342Z","ev":"task_unblocked","id":"copying-an-icon-carries-the-white-canvas-the-exp","decision":"copying-an-icon-carries-the-white-canvas-the-exp-copying-an-icon-should-the-white"}
+{"t":"2026-09-20T17:33:03.510Z","ev":"decision_resolved","id":"a-shadow-comes-out-of-the-app-a-different-shade-photonz-draws-see-through-things","taskId":"a-shadow-comes-out-of-the-app-a-different-shade","choice":"a"}
+{"t":"2026-09-20T17:33:03.547Z","ev":"task_unblocked","id":"a-shadow-comes-out-of-the-app-a-different-shade","decision":"a-shadow-comes-out-of-the-app-a-different-shade-photonz-draws-see-through-things"}
+{"t":"2026-09-20T17:33:39.922Z","ev":"decision_resolved","id":"appearance-is-below-the-fold-again-because-the-p-appearance-and-effects-will-not","taskId":"appearance-is-below-the-fold-again-because-the-p","choice":"a"}
+{"t":"2026-09-20T17:33:39.950Z","ev":"task_unblocked","id":"appearance-is-below-the-fold-again-because-the-p","decision":"appearance-is-below-the-fold-again-because-the-p-appearance-and-effects-will-not"}
+{"t":"2026-09-20T17:34:06.731Z","ev":"decision_resolved","id":"work-out-whether-the-app-needs-project-types-at-should-a-window-have-modes-you-s","taskId":"work-out-whether-the-app-needs-project-types-at","choice":"b"}
+{"t":"2026-09-20T17:34:06.753Z","ev":"task_unblocked","id":"work-out-whether-the-app-needs-project-types-at","decision":"work-out-whether-the-app-needs-project-types-at-should-a-window-have-modes-you-s"}
+{"t":"2026-09-20T17:35:06.017Z","ev":"decision_resolved","id":"a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t","taskId":"a-copy-of-a-component-is-configured-not-authored","choice":"a"}
+{"t":"2026-09-20T17:35:06.059Z","ev":"task_unblocked","id":"a-copy-of-a-component-is-configured-not-authored","decision":"a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t"}
+{"t":"2026-09-20T17:47:50.003Z","ev":"sweep_pass","walks":389,"passed":377,"failed":12,"seconds":4642,"complete":false,"total":539,"screenLocked":true,"couldNotRun":150,"partial":true}
+{"t":"2026-09-20T17:47:50.127Z","ev":"task_started","id":"refine-the-video-design-so-it-reads-as-the-same","title":"Refine the video design so it reads as the same app","priority":"p1-high"}
+{"t":"2026-09-20T17:52:00.143Z","ev":"task_note","id":"a-document-can-have-time"}
+{"t":"2026-09-20T17:52:19.890Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T17:52:52.146Z","ev":"task_created","id":"the-fourteen-video-pages-still-contradict-the-vi","priority":"p2-normal","title":"The fourteen video pages still contradict the video design they were corrected by"}
+{"t":"2026-09-20T17:52:58.044Z","ev":"task_note","id":"refine-the-video-design-so-it-reads-as-the-same"}
+{"t":"2026-09-20T17:53:01.997Z","ev":"task_note","id":"refine-the-video-design-so-it-reads-as-the-same"}
+{"t":"2026-09-20T17:53:06.456Z","ev":"task_note","id":"refine-the-video-design-so-it-reads-as-the-same"}
+{"t":"2026-09-20T17:53:06.509Z","ev":"task_note","id":"refine-the-video-design-so-it-reads-as-the-same"}
+{"t":"2026-09-20T17:54:11.438Z","ev":"task_note","id":"a-document-can-have-time"}

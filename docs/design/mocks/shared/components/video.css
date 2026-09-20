@@ -72,6 +72,8 @@
        .lb             its duration, riding inside the clip body
      .xfade.in / .out  a fade INSIDE one clip's own time - no overlap, so
                        nothing moves and no spare is spent      (z 6)
+     .clip.trimming    the clip the Trim tool has in hand: both handles up
+     .tspare           that clip's own spare, at its ends       (z 4)
    And for the expanded view, where the two clips get their own rows:
      .xused            the region of a clip the overlap consumed
      .xboth            the span where both clips are on screen at once
@@ -182,6 +184,31 @@
   background:rgba(255,255,255,.55);border-radius:2px;left:50%;transform:translateX(-50%);
   opacity:0;transition:opacity .12s ease}
 .clip:hover .edge::after{opacity:1}
+
+/* A CLIP BEING TRIMMED (UX-PATTERNS D20). Trim is a tool you pick, like Crop,
+   and while it is in hand the clip it is working on holds BOTH handles up
+   without hover: the session is about the two ends together, and a handle you
+   have to go looking for is not a handle. Wider and brighter than the hover
+   state, so a trim in progress is never mistaken for a pointer resting on a
+   clip. The accent ring is the one the rest of the app uses for "this is
+   selected" - keep and drop are told apart by the spare drawing outside the
+   clip, never by the ring meaning something different here. */
+.clip.trimming{box-shadow:0 0 0 2px var(--accent), var(--shadow-2)}
+.clip.trimming .edge::after{opacity:1;width:3px;top:4px;bottom:4px;
+  background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+
+/* THE SPARE AT A CLIP'S OWN ENDS. Same dashes as `.xspare`, because it is the
+   same substance: frames that were recorded and are not being read. A
+   transition spends spare; a trim gives it back. Drawn OUTSIDE the clip, at the
+   clip's own height, so what you would get back is the size it would be. */
+/* written as a child selector because `.lane.abs>*` pins every child to
+   top:0, exactly as `.xspare.a/.b` has to out-specify it above */
+.lane.abs>.tspare{position:absolute;top:4px;bottom:4px;height:auto;border-radius:4px;z-index:4;
+  border:1px dashed color-mix(in srgb,var(--ink) 30%,transparent);
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 9%,transparent),
+    color-mix(in srgb,var(--ink) 9%,transparent) 4px,transparent 4px,transparent 8px);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8.5px;font-family:var(--mono);color:var(--faint);white-space:nowrap}
 
 /* KEY MARKS. Read-only on purpose: the timeline says WHEN something changes,
    and the clip detail pane says what it changes to. A draggable key here would

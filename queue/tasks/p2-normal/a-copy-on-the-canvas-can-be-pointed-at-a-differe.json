@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:07:03.226Z",
-  "updated": "2026-09-20T12:26:43.731Z",
+  "updated": "2026-09-20T17:32:43.163Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Ninth manager pass carrying this as an open thread with no card ever opened against it. That is the actual failure being corrected here: the thread kept being recorded and never turned into a question the user could answer.\n\nThe gap is stated in the spec itself, docs/design/ui-building.md, What the first version deliberately does not do: Detach is one way, there is no re-attach. Nothing in that list covers swapping which main a copy follows, and nothing in Sources/PhotonzCore/ComponentInstances.swift offers it.\n\nBLOCKED ON ITS CARD. This adds something visible that the user has not asked for, and the shape of it is exactly the product question: whether it is a row in the Component section, a drop of one tile onto an existing copy, or something else. Do not build it before the card is answered.\n\nOne of the card options is do not build it, marked declines, because a tool where you delete and redo is a defensible answer for a first version and the user should be able to say so.",
@@ -55,6 +55,10 @@
     {
       "t": "2026-09-20T12:26:43.730Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-09-20T17:32:43.162Z",
+      "note": "decision \"You put a Button on a screen and set it up. Should you be able to point it at a different component without starting over?\" resolved: A row in the panel that says which one it is"
     }
   ]
 }

@@ -18467,3 +18467,49 @@ media on the bar. Its log says exactly what the model already does for it.
 **Open question worth an answer:** a test run can report twenty broken tests and
 a crash on code that is fine, when the build folder is left half rebuilt after a
 core type gains a field. Filed as `a-test-run-says-what-is-wrong-with-the-code-not`.
+
+## 2026-09-20 — Trim stops being a window and becomes a tool
+
+The last open question in the video design came back answered: **one window,
+with a trim mode in it**. Opening a recording lands you in the ordinary Photonz
+window, and Trim is a tool you pick, like Crop.
+
+"Like Crop" is only an answer if Crop is copied exactly, so the shipped Crop was
+read first (`EditorView.cropActionBar`): a tool in the strip, handles on the
+thing whose bounds change, **one glass capsule clear of the tool bar carrying
+Cancel and a primary button named for the verb**, `⏎` to commit and `⎋` to
+cancel. No "Done" and no "Reset" standing beside them. That makes the recording
+window's **Reset · Cancel · Done** a third vocabulary rather than the thing being
+preserved, so it does not move with the flow: a trim now ends with **Cancel** and
+**Trim**, and Reset is demoted into the settings half of the capsule, where it
+earns its place because a trim is cumulative and "give the whole recording back"
+is a thing you want.
+
+Trim joins **Crop's slot** rather than taking one of its own. That slot is
+already *change the picture's bounds*, with Resize Image at the foot of its
+flyout, and a trim is bounds in time — so `C` picks it, `C` again swaps, `⇧C`
+walks, no slot anybody has learned the position of moves and no new letter is
+spent. The second member is offered when the document has a duration, the same
+fact that puts the timeline there (D19). The handles go on the clip's **bar**,
+both up at once, with the frames outside the in and out drawn beside it at the
+clip's own height with their durations, because **a trim throws nothing away**.
+
+And trim-and-send does not get slower: a recording that is one clip and has
+never been edited opens with the clip picked and **Trim already in hand**, so the
+flow is still drag a handle, press `⏎`, export.
+
+Written up as `docs/design/video-surface.md` §10, generalised as **UX-PATTERNS
+D20** (a focused flow is a tool in the ordinary window, and every modal tool ends
+the same way), drawn at `pages/video-shell.html` block 05 with the primitive at
+`comp-video` §08. The design system gained `.clip.trimming`, `.tspare` and
+`.cnv .modebar` so the session chrome is not re-invented per page. Audit:
+`queue/audits/2026-09-20-video-trim-tool.json`.
+
+**Next:** `a-document-can-have-time` carries it, with two new acceptance items —
+trim arrives as a tool with that capsule, and the eleven walks that drive the
+shipped trim flow are rewritten in the commit that moves the window.
+
+**Left contradicting itself:** fourteen of the fifteen video pages still have no
+Layers group in the dock, which D18 forbids, and `video-entry-wt` still types a
+clip's In and Out into a grid of boxes. Filed as
+`the-fourteen-video-pages-still-contradict-the-vi`.

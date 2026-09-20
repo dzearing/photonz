@@ -32,3 +32,24 @@
   border:1px solid var(--edge-lo);background:var(--sl-knob);box-shadow:var(--sl-knob-shadow)}
 .zslider:focus-visible{box-shadow:var(--ring)}
 .zoomctl .zval{min-width:34px;text-align:right}
+
+/* ---- THE MODAL TOOL CAPSULE (UX-PATTERNS D20) ----
+   Crop, Trim, and anything else that takes the window over for a moment end
+   the same way: one glass capsule floating just clear of the tool bar, with
+   the tool's own readouts and settings at the left, then Cancel, then a
+   primary button NAMED FOR THE VERB. Never "Done", never a checkmark at the
+   far end of a long bar.
+   It sits ABOVE `.tbar` rather than beside it so the two read as a stack: the
+   bar is what is always there, the capsule is what leaves when the mode does.
+   `--mb-lift` is how far clear, and a page with a tool-settings row of its own
+   raises it. */
+.cnv .modebar{position:absolute;left:50%;bottom:calc(var(--s4) + var(--mb-lift,46px));
+  transform:translateX(-50%);z-index:7;
+  display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);
+  border:1px solid var(--edge-lo);border-radius:999px;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow);white-space:nowrap}
+/* the readouts: what this mode is about to do, in numbers, in the settings
+   half of the capsule so they never read as buttons */
+.cnv .modebar .rd{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.cnv .modebar .rd b{color:var(--ink);font-weight:600}

@@ -66,6 +66,11 @@
     }
   ],
   "recommended": "true-size",
-  "status": "pending",
-  "created": "2026-09-17T18:34:04.380Z"
+  "status": "resolved",
+  "created": "2026-09-17T18:34:04.380Z",
+  "answer": {
+    "choice": "true-size",
+    "note": "",
+    "resolved": "2026-09-20T17:32:27.542Z"
+  }
 }
