@@ -129,7 +129,7 @@
     {
       "do": "describe",
       "stage": "3-past-fully-round",
-      "note": "the ends of the slider are the ends of the box: 500 on a box whose fully round is 48 shows 48, rather than a number over a knob sitting at the top"
+      "note": "the ends of the slider are the ends of the box: this box is 360 by 120, so fully round is half its short edge, 60. Typing 500 shows 60, rather than a number over a knob sitting at the top"
     },
     {
       "do": "focus",
@@ -150,7 +150,7 @@
     {
       "do": "expect",
       "field": "Corner Radius",
-      "reads": "48"
+      "reads": "60"
     },
     {
       "do": "focus",

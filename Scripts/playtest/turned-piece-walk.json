@@ -8,6 +8,7 @@
     { "do": "tool", "tool": "rectangle" },
     { "do": "drag", "from": [300, 300], "to": [700, 500], "steps": 8 },
     { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "rectangle" },
     { "do": "drag", "from": [340, 340], "to": [460, 400], "steps": 8 },
     { "do": "wait", "seconds": 0.3 },
 

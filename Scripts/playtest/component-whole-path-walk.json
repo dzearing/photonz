@@ -7,7 +7,8 @@
       "text",
       "panel",
       "groups",
-      "tools"
+      "tools",
+      "shelf"
     ]
   },
   "steps": [
@@ -765,7 +766,7 @@
     {
       "do": "expect",
       "control": "Apply to Other Variants",
-      "reads": "every version already matches"
+      "reads": "every variant already matches"
     },
     {
       "do": "describe",
@@ -813,7 +814,7 @@
     {
       "do": "expect",
       "control": "Apply to Other Variants",
-      "reads": "every version already matches"
+      "reads": "every variant already matches"
     },
     {
       "do": "describe",
