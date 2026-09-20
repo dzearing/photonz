@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T23:08:14.715Z",
-  "updated": "2026-09-18T12:08:26.147Z",
+  "updated": "2026-09-20T07:35:52.353Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed in source on 2026-09-17, NOT photographed, and the honest reason is below.\n\nSources/Photonz/MotionListInspector.swift:193-196 draws both rows unconditionally for a rotation:\n    if motion.property == .rotation {\n        MotionPivotSetting(motion: motion, isNumbers: false)   // Around\n        MotionPivotSetting(motion: motion, isNumbers: true)    // At\n    }\nThe if/else at line 435 is per instance, not a choice between the two. MotionPivotSetting.reading (line 429) returns the named spot title when there is one and \"x, y\" otherwise, which is exactly the pair the At boxes at line 436 already show.\n\nCould not photograph it: Scripts/playtest.sh Scripts/playtest/motion-pivot-walk.json --no-build returned status locked, 0 of 55 steps, \"step 9 (panelMenu) opens a real menu, and an open menu is a window of its own that the app can neither drive nor photograph while the login window is up. Forcing it with PHOTONZ_ALLOW_LOCKED_WALK=1 gets none of its 6 pictures: the first one comes after that step.\" So whoever picks this up takes the picture.\n\nThe audit that shipped it says the same (queue/audits/2026-09-15-motion-pivot.json rough item six). The rule is the new One setting, two doors section in docs/design/mocks/shared/UX-PATTERNS.md (added 2026-09-17): these two doors pass the test honestly, because a menu cannot set 142 and boxes cannot say \"its centre\", but only one door may be the readout.",
@@ -27,6 +27,49 @@
     {
       "t": "2026-09-18T12:08:26.146Z",
       "note": "seq 1350 -> 20"
+    },
+    {
+      "t": "2026-09-20T07:22:38.884Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T07:35:27.189Z",
+      "note": "owns these walks: motion-pivot-reads-once-walk, motion-pivot-walk, motion-pivot-in-a-corner-walk"
+    },
+    {
+      "t": "2026-09-20T07:35:52.045Z",
+      "note": "Adversarial review before building: the two rows pass test 2 of the two-doors rule honestly (a menu of three spots cannot set 142; two boxes cannot say 'its centre'), so the answer is not to delete a row. Merging them into one row was considered and dropped: the dock row is a 44pt label plus one control, and a menu next to two number boxes does not fit. So the minimal correct fix is that Around stops being a readout."
+    },
+    {
+      "t": "2026-09-20T07:35:52.095Z",
+      "note": "Built: MotionPivotSetting.reading now asks the model (MotionPivot.title -> 'Its centre' / 'Top centre' / 'Bottom centre' / 'Custom') instead of spelling the numbers a second time. EditorState gained motionPivot (preview while dragging, stored otherwise) and lost motionPivotNamed, which nothing else used. The word is Custom rather than 'Its own spot' because the app already says Custom for a size that is not one of the presets (New Frame, New Canvas), and MotionPivot.title already said it; the audit puts the choice to the user in evaluate item two."
+    },
+    {
+      "t": "2026-09-20T07:35:52.153Z",
+      "note": "Verified on the real app under a locked screen: new lock-safe walk motion-pivot-reads-once-walk (19 steps, ok, 2 real window captures). It opens Scripts/playtest/fixtures/pivot-of-its-own.photonz, a bell whose rotation pivot is at unit (0.5, -0.2) = canvas (380, 140), reveals the Around row and photographs it: Around reads Custom, At reads 380 and 140. It then drags the crosshair back to the middle and checks Around reads Its centre with At on 380, 280. The fixture was generated with a throwaway program linked against the built module: swiftc -I .build/debug/Modules -o /tmp/make-pivot-fixture make.swift .build/debug/PhotonzCore.build/*.o"
+    },
+    {
+      "t": "2026-09-20T07:35:52.202Z",
+      "note": "Acceptance 3 (the At boxes still set an exact point and still carry the pivot through a move or resize) is not covered by a new run: the typing path and the fraction storage are untouched, MotionPivotTests.thePivotFollowsTheLayerWhenTheLayerMoves covers the carrying, and motion-pivot-walk step 6 covers the typing but cannot run until the screen is unlocked."
+    },
+    {
+      "t": "2026-09-20T07:35:52.251Z",
+      "note": "Found while here, folded into walks-that-fail-in-the-full-sweep rather than filed: every motion walk's 'expect field Rotation present' step has been failing since before this change (the motion row is not a text field), and a control inside a motion row reads as 'Rotation, <value>', so 'expect control Around reads ...' needs \"in\": \"Rotation\". Fixed in the two pivot walks this task owns; tutorial-make-something-move-walk has the same break at step 17 on 'Motion Empty' and is left to that task."
+    },
+    {
+      "t": "2026-09-20T07:35:52.300Z",
+      "note": "left rough: the At boxes are still called Around X and Around Y to a screen reader although their row says At. Not filed: it is a name only a screen reader and a walk read, the row it sits under makes the meaning plain, and renaming it would churn three walks for nothing a person would notice. Raised in the audit's evaluate list instead. No sweep asked for: the change touches the motion rows only, and a full sweep is already pending on the lock."
+    },
+    {
+      "t": "2026-09-20T07:35:52.351Z",
+      "note": "Around now says Custom where the pivot is somewhere of its own, and the At row alone states the position. Reading comes off MotionPivot.title in the model; EditorState.motionPivot feeds it, preview included. Core test pins all four readings and that none of them contains a comma; 8413 tests pass. Verified on the real app by a new lock-safe walk (motion-pivot-reads-once-walk, ok, two real window captures of the panel, taken under a lock). Audit: queue/audits/2026-09-20-motion-pivot-reads-once.json. Committed 43910970 and pushed."
     }
-  ]
+  ],
+  "started": "2026-09-20T07:22:38.883Z",
+  "walks": [
+    "motion-pivot-reads-once-walk",
+    "motion-pivot-walk",
+    "motion-pivot-in-a-corner-walk"
+  ],
+  "completed": "2026-09-20T07:35:52.352Z"
 }

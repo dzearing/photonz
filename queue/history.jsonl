@@ -5625,3 +5625,34 @@
 {"t":"2026-09-20T06:22:25.859Z","ev":"task_note","id":"a-shape-you-nudge-stops-looking-smooth-until-you"}
 {"t":"2026-09-20T06:22:25.906Z","ev":"task_note","id":"a-shape-you-nudge-stops-looking-smooth-until-you"}
 {"t":"2026-09-20T06:22:25.955Z","ev":"task_note","id":"a-shape-you-nudge-stops-looking-smooth-until-you"}
+{"t":"2026-09-20T06:22:47.913Z","ev":"task_note","id":"a-shape-you-nudge-stops-looking-smooth-until-you"}
+{"t":"2026-09-20T06:22:47.961Z","ev":"task_note","id":"a-shape-you-nudge-stops-looking-smooth-until-you"}
+{"t":"2026-09-20T06:22:50.391Z","ev":"task_done","id":"a-shape-you-nudge-stops-looking-smooth-until-you","from":"in_progress","note":"A nudged shape stays smooth. Cause: the canvas refuses to draw its sharp copy while a drag sprite is up, and a drag's commit submits while the sprite is still up, so the request was thrown away and nothing asked again until the zoom changed. Fixed in Sources/Photonz/EditorState.swift as a didSet on dragPreview, so every route that drops a sprite asks again. Next only (next-crisp-zoom). New walk step expectSharp (PhotonzCore, unit tested, lock-safe) and Scripts/playtest/nudge-stays-sharp-walk.json, which failed at step 16 before the fix and is green twice after it with four real window captures. Scripts/test.sh green, 8412 tests. Audit: queue/audits/2026-09-20-nudge-stays-sharp.json. Commit f7c3ed51, pushed."}
+{"t":"2026-09-20T07:22:38.764Z","ev":"sweep_pass","walks":259,"passed":258,"failed":1,"seconds":3575,"complete":false,"total":537,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T07:22:38.886Z","ev":"task_started","id":"a-turning-layer-says-where-its-pivot-is-twice","title":"A turning layer says where its pivot is twice","priority":"p3-low"}
+{"t":"2026-09-20T07:35:27.191Z","ev":"task_walks","id":"a-turning-layer-says-where-its-pivot-is-twice","walks":["motion-pivot-reads-once-walk","motion-pivot-walk","motion-pivot-in-a-corner-walk"]}
+{"t":"2026-09-20T07:35:27.241Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-20T07:35:52.047Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.097Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.155Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.204Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.253Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.302Z","ev":"task_note","id":"a-turning-layer-says-where-its-pivot-is-twice"}
+{"t":"2026-09-20T07:35:52.354Z","ev":"task_done","id":"a-turning-layer-says-where-its-pivot-is-twice","from":"in_progress","note":"Around now says Custom where the pivot is somewhere of its own, and the At row alone states the position. Reading comes off MotionPivot.title in the model; EditorState.motionPivot feeds it, preview included. Core test pins all four readings and that none of them contains a comma; 8413 tests pass. Verified on the real app by a new lock-safe walk (motion-pivot-reads-once-walk, ok, two real window captures of the panel, taken under a lock). Audit: queue/audits/2026-09-20-motion-pivot-reads-once.json. Committed 43910970 and pushed."}
+{"t":"2026-09-20T08:35:43.440Z","ev":"sweep_pass","walks":260,"passed":259,"failed":1,"seconds":3576,"complete":false,"total":538,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T08:38:22.182Z","ev":"task_created","id":"time-lives-in-the-document-and-a-layer-can-have","priority":"p1-high","title":"Time lives in the document, and a layer can have an in and an out"}
+{"t":"2026-09-20T08:38:27.158Z","ev":"task_resequenced","id":"time-lives-in-the-document-and-a-layer-can-have","from":340,"to":15}
+{"t":"2026-09-20T08:38:27.226Z","ev":"task_note","id":"a-document-can-have-time"}
+{"t":"2026-09-20T08:38:33.761Z","ev":"task_created","id":"three-layers-picked-one-outlined-and-the-switch","priority":"p2-normal","title":"Three layers picked, one outlined, and the switch says they all are"}
+{"t":"2026-09-20T08:38:35.829Z","ev":"task_resequenced","id":"three-layers-picked-one-outlined-and-the-switch","from":3020,"to":1}
+{"t":"2026-09-20T08:38:35.877Z","ev":"task_walks","id":"three-layers-picked-one-outlined-and-the-switch","walks":["switch-says-mixed-walk"]}
+{"t":"2026-09-20T08:38:35.923Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-20T08:38:42.132Z","ev":"task_created","id":"a-recording-can-be-made-small-enough-to-send","priority":"p2-normal","title":"A recording can be made small enough to send"}
+{"t":"2026-09-20T08:38:48.944Z","ev":"task_resequenced","id":"a-recording-can-be-made-small-enough-to-send","from":3020,"to":5}
+{"t":"2026-09-20T08:38:48.995Z","ev":"task_created","id":"a-shape-you-turned-still-shows-its-points","priority":"p2-normal","title":"A shape you turned still shows its points"}
+{"t":"2026-09-20T08:38:52.434Z","ev":"task_resequenced","id":"a-shape-you-turned-still-shows-its-points","from":3020,"to":10}
+{"t":"2026-09-20T08:38:58.523Z","ev":"task_created","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","priority":"p2-normal","title":"A lane on the timing strip says which layer it belongs to"}
+{"t":"2026-09-20T08:39:01.947Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":3020,"to":20}
+{"t":"2026-09-20T08:39:09.394Z","ev":"task_created","id":"the-dev-app-says-how-far-behind-it-is","priority":"p1-high","title":"The dev app says how far behind it is"}
+{"t":"2026-09-20T08:39:12.564Z","ev":"task_resequenced","id":"the-dev-app-says-how-far-behind-it-is","from":340,"to":5}
+{"t":"2026-09-20T08:39:47.817Z","ev":"manager","filed":6,"readyBefore":2,"readyAfter":8,"report":"queue/manager/2026-09-20-0139.md"}

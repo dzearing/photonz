@@ -1,0 +1,38 @@
+{
+  "id": "time-lives-in-the-document-and-a-layer-can-have",
+  "title": "Time lives in the document, and a layer can have an in and an out",
+  "goal": "Today a recording is a separate little editor with its own idea of time, and the rest of the app has no idea time exists. Give the document a duration and give a layer a point where it starts and a point where it ends, put that in the pure core where the icon timing strip and the video timeline can both read it, and make the strip draw a bar for a layer that occupies time instead of a bare heading. Nothing new appears on screen for somebody who is not editing a recording.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T08:38:22.178Z",
+  "updated": "2026-09-20T08:38:27.157Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "SPLIT OUT of a-document-can-have-time by the manager pass on 2026-09-20, and this is the half that does NOT need the pending decision card.\n\nWhy the split. The design pass landed on 2026-09-19 as 72a2a75c with docs/design/video-surface.md, and it left exactly one question open: what happens to the trim-and-send fast lane once a recording opens in the ordinary window. That question decides where a recording OPENS. It does not touch the model underneath, the strip drawing, or the renderer. With the whole foundation sitting behind that card the focus epic had two claimable tasks this morning and then zero, so the model half comes out and can be built now.\n\nWhat stays behind in a-document-can-have-time, which now depends on this: opening a recording in the ordinary editor, the timeline appearing because the document has time, a clip being an ordinary layer you can pick and name and style, retiring VideoEditorState and VideoEditorView, and docs/design/video.md. None of that can be honestly built before the card is answered; all of it becomes straightforward once this lands.\n\nFiles. PhotonzCore has NO notion of time, duration, tracks or keyframes today. Sources/Photonz/VideoEditorState.swift and VideoEditorView.swift are the app for a recording, with TrimTimeline and PlaybackScrubber bound to VideoEditorState rather than to a reusable model. Sources/Photonz/MotionStripView.swift is the strip; MotionStrip.swift says today that a layer row is a heading and not a bar, which is true of a bell that rotates and false of a clip, and the rule becomes: a bar when it has an in and an out, a heading when it does not.\n\nRead docs/design/video-surface.md first. It is the answer the rest of this set builds against, and it already settled where the transport and the timeline live, what the panel budget is, and how the fifteen clickthroughs reconcile.\n\nKeep the scope tight: no transitions, no audio lanes, no captions, no keyframes. Those are siblings and each will push back on the model; the model is right when they can be added without reopening it.",
+  "acceptance": [
+    "A document can carry a duration, and a layer in it can have a point where it starts and a point where it ends",
+    "The time model lives in PhotonzCore: pure, value typed, Sendable, Codable, no AppKit, no CoreImage, no force unwraps, tests written before the code",
+    "A layer row on the timing strip draws a BAR when the layer has an in and an out and a bare heading when it does not, so the icon strip and the video timeline stay one component (UX-PATTERNS D18)",
+    "The renderer can composite a frame at a given moment, and the measured cost for a realistic document is written down and compared against the 16ms budget",
+    "The recording window is re-pointed at the shared model rather than keeping its own: trim, crop, revert and export all still work and the audit names each one it checked",
+    "A document with no time behaves exactly as it does today, proved by the existing walks passing untouched",
+    "Pixel data still never lives in the document model: a clip is a reference plus an in and an out, never frames",
+    "Ships behind next-cut-a-recording, which is already on by default in Next, so the try path is: open a recording from History, cut it into pieces with B, and the timing strip shows a bar per piece",
+    "audit written under queue/audits/, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T08:38:22.180Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-20T08:38:27.156Z",
+      "note": "seq 340 -> 15"
+    }
+  ],
+  "source": "manager"
+}

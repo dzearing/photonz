@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 330,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T05:03:43.181Z",
-  "updated": "2026-09-20T06:22:25.954Z",
+  "updated": "2026-09-20T06:22:50.390Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-20, not read off code. Found while working an-icon-frame-s-guides-stop-looking-like-a-secon, and NOT caused by it: the same pictures come out of a build with that change stashed.\n\nCommand: Scripts/playtest.sh /tmp/blocky-probe.json (script inlined below). Four window captures in /tmp/photonz-playtest/blocky-probe, side by side at /tmp/abcd.png:\n  a-fresh-sc.png        a 10 point ellipse just drawn on a 24 point icon frame at 3200%: smooth.\n  b-moved-inside-sc.png the same ellipse dragged from (800,550) to (801,551), one document point, nowhere near the frame's edge: drawn in 1-document-pixel blocks with a stepped, anti-aliased fringe.\n  c-settled-sc.png      three seconds later, after clicking empty canvas so nothing is picked: still blocky.\n  d-rezoomed-sc.png     zoomToFit then pinch back to 32x: smooth again.\n\nSo it is a raster cached at the wrong resolution that survives the move and any wait, and only a zoom change throws it away. Photographed while the Mac was locked; the lock dims colours but not shapes, and the blocks are geometry.\n\nNot yet checked: whether it also happens to a shape that is not inside a frame, or on a screen-sized frame rather than an icon one. It was only ever tried on a 24 point icon frame.\n\nThe walk script:\n{ \"out\": \"/tmp/photonz-playtest/blocky-probe\", \"setup\": { \"forget\": [\"shapes\", \"frames\"] }, \"steps\": [ blank 1600x1100, newFrameDialog, press 24 in Icons, press Add Frame, tool ellipse, drag (795,545)->(805,555), tool select, snapshot a-fresh, drag (800,550)->(801,551), snapshot b-moved-inside, wait 3, click (600,300), snapshot c-settled, zoomToFit, pinch to 32, snapshot d-rezoomed ] }",
@@ -62,10 +62,23 @@
     {
       "t": "2026-09-20T06:22:25.953Z",
       "note": "Left rough, no task filed: the sharp copy is still asked for 90ms after whatever changed, so on a slow machine there can be a frame or two of the blown-up picture between letting go and it landing. That delay predates this bug, is deliberate (it stops a whole window of pixels being spent per keystroke), and nobody has reported noticing it. It is in the audit's rough list, where the user can disagree."
+    },
+    {
+      "t": "2026-09-20T06:22:47.911Z",
+      "note": "Answers the report's open question. It was never about frames: the sharp copy is drawn for whatever is in the window, so a shape anywhere on any canvas went blocky the same way after a pointer drag at any zoom past 1:1. A 24 point icon frame is simply where it is impossible to miss, because an icon is worked on at 3200%. The fix is frame-independent for the same reason."
+    },
+    {
+      "t": "2026-09-20T06:22:47.959Z",
+      "note": "Asked for a full sweep between tasks: the didSet fires on every drag in the app and expectSharp changed the lock-safe list, and only the drag, icon and zoom walks have been run against it."
+    },
+    {
+      "t": "2026-09-20T06:22:50.388Z",
+      "note": "A nudged shape stays smooth. Cause: the canvas refuses to draw its sharp copy while a drag sprite is up, and a drag's commit submits while the sprite is still up, so the request was thrown away and nothing asked again until the zoom changed. Fixed in Sources/Photonz/EditorState.swift as a didSet on dragPreview, so every route that drops a sprite asks again. Next only (next-crisp-zoom). New walk step expectSharp (PhotonzCore, unit tested, lock-safe) and Scripts/playtest/nudge-stays-sharp-walk.json, which failed at step 16 before the fix and is green twice after it with four real window captures. Scripts/test.sh green, 8412 tests. Audit: queue/audits/2026-09-20-nudge-stays-sharp.json. Commit f7c3ed51, pushed."
     }
   ],
   "walks": [
     "nudge-stays-sharp-walk"
   ],
-  "started": "2026-09-20T06:08:37.271Z"
+  "started": "2026-09-20T06:08:37.271Z",
+  "completed": "2026-09-20T06:22:50.389Z"
 }

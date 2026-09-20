@@ -1,0 +1,36 @@
+{
+  "id": "the-dev-app-says-how-far-behind-it-is",
+  "title": "The dev app says how far behind it is",
+  "goal": "The app you open to look at what the loop has built is two days old. A lock file left behind on 2026-09-18 stops the loop rebuilding it, which is correct because the lock means somebody is in there, but nothing anywhere says the lock is still held or that the build has gone stale. So you open the app to check the Save fix you reported, it is not there, and the app looks broken when it is only old. Say it out loud, on the dashboard and in the loop output.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T08:39:09.390Z",
+  "updated": "2026-09-20T08:39:12.563Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED here on 2026-09-20:\n\n  $ ls -l \"dist/Photonz Dev.app/Contents/MacOS/\"\n  -rwxr-xr-x  40522176 Sep 18 07:43 Photonz Dev\n  $ cat queue/playtest.lock\n  Someone is working in the dev app. Created 2026-09-18 08:09 by testing.sh.\n  $ git log --since=\"2026-09-18T08:09\" --oneline -- Sources/ | wc -l\n  12\n  $ grep -c \"someone is using the dev app\" queue/loop.log\n  13\n\nSo the binary is from 07:43 on 2026-09-18, the lock was taken 26 minutes later, and twelve commits have touched Sources since. Among the things missing from the app on disk: the Save fix for the bug the user reported (72dd8ffa and 08e6450d), the recording Export sheet (60c74070), the picked-piece visibility (db6436ea) and both icon fixes from last night. The refresh has bailed thirteen times and said so only in queue/loop.log.\n\nNothing on the dashboard knows the lock exists: grep for playtest.lock across queue/ and site/ finds refresh-dev-app.sh, testing.sh, runner-prompt.md and a pile of task and audit text, and no dashboard code at all.\n\nThe manager pass on 2026-09-19 checked this same theory and correctly killed it, because at that point the newest Sources commit was ebbcfc3f at 07:42 on 2026-09-18 and the binary was 07:43, so the hold had cost nothing. It wrote the condition that would make it real into a task log. That condition has now happened.\n\nDo NOT make the refresh override the lock. That was tried and it is why the lock exists: on 2026-09-15 the loop quit the app out from under the user while they were drawing with the Pen. The whole reasoning is at the top of queue/bin/refresh-dev-app.sh. The fix is honesty, not force.",
+  "acceptance": [
+    "The dashboard says when the dev app is older than the newest commit that touched Sources, and how many commits and how long",
+    "The same line says the lock is being held and since when, because that is the reason the app is not being refreshed",
+    "A lock older than a day is called out as probably forgotten, with the one command that clears it, and nothing clears it automatically: the lock exists to protect somebody working in the app",
+    "The go loop prints the same thing where it already prints the refresh outcome, so a run log says it too",
+    "Nothing about this rebuilds, re-signs, quits or relaunches the dev app, and refresh-dev-app.sh still bails while the lock is held",
+    "The try path is: hold queue/playtest.lock, land a commit under Sources, and the dashboard says the dev app is behind",
+    "audit written under queue/audits/ with the dashboard line, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T08:39:09.392Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-20T08:39:12.562Z",
+      "note": "seq 340 -> 5"
+    }
+  ],
+  "source": "manager"
+}

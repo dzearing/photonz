@@ -1,0 +1,42 @@
+{
+  "id": "three-layers-picked-one-outlined-and-the-switch",
+  "title": "Three layers picked, one outlined, and the switch says they all are",
+  "goal": "Pick three layers where only one has an outline. The Outline switch in the panel reads as on, the same as it reads when all three have one, so the panel is saying something that is not true and a click on it does something different from what you expect. It used to say Mixed. Put that back.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T08:38:33.757Z",
+  "updated": "2026-09-20T08:38:35.876Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED, not read. Run at 2026-09-20 on HEAD 43910970 against the probe built at 00:36:\n\n  $ Scripts/playtest-all.sh --no-build switch-says-mixed\n  switch-says-mixed-walk   8s  FAILED  step 34 (expect): the control called \"Switch\" in \"@outline\" reads \"Outline, on\", not \"mixed\"\n  ==> 0 passed, 1 failed\n\nNot a sweep casualty: it failed on its own here, and it is the ONLY failure in each of the last four full sweeps (02:18, 06:08, 07:22 and 08:35 on 2026-09-20), and it appears in every sweep log back to 2026-09-19 10:45. So it is a steady regression rather than a flake.\n\nThis is shipped behaviour that came back: a-switch-says-mixed-the-way-every-other-control is done, and its whole point was that a switch facing a mixed selection should say Mixed out loud like every other control in the panel rather than showing a plain state. The walk step that fails is step 34 of Scripts/playtest/switch-says-mixed-walk.json, which picks three layers with one outlined and expects the Outline switch to read mixed.\n\nStart by finding what changed: the Outline row moved out of Appearance recently (outline-leaves-appearance-and-an-effect-s-colo, done) and the shape parts work rearranged that section, so the mixed reading is most likely computed somewhere the new row does not ask. Reproduce first, then fix.\n\nThe standing sweep task walks-that-fail-in-the-full-sweep cannot pick this up: it is blocked behind two other tasks and has been for days, which is how one steady failure sat through ten sweeps unowned.",
+  "acceptance": [
+    "Pick three layers where one has an outline and two do not: the Outline row reads Mixed, not on",
+    "The same holds for every other switch in the panel that can face a mixed selection, and the audit names the ones checked",
+    "Scripts/playtest.sh Scripts/playtest/switch-says-mixed-walk.json passes, on its own and in the sweep",
+    "A test covers the mixed reading so it cannot silently go back to on",
+    "Ships in the same place it already lives, so the try path is: pick three layers, give one an outline, look at the Outline row",
+    "audit written under queue/audits/, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T08:38:33.759Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-20T08:38:35.827Z",
+      "note": "seq 3020 -> 1"
+    },
+    {
+      "t": "2026-09-20T08:38:35.875Z",
+      "note": "owns these walks: switch-says-mixed-walk"
+    }
+  ],
+  "walks": [
+    "switch-says-mixed-walk"
+  ],
+  "source": "manager"
+}
