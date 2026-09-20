@@ -1599,6 +1599,9 @@ private final class Run {
         case .expectClickReaches(let at, let what):
             note(number, step.name, try checkClickReaches(at, what: what), state: describe())
 
+        case .expectToast(let says, let absent):
+            note(number, step.name, try checkToast(says: says, absent: absent), state: describe())
+
         case .expectNotice(let says, let absent, let held):
             note(number, step.name, try checkNotice(says: says, absent: absent, held: held),
                  state: describe())
@@ -2119,6 +2122,25 @@ private final class Run {
         // Saving is its own case because it has to be WAITED for: a commit
         // re-encodes, and every one of these steps is only worth anything once
         // the file on disk has actually changed.
+        // What Command S runs, on whatever window is in front. The chord itself
+        // cannot reach File > Save in a walk (the probe never comes to the
+        // front, so that item is dimmed and empty for the whole run), so the
+        // chord stands in for this and this does what the item does.
+        case .action(.save):
+            let target: any SaveableEditor = try recording ?? requireEditor()
+            let kind = recording == nil ? "document" : "recording"
+            let before = target.saveAffordance
+            var answer: Bool?
+            target.performSave { answer = $0 }
+            try await poll("the save to finish", within: 120) { answer != nil }
+            guard answer == true else {
+                throw Failure(description: "Command S reported that it did NOT save the \(kind) "
+                    + "(it was \(before.rawValue) before the press)")
+            }
+            note(number, step.name,
+                 "save: the \(kind) was \(before.rawValue), now \(target.saveAffordance.rawValue)",
+                 state: describe())
+
         case .action(let action) where action == .videoSave || action == .videoCloseAndSave:
             let video = try requireRecording()
             let before = video.saveAffordance
@@ -2223,7 +2245,7 @@ private final class Run {
                 video.setCropRect(CGRect(x: whole.width / 4, y: whole.height / 4,
                                          width: whole.width / 2, height: whole.height / 2))
                 video.commitCrop()
-            case .videoSave, .videoCloseAndSave, .videoRevertToOriginal: break // handled above
+            case .videoSave, .videoCloseAndSave, .videoRevertToOriginal, .save: break // handled above
             case .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
                  .videoExportSheetCancel: break // handled above
             default: break
@@ -2345,7 +2367,7 @@ private final class Run {
             switch action {
             // Handled in full above, where they can refuse the walk. Named
             // here only because this switch covers every action.
-            case .holdColorRow, .paintHeldColorRow: break
+            case .holdColorRow, .paintHeldColorRow, .save: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             case .copy: editor.copySelectedLayer()
@@ -4559,6 +4581,40 @@ private final class Run {
     /// real OS cursor: a walk's pointer is synthesized while the real one is
     /// somewhere else on the screen entirely, so the cursor is corroboration
     /// and this is the claim.
+    /// What the bottom-right corner is saying.
+    ///
+    /// Every toast is its own borderless panel, so nothing that walks a
+    /// window's views can see one. This asks the controller that owns them,
+    /// which is the same list a person is looking at.
+    private func checkToast(says: String?, absent: Bool?) throws -> String {
+        let lines = coordinator.playtestToastLines
+        let corner = lines.isEmpty
+            ? "nothing in the corner"
+            : "the corner says " + lines.map { "\"\($0)\"" }.joined(separator: ", ")
+        if absent == true, says == nil {
+            guard lines.isEmpty else {
+                throw Failure(description: "a walk expected no toast at all, and \(corner)")
+            }
+            return "nothing in the corner, as claimed"
+        }
+        guard let says else { return corner }
+        let found = lines.contains { $0.localizedCaseInsensitiveContains(says) }
+        if absent == true {
+            guard !found else {
+                throw Failure(description: "a walk expected nothing in the corner to say "
+                    + "\"\(says)\", and \(corner)")
+            }
+            return "no toast says \"\(says)\", as claimed; \(corner)"
+        }
+        guard found else {
+            throw Failure(description: "a walk expected a toast saying \"\(says)\", and "
+                + "\(corner). The corner is where the app reports work that outlives the window "
+                + "that asked for it, so nothing saying this means the app did the work and "
+                + "never said so.")
+        }
+        return "a toast says \"\(says)\", as claimed"
+    }
+
     private func checkCue(says: String) throws -> String {
         let reading = try requireCanvas().playtestPointerCue
         guard reading == says else {

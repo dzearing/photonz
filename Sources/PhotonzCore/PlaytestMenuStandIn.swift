@@ -41,6 +41,10 @@ public enum PlaytestMenuStandIn {
     /// for real and none of them belong here.
     private static let table: [Chord: PlaytestAction] = [
         Chord(key: "z", modifiers: [.command]): .undo,
+        // File > Save. It hangs off the focused window exactly as undo does, so
+        // it is dimmed and empty for the whole of a walk; the stand-in saves
+        // whichever kind of window is in front, which is what the item does.
+        Chord(key: "s", modifiers: [.command]): .save,
         Chord(key: "z", modifiers: [.command, .shift]): .redo,
         Chord(key: "c", modifiers: [.command]): .copy,
         Chord(key: "c", modifiers: [.command, .shift]): .copyMerged,

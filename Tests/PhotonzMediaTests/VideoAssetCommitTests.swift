@@ -40,6 +40,51 @@ struct VideoAssetCommitTests {
                 "the stored recording should now BE ~1s of media, got \(stored)s")
     }
 
+    // A save long enough to wait for draws a bar in the corner, and a bar
+    // needs a number. This is the number: the encoder's own count, threaded out
+    // of the commit. Without it the bar would sit at zero for the whole save,
+    // which is the silence the bar exists to end.
+    @Test func aCommitReportsHowFarThroughTheEncodeItIs() async throws {
+        let (dir, media) = try await makeRecording(seconds: 4)
+        defer { TestClip.cleanUp(dir) }
+        let full = await TestClip.duration(of: media)
+
+        let reported = Reported()
+        let edits = VideoEdits(trim: VideoTrim(inPoint: 0, outPoint: full - 0.5, duration: full))
+        let plan = try #require(VideoCommitPlanner.plan(mediaURL: media, edits: edits))
+        let started = Date()
+        try await VideoAssetCommit.commit(plan, onProgress: { reported.add($0) })
+        let took = Date().timeIntervalSince(started)
+
+        let fractions = reported.all
+        #expect(!fractions.isEmpty, "a commit that re-encodes has to say how far through it is")
+        #expect(fractions.allSatisfy { $0 >= 0 && $0 <= 1 })
+        #expect(fractions.last == 1, "the last word from a finished encode is that it is finished")
+        // Readings arrive about five times a second, so a commit that ran for
+        // longer than that has to have said something before it finished. A
+        // commit shorter than one interval is not held to it: that is a machine
+        // being fast, not the plumbing being broken, and pinning it would make
+        // this flaky on exactly the runs where the bar never appears anyway.
+        if took > 0.5 {
+            #expect(fractions.count > 1,
+                    "a \(String(format: "%.2f", took))s encode said nothing until it was over")
+        }
+    }
+
+    /// Collects the fractions off whichever thread the encoder reports them on.
+    private final class Reported: @unchecked Sendable {
+        private let lock = NSLock()
+        private var fractions: [Double] = []
+        func add(_ fraction: Double) {
+            lock.lock(); defer { lock.unlock() }
+            fractions.append(fraction)
+        }
+        var all: [Double] {
+            lock.lock(); defer { lock.unlock() }
+            return fractions
+        }
+    }
+
     @Test func theUntouchedOriginalIsKeptSoTheEditStaysReversible() async throws {
         let (dir, media) = try await makeRecording()
         defer { TestClip.cleanUp(dir) }

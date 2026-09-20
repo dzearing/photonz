@@ -149,7 +149,8 @@ public enum VideoExporter {
     /// plays exactly what the editor plays — the dropped pieces simply are not
     /// in it, and the joins are ordinary frame boundaries.
     public static func exportMP4(from url: URL, to destination: URL,
-                          cuts: VideoCutList, crop: VideoCrop?) async throws {
+                          cuts: VideoCutList, crop: VideoCrop?,
+                          onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         let asset = AVURLAsset(url: url)
         guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else {
             throw ExportError.noVideoTrack
@@ -211,7 +212,27 @@ public enum VideoExporter {
         session.videoComposition = videoComposition
         try? FileManager.default.removeItem(at: destination)
         // Modern non-deprecated async export (macOS 15+).
+        guard let onProgress else {
+            try await session.export(to: destination, as: .mp4)
+            return
+        }
+        // Watch the session's own count of how far through it is, so a caller
+        // drawing a bar draws the encoder's truth rather than a guess. The
+        // watcher is a separate task that is always cancelled once the export
+        // returns, so nothing is left running if the sequence outlives it.
+        // The state sequence is Sendable (the session itself is not), so the
+        // watcher takes the sequence and never the session.
+        let states = session.states(updateInterval: 0.2)
+        let watcher = Task {
+            for await state in states {
+                if case .exporting(let progress) = state {
+                    onProgress(progress.fractionCompleted)
+                }
+            }
+        }
+        defer { watcher.cancel() }
         try await session.export(to: destination, as: .mp4)
+        onProgress(1)
     }
 
     /// Down-scale a CGImage to `size` (bitmap context). Used to fit a cropped

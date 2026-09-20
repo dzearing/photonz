@@ -45,6 +45,25 @@ final class AppCoordinator {
     /// history overlay — it stacks a small "Copied to clipboard" toast instead.
     @ObservationIgnored private let toasts = ToastController()
 
+    #if PHOTONZ_PLAYTEST
+    /// What the bottom-right corner is saying right now, for `expectToast`.
+    var playtestToastLines: [String] { toasts.playtestLines }
+    #endif
+
+    /// Says in the same corner that a recording is saving, and that it saved.
+    /// Built lazily because it needs `self` (the screen the toast belongs on,
+    /// and how to reopen the recording from it).
+    @ObservationIgnored private var recordingSavesStorage: RecordingSaveAnnouncer?
+    var recordingSaves: RecordingSaveAnnouncer {
+        if let recordingSavesStorage { return recordingSavesStorage }
+        let announcer = RecordingSaveAnnouncer(
+            toasts: toasts, store: capture.store,
+            screen: { [weak self] in self?.activeScreen() ?? NSScreen.screens[0] },
+            open: { [weak self] url in self?.openRecording(url) })
+        recordingSavesStorage = announcer
+        return announcer
+    }
+
     /// First-run permissions walkthrough. Created at launch so it can record
     /// whether Screen Recording was granted when the process started (a grant
     /// mid-session needs a relaunch to take effect).

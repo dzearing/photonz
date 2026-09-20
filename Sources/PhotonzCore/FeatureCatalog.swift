@@ -176,6 +176,8 @@ public enum FeatureCatalog {
 
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
+    public static let savingARecordingSaysSoFlag = "next-saving-a-recording-says-so"
+
     public static let lineEndsFlag = "next-line-ends"
 
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
@@ -607,6 +609,16 @@ public enum FeatureCatalog {
                     name: recordingExportSheetFlag,
                     title: "A recording leaves through the same Export sheet as everything else",
                     description: "Saving a copy of a recording goes through the same Export sheet every picture in the app already goes through, instead of a bare system save box with the format already decided for you. Shift Command S on a recording, or Export in the Video menu, opens the sheet: MP4, GIF and HEIC sit side by side in one row rather than being three separate menu items you had to choose between before the save box appeared, and the size and frame rate preset that GIF and HEIC have moved out of a submenu and onto the sheet beside the format, where you can see what it does. Under the format the sheet says how big the picture will be, how fast it runs, and how much of the recording is in it, so a trim is legible right where the file is about to be written. Under that it says what the file will weigh. An untouched recording saved as video is copied rather than re-encoded, so that number is exact; a trimmed or cropped one is worked out from what this very recording already costs per second and per pixel, and the line says about, because it is an estimate and not a promise. A GIF or a HEIC is written frame by frame into a different kind of file, and nothing about the recording predicts its size, so rather than invent a number the sheet says the size comes with the file. Cancel writes nothing. Off means Save As on a recording opens the save box straight away as it always did, and the three Export items stay in the Video menu.",
+                    area: .export,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: savingARecordingSaysSoFlag,
+                    title: "Saving a recording says it saved",
+                    description: "Saving a trimmed recording tells you it worked. Today the only sign is a small arrow on the floating controller quietly going away, and on a recording long enough for the save to take real seconds the only sign it is happening at all is a spinner the size of a fingernail in the same spot, which is easy to miss entirely. With this on, a save that writes something ends with the recording's own thumbnail in the bottom right corner saying it saved, named, in the same place copying a recording already says so, and it says it however you started the save: the arrow on the controller, Command S, or Save in the box that asks before the window closes. That last one is the reason it is a corner and not something inside the window, because by the time that save lands the window has gone. A save long enough to wait for grows a progress bar in the same corner with the recording's name on it and the encoder's own count of how far through it is. A save that takes less than about half a second shows no progress at all, so the quick ones stay quiet rather than flashing something nobody can read. Off means saving is silent again and the spinner on the controller is all there is.",
                     area: .export,
                     isEnabled: false,
                     parameters: []),

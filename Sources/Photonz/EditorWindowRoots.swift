@@ -80,6 +80,7 @@ struct VideoEditorRootView: View {
                 state.hostWindow?.isDocumentEdited = dirty
             }
             .task {
+                state.saves = coordinator.recordingSaves
                 state.seed(url: url, capture: coordinator.capture)
                 // From here on a guide can find this window: one that brought
                 // its own recording starts as soon as the clip is loaded, and

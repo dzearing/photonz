@@ -22,7 +22,13 @@ public enum VideoAssetCommit {
     }
 
     /// Apply `plan`. Throws rather than half-applying.
-    public static func commit(_ plan: VideoCommitPlan) async throws {
+    ///
+    /// `onProgress` is the encoder's own count of how far through the re-encode
+    /// it is, 0...1, for a caller drawing a bar. It is never called for a
+    /// plan that only copies bytes back (reverting to the whole clip), which is
+    /// over before a bar would be drawn.
+    public static func commit(_ plan: VideoCommitPlan,
+                              onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         let fm = FileManager.default
         guard fm.fileExists(atPath: plan.source.path) else { throw CommitError.missingSource }
 
@@ -41,7 +47,8 @@ public enum VideoAssetCommit {
             let cuts = plan.edits.keptPieces
                 ?? VideoCutList(duration: seconds)
             try await VideoExporter.exportMP4(from: plan.source, to: scratch,
-                                              cuts: cuts, crop: plan.edits.crop)
+                                              cuts: cuts, crop: plan.edits.crop,
+                                              onProgress: onProgress)
         } else {
             // No edits left: the stored file goes back to being the original.
             try fm.copyItem(at: plan.source, to: scratch)

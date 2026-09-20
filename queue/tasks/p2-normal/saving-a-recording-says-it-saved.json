@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3010,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-19T16:28:31.689Z",
-  "updated": "2026-09-19T16:28:31.692Z",
+  "updated": "2026-09-20T02:40:46.468Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing trim-a-recording-save-it-send-it-the-whole-flow on 2026-09-19. The machinery already exists: AppCoordinator.toasts.presentProgress / dismissProgress and presentCopyToast are what the GIF copy path uses (AppCoordinator.swift around :305). VideoEditorState has no route to the coordinator today, which is why the save path has none of it; VideoEditorView.saveButton (around :474) is where the spinner lives now.\n\nThe close-confirmation case is the interesting one: the sheet dismisses, the save runs, and the window closes when it lands. For a long recording that is several seconds of a window sitting there apparently doing nothing before it vanishes.",
@@ -23,9 +23,22 @@
     {
       "t": "2026-09-19T16:28:31.691Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-20T02:18:01.120Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T02:19:56.689Z",
+      "note": "Adversarial review before building. (1) Walked it as a first-timer: trim an 8s clip, press the arrow, the arrow vanishes — that reads as 'the button went away', not 'it saved'. On a long recording the only sign is a 28pt spinner in the same spot. (2) Where should the confirmation live? The close-sheet path settles it: the window is GONE by the time that save lands, so an in-window notice cannot exist for one of the three ways in. The bottom-right toast stack is screen level and already means 'a thing about a recording finished' (the copy toasts). Toast it is. (3) Found by the review: a save with nothing to write must stay SILENT. save() on an up-to-date recording returns success without writing a byte; toasting there would both lie and let repeated Command S stack toasts. Only a commit that had a plan confirms. (4) A determinate bar with no real number is decoration: AVAssetExportSession.states(updateInterval:) exists on this SDK (probed, returns AsyncSequence<State, Never>), so the bar carries the encoder's own progress rather than sitting at 0%. (5) Shortest version: no new surface, no new window — the toast family that already exists, plus a delay so short saves stay quiet."
+    },
+    {
+      "t": "2026-09-20T02:40:46.467Z",
+      "note": "Built and verified. New walk saving-a-recording-says-so-walk: 43 steps, all green, with two real pictures of the app (the window after the save, and the toast itself). It proves all three ways in — the arrow on the controller, Command S, and Save in the close confirmation — each end with a named confirmation in the corner, and that the quick save flashed no progress at all. Three pieces of harness had to exist for that: expectToast (a walk could not see a toast before, because each one is its own panel), a Command S stand-in in PlaytestMenuStandIn (File > Save is dimmed for a walk's whole run, so the chord could only report the frozen menu bar back at itself), and a title on the toast panels so snapshot can photograph one. expectToast was watched running forced under a lock and read back the real line, so it is now on the lock-safe list with a test saying why."
     }
   ],
   "walks": [
     "trim-save-send-walk"
-  ]
+  ],
+  "started": "2026-09-20T02:18:01.119Z"
 }

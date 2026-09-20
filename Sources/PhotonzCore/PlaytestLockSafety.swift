@@ -93,6 +93,10 @@ public enum PlaytestLockSafety {
         "expectMeasures", "expectNotice",
         "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
         "expectStoredRecording",
+        // Watched on 2026-09-19, forced under a lock: it asks the app's own
+        // toast controller what the corner is saying, so there is no name to
+        // look up and nothing for a lock to take away.
+        "expectToast",
         "expectWindows", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",

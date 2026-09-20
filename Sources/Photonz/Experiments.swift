@@ -427,6 +427,15 @@ extension Experiments {
     /// stored file and there is nothing left to switch off.
     var cutRecordingEnabled: Bool { isEnabled(FeatureCatalog.cutRecordingFlag) }
 
+    /// `next-saving-a-recording-says-so`: whether saving a recording reports
+    /// itself in the bottom-right toast stack — a progress bar once the save
+    /// has run past `SaveFeedback.quietWindow`, and a named confirmation when
+    /// it lands. Off, a save is silent and the controller's spinner is all
+    /// there is.
+    var savingARecordingSaysSo: Bool {
+        isEnabled(FeatureCatalog.savingARecordingSaysSoFlag)
+    }
+
     /// `next-recording-export-sheet`: whether saving a copy of a recording goes
     /// through the Export sheet every picture already goes through, rather than
     /// a bare save box with the format decided by which menu item was picked.

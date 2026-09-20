@@ -148,6 +148,25 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.canRunLocked(steps))
     }
 
+    /// `expectToast` asks the app's own toast controller what the bottom-right
+    /// corner is saying. That is a list of strings the app is holding, not a
+    /// name looked up through accessibility, so a lock has nothing to take
+    /// away. Watched on 2026-09-19 under a lock: `saving-a-recording-says-so-walk`,
+    /// forced, ran the step and read back "Tutorial Sample.mp4 saved" — the
+    /// real line, from the real save.
+    @Test("Reading what the corner says needs no name, so a lock cannot stop it")
+    func readingTheCornerRunsUnderALock() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectToast"))
+        #expect(!PlaytestLockSafety.stepsALockStops.contains("expectToast"))
+        let steps: [PlaytestStep] = [
+            .action(.openSampleRecording),
+            .action(.videoSave),
+            .expectToast(says: "saved", absent: nil),
+        ]
+        #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)
+        #expect(PlaytestLockSafety.canRunLocked(steps))
+    }
+
     /// A `menus` step is still refused, and the reason it gave was wrong. It
     /// used to say it "opens a real menu", which it does not: it reads
     /// `NSApp.mainMenu` inside the app's own process and never pops anything

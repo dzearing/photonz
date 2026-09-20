@@ -475,9 +475,14 @@ struct VideoEditorView: View {
     /// expected path, not a second export flow. It appears once there's
     /// something to commit (and while the commit runs), the same way the Undo
     /// affordance appears once there's something to undo.
+    ///
+    /// The spinner waits out `SaveFeedback.quietWindow` before it replaces the
+    /// arrow: most saves land inside it, and a 28 point spinner that flashes
+    /// for a fifth of a second is a flicker rather than a report. A save long
+    /// enough to notice gets this AND the named bar in the corner.
     @ViewBuilder
     private var saveButton: some View {
-        if state.isSaving {
+        if state.isSaving && (state.isSaveSlow || !state.announcesSaves) {
             ProgressView()
                 .controlSize(.small)
                 .frame(width: 28, height: 28)

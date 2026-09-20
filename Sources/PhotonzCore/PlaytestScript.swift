@@ -628,6 +628,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the 2026-09-18 report says did nothing. `videoRevertToOriginal` puts the
     /// whole clip back, so a walk can show a save undone as well as done.
     case videoSave, videoCloseAndSave, videoRevertToOriginal
+    /// What Command S runs on whatever window is in front: the recording's
+    /// commit in a video window, the document's save in an image one.
+    ///
+    /// This exists because of the frozen menu bar. A walk never brings the
+    /// probe to the front, so File > Save is dimmed with nothing behind it for
+    /// the whole walk and the chord reports that back at itself. The chord
+    /// stands in for this (`PlaytestMenuStandIn`), so a walk pressing Command S
+    /// still means save, and it means the SAME save whichever kind of window is
+    /// in front, exactly as the menu item does.
+    case save
     /// Playback, driven the way space does.
     case videoPlay, videoPause
     /// The start handle dragged by hand towards the first cut in the
@@ -686,7 +696,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoCopyGIF,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
-             .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
+             .videoSave, .videoCloseAndSave, .videoRevertToOriginal, .save,
              .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
              .videoDragTrimFreedNearCut,
              .videoDragTrimEndNearCut, .videoDragTrimRelease,
@@ -2116,6 +2126,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// obliged to say — above all the sentence a command says when it changed
     /// NOTHING, which is the one case where the canvas cannot tell you.
     case expectNotice(says: String?, absent: Bool?, held: Bool?)
+    /// What the TOASTS in the bottom-right corner are saying, or that none of
+    /// them is saying it.
+    ///
+    /// The corner is where the app reports work that outlives the window that
+    /// asked for it: a capture landing, a clip reaching the clipboard, and now
+    /// a recording being written (`RecordingSaveAnnouncer`). Each toast is its
+    /// own panel rather than anything inside the window, so no other step can
+    /// see one — a walk could watch a recording save correctly and have no way
+    /// to ask whether the app ever SAID so, which is the whole of what this
+    /// change is about.
+    ///
+    /// `says` matches a substring of any toast on screen, progress bars
+    /// included, so a walk claims the promise rather than the punctuation.
+    case expectToast(says: String?, absent: Bool?)
     /// What the path the Pen just drew is actually made of: how many anchors it
     /// has, whether it closed, and how many of its runs are curves.
     ///
@@ -2437,7 +2461,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
     ]
@@ -2507,6 +2531,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectCue: "expectCue"
         case .expectClickReaches: "expectClickReaches"
         case .expectNotice: "expectNotice"
+        case .expectToast: "expectToast"
         case .expectLayers: "expectLayers"
         case .expectBox: "expectBox"
         case .expectField: "expectField"
@@ -3139,6 +3164,19 @@ public enum PlaytestStep: Sendable, Equatable {
                     + " floating over it; \"\(what)\" is neither")
             }
             self = .expectClickReaches(at, what: taker)
+        case "expectToast":
+            let says = try f.optionalString("says")
+            let absent = try f.optionalFlag("absent")
+            guard says != nil || absent != nil else {
+                throw f.invalid("says", "expectToast has to claim something: \"says\" for words a "
+                    + "toast in the bottom-right corner must be carrying, or \"absent\": true for "
+                    + "no toast there at all")
+            }
+            if let says, says.trimmingCharacters(in: .whitespaces).isEmpty {
+                throw f.invalid("says", "an empty claim passes against every toast and against no "
+                    + "toast, so it claims nothing")
+            }
+            self = .expectToast(says: says, absent: absent)
         case "expectNotice":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent")

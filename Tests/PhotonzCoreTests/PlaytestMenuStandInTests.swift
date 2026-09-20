@@ -19,6 +19,19 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("z"), modifiers: [.command]) == .undo)
     }
 
+    // File > Save is window-scoped like undo, so the chord is dead in a walk
+    // for the same reason. The stand-in means the same thing the item means:
+    // save whatever window is in front, whether that is a recording or a
+    // picture. Without it a walk could not check that saving a recording SAYS
+    // it saved when the save was started the way most people start it.
+    @Test("Command S means save whatever window is in front")
+    func save() {
+        #expect(PlaytestMenuStandIn.action(for: key("s"), modifiers: [.command]) == .save)
+        // Plain S is the colour swatch's own key and must not be a save.
+        #expect(PlaytestMenuStandIn.action(for: key("s"), modifiers: []) == nil)
+        #expect(PlaytestMenuStandIn.action(for: key("s"), modifiers: [.command, .shift]) == nil)
+    }
+
     @Test("Shift command Z means redo")
     func redo() {
         #expect(PlaytestMenuStandIn.action(for: key("z"), modifiers: [.command, .shift]) == .redo)

@@ -139,6 +139,10 @@ final class VideoEditorState {
     /// The capture history, so a commit can refresh the recording's thumbnail
     /// and duration pill.
     @ObservationIgnored private weak var capture: CaptureCenter?
+    /// Who says, in the corner of the screen, that this recording is saving and
+    /// that it saved. Nil in a window that was never given one (and in Current,
+    /// where saving stays silent), and the save path simply says nothing then.
+    @ObservationIgnored weak var saves: RecordingSaveAnnouncer?
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var didPlayToEndObserver: NSObjectProtocol?
 
@@ -382,6 +386,25 @@ final class VideoEditorState {
     /// True while a save's re-encode is in flight.
     private(set) var isSaving = false
 
+    /// True once a save has been running longer than `SaveFeedback.quietWindow`
+    /// — the only state the controller draws a spinner in, so a quick save
+    /// never flashes one.
+    private(set) var isSaveSlow = false
+    @ObservationIgnored private var slowSaveReveal: Task<Void, Never>?
+
+    /// Whether this release says anything about a save at all
+    /// (`next-saving-a-recording-says-so`). Off, saving is silent and the
+    /// controller spinner is the whole report, exactly as it was.
+    var announcesSaves: Bool { Experiments.shared.savingARecordingSaysSo }
+
+    /// Both of the save's own progress indications, put away together.
+    private func endSaveProgress() {
+        isSaving = false
+        isSaveSlow = false
+        slowSaveReveal?.cancel()
+        slowSaveReveal = nil
+    }
+
     /// Completions waiting on the commit that is already running. A second ⌘S,
     /// or the close sheet's Save pressed while the first one is still
     /// encoding, joins the queue instead of being told "no" — being told no is
@@ -440,9 +463,26 @@ final class VideoEditorState {
             return
         }
         isSaving = true
+        // The spinner on the controller is a progress indication too, so it
+        // waits out the same quiet window the corner bar does: a save that
+        // lands in a fifth of a second now shows NOTHING while it runs and says
+        // it saved when it lands, instead of flickering a spinner nobody can
+        // read (`SaveFeedback`).
+        isSaveSlow = false
+        slowSaveReveal?.cancel()
+        slowSaveReveal = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(SaveFeedback.quietWindow))
+            guard !Task.isCancelled, let self, self.isSaving else { return }
+            self.isSaveSlow = true
+        }
+        let announced = announcesSaves ? saves?.began(url: mediaURL) : nil
+        let announcer = saves
         Task {
             do {
-                try await VideoAssetCommit.commit(plan)
+                try await VideoAssetCommit.commit(plan, onProgress: { fraction in
+                    guard let announced else { return }
+                    Task { @MainActor in announcer?.report(announced, encoded: fraction) }
+                })
                 committedEdits = edits
                 // The first commit creates the original; from here on the
                 // recording itself is the trimmed output, so keep editing (and
@@ -453,14 +493,18 @@ final class VideoEditorState {
                     // the playhead and play state.
                     rebuildPlayer(resumeAt: currentTime, keepPlaying: isPlaying)
                 }
-                isSaving = false
+                endSaveProgress()
                 // The stored media changed: refresh the history thumbnail and
                 // duration pill.
                 capture?.store.reload()
+                // Said after the reload so the toast's thumbnail is the saved
+                // recording rather than the one it replaced.
+                if let announced { saves?.finished(announced) }
                 completion?(true)
                 finishWaitingSaves(saved: true)
             } catch {
-                isSaving = false
+                endSaveProgress()
+                if let announced { saves?.failed(announced) }
                 presentSaveFailure(error)
                 completion?(false)
                 finishWaitingSaves(saved: false)

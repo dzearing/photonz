@@ -18355,3 +18355,38 @@ locked, so it joined `stepsThatSurviveALock`.
 Next: the sheet can now tell you a recording weighs 200 MB and still offers
 nothing to do about it. Making an MP4 smaller is a new control and it is in the
 audit's rough list for the user to call.
+
+## 2026-09-19 — Saving a recording says it saved
+
+Saving a trimmed recording used to report itself by a small arrow on the
+floating controller going away, with a 28 point spinner in its place while it
+worked. That is what "I click Save and it does nothing" looked like from the
+outside. Now a save that writes something ends with the recording's own
+thumbnail in the bottom-right corner, named, with a green tick, in the same
+toast stack copying a recording already uses; a save still running after half a
+second grows a progress bar there carrying the encoder's own count; and a save
+quicker than that shows nothing at all while it runs, so the common case stays
+quiet rather than flickering. It is one code path, so all three ways in say the
+same thing: the arrow, ⌘S, and Save in the close confirmation. That last one is
+why the report lives in the corner rather than in the window, because the window
+has gone by the time that save lands.
+
+`SaveFeedback` (PhotonzCore) holds the rules — the half-second quiet window, the
+two lines, the middle-shortening of a long file name, and the scaling that keeps
+the bar off 100% until the swap is done. `RecordingSaveAnnouncer` drives the
+corner; `VideoEditorState.save` calls it, and `VideoAssetCommit.commit` now
+takes an `onProgress` threaded down to `AVAssetExportSession.states`. Behind
+`next-saving-a-recording-says-so`, on by default in Next.
+
+Three things the harness gained, because the corner was invisible to it: an
+`expectToast` step (every toast is its own panel, so nothing that walks a
+window's views could see one), a title on the toast panels so `snapshot` can
+photograph one, and a ⌘S entry in `PlaytestMenuStandIn` with a `save` action
+that saves whichever kind of window is in front — File ▸ Save is dimmed for a
+walk's whole run, so the chord could only ever report the frozen menu bar back
+at itself. `expectToast` was watched forced under a lock and joined
+`stepsThatSurviveALock`. `saving-a-recording-says-so-walk` covers all three ways
+in and ships two real pictures.
+
+Next: the progress bar has been proved but never seen, because nothing in the
+walk set saves slowly enough to draw one. The audit's rough list says so.

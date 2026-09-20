@@ -1,0 +1,28 @@
+{
+  "feature": "Saving a recording says it saved",
+  "epic": "video-cutting",
+  "summary": "Saving a trimmed recording now tells you it worked: the recording's own thumbnail appears in the bottom right corner with a green tick and the recording named, in the same place copying one already says so. A save long enough to wait for grows a progress bar there with the encoder's own count; a save under about half a second shows no progress at all, so the quick ones stay quiet instead of flickering.",
+  "setup": "Photonz Dev, release Next. The flag is on by default (Experiments > Export > \"Saving a recording says it saved\"). Help > Tutorials > Trim a recording brings its own eight second clip, or open any recording from capture history.",
+  "try": [
+    { "do": "Open a recording, drag the trim handles in so it is shorter, and press Done." },
+    { "do": "Press the save arrow on the floating controller." },
+    { "do": "Look at the bottom right corner of the screen: it names the recording and says it saved.", "shot": "2026-09-19-saving-says-it-saved-toast.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Look back at the controller: the arrow has gone and no spinner ever appeared in its place.", "shot": "2026-09-19-saving-says-it-saved-window.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Trim it again and press Command S instead: the corner says the same thing." },
+    { "do": "Trim it once more, then close the window and press Save in the box that asks. The window goes, and the corner still says it saved." },
+    { "do": "Do the same on a recording a few minutes long, and watch the corner while it works." }
+  ],
+  "evaluate": [
+    "Is the bottom right corner where your eye goes after pressing Save, or were you watching the button?",
+    "Does naming the recording in the line earn its space, or would a plain \"Saved\" read faster?",
+    "On a long recording, does the bar in the corner tell you enough to wait rather than press Save again?",
+    "The quick saves show nothing at all until they land. Does that feel calm, or does it feel like nothing happened until the toast arrives?",
+    "Pressing Command S on a recording with nothing left to save says nothing. Is that right, or should it say it is already saved?"
+  ],
+  "rough": [
+    "The progress bar has not been seen on screen, only proved: the eight second sample saves in about two tenths of a second, which is under the half second that draws anything, so no walk has ever made one appear. The rules for when it shows and the encoder's own count going into it are both unit tested against a real re-encode, and the bar itself is the same one the GIF copy already draws.",
+    "A save that writes nothing stays silent on purpose. Pressing Command S on a recording already saved reports nothing, the way any Mac app does, but somebody who pressed it because they were not sure gets the same nothing they got before.",
+    "The picture of the toast shows a generic film icon rather than the recording's first frame, because the tutorial sample is not in capture history. A recording you made yourself shows its own poster frame there.",
+    "Both pictures were taken with the Mac locked, so colours can read dimmed."
+  ]
+}

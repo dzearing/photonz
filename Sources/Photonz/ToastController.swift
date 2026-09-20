@@ -19,15 +19,21 @@ final class ToastController {
         /// Non-nil for a progress toast (GIF prep), so it can be updated/dismissed
         /// via its handle instead of the auto-fade lifecycle.
         let progress: ToastProgress?
-        init(panel: NSPanel, progress: ToastProgress? = nil) {
+        /// What a non-progress toast is saying, so a probe can read the corner.
+        let message: String?
+        init(panel: NSPanel, progress: ToastProgress? = nil, message: String? = nil) {
             self.panel = panel
             self.progress = progress
+            self.message = message
         }
     }
 
     /// Index 0 is the newest (corner-most) toast; later indices stack upward.
     private var items: [Item] = []
     private var screen: NSScreen?
+
+    /// What every toast panel calls itself, so a walk can photograph one.
+    static let panelTitle = "Toast"
 
     private let margin: CGFloat = 16
     private let spacing: CGFloat = 10
@@ -58,7 +64,7 @@ final class ToastController {
         }
 
         let panel = makePanel()
-        let item = Item(panel: panel)
+        let item = Item(panel: panel, message: message)
         let id = item.id
 
         let view = ToastView(
@@ -100,7 +106,8 @@ final class ToastController {
     /// export loop; call `dismissProgress(_:)` when the work finishes. Unlike a
     /// capture toast, it has no auto-fade lifecycle — it lives until dismissed.
     @discardableResult
-    func presentProgress(title: String, on screen: NSScreen) -> ToastProgress {
+    func presentProgress(title: String, symbol: String = "wand.and.stars",
+                         on screen: NSScreen) -> ToastProgress {
         self.screen = screen
 
         // Soft-cap the stack: drop the oldest before adding a new one.
@@ -109,7 +116,7 @@ final class ToastController {
         }
 
         let panel = makePanel()
-        let progress = ToastProgress(title: title)
+        let progress = ToastProgress(title: title, symbol: symbol)
         let item = Item(panel: panel, progress: progress)
 
         let hosting = NSHostingView(rootView: ProgressToastView(progress: progress))
@@ -129,6 +136,20 @@ final class ToastController {
         layout(animated: true)
         return progress
     }
+
+    #if PHOTONZ_PLAYTEST
+    /// Every line the corner is saying right now, newest first: a capture or
+    /// confirmation toast's message, and a progress toast's caption. Probe-only
+    /// — it is how `expectToast` asks whether the app SAID a thing, which no
+    /// other step can see, because each toast is its own panel rather than
+    /// anything inside a window.
+    var playtestLines: [String] {
+        items.compactMap { item in
+            if let progress = item.progress { return progress.title }
+            return item.message
+        }
+    }
+    #endif
 
     /// Remove a progress toast once its work is done (or failed).
     func dismissProgress(_ progress: ToastProgress) {
@@ -204,6 +225,12 @@ final class ToastController {
         let panel = ToastPanel(contentRect: .zero,
                                styleMask: [.borderless, .nonactivatingPanel],
                                backing: .buffered, defer: false)
+        // Borderless, so this is never drawn — it is how a playtest finds the
+        // panel to photograph (`snapshot` looks a window up by title, and an
+        // untitled one cannot be named). The corner is the whole of what a
+        // capture, a copy or a save says, so an audit that cannot picture it
+        // cannot show the feature at all.
+        panel.title = Self.panelTitle
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.backgroundColor = .clear
@@ -225,10 +252,17 @@ final class ToastController {
 final class ToastProgress {
     /// Caption above the bar (e.g. "Preparing GIF…").
     var title: String
+    /// The glyph beside the caption. It says what KIND of work this is at a
+    /// glance, which matters once more than one kind uses the same corner: a
+    /// wand for making a GIF out of a recording, a document for writing one.
+    let symbol: String
     /// Completion in 0...1.
     private(set) var fraction: Double = 0
 
-    init(title: String) { self.title = title }
+    init(title: String, symbol: String = "wand.and.stars") {
+        self.title = title
+        self.symbol = symbol
+    }
 
     func update(fraction newValue: Double) {
         fraction = min(1, max(fraction, newValue))
@@ -245,7 +279,7 @@ struct ProgressToastView: View {
         HStack(spacing: 10) {
             ZStack {
                 Circle().fill(.quaternary)
-                Image(systemName: "wand.and.stars")
+                Image(systemName: progress.symbol)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
