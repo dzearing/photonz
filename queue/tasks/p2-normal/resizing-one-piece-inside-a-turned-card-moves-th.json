@@ -1,0 +1,30 @@
+{
+  "id": "resizing-one-piece-inside-a-turned-card-moves-th",
+  "title": "Resizing one piece inside a turned card moves the whole card",
+  "goal": "Turn a card of shapes on a slant, then drag a handle on one piece inside it. That piece resizes as asked, and the rest of the card jumps a few points across the screen at the same time, without anybody touching it. Nothing outside the piece you grabbed should move.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 3040,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T16:26:34.288Z",
+  "updated": "2026-09-20T16:26:34.291Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-20 on a locked Mac with the probe, forced. Walk: Scripts/playtest/turned-piece-walk.json, which draws a 400x200 bar at (300,300) and a 120x60 label at (340,340), groups them, turns the card 20 degrees, then drags the label's top-left handle from (370,289) to (320,250).\n\nTwo cut-down copies of that walk, one stopping before the resize and one after, read the on-screen bottomRight corner of BOTH pieces:\n\n  before: \"Rectangle\" bottomRight on screen (654, 562) / \"Rectangle 2\" bottomRight on screen (462, 386)\n  after:  \"Rectangle\" bottomRight on screen (653, 566) / \"Rectangle 2\" bottomRight on screen (462, 390)\n\nRectangle is the bar. Nothing touched it, and it moved 4 points down the screen.\n\nThe arithmetic says why. The group is turned about the centre of its contents' bounds. Before the resize that union is (300,300,400x200), centre (500,400). The resize widens the label leftwards to (279.55,320.61,180.45x79.39), so the union becomes x 279.55 to 700, centre (489.78,400): the pivot everything in the card is turned about slid 10 points left, and every piece in the card swung with it. Rotating the label's own bottomRight (460,400) about (489.78,400) by 20 degrees gives (461.8, 389.8), which is the (462,390) the app reads back.\n\nturned-piece-walk step 38 is the claim that catches it (\"the bottom right corner should not have moved at all\") and it is RIGHT: the walk is not out of date here, the app is wrong. Step 5 of that walk WAS out of date and is fixed in walks-that-fail-in-the-full-sweep (the rectangle tool hands back to Select after it draws, so the second rectangle needed the tool asking for again); with that fixed the walk reaches 38 and stops there.\n\nThe piece-inside-a-turned-card work is a-piece-inside-a-turned-card-moves-on-its-own (done), which took the turn off the POINTER rather than composing it into the frame (PhotonzDocument.uprightPoint in Sources/PhotonzCore/LayerGrouping.swift). This is the other half of the same geometry: a resize changes the contents' bounds, and nothing holds the pivot still while it does.",
+  "acceptance": [
+    "Resizing a piece inside a turned card leaves every other piece in that card exactly where it was on screen, to within half a point",
+    "The corner opposite the handle you dragged does not move, on a turned card as well as an upright one",
+    "turned-piece-walk passes twice on its own with no further change to the walk"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T16:26:34.290Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "turned-piece-walk"
+  ]
+}
