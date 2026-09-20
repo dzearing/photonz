@@ -2236,6 +2236,52 @@ private final class Run {
             note(number, step.name, "put the whole recording back: \(video.saveAffordance.rawValue)",
                  state: describe())
 
+        // The same trim, in the ordinary editor. With
+        // `next-a-recording-is-a-document` on there is no recording window to
+        // drive, so a walk asking for `videoBeginTrim` gets the Trim TOOL: the
+        // action ids survived the move on purpose
+        // (`docs/design/video-surface.md` §10.6).
+        case .action(let action) where action.drivesTheTrimTool && recording == nil:
+            let editor = try requireEditor()
+            guard editor.documentHasTime else {
+                throw Failure(description: "\(action.rawValue) needs a document that runs for a "
+                    + "length of time, and this one does not")
+            }
+            switch action {
+            case .videoBeginTrim: editor.setTool(.trim)
+            case .videoTrimDone: editor.commitTrim()
+            case .videoTrimCancel: editor.cancelTrim()
+            case .videoTrimReset: editor.resetTrimSelection()
+            case .videoPlay: editor.playDocument()
+            case .videoPause: editor.pauseDocument()
+            case .videoSeekQuarter: editor.scrubDocument(toMS: editor.documentLengthMS / 4)
+            case .videoSeekMiddle: editor.scrubDocument(toMS: editor.documentLengthMS / 2)
+            case .videoSeekThreeQuarters:
+                editor.scrubDocument(toMS: editor.documentLengthMS * 3 / 4)
+            case .videoTrimStart, .videoTrimEnd:
+                guard let session = editor.trimSession,
+                      let start = editor.trimmedClipStartMS else {
+                    throw Failure(description: "\(action.rawValue) needs a trim in flight; add a "
+                        + "\"videoBeginTrim\" step first")
+                }
+                // A quarter in from each end, which is a real drag's outcome
+                // without a walk having to know how long the recording is.
+                let quarter = session.wholeLengthMS / 4
+                if action == .videoTrimStart {
+                    editor.dragTrimIn(toMS: start + quarter)
+                } else {
+                    editor.dragTrimOut(toMS: start + session.wholeLengthMS - quarter)
+                }
+            default: break
+            }
+            await sleep(0.3)
+            note(number, step.name,
+                 "\(action.rawValue): \(editor.activeTool.rawValue) in hand"
+                 + (editor.trimSession.map { _ in ", trimming \(editor.trimReadout)" } ?? "")
+                 + ", the timeline runs \(editor.documentLengthMS) ms"
+                 + ", playhead \(editor.documentTimeMS) ms",
+                 state: describe())
+
         case .action(let action) where action.drivesRecording:
             let video = try requireRecording()
             switch action {
@@ -2944,6 +2990,7 @@ private final class Run {
                 editor.isResizeDialogPresented = false
                 editor.isCanvasSizeDialogPresented = false
             case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
+                 .videoTrimReset,
                  .videoCopyGIF,
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,

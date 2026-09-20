@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/trim-is-a-tool-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-opens-with-trim-in-hand", "note": "THE FAST LANE: an eight second recording that is one clip and has never been edited opens in the ORDINARY editor with the clip picked and Trim already in hand. Crop's slot wears Trim, the timeline is open, and the clip's bar carries a handle at each end" },
+    { "do": "snapshot", "name": "1-opens-with-trim-in-hand" },
+
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-handles-dragged", "note": "both handles pulled a quarter in. The capsule reads the in, the out and how much is kept, and the frames outside them are drawn as spare at each end with how long they are, because a trim throws nothing away" },
+    { "do": "snapshot", "name": "2-handles-dragged" },
+
+    { "do": "action", "action": "videoTrimReset" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-reset", "note": "Reset gives the whole recording back without leaving the trim: eight seconds again, no spare at either end" },
+
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimCancel" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-cancelled", "note": "Escape's path: the session is thrown away and the clip is exactly as long as it was, because nothing was ever written down. The tool bar is back on Select" },
+    { "do": "snapshot", "name": "4-cancelled" },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-trimmed", "note": "THE TEST: the recording is now four seconds. The timeline, the transport and the clip's bar all say four, the tool bar is back on Select with the clip still picked, and one Command Z puts the eight back" },
+    { "do": "snapshot", "name": "5-trimmed-to-the-middle" },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-second-trim-shows-the-spare", "note": "trimming again lays the WHOLE eight seconds back out, with the four that are kept bright between the handles and two seconds of spare drawn at each end. That is what non-destructive means here: the frames are still in the document" },
+    { "do": "snapshot", "name": "6-the-spare-is-still-there" },
+    { "do": "action", "action": "videoTrimCancel" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-undone", "note": "one undo, and the recording is eight seconds again: a trim is an ordinary history step like every other edit in the app" },
+    { "do": "snapshot", "name": "7-undone" }
+  ]
+}

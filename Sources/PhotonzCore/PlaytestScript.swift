@@ -619,6 +619,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// clip, which is a real drag's outcome without a walk having to know how
     /// long the sample is.
     case videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone, videoTrimCancel, videoCopyGIF
+    /// Put the whole recording back without leaving the trim: the Reset in the
+    /// trim tool's capsule (`docs/design/video-surface.md` §10.2). Only the
+    /// trim TOOL has one; the window this replaces had a Reset too, and it
+    /// meant the same thing.
+    case videoTrimReset
     /// Open a recording window on the guides' sample clip WITHOUT a guide: a
     /// fresh eight second MP4 with dead air at both ends and something
     /// happening in the middle. What a cutting walk needs, since every other
@@ -702,7 +707,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     public var drivesRecording: Bool {
         switch self {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
-             .videoCopyGIF,
+             .videoTrimReset, .videoCopyGIF,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
              .videoSave, .videoCloseAndSave, .videoRevertToOriginal, .save,
@@ -714,6 +719,22 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         default: false
         }
     }
+    /// The trim, said in the ordinary editor's own terms.
+    ///
+    /// Trim stopped being a window and became a tool, and the action ids
+    /// survived the move on purpose (`docs/design/video-surface.md` §10.6): a
+    /// walk asks for `videoBeginTrim` and gets the tool where it used to get
+    /// the window's button. These are the ones a document can answer; saving,
+    /// exporting and cutting a recording are still the window's.
+    public var drivesTheTrimTool: Bool {
+        switch self {
+        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone,
+             .videoTrimCancel, .videoTrimReset, .videoPlay, .videoPause,
+             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters: true
+        default: false
+        }
+    }
+
     /// The first run, walked from a clean slate. `freshInstall` forgets
     /// everything the setup window remembers, so the next `launchHook` behaves
     /// like a machine that has never run Photonz; `oldInstall` instead pretends

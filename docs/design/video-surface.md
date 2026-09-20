@@ -420,21 +420,28 @@ five things wrong with that window. Copying Crop means dropping it.
   bounds in time. Crop and Trim become a `ToolGroup`, so **no slot in the bar
   moves**, which is the rule `ToolBarLayout` states for every tool a flag adds.
   The flyout reads Crop · Trim, with Resize Image still at its foot.
-- **Its letter:** `C`, and it belongs to the FAMILY rather than to either tool.
-  This is the marquee pair's mechanism exactly: `ToolGroup.tools(answeringTo:)`
-  hands a group letter the members that have no letter of their own, so Crop
-  gives up its own `c` to the family the way the box and ellipse marquees have
-  no letters and `M` stands for the pair. Then `C` hands you the member you used
-  last, `C` again swaps, and `⇧C` walks. (Leaving `c` on Crop instead would make
-  `C` mean Trim and nothing else, because the group branch is checked first.)
-  Photoshop has no trim tool to be compatible with, and this spends no new
-  letter.
+- **Its letter:** `C`, and both members answer to it. `C` hands you the member
+  you used last, `C` again swaps, and `⇧C` walks — the marquee pair's bargain,
+  said with two letters instead of none.
+
+  **Built 2026-09-20 one step away from what this said.** The plan was for Crop
+  to give its `c` up to the family, the way the marquees have no letters of
+  their own. That cannot be done without taking `C` off Crop in the UNGROUPED
+  bar, which is what Current ships and what Next shows with tool groups off:
+  that bar reads `Tool.crop.shortcutKey` directly and has no family to fall back
+  on, so a nil there is a C that crops nothing. So `Tool.trim.shortcutKey` is
+  `"c"` too, and `ToolGroup.bounds.groupKey` is nil. `tools(answeringTo: "c")`
+  then answers `[Crop, Trim]` and everything downstream — the swap, the walk,
+  the tooltip — works out the same. Nothing prints Crop's key off the family,
+  because Crop never lost it.
 - **When it is offered:** when the document has a duration. This is D19:
   existence is automatic, and the timeline and the tool appear on the same fact.
   In a screenshot document the slot is Crop and pressing `C` twice does nothing
   new, which means the family's ring is filtered to the members this document
-  can use before it is walked — the one thing `ToolGroup` does not do today, and
-  a line of it rather than a new mechanism.
+  can use before it is walked. Built as `ToolGroup.tools(offered:)`, which every
+  key-resolving call now takes, defaulting to the whole family so nothing else
+  in the bar changed. A family filtered down to nothing still stands for its
+  first member, because a slot that vanishes is a slot that moves.
 - **What it puts on screen:** the handles on **the clip's bar in the timeline**,
   held up without hover, and the frames outside the clip's in and out drawn as
   **spare** at both ends, with their durations (`comp-video` §01 `.edge`, §03
@@ -511,7 +518,7 @@ corner and entering Crop.
 
 | What moves | Where it goes |
 | --- | --- |
-| `VideoEditorView`'s trim row (Reset · Cancel · Done) | one glass capsule shaped like `cropActionBar`, words changed |
+| `VideoEditorView`'s trim row (Reset · Cancel · Done) | one glass capsule shaped like `cropActionBar`, words changed — built 2026-09-20 as `EditorView.trimActionBar` |
 | The trim handles on the piece strip | `.edge` handles on the clip's bar in the timeline |
 | "Done" | "Trim", the verb, as the primary button |
 | The separate recording window | gone; a recording is a document, `a-document-can-have-time` |

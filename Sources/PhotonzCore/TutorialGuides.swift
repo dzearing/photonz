@@ -2149,7 +2149,7 @@ public enum TutorialGuides {
                 id: "keep-whats-between",
                 anchor: .video(.trimDone),
                 title: "Keep what is between them",
-                body: "Done throws the ends away and leaves you the middle. It plays from its new start, and you can trim it again from there.",
+                body: "Trim keeps what is between the handles. Nothing is thrown away: the ends are still in the recording, so you can pull them back or trim again from here.",
                 advance: .waitsFor(.trimApplied)),
             TutorialStep(
                 id: "saving-writes-it-in",

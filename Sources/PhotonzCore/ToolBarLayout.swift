@@ -15,12 +15,18 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     /// The plain drawing shapes: line, rectangle, ellipse. Arrow is NOT here:
     /// it is the redline tool people reach for most and never hides.
     case shapes
+    /// Change what a thing's bounds are: Crop in space, Trim in time
+    /// (`docs/design/video-surface.md` §10). Resize Image rides at the foot of
+    /// the same flyout, so the slot has always been this family; Trim simply
+    /// makes the family two tools instead of one.
+    case bounds
 
     /// The members, in cycle order. The first is the default.
     public var tools: [Tool] {
         switch self {
         case .selection: [.rectSelect, .ellipseSelect, .wand]
         case .shapes: [.line, .rectangle, .ellipse]
+        case .bounds: [.crop, .trim]
         }
     }
 
@@ -29,6 +35,7 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .selection: "Selection"
         case .shapes: "Shapes"
+        case .bounds: "Crop and Trim"
         }
     }
 
@@ -39,16 +46,35 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     public var groupKey: Character? {
         switch self {
         case .selection: "m"
-        case .shapes: nil
+        // Crop keeps its own C and Trim answers to the same letter, so the
+        // pair walks on C without the family taking the letter off Crop — the
+        // ungrouped bar still has a C that crops.
+        case .shapes, .bounds: nil
         }
+    }
+
+    /// The members this document can actually use, in cycle order.
+    ///
+    /// A family can hold a tool that only some documents have anything for:
+    /// Trim needs a duration, and in a screenshot there is nothing to trim. The
+    /// ring is filtered before it is walked so C in a screenshot means Crop and
+    /// pressing it again does nothing new. Filtered down to nothing it still
+    /// stands for its first member, because a slot that vanishes is a slot that
+    /// moves.
+    public func tools(offered: Set<Tool>? = nil) -> [Tool] {
+        guard let offered else { return tools }
+        let kept = tools.filter { offered.contains($0) }
+        return kept.isEmpty ? [tools[0]] : kept
     }
 
     /// Every letter that, with shift held, walks the family: the group key
     /// first, then each member's own key. Deduplicated, in that order.
-    public var cycleKeys: [Character] {
+    public var cycleKeys: [Character] { cycleKeys(offered: nil) }
+
+    public func cycleKeys(offered: Set<Tool>? = nil) -> [Character] {
         var keys: [Character] = []
         if let groupKey { keys.append(groupKey) }
-        for tool in tools {
+        for tool in tools(offered: offered) {
             if let key = tool.shortcutKey, !keys.contains(key) { keys.append(key) }
         }
         return keys
@@ -61,9 +87,10 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     /// letter of its own, which today is exactly Photoshop's marquee pair: M
     /// picks a marquee and pressing it again swaps the box for the ellipse.
     /// The wand has W of its own, so it is never what M hands you.
-    public func tools(answeringTo key: Character) -> [Tool] {
-        if key == groupKey { return tools.filter { $0.shortcutKey == nil } }
-        return tools.filter { $0.shortcutKey == key }
+    public func tools(answeringTo key: Character, offered: Set<Tool>? = nil) -> [Tool] {
+        let members = tools(offered: offered)
+        if key == groupKey { return members.filter { $0.shortcutKey == nil } }
+        return members.filter { $0.shortcutKey == key }
     }
 
     /// The tool a plain press of `key` picks up, given the tool in hand and
@@ -73,8 +100,9 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     /// Already holding one of the letter's tools means the press moves on to
     /// the next one; otherwise you get the remembered member when the letter
     /// owns it, and the letter's first tool when it does not.
-    public func tool(forKey key: Character, active: Tool, remembered: Tool) -> Tool? {
-        let ring = tools(answeringTo: key)
+    public func tool(forKey key: Character, active: Tool, remembered: Tool,
+                     offered: Set<Tool>? = nil) -> Tool? {
+        let ring = tools(answeringTo: key, offered: offered)
         guard !ring.isEmpty else { return nil }
         if let index = ring.firstIndex(of: active) { return ring[(index + 1) % ring.count] }
         return ring.contains(remembered) ? remembered : ring[0]
@@ -82,14 +110,16 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
 
     /// The letters that hand you a DIFFERENT tool when you press them again,
     /// so a tooltip can teach that without the bar guessing which ones do.
-    public var swapKeys: [Character] {
-        cycleKeys.filter { tools(answeringTo: $0).count > 1 }
+    public var swapKeys: [Character] { swapKeys(offered: nil) }
+
+    public func swapKeys(offered: Set<Tool>? = nil) -> [Character] {
+        cycleKeys(offered: offered).filter { tools(answeringTo: $0, offered: offered).count > 1 }
     }
 
     /// The member after `tool`, wrapping. A tool from outside the family
     /// starts the walk at the first member.
-    public func next(after tool: Tool) -> Tool {
-        let members = tools
+    public func next(after tool: Tool, offered: Set<Tool>? = nil) -> Tool {
+        let members = tools(offered: offered)
         guard let index = members.firstIndex(of: tool) else { return members[0] }
         return members[(index + 1) % members.count]
     }
@@ -131,9 +161,18 @@ public struct ToolBarLayout: Hashable, Sendable {
     public var entries: [Entry] { families.flatMap { $0 } }
 
     /// The slot that stands for `tool`: its group's, or its own.
+    ///
+    /// A family whose slot the bar draws as a lone tool — Crop's, which holds
+    /// Trim as well but is only ever drawn once — answers with that tool, so
+    /// asking where Trim lives gives back the slot a person can actually see.
     public func entry(for tool: Tool) -> Entry? {
-        let wanted: Entry = ToolGroup.containing(tool).map { .group($0) } ?? .tool(tool)
-        return entries.contains(wanted) ? wanted : nil
+        if let group = ToolGroup.containing(tool) {
+            if entries.contains(.group(group)) { return .group(group) }
+            if let member = group.tools.first(where: { entries.contains(.tool($0)) }) {
+                return .tool(member)
+            }
+        }
+        return entries.contains(.tool(tool)) ? .tool(tool) : nil
     }
 
     /// The grouped bar. Resize Image is not a tool and is not listed: it rides

@@ -261,6 +261,15 @@ extension CanvasNSView {
                 refreshOverlays()
                 return
             }
+            // A trim is a session and ⎋ is how you leave it, the same as a
+            // crop (`docs/design/video-surface.md` §10.2). Ahead of the layer
+            // selection, because the clip is picked for the whole session and
+            // an Escape that unpicked it first would take two presses to do
+            // what the capsule says one does.
+            if tool == .trim {
+                onToolChange(.select)
+                return
+            }
             if measurePlacement != nil || alignmentDrag != nil {
                 cancelMeasurePlacement()
                 refreshOverlays()

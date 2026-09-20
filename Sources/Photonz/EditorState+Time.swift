@@ -22,7 +22,12 @@ extension EditorState {
     var documentHasTime: Bool { document?.hasTime ?? false }
 
     /// How long it runs for.
-    var documentLengthMS: Int { document?.documentDurationMS ?? 0 }
+    ///
+    /// The document AS IT IS BEING SHOWN, which is the same thing except
+    /// while a trim is running: then the clip is laid out at full length, so
+    /// the transport and the ruler say how much there is to choose from rather
+    /// than how much is currently kept (`EditorState+Trim`).
+    var documentLengthMS: Int { shownDocument?.documentDurationMS ?? 0 }
 
     /// The last moment there is a picture at.
     var lastDocumentTimeMS: Int { max(0, documentLengthMS - 1) }
@@ -128,7 +133,7 @@ extension EditorState {
     /// keeps a scrub responsive: the canvas never waits on a decode, it shows
     /// the last frame it has and replaces it the instant the right one lands.
     func documentMomentChanged() {
-        guard let document else { return }
+        guard let document = shownDocument else { return }
         let wanted = document.movieFrames(atTimeMS: documentTimeMS)
         if !wanted.isEmpty {
             movieFrames.fetch(wanted)
@@ -147,7 +152,7 @@ extension EditorState {
 
     /// A frame arrived that the canvas did not have when it last drew.
     func movieFrameLanded() {
-        guard let document, documentHasTime else { return }
+        guard let document = shownDocument, documentHasTime else { return }
         // A clip's row in the layers list is drawn from the frame it points at,
         // and its cache is keyed on the LAYER, which does not change when a
         // frame lands. So a row first drawn before the first frame was decoded

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 21,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-20T19:20:02.580Z",
+  "updated": "2026-09-20T21:10:26.614Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SPLIT OUT of a-document-can-have-time on 2026-09-20, by the runner that built the first half. Read docs/design/video.md 7 before anything else: it says exactly what is still standing and why.\n\nWHAT LANDED, so this task does not rebuild it. PhotonzCore gained MovieRef and Layer.movie (MovieClip.swift): which recording a layer plays, an id plus a picture size plus a length, no pixels and no path. PhotonzDocument.recording(_:name:cutList:) opens a recording as an ordinary document with one clip layer. drawn(atTimeMS:) swaps each clip's ImageRef for the frame at that moment, so DocumentRenderer draws video without one line of change. App side: MovieLibrary (id to URL), MovieDecoder (an actor owning the AVAssetImageGenerators) and MovieFrameFetcher (decode, file in ImageStore, 16 frame budget) in MovieFrames.swift; EditorState+Time.swift holds the playhead, play, pause, step and scrub; the transport and the draggable playhead are in MotionStripView.swift. Window routing is in PhotonzApp.EditorRootView, gated on Experiments.shared.recordingIsADocument.\n\nWHY THE FLAG IS OFF. Trim, crop, save, export and Revert to Original all live in VideoEditorState and none of them work on the document path. Turning it on today would take them away from anybody who opened a recording. So the flag is off, the old window is still the default, and this task is what turns it on.\n\nWHAT TRIM IS, already settled and drawn: docs/design/video-surface.md 10, UX-PATTERNS D20, pages/video-shell.html block 05, pages/comp-video.html 08. Crop and Trim become a ToolGroup so no slot moves; the letter c belongs to the FAMILY (ToolGroup.tools(answeringTo:)) rather than to either tool, which means Tool.crop.shortcutKey becomes nil and anything printing Crop's key reads it off the family. The family's ring is filtered to the members this document can use before it is walked, which is the one thing ToolGroup does not do today. trimBeforeSession, resetTrimSelection, commitTrim and cancelTrim are kept as they are, renamed to the tool's session.\n\nTHE WALKS drive through action ids (videoTrimDone, not a button called Done), so the ids survive the move; what does not survive is every step that opens the separate window and reads its strip. PlaytestHarness already branches openSampleRecording on the flag and adopts an EditorState when it is on, so the walks have somewhere to land.\n\nSAVE IS THE FIRST THING TO FIX, and there is a trap in it. The first build of this set had the window adopt the .mp4 as its sourceCaptureURL, which is 'Save writes the flattened picture back over the file this came from' — Command S would have replaced an eight second recording with a PNG of one frame of it. That is gone: EditorState.isRecordingDocument now makes saveAffordance report nothingToSave, which dims Save and stops the close sheet asking a question nothing can answer. The cost is that styling a clip and closing loses it silently. Two things have to be decided when this is picked up: what Save MEANS for a recording document (the recording window's Save writes the trimmed mp4 through VideoAssetCommit, and that is probably still the right answer), and whether a recording document can be written as a .photonz at all, since MovieRef deliberately carries no path and a package would reopen with a clip whose frames cannot be found.",
@@ -29,6 +29,18 @@
     {
       "t": "2026-09-20T19:20:02.579Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-20T20:44:03.268Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T21:10:24.392Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The mock puts the handles in the TIMELINE and the Cancel/Trim capsule over the CANVAS, two places at the bottom of the window. Kept, because the thing being bounded really is the bar, but picking Trim now OPENS the timeline if it is shut: a tool whose handles are behind a closed dock is a tool that does nothing. (2) The mock says Crop gives its letter to the family. That takes C off Crop in the ungrouped bar, which is what Current ships and what Next shows with tool groups off, and that bar reads Tool.crop.shortcutKey with no family to fall back on. Built the other way: both members answer to c and the family has no key of its own, which behaves identically and leaves Current alone. (3) 'The spare at each end, with its duration' has nowhere to be drawn once a trim has shortened the document: the frames are before time nought. Answered by laying the clip out at FULL length for the length of the session (PhotonzDocument.openedForTrim, pure, nothing written), so the ruler, the bar and the playhead all cover everything the trim could give back. (4) Cut the mock's separate handle-preview idea: the canvas already draws the frame under the playhead and dragging a handle moves the playhead to it."
+    },
+    {
+      "t": "2026-09-20T21:10:26.613Z",
+      "note": "walks trim-save-send-walk, trim-with-pieces-walk, trim-catches-on-a-cut-walk, trim-cancel-after-a-delete-walk, trim-keeps-the-piece-you-picked-walk, trim-handle-freed-from-a-cut-walk, undo-while-trimming-walk, save-is-live-after-a-trim-walk, close-a-trimmed-recording-walk, tutorial-trim-a-recording-walk, tutorial-trim-a-recording-skipped-walk -> trim-save-send-walk, trim-with-pieces-walk, trim-catches-on-a-cut-walk, trim-cancel-after-a-delete-walk, trim-keeps-the-piece-you-picked-walk, trim-handle-freed-from-a-cut-walk, undo-while-trimming-walk, save-is-live-after-a-trim-walk, close-a-trimmed-recording-walk, tutorial-trim-a-recording-walk, tutorial-trim-a-recording-skipped-walk, trim-is-a-tool-walk"
     }
   ],
   "walks": [
@@ -42,6 +54,8 @@
     "save-is-live-after-a-trim-walk",
     "close-a-trimmed-recording-walk",
     "tutorial-trim-a-recording-walk",
-    "tutorial-trim-a-recording-skipped-walk"
-  ]
+    "tutorial-trim-a-recording-skipped-walk",
+    "trim-is-a-tool-walk"
+  ],
+  "started": "2026-09-20T20:44:03.267Z"
 }

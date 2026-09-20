@@ -7,6 +7,7 @@ extension Tool {
         switch self {
         case .select: "cursorarrow"
         case .crop: "crop"
+        case .trim: "timeline.selection"
         case .arrow: "arrow.up.right"
         case .line: "line.diagonal"
         case .rectangle: "rectangle"
@@ -30,6 +31,7 @@ extension Tool {
         switch self {
         case .select: "Select"
         case .crop: "Crop"
+        case .trim: "Trim"
         case .arrow: "Arrow"
         case .line: "Line"
         case .rectangle: "Rectangle"
@@ -222,3 +224,8 @@ struct ToolGroupShortcuts: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Trim's one "mode", so the slot it shares with Crop can be the same widget
+/// whichever of the two is in hand. A trim has no settings beyond its two
+/// handles, so the list under the button is the family and Resize Image.
+enum TrimSlotMode: Hashable { case trim }

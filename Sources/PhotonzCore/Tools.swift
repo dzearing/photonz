@@ -7,6 +7,12 @@ import Foundation
 public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case select
     case crop
+    /// Bounds in TIME: pick it up in a document that runs for a length of time
+    /// and the clip you are on gets a handle at each end, on its own bar in the
+    /// timeline (`docs/design/video-surface.md` §10). It shares Crop's slot and
+    /// Crop's letter, because shortening a picture and shortening a recording
+    /// are the same act on two different axes.
+    case trim
     case arrow
     case line
     case rectangle
@@ -59,7 +65,13 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     public var shortcutKey: Character? {
         switch self {
         case .select: "v"
-        case .crop: "c"
+        // One letter for the pair that changes a thing's bounds: C hands you
+        // whichever of Crop and Trim you used last and swaps when you press it
+        // again (`ToolGroup.bounds`). Crop keeps the letter of its own rather
+        // than handing it to the family, so the ungrouped bar — which is what
+        // Current ships and what Next shows with tool groups off — still has a
+        // C that crops.
+        case .crop, .trim: "c"
         case .arrow: "a"
         case .line: "l"
         case .rectangle: "r"
@@ -100,7 +112,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text, .zoomCallout, .lens, .measure, .fill,
+        case .select, .crop, .trim, .text, .zoomCallout, .lens, .measure, .fill,
              .rectSelect, .ellipseSelect, .wand, .frame, .pen: nil
         }
     }
@@ -131,8 +143,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// were asked for. Nothing else survives: the Pen's first anchor lets go of
     /// whatever was picked (`penMouseDown`), so a pick only lasts as long as it
     /// is being worked on.
+    /// Trim is on the list for the same reason the Pen is: the clip it acts
+    /// on is the one you picked, and dropping the pick on the way in would
+    /// take away the thing the tool was reached for.
     public var preservesLayerSelection: Bool {
-        self == .select || self == .fill || self == .pen || isRegionSelectionTool
+        self == .select || self == .fill || self == .pen || self == .trim
+            || isRegionSelectionTool
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
@@ -157,7 +173,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// answer here instead of waiting for someone to hit the same thing.
     public var doubleClickOnEmptyCanvasZoomsWindow: Bool {
         switch self {
-        case .select, .crop, .rectSelect, .ellipseSelect, .wand: true
+        // Trim is on the true side with Crop: it shortens rather than adds,
+        // and its own gesture lives in the timeline rather than on the picture,
+        // so a double click on the matte has nothing of its to collide with.
+        case .select, .crop, .trim, .rectSelect, .ellipseSelect, .wand: true
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
              .zoomCallout, .lens, .measure, .fill, .frame, .pen: false
         }
@@ -179,7 +198,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
              .zoomCallout, .lens, .measure, .frame, .pen: true
-        case .select, .crop, .fill, .rectSelect, .ellipseSelect, .wand: false
+        case .select, .crop, .trim, .fill, .rectSelect, .ellipseSelect, .wand: false
         }
     }
 
@@ -208,7 +227,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // colour on the picture. The frame tool draws its own fixed grey.
         // A lens puts no colour on the picture either: it shows the colours
         // already there, changed.
-        case .select, .crop, .zoomCallout, .lens, .measure,
+        case .select, .crop, .trim, .zoomCallout, .lens, .measure,
              .rectSelect, .ellipseSelect, .wand, .frame: .hidden
         }
     }

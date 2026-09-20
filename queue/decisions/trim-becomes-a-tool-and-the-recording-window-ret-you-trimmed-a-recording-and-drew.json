@@ -1,0 +1,54 @@
+{
+  "id": "trim-becomes-a-tool-and-the-recording-window-ret-you-trimmed-a-recording-and-drew",
+  "taskId": "trim-becomes-a-tool-and-the-recording-window-ret",
+  "question": "You trimmed a recording and drew an arrow on it. What should Command S do?",
+  "context": "A recording now opens in the ordinary editor, which means it can have arrows, titles and styling on it like any other document. The old small recording window had one Save and it wrote the trimmed video back over the file. The ordinary editor has a Save that writes a Photonz document. The two mean different things and only one can be on Command S.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Save writes the recording",
+      "summary": "Command S writes the trimmed recording back over the file you opened, exactly as the small recording window does today. The untouched original is kept beside it, so a trim is never final. The arrow you drew is not in the video: it is there while the window is open, and Export is how it gets into a file you can send.",
+      "pros": [
+        "Command S means the same thing it means today, so nothing anybody has learned stops working",
+        "A trim is on disk in under a second, because only the video is rewritten",
+        "Send a trimmed recording with no extra step: trim, Command S, drag it out of the history"
+      ],
+      "cons": [
+        "Close the window after drawing on a recording and the drawing is gone"
+      ],
+      "mitigation": "Closing says so plainly rather than losing it quietly: the sheet names what is not kept and offers Export, which does write the arrow into the picture."
+    },
+    {
+      "id": "b",
+      "label": "Save writes a project beside it",
+      "summary": "Command S saves a Photonz document next to the recording, holding the recording, the trim and everything you drew on it. Re-open that document and it is all still there, still editable. The recording file itself is never changed unless you export.",
+      "pros": [
+        "Nothing you did is ever lost, including the arrow",
+        "Your original recording is never written over",
+        "Come back a week later and the trim is still adjustable"
+      ],
+      "cons": [
+        "Command S no longer changes the recording, so trim-and-send needs an export every time",
+        "A recording you trimmed and saved still plays at full length everywhere outside Photonz"
+      ],
+      "mitigation": "Export stays one chord away, and the window says at a glance that the recording on disk is still the long one."
+    },
+    {
+      "id": "c",
+      "label": "Save writes both",
+      "summary": "Command S writes the trim back to the recording AND saves a project beside it carrying the drawing. Two files, one press, nothing lost.",
+      "pros": [
+        "Keeps trim-and-send in one press",
+        "Never loses the arrow"
+      ],
+      "cons": [
+        "One press quietly makes a second file you did not ask for",
+        "Two things on disk that can drift apart if you trim the recording again elsewhere"
+      ],
+      "mitigation": "The project is only written once you have actually drawn something, so a plain trim still leaves one file."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-20T20:46:46.060Z"
+}

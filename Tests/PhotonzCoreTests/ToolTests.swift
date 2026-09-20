@@ -265,12 +265,21 @@ struct AnnotationBuilderTests {
         #expect(Tool.allCases.filter { $0.shortcutKey == "p" } == [.pen])
     }
 
+    /// One letter, one slot. Two tools may share a letter only where they
+    /// share a SLOT: C hands you Crop or Trim depending on which you used
+    /// last, and pressing it again swaps them, which is the marquee pair's
+    /// bargain said with two letters instead of none
+    /// (`docs/design/video-surface.md` §10.2). Two tools in different slots
+    /// sharing a letter would be a letter that means two things.
     @Test func noTwoToolsClaimTheSameKey() {
         var seen: [Character: Tool] = [:]
         for tool in Tool.allCases {
             guard let key = tool.shortcutKey else { continue }
             if let other = seen[key] {
-                Issue.record("\(tool) and \(other) both claim \(key)")
+                let family = ToolGroup.containing(tool)
+                if family == nil || family != ToolGroup.containing(other) {
+                    Issue.record("\(tool) and \(other) both claim \(key)")
+                }
             }
             seen[key] = tool
         }
@@ -432,11 +441,21 @@ struct ToolBarLayoutTests {
     /// Every OTHER tool is in every bar, exactly once.
     private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen]
 
+    /// How many slots each tool is reachable from.
+    ///
+    /// **A slot stands for its whole family.** A family listed as a group
+    /// offers every member from its flyout, and so does a family the bar
+    /// draws as ONE of its tools: Crop's slot is listed as Crop and offers
+    /// Crop and Trim, because Trim rides in it rather than taking a slot of
+    /// its own (`docs/design/video-surface.md` §10.2). Either way the family
+    /// is one slot and every member is reachable from it exactly once.
     private func counts(in bar: ToolBarLayout) -> [Tool: Int] {
         var counts: [Tool: Int] = [:]
         for entry in bar.entries {
             switch entry {
-            case .tool(let tool): counts[tool, default: 0] += 1
+            case .tool(let tool):
+                let family = ToolGroup.containing(tool)?.tools ?? [tool]
+                for member in family { counts[member, default: 0] += 1 }
             case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
             }
         }

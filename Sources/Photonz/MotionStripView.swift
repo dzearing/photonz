@@ -360,7 +360,15 @@ private struct MotionStripGroupView: View {
     /// shipped recording strip broke: there it ringed the range being kept in
     /// trim and the piece being held on the strip, so the same colour meant
     /// keep in one place and drop in the other.
-    private func clipBar(_ bar: LayerTime) -> some View {
+    @ViewBuilder private func clipBar(_ bar: LayerTime) -> some View {
+        if editorState.trimmingLayerID == group.layerID {
+            ClipTrimBar(bar: bar, layerName: group.layerName, laneWidth: laneWidth)
+        } else {
+            plainClipBar(bar)
+        }
+    }
+
+    private func plainClipBar(_ bar: LayerTime) -> some View {
         let ruler = editorState.motionStripRuler
         let x = laneWidth * ruler.fraction(ofMS: Double(bar.inMS))
         let width = laneWidth * ruler.fraction(ofMS: Double(bar.lengthMS))
@@ -379,6 +387,105 @@ private struct MotionStripGroupView: View {
     }
 
     private var isPicked: Bool { editorState.selectedLayerID == group.layerID }
+}
+
+/// The clip's bar while it is being TRIMMED (`docs/design/video-surface.md`
+/// §10.2).
+///
+/// The whole recording is laid out — that is what `openedForTrim` hands the
+/// strip — and the part being kept is drawn bright between two handles, with
+/// the frames outside them drawn as spare at each end, labelled with how long
+/// they are. Nothing is thrown away by a trim, and this is the drawing that
+/// says so: the spare is what Reset, or a second trim, gives back.
+///
+/// Both handles are up without hover, because a trim is a session and the two
+/// ends are the whole of what it is about.
+private struct ClipTrimBar: View {
+    @Environment(EditorState.self) private var editorState
+    let bar: LayerTime
+    let layerName: String
+    let laneWidth: CGFloat
+
+    /// How wide the grab zone on a handle is. The same seven points a motion
+    /// bar's ends use, so a hand that has learned one has learned both.
+    private static let gripWidth: CGFloat = 9
+
+    var body: some View {
+        let ruler = editorState.motionStripRuler
+        let session = editorState.trimSession
+        let start = Double(bar.inMS)
+        let keepIn = start + Double(session?.keepInMS ?? 0)
+        let keepOut = start + Double(session?.keepOutMS ?? bar.lengthMS)
+        let x0 = laneWidth * ruler.fraction(ofMS: start)
+        let xIn = laneWidth * ruler.fraction(ofMS: keepIn)
+        let xOut = laneWidth * ruler.fraction(ofMS: keepOut)
+        let xEnd = laneWidth * ruler.fraction(ofMS: start + Double(bar.lengthMS))
+        return ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(.quaternary.opacity(0.5))
+                .frame(height: MotionStripView.barHeight)
+            spare(width: xIn - x0, reading: session.map { Self.reading($0.spareBeforeMS) })
+                .offset(x: x0)
+            spare(width: xEnd - xOut, reading: session.map { Self.reading($0.spareAfterMS) })
+                .offset(x: xOut)
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color.accentColor.opacity(0.85))
+                .frame(width: max(2, xOut - xIn), height: MotionStripView.barHeight)
+                .offset(x: xIn)
+            handle(atX: xIn, isStart: true)
+            handle(atX: xOut, isStart: false)
+        }
+        .frame(width: laneWidth, alignment: .leading)
+        .panelReadout("\(layerName) trimming, \(editorState.trimReadout)")
+    }
+
+    /// The frames outside the handles: still in the document, not being
+    /// played, and drawn faintly with how long they are.
+    @ViewBuilder private func spare(width: CGFloat, reading: String?) -> some View {
+        if width > 1 {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(.secondary.opacity(0.18))
+                .frame(width: width, height: MotionStripView.barHeight)
+                .overlay {
+                    if let reading, width > 34 {
+                        Text(reading)
+                            .font(.system(size: 9))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+        }
+    }
+
+    private func handle(atX x: CGFloat, isStart: Bool) -> some View {
+        Capsule()
+            .fill(Color.accentColor)
+            .overlay {
+                Capsule().strokeBorder(Color.white.opacity(0.8), lineWidth: 1)
+            }
+            .frame(width: Self.gripWidth, height: MotionStripView.barHeight)
+            .offset(x: x - (isStart ? 0 : Self.gripWidth))
+            .contentShape(Rectangle().inset(by: -6))
+            .gesture(drag(isStart: isStart))
+            .playtestField(isStart ? "Trim in handle" : "Trim out handle")
+            .panelHelp(isStart ? "Where the trim starts keeping. Drag it."
+                               : "Where the trim stops keeping. Drag it.")
+    }
+
+    private func drag(isStart: Bool) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let ms = Int(editorState.motionStripRuler
+                    .ms(atFraction: Double(value.location.x / laneWidth)).rounded())
+                isStart ? editorState.dragTrimIn(toMS: ms) : editorState.dragTrimOut(toMS: ms)
+            }
+    }
+
+    /// `2.0s`, the way the spare says how much there is of it. Seconds with
+    /// one decimal rather than a timecode, because what it answers is how much
+    /// there is rather than when it happens.
+    static func reading(_ ms: Int) -> String {
+        String(format: "%.1fs", Double(ms) / 1000)
+    }
 }
 
 /// One lane: the property's name, and the bar that says when it happens.

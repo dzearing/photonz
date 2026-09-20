@@ -198,9 +198,18 @@ that quietly stutters.
 
 Not retired yet, and deliberately not pretended otherwise.
 
+**Trim moved on 2026-09-20.** It is now a tool in the ordinary window, in
+Crop's slot, and `video-surface.md` §10 describes what was built. What is left
+in the old window is save, export, crop and revert to original, and one
+question about the first of those is with the user: a recording document can
+now be styled, and Save cannot mean both "write the video back" and "write a
+project holding the arrow you drew on it". The window stays the default until
+that is answered, which is why `next-a-recording-is-a-document` is still off.
+
 | Thing | What happened |
 | --- | --- |
-| `VideoEditorState` | **Still standing.** It is what a recording opens with the flag off, and it still owns trim, crop, save, export and revert to original. |
+| Trim | **Moved.** `Tool.trim`, `ClipTrimSession` (PhotonzCore), `EditorState+Trim`, handles on the clip's bar in `MotionStripView`, one glass capsule in `EditorView.trimActionBar`. `trim-is-a-tool-walk` drives the whole session. |
+| `VideoEditorState` | **Still standing.** It is what a recording opens with the flag off, and it still owns save, crop, export and revert to original. Its own trim is still there and still what that window uses; nothing has been taken away from anybody. |
 | `VideoEditorView` | Still standing, same reason. |
 | `TrimTimeline` | Untouched. It is bound to `VideoEditorState` and goes when that does. |
 | `PlaybackScrubber` | Untouched, same reason. |
@@ -232,5 +241,11 @@ be added without it changing shape.
   of a layer opening into a timing surface with a lane per moving part. An icon
   animating and a clip moving are the same machinery, and the strip is already
   that machinery.
-- **Trimming by dragging the end of a clip's bar.** The bar is drawn; it has no
-  grip on it yet.
+- **Trimming by dragging the end of a clip's bar OUTSIDE a trim session.** The
+  bar has grips while Trim is in hand, and none the rest of the time. The quick
+  nudge `video-surface.md` §10.4 describes — Select, drag the end of a clip —
+  is not built.
+- **Scrubbing into the spare tells you nothing new yet.** During a session the
+  clip is laid out at full length and the canvas draws any frame of it, which
+  is the point; what it cannot do is show the trim's own in and out marked on
+  the CANVAS the way a crop darkens what it is about to lose.

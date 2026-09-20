@@ -898,6 +898,10 @@ final class EditorState {
     /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
     /// so a window holding a screenshot never makes one.
     @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?
+    /// The trim in flight, where the Trim tool is in hand over a clip
+    /// (`EditorState+Trim`). Held here rather than in the document, exactly as
+    /// the crop rectangle is, so ⎋ throws it away without an undo step.
+    var trimSession: ClipTrimSession?
     /// The recording this window was opened from, where it was opened from one.
     /// It is what Save, Export and Revert to Original act on, and it is how the
     /// window knows there is an untouched file behind the clip.
@@ -1105,6 +1109,13 @@ final class EditorState {
             // The first frame, fetched before anybody presses anything, so the
             // window opens on the picture rather than on nothing.
             documentMomentChanged()
+            // The fast lane (`docs/design/video-surface.md` §10.3): one clip,
+            // nothing done to it yet, so trim-and-send is drag a handle, ⏎,
+            // export — no click to pick the clip and none to pick the tool.
+            if document?.opensWithTrimInHand == true {
+                selectedLayerID = document?.layers.first?.id
+                setTool(.trim)
+            }
             #if PHOTONZ_PLAYTEST
             PlaytestHarness.register(self)
             #endif
@@ -2500,8 +2511,21 @@ final class EditorState {
             cropTargetLayerID = nil
             cropRect = nil
         }
+        // A trim session belongs to the Trim tool and leaves with it, the same
+        // bargain the crop rectangle strikes above. Opened after the tool is
+        // in hand, below, so everything it touches sees the tool it belongs to.
+        if tool != .trim, let session = trimSession {
+            // Leaving the tool by ANY route ends the session, and the clip
+            // goes back to the length it was: nothing was written, so there is
+            // nothing to put back but the playhead, which was moved along by
+            // however much the session laid out in front of the clip.
+            trimSession = nil
+            documentTimeMS = max(0, min(documentTimeMS - session.openedInMS, lastDocumentTimeMS))
+            documentMomentChanged()
+        }
         activeTool = tool
         remember(tool)
+        if tool == .trim { beginTrim() }
         // A guide step that says "pick the Measure tool" is waiting for exactly
         // this, whichever way the tool was picked: the button, the key, or the
         // menu. Nothing happens unless a guide is running and that is the step

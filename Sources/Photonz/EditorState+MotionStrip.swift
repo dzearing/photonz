@@ -35,7 +35,10 @@ extension EditorState {
 
     /// The lanes, grouped under the layer each belongs to.
     var motionStripGroups: [MotionStripGroup] {
-        guard let document else { return [] }
+        // The document AS SHOWN: while a trim runs the clip is laid out at
+        // full length, so its bar covers everything the trim could give back
+        // and the handles bracket the part being kept (`EditorState+Trim`).
+        guard let document = shownDocument else { return [] }
         var groups = document.motionStrip()
         // A bar under the hand is drawn where the hand has it, not where the
         // document still says it is, which is the same bargain the pivot
@@ -59,7 +62,7 @@ extension EditorState {
     /// pointer instead of following it.
     var motionStripCycleMS: Int {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
-        return max(1, document?.timelineLengthMS ?? 1)
+        return max(1, shownDocument?.timelineLengthMS ?? 1)
     }
 
     /// Whether this document finishes rather than repeating. A recording has a

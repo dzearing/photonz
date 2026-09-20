@@ -356,6 +356,8 @@ struct EditorView: View {
                     if Experiments.shared.toolOptionsEnabled,
                        editorState.activeTool == .crop, editorState.cropRect != nil {
                         cropActionBar
+                    } else if editorState.activeTool == .trim {
+                        trimActionBar
                     }
                 }
                 .overlay(alignment: .topLeading) {
@@ -1124,6 +1126,10 @@ struct EditorView: View {
             switch entry {
             case .group(.selection): self = .marquee
             case .group(.shapes): self = .shapes
+            // Crop's slot holds Trim as well, and the bar draws it once
+            // (`docs/design/video-surface.md` §10.2): no slot moves, and the
+            // family lives inside the button rather than beside it.
+            case .group(.bounds): self = .crop
             case .tool(let tool): self = ToolbarSlot.allCases.first { $0.tool == tool } ?? .select
             }
         }
@@ -1930,24 +1936,85 @@ struct EditorView: View {
     /// in the bar, which is what Current ships.
     @ViewBuilder private var cropToolButton: some View {
         if Experiments.shared.toolOptionsEnabled {
-            ToolModeButton(
-                toolTitle: "Crop",
-                key: Tool.crop.keyEquivalent,
-                isActive: editorState.activeTool == .crop,
-                modes: CropAspect.allCases.map {
-                    ToolMode(mode: $0, title: $0.label, symbol: $0.symbol, help: $0.help)
-                },
-                selection: Binding(get: { editorState.cropAspect },
-                                   set: { editorState.setCropAspect($0) }),
-                namespace: toolbarNamespace,
-                activate: { editorState.setTool(.crop) },
-                keyCycles: false,
-                command: Experiments.shared.toolGroupsEnabled ? resizeCommand : nil,
-                pressedKey: { editorState.setTool(.crop) })
-            .tutorialAnchor(.tool(.crop))
+            if boundsSlotMember == .trim {
+                trimSlotButton
+            } else {
+                cropSlotButton
+            }
         } else {
             toolButton(.crop, "crop", "Crop")
         }
+    }
+
+    /// The member Crop's slot is wearing: the one you used last, out of the
+    /// ones this document can use. In a screenshot that is always Crop
+    /// (`ToolGroup.bounds`).
+    private var boundsSlotMember: Tool {
+        let offered = editorState.boundsToolsOffered
+        let remembered = editorState.lastTool(in: .bounds)
+        return offered.contains(remembered) ? remembered : .crop
+    }
+
+    /// Crop and Trim, as the rows at the head of the slot's list. Empty in a
+    /// document with no duration, which is what keeps that document's bar
+    /// exactly as it was.
+    private var boundsSiblings: [ToolCommand] {
+        guard editorState.offersTrim else { return [] }
+        return ToolGroup.bounds.tools(offered: editorState.boundsToolsOffered).map { tool in
+            ToolCommand(title: tool.barTitle, symbol: tool.barSymbol,
+                        isOn: editorState.activeTool == tool) {
+                editorState.setTool(tool)
+            }
+        }
+    }
+
+    /// C, live: it hands you the member you used last, and swaps when one of
+    /// the pair is already in hand.
+    private func pickBoundsTool() {
+        guard let tool = ToolGroup.bounds.tool(forKey: "c", active: editorState.activeTool,
+                                               remembered: editorState.lastTool(in: .bounds),
+                                               offered: editorState.boundsToolsOffered)
+        else { return }
+        editorState.setTool(tool)
+    }
+
+    private var cropSlotButton: some View {
+        ToolModeButton(
+            toolTitle: "Crop",
+            key: Tool.crop.keyEquivalent,
+            isActive: editorState.activeTool == .crop,
+            modes: CropAspect.allCases.map {
+                ToolMode(mode: $0, title: $0.label, symbol: $0.symbol, help: $0.help)
+            },
+            selection: Binding(get: { editorState.cropAspect },
+                               set: { editorState.setCropAspect($0) }),
+            namespace: toolbarNamespace,
+            activate: { editorState.setTool(.crop) },
+            keyCycles: false,
+            command: Experiments.shared.toolGroupsEnabled ? resizeCommand : nil,
+            siblings: boundsSiblings,
+            pressedKey: { pickBoundsTool() })
+        .tutorialAnchor(.tool(.crop))
+    }
+
+    /// The same slot, wearing Trim. One mode, because a trim has no settings
+    /// beyond its two handles: what would be the mode list is the family list,
+    /// with Resize Image still at its foot.
+    private var trimSlotButton: some View {
+        ToolModeButton(
+            toolTitle: "Trim",
+            key: Tool.trim.keyEquivalent,
+            isActive: editorState.activeTool == .trim,
+            modes: [ToolMode(mode: TrimSlotMode.trim, title: "Trim", symbol: Tool.trim.barSymbol,
+                             help: "Keep part of a recording (C)")],
+            selection: .constant(TrimSlotMode.trim),
+            namespace: toolbarNamespace,
+            activate: { editorState.setTool(.trim) },
+            keyCycles: false,
+            command: Experiments.shared.toolGroupsEnabled ? resizeCommand : nil,
+            siblings: boundsSiblings,
+            pressedKey: { pickBoundsTool() })
+        .tutorialAnchor(.tool(.trim))
     }
 
     /// Crop's two actions while a crop is live. A mode belongs in the tool
@@ -1972,6 +2039,47 @@ struct EditorView: View {
         // Clear of the floating tool bar, and of the tool settings capsule
         // when one is up, so they read as a stack rather than one covering
         // the other.
+        .padding(.bottom, EditorChromeLayout.aboveToolBar(
+            toolSettingsHeight: editorState.toolSettingsSize.height))
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+
+    /// What ends a trim: the same glass capsule Crop uses, in the same place,
+    /// with the same two keys behind it (`docs/design/video-surface.md` §10.2).
+    ///
+    /// Three numbers, then Reset, then Cancel and the verb. Reset earns its
+    /// place here and not in Crop's because a trim is cumulative — the clip
+    /// may already have been trimmed, and Reset means give me the whole
+    /// recording back — so it is a quiet button in the settings half rather
+    /// than a third action beside the other two. There is no Done: the primary
+    /// button says what pressing it does.
+    @ViewBuilder private var trimActionBar: some View {
+        HStack(spacing: 10) {
+            if editorState.trimNeedsAClip {
+                Text("Pick a clip to trim")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(editorState.trimReadout)
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .playtestField("Trim readout")
+                Button("Reset") { editorState.resetTrimSelection() }
+                    .disabled(!editorState.canResetTrim)
+                    .help("Put the whole recording back")
+                Divider().frame(height: 18)
+                Button("Cancel") { editorState.cancelTrim() }
+                    .help("Cancel the trim (⎋)")
+                Button("Trim") { editorState.commitTrim() }
+                    .keyboardShortcut(.return, modifiers: [])
+                    .buttonStyle(.borderedProminent)
+                    .help("Keep what is between the handles (⏎)")
+            }
+        }
+        .controlSize(.large)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
         .padding(.bottom, EditorChromeLayout.aboveToolBar(
             toolSettingsHeight: editorState.toolSettingsSize.height))
         .transition(.opacity.combined(with: .move(edge: .bottom)))

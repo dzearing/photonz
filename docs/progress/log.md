@@ -18574,3 +18574,47 @@ eleven trim walks rewritten, and then `VideoEditorState`, `VideoEditorView`,
 
 Design: `docs/design/video.md`. Audit:
 `queue/audits/2026-09-20-a-recording-is-a-document.json`.
+
+## 2026-09-20 — Trim stops being a row of buttons and becomes a tool
+
+`trim-becomes-a-tool-and-the-recording-window-ret`, first half. Trim is now a
+tool in the ordinary editor, built exactly the way Crop is built, and the old
+recording window is untouched: nothing has been taken away from anybody.
+
+**What landed.** `Tool.trim`, sharing Crop's slot as `ToolGroup.bounds`, so no
+slot in the bar moves. Both members answer to `C` — a departure from
+`video-surface.md` §10.2, recorded there: the plan had Crop hand its letter to
+the family, which cannot be done without taking `C` off Crop in the UNGROUPED
+bar, and that bar is what Current ships. `ToolGroup` gained `offered:` on every
+key-resolving call, so in a screenshot the ring is Crop alone and pressing `C`
+twice does nothing new.
+
+`ClipTrimSession` (PhotonzCore, 20 tests) is the session: it opens on a clip,
+its two handles move in the clip's own milliseconds, `reset()` gives the whole
+recording back, and `applied(to:)` hands back the trimmed layer. Nothing is
+written until it commits, which is what makes ⎋ free.
+
+**The one thing the design could not say how to draw.** "The frames outside the
+in and out, drawn as spare at each end with their durations" has nowhere to be
+drawn once a trim has already shortened the document: those frames are before
+time nought. Answered by `PhotonzDocument.openedForTrim`, a pure function that
+lays the clip out at FULL length for the length of the session. The strip, the
+ruler, the transport and the playhead all read that document while a trim runs,
+so the spare is on the timeline and can be scrubbed into, and nothing is ever
+written down. `EditorState.shownDocument` is the one switch.
+
+**Not done, and why.** Save is still dimmed for a recording opened as a
+document, and Export and Revert to Original are still the old window's. A
+recording document can now be styled, and ⌘S cannot mean both "write the video
+back" and "write a project holding the arrow you drew on it". That is a
+question for the user, and it is on the dashboard as a card. Until it is
+answered `next-a-recording-is-a-document` stays off, the window stays, and the
+four files stay with it.
+
+**Perf.** `shownDocument` is the identity when no trim is running, so nothing
+outside a session pays anything. During one it copies the document per read of
+the strip, which is O(layers) on a value type with a session open and the
+playback clock paused.
+
+Walk: `trim-is-a-tool-walk`, eight stages, six real pictures. Audit:
+`queue/audits/2026-09-20-trim-is-a-tool.json`.

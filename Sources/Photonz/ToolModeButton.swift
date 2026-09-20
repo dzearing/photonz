@@ -32,15 +32,21 @@ struct ToolCommand {
     /// Whether there is anything for it to act on. A command with nothing to
     /// do is greyed rather than missing, so the list does not change shape.
     let isEnabled: Bool
+    /// Whether the row is the live one, for a row that stands for a state
+    /// rather than an act: a sibling TOOL in the same slot wears the tick when
+    /// it is the one in hand.
+    var isOn: Bool = false
     /// What pressing the row does.
     let run: @MainActor () -> Void
 
     init(title: String, symbol: String, shortcut: KeyboardShortcut? = nil,
-         isEnabled: Bool = true, run: @escaping @MainActor () -> Void) {
+         isEnabled: Bool = true, isOn: Bool = false,
+         run: @escaping @MainActor () -> Void) {
         self.title = title
         self.symbol = symbol
         self.shortcut = shortcut
         self.isEnabled = isEnabled
+        self.isOn = isOn
         self.run = run
     }
 }
@@ -104,6 +110,13 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// same family that is not a mode (Crop carries Resize Image, since both
     /// change the picture's bounds). Nil for none.
     var command: ToolCommand? = nil
+    /// The OTHER TOOLS sharing this slot, at the head of the list, above the
+    /// modes (`ToolGroup`). Crop's slot lists Crop and Trim when the document
+    /// has a duration, and lists neither when it does not, which is how Trim
+    /// appears without any slot in the bar moving
+    /// (`docs/design/video-surface.md` §10.2). Empty for a slot holding one
+    /// tool, and then nothing about the button changes.
+    var siblings: [ToolCommand] = []
     /// What the tool's key does: pick the tool up, or, when it is already in
     /// hand, move to the next mode. The caller decides from LIVE state rather
     /// than from `isActive`, because a keyboard shortcut's action is registered
@@ -144,7 +157,7 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// with one mode and a command drew as a plain button and the command
     /// silently vanished, which is a row nobody could reach and nobody could
     /// see was missing.
-    private var hasList: Bool { modes.count > 1 || command != nil }
+    private var hasList: Bool { modes.count > 1 || command != nil || !siblings.isEmpty }
 
     var body: some View {
         Group {
@@ -231,6 +244,15 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// Click picks the tool up; press-and-hold or the chevron opens the modes.
     private var modeMenu: some View {
         Menu {
+            if !siblings.isEmpty {
+                ForEach(siblings, id: \.title) { sibling in
+                    Toggle(isOn: Binding(get: { sibling.isOn }, set: { _ in sibling.run() })) {
+                        Label(sibling.title, systemImage: sibling.symbol)
+                    }
+                    .keyboardShortcut(sibling.shortcut)
+                }
+                Divider()
+            }
             ForEach(modes) { mode in
                 row(mode)
             }
@@ -272,11 +294,16 @@ struct ToolModeButton<Mode: Hashable>: View {
             // The command rides in the signature too, greying and all, so the
             // list a walk reads goes stale the moment Resize Image stops being
             // pressable rather than the next time a mode happens to change.
-            signature: (modes.map { "\($0.title)\($0.mode == selection ? "*" : "")" }
+            signature: (siblings.map { "\($0.title)\($0.isOn ? "*" : "")" }
+                        + modes.map { "\($0.title)\($0.mode == selection ? "*" : "")" }
                         + (command.map { ["\($0.title)\($0.isEnabled ? "" : " (off)")"] } ?? []))
                 .joined(separator: "|"),
             rows: {
-                modes.map { mode in
+                siblings.map { sibling in
+                    ToolFlyoutRow(title: sibling.title, symbol: sibling.symbol,
+                                  isLive: sibling.isOn, choose: sibling.run)
+                }
+                + modes.map { mode in
                     ToolFlyoutRow(title: mode.title, symbol: mode.symbol,
                                   isLive: mode.mode == selection,
                                   choose: { choose(mode.mode) })
@@ -304,5 +331,21 @@ struct ToolModeButton<Mode: Hashable>: View {
         .opacity(0)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .background { walkFamilyKey }
+    }
+
+    /// Shift plus the slot's letter walks the tools sharing it, the same
+    /// vocabulary every other family slot has (`ToolGroupShortcuts`). Nothing
+    /// at all for a slot holding one tool.
+    @ViewBuilder private var walkFamilyKey: some View {
+        if !siblings.isEmpty, let key {
+            Button { pressedKey() } label: { Color.clear.frame(width: 0, height: 0) }
+                .buttonStyle(.plain)
+                .keyboardShortcut(KeyboardShortcut(key, modifiers: .shift))
+                .frame(width: 0, height: 0)
+                .opacity(0)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 }
