@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-is-a-document-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "blank", "canvas": "1200x800", "window": "1440x900" },
+    { "do": "describe", "stage": "0-no-time-no-timeline", "note": "a document with no time in it: no timeline across the bottom, no transport, nothing new anywhere" },
+    { "do": "snapshot", "name": "0-a-document-with-no-time" },
+
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "describe", "stage": "1-opened", "note": "THE TEST: a recording opened the ORDINARY editor. Same layers list with the clip in it, same panel, same tools, and a timeline across the bottom with the clip drawn as a bar, because the document has a length" },
+    { "do": "snapshot", "name": "1-recording-in-the-ordinary-editor" },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "2-playing", "note": "space plays it: the playhead has moved along the timeline and the canvas is drawing the frame under it, composited by the same renderer that draws every other picture" },
+    { "do": "snapshot", "name": "2-playing" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-stepped", "note": "paused, then three frames on with the right arrow" },
+    { "do": "snapshot", "name": "3-stepped-three-frames" },
+
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "4-a-clip-is-a-layer" },
+    { "do": "action", "action": "dragCornerRadius" },
+    { "do": "action", "action": "dragOpacity" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-styled", "note": "THE OTHER TEST: the clip is an ordinary layer. Picked in the layers list, and the panel gives it a corner radius and an opacity the same way it would give them to a photograph, because as far as everything downstream is concerned it IS one" },
+    { "do": "snapshot", "name": "4-a-clip-takes-a-corner-radius" }
+  ]
+}

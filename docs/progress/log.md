@@ -18513,3 +18513,64 @@ shipped trim flow are rewritten in the commit that moves the window.
 Layers group in the dock, which D18 forbids, and `video-entry-wt` still types a
 clip's In and Out into a grid of boxes. Filed as
 `the-fourteen-video-pages-still-contradict-the-vi`.
+
+---
+
+## 2026-09-20 — a recording is a document
+
+`a-document-can-have-time`, first half. Opening a recording no longer opens a
+little video window: it opens **the editor you already know**, with the
+recording as a layer in the layers list, a timeline across the bottom and a
+transport over it. Behind `next-a-recording-is-a-document`, off by default.
+
+**The model is one field.** `PhotonzCore` already had a duration on the
+document, an in and an out on a layer, and pieces on a clip. What it had no way
+to say was *which recording a layer plays*. `MovieRef` — an id, a picture size,
+a length — and `Layer.movie` are the whole addition. No path, no frames, no
+asset: `CLAUDE.md`'s rule that pixels never live in the model holds for a clip
+exactly as it does for a photo.
+
+**The renderer did not change by one line.** A clip layer is an ordinary picture
+layer whose `ImageRef` is the frame it is showing, and
+`PhotonzDocument.drawn(atTimeMS:)` swaps that reference for the frame the
+playhead is on. So a clip gets a place in the stack, a corner radius, an
+opacity, a blend mode, the Effects list, a thumbnail, selection and undo for
+free, because as far as everything downstream is concerned it is a picture. A
+frame's reference is *derived* from the recording's id and the frame number, so
+the same frame is the same reference everywhere and decoding it once is enough.
+
+The pixels come from `MovieFrames.swift`: `MovieLibrary` (id to URL),
+`MovieDecoder` (an actor owning the image generators, so nothing not-`Sendable`
+crosses an isolation boundary) and `MovieFrameFetcher` (decode, file in
+`ImageStore`, sixteen frames and no more, because a Retina frame is thirty
+megabytes). The canvas never waits on a decode: it draws the last frame it has
+and replaces it when the right one lands.
+
+**One fact puts three things on screen** — the document has a duration — and
+they are the shipped timing strip, given a transport row and a draggable
+playhead. The strip did not fork: the ruler reads timecode for a document and
+milliseconds for a lap, which it already knew how to do, and the Loop Speed menu
+is simply not offered to something that finishes.
+
+**Two clumsy things found by running it, both fixed.** Space did nothing until
+you had clicked the video, because the canvas only took the keyboard when
+something handed it over; `CanvasNSView` now claims it on open when nobody else
+holds it. And the clip's row stayed blank forever, because the thumbnail cache
+is keyed on the layer and the layer does not change when a frame arrives.
+
+**Measured, and it is not all good news.** One frame of a 1280×800 recording
+costs about 9ms end to end and plays at the rate it was recorded at. One frame
+of a full-Retina 3456×2234 screen recording costs about 44ms — about 23 frames a
+second — and three quarters of that is AVFoundation handing over the frame.
+`docs/progress/perf.md` says so with the method; the audit says so in plain
+words rather than shipping a timeline that quietly stutters.
+
+**Next:** the old window is still standing and still owns trim, crop, save,
+export and Revert to Original, which is why the flag is off. Split out as
+`trim-becomes-a-tool-and-the-recording-window-ret`: Trim as a tool in Crop's
+slot per `video-surface.md` §10, the save and export paths on the document, the
+eleven trim walks rewritten, and then `VideoEditorState`, `VideoEditorView`,
+`TrimTimeline` and `PlaybackScrubber` deleted.
+
+Design: `docs/design/video.md`. Audit:
+`queue/audits/2026-09-20-a-recording-is-a-document.json`.

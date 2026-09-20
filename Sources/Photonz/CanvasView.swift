@@ -221,6 +221,13 @@ struct CanvasView: NSViewRepresentable {
     /// Whether there is anything to play, so Space is left alone in a still
     /// document rather than swallowed by a preview that cannot start.
     let canPlayMotion: Bool
+    /// Space, ← and → in a document that HAS time: play or pause, and step a
+    /// frame either way. It is the same Space the loop preview uses, answered
+    /// first, because a document that finishes has a transport and a document
+    /// that repeats has a loop and no document has both.
+    let onDocumentPlayToggle: () -> Void
+    let onDocumentStepFrames: (Int) -> Void
+    let documentHasTime: Bool
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -395,6 +402,9 @@ struct CanvasView: NSViewRepresentable {
         view.onMotionPivotCancel = onMotionPivotCancel
         view.onMotionPlayToggle = onMotionPlayToggle
         view.canPlayMotion = canPlayMotion
+        view.onDocumentPlayToggle = onDocumentPlayToggle
+        view.onDocumentStepFrames = onDocumentStepFrames
+        view.documentHasTime = documentHasTime
         view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
@@ -520,6 +530,9 @@ final class CanvasNSView: NSView {
     var onMotionPivotCancel: (() -> Void) = {}
     var onMotionPlayToggle: (() -> Void) = {}
     var canPlayMotion = false
+    var onDocumentPlayToggle: (() -> Void) = {}
+    var onDocumentStepFrames: ((Int) -> Void) = { _ in }
+    var documentHasTime = false
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
@@ -2062,6 +2075,16 @@ final class CanvasNSView: NSView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         onWindowChange(window)
+        // The canvas takes the keyboard when the window has nobody holding it.
+        //
+        // Without this, every key the canvas answers needs a click on the
+        // picture first, which nobody does and nobody should have to: opening a
+        // recording and pressing space did nothing at all until you had clicked
+        // the video. Only when the window is not already giving the keyboard to
+        // something else, so a field somebody is typing in is never taken from
+        // them.
+        guard let window, window.firstResponder === window else { return }
+        window.makeFirstResponder(self)
     }
 
     override func layout() {

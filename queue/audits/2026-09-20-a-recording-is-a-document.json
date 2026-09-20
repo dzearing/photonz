@@ -1,0 +1,60 @@
+{
+  "feature": "A recording is a document",
+  "epic": "video-cutting",
+  "summary": "Opening a recording now opens the ordinary editor window instead of a little video window of its own. The recording is a layer in the layers list, it takes opacity, corner radius, blending and effects like any picture, and because the document has a length there is a timeline across the bottom with the clip drawn as a bar, a transport, and a playhead you can drag. Whatever moment the playhead is on is the picture on the canvas.",
+  "setup": "Photonz Dev, release Next. Turn ON “A recording opens in the editor you already know” in the Experiments window (next-a-recording-is-a-document). It is OFF by default, because the old window still owns trim, crop, save and export; with it off nothing about opening a recording has changed.",
+  "try": [
+    {
+      "do": "Open any screenshot. Look at the bottom of the window: no timeline, no transport, nothing new anywhere.",
+      "shot": "2026-09-20-a-recording-is-a-document-no-time.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Open a recording from the History window.",
+      "shot": "2026-09-20-a-recording-is-a-document-opened.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Read the layers list. The recording is a layer, named after the file, with the first frame as its thumbnail."
+    },
+    {
+      "do": "Press space. It plays, and the canvas is drawing the frame under the playhead.",
+      "shot": "2026-09-20-a-recording-is-a-document-playing.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Press space again to stop, then ← and → to step a frame either way."
+    },
+    {
+      "do": "Drag the playhead along the timeline and watch the picture follow it."
+    },
+    {
+      "do": "Click the clip in the layers list and give it 40px of corner radius and 60% opacity in the panel. Then add a drop shadow in Effects.",
+      "shot": "2026-09-20-a-recording-is-a-document-styled.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Draw an arrow over the video with A, then scrub. The arrow stays put and the video moves under it."
+    }
+  ],
+  "evaluate": [
+    "Opening a recording in the full editor instead of the small window: does it feel like more of the app or like more to get through?",
+    "Does the timeline read as part of this window, or as something bolted under it?",
+    "Is the transport where your hand goes for it, centred over the timeline, or should it sit under the picture?",
+    "Scrubbing a full-size screen recording runs at about 23 frames a second rather than 30. Does that read as smooth, or as the app struggling?",
+    "A clip takes a corner radius and a shadow like any picture. Is that a thing you would use, or is it a party trick that costs panel space?",
+    "With the clip selected, the arrow keys nudge it instead of stepping a frame. Is that right, or should stepping win in a document that has time?"
+  ],
+  "rough": [
+    "THE OLD WINDOW IS STILL THERE, and this is the honest headline. Trim, crop, save, export and Revert to Original all still live in it and none of them work on the document path yet, so the new way in ships behind its own flag, off by default. The design settles what replaces them (Trim as a tool in Crop's slot, one capsule reading Cancel then Trim); it is not built, and eleven walks still drive the old window. Filed as a follow-up.",
+    "SAVE IS DIMMED on a recording opened this way, on purpose, and it is the sharpest edge here. Found while reviewing the built thing: the window had adopted the .mp4 as the file Save writes back to, which would have replaced somebody's eight second recording with a PNG of one frame of it. It does not do that any more. What it does instead is say there is nothing here to save: writing it as a Photonz package would write a clip whose frames cannot be found again when it is reopened, and writing it as a picture would destroy the video. So Save is dimmed and closing the window asks nothing, which means styling a clip and closing loses the styling without a word. Everything about saving a recording is the follow-up task's, and this is the first thing it should fix.",
+    "A full-Retina screen recording does not hold 30fps. One frame of a 3456x2234 recording costs about 44ms end to end (34ms to decode it, 10ms to composite it), which is about 23 frames a second; a 1280x800 recording costs about 9ms and plays at the rate it was recorded at. Nothing of it runs on the main actor, so the window stays responsive either way and frames are dropped rather than queued. Numbers and method in docs/progress/perf.md. The fix is a reader that reads forward instead of a generator that seeks, and decoding at the size of the window rather than the size of the file. Not built.",
+    "There is no sound. A recording plays silent, because audio is a layer with an in and an out and that is the video-audio epic. The transport deliberately has no volume control rather than a dead one.",
+    "The clip's bar cannot be dragged yet. The design says an in and an out are set by dragging on the strip and never typed into the panel; the bar is drawn and it has no grip on it.",
+    "The timeline's local bar has no zoom. An eight second recording fits the width; a five minute one would be unreadable. D8 puts timeline zoom in the timeline's own bar and it is not built.",
+    "The canvas now takes the keyboard when a window opens with nobody else holding it. That was needed here (space did nothing until you had clicked the video) and it changes focus behaviour for every window, not only a recording's. It is the right default, but it is the one change in this task that reaches beyond video.",
+    "Every picture here was taken with the Mac's screen locked, so colours can read dimmed. The window, the layout and the playhead are real.",
+    "A recording the app cannot read leaves an empty window with nothing said. MovieLibrary reads the size and the length off the file; if that fails there is no document, so you get the onboarding card and no explanation of why. Nobody hit it, and it is one line of handling once there is somewhere sensible to say it.",
+    "The arrow keys are shared and the sharing is a judgement call. With nothing picked they step a frame, which is what every video player does; with a layer picked they nudge it a pixel, which is what every design tool does and what this app has always done. A recording opens with nothing picked, so stepping works straight away, but the moment you click the clip to style it the arrows stop stepping. Somebody should say which they expect."
+  ]
+}

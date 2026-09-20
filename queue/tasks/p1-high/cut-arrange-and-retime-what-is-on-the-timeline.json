@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-20T17:52:19.889Z",
+  "updated": "2026-09-20T19:20:09.375Z",
   "deps": [
     "a-document-can-have-time",
     "a-clip-splits-into-pieces-and-the-pieces-can-be"
@@ -72,6 +72,10 @@
     {
       "t": "2026-09-20T17:52:19.888Z",
       "note": "The two ways to change a clip's length are reconciled in docs/design/video-surface.md §10.4, so this task does not have to pick one. Dragging a clip's end with Select is the quick nudge: it moves the in or the out and that is all you see. The Trim tool is a session: both ends held up, the spare at each end drawn with its duration, the numbers in the capsule, and ⎋ putting the clip back the way it was. Same values, same History step, same numbers on screen. That is the same relation as dragging a layer's corner versus entering Crop, so it is not a duplicate to remove."
+    },
+    {
+      "t": "2026-09-20T19:20:09.374Z",
+      "note": "The foundation for this landed on 2026-09-20 in a-document-can-have-time: a recording opens as a document, a clip is a layer with MovieRef + LayerTime + ClipPieces behind it, and the timeline draws it as a bar. Dragging the bar's ends is YOURS; the trim TOOL in Crop's slot and the retirement of the old recording window are trim-becomes-a-tool-and-the-recording-window-ret. Do not build a second way to change a clip's length without reading docs/design/video-surface.md 10.4, which reconciles the two."
     }
   ]
 }

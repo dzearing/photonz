@@ -176,3 +176,37 @@ struct MotionStripBarTests {
         #expect(text == "Piece 1 · 2000 ms")
     }
 }
+
+
+/// The numbers along the top of a DOCUMENT's ruler (`docs/design/video.md`).
+///
+/// A lap is measured in milliseconds because ninety of them is the whole point
+/// of a lag. A recording is measured in minutes and seconds because that is how
+/// long a recording is and how everything that has ever played one says so.
+@Suite("A document's ruler reads in minutes and seconds")
+struct DocumentRulerTests {
+
+    @Test("A recording's ruler is timecode, not milliseconds")
+    func documentTicksAreTimecode() {
+        let ruler = MotionStripRuler(documentMS: 8000)
+        let labels = ruler.ticks.map(\.label)
+        #expect(labels.first == "0:00")
+        #expect(labels.contains("0:02"))
+        #expect(labels.allSatisfy { $0.contains(":") })
+        #expect(!labels.contains { $0.contains("ms") })
+    }
+
+    @Test("A lap's ruler is untouched: still milliseconds, still a unit on the last one")
+    func cycleTicksAreUnchanged() {
+        let ruler = MotionStripRuler(cycleMS: 1200)
+        let labels = ruler.ticks.map(\.label)
+        #expect(labels.first == "0")
+        #expect(labels.last?.hasSuffix(" ms") == true)
+    }
+
+    @Test("A long recording says hours when it has them")
+    func hoursWhenThereAreHours() {
+        let ruler = MotionStripRuler(documentMS: 2 * 60 * 60 * 1000)
+        #expect(ruler.ticks.contains { $0.label.filter { $0 == ":" }.count == 2 })
+    }
+}

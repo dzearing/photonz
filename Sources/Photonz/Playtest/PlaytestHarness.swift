@@ -2112,6 +2112,23 @@ private final class Run {
                 throw Failure(description: "couldn't write the sample recording")
             }
             coordinator.openWindow(.video(standardizing: url))
+            // With `next-a-recording-is-a-document` on there is no recording
+            // window to find: a recording opens the ordinary editor, so the
+            // walk takes over an `EditorState` exactly as it would for a
+            // screenshot (`docs/design/video.md`).
+            if Experiments.shared.recordingIsADocument {
+                var landed: EditorState?
+                try await poll("the sample recording to open as a document", within: 20) {
+                    landed = PlaytestHarness.readyEditors.last {
+                        $0.recordingURL?.lastPathComponent == TutorialSampleRecording.fileName
+                    }
+                    return landed != nil
+                }
+                guard let landed else { throw Failure(description: "no editor opened the recording") }
+                try await adopt(landed, window: nil, step: step.name,
+                                subject: "the sample recording, as a document", number: number)
+                break
+            }
             var opened: VideoEditorState?
             try await poll("the sample recording to open", within: 20) {
                 opened = PlaytestHarness.readyRecordings.last {

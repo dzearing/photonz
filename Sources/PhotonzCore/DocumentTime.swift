@@ -229,6 +229,11 @@ extension Layer {
     func shownTree(atTimeMS ms: Int) -> Layer {
         var shown = self
         if !isOnScreen(atTimeMS: ms) { shown.isVisible = false }
+        // ...and whatever IS on screen and plays a recording shows the frame
+        // this moment lands on, which is the whole of "what is drawn at a
+        // moment is what the renderer composites for that moment"
+        // (`MovieClip.swift`).
+        if shown.isVisible { shown = shown.playing(atTimeMS: ms) }
         if shown.isGroup {
             shown.children = children.map { $0.shownTree(atTimeMS: ms) }
         }

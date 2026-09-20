@@ -153,7 +153,7 @@ struct EditorRootView: View {
     @Environment(AppCoordinator.self) private var coordinator
 
     var body: some View {
-        if case .video(let url) = windowID {
+        if case .video(let url) = windowID, !Experiments.shared.recordingIsADocument {
             ReleaseExperience.videoEditor(url: url)
         } else {
             ReleaseExperience.imageEditor(windowID: windowID)

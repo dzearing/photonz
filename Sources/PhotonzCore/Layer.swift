@@ -1560,6 +1560,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// `time` is where the row sits and how long it runs for.
     public internal(set) var cuts: ClipPieces?
 
+    /// The recording this layer plays, for a layer that plays one
+    /// (`MovieClip.swift`). Nil is every layer in every document written
+    /// before this existed, and every layer in every screenshot ever.
+    ///
+    /// Never pixels and never a path: which file, how big, how long. The frame
+    /// under the playhead is a picture reference derived from this, fetched by
+    /// the app and drawn by the ordinary picture path, which is what makes a
+    /// clip stylable, maskable and effectable like anything else.
+    public var movie: MovieRef?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1650,6 +1660,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // A copy of a clip somebody has cut is still cut: the pieces come
         // along with the stretch they are pieces of.
         copy.cuts = cuts
+        copy.movie = movie
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText

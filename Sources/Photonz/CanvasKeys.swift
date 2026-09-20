@@ -54,6 +54,23 @@ extension CanvasNSView {
         // that loops is a thing you start and stop far oftener than you reach
         // for a button. With nothing moving the key is left alone, so it stays
         // available to whatever wants it next.
+        // A document that finishes answers Space and the arrows first: play or
+        // pause, and step a frame either way. Nothing else in this window wants
+        // them while there is a transport under the picture
+        // (`docs/design/video.md`).
+        if documentHasTime,
+           event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty {
+            if event.keyCode == 49 {
+                onDocumentPlayToggle()
+                return
+            }
+            // ...but only where nothing is picked, so the arrows still nudge a
+            // layer somebody has taken hold of.
+            if selectedLayerID == nil, event.keyCode == 123 || event.keyCode == 124 {
+                onDocumentStepFrames(event.keyCode == 124 ? 1 : -1)
+                return
+            }
+        }
         if canPlayMotion, event.keyCode == 49,
            event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty {
             onMotionPlayToggle()

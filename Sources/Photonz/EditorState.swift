@@ -875,6 +875,33 @@ final class EditorState {
     /// drag is one step to undo, and read by BOTH the strip and the Start and
     /// Over fields in the side column so the two can never disagree.
     var motionTimingDrag: MotionTimingDrag?
+
+    // MARK: Time in the document (`docs/design/video.md`)
+
+    /// Where the playhead is, in milliseconds from the document's first frame.
+    ///
+    /// Only means anything in a document that HAS time. In every other
+    /// document it stays at nought and nothing reads it, which is what makes
+    /// all of this free for a screenshot.
+    var documentTimeMS: Int = 0
+    /// Whether the document is playing.
+    var isDocumentPlaying = false
+    /// The clock while it plays. Cancelled the moment it stops or the window
+    /// closes: a timer left running on a picture nobody is watching is a core
+    /// spent on nothing.
+    @ObservationIgnored var documentPlaybackTask: Task<Void, Never>?
+    /// When playing started and where the playhead was then, so the playhead
+    /// is real time rather than a count of frames that drifts when one is
+    /// dropped.
+    @ObservationIgnored var documentPlaybackStartedAt: Date?
+    @ObservationIgnored var documentPlaybackStartedAtMS: Int = 0
+    /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
+    /// so a window holding a screenshot never makes one.
+    @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?
+    /// The recording this window was opened from, where it was opened from one.
+    /// It is what Save, Export and Revert to Original act on, and it is how the
+    /// window knows there is an untouched file behind the clip.
+    var recordingURL: URL?
     /// The Escape watch armed for exactly as long as a bar is in hand
     /// (`EditorState+MotionStrip`). Held here because the strip is rebuilt on
     /// every move of the drag and a watch owned by a view that comes and goes
@@ -1044,6 +1071,46 @@ final class EditorState {
         installDocument(.withBaseImage(ref, pixelScale: pixelScale), url: nil)
     }
 
+    /// Opens a recording as an ordinary document: one clip layer, the size of
+    /// the picture, running the length of the file (`docs/design/video.md`).
+    ///
+    /// There is no second editor and no second model. What lands here is the
+    /// same `PhotonzDocument` a screenshot lands as, so the layers list, the
+    /// panel, the tools, undo, styling and effects all work on a clip without
+    /// having been told video exists. The one thing different about it is that
+    /// something in it occupies time, and that is what puts the timeline across
+    /// the bottom and the transport under the picture.
+    func openRecordingAsDocument(at url: URL) {
+        openedFileURL = url
+        untitledName = url.deletingPathExtension().lastPathComponent
+        // Deliberately NOT `sourceCaptureURL`. That is "Save writes the
+        // flattened picture back over the file this came from", and the file
+        // this came from is an eight second recording: ⌘S would have replaced
+        // somebody's video with a PNG of one frame of it. Saving a recording is
+        // the recording window's job until the tool that replaces it exists
+        // (`docs/design/video.md` §7), and until then this window says there is
+        // nothing here to save rather than writing something wrong.
+        Task { @MainActor [weak self] in
+            guard let self, let movie = await MovieLibrary.shared.movie(at: url) else { return }
+            let name = url.deletingPathExtension().lastPathComponent
+            installDocument(.recording(movie, name: name), url: nil)
+            // After the install, which clears it: this window holds a
+            // recording, and that is what dims Save (see `saveAffordance`).
+            recordingURL = url
+            openedFileURL = url
+            // A recording opens SAVED: nothing has been done to it yet, and a
+            // window born with the edited dot on it would be lying.
+            markSaved()
+            documentTimeMS = 0
+            // The first frame, fetched before anybody presses anything, so the
+            // window opens on the picture rather than on nothing.
+            documentMomentChanged()
+            #if PHOTONZ_PLAYTEST
+            PlaytestHarness.register(self)
+            #endif
+        }
+    }
+
     /// Starts a picture from nothing: an opaque white canvas at `size`, which
     /// every tool can draw on immediately. The white is a real full-size
     /// bitmap, not a stretched swatch, so a marquee fill or an eraser stroke on
@@ -1134,8 +1201,12 @@ final class EditorState {
             // the guide opened for itself.
             PlaytestHarness.register(self)
             #endif
-        case .video:
-            break // routed to the video editor (VideoEditorState), never here
+        case .video(let url):
+            // A recording is a document (`docs/design/video.md`). It opens in
+            // this window, with the same layers list, the same panel and the
+            // same tools as a screenshot, and the only thing different about it
+            // is that something in it occupies time.
+            openRecordingAsDocument(at: url)
         }
     }
 
@@ -1208,7 +1279,13 @@ final class EditorState {
     /// other (`SaveAffordance`). An image save is synchronous, so there is no
     /// commit in flight to report.
     var saveAffordance: SaveAffordance {
-        .forDocument(isLoaded: document != nil,
+        // A recording opened as a document has nowhere to be saved TO yet:
+        // writing it back as a picture would destroy the video, and writing it
+        // as a package would write a clip whose frames cannot be found again.
+        // `nothingToSave` is the one answer that dims Save and stops the close
+        // sheet asking a question nothing can answer.
+        if isRecordingDocument { return .nothingToSave }
+        return .forDocument(isLoaded: document != nil,
                      hasChanges: ClosePrompt.needsSavePrompt(current: document,
                                                              savedBaseline: savedDocument),
                      isSaving: false)
@@ -1860,6 +1937,15 @@ final class EditorState {
         // without cancelling anything.
         pauseMotionPreview()
         playMotionPreview()
+        // ...and the DOCUMENT's own clock, which is a different clock and has
+        // to be stopped for the same reason: a window handed a screenshot while
+        // a recording was playing in it would keep a timer running on a
+        // document that has no time in it. The playhead goes back to the first
+        // frame, and what recording this window holds is whatever the caller
+        // sets AFTER this (`openRecordingAsDocument`).
+        pauseDocument()
+        documentTimeMS = 0
+        recordingURL = nil
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there
         // is no host window yet — the real sizing runs once one is available.
@@ -1983,7 +2069,14 @@ final class EditorState {
     /// (and never saved as a package) writes the flattened composite back into
     /// that capture file — history items are real files, and Save means "save
     /// back to where it came from". Everything else runs Save As.
+    /// True where this window is holding a recording and has never been saved
+    /// as a package. Everything about saving one is the recording window's
+    /// still (`docs/design/video.md` §7).
+    var isRecordingDocument: Bool { recordingURL != nil && documentURL == nil }
+
     func saveDocument() {
+        // See `saveAffordance`: there is nowhere safe to put it yet.
+        if isRecordingDocument { return }
         if let documentURL {
             save(to: documentURL)
         } else if let sourceCaptureURL, let store = captureCenter?.store,
@@ -1999,7 +2092,7 @@ final class EditorState {
 
     /// ⇧⌘S.
     func saveDocumentAs() {
-        guard document != nil else { return }
+        guard document != nil, !isRecordingDocument else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [Self.photonzType]
         panel.nameFieldStringValue = documentURL?.lastPathComponent
@@ -3209,6 +3302,15 @@ final class EditorState {
         document = withPreviewedMotionValue(document)
         if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
+        }
+        // A document that HAS time is drawn at the moment the playhead is on:
+        // whatever is off screen then is taken off screen, and every clip shows
+        // the frame that moment lands on (`DocumentTime.drawn(atTimeMS:)`).
+        // This is the whole of "what is drawn at a moment is what the renderer
+        // composites for that moment" — the renderer itself is untouched,
+        // because what it gets is an ordinary document full of pictures.
+        if document.hasTime {
+            document = document.drawn(atTimeMS: documentTimeMS)
         }
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {

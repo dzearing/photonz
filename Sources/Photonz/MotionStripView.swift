@@ -46,6 +46,14 @@ struct MotionStripView: View {
         VStack(spacing: 0) {
             Divider()
             header
+            // The transport, for a document that finishes. It is the top row of
+            // the bottom dock and the timeline is under it, which is where
+            // UX-PATTERNS D8 puts them (`docs/design/video-surface.md` §2).
+            if editorState.motionStripMeasuresADocument {
+                DocumentTransportBar()
+                    .padding(.horizontal, Self.inset)
+                    .padding(.bottom, 6)
+            }
             GeometryReader { geo in
                 // The reader sits INSIDE the strip's own horizontal inset, so
                 // its width is already the content width: taking the inset off
@@ -76,6 +84,15 @@ struct MotionStripView: View {
                     MotionStripMarksView(laneWidth: laneWidth)
                         .padding(.leading, Self.labelWidth)
                         .allowsHitTesting(false)
+                }
+                // A document's playhead is a different thing from a loop's: it
+                // is always up, it can be taken hold of, and where it is is
+                // what the canvas is drawing.
+                .overlay(alignment: .topLeading) {
+                    if editorState.motionStripMeasuresADocument {
+                        DocumentPlayheadView(laneWidth: laneWidth)
+                            .padding(.leading, Self.labelWidth)
+                    }
                 }
             }
             .frame(height: bodyHeight)
@@ -131,8 +148,12 @@ struct MotionStripView: View {
             // strip as well as on the previews card because motion is on every
             // layer, not only on icons: a lag dragged out on this ruler has to
             // be judgeable in a document that has no icon frame to preview.
-            MotionSpeedMenu(name: "Loop Speed")
-                .disabled(!editorState.canPlayMotion)
+            // How fast the LOOP runs, which is a question only a thing that
+            // repeats has. A recording plays at the rate it was recorded at.
+            if !editorState.motionStripMeasuresADocument {
+                MotionSpeedMenu(name: "Loop Speed")
+                    .disabled(!editorState.canPlayMotion)
+            }
             // The same × the side dock's header wears, and it puts the strip
             // away the same way: down to the one row below, never to nothing.
             Button { editorState.toggleMotionStrip() } label: {
@@ -604,5 +625,104 @@ private struct MotionStripMarksView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+
+// MARK: - A document that finishes
+
+/// The transport: where the playhead is, the buttons that move it, and how long
+/// the whole thing runs for.
+///
+/// Only the controls that DO something. There is no volume and no loop button
+/// because there is no sound yet and a recording finishes rather than
+/// repeating, and a control that only promises a feature is a dead end.
+struct DocumentTransportBar: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(editorState.documentTimecode)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .frame(minWidth: 38, alignment: .leading)
+            Spacer(minLength: 0)
+            button("backward.frame.fill", name: "Previous Frame",
+                   help: "Back one frame (←)") { editorState.stepDocument(byFrames: -1) }
+            button(editorState.isDocumentPlaying ? "pause.fill" : "play.fill",
+                   name: editorState.isDocumentPlaying ? "Pause" : "Play",
+                   help: editorState.isDocumentPlaying ? "Pause (space)" : "Play (space)",
+                   size: 13) { editorState.toggleDocumentPlayback() }
+            button("forward.frame.fill", name: "Next Frame",
+                   help: "On one frame (→)") { editorState.stepDocument(byFrames: 1) }
+            Spacer(minLength: 0)
+            Text(editorState.documentLengthTimecode)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .monospacedDigit()
+                .frame(minWidth: 38, alignment: .trailing)
+        }
+        .tutorialAnchor(.video(.transport))
+    }
+
+    private func button(_ symbol: String, name: String, help: String,
+                        size: CGFloat = 11,
+                        action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: size, weight: .semibold))
+                .frame(width: 22, height: 18)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(name)
+        .panelHelp(help)
+        .playtestControl(name, detail: "Transport")
+    }
+}
+
+/// The playhead on a document's timeline: always up, and draggable.
+///
+/// Where it is is what the canvas is drawing, which is the whole of scrubbing:
+/// there is no preview mode and no second picture, the document simply has a
+/// moment and the canvas draws it.
+private struct DocumentPlayheadView: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+
+    var body: some View {
+        let length = max(1, editorState.documentLengthMS)
+        let x = laneWidth * CGFloat(editorState.documentTimeMS) / CGFloat(length)
+        ZStack(alignment: .topLeading) {
+            // The whole width takes the click, so landing anywhere on the
+            // timeline puts the playhead there rather than only landing on the
+            // hairline itself.
+            Color.clear
+                .contentShape(Rectangle())
+                .gesture(scrub)
+            VStack(alignment: .leading, spacing: 0) {
+                Circle()
+                    .fill(Color.accentColor)
+                    .frame(width: 7, height: 7)
+                    .offset(x: -3)
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: 1.5)
+                    .frame(maxHeight: .infinity)
+            }
+            .offset(x: x)
+            .allowsHitTesting(false)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var scrub: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let length = max(1, editorState.documentLengthMS)
+                let fraction = min(max(0, value.location.x / max(1, laneWidth)), 1)
+                editorState.scrubDocument(toMS: Int(fraction * CGFloat(length)))
+            }
     }
 }

@@ -290,10 +290,27 @@ public struct MotionStripRuler: Hashable, Sendable {
             values.append(ms)
             ms += step
         }
+        // A document is read in minutes and seconds, because that is how long a
+        // recording is and how everything that has ever played one says so. A
+        // lap stays in milliseconds, because ninety of them is the whole reason
+        // the strip exists (`docs/design/video.md`).
+        guard repeats else {
+            return values.map { Tick(ms: $0, label: MotionStripRuler.timecode($0)) }
+        }
         return values.enumerated().map { index, ms in
             let number = MotionStripRuler.number(ms)
             return Tick(ms: ms, label: index == values.count - 1 ? "\(number) ms" : number)
         }
+    }
+
+    /// `0:04`, or `1:02:11` once there are hours in it.
+    static func timecode(_ ms: Double) -> String {
+        let total = Int((max(0, ms) / 1000).rounded(.down))
+        let seconds = total % 60
+        let minutes = (total / 60) % 60
+        let hours = total / 3600
+        if hours > 0 { return String(format: "%d:%02d:%02d", hours, minutes, seconds) }
+        return String(format: "%d:%02d", minutes, seconds)
     }
 
     /// A step that gives between four and nine numbers, chosen off the 1, 2, 5

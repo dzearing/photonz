@@ -22,6 +22,47 @@ multiply highlight). One warm-up render, then median of 10 timed runs. Re-run wi
 
 | 2026-09-20 | A frame of video (`compositesAFrameOfVideoWithinBudget`) | **17.2ms** composite, **0.02ms** to pick the moment | — | — | same machine | The 12MP/10-layer doc given a six second duration and its nine upper layers cut into one-second clips, composited at a moment of the document's own clock (`PhotonzDocument.drawn(atTimeMS:)`). Two numbers because they answer different questions. **Picking the moment costs 0.02ms**: working out which layers are on screen is list arithmetic over ten layers and it never touches a pixel, so time in the document adds nothing measurable to a render. **Compositing that frame costs 17.2ms** on the cold full-render path, against 26.7ms for the same document with every layer on screen — a frame of video is cheaper than the whole picture precisely because most of it is not on screen at that moment. It is over the 16ms target by the same margin the full-render path has always been over it, and for the same reason: a cold 12MP full render on this machine has a ~15ms floor in the GPU pass and readback alone (see the 2026-06-12 row). Playback will run on the interactive path, which is 5.6ms here, not on this one. |
 
+## 2026-09-20 — what one frame of a real recording actually costs
+
+The row above measures compositing a frame once the pixels are in hand. Playing
+a recording has a cost that benchmark cannot see: **the frame has to be decoded
+out of the file first.** This is that number, measured on the two recordings
+that matter, with the exact generator settings the app uses
+(`MovieFrames.swift`: preferred transform applied, half a frame of tolerance
+either side, `maximumSize` clamped to the recording's own size).
+
+| Recording | Decode, playing forward | Decode, scrubbing | Composite one clip layer | One frame, end to end |
+| --- | --- | --- | --- | --- |
+| Tutorial sample, 1280×800, 8s | 7.2ms median, 9.0ms p90 | 7.1ms median | 1.6ms median | **~9ms** |
+| Screen recording, 3456×2234, 3.2s | 34.1ms median, 47.4ms p90 | 31.4ms median | 9.6ms median | **~44ms** |
+
+Read plainly:
+
+- **A recording the size of a window plays.** Nine milliseconds a frame is
+  inside the 16ms budget with room to spare, and the playhead advances on its
+  own real-time clock, so it plays at the 30fps the frame grid is cut on.
+- **A full-Retina screen recording does not hold 30fps.** Forty-four
+  milliseconds a frame is about 23 frames a second. It is smooth rather than
+  stuttery — the clock is real time, so the playhead never drifts and frames are
+  dropped rather than queued — but it is not the rate it was recorded at, and
+  saying so is the point of this row.
+- **Decoding is the cost, not compositing.** Three quarters of it is
+  AVFoundation handing over a 7.7 megapixel frame. That is where any work on
+  this goes: an `AVAssetReader` reading forward beats a generator seeking, and a
+  preview decoded at the size of the WINDOW rather than the size of the file
+  beats both. Neither is built; the generator is what one frame of honest
+  playback costs today.
+- **Nothing of this lands on the main actor.** Decoding runs on `MovieDecoder`,
+  an actor of its own, and the playhead's clock prefetches three frames ahead of
+  itself while playing, so a slow decode costs that frame's picture and never
+  the window's responsiveness.
+
+Method: `swiftc -O` over AVFoundation and CoreImage directly, 122 sequential
+frames and 30 random seeks per recording, median and p90 reported. It measures
+the app's own code path rather than standing in for it, because both halves —
+the generator settings and the one-layer composite — are what
+`MovieFrameFetcher` and `DocumentRenderer` actually do.
+
 The interactive benchmark (`[perf] … interactive edit`) is the budget-bearing
 number: it is what every drag tick and slider tweak pays. The full-render
 number still matters for document open and export, where ~35ms is fine.

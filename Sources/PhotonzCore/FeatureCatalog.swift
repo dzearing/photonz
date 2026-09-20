@@ -174,6 +174,8 @@ public enum FeatureCatalog {
 
     public static let cutRecordingFlag = "next-cut-a-recording"
 
+    public static let recordingIsADocumentFlag = "next-a-recording-is-a-document"
+
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
     public static let savingARecordingSaysSoFlag = "next-saving-a-recording-says-so"
@@ -634,6 +636,16 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: recordingIsADocumentFlag,
+                    title: "A recording opens in the editor you already know",
+                    description: "A recording opens in its own little window today: one clip, a play button, handles to shorten it from either end, and none of the rest of the app. You cannot put a title on it, you cannot draw an arrow on it, you cannot see it in a layers list, and nothing you learned about editing a picture applies. With this on, opening a recording opens the ordinary editor window instead. The recording is a layer in it, named after the file, sitting in the layers list with everything else, and it takes a corner radius, an opacity, a drop shadow, an effect and a place in the stack exactly like a picture does, because as far as the rest of the app is concerned it is one. What is different is that the document now has a length, and that one fact is what puts a timeline across the bottom with the clip drawn as a bar on it and a transport under the picture: play, pause, step a frame either way, and a playhead you can drag. Whatever moment the playhead is on is the picture on the canvas, composited with everything else in the document at that moment, so an arrow you draw over the video is over the video. A document with no length in it, which is every screenshot and every drawing, is exactly what it was: no timeline, no transport, nothing new anywhere. Off means a recording opens the small window it opens today.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: motionStripFlag,

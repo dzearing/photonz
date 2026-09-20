@@ -427,6 +427,15 @@ extension Experiments {
     /// stored file and there is nothing left to switch off.
     var cutRecordingEnabled: Bool { isEnabled(FeatureCatalog.cutRecordingFlag) }
 
+    /// `next-a-recording-is-a-document`: whether opening a recording opens the
+    /// ordinary editor window, with the recording as a layer in it and a
+    /// timeline across the bottom, rather than the small video window.
+    ///
+    /// It takes away a way IN and never a document's contents: turning it off
+    /// puts the old window back, and the recording on disk is the same file it
+    /// always was, because nothing about a clip is written into pixels.
+    var recordingIsADocument: Bool { isEnabled(FeatureCatalog.recordingIsADocumentFlag) }
+
     /// `next-saving-a-recording-says-so`: whether saving a recording reports
     /// itself in the bottom-right toast stack — a progress bar once the save
     /// has run past `SaveFeedback.quietWindow`, and a named confirmation when

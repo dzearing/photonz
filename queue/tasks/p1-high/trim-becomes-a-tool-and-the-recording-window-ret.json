@@ -1,0 +1,47 @@
+{
+  "id": "trim-becomes-a-tool-and-the-recording-window-ret",
+  "title": "Trim becomes a tool and the recording window retires",
+  "goal": "A recording now opens in the ordinary editor, but only if you switch it on, because the small video window is still the only place you can trim, crop, save or export one. Finish the move: make trimming a tool you pick in the editor, give the editor the save, the export and the revert the old window had, and then take the old window away so there is one way to open a recording and not two.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T19:20:02.577Z",
+  "updated": "2026-09-20T19:20:02.580Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "SPLIT OUT of a-document-can-have-time on 2026-09-20, by the runner that built the first half. Read docs/design/video.md 7 before anything else: it says exactly what is still standing and why.\n\nWHAT LANDED, so this task does not rebuild it. PhotonzCore gained MovieRef and Layer.movie (MovieClip.swift): which recording a layer plays, an id plus a picture size plus a length, no pixels and no path. PhotonzDocument.recording(_:name:cutList:) opens a recording as an ordinary document with one clip layer. drawn(atTimeMS:) swaps each clip's ImageRef for the frame at that moment, so DocumentRenderer draws video without one line of change. App side: MovieLibrary (id to URL), MovieDecoder (an actor owning the AVAssetImageGenerators) and MovieFrameFetcher (decode, file in ImageStore, 16 frame budget) in MovieFrames.swift; EditorState+Time.swift holds the playhead, play, pause, step and scrub; the transport and the draggable playhead are in MotionStripView.swift. Window routing is in PhotonzApp.EditorRootView, gated on Experiments.shared.recordingIsADocument.\n\nWHY THE FLAG IS OFF. Trim, crop, save, export and Revert to Original all live in VideoEditorState and none of them work on the document path. Turning it on today would take them away from anybody who opened a recording. So the flag is off, the old window is still the default, and this task is what turns it on.\n\nWHAT TRIM IS, already settled and drawn: docs/design/video-surface.md 10, UX-PATTERNS D20, pages/video-shell.html block 05, pages/comp-video.html 08. Crop and Trim become a ToolGroup so no slot moves; the letter c belongs to the FAMILY (ToolGroup.tools(answeringTo:)) rather than to either tool, which means Tool.crop.shortcutKey becomes nil and anything printing Crop's key reads it off the family. The family's ring is filtered to the members this document can use before it is walked, which is the one thing ToolGroup does not do today. trimBeforeSession, resetTrimSelection, commitTrim and cancelTrim are kept as they are, renamed to the tool's session.\n\nTHE WALKS drive through action ids (videoTrimDone, not a button called Done), so the ids survive the move; what does not survive is every step that opens the separate window and reads its strip. PlaytestHarness already branches openSampleRecording on the flag and adopts an EditorState when it is on, so the walks have somewhere to land.\n\nSAVE IS THE FIRST THING TO FIX, and there is a trap in it. The first build of this set had the window adopt the .mp4 as its sourceCaptureURL, which is 'Save writes the flattened picture back over the file this came from' — Command S would have replaced an eight second recording with a PNG of one frame of it. That is gone: EditorState.isRecordingDocument now makes saveAffordance report nothingToSave, which dims Save and stops the close sheet asking a question nothing can answer. The cost is that styling a clip and closing loses it silently. Two things have to be decided when this is picked up: what Save MEANS for a recording document (the recording window's Save writes the trimmed mp4 through VideoAssetCommit, and that is probably still the right answer), and whether a recording document can be written as a .photonz at all, since MovieRef deliberately carries no path and a package would reopen with a clip whose frames cannot be found.",
+  "acceptance": [
+    "Save stops being dimmed: a recording opened as a document can be saved, and saving it writes the recording rather than a picture of one frame of it. Today Save reports there is nothing to save, and closing the window loses any styling without asking",
+    "Trim is a tool in Crop's slot: C picks it, C again swaps, and it is offered only when the document has a duration. No slot in the tool bar moves",
+    "Trimming puts handles on the clip's bar in the timeline, both up without hover, with the frames outside the in and out drawn as spare at each end with their durations",
+    "The session ends on one glass capsule shaped like Crop's: readouts and Reset in its settings half, then Cancel, then a primary button reading Trim. Return trims, Escape cancels, and no Reset/Cancel/Done row survives",
+    "A recording that is one clip and has never been edited opens with the clip picked and Trim in hand, so trim-and-send is still drag a handle, Return, export",
+    "Save, Save a copy, export and Revert to Original all work on a recording opened as a document, and each is checked in the audit",
+    "The eleven walks that drive the shipped trim flow (trim-*, undo-while-trimming, save-is-live-after-a-trim, close-a-trimmed-recording, the two tutorial-trim-a-recording ones) are rewritten against the new surface and pass",
+    "next-a-recording-is-a-document is on by default in Next, or is deleted and the document path becomes the only path",
+    "VideoEditorState, VideoEditorView, TrimTimeline and PlaybackScrubber are deleted, and the audit says so",
+    "The tutorial copy moves with the chrome: TutorialGuides.swift step 'keep-whats-between' at .video(.trimDone) says \"Done throws the ends away and leaves you the middle\", which is both the wrong button name and against the model, since a trim leaves the frames outside the in and out in the document"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T19:20:02.579Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "trim-save-send-walk",
+    "trim-with-pieces-walk",
+    "trim-catches-on-a-cut-walk",
+    "trim-cancel-after-a-delete-walk",
+    "trim-keeps-the-piece-you-picked-walk",
+    "trim-handle-freed-from-a-cut-walk",
+    "undo-while-trimming-walk",
+    "save-is-live-after-a-trim-walk",
+    "close-a-trimmed-recording-walk",
+    "tutorial-trim-a-recording-walk",
+    "tutorial-trim-a-recording-skipped-walk"
+  ]
+}
