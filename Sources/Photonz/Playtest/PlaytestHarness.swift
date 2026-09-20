@@ -2241,6 +2241,115 @@ private final class Run {
         // drive, so a walk asking for `videoBeginTrim` gets the Trim TOOL: the
         // action ids survived the move on purpose
         // (`docs/design/video-surface.md` §10.6).
+        // Cutting, arranging and retiming on the TIMELINE
+        // (`EditorState+ClipBar`). Every one of these refuses loudly rather
+        // than quietly doing nothing, so a walk cannot photograph a cut that
+        // never landed.
+        case .action(let action) where action.drivesTheTimeline:
+            let editor = try requireEditor()
+            guard editor.documentHasTime else {
+                throw Failure(description: "\(action.rawValue) needs a document that runs for a "
+                    + "length of time, and this one does not")
+            }
+            let step8 = max(1, editor.documentLengthMS / 8)
+            func dragBar(_ grab: ClipBarGrab, byMS delta: Int) throws {
+                guard let id = editor.clipInHandID else {
+                    throw Failure(description: "\(action.rawValue) needs a clip on the timeline")
+                }
+                editor.beginClipBarDrag(layerID: id, grab: grab)
+                guard editor.clipBarDrag != nil else {
+                    throw Failure(description: "\(action.rawValue) could not take hold of the bar")
+                }
+                editor.updateClipBarDrag(byMS: delta)
+                editor.commitClipBarDrag()
+            }
+            let before = editor.documentLengthMS
+            switch action {
+            case .clipSplit:
+                guard editor.canSplitClipAtPlayhead else {
+                    throw Failure(description: "there is nothing to split at \(editor.documentTimeMS) "
+                        + "ms: the playhead is not inside a clip, or it is already on one of its joins")
+                }
+                editor.splitClipAtPlayhead()
+            case .clipDeletePiece:
+                guard editor.canDeleteClipPieceInHand else {
+                    throw Failure(description: "no piece is picked to throw away; cut the clip first, "
+                        + "which leaves you holding the piece after the cut")
+                }
+                editor.deleteClipPieceInHand()
+            case .clipHoldFrame:
+                guard editor.canHoldFrameAtPlayhead else {
+                    throw Failure(description: "the playhead is not on a clip, so there is no frame "
+                        + "to hold")
+                }
+                editor.holdFrameAtPlayhead()
+            case .clipSpeedDouble, .clipSpeedHalf:
+                let percent = action == .clipSpeedDouble ? 200 : 50
+                guard editor.canSetClipSpeed(percent) else {
+                    throw Failure(description: "there is no piece to retime, or it is a held frame, "
+                        + "which reads no stretch of the recording and so has no speed")
+                }
+                editor.setClipSpeedInHand(percent)
+            case .clipDragStartIn: try dragBar(.clipStart, byMS: step8)
+            case .clipDragStartBackOut:
+                // As far back out as the recording goes, which the model
+                // clamps to exactly what a previous trim put out of play. That
+                // makes the pair a real proof rather than one that depends on
+                // the two drags happening to be the same size.
+                try dragBar(.clipStart, byMS: -editor.documentLengthMS)
+            case .clipDragEndIn:
+                let last = (editor.clipInHandPieces?.count ?? 1) - 1
+                try dragBar(.seam(after: last), byMS: -step8)
+            case .clipCarryLastToFront:
+                let last = (editor.clipInHandPieces?.count ?? 1) - 1
+                guard last > 0 else {
+                    throw Failure(description: "this clip is one piece, so there is no order to "
+                        + "rearrange; cut it first")
+                }
+                try dragBar(.carry(piece: last), byMS: -editor.documentLengthMS)
+            case .clipSlideLater: try dragBar(.body, byMS: step8)
+            case .clipSlideOntoPlayheadHeld:
+                guard let id = editor.clipInHandID,
+                      let start = editor.document?.layer(id: id)?.time?.inMS else {
+                    throw Failure(description: "there is no clip to slide")
+                }
+                editor.beginClipBarDrag(layerID: id, grab: .body)
+                // A hair short of the playhead, which is inside the catching
+                // distance, so what gets photographed is a catch.
+                editor.updateClipBarDrag(byMS: editor.documentTimeMS - start - 30)
+                guard editor.clipBarSnap != nil else {
+                    throw Failure(description: "the clip was dropped 30 ms short of the playhead "
+                        + "and did not catch on it; the catching distance is "
+                        + "\(editor.clipSnapMS) ms")
+                }
+            case .clipCarryLastToFrontHeld:
+                let last = (editor.clipInHandPieces?.count ?? 1) - 1
+                guard last > 0, let id = editor.clipInHandID else {
+                    throw Failure(description: "this clip is one piece, so there is no order to "
+                        + "rearrange; cut it first")
+                }
+                editor.beginClipBarDrag(layerID: id, grab: .carry(piece: last))
+                editor.updateClipBarDrag(byMS: -editor.documentLengthMS)
+                guard editor.clipBarReadout != nil else {
+                    throw Failure(description: "the carry is not showing where it would land")
+                }
+            case .clipDragRelease:
+                guard editor.clipBarDrag != nil else {
+                    throw Failure(description: "nothing is being dragged to let go of")
+                }
+                editor.commitClipBarDrag()
+            default: break
+            }
+            await sleep(0.35)
+            let pieces = editor.clipInHandPieces
+            note(number, step.name,
+                 "\(action.rawValue): the timeline runs \(editor.documentLengthMS) ms"
+                 + " (was \(before))"
+                 + ", the clip is in \(pieces?.count ?? 0) piece(s)"
+                 + (editor.selectedClipPieceIndex.map { ", piece \($0 + 1) picked" } ?? "")
+                 + ", playhead \(editor.documentTimeMS) ms",
+                 state: describe())
+
         case .action(let action) where action.drivesTheTrimTool && recording == nil:
             let editor = try requireEditor()
             guard editor.documentHasTime else {
@@ -3002,6 +3111,12 @@ private final class Run {
                  .videoExportSheetCancel, .videoCropMiddle,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
+            case .clipSplit, .clipDeletePiece, .clipHoldFrame,
+                 .clipSpeedDouble, .clipSpeedHalf,
+                 .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
+                 .clipCarryLastToFront, .clipSlideLater,
+                 .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease:
+                break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)
             let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)

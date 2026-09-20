@@ -541,3 +541,93 @@ build task, not fixed here.
   already has.
 - **A trim tool for audio alone** is not a separate thing. A separated voice
   track is a layer with an in and an out, so the same tool trims it.
+
+## 11. Cutting, arranging and retiming, answered
+
+Built 2026-09-20. The rules the timeline keeps, written down here because the
+one most likely to be got wrong by leaving it implicit is ripple, and every
+editor has a different answer.
+
+### 11.1 The ripple rule, in one sentence
+
+**A clip's pieces lie end to end and there is never a hole between them, so
+anything that changes a piece's length moves everything after it and nothing
+before it.**
+
+That one sentence covers all six edits, and it is the same sentence every time:
+
+| What you do | What moves |
+| --- | --- |
+| Throw a piece away | everything after it slides back; the join closes |
+| Drag a join | the piece to its left changes length; everything after slides |
+| Drag the clip's left end | the clip's in point moves and the clip moves with it, so **nothing else moves at all** |
+| Drag the clip's right end | nothing else moves; the clip ends somewhere new |
+| Hold a frame | everything after the hold slides along |
+| Retime a piece | everything after it slides along |
+| Slide the whole clip | nothing inside it changes; only when it plays |
+
+Ripple never crosses to another layer. A title under a cut stays where the
+title was put, which is what makes detaching audio worth doing and what the
+cut clickthrough is really about.
+
+### 11.2 Every edge follows your hand
+
+The gesture rule, and it is the reason the grips are arranged the way they are:
+
+- The bar's **left end** is the clip's in point. Pulling it in shortens the
+  first piece from the front and slides the clip by the same amount, so the
+  edge lands under the hand and every other frame keeps the moment it had.
+- Every **join**, and the bar's **right end**, is the END of the piece to its
+  left. That piece grows or shrinks and the join goes where the hand puts it.
+
+**There is deliberately no gesture for the start of a piece that is not the
+first one.** The join is pinned by the piece before it, so such an edge could
+only run away from the hand — the one place in the timeline where the thing you
+are holding does not follow you. The job it would do belongs to the playhead
+instead: B where the good part starts, then ⌫. Frame exact, and no aiming at a
+four point edge.
+
+### 11.3 What is in your hand after a cut
+
+**The piece BEFORE the cut.** Chosen for the job people come here for: getting
+rid of a fumble in the middle of a take. Cut where it starts, cut where it
+ends, and the second cut leaves you holding exactly the bad bit, so ⌫ throws it
+away with no click in between. Trimming dead air off an end does not need this
+at all — the bar's own ends are draggable and drop nothing.
+
+### 11.4 ⌫ takes a picked piece, never the one under the playhead
+
+⌫ already means delete the layer. A key that silently meant something else
+because of where the playhead happened to be would be the most expensive
+surprise in the app, so throwing a piece away takes an explicitly picked one.
+Cutting hands you one, so the common job still costs no clicks.
+
+### 11.5 Where the mock was wrong, and why the app is shorter than it
+
+`video-cut-wt.html` steps 7 and 8 drag a piece's left edge right so "a gap
+opens where they were", then drag the piece left "until it snaps against the
+first half". **Neither is possible and neither is needed**: a clip's pieces
+cannot have a hole in them, so trimming already closes the join and step 8 has
+nothing to do. One gesture where the mock needs two, and no way to leave a gap
+you did not mean to leave.
+
+The snap line the mock draws for step 8 still earns its place, for the job that
+does need it: lining a **whole clip** up against another clip, against the
+playhead, and against the two ends of the document.
+
+The mock also makes the blade a tool ("Blade is a tool, not a menu command").
+It is a command here. The playhead is already the cut line and you already
+scrubbed to the frame you are looking at, so a tool to pick up and put down
+buys only cutting somewhere the playhead is not — which costs you the aim
+anyway.
+
+### 11.6 What §11 does not settle
+
+- **A hole INSIDE a clip cannot be written down**, so there is no "lift leaving
+  a gap". That needs a model change and a card first.
+- **Roll trim** (moving a join without changing the clip's length) is absent on
+  purpose.
+- **Reverse speed and pitch correction** are absent. Retiming takes the sound
+  with it at the same rate.
+- **A speed is chosen from a short list** in Video ▸ Speed, not typed. A
+  retiming panel row is the obvious next step and is not built.

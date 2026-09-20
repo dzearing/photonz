@@ -369,21 +369,8 @@ private struct MotionStripGroupView: View {
     }
 
     private func plainClipBar(_ bar: LayerTime) -> some View {
-        let ruler = editorState.motionStripRuler
-        let x = laneWidth * ruler.fraction(ofMS: Double(bar.inMS))
-        let width = laneWidth * ruler.fraction(ofMS: Double(bar.lengthMS))
-        return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(.quaternary.opacity(0.5))
-                .frame(height: MotionStripView.barHeight)
-            RoundedRectangle(cornerRadius: 5)
-                .fill(isPicked ? AnyShapeStyle(Color.accentColor.opacity(0.85))
-                               : AnyShapeStyle(.secondary.opacity(0.45)))
-                .frame(width: max(2, width), height: MotionStripView.barHeight)
-                .offset(x: x)
-        }
-        .frame(width: laneWidth, alignment: .leading)
-        .panelReadout("\(group.layerName) \(bar.inMS) to \(bar.outMS) ms")
+        ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
+                      bar: bar, laneWidth: laneWidth)
     }
 
     private var isPicked: Bool { editorState.selectedLayerID == group.layerID }

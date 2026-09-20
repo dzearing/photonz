@@ -686,6 +686,10 @@ final class EditorState {
         didSet {
             if oldValue != selectedLayerID {
                 if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
+                // A piece belongs to the clip it was picked on. Picking
+                // something else lets it go, so ⌫ can never throw away a piece
+                // of a clip nobody is looking at (`EditorState+ClipBar`).
+                if selectedClipPieceIndex != nil { selectedClipPieceIndex = nil }
                 // The chip that says what a path's points do belongs to the
                 // path that was picked; the canvas lets those points go at the
                 // same moment (`CanvasNSView.selectedLayerID`), so the line
@@ -906,6 +910,16 @@ final class EditorState {
     /// It is what Save, Export and Revert to Original act on, and it is how the
     /// window knows there is an untouched file behind the clip.
     var recordingURL: URL?
+    /// Which PIECE of the picked clip is in hand, where the clip is cut into
+    /// more than one (`EditorState+ClipBar`). Nil means the clip as a whole:
+    /// a recording nobody has cut has no piece to pick.
+    var selectedClipPieceIndex: Int?
+    /// The clip's bar under a hand: which edge, what it was when it was
+    /// grabbed, and where it has got to. Kept out of the document so a whole
+    /// drag is one step to undo, exactly like the timing drag next door.
+    var clipBarDrag: ClipBarDragSession?
+    /// The Escape watch armed for exactly as long as a clip's bar is in hand.
+    @ObservationIgnored var clipBarEscapeWatch: Any?
     /// The Escape watch armed for exactly as long as a bar is in hand
     /// (`EditorState+MotionStrip`). Held here because the strip is rebuilt on
     /// every move of the drag and a watch owned by a view that comes and goes
@@ -3319,6 +3333,12 @@ final class EditorState {
         // you started moving it (`EditorState+MotionStrip`). The held lap comes
         // with it, so the loop does not change length mid-drag either.
         document = withDraggedMotionTiming(document)
+        // ...and a CLIP's bar under a hand, for exactly the same reason: a
+        // trim has to show you the frame it is about to land on rather than
+        // the one you started the drag from (`EditorState+ClipBar`). Writing
+        // absolute values, so the shown document having already had it applied
+        // costs nothing.
+        document = withDraggedClipBar(document)
         // A colour being chosen for a From or a To, before the blend below
         // reads the pair: the loop keeps running while the picker is open, so
         // the swing you are watching is painted the colour under your hand

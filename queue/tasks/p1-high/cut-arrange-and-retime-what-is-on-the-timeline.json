@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-20T19:20:09.375Z",
+  "updated": "2026-09-20T22:51:57.331Z",
   "deps": [
     "a-document-can-have-time",
     "a-clip-splits-into-pieces-and-the-pieces-can-be"
@@ -76,6 +76,35 @@
     {
       "t": "2026-09-20T19:20:09.374Z",
       "note": "The foundation for this landed on 2026-09-20 in a-document-can-have-time: a recording opens as a document, a clip is a layer with MovieRef + LayerTime + ClipPieces behind it, and the timeline draws it as a bar. Dragging the bar's ends is YOURS; the trim TOOL in Crop's slot and the retirement of the old recording window are trim-becomes-a-tool-and-the-recording-window-ret. Do not build a second way to change a clip's length without reading docs/design/video-surface.md 10.4, which reconciles the two."
+    },
+    {
+      "t": "2026-09-20T22:08:56.475Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T22:10:33.035Z",
+      "note": "ADVERSARIAL REVIEW, before building (video-cut-wt.html walked as somebody who has never seen it). (1) The mock's step 7-8 CANNOT BE WRITTEN DOWN in the model that landed: 'the left edge moves right and a gap opens where the fumble was', then 'drag the piece left until it snaps against the first half'. ClipPieces lies end to end with no holes inside a clip (D18), so trimming a piece's start ALREADY closes the join and step 8 has nothing to do. That is better, not a shortfall: one gesture where the mock needs two, and no way to leave a gap you did not mean to leave. The green snap line step 8 draws still earns its place, for a different job - lining a WHOLE clip up against another clip, against the playhead and against the ends of the document. (2) The mock makes the blade a TOOL ('Blade is a tool, not a menu command'). Photonz already ships Split at Playhead on plain B in the Video menu, and the design pass has already spent Crop's slot on Trim. A second video-only tool costs a slot and a mode to get out of, and buys only cutting somewhere the playhead is not - which costs you the aim anyway. Shortest version, same value: the playhead IS the cut line, B cuts there, no tool to pick up or put down. Building the command, not the tool. (3) Decorative and cut: the waveform drawn inside the clip (that is video-audio), and the mock's 'no Layers group because the timeline IS the layer list', which the design pass already corrected in video-surface.md 3. (4) REAL RISK found while measuring: the strip's ruler spans the whole document, so an eight second recording about a thousand points wide gives 125 points a second. A piece trimmed to 200ms is 25 points, and two 9 point grips on it leave 7 points of body - so carrying a short piece would be impossible and grabbing its middle would grab an edge instead. The grips have to give way to the body below a minimum width rather than being a fixed 9."
+    },
+    {
+      "t": "2026-09-20T22:51:37.798Z",
+      "note": "owns these walks: cut-on-the-timeline-walk, a-clip-shows-where-it-will-land-walk"
+    },
+    {
+      "t": "2026-09-20T22:51:47.558Z",
+      "note": "BUILT 2026-09-20. The timeline's clip bar became the surface you cut on. Model: Sources/PhotonzCore/ClipBarDrag.swift (ClipBarGrab .clipStart / .seam(after:) / .carry(piece:) / .body, ClipBarDrag.landing(byMS:) with clamping and catching, PhotonzDocument.clipBarEdges + moveClip + refreshDuration, ClipBarCopy), 30 tests in Tests/PhotonzCoreTests/ClipBarDragTests.swift. App: Sources/Photonz/EditorState+ClipBar.swift (piece pick, split, ripple delete, hold, speed, the drag session, the Escape watch, the drag preview both the strip and the canvas read) and Sources/Photonz/ClipPiecesBar.swift (the bar drawn as pieces, seams, grips that give way to a short piece, hold and speed badges, the green catch band, the capsule). Video menu: Split at Playhead (B) and Delete This Piece now reach the DOCUMENT when the window has one, plus Hold This Frame and a Speed list. Design: docs/design/video-surface.md section 11 states the ripple rule, the gesture rule, what is in your hand after a cut, and where the mock was wrong. Walks: cut-on-the-timeline-walk (9 real pictures) and a-clip-shows-where-it-will-land-walk (6, two of them mid-drag). Audit: queue/audits/2026-09-20-video-cutting.json. 8584 tests pass; every trim, cut, clip, recording and motion-strip walk that can run on a locked screen passes."
+    },
+    {
+      "t": "2026-09-20T22:51:52.834Z",
+      "note": "REVIEW OF THE BUILT THING, on the real app, and the three things it changed. (1) THE FIRST DESIGN WAS WRONG AND THE WALK CAUGHT IT. Dragging the bar's left end first moved the CLIP along with the edge, so the edge followed the hand perfectly - and left a hole at the front of the recording, because the clip had walked away from nought. The walk's own numbers said so: the timeline still ran 6000 ms after a trim that should have shortened it. Rebuilt the other way: the clip stays where it was put and the bar closes up from its far end, which is the value docs/design/video-surface.md 10.4 says the Trim TOOL writes, and the only one that answers the real job of dragging the dead air off the front of a recording. The edge still follows the hand DURING the drag, because the bar is drawn where the hand has it with the frames being dropped faint in the room that leaves, and it shuts when you let go. (2) THE RULER RESCALED UNDER THE HAND. Sliding a clip two seconds later grew the document from eight seconds to ten WHILE the hand was still down, so the ruler stretched under the bar being dragged - exactly the bug motionStripCycleMS already guards against for a motion bar. Fixed the same way: the document's length is HELD for the life of the drag and only says the new number on release. (3) Mid-carry the highlight stayed on the piece INDEX rather than on the piece, so the bar was drawn in the order it would land in with the wrong piece lit up. Fixed to follow the drop index. Also: B, Delete, Hold and Speed now put the Trim tool down first (committing a session whose handles were moved, dropping an untouched one), because a recording opens with Trim in hand and cutting a bar being shown at its full length would put the cut in the wrong place."
+    },
+    {
+      "t": "2026-09-20T22:51:57.330Z",
+      "note": "LEFT ROUGH, all of it also in the audit's rough list. Filed as ONE follow-up (a-cut-clip-says-how-many-pieces-it-is-in-and-a-p, p2): the layers list still shows a cut clip as a plain row with no piece count (D18 says it should), and speed has no Properties row (video-speed says retiming is a property of the selected clip). Not filed, recorded here instead: letting go of a trim that shortened a piece reflows the pieces after it, so the bar shifts by the amount you trimmed at the moment you release - every editor does this and the ripple rule requires it, but it is a visible jump and the user may disagree; Hold This Frame has no keyboard shortcut because shift-F walks the Frame slot and option-F fills the flow and nothing free reads as freeze; the joins between pieces are a hairline when the clip is NOT picked, since the grips only come up on the picked clip; snapping has almost nothing to catch on in a one clip recording and will only earn its keep once titles and a second clip are on the timeline. ALSO WORTH KNOWING FOR THE NEXT RUNNER, and it is not an app bug: four walks reported CRASHED with no crash report during this task, including ones that had passed minutes earlier. The cause was two playtest runs overlapping - one run's probe quit kills the other's app, because there is one Photonz Probe bundle and both drive it. Run playtests one at a time; every one of those walks passed when re-run alone."
     }
+  ],
+  "started": "2026-09-20T22:08:56.474Z",
+  "walks": [
+    "cut-on-the-timeline-walk",
+    "a-clip-shows-where-it-will-land-walk"
   ]
 }

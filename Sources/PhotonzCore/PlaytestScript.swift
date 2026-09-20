@@ -690,6 +690,63 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// than the recording's.
     case videoCropMiddle
 
+    // MARK: Cutting on the TIMELINE (`EditorState+ClipBar`)
+    //
+    // The same jobs as `videoCut` and `videoDeletePiece`, in the ordinary
+    // editor rather than in the recording window. Separate ids rather than
+    // reused ones because they are a different surface with different rules:
+    // ⌫ here takes a PICKED piece, and every edge on the bar can be dragged.
+
+    /// Split the clip under the playhead in two: B, and Video ▸ Split at
+    /// Playhead. Fails the walk when the playhead is nowhere a cut means
+    /// anything, so a walk cannot quietly photograph a cut that never landed.
+    case clipSplit
+    /// Throw the picked piece away. The join closes and everything after it
+    /// slides back.
+    case clipDeletePiece
+    /// Hold on the frame under the playhead: a piece whose in and out are the
+    /// same frame, dropped onto the timeline like any other piece.
+    case clipHoldFrame
+    /// Retime the piece in hand. Its sound goes with it, at the same rate.
+    case clipSpeedDouble, clipSpeedHalf
+    /// The bar's LEFT end dragged an eighth of the document inwards, and back
+    /// out again by the same amount. The pair is the proof that nothing was
+    /// thrown away: what the first one put out of play, the second one takes
+    /// back. Driven through the real drag, so the clamping and the catching
+    /// are exercised rather than stepped around.
+    case clipDragStartIn, clipDragStartBackOut
+    /// The bar's RIGHT end dragged an eighth of the document inwards.
+    case clipDragEndIn
+    /// The LAST piece carried to the front of the order, which is a real
+    /// rearrange without a walk having to know how long any piece is.
+    case clipCarryLastToFront
+    /// The whole clip slid an eighth of the document later, so a walk shows a
+    /// clip being placed as well as cut.
+    case clipSlideLater
+    /// The same two drags, LEFT IN THE HAND rather than let go of, so a walk
+    /// can photograph what a drag SHOWS you before you commit to it: the green
+    /// line where it has caught, and the order it would land in.
+    /// `clipSlideOntoPlayheadHeld` aims the clip's start a hair short of the
+    /// playhead, which is inside the catching distance, so the picture is of a
+    /// catch rather than of a near miss.
+    case clipSlideOntoPlayheadHeld, clipCarryLastToFrontHeld
+    /// Let go of whichever of those is in the hand.
+    case clipDragRelease
+
+    /// Whether this action drives the TIMELINE in the ordinary editor: cutting,
+    /// arranging and retiming what is on it. Answered by the editor, never by
+    /// the old recording window, which has its own ids above.
+    public var drivesTheTimeline: Bool {
+        switch self {
+        case .clipSplit, .clipDeletePiece, .clipHoldFrame,
+             .clipSpeedDouble, .clipSpeedHalf,
+             .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
+             .clipCarryLastToFront, .clipSlideLater,
+             .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease: true
+        default: false
+        }
+    }
+
     /// Whether this action drives the GUIDE rather than a window: pressing the
     /// callout's own button. A guide can be running over a recording's window,
     /// where there is no editor to ask for, so a walk in one needs these

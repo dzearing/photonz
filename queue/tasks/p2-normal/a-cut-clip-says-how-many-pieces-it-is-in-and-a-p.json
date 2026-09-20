@@ -1,0 +1,28 @@
+{
+  "id": "a-cut-clip-says-how-many-pieces-it-is-in-and-a-p",
+  "title": "A cut clip says how many pieces it is in, and a piece can be retimed from the panel",
+  "goal": "After you cut a recording into pieces, the layers list still shows it as one plain row with no sign it was ever cut, and the only way to change how fast a piece plays is a menu. Put the piece count on the row where you would look for it, and put the speed next to the other properties of the thing you have picked.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-20T22:51:34.670Z",
+  "updated": "2026-09-20T22:51:34.673Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Both halves are gaps the 2026-09-20 cutting build left, recorded in queue/audits/2026-09-20-video-cutting.json. (1) UX-PATTERNS D18 and docs/design/video-surface.md 10.5 both say the layers list shows the layer once WITH its piece count; the row is LayersRow.swift and the count is layer.clipPieces?.count, nil-safe and already computed. (2) docs/design/mocks/pages/video-speed.html: \"Retiming is a property of the selected clip, so nothing new appears in the chrome\" - so it belongs in the Properties panel, not only in the Video menu. EditorState.clipSpeedInHand / setClipSpeedInHand / clipSpeeds are written and wired already (EditorState+ClipBar.swift); this is the panel row over them. ClipPiece.isHeld is the held case.",
+  "acceptance": [
+    "A clip cut into more than one piece shows its piece count on its row in the layers list, and a clip that has never been cut shows nothing extra",
+    "Picking a piece on the timeline shows that piece's speed in the Properties panel, next to the other properties of the clip",
+    "Changing the speed from the panel and changing it from Video > Speed produce the same result and the same single undo step",
+    "A held frame says it is a held frame in the panel rather than showing a speed it does not have"
+  ],
+  "log": [
+    {
+      "t": "2026-09-20T22:51:34.672Z",
+      "note": "created (manual)"
+    }
+  ]
+}

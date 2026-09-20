@@ -125,7 +125,10 @@ extension EditorState {
     /// ever written down (`PhotonzDocument.openedForTrim`).
     var shownDocument: PhotonzDocument? {
         guard let document else { return nil }
-        guard let session = trimSession else { return document }
+        // A bar under a hand is drawn where the HAND has it, not where the
+        // document still says it is, which is the same bargain the timing
+        // strip and the pivot crosshair strike (`EditorState+ClipBar`).
+        guard let session = trimSession else { return withDraggedClipBar(document) }
         return document.openedForTrim(session)
     }
 

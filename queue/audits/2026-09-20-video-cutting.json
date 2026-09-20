@@ -1,0 +1,59 @@
+{
+  "feature": "Cut, arrange and retime what is on the timeline",
+  "epic": "video-cutting",
+  "summary": "A recording on the timeline can now be cut into pieces, the pieces thrown away, carried into a different order, retimed and frozen, and every edge of the bar can be dragged. Nothing is destroyed: a trim only moves an in point, and dragging the edge back out gives the frames back.",
+  "setup": "Photonz Dev, Experiments window, release Next, with \"A recording is a document\" and \"Cut a recording\" on. Open a screen recording (or File ▸ Open on any .mp4) and the timeline appears across the bottom.",
+  "try": [
+    {
+      "do": "Drag the left end of the clip's bar a second to the right, then drag it back out as far as it goes.",
+      "shot": "2026-09-20-cut-caught-on-the-playhead.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Scrub to two seconds and press B, then scrub to four seconds and press B again.",
+      "shot": "2026-09-20-cut-three-shots.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Press Delete once.",
+      "shot": "2026-09-20-cut-middle-gone.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Drag the last piece of the bar to the front of the row and watch the bar redraw before you let go.",
+      "shot": "2026-09-20-cut-carrying-a-shot.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "With that piece still picked, choose Video ▸ Speed ▸ 2x Speed."
+    },
+    {
+      "do": "Choose Video ▸ Hold This Frame.",
+      "shot": "2026-09-20-cut-held-frame.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it."
+    },
+    {
+      "do": "Hold ⌘ and drag the bar sideways until it catches on the playhead, then press Escape before letting go."
+    },
+    {
+      "do": "Press ⌘Z until the recording is one eight second clip again."
+    }
+  ],
+  "evaluate": [
+    "When you drag the left end of the bar in, the frames come off the FRONT and the bar closes up from its far end, so the recording never starts with a hole. Does that match what your hand expected, or did you want the edge itself to stay under the pointer?",
+    "After the second cut, the piece left picked is the one BETWEEN the two cuts, so Delete throws away the bit you were cutting out with no click in between. Is that the half you reach for, or do you want the half after the cut?",
+    "Is the join between two pieces visible enough when the clip is NOT picked? With nothing picked the grips go away and the joins are a hairline.",
+    "The green band is where an edge has caught. On a catch onto the playhead it wraps the playhead's own line. Can you tell a catch from a near miss at a glance?",
+    "Speed is a short list (Quarter, Half, Normal, 2x, 4x) in a menu rather than a number you type. Is that the right amount of control, or do you want the number?"
+  ],
+  "rough": [
+    "There is no way to trim the START of a piece that is not the first one, on purpose: the join is pinned by the piece before it, so that edge could only run away from your hand. Two cuts and a Delete does the same job, frame exact. Said in docs/design/video-surface.md §11.2; if it still feels missing, that is worth hearing.",
+    "The mock (video-cut-wt) has a gap open up when you trim a piece and then asks you to drag the piece left to close it. Neither is possible here and neither is needed: a clip's pieces cannot have a hole in them, so the trim closes the join by itself. One gesture instead of two.",
+    "The mock makes the blade a TOOL. It is a command here (B), because the playhead is already the cut line and you already scrubbed to the frame you are looking at, so there is no mode to get into or out of.",
+    "The layers list still shows a cut clip as one row with no piece count on it. D18 says it should say how many pieces. Not built.",
+    "Speed has no panel row. video-speed says retiming is a property of the selected clip, which means it belongs in Properties next to Opacity, not only in a menu.",
+    "Letting go of a trim that shortened a piece reflows the pieces after it, so the bar shifts by the amount you trimmed at the moment you release. Every editor does this and it is what the ripple rule requires, but it is a visible jump.",
+    "Hold This Frame has no keyboard shortcut. ⇧F walks the Frame slot and ⌥F fills the flow, so there was nothing free that reads as freeze.",
+    "Snapping has almost nothing to catch on in a one clip recording: the two ends of the document and the playhead. It will earn its keep once titles and a second clip are on the timeline."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/a-clip-shows-where-it-will-land-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-playhead-at-two-seconds", "note": "an eight second recording with the playhead parked at two seconds. The clip starts at nought, so there is a two second run-up to slide it into" },
+    { "do": "snapshot", "name": "1-before-the-drag" },
+
+    { "do": "action", "action": "clipSlideOntoPlayheadHeld" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-caught-mid-drag", "note": "THE TEST, photographed WITH THE CLIP STILL IN THE HAND: it was dropped thirty milliseconds short of the playhead and the playhead CAUGHT it. The green line is where it has caught and the capsule says where it would start and how far it has come. Nothing has been written yet: let go and it lands there, press Escape and it never happened" },
+    { "do": "snapshot", "name": "2-caught-on-the-playhead" },
+    { "do": "action", "action": "clipDragRelease" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-landed", "note": "let go, and the clip starts exactly at two seconds: a caught edge is really caught, not nearly. One undo step for the whole drag" },
+    { "do": "snapshot", "name": "3-landed-on-the-playhead" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-three-shots", "note": "the same take cut into three shots on one row" },
+    { "do": "snapshot", "name": "4-three-shots" },
+
+    { "do": "action", "action": "clipCarryLastToFrontHeld" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-carrying", "note": "THE OTHER TEST, photographed MID-CARRY: the last shot is being carried to the front, and the bar is already drawn in the order it would land in, with the capsule naming the piece and the place it is going to. You are looking at the answer before you commit to it" },
+    { "do": "snapshot", "name": "5-carrying-a-shot-to-the-front" },
+    { "do": "action", "action": "clipDragRelease" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-dropped", "note": "dropped. What plays, what the playhead reads and what an export would write all agree with the new order straight away" },
+    { "do": "snapshot", "name": "6-dropped-at-the-front" }
+  ]
+}

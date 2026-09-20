@@ -627,6 +627,12 @@ extension PhotonzDocument {
               var pieces = layer.clipPieces else { return false }
         guard edit(&pieces, time) else { return false }
         updateLayer(id: id) { $0.setClipPieces(pieces) }
+        // A document that was told how long it runs for is told again, because
+        // the thing it was measuring just changed length. Without this, a clip
+        // cut down to six seconds still had a ten second ruler, a transport
+        // counting to ten and four seconds of nothing at the end
+        // (`refreshDuration`, the same rule `applyTrim` follows).
+        refreshDuration()
         return true
     }
 }

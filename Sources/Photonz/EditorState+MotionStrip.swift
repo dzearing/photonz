@@ -62,6 +62,9 @@ extension EditorState {
     /// pointer instead of following it.
     var motionStripCycleMS: Int {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
+        // ...and the same for a CLIP's bar, for the same reason
+        // (`EditorState+ClipBar`).
+        if let drag = clipBarDrag { return drag.heldTimelineMS }
         return max(1, shownDocument?.timelineLengthMS ?? 1)
     }
 

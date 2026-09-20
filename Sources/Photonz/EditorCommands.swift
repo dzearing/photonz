@@ -376,16 +376,50 @@ struct EditorCommands: Commands {
                 .disabled(!hasVideo)
             Divider()
             if Experiments.shared.cutRecordingEnabled {
-                Button("Split at Playhead") { video?.cutAtPlayhead() }
-                    .keyboardShortcut("b", modifiers: [])
-                    .disabled(!(video?.canCutAtPlayhead ?? false))
-                Button("Delete This Piece") { video?.deleteSelectedPiece() }
-                    // Not `.delete`: SwiftUI's is U+0008, and AppKit only
-                    // matches a ⌫ press against U+007F, so `.delete` registers
-                    // a chord the keyboard cannot type. See
-                    // `DeleteKeyCharacters`.
-                    .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: [])
-                    .disabled(!(video?.canDeleteSelectedPiece ?? false))
+                // One key, one meaning, two places it can land. A recording
+                // that opens as a DOCUMENT is cut on the timeline
+                // (`EditorState+ClipBar`); the old recording window is still
+                // cut on its strip until it retires. Nothing here is a second
+                // way to do the same thing: they are the same command reaching
+                // whichever surface is in front of you.
+                let onTimeline = editor?.documentHasTime ?? false
+                Button("Split at Playhead") {
+                    onTimeline ? editor?.splitClipAtPlayhead() : video?.cutAtPlayhead()
+                }
+                .keyboardShortcut("b", modifiers: [])
+                .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
+                                       : (video?.canCutAtPlayhead ?? false)))
+                Button("Delete This Piece") {
+                    onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
+                }
+                // Not `.delete`: SwiftUI's is U+0008, and AppKit only
+                // matches a ⌫ press against U+007F, so `.delete` registers
+                // a chord the keyboard cannot type. See
+                // `DeleteKeyCharacters`.
+                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: [])
+                .disabled(!(onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
+                                       : (video?.canDeleteSelectedPiece ?? false)))
+                // A freeze is not a special object: it is a piece whose in and
+                // out are the same frame, so it drops onto the timeline like
+                // any other piece and can be moved, lengthened and thrown away
+                // like any other piece (`video-freeze-wt`).
+                // No key: ⇧F walks the Frame slot, ⌥F fills the flow, and a
+                // freeze is a thing you do once in a cut rather than forty
+                // times. The row is where you would look for it.
+                Button("Hold This Frame") { editor?.holdFrameAtPlayhead() }
+                    .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
+                // Retiming is a property of the piece you are on, so it is a
+                // list of speeds rather than a surface of its own
+                // (`video-speed`). Its sound goes with it, at the same rate.
+                Menu("Speed") {
+                    ForEach(EditorState.clipSpeeds, id: \.self) { percent in
+                        Button(VideoSpeedNames.title(percent)) {
+                            editor?.setClipSpeedInHand(percent)
+                        }
+                        .disabled(!(editor?.canSetClipSpeed(percent) ?? false))
+                    }
+                }
+                .disabled(editor?.clipSpeedInHand == nil)
                 Divider()
             }
             Button("Set Trim Start to Playhead") {
