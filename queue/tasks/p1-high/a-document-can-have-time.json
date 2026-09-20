@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.283Z",
-  "updated": "2026-09-20T19:47:15.773Z",
+  "updated": "2026-09-20T19:47:38.949Z",
   "deps": [
     "refine-the-video-design-so-it-reads-as-the-same",
     "time-lives-in-the-document-and-a-layer-can-have"
@@ -104,10 +104,15 @@
     {
       "t": "2026-09-20T19:47:15.772Z",
       "note": "TESTS: Scripts/test.sh green on this tree, 8530 tests in 677 suites, 190.9s, on an idle machine. It went red three times first, always with the same 21 issues in SeparatedRowsSayTheirWordsTests, and that cost most of an hour to settle: the reading off a screenshot comes back empty whenever the Mac is busy, so every row keeps its auto name. Proved it is not this change by running the same eleven tests idle (pass, twice), busy (21 issues), and by a throwaway diagnostic showing the whole path working. Clean HEAD's full suite passes and so does this one. Filed as the-test-suite-stops-reporting-failures-that-are, because a runner that sees it cannot tell a break from a flake."
+    },
+    {
+      "t": "2026-09-20T19:47:38.947Z",
+      "note": "A recording opens the ordinary editor as a document: the clip is a layer in the layers list, the timeline and transport appear on the one fact that the document has a duration, and the renderer composites the frame under the playhead with no change to the renderer at all. Behind next-a-recording-is-a-document, off by default. Verified by a-recording-is-a-document-walk (27 steps, five real pictures: no timeline without time, a recording opened, playing, stepped, and a clip wearing 45% opacity and a 22px corner radius) and Scripts/test.sh green at 8530 tests. Design docs/design/video.md, audit queue/audits/2026-09-20-a-recording-is-a-document.json, perf numbers in docs/progress/perf.md. The retirement half (trim as a tool, save and export on the document path, the eleven trim walks, deleting the old window) is split out as trim-becomes-a-tool-and-the-recording-window-ret."
     }
   ],
   "started": "2026-09-20T18:58:24.936Z",
   "walks": [
     "a-recording-is-a-document-walk"
-  ]
+  ],
+  "completed": "2026-09-20T19:47:38.948Z"
 }
