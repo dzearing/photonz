@@ -1,0 +1,394 @@
+{
+  "out": "/tmp/photonz-playtest/icon-previews-stay-with-nothing-picked",
+  "seed": "The row of small previews at the top left shows an icon at the sizes it will really be used, and it only knew which icon to show from whatever was PICKED. So clicking an empty part of the canvas, or pressing Escape, took the whole row away - which is the ordinary way to stand back and look at what you have drawn, and exactly the moment the previews are worth most. This walk draws in an icon frame, then picks nothing, and reads the row.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "frames",
+      "tools",
+      "color"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectIconPreviews",
+      "absent": true
+    },
+    {
+      "do": "describe",
+      "stage": "0-bare-canvas",
+      "note": "an empty canvas with no icon frame in it: no previews row, and nothing is rendered for one"
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-frame-picked",
+      "note": "a 24 by 24 icon frame, freshly added and picked: the previews row is up, showing it at 16 and at 24"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-frame-picked"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        793,
+        543
+      ],
+      "to": [
+        807,
+        557
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-drawn",
+      "note": "a box drawn inside it: the row still shows the frame, because what is picked is the shape and the frame is the thing above it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-drawn"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Frame"
+      ]
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-escape-steps-out",
+      "note": "the first Escape steps out of the shape to the frame around it, which is still an icon, so the row is unchanged"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-escape",
+      "note": "THE TEST: a second Escape picks nothing at all, and the previews row is still there and still showing this icon. It used to vanish here."
+    },
+    {
+      "do": "snapshot",
+      "name": "3-escape"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-empty-canvas",
+      "note": "THE OTHER TEST: clicking a bare part of the canvas, far from the frame, leaves nothing picked AND the pointer over no frame at all. The row keeps the last icon it had an answer for, because standing back is when the pictures are worth most."
+    },
+    {
+      "do": "snapshot",
+      "name": "4-empty-canvas"
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "48",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "move",
+      "at": [
+        916,
+        562
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5-pointer-says-which",
+      "note": "with nothing picked, resting the pointer in a second icon frame moves the row onto that one: 48 is shown at 16, 24, 32 and 48. This is the rule the Width row already runs on, so the number in the tool bar and the pictures beside it are always about one icon."
+    },
+    {
+      "do": "snapshot",
+      "name": "5-pointer-says-which"
+    },
+    {
+      "do": "move",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-sweeping-away-keeps-it",
+      "note": "sweeping back out onto bare canvas keeps the 48, deliberately: bare canvas is where the pointer rests while you look, and taking the row away there is the bug this walk exists for"
+    },
+    {
+      "do": "click",
+      "at": [
+        916,
+        562
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        916,
+        562
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectIconPreviews",
+      "absent": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-nothing-left-to-show",
+      "note": "delete the icon frames and the row goes, memory and all: it can never go on showing an icon that is not in the document"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-nothing-left-to-show"
+    },
+    {
+      "do": "render",
+      "name": "8-final-render"
+    }
+  ]
+}

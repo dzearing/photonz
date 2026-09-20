@@ -128,13 +128,27 @@
       "seconds": 0.6
     },
     {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48,
+        64
+      ]
+    },
+    {
       "do": "describe",
       "stage": "4-away",
-      "note": "picking bare canvas puts the row away"
+      "note": "picking bare canvas leaves the row exactly where it was: standing back to look at what you have drawn is when the pictures are worth most, so nothing about picking nothing takes them away"
     },
     {
       "do": "snapshot",
-      "name": "icon-preview-4-away"
+      "name": "icon-preview-4-still-there"
     },
     {
       "do": "click",
@@ -148,9 +162,19 @@
       "seconds": 0.6
     },
     {
+      "do": "expectIconPreviews",
+      "sides": [
+        16,
+        24,
+        32,
+        48,
+        64
+      ]
+    },
+    {
       "do": "describe",
       "stage": "5-back",
-      "note": "clicking back into the frame brings it back"
+      "note": "and clicking back into the frame is still the same row, about the same icon"
     },
     {
       "do": "snapshot",

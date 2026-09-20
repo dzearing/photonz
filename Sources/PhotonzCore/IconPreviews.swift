@@ -87,6 +87,34 @@ extension PhotonzDocument {
         return frameID
     }
 
+    /// The icon the previews strip is showing, from the three things that can
+    /// say so: what is PICKED, failing that the frame the POINTER is resting
+    /// in, and failing that the last icon either of them named.
+    ///
+    /// The first two are the rule the Width row already runs on
+    /// (`iconFrameSize(picked:pointerIn:)`), so the number in the row and the
+    /// pictures beside it are always about one icon. What is picked comes
+    /// first and answers even when the answer is "no icon": picking a shape on
+    /// a screen puts the strip away, wherever the hand has wandered.
+    ///
+    /// The third is the strip's own, and it is the whole point of it. Clicking
+    /// an empty part of the canvas, or pressing Escape, is the ordinary way to
+    /// stand back and look at what you have drawn, and it is exactly the
+    /// moment the previews are worth most. Nothing is picked and the pointer
+    /// is over no frame at all, so without a memory the row vanished at the
+    /// one moment it was wanted. It keeps the last icon instead.
+    ///
+    /// Staying is bounded by being CHECKED rather than by expiring: an icon
+    /// that has been deleted, or a `remembered` that was never an icon frame,
+    /// is dropped here, so the strip can never go on showing an icon that is
+    /// not in the document.
+    public func iconPreviewFrameID(picked: UUID?, pointerIn hovered: UUID?,
+                                   remembered: UUID?) -> UUID? {
+        if let id = picked ?? hovered { return iconFrameID(containing: id) }
+        guard let remembered, isIconFrame(id: remembered) else { return nil }
+        return remembered
+    }
+
     /// The icon frame a canvas point is inside, if any.
     ///
     /// The same question `frameID(under:)` answers, narrowed to the frames that

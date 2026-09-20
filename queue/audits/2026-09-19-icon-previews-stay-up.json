@@ -1,0 +1,26 @@
+{
+  "feature": "The icon previews row stays up when you pick nothing",
+  "epic": "icon-grid",
+  "summary": "The row of small previews at the top left, which shows an icon at the sizes it will really be used, no longer vanishes when you click empty canvas or press Escape. Standing back to look at what you have drawn is the moment those pictures are worth most, and it was the one moment they went away.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-icon-frames and next-icon-previews are on by default.",
+  "try": [
+    { "do": "Layer > New Frame, pick 24 under Icons, press Add Frame." },
+    { "do": "Press R and drag a small box inside the frame." },
+    { "do": "Press Escape twice: once steps out to the frame, once picks nothing at all." },
+    { "do": "Click an empty part of the canvas, well away from the frame. The previews row is still there, still showing this icon.", "shot": "2026-09-19-icon-previews-stay-up-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Layer > New Frame again, pick 48, press Add Frame, then View > Zoom to Fit." },
+    { "do": "Click empty canvas so nothing is picked, then rest the pointer inside the 48 frame. The row moves onto that icon and grows to 16, 24, 32 and 48.", "shot": "2026-09-19-icon-previews-stay-up-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Delete both frames. The row goes, and stays gone." }
+  ],
+  "evaluate": [
+    "With nothing picked, does the row showing the last icon you touched read as helpful, or as chrome you cannot put away?",
+    "Merely passing the pointer over a second icon frame moves the row onto it, and it stays there once you move off. Is that what you would expect, or should the row stick to the icon you last drew in?",
+    "In a document that is all icons, there is now no click that puts the row away. Does it ever get in the way of the canvas?",
+    "The row sits under the frame's own name chip in the top left corner. Do the two crowd each other?"
+  ],
+  "rough": [
+    "The row keeps the last icon rather than emptying, and nothing expires it: only picking something that is not in an icon, or deleting the frame, takes it away. That is deliberate, because clicking bare canvas is exactly the gesture the row used to die on, but it does mean a pointer that brushes a second frame on its way to the tool bar leaves the row speaking for that second frame.",
+    "This is the same rule the tool bar's Width row already runs on, so the number and the pictures always mean one icon. It inherits that row's known wrinkle rather than inventing a second answer to it.",
+    "Screenshots here were taken with the Mac's screen locked. The window is the real one, driven and photographed for real, but colours can read dimmed."
+  ]
+}

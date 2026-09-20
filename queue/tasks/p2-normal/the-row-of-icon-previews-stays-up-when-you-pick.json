@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:25.099Z",
-  "updated": "2026-09-19T15:35:09.610Z",
+  "updated": "2026-09-20T00:51:52.556Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Straight from the rough list of queue/audits/2026-09-17-icon-width-row-nothing-picked.json: 'The icon previews strip still vanishes the moment you pick nothing, for the same reason the Width row used to go wrong: it only knows which icon it is showing from what is picked. It was left alone here so this change stayed to one row.'\n\nThe code says the same. Sources/Photonz/EditorState+IconPreviews.swift:\n\n    var iconPreviewFrameID: UUID? {\n        guard iconPreviewsEnabled, let document, let id = selectedLayerID else { return nil }\n        return document.iconFrameID(containing: id)\n    }\n\nNo selectedLayerID, no frame, and iconPreviewTiles returns [] so the strip draws nothing.\n\nThe answer already exists one file away: with-nothing-picked-the-pen-s-width-row-still-sa (done, commit 2c1a4bc4) taught the Width row to fall back to the icon frame UNDER THE POINTER when nothing is picked. Reuse that, do not invent a second rule. That task's audit also records the one flaw worth not repeating: sweep the pointer out of the frame onto bare canvas and the row can read stale, so decide deliberately what the previews show when the pointer is over neither.\n\nDrawing surface: Sources/Photonz/IconPreviewsStrip.swift, Sources/Photonz/IconPreviewsOverlay.swift.",
@@ -42,6 +42,35 @@
     {
       "t": "2026-09-19T15:35:09.609Z",
       "note": "seq 60 -> 40"
+    },
+    {
+      "t": "2026-09-20T00:38:18.945Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-20T00:43:56.911Z",
+      "note": "owns these walks: icon-previews-stay-with-nothing-picked-walk, icon-preview-walk"
+    },
+    {
+      "t": "2026-09-20T00:51:52.405Z",
+      "note": "Adversarial review before building: the mock-free question here was what the row should show when NOTHING is picked and the pointer is over neither an icon nor anything else, which is exactly the state clicking empty canvas leaves you in. A pointer-only fallback (the Width row's rule as written) would have left the bug alive for the click, since the click puts the pointer on bare canvas. So the rule is picked, then pointer, then the last icon either of them named, with the last part checked against the document on every read rather than expiring - an icon that has been deleted, or one that was never an icon frame, is dropped. Shortest version that delivers it: one pure function in PhotonzCore and one remembered id on EditorState."
+    },
+    {
+      "t": "2026-09-20T00:51:52.455Z",
+      "note": "left rough: merely passing the pointer over a second icon frame moves the row onto it and it stays there once the pointer moves off. Deliberate, and inherited from the Width row's shipped rule (iconFrameSize(picked:pointerIn:)) rather than a second answer invented here; the audit asks the user whether the row should instead stick to the icon you last drew in. No open task covers it and it is a judgment call rather than a defect, so it is here rather than filed."
+    },
+    {
+      "t": "2026-09-20T00:51:52.506Z",
+      "note": "left rough: at high zoom the frame's own name chip sits immediately right of the previews card in the top left corner, and now that the card stays up the two are adjacent much more of the time (see queue/audits/2026-09-19-icon-previews-stay-up-1.png). They do not overlap in any capture taken here, so it is a crowding question rather than a bug; the audit asks about it."
+    },
+    {
+      "t": "2026-09-20T00:51:52.555Z",
+      "note": "New playtest step kind expectIconPreviews (sides, or absent:true): reads the editor's own strip and fails with which icon it is speaking for and which icon frames the document holds. Forced under a lock on 2026-09-19 it ran clean through all 77 steps, so it was added to PlaytestLockSafety.stepsThatSurviveALock with that evidence written into the doc comment, and the walk now runs unforced on a locked Mac (lockSafe true, 6 real window captures)."
     }
+  ],
+  "started": "2026-09-20T00:38:18.944Z",
+  "walks": [
+    "icon-previews-stay-with-nothing-picked-walk",
+    "icon-preview-walk"
   ]
 }

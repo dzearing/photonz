@@ -37,6 +37,11 @@ public enum PlaytestLockSafety {
     /// - `layers-list-follows-pick-walk`, 103 steps: scrollPanel, selectRow,
     ///   reveal.
     /// - `pen-draws-a-path-walk`, 70 steps: expectPicked.
+    /// - `icon-previews-stay-with-nothing-picked-walk`, all 77 steps and six
+    ///   real window captures, forced under a lock on 2026-09-19:
+    ///   expectIconPreviews. It reads the editor's own previews strip inside
+    ///   the app's process and never asks accessibility for anything, so a
+    ///   lock has nothing to take away from it.
     /// - `name-chip-reads-anywhere-walk`, 24 steps before it failed on a
     ///   missing component tile, which is a fact about the walk and not about
     ///   the lock: dropImage, pinch, appearance.
@@ -86,7 +91,8 @@ public enum PlaytestLockSafety {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
-        "expectEdited", "expectPath", "expectPicked", "expectRecording", "expectStoredRecording",
+        "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
+        "expectStoredRecording",
         "expectWindows", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",

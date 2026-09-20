@@ -1931,6 +1931,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// An empty list is as much of the point as a full one: it says nothing
     /// should be picked here.
     case expectPicked(layers: [String])
+    /// What the icon previews strip is showing right now: the sizes its chips
+    /// are labelled with, smallest first, or that there is no strip at all.
+    ///
+    /// A snapshot cannot settle this. The strip is a small card in the top
+    /// left of the canvas, and "is it still there, and is it still the same
+    /// icon" is the one thing the row exists to be trusted about: it used to
+    /// vanish the moment you picked nothing, which is the ordinary way to
+    /// stand back and look at what you have drawn. This asks the editor which
+    /// icon frame the strip is speaking for and what sizes it drew.
+    ///
+    /// `absent: true` claims no strip at all, which is what a document with no
+    /// icon frame in it must give.
+    case expectIconPreviews(sides: [Int], absent: Bool)
     /// How many times a named view may have built since the step before it.
     ///
     /// The guard for what a click COSTS, written as a count rather than as a
@@ -2420,7 +2433,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectStoredRecording", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
     ]
@@ -2499,6 +2512,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectOneUnit: "expectOneUnit"
         case .expectOneNumberPerName: "expectOneNumberPerName"
         case .expectPicked: "expectPicked"
+        case .expectIconPreviews: "expectIconPreviews"
         case .expectBuilds: "expectBuilds"
         case .expectListStill: "expectListStill"
         case .expectEdited: "expectEdited"
@@ -3216,6 +3230,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")
             }
             self = .expectPicked(layers: try f.optionalStrings("layers"))
+        case "expectIconPreviews":
+            let absent = try f.optionalFlag("absent") ?? false
+            guard absent || fields["sides"] != nil else {
+                throw f.invalid("sides", "expectIconPreviews has to say which sizes the strip must be showing, smallest first, or carry \"absent\": true to claim there is no strip at all")
+            }
+            self = .expectIconPreviews(sides: try f.optionalNumbers("sides").map { Int($0) },
+                                       absent: absent)
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "reveal":
@@ -3284,6 +3305,14 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw invalid(field, "must be a list of non-empty strings")
             }
             return values
+        }
+
+        func optionalNumbers(_ field: String) throws -> [Double] {
+            guard let raw = fields[field] else { return [] }
+            guard let values = raw as? [NSNumber] else {
+                throw invalid(field, "must be a list of numbers")
+            }
+            return values.map { $0.doubleValue }
         }
 
         func optionalFlag(_ field: String) throws -> Bool? {

@@ -101,6 +101,83 @@ struct IconPreviewTests {
         #expect(document.iconFrameID(containing: screen.id) == nil)
     }
 
+    // MARK: - Which icon the strip keeps showing
+
+    /// A document with one icon frame, one shape drawn in it, and a screen
+    /// next door with a shape of its own.
+    private func iconAndScreen() -> (document: PhotonzDocument, icon: UUID, second: UUID,
+                                     drawn: UUID, screen: UUID, onScreen: UUID) {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 2400, height: 1400))
+        let icon = document.addFrame(origin: CGPoint(x: 100, y: 100),
+                                     size: CGSize(width: 24, height: 24))
+        let second = document.addFrame(origin: CGPoint(x: 300, y: 100),
+                                       size: CGSize(width: 48, height: 48))
+        let screen = document.addFrame(origin: CGPoint(x: 800, y: 100),
+                                       size: CGSize(width: 1440, height: 1024))
+        let dot = Layer(name: "Dot", content: .annotation(AnnotationContent(shape: .ellipse)),
+                        frame: CGRect(x: 104, y: 104, width: 8, height: 8))
+        document.addLayerDrawnOnFrame(dot)
+        let drawn = document.layer(id: icon.id)?.children.first?.id ?? icon.id
+        let box = Layer(name: "Box", content: .annotation(AnnotationContent(shape: .rectangle)),
+                        frame: CGRect(x: 900, y: 200, width: 120, height: 80))
+        document.addLayerDrawnOnFrame(box)
+        let onScreen = document.layer(id: screen.id)?.children.first?.id ?? screen.id
+        return (document, icon.id, second.id, drawn, screen.id, onScreen)
+    }
+
+    @Test("What is picked says which icon, as it always did")
+    func previewFrameFromSelection() {
+        let d = iconAndScreen()
+        #expect(d.document.iconPreviewFrameID(picked: d.drawn, pointerIn: nil,
+                                              remembered: nil) == d.icon)
+        #expect(d.document.iconPreviewFrameID(picked: d.icon, pointerIn: nil,
+                                              remembered: nil) == d.icon)
+        // What is picked answers even when the answer is "no icon": picking
+        // something on a screen and sweeping the pointer over an icon does not
+        // make the strip speak for the icon.
+        #expect(d.document.iconPreviewFrameID(picked: d.onScreen, pointerIn: d.icon,
+                                              remembered: d.icon) == nil)
+    }
+
+    @Test("With nothing picked the pointer says which icon")
+    func previewFrameFromPointer() {
+        let d = iconAndScreen()
+        #expect(d.document.iconPreviewFrameID(picked: nil, pointerIn: d.second,
+                                              remembered: d.icon) == d.second)
+    }
+
+    @Test("With nothing picked and the pointer over neither, the strip stays on the last icon")
+    func previewFrameRemembered() {
+        // THE POINT OF THE ROW. Clicking bare canvas or pressing Escape is how
+        // you stand back and look at what you have drawn, and it is exactly
+        // the moment the previews are worth most, so neither may take them
+        // away: nothing is picked, and the pointer is out on bare canvas.
+        let d = iconAndScreen()
+        #expect(d.document.iconPreviewFrameID(picked: nil, pointerIn: nil,
+                                              remembered: d.icon) == d.icon)
+    }
+
+    @Test("An icon it can no longer show is forgotten rather than kept")
+    func previewFrameForgetsWhatIsGone() {
+        var d = iconAndScreen()
+        // A screen was never an icon, whatever was remembered.
+        #expect(d.document.iconPreviewFrameID(picked: nil, pointerIn: nil,
+                                              remembered: d.screen) == nil)
+        // ...and a frame that has been deleted is not one either, which is the
+        // case no change of selection or pointer would ever announce.
+        _ = d.document.removeLayer(id: d.icon)
+        #expect(d.document.iconPreviewFrameID(picked: nil, pointerIn: nil,
+                                              remembered: d.icon) == nil)
+    }
+
+    @Test("A document with nothing to preview still previews nothing")
+    func previewFrameOnBareCanvas() {
+        let document = PhotonzDocument(canvasSize: CGSize(width: 1600, height: 1100))
+        #expect(document.iconPreviewFrameID(picked: nil, pointerIn: nil, remembered: nil) == nil)
+        #expect(document.iconPreviewFrameID(picked: UUID(), pointerIn: UUID(),
+                                            remembered: UUID()) == nil)
+    }
+
     // MARK: - The flag it ships behind
 
     @Test("The previews are a Next flag, on by default, written up for a person")

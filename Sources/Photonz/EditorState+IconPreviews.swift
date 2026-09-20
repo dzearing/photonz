@@ -14,9 +14,12 @@ import PhotonzRender
 //
 // Two rules decide what it costs:
 //
-//  - **Nothing at all unless an icon frame is what you are in.** No frame, no
-//    selection, or a selection on a screen: `iconPreviewTiles` is empty before
-//    it renders anything, so a document of screenshots never pays a pixel.
+//  - **Nothing at all unless an icon frame is what you are in.** No frame in
+//    the document, a selection on a screen, or an icon that has since been
+//    deleted: `iconPreviewTiles` is empty before it renders anything, so a
+//    document of screenshots never pays a pixel. Picking NOTHING is not one of
+//    those cases any more — standing back to look is when the pictures are
+//    worth most, so the strip keeps the last icon it had an answer for.
 //  - **A picture is made once per drawing.** Each one is cached against the
 //    frame's own hash, exactly as the layers panel caches its rows, and the
 //    render happens off the main actor. Drawing in the frame costs one batch of
@@ -31,9 +34,34 @@ extension EditorState {
     /// The frame itself when it is what you picked, and the frame ABOVE what
     /// you picked while you are drawing in it — which is nearly the whole time,
     /// since what is selected right after drawing a shape is the shape.
+    ///
+    /// With NOTHING picked the pointer says which icon, and failing that the
+    /// last icon either of them named. That last part is what keeps the
+    /// pictures up when you click an empty part of the canvas or press Escape,
+    /// which is the ordinary way to stand back and look at what you have
+    /// drawn. The rule is `PhotonzDocument.iconPreviewFrameID`, shared with
+    /// the tool bar's Width row so the number and the pictures are always
+    /// about one icon.
     var iconPreviewFrameID: UUID? {
-        guard iconPreviewsEnabled, let document, let id = selectedLayerID else { return nil }
-        return document.iconFrameID(containing: id)
+        guard iconPreviewsEnabled, let document else { return nil }
+        return document.iconPreviewFrameID(picked: selectedLayerID,
+                                           pointerIn: pointerIconFrameID,
+                                           remembered: lastIconPreviewFrameID)
+    }
+
+    /// Re-decides which icon the strip is speaking for and remembers it.
+    ///
+    /// Called from the two places the answer can change — the selection and
+    /// the pointer — because the strip itself cannot remember anything: it is
+    /// a view, and writing state while SwiftUI reads a body is a redraw loop.
+    /// Everything it decides is re-derivable, so a missed call costs a stale
+    /// memory at worst and the read path checks that anyway.
+    func noteIconPreviewFocus() {
+        guard iconPreviewsEnabled, let document else { return }
+        let id = document.iconPreviewFrameID(picked: selectedLayerID,
+                                             pointerIn: pointerIconFrameID,
+                                             remembered: lastIconPreviewFrameID)
+        if id != lastIconPreviewFrameID { lastIconPreviewFrameID = id }
     }
 
     /// What the strip draws: one tile per size, in size order, each carrying

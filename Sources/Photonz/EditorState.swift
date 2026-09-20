@@ -716,6 +716,10 @@ final class EditorState {
                 if selectedLayerID != nil {
                     TutorialController.shared.note(.layerSelected, from: self)
                 }
+                // Which icon the previews strip is speaking for, re-decided
+                // here rather than in its own body: a view cannot remember
+                // anything while SwiftUI is reading it.
+                noteIconPreviewFocus()
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
@@ -1475,7 +1479,25 @@ final class EditorState {
     /// rather than going blank. Reading the Width row means reaching up to the
     /// tool bar, and a number that changed on the way to being read would be
     /// no better than the one this replaced.
-    var pointerIconFrameID: UUID?
+    ///
+    /// The icon previews strip reads it too, for the same reason and with the
+    /// same memory behind it (`iconPreviewFrameID`).
+    var pointerIconFrameID: UUID? {
+        didSet {
+            if oldValue != pointerIconFrameID { noteIconPreviewFocus() }
+        }
+    }
+
+    /// The last icon frame the previews strip had an answer for, so that
+    /// clicking empty canvas or pressing Escape does not take the pictures
+    /// away at the one moment they are worth most. Maintained by
+    /// `noteIconPreviewFocus()`; the rule that reads it is
+    /// `PhotonzDocument.iconPreviewFrameID(picked:pointerIn:remembered:)`,
+    /// which drops an icon that is no longer in the document.
+    ///
+    /// Per window and never written down: which icon you were last looking at
+    /// is where you are right now, not something about the picture.
+    var lastIconPreviewFrameID: UUID?
 
     /// A component whose Name field should be waiting for typing, set by the
     /// command that just made it. The Component section consumes it and puts it

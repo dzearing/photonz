@@ -1524,6 +1524,10 @@ private final class Run {
         case .expectPicked(let layers):
             note(number, step.name, try checkPicked(layers), state: describe())
 
+        case .expectIconPreviews(let sides, let absent):
+            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent),
+                 state: describe())
+
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
@@ -4087,6 +4091,41 @@ private final class Run {
                 : "this window is holding unsaved changes, and the walk says nothing should be unsaved here")
         }
         return edited ? "unsaved changes, as claimed" : "nothing unsaved, as claimed"
+    }
+
+    /// Fails the run unless the icon previews strip is showing exactly these
+    /// sizes, or is not there at all.
+    ///
+    /// The failure says which icon frame the strip is speaking for and which
+    /// ones the document holds, because the two ways this goes wrong are "the
+    /// strip is gone" and "the strip is showing the wrong icon", and a bare
+    /// list of numbers tells them apart from neither.
+    private func checkIconPreviews(sides: [Int], absent: Bool) throws -> String {
+        let editor = try requireEditor()
+        let showing = editor.iconPreviewTiles.map { Int($0.side) }
+        let frameID = editor.iconPreviewFrameID
+        let named = frameID.flatMap { editor.document?.layer(id: $0)?.name } ?? "no icon"
+        let icons = (editor.document?.allLayers ?? [])
+            .filter { editor.document?.isIconFrame(id: $0.id) == true }
+            .map(\.name)
+        let inTheDocument = icons.isEmpty ? "none" : icons.joined(separator: ", ")
+        func list(_ values: [Int]) -> String {
+            values.isEmpty ? "nothing" : values.map(String.init).joined(separator: ", ")
+        }
+        if absent {
+            guard showing.isEmpty else {
+                throw Failure(description: "the icon previews strip is showing \(list(showing)) "
+                    + "for \"\(named)\", and this step claims there should be no strip at all; "
+                    + "icon frames in the document: \(inTheDocument)")
+            }
+            return "no icon previews strip, as claimed"
+        }
+        guard showing == sides else {
+            throw Failure(description: "the icon previews strip is showing \(list(showing)), "
+                + "not \(list(sides)); it is speaking for \"\(named)\", and the icon frames in "
+                + "the document are: \(inTheDocument)")
+        }
+        return "icon previews for \"\(named)\" at \(list(showing)), as claimed"
     }
 
     private func checkPicked(_ layers: [String]) throws -> String {
