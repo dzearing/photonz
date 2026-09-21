@@ -260,6 +260,111 @@ settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 
   return 0
 }
 
+# ---- holding the Mac awake for as long as the loop is working --------------
+#
+# The user answered a card on 2026-09-20 asking whether the loop should stop
+# their Mac locking itself while it works, and chose to keep it awake. What
+# already existed was much narrower than that: Scripts/playtest-all.sh holds the
+# Mac for the length of ONE SWEEP and lets go the moment it ends. The loop
+# spends most of its life outside a sweep, and thirty one minutes after that
+# answer the Mac locked itself in a gap between two of them (11:03:19 local,
+# with sweeps at 12:23, 14:02, 15:46, 17:47 and 18:58 UTC and gaps of thirty to
+# seventy minutes between them). It stayed locked, which cost 163 of 544 walks
+# on every sweep after it and put a caveat on every picture in every audit the
+# user was asked to read. So the hold belongs to the LOOP, for its whole life,
+# gaps included.
+#
+# -d -i holds off display sleep and idle sleep, which is what the screen saver
+# and the lock behind it hang off. Deliberately NOT -u: that posts user
+# activity, which would light a display somebody has already put to sleep, at
+# whatever hour the loop reaches this. So this keeps an awake Mac awake and does
+# nothing at all to a sleeping one. It is a power assertion rather than a
+# process doing work, and it can neither wake a display nor unlock a screen.
+#
+# -w $$ is what makes it safe to hold for days rather than for an hour. The
+# assertion is released when THIS PID exits, whatever ended it: the trap below
+# covers a clean stop, and a SIGKILL, which runs no trap at all, is covered by
+# caffeinate itself noticing the pid go. That is the opposite trade from the
+# sweep's hold, which has to outlive a SIGKILL to its parent long enough to be
+# put down by pid, and bounds itself with -t instead.
+#
+# The pid is written down for two reasons: so a sweep can see there is already a
+# hold and not stack a second one on top of it, and so that anything putting
+# this hold down does it BY PID. Never pkill caffeinate: a hold the user started
+# by hand looks exactly like ours to a pattern.
+AWAKE_PIDFILE="$QDIR/.loop-awake.pid"
+export PHOTONZ_LOOP_AWAKE_PIDFILE="$AWAKE_PIDFILE"
+AWAKE=""
+# Set only for the reload below, where the process is replaced but the pid, and
+# so the hold watching it, carry straight across.
+RELOADING=0
+
+# Is the Mac's screen locked right now? Nothing here ever tries to change that:
+# a Mac already locked stays locked until a person logs in.
+screen_locked() {
+  ioreg -n Root -d1 -a 2>/dev/null | grep -A1 CGSSessionScreenIsLocked | grep -q "<true/>"
+}
+
+# True when $1 is a live caffeinate. This is the pid-reuse guard: a pid we wrote
+# down minutes ago may belong to something else entirely by now, and killing
+# that would be worse than leaving a hold behind.
+is_a_live_hold() {
+  [[ -n "${1:-}" ]] || return 1
+  ps -o command= -p "$1" 2>/dev/null | grep -q caffeinate
+}
+
+hold_awake() {
+  command -v caffeinate >/dev/null 2>&1 || return 0
+  # A reload exec's onto an edited copy of this script with the SAME pid, so the
+  # hold taken before the reload is still alive and still watching the right
+  # process. Adopt it instead of stacking a second one that nothing would then
+  # release until the loop stopped.
+  # ...and it must be OUR hold, not merely a live caffeinate wearing the pid we
+  # wrote down. A loop that was SIGKILLed leaves the pidfile behind (its hold
+  # went with it, but nothing ran to tidy the note), and a pid that comes round
+  # again on a machine where the user runs caffeinate by hand would otherwise be
+  # adopted here and killed when this loop stops. The hold is a direct child of
+  # this pid and stays one across the exec, so the parent is the whole test.
+  if [[ -s "$AWAKE_PIDFILE" ]]; then
+    local had; had=$(cat "$AWAKE_PIDFILE" 2>/dev/null)
+    if is_a_live_hold "$had" && [[ "$(ps -o ppid= -p "$had" 2>/dev/null | tr -d ' ')" == "$$" ]]; then
+      AWAKE="$had"; return 0
+    fi
+  fi
+  caffeinate -d -i -w $$ &
+  AWAKE=$!
+  echo "$AWAKE" > "$AWAKE_PIDFILE"
+  return 0
+}
+
+release_awake() {
+  (( RELOADING )) && return 0
+  local pid="$AWAKE"
+  AWAKE=""
+  rm -f "$AWAKE_PIDFILE"
+  is_a_live_hold "$pid" || return 0
+  kill "$pid" 2>/dev/null
+  return 0
+}
+
+# Say what the hold bought, in the one place where the honest version matters.
+# A hold stops the NEXT lock and does nothing whatever to a lock already in
+# place, so a loop starting on a locked screen must not read as having fixed it.
+say_about_the_hold() {
+  if [[ -z "$AWAKE" ]]; then
+    echo "[go-loop] no caffeinate on this machine, so nothing here stops the screen locking while the loop works." | tee -a "$LOG"
+    Q event loop_awake "{\"held\":false,\"why\":\"no caffeinate\"}"
+    return 0
+  fi
+  if screen_locked; then
+    echo "[go-loop] holding the Mac awake for as long as this loop runs (caffeinate pid $AWAKE). The screen is ALREADY LOCKED and this does not unlock it: only a person logging in can. It stops the NEXT lock, so once somebody does, the screen stays up." | tee -a "$LOG"
+    Q event loop_awake "{\"held\":true,\"pid\":$AWAKE,\"screenLocked\":true}"
+  else
+    echo "[go-loop] holding the Mac awake for as long as this loop runs (caffeinate pid $AWAKE), gaps between sweeps included." | tee -a "$LOG"
+    Q event loop_awake "{\"held\":true,\"pid\":$AWAKE,\"screenLocked\":false}"
+  fi
+}
+
 # The full walk sweep, run BETWEEN tasks. A runner cannot run it: the set is
 # about 530 walks and about 100 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
@@ -282,7 +387,7 @@ sweep_pass() {
   full=$(queue/bin/sweep-size.mjs --minutes 2>/dev/null || echo 105)
   part=$(queue/bin/sweep-size.mjs --partial-minutes 2>/dev/null || echo 55)
   what="the full walk sweep (about $full minutes)"
-  if ioreg -n Root -d1 -a 2>/dev/null | grep -A1 CGSSessionScreenIsLocked | grep -q "<true/>"; then
+  if screen_locked; then
     what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
   fi
   echo "[go-loop] $(date +%T) walk sweep requested; running $what before the next task" | tee -a "$LOG"
@@ -338,6 +443,11 @@ reload_if_changed() {
   Q event loop_reloaded "{\"from\":\"${LOOP_SCRIPT_HASH:0:12}\",\"to\":\"${fresh:0:12}\"}"
   Q busy "restarting onto the updated loop script"
   export PHOTONZ_LOOP_ITERS=$ITERS
+  # The hold on the Mac rides across untouched: caffeinate is watching this pid,
+  # and exec keeps it. RELOADING stops the EXIT trap putting it down on the way
+  # out, and the copy we exec onto adopts it from the pidfile rather than
+  # stacking a second one.
+  RELOADING=1
   exec "$SCRIPT"
 }
 
@@ -363,6 +473,7 @@ if [[ "$OWNER" != "no" && "$OWNER" != "$$" ]] && ps -o command= -p "$OWNER" 2>/d
 fi
 
 cleanup() {
+  release_awake
   Q stopped
   banner "**Go loop stopped**"
   state idle
@@ -370,10 +481,19 @@ cleanup() {
   exit 0
 }
 trap cleanup INT TERM
+# ...and for every other way this process can end, including one nobody wrote a
+# handler for. release_awake is idempotent, so cleanup calling it first and this
+# firing on the exit underneath costs nothing.
+trap release_awake EXIT
 title "photonz: go-loop"
+
+# Take the hold now, before the first pass: the gaps this exists to cover start
+# at startup, not at the first sweep.
+hold_awake
 
 echo "[go-loop] started pid=$$ repo=$REPO queue=$QDIR model=$RUNNER_MODEL effort=$RUNNER_EFFORT" | tee -a "$LOG"
 Q event loop_started "{\"pid\":$$}"
+say_about_the_hold
 # Tell the queue which copy of this script is running. The dashboard hashes the
 # file itself and says plainly when the loop is on an older one, which covers
 # the window this reload check cannot: the twenty minutes the loop spends

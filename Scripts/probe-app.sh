@@ -159,7 +159,23 @@ while IFS='=' read -r key value; do
 done < <(swift Scripts/permcheck.swift 2>/dev/null || true)
 
 TERM_APP="$(terminal_app)"
+
+# Is the go loop holding this Mac awake? It takes that hold for as long as it is
+# working (queue/bin/go-loop.sh), so a walk running under the loop is normally on
+# a Mac that will not lock itself part way through. It goes on this line because
+# the honest version of it is the part that matters: a hold stops the NEXT lock
+# and does nothing at all to a lock already in place.
+HELD_AWAKE=no
+AWAKE_PIDFILE="${PHOTONZ_LOOP_AWAKE_PIDFILE:-queue/.loop-awake.pid}"
+if [[ -s "$AWAKE_PIDFILE" ]]; then
+  HELD_PID="$(cat "$AWAKE_PIDFILE" 2>/dev/null || true)"
+  if [[ -n "$HELD_PID" ]] && ps -o command= -p "$HELD_PID" 2>/dev/null | grep -q caffeinate; then
+    HELD_AWAKE=yes
+  fi
+fi
+
 LINE="==> Grants: probe Screen Recording $SCREEN · $TERM_APP Accessibility $AX · screen $LOCKED"
+if [[ "$HELD_AWAKE" == yes ]]; then LINE="$LINE · the loop is holding this Mac awake"; fi
 if [[ "$AUTOMATION" != "unknown" ]]; then LINE="$LINE · Automation $AUTOMATION"; fi
 echo "$LINE"
 
@@ -173,6 +189,11 @@ if [[ "$LOCKED" == "locked" ]]; then
   echo "    a lock). A walk that does look one up is refused, because a name comes back empty"
   echo "    now and its failures would be about the lock rather than about the app."
   echo "    Which steps are which: Sources/PhotonzCore/PlaytestLockSafety.swift"
+  if [[ "$HELD_AWAKE" == yes ]]; then
+    echo "    The loop holding this Mac awake does NOT undo this lock and never will: it stops"
+    echo "    the NEXT one. Only a person logging in clears this, and until somebody does, every"
+    echo "    run here is a run on a locked screen."
+  fi
 fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"

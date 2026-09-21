@@ -116,8 +116,25 @@ awake_seconds() {
 # left behind by one forced stop. So the pid is written where the caller asked
 # for it, and whoever forced the stop puts it down by pid rather than reaching
 # for pkill, which would also kill a caffeinate the user started themselves.
+#
+# The go loop holds the Mac awake for as long as IT is working, gaps between
+# sweeps included (queue/bin/go-loop.sh), and it says where by exporting
+# PHOTONZ_LOOP_AWAKE_PIDFILE. When that hold is already live there is nothing a
+# second one buys: assertions do not stack into a stronger hold, and two of them
+# is two things to put down and one of them to get wrong. So defer to it, and
+# leave no pidfile of our own, which is exactly what tells whoever stops this
+# run (sweep.sh stop_the_run, sweep-recover.mjs) that there is no hold of ours
+# to release. Neither of them ever touches the loop's, and the loop's is
+# released by the loop's own pid going away, so it cannot outlive the loop.
 hold_awake() {
   command -v caffeinate >/dev/null 2>&1 || return 0
+  if [[ -s "${PHOTONZ_LOOP_AWAKE_PIDFILE:-/nonexistent}" ]]; then
+    HELD_BY=$(cat "${PHOTONZ_LOOP_AWAKE_PIDFILE}" 2>/dev/null)
+    if [[ -n "$HELD_BY" ]] && ps -o command= -p "$HELD_BY" 2>/dev/null | grep -q caffeinate; then
+      echo "==> The go loop is already holding this Mac awake (pid $HELD_BY), so this run does not take a second hold."
+      return 0
+    fi
+  fi
   caffeinate -d -i -t "$(awake_seconds)" &
   AWAKE=$!
   [[ -n "${PHOTONZ_WALK_AWAKE_PIDFILE:-}" ]] && echo "$AWAKE" > "$PHOTONZ_WALK_AWAKE_PIDFILE"

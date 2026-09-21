@@ -1,0 +1,25 @@
+{
+  "feature": "The loop holds the Mac awake while it works",
+  "epic": "unmanned-loop",
+  "summary": "The go loop now keeps your Mac from locking itself for the whole time it is working, not just for the forty to a hundred minutes a walk sweep is running. It says so when it starts, it says so on the line every app launch prints, and it lets go the moment it stops.",
+  "setup": "A terminal in the repo. Nothing to install and nothing to grant. Nothing here can unlock a Mac that is already locked: this one has been locked since 2026-09-20 11:03 local and stays that way until you log in.",
+  "try": [
+    { "do": "Read the go loop's first lines in its window. It now says \"holding the Mac awake for as long as this loop runs\" with the pid it is holding with." },
+    { "do": "Run: pmset -g assertions | grep caffeinate. One hold, owned by that pid, named PreventUserIdleDisplaySleep." },
+    { "do": "Run: Scripts/probe-app.sh --no-build. The Grants line now ends with \"· the loop is holding this Mac awake\".", "shot": "2026-09-21-loop-awake-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Leave it alone for five minutes, with no sweep and no task running, and run the pmset line again. Same pid, still one hold. This is the gap that used to let the Mac lock." },
+    { "do": "Stop the loop with ctrl-c, wait for it to say stopped, then run: pgrep -x caffeinate. Nothing." },
+    { "do": "Run: queue/bin/awake-drill.sh. Twenty checks, including that a killed loop still releases its hold and that a hold you started by hand is never touched." }
+  ],
+  "evaluate": [
+    "The screen is already locked and the hold cannot change that. Does the Grants line make that clear enough, or does it still read as though the hold should have stopped this lock?",
+    "Is one line when the loop starts enough for you to know the Mac is being held, or do you want the dashboard to say it too?",
+    "The hold keeps the DISPLAY awake, because the lock hangs off the screen saver and there is no way to stop one without the other. Is a lit screen all night the right trade for a full walk sweep every time?",
+    "When you are sitting at the Mac using something else, the loop's hold is still on. Is that invisible to you, or is it stopping your display sleeping when you want it to?"
+  ],
+  "rough": [
+    "This does not fix today. The Mac locked on 2026-09-20 at 11:03 local and only a person logging in clears that, so every sweep and every audit until you do still carries the locked-screen caveat and still leaves 163 of 544 walks unrun.",
+    "The dashboard says nothing about the hold. Only the loop's own window and the probe's Grants line do.",
+    "A SIGTERM to the loop can take up to a minute to be noticed, because the loop is inside its idle sleep when it arrives. That is how it already behaved; the hold is not affected either way, since it is released by the loop's pid going away rather than by a handler."
+  ]
+}

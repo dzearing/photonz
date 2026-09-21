@@ -26,3 +26,8 @@ Scripts/playtest/out/
 # which queue/bin/leftovers.mjs compares against when that runner ends. It is
 # scratch for one task, not queue state (the records beside it ARE committed).
 queue/leftovers/.before.json
+
+# The pid of the caffeinate holding this Mac awake while the loop works. It is
+# one machine's live process, not queue state: committed, it would send a dead
+# pid to every other checkout, and a hold is a thing you put down BY PID.
+queue/.loop-awake.pid

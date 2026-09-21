@@ -18618,3 +18618,57 @@ playback clock paused.
 
 Walk: `trim-is-a-tool-walk`, eight stages, six real pictures. Audit:
 `queue/audits/2026-09-20-trim-is-a-tool.json`.
+
+## 2026-09-21 — The loop holds the Mac awake for as long as it is working
+
+The user answered a card on 2026-09-20 asking whether the loop should stop their
+Mac locking itself while it works, and chose to keep it awake. Nothing was
+built. Thirty one minutes later the Mac locked itself, and it has been locked
+since: 163 of 544 walks refused on every sweep, and a caveat on every picture in
+every audit they were asked to read.
+
+What existed was narrower than the question. `Scripts/playtest-all.sh` held the
+Mac for the length of ONE SWEEP and let go on its way out. The loop spends most
+of its life outside a sweep, and the recorded gaps on the day it locked were
+thirty to seventy minutes.
+
+**What landed.** The hold belongs to the loop now. `queue/bin/go-loop.sh` takes
+one `caffeinate -d -i -w $$` when it starts and holds it until it stops.
+
+- `-d -i` is the display-and-idle assertion, which is what the screen saver and
+  the lock behind it hang off. Never `-u`: that posts user activity and would
+  light a display somebody has already put to sleep.
+- `-w $$` is what makes it safe to hold for days. The assertion goes when the
+  loop's pid goes, whatever ended it, so a SIGKILL that runs no trap at all
+  still releases it. That is the opposite trade from the sweep's hold, which has
+  to outlive a SIGKILL to its parent and bounds itself with `-t` instead.
+- A reload (`exec` onto an edited copy, same pid) keeps the same hold: the new
+  copy adopts it from `queue/.loop-awake.pid` rather than stacking a second.
+- `Scripts/playtest-all.sh` defers when the loop's hold is already live, and
+  leaves no pidfile, which is what tells `sweep.sh stop_the_run` and
+  `sweep-recover.mjs` there is no hold of theirs to release. Neither of them
+  ever reaches for the loop's, and nothing anywhere pkills a caffeinate: a hold
+  the user started by hand looks exactly like ours to a pattern.
+- `Scripts/probe-app.sh` says it on the `Grants:` line
+  (`· the loop is holding this Mac awake`), and under a locked screen says in
+  three lines that the hold stops the NEXT lock and cannot undo this one.
+
+**It does not unlock anything, and says so.** A loop starting on a locked screen
+prints that the screen is ALREADY LOCKED, that only a person logging in clears
+it, and what the hold does buy.
+
+**Proved.** `queue/bin/awake-drill.sh`, 20 checks, all green: the assertion is
+real and is the right one, a reload adopts rather than stacks, a clean stop
+leaves nothing, a SIGKILLed loop still releases, a sweep defers, a hand-started
+hold is untouched. Live: a real loop across three idle gaps held the same pid
+continuously for 175s and released on stop, with the pidfile gone; a real loop
+SIGKILLed released its hold in under a second; a real loop reloaded onto an
+edited copy kept one hold with the same pid, and released it on TERM.
+`redline-walk` still passes with 14 real window captures, so the Grants change
+did not disturb the launch path. Audit:
+`queue/audits/2026-09-21-loop-awake.json`.
+
+**Next.** Nothing here helps until somebody logs in at that Mac. The full sweep
+stays pending and the large task about making a walk answer the same way locked
+or not (`a-hundred-and-fifteen-walks-fail-on-code-that-pa`) is still the other
+half of this.

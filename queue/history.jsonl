@@ -5938,3 +5938,10 @@
 {"t":"2026-09-21T13:31:09.075Z","ev":"task_resequenced","id":"a-shape-that-was-turned-into-a-picture-and-undon","from":3030,"to":230}
 {"t":"2026-09-21T13:31:14.764Z","ev":"triage","summary":"merged 0 (nine search phrasings found no twins), filed 4 (video export of a document, hold the Mac awake, timeline zoom, a dropped sound or video), split 1 out of the walks-under-a-lock task, reset 0, folded 7 findings into 6 existing tasks, resequenced 32 open tasks to clean steps of 10. Open 31 -> 35: p1 7 -> 9, p2 21 -> 23, p3 3 -> 3, p0 0 -> 0. Every open task carries an epic, a plain-language goal and at least three acceptance items."}
 {"t":"2026-09-21T13:31:54.777Z","ev":"digest","file":"2026-09-21.md"}
+{"t":"2026-09-21T13:32:09.083Z","ev":"task_started","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i","title":"The loop holds the Mac awake the whole time it is working","priority":"p1-high"}
+{"t":"2026-09-21T13:44:27.296Z","ev":"task_walks","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i","walks":[]}
+{"t":"2026-09-21T13:44:27.350Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
+{"t":"2026-09-21T13:44:27.403Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
+{"t":"2026-09-21T13:46:34.524Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
+{"t":"2026-09-21T13:46:34.572Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
+{"t":"2026-09-21T13:46:34.621Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}

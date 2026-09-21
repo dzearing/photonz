@@ -72,9 +72,17 @@ never allowed to read as the state of the walk set, and the request for a full
 sweep stays pending until the screen is unlocked. While the screen stays locked
 the loop runs that partial at most once per commit, so it does not spend forty
 minutes between every pair of tasks re-checking code it has already covered. Every launch
-prints the state on its `Grants:` line (`· screen locked`). Nothing tries to
-unlock the Mac; a run that starts unlocked is held awake for its length so it
-cannot be locked out half way.
+prints the state on its `Grants:` line (`· screen locked`).
+
+Nothing tries to unlock the Mac, and nothing can: a Mac already locked stays
+locked until a person logs in. What the loop does do is stop the NEXT lock. It
+takes one power assertion when it starts and holds it until it stops, gaps
+between sweeps included, so a Mac that is unlocked when the loop starts is still
+unlocked in the morning. The `Grants:` line says when that hold is on
+(`· the loop is holding this Mac awake`). Until 2026-09-21 only a sweep held it,
+for the length of that sweep, and the Mac locked itself in a gap between two of
+them and cost 163 of 544 walks on every sweep afterwards. See
+`queue/bin/go-loop.sh` (hold_awake) and `queue/bin/awake-drill.sh`.
 
 This is not theoretical. The Mac locked at 2026-09-14 20:46:47 and the sweep at
 00:09 reported 115 of 400 walks broken, including all 31 tutorial walks, on
