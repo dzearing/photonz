@@ -4,12 +4,12 @@
   "goal": "The video design study settled how a video document looks in this app, and the fourteen video clickthrough pages still draw the old answer: no layers list in the dock, and a clip whose start and end are typed into a grid of number boxes. Anyone opening those pages reads a design the study says is wrong. Bring the pages into line so the study and the pages say one thing.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 3050,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:52:52.142Z",
-  "updated": "2026-09-20T17:52:52.145Z",
+  "updated": "2026-09-21T13:31:08.158Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the video design pass on 2026-09-20. Evidence, run from the repo root:\n\n  $ for f in docs/design/mocks/pages/video*.html; do echo \"$(grep -c 'ttl\">Layers' $f) $(basename $f)\"; done\n  0 video-audio.html\n  0 video-captions.html\n  0 video-compositing.html\n  0 video-cut-wt.html\n  0 video-entry-wt.html\n  0 video-freeze-wt.html\n  0 video-motion.html\n  0 video-move-wt.html\n  4 video-shell.html\n  0 video-speed.html\n  0 video-title-wt.html\n  0 video-transition-wt.html\n  0 video-transitions.html\n  0 video-zoom-wt.html\n  0 video.html\n\nOnly video-shell draws it. video-entry-wt.html line 148 still carries the comment \"no Layers group here: the timeline below IS the layer list\" and line 342 still tells the reader \"there is no separate Layers panel to manage\", which is exactly what UX-PATTERNS D18 now forbids.\n\nThe 2026-09-19 pass corrected video.html's caption (it says out loud that removing Layers was wrong) and renamed rows on fifteen pages, but putting the GROUP back is a change to fourteen laid-out docks and the scripts that drive them, so it was left. video-surface.md §7 now says so rather than claiming it was done.\n\nSecond half, same pages: video-entry-wt.html lines 156-166 draw the Clip section as a four box grid (In, Out, Speed, Vol) with an explaining paragraph under it. video-surface.md §2 settles that time is never a number in the panel (in, out, duration and speed are dragged on the strip, and an exact number opens the way Position and Size opens, which is worth 130 points every time), and §5 settles that a section needing a paragraph inside it is misnamed. The settled Clip section is Reads, Volume, Speed as three rows. Careful with the walkthrough script: step data-set writes #pOut, so removing that field without touching the step breaks the walk.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-20T17:52:52.144Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:31:08.157Z",
+      "note": "seq 3050 -> 40"
     }
   ]
 }

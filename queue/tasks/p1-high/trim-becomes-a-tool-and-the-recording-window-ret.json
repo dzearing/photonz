@@ -4,12 +4,12 @@
   "goal": "A recording now opens in the ordinary editor, but only if you switch it on, because the small video window is still the only place you can trim, crop, save or export one. Finish the move: make trimming a tool you pick in the editor, give the editor the save, the export and the revert the old window had, and then take the old window away so there is one way to open a recording and not two.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 21,
+  "seq": 20,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-20T21:13:42.198Z",
+  "updated": "2026-09-21T13:31:04.076Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SPLIT OUT of a-document-can-have-time on 2026-09-20, by the runner that built the first half. Read docs/design/video.md 7 before anything else: it says exactly what is still standing and why.\n\nWHAT LANDED, so this task does not rebuild it. PhotonzCore gained MovieRef and Layer.movie (MovieClip.swift): which recording a layer plays, an id plus a picture size plus a length, no pixels and no path. PhotonzDocument.recording(_:name:cutList:) opens a recording as an ordinary document with one clip layer. drawn(atTimeMS:) swaps each clip's ImageRef for the frame at that moment, so DocumentRenderer draws video without one line of change. App side: MovieLibrary (id to URL), MovieDecoder (an actor owning the AVAssetImageGenerators) and MovieFrameFetcher (decode, file in ImageStore, 16 frame budget) in MovieFrames.swift; EditorState+Time.swift holds the playhead, play, pause, step and scrub; the transport and the draggable playhead are in MotionStripView.swift. Window routing is in PhotonzApp.EditorRootView, gated on Experiments.shared.recordingIsADocument.\n\nWHY THE FLAG IS OFF. Trim, crop, save, export and Revert to Original all live in VideoEditorState and none of them work on the document path. Turning it on today would take them away from anybody who opened a recording. So the flag is off, the old window is still the default, and this task is what turns it on.\n\nWHAT TRIM IS, already settled and drawn: docs/design/video-surface.md 10, UX-PATTERNS D20, pages/video-shell.html block 05, pages/comp-video.html 08. Crop and Trim become a ToolGroup so no slot moves; the letter c belongs to the FAMILY (ToolGroup.tools(answeringTo:)) rather than to either tool, which means Tool.crop.shortcutKey becomes nil and anything printing Crop's key reads it off the family. The family's ring is filtered to the members this document can use before it is walked, which is the one thing ToolGroup does not do today. trimBeforeSession, resetTrimSelection, commitTrim and cancelTrim are kept as they are, renamed to the tool's session.\n\nTHE WALKS drive through action ids (videoTrimDone, not a button called Done), so the ids survive the move; what does not survive is every step that opens the separate window and reads its strip. PlaytestHarness already branches openSampleRecording on the flag and adopts an EditorState when it is on, so the walks have somewhere to land.\n\nSAVE IS THE FIRST THING TO FIX, and there is a trap in it. The first build of this set had the window adopt the .mp4 as its sourceCaptureURL, which is 'Save writes the flattened picture back over the file this came from' — Command S would have replaced an eight second recording with a PNG of one frame of it. That is gone: EditorState.isRecordingDocument now makes saveAffordance report nothingToSave, which dims Save and stops the close sheet asking a question nothing can answer. The cost is that styling a clip and closing loses it silently. Two things have to be decided when this is picked up: what Save MEANS for a recording document (the recording window's Save writes the trimmed mp4 through VideoAssetCommit, and that is probably still the right answer), and whether a recording document can be written as a .photonz at all, since MovieRef deliberately carries no path and a package would reopen with a clip whose frames cannot be found.",
@@ -53,6 +53,14 @@
     {
       "t": "2026-09-20T21:13:42.197Z",
       "note": "Trim is a tool and it is shipped (commit 33e1cbc3, audit 2026-09-20-trim-is-a-tool). The rest of the task — Save, export and Revert to Original on the document path, the eleven walks rewritten, the flag on by default and the four old files deleted — all turn on one question that is now a card on the dashboard: what Command S should do to a recording you have also drawn on. Nothing else in the task can be decided without it."
+    },
+    {
+      "t": "2026-09-21T13:30:15.062Z",
+      "note": "Design review 2026-09-21, folded from the 2026-09-20-trim-is-a-tool audit so it is not lost when the card is answered: the Crop slot flyout now stacks three kinds of row in one list (the Crop/Trim family at the head, then Crop's four aspect locks, then Resize Image). UX-PATTERNS has a vocabulary for a tool family in a slot and one for a tool's options; it has no rule for a list that is both plus a command. Whoever finishes this task should either group them visibly or say in video-surface.md why one flat list is right, so the next tool that joins a slot has an answer."
+    },
+    {
+      "t": "2026-09-21T13:31:04.075Z",
+      "note": "seq 21 -> 20"
     }
   ],
   "walks": [

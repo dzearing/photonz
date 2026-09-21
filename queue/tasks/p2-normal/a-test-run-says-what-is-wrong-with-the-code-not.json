@@ -4,12 +4,12 @@
   "goal": "When somebody adds a field to a core type, the test command can report twenty tests broken and crash the runner, on code that is perfectly fine: the build folder keeps half-rebuilt pieces that disagree about the shape of the type. Make the test command notice that and rebuild rather than reporting a failure nobody can explain.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3020,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T13:05:00.303Z",
-  "updated": "2026-09-20T13:05:00.306Z",
+  "updated": "2026-09-21T13:31:08.593Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-20 while building ClipPieces. Added one optional stored property (Layer.cuts) to Sources/PhotonzCore/Layer.swift, then `Scripts/test.sh`: 20 failures in Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift plus `exited with unexpected signal code 11`. Every failure was the same shape - every run of text read as empty, so rows kept their numbered names: `(names -> [\"Text 9\", ... \"Background\"]).contains(words -> \"General\")`. The crash report (node Scripts/crash-report.mjs --file ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper-2026-09-20-054858.ips) is EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0x8 in swift_retain < outlined init with copy of Layer < openingASavedReadingLeavesNothingPending(). That is PhotonzRenderTests reading a Layer at the OLD field offsets: isARunOfText comes back false for every piece so nothing is read, and a copy retains whatever is at the wrong offset. PROVED it was the build folder and not the code, three runs: (1) with the change, `Scripts/test.sh --filter SeparatedRowsSayTheirWords` = 20 failures + signal 11; (2) same filter with the three files moved out of the tree = 11 tests passed; (3) `rm -rf .build` then the same filter with the change back in = 11 tests passed, and the full suite then passed 8509 tests in 675 suites. So swiftpm did not rebuild PhotonzRenderTests against the new layout. Why it matters here rather than being a toolchain curiosity: this is the command every runner must have green before it commits, and it spent fifteen minutes of this task looking like a real memory bug in the app. The cheap answer is probably for Scripts/test.sh to notice a signal-11 exit and retry once from a clean .build, saying which it did.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-20T13:05:00.305Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:30:11.748Z",
+      "note": "READ the-test-suite-stops-reporting-failures-that-are BEFORE diagnosing. It watched the same eleven SeparatedRowsSayTheirWords tests go red with every text read empty, but from machine LOAD rather than a stale .build: idle passes, busy fails, same tree, no signal 11. So an empty text read is not proof of this task's stale-build case; the crash inside a copy of Layer is."
+    },
+    {
+      "t": "2026-09-21T13:31:08.592Z",
+      "note": "seq 3020 -> 130"
     }
   ],
   "walks": []

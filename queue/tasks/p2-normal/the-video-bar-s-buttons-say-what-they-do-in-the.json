@@ -4,12 +4,12 @@
   "goal": "The row of buttons over the trim strip is eight unlabelled glyphs, and hovering one gives a tooltip that looks like nothing else in the app. You cannot tell what any of them does without trying it. They should read the way every other control in Photonz reads, and say what they do in the same way.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 5,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:07:21.894Z",
-  "updated": "2026-09-20T17:07:21.974Z",
+  "updated": "2026-09-21T13:31:08.014Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-20 with a screenshot of the trim bar, hovering the scissors: \"tooltips don't look like any other tooltip. I don't know what the buttons do.\" The tooltip in the shot reads 'Split at Playhead (B)' in a plain dark rounded box that is not the app's tooltip.\n\nThe app HAS a tooltip system and these buttons are not using it. Look at .toolTip(_:key:fallback:) which the tool bar uses (every tool shows a tooltip that names it and its key, a shipped task), and panelHelp which the panel uses. One of those is the right answer for this row; a third look is not.\n\nThe icons are the other half and are worth checking rather than assuming: eight glyphs in a row with no labels, several of which look like glyphs used for other things elsewhere in the app. There is a done task 'edit-is-one-glyph-across-the-corpus' about exactly this kind of drift, and an icon conformance epic. Check this row against the same rule.\n\nThis is a small task and it is deliberately narrow: it is about the row of buttons reading correctly, not about whether that row should exist. Where the video surface goes is the design pass's question and is blocked on a decision card.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-20T17:07:21.973Z",
       "note": "seq 3050 -> 5"
+    },
+    {
+      "t": "2026-09-21T13:31:08.013Z",
+      "note": "seq 5 -> 10"
     }
   ]
 }

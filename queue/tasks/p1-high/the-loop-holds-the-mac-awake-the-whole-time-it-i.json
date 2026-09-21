@@ -1,0 +1,33 @@
+{
+  "id": "the-loop-holds-the-mac-awake-the-whole-time-it-i",
+  "title": "The loop holds the Mac awake the whole time it is working",
+  "goal": "You answered a card on 2026-09-20 asking whether the loop should stop your Mac locking itself while it works, and you chose to keep it awake. Nothing was built, and the Mac locked itself half an hour after you answered. It has been locked ever since, which costs 163 of 544 scripted walks every sweep and puts a caveat on every picture in every audit you are asked to read. Make the loop hold the machine awake for as long as it is working, not only for the forty minutes a sweep is running.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-21T13:30:38.172Z",
+  "updated": "2026-09-21T13:31:04.026Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "VERIFIED on 2026-09-21 during the digest pass.\n\nThe answer: decision trim... no, decision id a-hundred-and-fifteen-walks-fail-on-code-that-pa-while-the-loop-is-working-throug, question \"While the loop is working through the night, should it stop your Mac locking itself?\", resolved 2026-09-20T17:32:21Z, choice awake-while-working (\"Keep it awake while the loop works\").\n\nWhat is actually built: grep caffeinate across Scripts/ and queue/bin/ finds it in exactly one place, Scripts/playtest-all.sh:121, `caffeinate -d -i -t $(awake_seconds) &`, started by hold_awake() for the length of one sweep and released by its EXIT trap. queue/bin/go-loop.sh (551 lines) has no caffeinate in it at all. So the machine is held awake for the roughly 75 minutes a sweep runs and let go in every gap between them.\n\nWhat that cost, with timestamps:\n  CGSSessionScreenLockedTime = 1789927399 = 2026-09-20 11:03:19 PDT (2026-09-20T18:03Z)\n  the card was answered at 2026-09-20T17:32:21Z, thirty-one minutes earlier\n  sweeps that day ran 12:23, 14:02, 15:46, 17:47, 18:58Z: gaps of 30 to 70 minutes, which is where it locked\n  every sweep since reports screenLocked true; the 13:27Z sweep ran 381 of 544 walks and refused 163\n  every audit written since carries the sentence \"Photographed while the Mac was locked\"\n\nSPLIT OUT of a-hundred-and-fifteen-walks-fail-on-code-that-pa on purpose. That task is the large one (make a walk answer the same way locked or not, by taking accessibility out of the walk harness step kind by step kind) and it has been open since 2026-09-15. This is the small concrete thing the user actually asked for, and burying it in the large one is why it has not happened.\n\nIt does NOT unlock the Mac and must not try. A Mac already locked stays locked until somebody logs in; this only stops the NEXT lock.",
+  "acceptance": [
+    "The go loop holds the Mac awake from the moment it starts working until it stops, covering the gaps between sweeps as well as the sweeps themselves",
+    "It never fights the sweep's own hold: one of them holds at a time and neither kills the other's, and neither kills a hold the user started by hand",
+    "Stopping the loop, or killing it, releases the hold; a check after a stop shows nothing left holding the machine awake",
+    "A run started while the screen is already locked says so plainly on the Grants line and does not pretend the hold fixed it, because nothing but a person can unlock a Mac",
+    "Proved by leaving the loop running across at least two idle gaps and reading CGSSessionScreenIsLocked before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:30:38.174Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:31:04.025Z",
+      "note": "seq 15 -> 10"
+    }
+  ]
+}

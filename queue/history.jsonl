@@ -5891,3 +5891,50 @@
 {"t":"2026-09-21T12:11:04.465Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
 {"t":"2026-09-21T12:11:04.516Z","ev":"task_note","id":"audio-you-can-separate-add-see-and-shape"}
 {"t":"2026-09-21T12:11:31.888Z","ev":"task_done","id":"audio-you-can-separate-add-see-and-shape","from":"in_progress","note":"Sound is a layer now. PhotonzCore: SoundRef, LayerContent.sound, AudioLevel (fader x points over time), AudioMixSegment, Waveform - 53 tests, written first. Detaching a clip's sound puts it on its own layer in step with the same cuts, so cutting the picture leaves the voiceover over it untouched (proved in SoundClipTests and photographed in the walk). Add Sound puts a file on the timeline and grows the document to hold it. Every layer that makes a sound draws its waveform on its bar, following its cuts, and its level is a line across that bar with a dot at every moment it is pinned: a fade and a duck are the same control. PhotonzMedia: SoundFile reads peaks in one forward pass, AudioMixdown turns the mix plan into a composition with volume ramps and writes it. App: DocumentAudioPlayer (AVAudioEngine, one mixer per layer, varispeed for a retimed piece), the Sound panel section, four rows in the Video menu. WHAT PLAYS AND WHAT EXPORTS ARE ONE FUNCTION - audioMix() - so they cannot drift; AudioMixdownTests measures the written file rather than trusting it (a duck comes out quieter, a cut reads the stretch it kept, three sounds are louder where they overlap). Verified: 8639 tests green; sound-on-the-timeline-walk passes with 8 real window captures and reports 3 pieces of sound on the engine and 3 written to a 15.75s mix.m4a; the 17 video, trim, clip and recording walks still pass with the sample recording's new sound track. Behind next-sound-on-the-timeline, on by default in Next, needs next-a-recording-is-a-document on. Design: docs/design/video-audio.md. Audit: queue/audits/2026-09-21-video-audio.json. Committed ffaa1c76, pushed. Two follow-ups filed (scrub audio, metering and clipping); a full sweep requested."}
+{"t":"2026-09-21T13:27:36.304Z","ev":"sweep_pass","walks":381,"passed":380,"failed":1,"seconds":4538,"complete":false,"total":544,"screenLocked":true,"couldNotRun":163,"partial":true}
+{"t":"2026-09-21T13:30:11.655Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-21T13:30:11.704Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-21T13:30:11.750Z","ev":"task_note","id":"a-test-run-says-what-is-wrong-with-the-code-not"}
+{"t":"2026-09-21T13:30:15.064Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-21T13:30:15.112Z","ev":"task_note","id":"a-shape-that-was-turned-into-a-picture-and-undon"}
+{"t":"2026-09-21T13:30:22.626Z","ev":"task_created","id":"an-edited-recording-comes-out-as-a-video-file","priority":"p1-high","title":"An edited recording comes out as a video file"}
+{"t":"2026-09-21T13:30:30.061Z","ev":"task_note","id":"components-on-the-timeline-animated-the-way-ever"}
+{"t":"2026-09-21T13:30:30.111Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-21T13:30:38.176Z","ev":"task_created","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i","priority":"p1-high","title":"The loop holds the Mac awake the whole time it is working"}
+{"t":"2026-09-21T13:30:41.047Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-21T13:30:46.557Z","ev":"task_created","id":"the-timeline-zooms-so-a-recording-longer-than-a","priority":"p2-normal","title":"The timeline zooms, so a recording longer than a few seconds can be cut"}
+{"t":"2026-09-21T13:30:56.162Z","ev":"task_created","id":"a-sound-or-a-video-dropped-on-the-window-lands-a","priority":"p2-normal","title":"A sound or a video dropped on the window lands as a layer, or says why not"}
+{"t":"2026-09-21T13:31:04.027Z","ev":"task_resequenced","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i","from":15,"to":10}
+{"t":"2026-09-21T13:31:04.077Z","ev":"task_resequenced","id":"trim-becomes-a-tool-and-the-recording-window-ret","from":21,"to":20}
+{"t":"2026-09-21T13:31:04.125Z","ev":"task_resequenced","id":"an-edited-recording-comes-out-as-a-video-file","from":25,"to":30}
+{"t":"2026-09-21T13:31:04.174Z","ev":"task_resequenced","id":"transitions-at-a-cut-and-effects-you-can-control","from":80,"to":40}
+{"t":"2026-09-21T13:31:04.221Z","ev":"task_resequenced","id":"components-on-the-timeline-animated-the-way-ever","from":90,"to":50}
+{"t":"2026-09-21T13:31:04.269Z","ev":"task_resequenced","id":"captions-that-write-themselves-and-titles-that-b","from":70,"to":60}
+{"t":"2026-09-21T13:31:04.316Z","ev":"task_resequenced","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":100,"to":70}
+{"t":"2026-09-21T13:31:04.369Z","ev":"task_resequenced","id":"a-copy-of-a-component-is-configured-not-authored","from":110,"to":80}
+{"t":"2026-09-21T13:31:04.419Z","ev":"task_resequenced","id":"work-out-whether-the-app-needs-project-types-at","from":120,"to":90}
+{"t":"2026-09-21T13:31:08.015Z","ev":"task_resequenced","id":"the-video-bar-s-buttons-say-what-they-do-in-the","from":5,"to":10}
+{"t":"2026-09-21T13:31:08.065Z","ev":"task_resequenced","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p","from":3070,"to":20}
+{"t":"2026-09-21T13:31:08.113Z","ev":"task_resequenced","id":"the-timeline-zooms-so-a-recording-longer-than-a","from":35,"to":30}
+{"t":"2026-09-21T13:31:08.159Z","ev":"task_resequenced","id":"the-fourteen-video-pages-still-contradict-the-vi","from":3050,"to":40}
+{"t":"2026-09-21T13:31:08.209Z","ev":"task_resequenced","id":"a-sound-or-a-video-dropped-on-the-window-lands-a","from":45,"to":50}
+{"t":"2026-09-21T13:31:08.257Z","ev":"task_resequenced","id":"hearing-the-sound-under-the-playhead-while-you-d","from":3100,"to":60}
+{"t":"2026-09-21T13:31:08.306Z","ev":"task_resequenced","id":"a-mix-says-how-loud-it-is-and-stops-itself-runni","from":3110,"to":70}
+{"t":"2026-09-21T13:31:08.355Z","ev":"task_resequenced","id":"a-recording-can-be-made-small-enough-to-send","from":10,"to":80}
+{"t":"2026-09-21T13:31:08.403Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-4","from":3090,"to":90}
+{"t":"2026-09-21T13:31:08.451Z","ev":"task_resequenced","id":"resizing-one-piece-inside-a-turned-card-moves-th","from":3040,"to":100}
+{"t":"2026-09-21T13:31:08.499Z","ev":"task_resequenced","id":"a-colour-dropped-on-a-switched-off-effect-paints","from":3080,"to":110}
+{"t":"2026-09-21T13:31:08.546Z","ev":"task_resequenced","id":"the-test-suite-stops-reporting-failures-that-are","from":3060,"to":120}
+{"t":"2026-09-21T13:31:08.594Z","ev":"task_resequenced","id":"a-test-run-says-what-is-wrong-with-the-code-not","from":3020,"to":130}
+{"t":"2026-09-21T13:31:08.643Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":60,"to":140}
+{"t":"2026-09-21T13:31:08.690Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":100,"to":150}
+{"t":"2026-09-21T13:31:08.739Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":70,"to":160}
+{"t":"2026-09-21T13:31:08.786Z","ev":"task_resequenced","id":"a-shape-you-turned-still-shows-its-points","from":20,"to":170}
+{"t":"2026-09-21T13:31:08.835Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":30,"to":180}
+{"t":"2026-09-21T13:31:08.884Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":40,"to":190}
+{"t":"2026-09-21T13:31:08.933Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":80,"to":200}
+{"t":"2026-09-21T13:31:08.979Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":90,"to":210}
+{"t":"2026-09-21T13:31:09.026Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":50,"to":220}
+{"t":"2026-09-21T13:31:09.075Z","ev":"task_resequenced","id":"a-shape-that-was-turned-into-a-picture-and-undon","from":3030,"to":230}
+{"t":"2026-09-21T13:31:14.764Z","ev":"triage","summary":"merged 0 (nine search phrasings found no twins), filed 4 (video export of a document, hold the Mac awake, timeline zoom, a dropped sound or video), split 1 out of the walks-under-a-lock task, reset 0, folded 7 findings into 6 existing tasks, resequenced 32 open tasks to clean steps of 10. Open 31 -> 35: p1 7 -> 9, p2 21 -> 23, p3 3 -> 3, p0 0 -> 0. Every open task carries an epic, a plain-language goal and at least three acceptance items."}
+{"t":"2026-09-21T13:31:54.777Z","ev":"digest","file":"2026-09-21.md"}

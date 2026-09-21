@@ -4,12 +4,12 @@
   "goal": "Every video needs words on it, and typing them out by hand while scrubbing is the worst job in editing. Have the app listen to the audio and write the captions, let them be corrected and restyled like any other text, and let a title be a text layer that happens to have a start and an end.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.757Z",
-  "updated": "2026-09-20T12:25:32.654Z",
+  "updated": "2026-09-21T13:31:04.268Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -45,6 +45,14 @@
     {
       "t": "2026-09-20T12:25:32.653Z",
       "note": "seq 50 -> 70"
+    },
+    {
+      "t": "2026-09-21T13:30:30.109Z",
+      "note": "Your acceptance item 'Captions can be burned into the picture on export' has nothing to burn into: export from a document with time does not exist yet (export reads the source recording URL plus a cut list, not the document). Filed as an-edited-recording-comes-out-as-a-video-file at p1 seq 25, ahead of this. If it has not landed when you start, build the burn-in path against it rather than against the recording exporter, and say in the audit which ways out were actually checked."
+    },
+    {
+      "t": "2026-09-21T13:31:04.267Z",
+      "note": "seq 70 -> 60"
     }
   ]
 }

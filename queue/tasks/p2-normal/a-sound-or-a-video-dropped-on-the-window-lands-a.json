@@ -1,0 +1,35 @@
+{
+  "id": "a-sound-or-a-video-dropped-on-the-window-lands-a",
+  "title": "A sound or a video dropped on the window lands as a layer, or says why not",
+  "goal": "Drag a picture onto an open document and it lands as a layer, which is the app's whole promise: everything is a layer. Drag a sound file or a video onto the same window and absolutely nothing happens. No layer, no refusal, no line under the canvas, no cursor that said no while it was in the air. Sound is a layer now and a recording is a document, so the one gesture everybody tries first should work for both, and where it genuinely cannot it has to say so out loud.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:30:56.158Z",
+  "updated": "2026-09-21T13:31:08.208Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "VERIFIED on 2026-09-21 by reading the drop path. Sources/Photonz/EditorState.swift:1070 addImageLayerOrOpen, which every canvas drop of a file URL goes through (EditorCanvasSurface.swift:150):\n\n  guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),\n        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }\n\nImageIO reads no .m4a, .mp3, .wav, .mov or .mp4, so every one of those takes the bare `return`. Not a refusal: a return. Nothing is drawn, nothing is said, nothing is logged.\n\nThat is against the rule the app already has. docs/design/mocks/shared/UX-PATTERNS.md:670 says \"A refusal speaks in the same place a yes would have, and it says WHY, and it names the one thing to do\", and :676 says a surface that refuses by going quiet is the thing the rule exists to stop.\n\nFrom the 2026-09-21-video-audio audit rough list: \"Dragging a sound file onto the window is refused: Add Sound in the Video menu is the only way in. The refusal is honest rather than silent, but it is the first thing most people will try.\" The audit was generous. Read at the code, it is silent.\n\nThe video half is worth doing in the same pass because it is the same line of code and a recording is a document now, so dropping an .mp4 on an open document is an obvious thing to try and does nothing.",
+  "acceptance": [
+    "A sound file dropped on a document that has time lands as a sound layer at the point in time you dropped it, the same layer Add Sound would have made",
+    "A video file dropped on a document that has time lands as a clip layer",
+    "Anywhere the drop genuinely cannot be taken, it is refused in words in the place a yes would have appeared, naming what to do instead, rather than returning in silence",
+    "The drag says before you let go whether it will be taken, so nobody drops into a void",
+    "Dropping a picture keeps working exactly as it does today, including into a collage and onto a component",
+    "A walk covers dropping a sound on a document with time and a sound on one without",
+    "audit written under queue/audits/, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:30:56.160Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:31:08.207Z",
+      "note": "seq 45 -> 50"
+    }
+  ]
+}

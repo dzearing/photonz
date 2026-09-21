@@ -1,0 +1,36 @@
+{
+  "id": "an-edited-recording-comes-out-as-a-video-file",
+  "title": "An edited recording comes out as a video file",
+  "goal": "You can now cut a recording into pieces, throw one away, carry them into a different order, speed one up, hold a frame, take the sound off the picture, add music and duck it under a voice. There is no way to get any of that out of the app as a video. Export writes the recording you opened, ignoring every edit above, and Export Sound writes the audio on its own. Give a document that has time a real video export, so the thing you just made is a file you can play anywhere and send to anyone.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:30:22.622Z",
+  "updated": "2026-09-21T13:31:04.124Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "VERIFIED MISSING on 2026-09-21 during the digest pass, by reading the two export paths:\n\n  Sources/Photonz/AppCoordinator.swift:456 -> VideoExporter.exportMP4(from: state.editSourceURL, to: url, cuts: state.exportCuts, crop: state.crop)\n  Sources/PhotonzMedia/VideoExporter.swift:151 -> builds an AVMutableComposition from ONE source URL plus a cut list and a crop rect\n\nSo export is a function of (source file, cuts, crop). It has no idea a document exists. Nothing in it can express a reordered piece, a held frame, a 2x piece, a detached sound layer, an added music layer with a level line on it, or an arrow drawn over the picture. Sources/PhotonzMedia/AudioMixdown.swift does build a real composition from the document's sound layers, and Export Sound writes that alone (EditorState+Audio.swift:183). That mixdown is the half that already exists; the picture half does not.\n\nThe 2026-09-21-video-audio audit says it in its own words: \"There is no video export from a document yet, so Export Sound writes the mix on its own. The composition it builds already has the volume ramps on it, so video export will pick it up unchanged when it is built.\"\n\nNOT the same as a-recording-can-be-made-small-enough-to-send, which gives the EXISTING recording export its three MP4 quality choices. That one makes the old path smaller; this one gives the new path a file at all.\n\nOVERLAPS trim-becomes-a-tool-and-the-recording-window-ret, which promises \"Save, export and Revert to Original all work on a recording opened as a document\". That task means the old window's export moved across, on a recording that is one clip; it is blocked on the Command S card and it predates cutting, pieces and sound. If the two are picked up together, this one owns the compositing and that one owns where the commands live.",
+  "acceptance": [
+    "Exporting a document that has time writes a video of what plays in the window: the pieces in the order they are in, the ones thrown away absent, speed and held frames respected, and every layer over the picture drawn in",
+    "The sound in the file is the mix you hear on space, with the level line and its points applied, and it stays in step with the picture from the first frame to the last",
+    "A recording that has not been edited at all still takes the verbatim copy fast path, so nothing that is fast today gets slower",
+    "The export says how far along it is and can be cancelled, and cancelling leaves no half-written file behind",
+    "The format and quality choices are the ones the recording export sheet already offers, not a second set invented here",
+    "A document with no duration is unaffected: picture export works exactly as it does today",
+    "audit written under queue/audits/, with the exported file described by what it looks and sounds like",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:30:22.624Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:31:04.123Z",
+      "note": "seq 25 -> 30"
+    }
+  ]
+}

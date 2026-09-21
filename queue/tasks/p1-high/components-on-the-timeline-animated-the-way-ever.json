@@ -4,12 +4,12 @@
   "goal": "The thing that would make this better than other video editors is that what you draw and what you edit are the same document. A component you built, an icon you drew, a title you styled: put any of them on the timeline, give it a start and an end, and animate it with the same moves you animate anything else with.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 90,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:43.070Z",
-  "updated": "2026-09-20T12:25:32.748Z",
+  "updated": "2026-09-21T13:31:04.220Z",
   "deps": [
     "a-document-can-have-time",
     "transitions-at-a-cut-and-effects-you-can-control"
@@ -46,6 +46,14 @@
     {
       "t": "2026-09-20T12:25:32.747Z",
       "note": "seq 70 -> 90"
+    },
+    {
+      "t": "2026-09-21T13:30:30.059Z",
+      "note": "Your acceptance item 'It exports correctly: what plays is what leaves, checked by comparing frames rather than assumed' cannot be met today: there is no video export from a document at all. Filed as an-edited-recording-comes-out-as-a-video-file and sequenced ahead of this task (p1 seq 25). Read it before starting; if it has not landed, say so in the audit rather than quietly dropping the frame comparison."
+    },
+    {
+      "t": "2026-09-21T13:31:04.219Z",
+      "note": "seq 90 -> 50"
     }
   ]
 }

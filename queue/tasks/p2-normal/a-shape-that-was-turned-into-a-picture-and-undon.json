@@ -4,12 +4,12 @@
   "goal": "Turn a rectangle into a picture, take a piece out of it with a marquee, then undo twice. The rectangle is a shape again on screen, but drawing a marquee over it and pressing Backspace now does nothing at all and says nothing: no piece comes out, and no line appears at the bottom of the canvas explaining why. A person is left pressing a key that has silently stopped answering. It should refuse out loud the way it does for any other shape.",
   "epic": "image-editing",
   "priority": "p2-normal",
-  "seq": 3030,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T14:50:47.440Z",
-  "updated": "2026-09-20T14:50:47.443Z",
+  "updated": "2026-09-21T13:31:09.074Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe built from 59289581, three times, each on a locked Mac with PHOTONZ_ALLOW_LOCKED_WALK=1 (no step in the reproduction asks accessibility for a name, so the lock is not in it).\n\nThe smallest reproduction, /tmp/undo-turn-probe2.json: blank 1200x800; rectangle tool; drag (600,160) to (900,380); select tool; escape; selectRow Rectangle; rightClick Rectangle choose \"Turn Into Picture…\"; press \"Turn Into Picture\" in the sheet; rectSelect; drag (600,160) to (700,380); delete (a piece comes out, expectNotice absent passes); escape; undo; selectRow Rectangle; rectSelect; drag (600,160) to (750,380); delete; expectNotice says \"Only a picture can have a piece taken out\".\n  -> step 34 (expectNotice): no pill is up under the canvas, so it cannot be saying \"Only a picture can have a piece taken out\"\n\nIt is not the undo alone and not the refusal in general:\n- ONE undo (turn into a picture, undo, marquee, Backspace) raises the refusal correctly: same walk without the piece removal, status ok.\n- A plain rectangle that was never turned raises it correctly: /tmp/refusal-probe-walk.json, status ok.\nSo the state is only reached by undoing the piece removal AND the turn.\n\nThe key really does nothing: rendering the document before and after that Backspace gives a pixel-identical picture (PIL ImageChops.difference bbox None), so the layer is not quietly being sliced either. RegionSliceRefusal.refusal(for:action:) is driven by RegionTarget.canSlice and layer.imageRef, so the layer is probably coming back from undo with an imageRef that still reads as a picture while nothing can be cut out of it.\n\nturn-two-shapes-into-pictures-walk is the walk that catches it, at its last expectNotice. That walk was also corrected on 2026-09-20 (it drew its second marquee with nothing picked, because the escape before it drops the selection; it now picks Rectangle 2 first). It still fails, on this.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-20T14:50:47.442Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:30:15.110Z",
+      "note": "Kept at triage 2026-09-21 even though its epic (image-editing) is staged later, under the rule that anything actually broken stays: Backspace silently stops answering, which UX-PATTERNS 'a refusal speaks in the same place a yes would have' forbids outright, and turn-two-shapes-into-pictures-walk is red on it. Sequenced last in p2 because it is the least reached of the open defects, not because it is allowed to rot."
+    },
+    {
+      "t": "2026-09-21T13:31:09.073Z",
+      "note": "seq 3030 -> 230"
     }
   ],
   "walks": [

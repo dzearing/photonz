@@ -1,0 +1,35 @@
+{
+  "id": "the-timeline-zooms-so-a-recording-longer-than-a",
+  "title": "The timeline zooms, so a recording longer than a few seconds can be cut",
+  "goal": "The timeline draws the whole document across whatever width the window happens to be. An eight second recording fits and reads fine. A five minute one, which is what a real screen recording is, becomes a bar a few hundred pixels wide where every cut is a guess and the waveform under it is a smear. Give the timeline a zoom, so you can open out the second you are working on and still see where you are in the whole thing.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:30:46.553Z",
+  "updated": "2026-09-21T13:31:08.112Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-20-a-recording-is-a-document audit rough list, word for word: \"The timeline's local bar has no zoom. An eight second recording fits the width; a five minute one would be unreadable. D8 puts timeline zoom in the timeline's own bar and it is not built.\"\n\nVERIFIED still missing on 2026-09-21: Sources/Photonz/CutStrip.swift is 148 lines and contains no zoom, no scale and no pixels-per-second; the strip is laid out against the document duration and the available width.\n\nThe design already says where it goes. docs/design/video-surface.md:111: \"Timeline zoom, blade, and what is scoped to the timeline | .tlbar, the timeline's own local bar | D8's last row. Today only video.html draws a zoom at all.\"\n\nWhy it is worth doing before more video features rather than after: the 2026-09-21-video-audio audit already has to ask \"Is the waveform legible enough to aim a cut at a word, at the width your timeline actually is?\" Every feature added to the timeline from here (captions, transitions, components with a start and an end) makes the unzoomed strip more crowded, so each one lands on a surface that is already too small to read.",
+  "acceptance": [
+    "The timeline can be zoomed in and out, and a five minute recording can be opened out far enough to put a cut on a particular word",
+    "Zooming keeps the playhead where you are looking rather than jumping you to the start",
+    "When the timeline is zoomed in you can still tell where you are in the whole document and get back out in one gesture",
+    "Waveforms and piece joins redraw at the zoomed scale rather than being stretched, so the detail you zoomed in for is actually there",
+    "The zoom control lives in the timeline's own local bar, which is where D8 and docs/design/video-surface.md put it, not in the transport",
+    "Scrubbing and cutting stay smooth at every zoom level on a five minute recording",
+    "audit written under queue/audits/, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:30:46.555Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T13:31:08.111Z",
+      "note": "seq 35 -> 30"
+    }
+  ]
+}
