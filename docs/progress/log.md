@@ -18672,3 +18672,52 @@ did not disturb the launch path. Audit:
 stays pending and the large task about making a walk answer the same way locked
 or not (`a-hundred-and-fifteen-walks-fail-on-code-that-pa`) is still the other
 half of this.
+
+## 2026-09-21 — A transition lives at the cut, and an effect can change over a shot
+
+**Shipped.** `next-transitions-at-a-cut` (on by default in Next). Every join in a
+cut clip is now something you can pick, and picking one opens Transition in the
+panel: cross dissolve, dip to black, dip to white, or a hard cut. Design doc:
+`docs/design/video-transitions.md`.
+
+**The model.** `ClipTransitions.swift`: a kind, a length, and a `ClipCut` that
+works out what a cut can afford from the spare media either side — the same
+arithmetic a trim already uses. It is written down on the piece that ARRIVES at
+the cut, because a cut has no object of its own and a piece carried elsewhere in
+the order has to take its arrival with it; it is read, drawn, selected and paid
+for as a property of the cut.
+
+**Nothing on the timeline ever moves.** An overlap is paid for with frames the
+recording already has and the clip is not playing. A cut with no spare says so
+and cannot be given a dissolve, rather than quietly getting a shorter one. A cut
+whose two sides read the same frames says a dissolve there would show nothing.
+
+**The renderer still does not know transitions exist.** `drawn(atTimeMS:)` hands
+back one more ordinary layer while a transition is running: the incoming frame
+at the ramp's opacity, or a rectangle of the dip colour. That is the same trick
+that made a clip an ordinary picture layer.
+
+**Effects over time invented nothing.** `MotionProperty.blur` joins the six that
+were there, offered only on a layer that has a blur, writing the same number the
+Effects panel's own slider writes. One real change fell out of it: a motion
+added to a layer with a stretch of time now plays ONCE. A document finishes; an
+icon repeats, and a blur that took itself back off again is not what anybody
+means by a blur coming on.
+
+**What it cost to be honest.** The model's own tests passed while the frame on
+the cut came out as the incoming shot instead of black: a rectangle's box lives
+in `annotation.start`/`end`, and a rectangle whose corners are both nought is a
+rectangle of no size. There is now a render test that asks whether the frame is
+black, and an export test that writes a real MP4 and reads its frames back, so
+"what plays is what exports" is measured rather than assumed.
+
+**Verified.** `Scripts/test.sh` green (8697 tests). New walk
+`transitions-at-a-cut-walk`, eleven real window captures. cut-on-the-timeline,
+clip, trim (12) and sound walks all still pass. `motion-pivot-in-a-corner-walk`
+fails, and it fails identically on clean main with every change stashed: folded
+into `walks-that-fail-in-the-full-sweep-4`, which already owns it. Audit:
+`queue/audits/2026-09-21-transitions-at-a-cut.json`.
+
+**Next.** Two clips in one document is what would make a cut between LAYERS
+possible; until then the cut that exists is the join between two pieces. Push,
+wipe and morph are deliberately not built, and the reasons are in the design doc.

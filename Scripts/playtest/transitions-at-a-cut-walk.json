@@ -1,0 +1,84 @@
+{
+  "out": "/tmp/photonz-playtest/transitions-at-a-cut-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-transitions-at-a-cut": true,
+      "next-motion": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-a-real-cut", "note": "two cuts and the middle thrown away, which is the commonest real edit there is. What is left is ONE clip in two pieces with a join between them, and the frames either side of that join are two seconds apart in the recording rather than next to each other. That matters: a dissolve blends the two sides, so a join whose sides read the SAME frames would blend a picture with itself and show nothing" },
+    { "do": "snapshot", "name": "1-a-join-worth-dissolving" },
+
+    { "do": "action", "action": "clipPickFirstCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-the-cut-picked", "note": "THE FIRST TEST: a cut is a thing you can PICK. One click on the join and the panel is talking about it, not about the clip and not about a piece: which piece goes out, which comes in, and how much spare media there is either side. Spare is frames the recording still has and the clip is not playing, and it is what an overlap gets paid for with. The playhead went to the cut, so the canvas is showing the frames the panel is talking about" },
+    { "do": "snapshot", "name": "2-the-cut-in-the-panel" },
+
+    { "do": "action", "action": "clipTransitionDissolve" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-a-dissolve", "note": "THE SECOND TEST: a cross dissolve, and NOTHING ON THE TIMELINE MOVED. The band is drawn OVER the join rather than wedged between the two pieces, because that is what it is: an interval where both shots are on screen. The panel says what it cost, three tenths of a second of spare from each side. The canvas is on the cut itself, so what is on screen is half of the shot going out and half of the shot coming in" },
+    { "do": "snapshot", "name": "3-a-cross-dissolve" },
+
+    { "do": "action", "action": "clipTransitionDragLonger" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-longer", "note": "the band's end dragged outwards and the dissolve is longer. Both ends move, because a transition is measured ACROSS the join and never sits to one side of it. The bill on the panel keeps up: more of the spare either side is being spent, and the clips are still exactly where they were put" },
+    { "do": "snapshot", "name": "4-dragged-longer-at-the-cut" },
+
+    { "do": "action", "action": "clipTransitionDipToBlack" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-a-dip", "note": "THE THIRD TEST, and the distinction the whole feature turns on: a dip to black needs NO overlap. The two pieces stop reaching past each other, the spare goes back in the bank, each piece fades inside the time it already had, and the frame on the cut is black. The panel swaps the bill for the sentence saying no spare media is spent" },
+    { "do": "snapshot", "name": "5-a-dip-to-black" },
+
+    { "do": "action", "action": "clipCarryLastToFront" },
+    { "do": "action", "action": "clipPickFirstCut" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-no-spare", "note": "THE FOURTH TEST: the two pieces swapped round, which leaves a cut with nothing to spend. The piece going out now ends on the recording's last frame and the piece coming in starts on its first, so there is no spare either side. Cross dissolve says NO SPARE and cannot be chosen. The app says what it cannot do instead of quietly making something shorter than was asked for. The dip went with the piece that used to arrive at the cut, and that piece is now the first one, which arrives at nothing: so this cut is hard, and the way back is to put a dip on it" },
+    { "do": "snapshot", "name": "6-a-cut-with-nothing-to-spend" },
+
+    { "do": "action", "action": "clipTransitionDipToBlack" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-a-dip-still-fits", "note": "and the dip lands on the very cut a dissolve was refused at, because a dip needs no spare media at all. That is the difference the panel has been saying in words, now shown: same cut, same frames, one behaviour affordable and the other not" },
+    { "do": "snapshot", "name": "7-a-dip-where-a-dissolve-cannot-go" },
+
+    { "do": "action", "action": "clipTransitionHardCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-hard-again", "note": "the transition taken off. An untouched cut draws nothing and takes no width on the timeline, because nothing is there" },
+    { "do": "snapshot", "name": "8-a-hard-cut-again" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "clipBlurComesOn" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "9-blur-starts", "note": "THE FIFTH TEST, and the second half of this work: an EFFECT changing over a shot. A blur was added to the clip in the Effects list, and then told to come on over a second from where the playhead is, through the very same Motion list an icon uses. There is no keyframe window and no second mechanism. At the playhead, which is where the blur starts, the picture is still sharp and the strip has a new lane under the clip's bar saying Blur" },
+    { "do": "snapshot", "name": "9-a-blur-told-to-come-on" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "10-blurred", "note": "further along the same shot, and the picture is soft. The blur came on over the second it was given and stayed where it landed, because a document FINISHES: a motion added to something with a stretch of time plays once, while the same motion on an icon goes there and back for ever. Nothing was baked into the picture; stop on any frame and the blur is worked out for that moment" },
+    { "do": "snapshot", "name": "10-the-shot-out-of-focus" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "11-undone", "note": "the blur, its motion and the hard cut taken back one press at a time. Every one of these edits is an ordinary history step, the same as every other edit in the app" },
+    { "do": "snapshot", "name": "11-undone" }
+  ]
+}

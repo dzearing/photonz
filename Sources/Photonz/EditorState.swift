@@ -696,6 +696,8 @@ final class EditorState {
                 // something else lets it go, so ⌫ can never throw away a piece
                 // of a clip nobody is looking at (`EditorState+ClipBar`).
                 if selectedClipPieceIndex != nil { selectedClipPieceIndex = nil }
+                // ...and so does a cut, for the same reason.
+                if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
                 // The chip that says what a path's points do belongs to the
                 // path that was picked; the canvas lets those points go at the
                 // same moment (`CanvasNSView.selectedLayerID`), so the line
@@ -936,12 +938,26 @@ final class EditorState {
     /// more than one (`EditorState+ClipBar`). Nil means the clip as a whole:
     /// a recording nobody has cut has no piece to pick.
     var selectedClipPieceIndex: Int?
+    /// Which CUT of the picked clip is in hand, named by the piece that arrives
+    /// at it (`EditorState+ClipTransitions`). Nil means no cut is picked, which
+    /// is every moment until somebody clicks a join.
+    ///
+    /// A cut and a piece are two different things to have picked, so picking
+    /// one lets the other go: the panel is about what is in your hand, and a
+    /// panel talking about both at once would be talking about neither.
+    var selectedClipCutIndex: Int?
+    /// The transition band under a hand: which cut, and how long it has been
+    /// dragged to. Kept out of the document so the whole drag is one step to
+    /// undo, exactly like the bar drag next door.
+    var clipTransitionDrag: ClipTransitionDragSession?
     /// The clip's bar under a hand: which edge, what it was when it was
     /// grabbed, and where it has got to. Kept out of the document so a whole
     /// drag is one step to undo, exactly like the timing drag next door.
     var clipBarDrag: ClipBarDragSession?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
+    /// ...and the one armed while a transition's band is.
+    @ObservationIgnored var clipTransitionEscapeWatch: Any?
     /// The Escape watch armed for exactly as long as a bar is in hand
     /// (`EditorState+MotionStrip`). Held here because the strip is rebuilt on
     /// every move of the drag and a watch owned by a view that comes and goes
@@ -3361,6 +3377,10 @@ final class EditorState {
         // absolute values, so the shown document having already had it applied
         // costs nothing.
         document = withDraggedClipBar(document)
+        // ...and the BAND over a cut under a hand, for the third time for the
+        // same reason: dragging a dissolve longer has to show you the dissolve
+        // it is about to be (`EditorState+ClipTransitions`).
+        document = withDraggedClipTransition(document)
         // A colour being chosen for a From or a To, before the blend below
         // reads the pair: the loop keeps running while the picker is open, so
         // the swing you are watching is painted the colour under your hand

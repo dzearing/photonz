@@ -59,12 +59,23 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// How fast it plays: 100 as recorded, 0 while a frame is held.
     public private(set) var speedPercent: Int
 
-    public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent) {
+    /// How this piece ARRIVES, which is what is on the cut before it
+    /// (`ClipTransitions.swift`).
+    ///
+    /// It lives here rather than in a list keyed by join number so that a piece
+    /// carried somewhere else in the order takes its arrival with it and
+    /// nothing has to be renumbered. Inert on the first piece, which arrives
+    /// at no cut; `ClipPieces` keeps that true.
+    public internal(set) var transitionIn: ClipTransition?
+
+    public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent,
+                transitionIn: ClipTransition? = nil) {
         self.sourceInMS = max(0, sourceInMS)
         self.lengthMS = max(Self.shortestMS, lengthMS)
         self.speedPercent = speedPercent == 0
             ? 0
             : min(max(Self.slowestPercent, speedPercent), Self.fastestPercent)
+        self.transitionIn = transitionIn
     }
 
     /// A frame held: a piece whose start and end in the recording are the same
@@ -102,9 +113,15 @@ public struct ClipPiece: Hashable, Codable, Sendable {
 
     /// Which frame of the file plays this far into the piece. The held frame,
     /// wherever you ask, while a frame is held.
-    public func sourceMS(atOffsetMS offset: Int) -> Int {
+    ///
+    /// `runningOn` lets the piece read PAST its own edges, which is what a
+    /// transition that needs an overlap spends: the outgoing piece plays on
+    /// into the frames after its out point, and the incoming one starts early
+    /// on the frames before its in point (`ClipTransitions.swift`). Nothing
+    /// about the piece changes — it is still exactly as long as it was.
+    public func sourceMS(atOffsetMS offset: Int, runningOn: Bool = false) -> Int {
         guard !isHeld else { return sourceInMS }
-        let inside = min(max(0, offset), lengthMS)
+        let inside = runningOn ? offset : min(max(0, offset), lengthMS)
         return sourceInMS + Self.scaled(inside, byPercent: speedPercent)
     }
 
@@ -116,7 +133,10 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// be too short to see or to grab.
     public func split(atOffsetMS offset: Int) -> (ClipPiece, ClipPiece)? {
         guard offset >= Self.shortestMS, lengthMS - offset >= Self.shortestMS else { return nil }
-        return (ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent),
+        // The head still arrives the way this piece did; the new join between
+        // them is a hard cut until somebody puts something on it.
+        return (ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
+                          transitionIn: transitionIn),
                 ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
                           lengthMS: lengthMS - offset, speedPercent: speedPercent))
     }
@@ -130,13 +150,14 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     public func trimmedStart(byMS delta: Int) -> ClipPiece {
         ClipPiece(sourceInMS: sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent)),
                   lengthMS: lengthMS - delta,
-                  speedPercent: speedPercent)
+                  speedPercent: speedPercent, transitionIn: transitionIn)
     }
 
     /// The same piece with its end edge moved later by `delta` (earlier, for a
     /// negative one).
     public func trimmedEnd(byMS delta: Int) -> ClipPiece {
-        ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent)
+        ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
+                  transitionIn: transitionIn)
     }
 
     /// The same stretch of recording, played at another speed.
@@ -155,7 +176,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         let speed = min(max(Self.slowestPercent, percent), Self.fastestPercent)
         return ClipPiece(sourceInMS: sourceInMS,
                          lengthMS: Self.unscaled(sourceLengthMS, byPercent: speed),
-                         speedPercent: speed)
+                         speedPercent: speed, transitionIn: transitionIn)
     }
 
     // MARK: - Two clocks, one conversion
@@ -189,7 +210,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     // MARK: - Written down
 
     private enum CodingKeys: String, CodingKey {
-        case sourceInMS, lengthMS, speedPercent
+        case sourceInMS, lengthMS, speedPercent, transitionIn
     }
 
     /// A piece playing at the speed it was recorded writes two numbers. The
@@ -199,6 +220,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         try c.encode(sourceInMS, forKey: .sourceInMS)
         try c.encode(lengthMS, forKey: .lengthMS)
         if speedPercent != Self.asRecordedPercent { try c.encode(speedPercent, forKey: .speedPercent) }
+        // ...and the fourth only where a cut has something on it, so every
+        // document written before transitions existed reads back byte for byte.
+        if let transitionIn { try c.encode(transitionIn, forKey: .transitionIn) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -206,7 +230,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         self.init(sourceInMS: try c.decode(Int.self, forKey: .sourceInMS),
                   lengthMS: try c.decode(Int.self, forKey: .lengthMS),
                   speedPercent: try c.decodeIfPresent(Int.self, forKey: .speedPercent)
-                      ?? Self.asRecordedPercent)
+                      ?? Self.asRecordedPercent,
+                  transitionIn: try c.decodeIfPresent(ClipTransition.self, forKey: .transitionIn))
     }
 }
 
@@ -272,6 +297,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
             ? [ClipPiece(sourceInMS: 0, lengthMS: ClipPiece.shortestMS)]
             : pieces
         self.sourceLengthMS = sourceLengthMS.map { max(0, $0) }
+        settleFirstArrival()
     }
 
     /// The one-piece clip a layer's stretch describes: uncut, at the speed it
@@ -387,6 +413,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let (head, tail) = pieces[index].split(atOffsetMS: moment - startMS(ofPiece: index))
         else { return false }
         pieces.replaceSubrange(index...index, with: [head, tail])
+        settleFirstArrival()
         return true
     }
 
@@ -402,6 +429,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     public mutating func remove(at index: Int) -> Bool {
         guard canRemove(at: index) else { return false }
         pieces.remove(at: index)
+        settleFirstArrival()
         return true
     }
 
@@ -416,6 +444,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard pieces.indices.contains(from), pieces.indices.contains(to), from != to
         else { return false }
         pieces.insert(pieces.remove(at: from), at: to)
+        settleFirstArrival()
         return true
     }
 
@@ -501,10 +530,12 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         let held = ClipPiece.held(atSourceMS: piece.sourceMS(atOffsetMS: offset), forMS: length)
         if let (head, tail) = piece.split(atOffsetMS: offset) {
             pieces.replaceSubrange(index...index, with: [head, held, tail])
+            settleFirstArrival()
         } else {
             // Too near an edge to cut: the hold goes at the edge it is nearest,
             // which is the cut the person was aiming at anyway.
             pieces.insert(held, at: offset * 2 < piece.lengthMS ? index : index + 1)
+            settleFirstArrival()
         }
         return true
     }
@@ -523,6 +554,23 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard retimed != piece else { return false }
         pieces[index] = retimed
         return true
+    }
+
+    /// What is on the cut a piece arrives at, written down
+    /// (`ClipTransitions.swift`). Everything that decides WHETHER it may be
+    /// written is `setTransition(_:atCut:)`; this is only the writing.
+    mutating func setTransitionIn(_ transition: ClipTransition?, ofPiece index: Int) {
+        guard pieces.indices.contains(index) else { return }
+        pieces[index].transitionIn = transition
+        settleFirstArrival()
+    }
+
+    /// **The first piece arrives at no cut**, so whatever it is carrying is
+    /// taken off it. Run after every edit that can change which piece is first:
+    /// a piece carried to the front would otherwise keep a dissolve nobody can
+    /// see, and it would reappear the moment it was carried back.
+    private mutating func settleFirstArrival() {
+        if pieces.first?.transitionIn != nil { pieces[0].transitionIn = nil }
     }
 }
 
@@ -616,6 +664,17 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func setClipSpeed(_ id: UUID, ofPiece index: Int, percent: Int) -> Bool {
         editClip(id) { pieces, _ in pieces.setSpeed(ofPiece: index, percent: percent) }
+    }
+
+    /// Put a transition on one of a clip's cuts, or take one off with nil
+    /// (`ClipTransitions.swift`).
+    ///
+    /// **Nothing moves.** An overlap is paid for with spare media, so the clip
+    /// is where it was, as long as it was, with everything after it untouched.
+    @discardableResult
+    public mutating func setClipTransition(_ id: UUID, atCut index: Int,
+                                           to transition: ClipTransition?) -> Bool {
+        editClip(id) { pieces, _ in pieces.setTransition(transition, atCut: index) }
     }
 
     /// One edit to one clip's pieces: read them, change them, write them back

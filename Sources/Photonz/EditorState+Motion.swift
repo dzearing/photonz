@@ -114,7 +114,13 @@ extension EditorState {
     /// the value it is wearing right now.
     var motionOffers: [MotionProperty.Offer] {
         guard let motionLayer else { return [] }
-        return MotionProperty.offered(for: motionLayer)
+        return MotionProperty.offered(for: motionLayer).filter {
+            // An EFFECT changing over time rides in on its own switch
+            // (`next-transitions-at-a-cut`), because it is the second half of
+            // that work: the same machinery, pointed at a property the Effects
+            // list owns rather than one the layer owns.
+            $0.property != .blur || Experiments.shared.transitionsAtACutEnabled
+        }
     }
 
     // MARK: The gestures

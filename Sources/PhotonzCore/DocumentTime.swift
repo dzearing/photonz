@@ -216,6 +216,12 @@ extension PhotonzDocument {
         // is four seconds in, never four seconds modulo something.
         let cycle = max(1, documentDurationMS)
         shown.layers = shown.layers.map { $0.movedTree(toMotionTimeMS: moment, cycleMS: cycle) }
+        // ...and a cut with a transition on it puts a second picture on screen
+        // beside the first, or a panel of colour over it
+        // (`ClipTransitions.swift`). Last, so a layer told to fade over the
+        // shot is faded and THEN dissolved, rather than the dissolve being
+        // overwritten by the fade.
+        shown.layers = shown.layers.flatMap { $0.withTransitionDrawn(atTimeMS: moment) }
         return shown
     }
 }

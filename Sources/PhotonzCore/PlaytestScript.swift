@@ -760,6 +760,32 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Let go of whichever of those is in the hand.
     case clipDragRelease
 
+    // MARK: What happens at a cut (`ClipTransitions.swift`)
+
+    /// Pick the cut in hand: the join the playhead is standing on. Fails the
+    /// walk when there is no cut to pick, so a walk cannot photograph a panel
+    /// talking about a join that is not there.
+    case clipPickCut
+    /// Pick the clip's FIRST cut, wherever the playhead happens to be. What
+    /// `clipPickCut` cannot do: reach a join the playhead is nowhere near,
+    /// which is exactly what a walk needs after it has rearranged the pieces.
+    case clipPickFirstCut
+    /// Put a cross dissolve on the cut in hand. Fails the walk when the cut
+    /// cannot pay for one, which is the whole point of the refusal: a dissolve
+    /// with no spare media either side is not quietly made shorter.
+    case clipTransitionDissolve
+    /// ...and a dip to black, which needs no spare media at all.
+    case clipTransitionDipToBlack
+    /// Take whatever is on the cut off again, leaving a hard cut.
+    case clipTransitionHardCut
+    /// Drag the band's right hand end outwards, through the real drag, so the
+    /// clamping and the readout are exercised rather than stepped around.
+    case clipTransitionDragLonger
+    /// Put a blur on the picked layer and tell it to come on over a second from
+    /// the playhead: the second half of this work, driven through the same two
+    /// calls the Effects plus and the Motion plus make.
+    case clipBlurComesOn
+
     /// Whether this action drives the TIMELINE in the ordinary editor: cutting,
     /// arranging and retiming what is on it. Answered by the editor, never by
     /// the old recording window, which has its own ids above.
@@ -771,7 +797,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .soundExpectPlaying, .soundExportMix,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
-             .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease: true
+             .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+             .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
+             .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn: true
         default: false
         }
     }

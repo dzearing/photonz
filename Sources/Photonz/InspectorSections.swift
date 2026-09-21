@@ -101,6 +101,13 @@ enum InspectorSectionID: String, CaseIterable {
     // Effects row is something the layer paints, a Motion row is something
     // about it that changes.
     case motion
+    // What happens at the CUT you have picked (Next,
+    // `next-transitions-at-a-cut`). It sits with the other things that are
+    // about what is in your hand rather than about the whole layer, and it is
+    // the only section in the panel whose subject is not a layer at all: a cut
+    // is the moment one piece stops and the next starts
+    // (`docs/design/video-transitions.md`).
+    case transition
     // How loud the picked layer plays and what shapes it (Next,
     // `next-sound-on-the-timeline`). Directly above Motion because they are the
     // same shape of thing said about two different properties: something about
@@ -143,6 +150,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .canvas: "Canvas"
         case .effects: "Effects"
         case .motion: "Motion"
+        case .transition: "Transition"
         case .sound: "Sound"
         case .shadow: "Shadow"
         case .library: "Library"

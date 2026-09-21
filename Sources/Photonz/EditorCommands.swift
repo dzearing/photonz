@@ -422,6 +422,26 @@ struct EditorCommands: Commands {
                 .disabled(editor?.clipSpeedInHand == nil)
                 Divider()
             }
+            // What happens at a CUT (`docs/design/video-transitions.md`). The
+            // menu acts on the cut in hand — the one picked, else the one the
+            // playhead is standing on — so putting a dissolve on the join you
+            // are looking at costs no aiming. Every one of these is also a
+            // click on the band in the timeline; this is the way in that can be
+            // found by reading.
+            if Experiments.shared.transitionsAtACutEnabled {
+                Menu("Transition at Cut") {
+                    Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
+                        .disabled(editor?.clipCutInHand?.transition == nil)
+                    Divider()
+                    ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
+                        Button(kind.title) { editor?.setClipTransitionInHand(kind) }
+                            .disabled(!(editor?.clipCutInHand?.canAfford(kind) ?? false))
+                    }
+                }
+                .disabled(!(editor?.canWorkWithClipTransitions ?? false)
+                          || editor?.clipCutInHand == nil)
+                Divider()
+            }
             // Sound rides the same time axis as the picture, so there is no
             // mixer window and no audio mode: these four rows are the whole of
             // it, and everything else a piece of sound needs — cut it, move it,

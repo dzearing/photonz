@@ -318,8 +318,10 @@ takes the half-written file with it.
 Each of these will push back on the model, and the model is right when they can
 be added without it changing shape.
 
-- **Transitions.** A relationship between two clips at a cut, not a filter on a
-  clip. `comp-video` §02–§04.
+- ~~**Transitions.**~~ **Built on 2026-09-21** (`video-transitions.md`), and the
+  model pushed back exactly where it was expected to: one optional field on a
+  `ClipPiece`, and `drawn(atTimeMS:)` handing back TWO layers for the moments a
+  transition is running. The renderer still does not know transitions exist.
 - ~~**Audio.**~~ **Built on 2026-09-21** (`video-audio.md`), and it pushed back
   on the model exactly as little as hoped: one computed property on `Layer`, one
   content case, two optional fields, and the strip drew it without being asked.
@@ -329,7 +331,9 @@ be added without it changing shape.
 - **Keyframes.** Already settled by the user on 2026-09-15: motion is a property
   of a layer opening into a timing surface with a lane per moving part. An icon
   animating and a clip moving are the same machinery, and the strip is already
-  that machinery.
+  that machinery. **An EFFECT changing over a shot joined that machinery on
+  2026-09-21** as one more `MotionProperty` (`video-transitions.md` §5): a blur
+  coming on over a second is a motion like any other.
 - **Trimming by dragging the end of a clip's bar OUTSIDE a trim session.** The
   bar has grips while Trim is in hand, and none the rest of the time. The quick
   nudge `video-surface.md` §10.4 describes — Select, drag the end of a clip —

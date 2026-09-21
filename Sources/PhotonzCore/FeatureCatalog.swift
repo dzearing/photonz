@@ -178,6 +178,8 @@ public enum FeatureCatalog {
 
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
 
+    public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
+
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
     public static let videoExportFlag = "next-export-the-video"
@@ -655,6 +657,16 @@ public enum FeatureCatalog {
                     name: videoExportFlag,
                     title: "An edited recording comes out as a video file",
                     description: "Everything the timeline can do to a recording could not leave the app. You can cut it into pieces, throw one away, carry them into a different order, speed a piece up, hold a frame, take the sound off the picture, put music under it and duck the music under a voice, and then Export wrote the recording you opened, ignoring every edit, while Export Sound wrote the sound on its own. With this on, Export on a document that has time writes a VIDEO of what plays in the window: the pieces in the order they are in, the ones you threw away absent, speed and held frames respected, every title, arrow and shape drawn over the picture, and the sound the mix you hear on space, level line and all, in step from the first frame to the last. The sheet offers the same three formats a recording already leaves through, MP4, GIF and HEIC, and the same size presets, because they mean the same thing whichever door they are asked for through. While it writes, a card says how far along it is and can stop it, and stopping leaves no half a file behind. A recording nobody has touched still goes out as a straight copy of its own file, so what is instant today stays instant. A document with no duration is untouched: a screenshot still leaves through the picture sheet it always did. Off means Export on a recording writes a still picture of it.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: transitionsAtACutFlag,
+                    title: "Put a transition on a cut, and change an effect over a shot",
+                    description: "A cut is hard: one shot stops and the next starts on the same frame. With this on, every join in a clip is something you can pick, and picking one opens Transition in the panel, where the cut says what it is made of and what it can afford. Cross dissolve puts both shots on screen together, which needs spare media either side of the cut to pay for; Dip to black and Dip to white need none, because each shot fades inside the time it already has and the picture goes through a colour between them. Nothing on the timeline ever moves: an overlap is paid for with frames the recording already has and the clip is not playing, and the panel says exactly how much of that spare each side is spending. A cut with no spare says so and offers the dips instead of quietly making something shorter than you asked for. The transition is drawn as a band over the join, and its length is dragged there. The same switch also lets an EFFECT change over a shot: a layer with a blur on it is offered Blur in the Motion list, so a shot can come out of focus over a second, on the same lane, the same easing curves and the same undo as everything else that moves. Off means every cut is hard and a blur is one number for the whole clip.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

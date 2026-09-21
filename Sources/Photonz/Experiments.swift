@@ -432,6 +432,11 @@ extension Experiments {
     /// (`docs/design/video-audio.md`).
     var soundOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.soundOnTheTimelineFlag) }
 
+    /// `next-transitions-at-a-cut`: whether a cut can carry a transition, and
+    /// whether an effect a layer already has can be changed over time
+    /// (`docs/design/video-transitions.md`).
+    var transitionsAtACutEnabled: Bool { isEnabled(FeatureCatalog.transitionsAtACutFlag) }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.

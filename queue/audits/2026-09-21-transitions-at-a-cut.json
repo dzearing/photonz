@@ -1,0 +1,32 @@
+{
+  "feature": "Transitions at a cut, and effects over time",
+  "epic": "video-transitions-motion",
+  "summary": "Every join in a cut recording is now something you can pick, and picking one opens Transition in the panel: a cross dissolve puts both shots on screen together and says what spare media it spent, a dip to black or white needs none, and nothing on the timeline ever moves. The same switch lets an effect a layer already has change over a shot, so a recording can come out of focus over a second through the same Motion list an icon uses.",
+  "setup": "Photonz Dev, Experiments window, release Next. Turn on \"A recording is a document\" and \"Cut a recording\"; \"Put a transition on a cut\" is on by default. Open a screen recording.",
+  "try": [
+    { "do": "Press B at about two seconds and again at about four, then press Delete to throw the middle piece away." },
+    { "do": "Click the join left behind, on the clip's bar in the timeline. The Transition section opens in the panel.", "shot": "2026-09-21-transitions-2-the-cut-in-the-panel-sc.png" },
+    { "do": "Pick Cross dissolve. Read the sentence under it saying what it cost.", "shot": "2026-09-21-transitions-3-a-cross-dissolve-sc.png" },
+    { "do": "Drag either end of the band drawn over the join to make the dissolve longer, and watch the bill keep up." },
+    { "do": "Pick Dip to black. The frame on the cut goes black and the spare goes back in the bank.", "shot": "2026-09-21-transitions-5-a-dip-to-black-sc.png" },
+    { "do": "Drag the second piece to the front of the order, then pick the join again: Cross dissolve now says no spare, and the dips are still there.", "shot": "2026-09-21-transitions-6-a-cut-with-nothing-to-spend-sc.png" },
+    { "do": "Add a Blur in the Effects list, then add Blur in the Motion list, and drag its lane to where you want the shot to go soft.", "shot": "2026-09-21-transitions-10-the-shot-out-of-focus-sc.png" },
+    { "do": "Export the video and scrub the file: the dissolve, the dip and the blur are all in it." }
+  ],
+  "evaluate": [
+    "Clicking a join to pick a cut: did you find it, or did you go looking for a transition in a menu or a library shelf first?",
+    "The Transition panel names the two pieces and prints the spare either side. Is that the thing you wanted to know, or is what you wanted just \"how long\"?",
+    "The band over the join grows from both ends when you drag one. Does that read as the transition getting longer, or as the edge running away from your hand?",
+    "A cut with no spare greys out Cross dissolve and says no spare. Is that enough of an answer, or do you want to be offered the fourth way out the study raises (shorten the cut and move everything after it)?",
+    "Three behaviours: cross dissolve, dip to black, dip to white. Is anything missing that you would really use, or is the shelf of six in the study the wrong shape?",
+    "A blur over a shot is authored in the Motion list, in document time. Does that feel like the same thing as animating an icon, which is what it is?"
+  ],
+  "rough": [
+    "Carrying a piece to the FRONT of the order silently drops the transition it arrived with, because the first piece arrives at no cut. That is the honest answer to \"where should it go\" and it is still a thing disappearing without a word.",
+    "A cross dissolve at a plain split blends a picture with itself and shows nothing. The panel says so in orange before you choose, but the choice is still offered rather than being unavailable, because the two sides being identical is not the same as the cut being unable to afford it.",
+    "The value readings in the dock's video sections (the cut's timecode, and Sound's level in decibels) sit hard against the right edge of the panel. Sound does it too, so it is the dock rather than this work, but it is visible in every picture here.",
+    "The study's push, wipe and morph are not built, and neither is the default transition or apply-to-every-cut. The reasons are in docs/design/video-transitions.md section 6.",
+    "The length is dragged or pulled on a slider; there is no number to type. A number field is one line when somebody asks for it.",
+    "Blur is the only effect that can change over time. A glow or a shadow doing the same is one enum case each."
+  ]
+}

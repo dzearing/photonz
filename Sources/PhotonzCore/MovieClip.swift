@@ -151,9 +151,17 @@ extension Layer {
     /// this only turns the answer into a moment of the file, rounded to the
     /// grid a frame is actually fetched on.
     public func movieFrameSourceMS(atTimeMS ms: Int) -> Int? {
-        guard let movie, let time, time.contains(ms: ms), let pieces = clipPieces else { return nil }
-        guard let source = pieces.sourceMS(atMS: ms - time.inMS) else { return nil }
-        return movie.frameSourceMS(atSourceMS: source)
+        guard let movie, let moment = clipMoment(atTimeMS: ms) else { return nil }
+        return movie.frameSourceMS(atSourceMS: moment.sourceMS)
+    }
+
+    /// The frame coming IN over this one, while a transition that needs an
+    /// overlap is running at this moment. Nil the rest of the time, which is
+    /// nearly always (`ClipTransitions.swift`).
+    public func incomingMovieFrameSourceMS(atTimeMS ms: Int) -> Int? {
+        guard let movie, let moment = clipMoment(atTimeMS: ms),
+              let incoming = moment.incomingSourceMS else { return nil }
+        return movie.frameSourceMS(atSourceMS: incoming)
     }
 
     /// The frame this clip needs fetched to be drawn at a moment, or nil where
@@ -163,6 +171,17 @@ extension Layer {
         guard isVisible, let movie, let sourceMS = movieFrameSourceMS(atTimeMS: ms) else { return nil }
         return MovieFrameRequest(layerID: id, movie: movie, sourceMS: sourceMS,
                                  ref: movie.frameRef(atSourceMS: sourceMS))
+    }
+
+    /// Every frame this clip needs at a moment: one ordinarily, and two while a
+    /// dissolve is running, because both shots are on screen then and a picture
+    /// nobody fetched is a picture nobody draws.
+    public func movieFrameRequests(atTimeMS ms: Int) -> [MovieFrameRequest] {
+        guard let first = movieFrameRequest(atTimeMS: ms) else { return [] }
+        guard let movie, let incoming = incomingMovieFrameSourceMS(atTimeMS: ms) else { return [first] }
+        return [first, MovieFrameRequest(layerID: Layer.transitionPartnerID(of: id), movie: movie,
+                                         sourceMS: incoming,
+                                         ref: movie.frameRef(atSourceMS: incoming))]
     }
 
     /// This clip showing the frame at a moment: the same layer, with the
@@ -215,7 +234,7 @@ extension PhotonzDocument {
     public func movieFrames(atTimeMS ms: Int) -> [MovieFrameRequest] {
         guard hasTime else { return [] }
         let moment = min(max(0, ms), lastDrawableTimeMS)
-        return allLayers.compactMap { $0.movieFrameRequest(atTimeMS: moment) }
+        return allLayers.flatMap { $0.movieFrameRequests(atTimeMS: moment) }
     }
 
     /// Whether anything in this document plays a recording.

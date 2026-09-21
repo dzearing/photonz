@@ -81,7 +81,10 @@ let package = Package(
         ),
         .testTarget(
             name: "PhotonzMediaTests",
-            dependencies: ["PhotonzMedia"]
+            // ...and the renderer, because the one claim a video export has to
+            // make is that the frame on disk is the frame the canvas draws, and
+            // the only way to check it is to draw one and then write it.
+            dependencies: ["PhotonzMedia", "PhotonzRender"]
         ),
     ]
 )

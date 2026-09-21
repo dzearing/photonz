@@ -2468,6 +2468,83 @@ private final class Run {
                     throw Failure(description: "nothing is being dragged to let go of")
                 }
                 editor.commitClipBarDrag()
+
+            // What happens at a cut (`EditorState+ClipTransitions`). Each one
+            // refuses out loud, because the refusals ARE the feature: a cut
+            // that cannot pay for a dissolve says so rather than making a
+            // shorter one nobody asked for.
+            case .clipPickCut:
+                guard let id = editor.clipInHandID, let cut = editor.clipCutInHand else {
+                    throw Failure(description: "there is no cut near the playhead to pick; "
+                        + "cut the clip first, and stand the playhead on the join")
+                }
+                editor.selectClipCut(layerID: id, index: cut.index)
+            case .clipPickFirstCut:
+                guard let id = editor.clipInHandID, let first = editor.clipCutsInHand.first else {
+                    throw Failure(description: "this clip has no cuts at all; cut it first")
+                }
+                editor.selectClipCut(layerID: id, index: first.index)
+            case .clipTransitionDissolve, .clipTransitionDipToBlack:
+                let kind: ClipTransitionKind =
+                    action == .clipTransitionDissolve ? .dissolve : .dipToBlack
+                guard let cut = editor.clipCutInHand else {
+                    throw Failure(description: "there is no cut in hand to put a \(kind.title) on")
+                }
+                guard cut.canAfford(kind) else {
+                    throw Failure(description: "this cut cannot pay for a \(kind.title): "
+                        + ClipTransitionCopy.spare(cut))
+                }
+                editor.setClipTransitionInHand(kind)
+                guard editor.clipCutInHand?.transition?.kind == kind else {
+                    throw Failure(description: "the \(kind.title) did not land on the cut")
+                }
+            case .clipTransitionHardCut:
+                guard editor.clipCutInHand?.transition != nil else {
+                    throw Failure(description: "this cut is already hard, so there is nothing "
+                        + "to take off it")
+                }
+                editor.setClipTransitionInHand(nil)
+            case .clipTransitionDragLonger:
+                guard let id = editor.clipInHandID, let cut = editor.clipCutInHand,
+                      let was = cut.drawnTransition else {
+                    throw Failure(description: "there is no transition on the cut in hand to "
+                        + "drag longer")
+                }
+                editor.beginClipTransitionDrag(layerID: id, cutIndex: cut.index,
+                                               leadingEdge: false)
+                guard editor.clipTransitionDrag != nil else {
+                    throw Failure(description: "could not take hold of the band over the cut")
+                }
+                editor.updateClipTransitionDrag(byMS: step8)
+                editor.commitClipTransitionDrag()
+                guard let now = editor.clipCutInHand?.drawnTransition,
+                      now.lengthMS > was.lengthMS else {
+                    throw Failure(description: "the band was dragged out by \(step8) ms and the "
+                        + "transition is still \(was.lengthMS) ms; the cut's longest is "
+                        + "\(cut.longestMS(of: was.kind)) ms")
+                }
+            case .clipBlurComesOn:
+                guard let id = editor.clipInHandID else {
+                    throw Failure(description: "there is no clip to blur")
+                }
+                editor.selectLayer(id)
+                editor.addEffect(.blur)
+                guard editor.document?.layer(id: id)?.style.blurRadius ?? 0 > 0 else {
+                    throw Failure(description: "the blur did not land on the clip")
+                }
+                editor.addMotion(.blur)
+                guard let motion = (editor.document?.layer(id: id)?.motions ?? [])
+                    .first(where: { $0.property == .blur }) else {
+                    throw Failure(description: "Blur was not offered as something to change over "
+                        + "time; the switch for it is next-transitions-at-a-cut")
+                }
+                // It starts where the playhead is, so what the walk photographs
+                // next is the shot going soft rather than a blur that came and
+                // went before the first frame.
+                editor.updateMotion(id: motion.id) {
+                    $0.timing.setStart(editor.documentTimeMS)
+                    $0.timing.setDuration(1000)
+                }
             default: break
             }
             await sleep(0.35)
@@ -2477,6 +2554,11 @@ private final class Run {
                  + " (was \(before))"
                  + ", the clip is in \(pieces?.count ?? 0) piece(s)"
                  + (editor.selectedClipPieceIndex.map { ", piece \($0 + 1) picked" } ?? "")
+                 + (editor.clipCutInHand.map { cut in
+                        ", cut \(cut.index) "
+                        + (cut.drawnTransition.map {
+                               "\($0.kind.title.lowercased()) \($0.lengthMS) ms" } ?? "hard")
+                    } ?? "")
                  + ", playhead \(editor.documentTimeMS) ms",
                  state: describe())
 
@@ -3262,7 +3344,9 @@ private final class Run {
                  .clipSpeedDouble, .clipSpeedHalf,
                  .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
                  .clipCarryLastToFront, .clipSlideLater,
-                 .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease:
+                 .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+                 .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
+                 .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn:
                 break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)

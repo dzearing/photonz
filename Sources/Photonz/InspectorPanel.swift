@@ -642,6 +642,11 @@ struct InspectorPanel: View {
         if Experiments.shared.soundOnTheTimelineEnabled, editorState.soundLayerInHand != nil {
             set.insert(.sound)
         }
+        // What is on the CUT in hand (Next, `next-transitions-at-a-cut`).
+        // Present only where there is a cut to be on: a clip somebody has split
+        // at least once. A recording nobody has cut has no join, and a section
+        // about a join that is not there would be a section about nothing.
+        if editorState.canWorkWithClipTransitions { set.insert(.transition) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -1046,6 +1051,8 @@ struct InspectorPanel: View {
             }
         case .motion:
             MotionListInspector()
+        case .transition:
+            TransitionInspector()
         case .sound:
             SoundInspector()
         case .shadow:

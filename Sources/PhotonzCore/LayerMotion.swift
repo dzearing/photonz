@@ -26,6 +26,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     case color
     /// How thick the one line round it is, in document points.
     case strokeWidth
+    /// How soft the blur in its Effects list is, in document points.
+    ///
+    /// **An effect changing over a shot is this machinery pointed at a
+    /// different property, never a second one.** A blur that comes on over a
+    /// second is a motion like any other: it gets the curve list, the lane on
+    /// the strip, the From and To row, undo and the export without a line
+    /// written for it (`docs/design/video-transitions.md`).
+    case blur
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -36,6 +44,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .opacity: "Opacity"
         case .color: "Color"
         case .strokeWidth: "Stroke width"
+        case .blur: "Blur"
         }
     }
 
@@ -43,7 +52,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// how faded, then what it is painted and what its line is. Transform
     /// first, because that is what an icon animation is nearly always made of.
     public static let menuOrder: [MotionProperty] =
-        [.position, .scale, .rotation, .opacity, .color, .strokeWidth]
+        [.position, .scale, .rotation, .opacity, .color, .strokeWidth, .blur]
 
     /// How the properties NEST when more than one is on the same layer,
     /// outermost first: a fade over everything, then the move, then the turn,
@@ -58,7 +67,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// carries both, because growing something multiplies the line it is drawn
     /// with and setting that line afterwards throws the multiplication away.
     public static let nestingOrder: [MotionProperty] =
-        [.opacity, .position, .rotation, .scale, .color, .strokeWidth]
+        [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
@@ -118,6 +127,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // effect's business, not the layer's.
             guard layer.drawsItsOwnOutline else { return nil }
             return .number(Double(layer.outlineWidth))
+        case .blur:
+            // Only where there is a blur in the Effects list to change. The
+            // menu says what the layer HAS, and offering a blur to a layer
+            // with none would be offering to animate a thing that is not
+            // there.
+            guard layer.style.effects.contains(where: { $0.kind == .blur }) else { return nil }
+            return .number(Double(layer.style.blurRadius))
         }
     }
 
@@ -148,6 +164,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.scale, .number(percent)): return "\(MotionNumber.text(percent))%"
         case let (.opacity, .number(percent)): return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
+        case let (.blur, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
         case let (.color, .color(hex)): return hex
@@ -631,6 +648,13 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// start at something worth watching and get tuned from there.
     public static func starting(_ property: MotionProperty, on layer: Layer) -> LayerMotion {
         let current = property.current(of: layer)
+        // **A document finishes; an icon repeats.** A motion added to something
+        // that occupies a stretch of a timeline plays ONCE and stays where it
+        // landed, because a blur that came on over a second and then quietly
+        // took itself back off again is not what anybody meant by a blur coming
+        // on. Everything without a stretch keeps the icon's own answer, which
+        // is there and back for ever, because that is what an icon is.
+        let plays: MotionRepeat = layer.occupiesTime ? .once : .foreverThereAndBack
         switch property {
         case .rotation:
             // The swing: out one way, through where it was drawn, and back.
@@ -646,11 +670,11 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: .rotation,
                                from: .number(angle - 12), to: .number(angle + 12),
                                timing: MotionTiming(startMS: 0, durationMS: 900),
-                               curve: .easeInOutSine, pivot: .centre)
+                               curve: .easeInOutSine, repeats: plays, pivot: .centre)
         case .scale:
             return LayerMotion(property: .scale, from: .number(100), to: .number(120),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
-                               curve: .easeInOut)
+                               curve: .easeInOut, repeats: plays)
         case .opacity:
             // Fades out from wherever it is now, and a layer that is already
             // invisible fades IN instead: either way something happens.
@@ -658,7 +682,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: .opacity, from: .number(now),
                                to: .number(now > 1 ? 0 : 100),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
-                               curve: .easeInOut)
+                               curve: .easeInOut, repeats: plays)
         case .position:
             let origin = layer.frame.origin
             // Up and back by a handful of points: enough to see at icon size,
@@ -667,20 +691,30 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                                from: .point(origin),
                                to: .point(CGPoint(x: origin.x, y: origin.y - 8)),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
-                               curve: .easeInOut)
+                               curve: .easeInOut, repeats: plays)
         case .strokeWidth:
             let width = if case let .number(number) = current ?? .number(1) { number } else { 1.0 }
             return LayerMotion(property: .strokeWidth, from: .number(width),
                                to: .number((width * 2 * 10).rounded() / 10),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
-                               curve: .easeInOut)
+                               curve: .easeInOut, repeats: plays)
+        case .blur:
+            // Comes ON, from clear to the softness the layer is already
+            // wearing: that is the shot going out of focus, which is what
+            // somebody asking for a blur over time nearly always means. The
+            // other direction is one swap of two numbers away.
+            let radius = if case let .number(number) = current ?? .number(8) { number } else { 8.0 }
+            return LayerMotion(property: .blur, from: .number(0),
+                               to: .number(radius > 0 ? radius : 8),
+                               timing: MotionTiming(startMS: 0, durationMS: 1000),
+                               curve: .easeInOut, repeats: plays)
         case .color:
             // The one property whose second value nobody can guess, so it
             // starts where the layer is and waits for the colour you mean.
             let hex = if case let .color(hex) = current ?? .color("#000000") { hex } else { "#000000" }
             return LayerMotion(property: .color, from: .color(hex), to: .color(hex),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
-                               curve: .easeInOut)
+                               curve: .easeInOut, repeats: plays)
         }
     }
 }
@@ -799,6 +833,12 @@ extension MotionProperty {
             moved.style.opacity = min(max(percent / 100, 0), 1)
         case let (.color, .color(hex)):
             if let painted = Fill.filled(moved, colorHex: hex, solidRef: nil) { moved = painted }
+        case let (.blur, .number(points)):
+            // The same number the Effects panel's own slider sets, so a blur
+            // being animated and a blur being dragged are one value with one
+            // meaning. Magnified from above like the other two lengths said in
+            // points: a drawing at twice the size blurs twice as softly.
+            moved.style.blurRadius = CGFloat(max(0, points)) * grown
         case let (.strokeWidth, .number(points)):
             // Points again, and magnified for the same reason: the file writes
             // the width inside the growth, so 3pt of line on a drawing at

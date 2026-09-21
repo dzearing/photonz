@@ -74,6 +74,13 @@ struct ClipPiecesBar: View {
             ForEach(0..<pieces.count, id: \.self) { index in
                 piece(pieces, index: index, x0: x0, ruler: ruler)
             }
+            // The bands over the joins, UNDER the grips: a transition is drawn
+            // over the seam because that is what it is, an interval where both
+            // pieces are on screen, rather than a third object wedged between
+            // them (`docs/design/video-transitions.md`).
+            ForEach(shownCuts(pieces), id: \.index) { cut in
+                band(cut, x0: x0, ruler: ruler)
+            }
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
             }
@@ -271,6 +278,85 @@ struct ClipPiecesBar: View {
         return "Piece \(index + 1) of \(pieces.count). Drag it somewhere else in the order."
     }
 
+    // MARK: The band over a cut
+
+    /// The cuts worth drawing something on: the ones carrying a transition.
+    /// An untouched cut draws nothing and takes no width, because nothing is
+    /// there.
+    private func shownCuts(_ pieces: ClipPieces) -> [ClipCut] {
+        guard Experiments.shared.transitionsAtACutEnabled else { return [] }
+        return pieces.cuts.filter { $0.drawnTransition != nil }
+    }
+
+    /// One transition, drawn across its join: a band as long as the transition
+    /// is, centred on the cut, with a grip at each end to make it longer or
+    /// shorter. Both ends do the same thing, because a transition is measured
+    /// ACROSS the join and never sits to one side of it.
+    @ViewBuilder
+    private func band(_ cut: ClipCut, x0: CGFloat, ruler: MotionStripRuler) -> some View {
+        if let transition = cut.drawnTransition {
+            let width = laneWidth * ruler.fraction(ofMS: Double(transition.lengthMS))
+            let x = x0 + laneWidth * ruler.fraction(ofMS: Double(cut.atMS - transition.beforeMS))
+            let picked = editorState.selectedClipCutIndex == cut.index && isPicked
+            ZStack {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.accentColor.opacity(picked ? 0.55 : 0.35))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 3)
+                            .strokeBorder(.white.opacity(picked ? 0.9 : 0.5), lineWidth: 1)
+                    }
+                if width > 30 {
+                    Text(ClipTransitionCopy.length(transition.lengthMS))
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.95))
+                        .shadow(radius: 1)
+                }
+            }
+            .frame(width: max(3, width), height: barHeight)
+            .contentShape(Rectangle())
+            .onTapGesture { editorState.selectClipCut(layerID: layerID, index: cut.index) }
+            .overlay(alignment: .leading) { bandGrip(cut, leading: true, width: width) }
+            .overlay(alignment: .trailing) { bandGrip(cut, leading: false, width: width) }
+            .offset(x: x)
+            .playtestField(Self.bandName(layerName: layerName, cut: cut.index))
+            .panelHelp("\(transition.kind.title) over the join after piece \(cut.index). "
+                       + "Drag either end to change how long it takes.")
+        }
+    }
+
+    /// One end of a band. It goes away on a band too narrow to hold two, for
+    /// the same reason a piece's grips do: a grip you cannot help but hit is
+    /// worse than no grip at all, and the panel's own Length row is always
+    /// there.
+    @ViewBuilder
+    private func bandGrip(_ cut: ClipCut, leading: Bool, width: CGFloat) -> some View {
+        if width >= Self.smallestGrabbablePiece {
+            Rectangle()
+                .fill(.white.opacity(0.85))
+                .frame(width: 3, height: barHeight - 4)
+                .contentShape(Rectangle().inset(by: -5))
+                .gesture(bandDrag(cut, leading: leading))
+        }
+    }
+
+    private func bandDrag(_ cut: ClipCut, leading: Bool) -> some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                if editorState.clipTransitionDrag == nil {
+                    editorState.beginClipTransitionDrag(layerID: layerID, cutIndex: cut.index,
+                                                        leadingEdge: leading)
+                }
+                editorState.updateClipTransitionDrag(
+                    byMS: Self.ms(value.translation.width, laneWidth: laneWidth,
+                                  ruler: editorState.motionStripRuler))
+            }
+            .onEnded { _ in editorState.commitClipTransitionDrag() }
+    }
+
+    static func bandName(layerName: String, cut: Int) -> String {
+        "\(layerName) transition at join \(cut)"
+    }
+
     // MARK: The grips
 
     /// One grip per edge: nought is the clip's in point, and every other one
@@ -294,6 +380,14 @@ struct ClipPiecesBar: View {
                 .offset(x: x - (edge == 0 ? 0 : width))
                 .contentShape(Rectangle().inset(by: -5))
                 .gesture(edgeDrag(pieces, edge: edge, ruler: ruler))
+                // A join is a CUT, and a cut is a thing you can pick: one click
+                // and the panel is talking about what happens there. Dragging
+                // the same grip still trims, because the two gestures are told
+                // apart by whether the hand moved.
+                .onTapGesture {
+                    guard edge > 0, edge < pieces.count else { return }
+                    editorState.selectClipCut(layerID: layerID, index: edge)
+                }
                 .playtestField(Self.gripName(layerName: layerName, edge: edge, of: pieces.count))
                 .panelHelp(edge == 0
                            ? "Where the clip starts. Drag it: nothing is thrown away."
@@ -411,9 +505,18 @@ struct ClipPiecesBar: View {
                 words += ", piece \(index + 1) \(badge)"
             }
         }
+        for cut in shownCuts(pieces) {
+            guard let transition = cut.drawnTransition else { continue }
+            words += ", \(transition.kind.title.lowercased()) "
+                + "\(ClipTransitionCopy.length(transition.lengthMS)) at join \(cut.index)"
+        }
         if let readout = editorState.clipBarReadout, isBeingDragged {
             words += ", dragging \(readout)"
             if let snap = editorState.clipBarSnap { words += ", \(ClipBarCopy.caught(on: snap))" }
+        }
+        if let readout = editorState.clipTransitionReadout,
+           editorState.clipTransitionDrag?.layerID == layerID {
+            words += ", dragging the transition to \(readout)"
         }
         return words
     }
