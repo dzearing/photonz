@@ -99,7 +99,7 @@ extension EditorState {
         var rows = motionLayer?.motions ?? []
         if let drag = motionTimingDrag,
            let index = rows.firstIndex(where: { $0.id == drag.motionID }) {
-            rows[index].timing = drag.timing
+            rows[index] = rows[index].retimed(to: drag.timing)
         }
         // ...and the same for a colour still being chosen: the swatch and the
         // summary beside it show what the hand is on, not what is written down.

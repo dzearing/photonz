@@ -180,6 +180,8 @@ public enum FeatureCatalog {
 
     public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
 
+    public static let punchInFlag = "next-punch-in-and-hold"
+
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
     public static let videoExportFlag = "next-export-the-video"
@@ -667,6 +669,16 @@ public enum FeatureCatalog {
                     name: transitionsAtACutFlag,
                     title: "Put a transition on a cut, and change an effect over a shot",
                     description: "A cut is hard: one shot stops and the next starts on the same frame. With this on, every join in a clip is something you can pick, and picking one opens Transition in the panel, where the cut says what it is made of and what it can afford. Cross dissolve puts both shots on screen together, which needs spare media either side of the cut to pay for; Dip to black and Dip to white need none, because each shot fades inside the time it already has and the picture goes through a colour between them. Nothing on the timeline ever moves: an overlap is paid for with frames the recording already has and the clip is not playing, and the panel says exactly how much of that spare each side is spending. A cut with no spare says so and offers the dips instead of quietly making something shorter than you asked for. The transition is drawn as a band over the join, and its length is dragged there. The same switch also lets an EFFECT change over a shot: a layer with a blur on it is offered Blur in the Motion list, so a shot can come out of focus over a second, on the same lane, the same easing curves and the same undo as everything else that moves. Off means every cut is hard and a blur is one number for the whole clip.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: punchInFlag,
+                    title: "Punch in on something and hold there",
+                    description: "Half of what makes a screen recording watchable is moving the eye: start wide, push in on the thing being talked about, hold there while it is explained, and pull back out. With this on that is two moves rather than an exercise. Pick a clip, drag a box round the part of the picture that matters, put the playhead on the moment it matters, and Punch In: by that moment the camera has arrived on it, having leaned in over about a second, and it stays there until you say otherwise. Put the playhead where you are done with it and Pull Back Out, and everything between the two is a hold nobody had to ask for. Punch in a second time and the camera travels from where it is rather than cutting back to wide. It is not a zoom tool and there is no crop mode: a reframe is Scale and Centre on the clip, the same two properties a title or a piece of clip art would be animated on, so it gets the easing, the lanes on the timing strip, undo and the export with nothing written for it. The move is nailed to the FRAME it was made on rather than to a moment of the finished cut, so trimming the front of the clip, cutting it or throwing a piece away carries the move along with the frames instead of leaving it pointing at the wrong thing. The panel says how far in you are, what is in the middle of the frame, and how far in the recording itself can go before there are no pixels left to show, because a screen recording is usually captured at twice the size it is laid out at and most punch-ins never spend that. Off means a clip is framed one way for its whole length.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

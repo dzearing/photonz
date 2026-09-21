@@ -5998,3 +5998,13 @@
 {"t":"2026-09-21T17:36:26.658Z","ev":"task_walks","id":"transitions-at-a-cut-and-effects-you-can-control","walks":["transitions-at-a-cut-walk"]}
 {"t":"2026-09-21T17:36:32.686Z","ev":"task_note","id":"transitions-at-a-cut-and-effects-you-can-control"}
 {"t":"2026-09-21T17:36:36.394Z","ev":"task_done","id":"transitions-at-a-cut-and-effects-you-can-control","from":"in_progress","note":"A transition lives at the cut between two pieces of a clip and opens in the panel like any other selection: cross dissolve spends spare media either side and says how much, dip to black and dip to white spend none, a cut that cannot pay refuses rather than quietly shortening, and its length is dragged on the band over the join. Effects over time invented nothing: MotionProperty.blur, offered only where the layer has a blur, riding the same lanes, curves and undo, with a motion on a timed layer now playing once rather than looping. Verified: Scripts/test.sh green (8697 tests, including a render test that the frame on the cut really is black and an export test that writes a real MP4 and reads its frames back, which is 'what plays is what exports' measured); new walk transitions-at-a-cut-walk with 11 real window captures; cut-on-the-timeline, clip, trim and sound walks all still pass. Audit: queue/audits/2026-09-21-transitions-at-a-cut.json. Design: docs/design/video-transitions.md. Committed 19076ad0 and pushed."}
+{"t":"2026-09-21T17:50:52.617Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-21T17:50:52.700Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":687,"of":546,"rotating":true}
+{"t":"2026-09-21T17:50:52.814Z","ev":"task_started","id":"punch-in-on-something-and-hold-there","title":"Punch in on something and hold there","priority":"p1-high"}
+{"t":"2026-09-21T17:52:43.268Z","ev":"task_note","id":"punch-in-on-something-and-hold-there"}
+{"t":"2026-09-21T18:27:09.974Z","ev":"task_created","id":"a-move-with-a-hold-in-it-shows-its-keys-on-the-s","priority":"p2-normal","title":"A move with a hold in it shows its keys on the strip"}
+{"t":"2026-09-21T18:27:19.815Z","ev":"task_walks","id":"punch-in-on-something-and-hold-there","walks":["punch-in-and-hold-walk"]}
+{"t":"2026-09-21T18:27:19.865Z","ev":"task_note","id":"punch-in-on-something-and-hold-there"}
+{"t":"2026-09-21T18:27:19.912Z","ev":"task_note","id":"punch-in-on-something-and-hold-there"}
+{"t":"2026-09-21T18:27:19.959Z","ev":"task_note","id":"punch-in-on-something-and-hold-there"}
+{"t":"2026-09-21T18:27:20.008Z","ev":"task_note","id":"punch-in-on-something-and-hold-there"}

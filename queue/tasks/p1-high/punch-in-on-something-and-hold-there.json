@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 41,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:34.816Z",
-  "updated": "2026-09-21T13:54:34.921Z",
+  "updated": "2026-09-21T18:27:20.007Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -32,6 +32,38 @@
     {
       "t": "2026-09-21T13:54:34.916Z",
       "note": "seq 340 -> 41"
+    },
+    {
+      "t": "2026-09-21T17:50:52.812Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T17:52:43.266Z",
+      "note": "Adversarial review of the mock, before building. (1) The mock's eight steps are a chore: step 3 keys a value you have not changed, and the mock itself admits it 'feels odd for a second'. A first-time user will not do it, and the acceptance item says where it pushes in to is chosen by POINTING at the thing, not typing numbers. So the gesture is: scrub to the moment, drag a box round the thing, and the camera has arrived on it by that moment. One gesture instead of five. (2) The mock's 'key 100% again wherever you want the move to land' needs a third and fourth key on one property, and the model has exactly two (from and to) with one motion per property. That is the finding the task predicted: a punch in, a hold and a pull back out is a KEY LIST, and the fix belongs in the animation model rather than in a zoom tool. (3) The mock never asks what happens when the clip is cut. A clip's frames slide along the timeline when it is trimmed (ClipPieces lays the pieces back to back), and a motion's clock today is the DOCUMENT's, so a punch in would stay put while the frames it was pointing at moved. A move on a clip belongs to the clip's own clock. (4) Decorative and cut: no separate Reframe effect, no crop mode, no numeric Centre entry as the primary path. (5) The mock's open question about sharpness is answerable rather than a warning: the renderer already keeps the full source frame and scales it into the box, so a 2x recording in a 1x document has headroom, and the app can say how much."
+    },
+    {
+      "t": "2026-09-21T18:27:19.813Z",
+      "note": "owns these walks: punch-in-and-hold-walk"
+    },
+    {
+      "t": "2026-09-21T18:27:19.863Z",
+      "note": "Built. Core: MotionStop (a motion can be nailed to a value part way through, so one property can go out, HOLD and come back, which is what the task predicted would be the finding); Layer.motionClockMS(atDocumentTimeMS:) so a clip's motions are read on the clip's own source clock, which is what makes a punch in survive a trim, a split and a piece being thrown away; ClipReframe.swift, which is arithmetic only — a box on the picture into a Scale percentage and a Position, and the two moves that write them. App: EditorState+Reframe, ReframeInspector (a Reframe section above Motion, readouts not fields), three rows in the Video menu with the mock's own key. Render: a photo drawn bigger than its own pixels now gets the Lanczos resampler in an ordinary composite, not only on a magnified one, which is the sharpness item. 26 new core tests, 8723 tests green, punch-in-and-hold-walk green with 9 real window captures."
+    },
+    {
+      "t": "2026-09-21T18:27:19.910Z",
+      "note": "Found and fixed by playing it: the first working build tore the canvas in half. Punching in called motionChanged(), which starts the ICON motion preview — its own lap clock — while the transport was still pointing at a frame of the recording, so the canvas was handed two different moments at once. A document that finishes has one clock and it is the playhead's; reframeChanged() stops the preview instead. Visible in the 2026-09-21 17:5x run of the walk and gone in the next one."
+    },
+    {
+      "t": "2026-09-21T18:27:19.957Z",
+      "note": "left rough: Pull Back Out stays live once the clip is already wide, so a second press writes a leg from 100% to 100% that does nothing visible. Not filed: nothing is lost, nothing reads wrong, and it is one guard when somebody next touches this section. left rough: the Motion rows under Reframe show a punch in as From and To only, so the keys in the middle are not editable there; the strip task filed today is the place that gets fixed. left rough: Scale and Centre are readouts rather than fields, deliberately — pointing at the thing is the gesture and typing a percentage is what it replaces — so there is nowhere to nudge a landing by hand except the Motion rows."
+    },
+    {
+      "t": "2026-09-21T18:27:20.006Z",
+      "note": "motion-pivot-in-a-corner-walk fails in the motion batch (step 24 expectCue, 'a press here would be none, not grab'). Confirmed pre-existing: already recorded on walks-that-fail-in-the-full-sweep-4 on 2026-09-21 as not caused by the transitions work either. Everything else green: 8 of 9 motion walks, 2 of 2 clip walks, 9 of 9 recording walks, 9 of 9 cut walks."
     }
+  ],
+  "started": "2026-09-21T17:50:52.811Z",
+  "walks": [
+    "punch-in-and-hold-walk"
   ]
 }

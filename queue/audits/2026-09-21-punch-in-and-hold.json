@@ -1,0 +1,30 @@
+{
+  "feature": "Punch in on something and hold there",
+  "epic": "video-transitions-motion",
+  "summary": "A clip can be pushed in on something, hold there while it is explained, and pulled back out, and the whole move is two button presses aimed with a box you drag on the picture. It is not a zoom tool: it is Scale and Centre on the clip, so it gets easing, lanes on the timing strip, undo and the export with nothing written for it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Turn on \"Punch in on something and hold there\". Open a screen recording (or File > New from a capture).",
+  "try": [
+    { "do": "Open a recording and press space to stop it at the first frame.", "shot": "2026-09-21-punch-in-wide.png" },
+    { "do": "Scrub the playhead to the moment the thing you want to show matters." },
+    { "do": "Press M and drag a box round the part of the picture that should fill the frame." },
+    { "do": "Press Shift Z, or Punch In in the Reframe section of the panel.", "shot": "2026-09-21-punch-in-holding.png" },
+    { "do": "Scrub back before the move and forward well past it: wide before, tight after, and it holds." },
+    { "do": "Scrub to where you are done with the detail and press Option Shift Z, or Pull Back Out.", "shot": "2026-09-21-punch-in-pulling-out.png" },
+    { "do": "Press space and watch the whole thing play." },
+    { "do": "Pick up Trim, take two seconds off the front of the clip, and press Return: the move is still on the same frames." }
+  ],
+  "evaluate": [
+    "Does the camera arriving AT the playhead, rather than setting off from it, match what your hand meant when you pointed at something?",
+    "Is a second and a fifth of a second the right length for a push, or does it want to be slower?",
+    "Is dragging a box the right way to say \"that thing\", or would you rather just click on it?",
+    "The panel says \"Sharp to 200%\" rather than warning you when you go past it. Is a budget more useful than a warning?",
+    "The Motion section under Reframe shows the same move as a Scale row and a Position row you can tune. Is seeing it twice useful, or noise?"
+  ],
+  "rough": [
+    "The timing strip draws the whole move as ONE bar, so you cannot see where the hold is or drag a single key. The keys exist in the model; the strip has no way to show them yet.",
+    "Pull Back Out stays live once you are already wide, so pressing it twice writes a second leg that goes from 100% to 100% and does nothing visible.",
+    "The mock's Scale and Centre fields are readouts here, not fields you can type into. Pointing at the thing is the gesture; typing a percentage is the thing it replaces. If you want to nudge a landing by hand there is nowhere to do it except the Motion rows underneath.",
+    "The sample recording used for the walk is captured at exactly the size it is laid out at, so the panel honestly says \"Past the recording's own detail, which is 100%\" the moment you punch in on it. A real Mac screen recording is captured at twice its layout size, where the same punch-in reads \"Sharp to 200%\" and spends none of the budget.",
+    "Where it went further than the clickthrough: the clickthrough's eight steps (key a value you have not changed, scrub, drag a percentage, drag the picture, pick a curve) became one box and one press, because the acceptance asked for pointing rather than typing and the mock admits its own third step feels odd. Easing is chosen rather than offered, because a linear punch-in reads like a machine and the mock says so itself."
+  ]
+}

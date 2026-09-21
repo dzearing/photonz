@@ -412,7 +412,14 @@ enum MotionSVG {
         if startMS > 0 { add(0, motion.from, hold) }
 
         for (index, run) in runs.enumerated() {
-            let samples = run.truncated || run.spline == nil
+            // ...and a move with keys nailed down INSIDE it is always drawn
+            // point by point, whatever its curve. One spline can only say
+            // where a run starts and where it lands, so a punch-in that goes
+            // out, holds and comes back would export as a single slide from
+            // its first value to its last and lose everything in between
+            // (`MotionStop`).
+            let holds = !(motion.stops ?? []).isEmpty
+            let samples = run.truncated || run.spline == nil || holds
                 ? sampleCount(for: motion.curve) : 0
             if samples <= 0, let spline = run.spline {
                 add(run.from, index == 0 ? motion.from : runs[index - 1].lands, spline)

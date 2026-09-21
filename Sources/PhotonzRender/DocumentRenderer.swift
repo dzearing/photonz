@@ -809,7 +809,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         case .image(let ref):
             guard let cg = store.image(for: ref) else { return nil }
             image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)
-            enlargesPhoto = !magnifyNearest && contentScale > 1
+            // A bitmap asked to cover more than it has pixels for gets the
+            // better resampler, whatever put it in that position: a canvas
+            // zoomed past 1:1, an export at 2x, or a clip PUNCHED IN ON, where
+            // the layer's own box has grown past the frame the recording holds
+            // (`ClipReframe.swift`). It used to be the first two only, so a
+            // punch-in read soft for no reason anybody could see. The `sx > 1`
+            // test below is what actually spends the money, so a picture drawn
+            // at or under its own size still costs exactly what it did.
+            enlargesPhoto = !magnifyNearest
         case .text(let text):
             // Baked at the resolution it will be SHOWN at, so the scale-to-frame
             // step below is 1:1 and the words stay sharp however far in you are
@@ -951,9 +959,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         if contentSize.width > 0, contentSize.height > 0 {
             let sx = target.width / contentSize.width
             let sy = target.height / contentSize.height
-            // A photo has no more detail to give, so on a magnified render it
-            // is enlarged with the best resampling there is rather than the
-            // plain one an affine transform uses. That is what an export at 2x
+            // A photo has no more detail to give, so wherever it is being
+            // ENLARGED it is enlarged with the best resampling there is rather
+            // than the plain one an affine transform uses. That is what an export at 2x
             // has always done to the whole picture, and it is why the capture
             // under a redline stays as clean as it was before the words on top
             // of it got sharp.

@@ -534,6 +534,30 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
     }
 }
 
+// MARK: - A value nailed down part way through
+
+/// One value a property is nailed to part way through a motion.
+///
+/// **This is what a punch-in forced, and it is general.** A move that goes out
+/// and comes back is not two motions on one property — one property is still
+/// one answer — it is one motion with more than two keys on it. From and To are
+/// the first and the last of them; these are the ones in between, and a gap
+/// between two stops holding the same value is a HOLD, which is what a camera
+/// does when it has arrived somewhere and stays.
+///
+/// Measured in the same clock as `MotionTiming`, and always inside it: a stop
+/// outside the span is a key on a lane the bar does not cover, which is a
+/// number nothing can draw.
+public struct MotionStop: Hashable, Codable, Sendable {
+    public var atMS: Int
+    public var value: MotionValue
+
+    public init(atMS: Int, value: MotionValue) {
+        self.atMS = atMS
+        self.value = value
+    }
+}
+
 // MARK: - One motion
 
 /// One property of one layer, changing over time.
@@ -548,6 +572,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     public var from: MotionValue
     public var to: MotionValue
     public var timing: MotionTiming
+    /// The keys BETWEEN From and To, where there are any.
+    ///
+    /// Nil on everything that simply goes from one value to another, which is
+    /// nearly everything, so a document written before a move could hold in the
+    /// middle reads back byte for byte the same (`MotionStop`).
+    public var stops: [MotionStop]?
     public var curve: EasingCurve
     public var repeats: MotionRepeat
     /// What a TURN turns around, and nil on everything else: a fade and a
@@ -566,16 +596,37 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                 from: MotionValue, to: MotionValue,
                 timing: MotionTiming, curve: EasingCurve = .linear,
                 repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true,
-                pivot: MotionPivot? = nil) {
+                pivot: MotionPivot? = nil, stops: [MotionStop]? = nil) {
         self.id = id
         self.property = property
         self.from = from
         self.to = to
         self.timing = timing
+        self.stops = stops.flatMap { $0.isEmpty ? nil : $0 }
         self.curve = curve
         self.repeats = repeats
         self.isOn = isOn
         self.pivot = pivot
+    }
+
+    /// This motion re-timed, with everything nailed down inside it carried
+    /// along.
+    ///
+    /// Dragging a bar on the timing strip moves and stretches the span, and a
+    /// stop is stated in the same clock the span is, so leaving the stops where
+    /// they were would slide a hold out of the move that owns it — or right off
+    /// the end of it. They travel in proportion instead, which is what dragging
+    /// the bar looks like it is doing: the whole move, later or slower.
+    public func retimed(to timing: MotionTiming) -> LayerMotion {
+        var moved = self
+        moved.timing = timing
+        guard let stops, !stops.isEmpty, self.timing.durationMS > 0 else { return moved }
+        let stretch = Double(timing.durationMS) / Double(self.timing.durationMS)
+        moved.stops = stops.map {
+            let along = Double($0.atMS - self.timing.startMS) * stretch
+            return MotionStop(atMS: timing.startMS + Int(along.rounded()), value: $0.value)
+        }
+        return moved
     }
 
     /// The point this turn turns about, with the middle standing in wherever
@@ -613,7 +664,49 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             // seam to see.
             progress = progress < 0.5 ? progress * 2 : (1 - progress) * 2
         }
-        return from.blended(to: to, progress: curve.value(at: progress)) ?? from
+        return value(atProgress: progress)
+    }
+
+    /// Every key on this motion, first to last: From at the start, whatever was
+    /// nailed down in between, To at the end.
+    ///
+    /// Stops outside the span are dropped rather than clamped, because a key
+    /// dragged past the end of the bar means the bar should have been longer,
+    /// and silently piling several onto the last millisecond would draw one key
+    /// where there were three.
+    public var keys: [MotionStop] {
+        var list = [MotionStop(atMS: timing.startMS, value: from)]
+        for stop in (stops ?? []).sorted(by: { $0.atMS < $1.atMS })
+        where stop.atMS > timing.startMS && stop.atMS < timing.endMS {
+            list.append(stop)
+        }
+        list.append(MotionStop(atMS: timing.endMS, value: to))
+        return list
+    }
+
+    /// The value this motion has a fraction of the way along its span.
+    ///
+    /// One segment between each pair of keys, each eased by the motion's own
+    /// curve, so a two-key motion is exactly what it always was and a longer
+    /// one leans in and settles at every key rather than only at the ends. Two
+    /// keys holding the same value make a segment that does not move, which is
+    /// the HOLD, and it costs nothing to draw.
+    func value(atProgress progress: Double) -> MotionValue {
+        let list = keys
+        guard list.count > 2 else {
+            return from.blended(to: to, progress: curve.value(at: progress)) ?? from
+        }
+        let at = Double(timing.startMS) + progress * Double(timing.durationMS)
+        for index in 0..<(list.count - 1) {
+            let left = list[index]
+            let right = list[index + 1]
+            guard at < Double(right.atMS) || index == list.count - 2 else { continue }
+            let span = Double(right.atMS - left.atMS)
+            guard span > 0 else { return right.value }
+            let local = min(max((at - Double(left.atMS)) / span, 0), 1)
+            return left.value.blended(to: right.value, progress: curve.value(at: local)) ?? left.value
+        }
+        return to
     }
 
     /// True once this motion has stopped moving for good, so the preview can
@@ -631,7 +724,16 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// does not start at the top.
     public var summary: String {
         let seconds = MotionNumber.text(Double(timing.durationMS) / 1000)
-        var text = "\(property.format(from)) → \(property.format(to)) over \(seconds)s"
+        var text: String
+        if let middle = stops?.sorted(by: { $0.atMS < $1.atMS }), !middle.isEmpty {
+            // A move with keys in the middle is read as the journey it is
+            // rather than as its two ends, which on a punch-in that comes back
+            // out would otherwise read "100% → 100%" and look like nothing.
+            let steps = ([from] + middle.map(\.value) + [to]).map { property.format($0) }
+            text = steps.joined(separator: " → ") + " over \(seconds)s"
+        } else {
+            text = "\(property.format(from)) → \(property.format(to)) over \(seconds)s"
+        }
         if timing.startMS > 0 {
             text += ", after \(MotionNumber.text(Double(timing.startMS) / 1000))s"
         }

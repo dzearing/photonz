@@ -101,6 +101,13 @@ struct InspectorPanel: View {
     /// Layout all sat in the gap, so animating an icon meant scrolling past
     /// every screen setting in the panel.
     private static let orderVersionMotionUnderEffects = 7
+
+    /// Reframe sits directly above Motion (Next, `next-punch-in-and-hold`).
+    /// They are the same move at two altitudes: Reframe is the whole camera
+    /// move in two buttons, Motion is the two properties it is made of. The
+    /// short way round comes first, and the parts are under it for anybody who
+    /// wants to tune the timing.
+    private static let orderVersionReframeAboveMotion = 8
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
@@ -148,6 +155,11 @@ struct InspectorPanel: View {
             .init(version: orderVersionMotionUnderEffects,
                   sections: [InspectorSectionID.motion.rawValue],
                   .after, InspectorSectionID.effects.rawValue, isEnabled: split),
+            // ...with Reframe above it: the whole move first, its two
+            // properties under it.
+            .init(version: orderVersionReframeAboveMotion,
+                  sections: [InspectorSectionID.reframe.rawValue],
+                  .before, InspectorSectionID.motion.rawValue),
         ]
     }
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
@@ -647,6 +659,11 @@ struct InspectorPanel: View {
         // at least once. A recording nobody has cut has no join, and a section
         // about a join that is not there would be a section about nothing.
         if editorState.canWorkWithClipTransitions { set.insert(.transition) }
+        // Where the camera is pointed on the clip in hand (Next,
+        // `next-punch-in-and-hold`). Present only where there is a picture with
+        // time under it, which is what a camera can be moved on at all: a title
+        // has no frame to push in to and a sound draws nothing to push in on.
+        if editorState.canReframeAClip { set.insert(.reframe) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -1051,6 +1068,8 @@ struct InspectorPanel: View {
             }
         case .motion:
             MotionListInspector()
+        case .reframe:
+            ReframeInspector()
         case .transition:
             TransitionInspector()
         case .sound:

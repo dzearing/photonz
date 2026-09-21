@@ -1,0 +1,31 @@
+{
+  "id": "a-move-with-a-hold-in-it-shows-its-keys-on-the-s",
+  "title": "A move with a hold in it shows its keys on the strip",
+  "goal": "A punch in that pushes in, holds and pulls back out draws as one long bar on the timing strip, so you can see that something happens over those four seconds but not where it arrives, how long it sits there, or where it leaves. The bar should show the moments the value is nailed to, and let one of them be dragged.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3040,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T18:27:09.970Z",
+  "updated": "2026-09-21T18:27:09.973Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building next-punch-in-and-hold on 2026-09-21. The keys are in the model already: LayerMotion.stops, with LayerMotion.keys giving the whole list first to last, and retimed(to:) already carries them when the bar is moved or stretched. What is missing is entirely in the strip: MotionStrip.swift builds one lane per motion with a single span, and MotionStripView draws it as one rounded bar. Reproduced by running Scripts/playtest.sh Scripts/playtest/punch-in-and-hold-walk.json --no-build and looking at 6-pulling-back-out-sc.png: the Scale lane is a single bar from 0.8s to 5.2s with nothing on it, while the panel above says 100% -> 200% -> 200% -> 100%.",
+  "acceptance": [
+    "A motion with keys between its ends draws a mark on its bar at each of them",
+    "Dragging one of those marks moves that key alone, and the rest of the move stays put",
+    "The whole bar can still be moved and stretched as it is today, carrying its keys in proportion",
+    "A motion with only two keys draws exactly as it does now"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T18:27:09.972Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "punch-in-and-hold-walk"
+  ]
+}

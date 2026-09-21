@@ -215,7 +215,9 @@ extension PhotonzDocument {
         // In a document that finishes, the lap IS the document: four seconds in
         // is four seconds in, never four seconds modulo something.
         let cycle = max(1, documentDurationMS)
-        shown.layers = shown.layers.map { $0.movedTree(toMotionTimeMS: moment, cycleMS: cycle) }
+        shown.layers = shown.layers.map {
+            $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
+        }
         // ...and a cut with a transition on it puts a second picture on screen
         // beside the first, or a panel of colour over it
         // (`ClipTransitions.swift`). Last, so a layer told to fade over the
@@ -281,5 +283,66 @@ extension VideoCutList {
     static func ms(_ seconds: TimeInterval) -> Int {
         guard seconds.isFinite else { return 0 }
         return Int((max(0, seconds) * 1000).rounded())
+    }
+}
+
+// MARK: - A move on a clip belongs to the clip's own clock
+
+extension Layer {
+
+    /// The moment this layer's own motions are read at, given a moment of the
+    /// DOCUMENT's clock.
+    ///
+    /// For anything simply placed on a canvas the two are the same clock and
+    /// nothing changes. For a layer that occupies a stretch of time they are
+    /// not, and the difference is the whole of "a punch-in survives a trim": a
+    /// clip's frames SLIDE along the timeline when the clip is trimmed, split
+    /// or re-ordered, because the pieces are laid back to back from the clip's
+    /// in point (`ClipPieces.swift`). A move written against the document's
+    /// clock would stay where it was while the frame it was pointing at moved
+    /// out from under it. Written against the clip's own source clock it goes
+    /// where the frames go, because it is nailed to a FRAME rather than to a
+    /// moment of the finished cut.
+    public func motionClockMS(atDocumentTimeMS ms: Int) -> Int {
+        guard let time else { return ms }
+        let offset = ms - time.inMS
+        if let pieces = clipPieces, let source = pieces.sourceMS(atMS: offset) { return source }
+        return max(0, offset + time.sourceInMS)
+    }
+
+    /// The lap this layer's motions are measured against. A clip's is its whole
+    /// recording, so nothing inside it ever wraps; everything else takes the
+    /// document's.
+    func motionCycleMS(documentCycleMS: Int) -> Int {
+        guard let time else { return documentCycleMS }
+        if let whole = movie?.durationMS, whole > 0 { return whole }
+        if let source = time.sourceLengthMS, source > 0 { return source }
+        return max(1, time.sourceInMS + time.lengthMS)
+    }
+
+    /// This layer and everything inside it moved for a moment of the document's
+    /// own clock, with anything that occupies time read on its own clock.
+    ///
+    /// A layer INSIDE a clip inherits that clip's clock, which is what makes a
+    /// label stuck to a moment of a recording travel with it. A layer inside it
+    /// that has a stretch of its own answers for itself instead.
+    func movedTree(atDocumentTimeMS ms: Int, documentCycleMS: Int,
+                   inheritedClockMS: Int? = nil, inheritedCycleMS: Int? = nil,
+                   magnification: CGFloat = 1) -> Layer {
+        let clock = time == nil ? (inheritedClockMS ?? ms) : motionClockMS(atDocumentTimeMS: ms)
+        let cycle = time == nil
+            ? (inheritedCycleMS ?? documentCycleMS)
+            : motionCycleMS(documentCycleMS: documentCycleMS)
+        var moved = moved(toMotionTimeMS: clock, cycleMS: cycle, magnification: magnification)
+        if var group = moved.group {
+            let inside = magnification * motionMagnification(atMS: clock, cycleMS: cycle)
+            group.children = group.children.map {
+                $0.movedTree(atDocumentTimeMS: ms, documentCycleMS: documentCycleMS,
+                             inheritedClockMS: clock, inheritedCycleMS: cycle,
+                             magnification: inside)
+            }
+            moved.content = .group(group)
+        }
+        return moved
     }
 }

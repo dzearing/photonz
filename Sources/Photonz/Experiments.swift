@@ -437,6 +437,10 @@ extension Experiments {
     /// (`docs/design/video-transitions.md`).
     var transitionsAtACutEnabled: Bool { isEnabled(FeatureCatalog.transitionsAtACutFlag) }
 
+    /// Punching in on a detail of a clip and holding there
+    /// (`ClipReframe.swift`).
+    var punchInEnabled: Bool { isEnabled(FeatureCatalog.punchInFlag) }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.

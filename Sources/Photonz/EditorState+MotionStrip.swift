@@ -227,7 +227,7 @@ extension EditorState {
             document.updateLayer(id: drag.layerID) { layer in
                 guard var motions = layer.motions,
                       let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
-                motions[index].timing = drag.timing
+                motions[index] = motions[index].retimed(to: drag.timing)
                 layer.motions = motions
             }
             // What the drag did to the LAP, in the same step, so undo takes
@@ -271,7 +271,7 @@ extension EditorState {
         document.updateLayer(id: drag.layerID) { layer in
             guard var motions = layer.motions,
                   let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
-            motions[index].timing = drag.timing
+            motions[index] = motions[index].retimed(to: drag.timing)
             layer.motions = motions
         }
         document.motionCycleMS = drag.heldCycleMS

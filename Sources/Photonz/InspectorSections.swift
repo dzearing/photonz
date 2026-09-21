@@ -100,6 +100,12 @@ enum InspectorSectionID: String, CaseIterable {
     // settings that unfold. The only difference is what a row means — an
     // Effects row is something the layer paints, a Motion row is something
     // about it that changes.
+    // Where the camera is pointed on the picked CLIP, and where it goes next
+    // (Next, `next-punch-in-and-hold`). ABOVE Motion, which shows the very same
+    // move broken into its two properties: this is the whole move in two
+    // buttons, and that is its parts, so the short way round comes first
+    // (`ClipReframe.swift`).
+    case reframe
     case motion
     // What happens at the CUT you have picked (Next,
     // `next-transitions-at-a-cut`). It sits with the other things that are
@@ -150,6 +156,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .canvas: "Canvas"
         case .effects: "Effects"
         case .motion: "Motion"
+        case .reframe: "Reframe"
         case .transition: "Transition"
         case .sound: "Sound"
         case .shadow: "Shadow"

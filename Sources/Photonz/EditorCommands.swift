@@ -422,6 +422,21 @@ struct EditorCommands: Commands {
                 .disabled(editor?.clipSpeedInHand == nil)
                 Divider()
             }
+            // Where the camera is pointed, and where it goes next
+            // (`ClipReframe.swift`). Both rows act on the clip in hand at the
+            // playhead, so a punch-in costs no aiming beyond the box you drew
+            // on the picture. ⇧Z is the clickthrough's own key.
+            if Experiments.shared.punchInEnabled {
+                Button("Punch In") { editor?.punchInOnRegion() }
+                    .keyboardShortcut("z", modifiers: [.shift])
+                    .disabled(!(editor?.canPunchIn ?? false))
+                Button("Pull Back Out") { editor?.pullReframeBackOut() }
+                    .keyboardShortcut("z", modifiers: [.shift, .option])
+                    .disabled(!(editor?.canPullBackOut ?? false))
+                Button("Reset Reframe") { editor?.resetReframeInHand() }
+                    .disabled(!(editor?.canResetReframe ?? false))
+                Divider()
+            }
             // What happens at a CUT (`docs/design/video-transitions.md`). The
             // menu acts on the cut in hand — the one picked, else the one the
             // playhead is standing on — so putting a dissolve on the join you
