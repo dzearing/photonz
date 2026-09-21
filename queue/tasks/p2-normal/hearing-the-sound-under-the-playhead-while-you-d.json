@@ -1,0 +1,33 @@
+{
+  "id": "hearing-the-sound-under-the-playhead-while-you-d",
+  "title": "Hearing the sound under the playhead while you drag it",
+  "goal": "Dragging the playhead over a recording is silent. Finding the exact word someone says, or the exact beat, is something people do by ear while they drag, and right now only the picture of the sound answers. Make the sound play under the playhead as it moves.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T12:04:16.634Z",
+  "updated": "2026-09-21T12:04:19.384Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 1). Nothing is broken: the waveform is the primary answer to aiming a cut and it works. This is the second answer people reach for.\n\nThe model already has what it needs: PhotonzDocument.audioMix(atMS:) says exactly which files and offsets are audible at a moment. What is missing is the app half. The live player (Sources/Photonz/DocumentAudioPlayer.swift) schedules whole segments against one engine start, which is right for playing and wrong for scrubbing: a scrub wants a short window of samples per pointer move, played once. That is its own path through the engine, probably a second player node fed AVAudioPCMBuffers read straight out of an AVAudioFile at the source offset the mix gives.\n\nHook: EditorState.scrubDocument(toMS:) in Sources/Photonz/EditorState+Time.swift is where every scrub lands.",
+  "acceptance": [
+    "Dragging the playhead over a layer that makes a sound plays that sound as you drag, and stops when you let go",
+    "Dragging backwards plays it backwards, or at least plays something, rather than going silent",
+    "Two sounds under the playhead at once are both heard",
+    "It does not stutter the picture: a walk shows the playhead still following the hand while sound is coming out"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T12:04:16.636Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-21T12:04:19.383Z",
+      "note": "walks sound-on-the-timeline-walk -> none"
+    }
+  ],
+  "walks": []
+}

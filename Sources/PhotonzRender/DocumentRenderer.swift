@@ -800,6 +800,12 @@ public final class DocumentRenderer: @unchecked Sendable {
         // (`BorderPosition.swift`).
         let contentOutset = layer.contentOutset * contentScale
         switch layer.content {
+        // Sound is a layer that occupies time and draws not one pixel
+        // (`SoundClip.swift`). Nothing to composite, so it never reaches the
+        // canvas — which is the whole reason it is its own content case
+        // rather than a picture with no picture in it.
+        case .sound:
+            return nil
         case .image(let ref):
             guard let cg = store.image(for: ref) else { return nil }
             image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)

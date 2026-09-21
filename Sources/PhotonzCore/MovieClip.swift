@@ -42,11 +42,38 @@ public struct MovieRef: Hashable, Codable, Sendable {
     /// keeps: a trim moves a clip's in and out and never shortens this, which
     /// is what lets the timeline draw the spare at both ends.
     public let durationMS: Int
+    /// Whether the file has a sound track in it at all.
+    ///
+    /// Not what the sound IS — that is `soundRef`, and it is derived — only
+    /// whether asking for it would get anything. A recording with no sound has
+    /// nothing to take off it, and the app says so rather than offering it.
+    public let hasSound: Bool
 
-    public init(id: UUID = UUID(), pixelSize: CGSize, durationMS: Int) {
+    public init(id: UUID = UUID(), pixelSize: CGSize, durationMS: Int, hasSound: Bool = false) {
         self.id = id
         self.pixelSize = pixelSize
         self.durationMS = max(0, durationMS)
+        self.hasSound = hasSound
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, pixelSize, durationMS, hasSound }
+
+    /// A recording with no sound writes nothing about sound, so every document
+    /// written before sound existed reads back byte for byte the same.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(pixelSize, forKey: .pixelSize)
+        try c.encode(durationMS, forKey: .durationMS)
+        if hasSound { try c.encode(true, forKey: .hasSound) }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(id: try c.decode(UUID.self, forKey: .id),
+                  pixelSize: try c.decode(CGSize.self, forKey: .pixelSize),
+                  durationMS: try c.decode(Int.self, forKey: .durationMS),
+                  hasSound: try c.decodeIfPresent(Bool.self, forKey: .hasSound) ?? false)
     }
 
     /// Which frame of the grid a moment of the file falls on.

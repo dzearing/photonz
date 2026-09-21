@@ -14,6 +14,13 @@ import PhotonzCore
 // four of something actually happening, two more of it sitting there again. That
 // is what makes trimming it worth doing: a clip where every second matters
 // teaches the gesture and none of the judgement.
+//
+// **It has a sound track, and the sound matches the picture.** Silence over the
+// dead air at both ends, a hum while the copy runs, and a blip at each of the
+// four moments a file arrives. A real screen recording has sound in it, so a
+// sample without one could not teach taking the sound off the picture
+// (`docs/design/video-audio.md`) — and a waveform shaped like the picture is
+// what makes aiming a cut at a beat worth showing at all.
 @MainActor
 enum TutorialSampleRecording {
     /// 1280 by 800 at 20 frames a second. Small enough to write quickly, and
@@ -58,7 +65,36 @@ enum TutorialSampleRecording {
 
     // MARK: - Writing it
 
+    /// Written in three steps rather than one, and the reason is worth keeping.
+    ///
+    /// One `AVAssetWriter` with both a video and an audio input has to be fed
+    /// INTERLEAVED: it stops taking video until the audio has caught up, and a
+    /// single thread pushing one then the other stalls with `isReadyForMoreMediaData`
+    /// false forever (measured, 2026-09-21: the video input went quiet 36 frames
+    /// into a 40 frame clip and never came back). Feeding two inputs in step
+    /// from one thread is a job for `requestMediaDataWhenReady` and two queues,
+    /// which is a lot of machinery for a sample clip. So the picture is written
+    /// exactly as it always was, the sound is written beside it with
+    /// `AVAudioFile`, and the two are laid into one composition and exported.
     private static func write(to url: URL) -> Bool {
+        let silent = url.deletingPathExtension().appendingPathExtension("picture.mp4")
+        let sound = url.deletingPathExtension().appendingPathExtension("sound.m4a")
+        defer {
+            try? FileManager.default.removeItem(at: silent)
+            try? FileManager.default.removeItem(at: sound)
+        }
+        guard writePicture(to: silent) else { return false }
+        // A sample with no sound still opens and still teaches trimming, so a
+        // sound that would not write is not a reason to have no recording.
+        guard writeSound(to: sound), merge(picture: silent, sound: sound, into: url) else {
+            try? FileManager.default.removeItem(at: url)
+            return (try? FileManager.default.moveItem(at: silent, to: url)) != nil
+        }
+        return true
+    }
+
+    private static func writePicture(to url: URL) -> Bool {
+        try? FileManager.default.removeItem(at: url)
         guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mp4) else { return false }
         let settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
@@ -100,6 +136,106 @@ enum TutorialSampleRecording {
         writer.finishWriting { done.signal() }
         _ = done.wait(timeout: .now() + 10)
         return writer.status == .completed
+    }
+
+    /// The picture and the sound, laid into one file.
+    ///
+    /// `Task.detached` rather than `Task`: this type is on the main actor, so an
+    /// inherited task would need the main thread the semaphore below is
+    /// blocking, and the whole thing would sit there forever.
+    private static func merge(picture: URL, sound: URL, into url: URL) -> Bool {
+        try? FileManager.default.removeItem(at: url)
+        let done = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var worked = false
+        Task.detached {
+            defer { done.signal() }
+            let pictureAsset = AVURLAsset(url: picture)
+            let soundAsset = AVURLAsset(url: sound)
+            guard let videoTrack = try? await pictureAsset.loadTracks(withMediaType: .video).first,
+                  let soundTrack = try? await soundAsset.loadTracks(withMediaType: .audio).first,
+                  let duration = try? await pictureAsset.load(.duration)
+            else { return }
+            let composition = AVMutableComposition()
+            guard let video = composition.addMutableTrack(
+                    withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+                  let audio = composition.addMutableTrack(
+                    withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+            else { return }
+            let whole = CMTimeRange(start: .zero, duration: duration)
+            guard (try? video.insertTimeRange(whole, of: videoTrack, at: .zero)) != nil,
+                  (try? audio.insertTimeRange(whole, of: soundTrack, at: .zero)) != nil,
+                  let session = AVAssetExportSession(asset: composition,
+                                                     presetName: AVAssetExportPresetHighestQuality)
+            else { return }
+            do {
+                try await session.export(to: url, as: .mp4)
+                worked = true
+            } catch {
+                worked = false
+            }
+        }
+        _ = done.wait(timeout: .now() + 30)
+        return worked
+    }
+
+    // MARK: - The sound in it
+
+    static let audioSampleRate: Double = 44_100
+
+    /// How loud the recording is at a moment of itself, nought to one.
+    ///
+    /// The shape of the PICTURE, said in sound: nothing over the dead air at
+    /// either end, a steady hum while the copy runs, and a blip at each of the
+    /// four moments a file name ticks in. So a waveform on the timeline points
+    /// at the same moments the picture does, which is what makes "aim the cut
+    /// at the beat" a thing somebody can actually try.
+    static func loudness(atSeconds time: Double) -> Double {
+        let action = (time - deadAir) / (seconds - deadAir * 2)
+        guard action > 0, action < 1 else { return 0 }
+        var level = 0.18
+        // Four files arrive, evenly through the middle stretch.
+        for file in 0..<4 {
+            let at = deadAir + (seconds - deadAir * 2) * (Double(file) + 0.5) / 4
+            let since = time - at
+            if since >= 0, since < 0.18 { level = 0.9 * (1 - since / 0.18) + 0.18 }
+        }
+        return level
+    }
+
+    /// The sound track, written on its own with `AVAudioFile`.
+    ///
+    /// Scoped so the file is CLOSED before anybody reads it: `AVAudioFile`
+    /// finishes the container when it goes out of scope, and a file still held
+    /// open reads back as damaged media.
+    private static func writeSound(to url: URL) -> Bool {
+        try? FileManager.default.removeItem(at: url)
+        guard let file = try? AVAudioFile(forWriting: url, settings: [
+                  AVFormatIDKey: kAudioFormatMPEG4AAC,
+                  AVSampleRateKey: audioSampleRate,
+                  AVNumberOfChannelsKey: 1,
+              ]),
+              let format = AVAudioFormat(standardFormatWithSampleRate: audioSampleRate,
+                                         channels: 1)
+        else { return false }
+        let chunk = AVAudioFrameCount(4410)
+        var written: AVAudioFramePosition = 0
+        let total = AVAudioFramePosition(seconds * audioSampleRate)
+        while written < total {
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: chunk),
+                  let samples = buffer.floatChannelData?[0] else { return false }
+            let count = AVAudioFrameCount(min(AVAudioFramePosition(chunk), total - written))
+            buffer.frameLength = count
+            for index in 0..<Int(count) {
+                let at = Double(written + AVAudioFramePosition(index)) / audioSampleRate
+                // Two tones an octave apart, so it reads as something rather
+                // than as a test signal.
+                let tone = sin(2 * .pi * 220 * at) * 0.7 + sin(2 * .pi * 440 * at) * 0.3
+                samples[index] = Float(loudness(atSeconds: at) * tone)
+            }
+            guard (try? file.write(from: buffer)) != nil else { return false }
+            written += AVAudioFramePosition(count)
+        }
+        return true
     }
 
     private static func makeBuffer(pool: CVPixelBufferPool, at time: Double) -> CVPixelBuffer? {

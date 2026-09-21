@@ -34,6 +34,11 @@ struct MotionStripView: View {
     /// One lane, and the bar in it.
     static let laneHeight: CGFloat = 22
     static let barHeight: CGFloat = 18
+    /// A bar carrying a WAVEFORM is taller, and the level line drawn across it
+    /// is why: a dot you drag up and down needs somewhere to go
+    /// (`docs/design/video-audio.md`).
+    static let soundBarHeight: CGFloat = 36
+    static let soundLaneHeight: CGFloat = 42
     /// The labelled hairline over each layer's lanes.
     static let layerRowHeight: CGFloat = 16
     /// Air round the whole strip.
@@ -121,7 +126,8 @@ struct MotionStripView: View {
         // A row with a bar in it is as tall as a lane; a bare heading is the
         // short hairline row it always was.
         let headings = groups.reduce(CGFloat(0)) {
-            $0 + ($1.bar == nil ? Self.layerRowHeight : Self.laneHeight)
+            $0 + ($1.bar == nil ? Self.layerRowHeight
+                                : ($1.isSound ? Self.soundLaneHeight : Self.laneHeight))
         }
         let content = MotionStripRulerView.height
             + headings
@@ -351,7 +357,8 @@ private struct MotionStripGroupView: View {
     /// gets to draw one in. A layer that does not keeps the labelled hairline
     /// it has always had (`docs/design/video-surface.md` §2).
     private var rowHeight: CGFloat {
-        group.bar == nil ? MotionStripView.layerRowHeight : MotionStripView.laneHeight
+        guard group.bar != nil else { return MotionStripView.layerRowHeight }
+        return group.isSound ? MotionStripView.soundLaneHeight : MotionStripView.laneHeight
     }
 
     /// The stretch of the document this layer occupies, drawn where it happens.
@@ -370,7 +377,7 @@ private struct MotionStripGroupView: View {
 
     private func plainClipBar(_ bar: LayerTime) -> some View {
         ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
-                      bar: bar, laneWidth: laneWidth)
+                      bar: bar, laneWidth: laneWidth, isSound: group.isSound)
     }
 
     private var isPicked: Bool { editorState.selectedLayerID == group.layerID }

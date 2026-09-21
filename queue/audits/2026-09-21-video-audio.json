@@ -1,0 +1,34 @@
+{
+  "feature": "Sound you can separate, add, see and shape",
+  "epic": "video-audio",
+  "summary": "A recording's sound can be taken off its picture and becomes a layer of its own, so cutting the picture no longer cuts the voiceover over it. Other sound can be brought in from a file, every sound draws its waveform on its bar in the timeline, and its level is a line across that bar you can pin at any moment, which is how music ducks under a voice.",
+  "setup": "Photonz Dev, Experiments window, release Next. Turn ON 'A recording opens in the editor you already know' (next-a-recording-is-a-document): sound lives on the timeline and the timeline only exists there. 'Take a recording's sound off its picture' (next-sound-on-the-timeline) is on by default. Then open any screen recording with sound in it.",
+  "try": [
+    { "do": "Open a recording. Look at its bar in the timeline: the waveform in it is the sound of the recording.", "shot": "2026-09-21-video-audio-detach.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Pick the clip and choose Video ▸ Detach Sound. Its sound lands on a layer of its own directly above it." },
+    { "do": "Pick the picture again, put the playhead in the middle and press B. The picture is two pieces now and the sound above it is untouched.", "shot": "2026-09-21-video-audio-cut.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Home or drag the playhead to the start, then Video ▸ Add Sound… and pick any music file. It lands as a third layer and the timeline grows to hold it." },
+    { "do": "With the music picked, drag Level in the Sound section down to about −6 dB." },
+    { "do": "On the music's bar, click the white line where you want the music to drop, then drag that dot down. Click again further along and drag that one back up. That is a duck.", "shot": "2026-09-21-video-audio-duck.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press space. Both sounds play together and the music slides down where you put the dots." },
+    { "do": "Choose Video ▸ Export Sound…, save it, and play the file in anything. It should be exactly what you just heard." }
+  ],
+  "evaluate": [
+    "Does 'Detach Sound' say what it does? It is called that rather than Separate Audio because Separate into Layers already means something else on a screenshot.",
+    "Is the waveform legible enough to aim a cut at a word, at the width your timeline actually is?",
+    "Clicking the level line to add a point and dragging the dot: did you find that without being told, or did you go looking for a fade control?",
+    "There is no mute switch, because a level dragged to the bottom reads Silent. Did you reach for a mute and not find one?",
+    "The level line sits about seven tenths of the way up the bar when nothing is touched, with the headroom above it. Does that read as 'normal', or as 'turned down'?",
+    "Does the exported file sound like what played in the app?"
+  ],
+  "rough": [
+    "Scrubbing is silent. Dragging the playhead over a voiceover is how most people find a word, and here only the waveform answers. Filed.",
+    "Nothing says how loud the mix is coming out, and nothing stops several sounds at full level adding up past what a file can hold. Three sounds at once needs each pulled down by hand. Filed.",
+    "Dragging a sound file onto the window is refused: Add Sound in the Video menu is the only way in. The refusal is honest rather than silent, but it is the first thing most people will try.",
+    "The mock puts source files in the Library at scope Media. That shelf is not built, so a sound that is on the timeline is not listed anywhere as a file. Nothing invented a second place for media; there is just no shelf yet.",
+    "The Sound section sits at the bottom of the panel, under Motion. The level fader is the most reached control a sound layer has and it is the lowest thing in the dock.",
+    "The mock's channel strip had mute, solo, EQ and a compressor, and a fade in field, a fade out field and a curve picker beside the diamonds on the lane. All of that is cut: a fade and a duck are the same thing as level over time, so there is one control instead of four, and a level at the bottom is the mute. Say if that is one control too few.",
+    "While it plays, the level is followed on the same 33ms clock the playhead runs on, so a fade shorter than about a tenth of a second is stepped live and smooth in the export. The plan is identical either way; only the smoothness differs at the extreme.",
+    "There is no video export from a document yet, so Export Sound writes the mix on its own. The composition it builds already has the volume ramps on it, so video export will pick it up unchanged when it is built."
+  ]
+}

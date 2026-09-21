@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/sound-on-the-timeline-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-the-recording-arrives-with-its-sound", "note": "An eight second screen recording opens as an ordinary document. It has a sound track, so its clip's bar carries the shape of the sound: silence over the dead air at both ends, a hum while the copy runs, and a blip at each of the four moments a file arrives. The Sound section in the panel says what level it plays at" },
+    { "do": "snapshot", "name": "1-the-recording-arrives-with-its-sound" },
+
+    { "do": "action", "action": "soundDetach" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-sound-taken-off-the-picture", "note": "Detach Sound. The picture keeps its place and goes quiet; its sound is now a layer of its own directly above it, in step, with the same length and the same waveform. Two rows on the timeline where there was one, and two rows in the layers list, the sound one wearing a waveform where a thumbnail would be" },
+    { "do": "snapshot", "name": "2-sound-taken-off-the-picture" },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-a-cut-to-the-picture-leaves-the-sound-alone", "note": "THE CASE THE CUT CLICKTHROUGH IS BUILT AROUND. The picture is picked and cut at the playhead: its bar is two pieces now. The sound's bar above it is untouched, one piece, exactly as long as it was. A cut to the picture is no longer a cut to the voiceover over it" },
+    { "do": "snapshot", "name": "3-a-cut-to-the-picture-leaves-the-sound-alone" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "4-music-brought-in-from-a-file", "note": "Add Sound puts a fourteen second piece of music on the timeline at the playhead. It is longer than the recording, so the document grew to hold it, and its bar carries its own waveform with a beat in it. Three rows now: music, the recording's sound, and the picture" },
+    { "do": "snapshot", "name": "4-music-brought-in-from-a-file" },
+
+    { "do": "action", "action": "soundLevelHalf" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "soundDuck" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-the-music-ducks-under-the-voice", "note": "The music's fader is at half, and four points on its bar take it down to a sixth over the middle of the recording and back up again. The line across its bar IS the level: no fade control and no curve menu, because a fade and a duck are the same thing said twice. The Sound section says how many moments the level is pinned at, with a Flatten beside it" },
+    { "do": "snapshot", "name": "5-the-music-ducks-under-the-voice" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "clipSlideLater" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-the-music-is-cut-and-moved-like-anything-else", "note": "The music is picked, so B cuts IT, and dragging its bar slides IT. Nothing about a piece of sound needed a gesture of its own: it is a layer with an in and an out, so every gesture the timeline already had works on it, and the picture below has not moved through any of it" },
+    { "do": "snapshot", "name": "6-the-music-is-cut-and-moved-like-anything-else" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-it-plays", "note": "Space plays the document and two pieces of sound play together, each at the level its own line says, the music sliding down as the playhead reaches the duck. Space again pauses and the sound stops with it" },
+    { "do": "snapshot", "name": "7-it-plays" },
+
+    { "do": "action", "action": "soundExportMix" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-the-mix-is-written", "note": "Export Sound writes the mix as one file, built from the very same plan that just played: the same segments, the same source offsets, the same volume ramps. mix.m4a sits beside these pictures" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "9-undo", "note": "Every one of these is an ordinary edit, so Command Z steps back through them: the duck goes first, then the level, then the music, then the cut, then the detach. Nothing about sound needed its own undo" },
+    { "do": "snapshot", "name": "9-undo" }
+  ]
+}

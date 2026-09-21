@@ -633,6 +633,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Move the playhead to a fraction of what is left to watch, which is a
     /// real scrub's outcome without a walk having to know how long the clip is.
     case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
+    /// Back to the first frame. A walk that has to place something at the head
+    /// of the timeline needs a way to put the playhead there, and the three
+    /// fractions above cannot say nought.
+    case videoSeekStart
     /// Cutting a recording into pieces: put a cut where the playhead is, throw
     /// away the piece the playhead is in, and take the last one back.
     case videoCut, videoDeletePiece, videoUndoEdit
@@ -709,6 +713,29 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case clipHoldFrame
     /// Retime the piece in hand. Its sound goes with it, at the same rate.
     case clipSpeedDouble, clipSpeedHalf
+    /// Take the picked clip's sound off its picture and lay it on a layer of
+    /// its own (`docs/design/video-audio.md`). Fails the walk when there is
+    /// nothing to take off, so a walk cannot photograph a detach that never
+    /// happened.
+    case soundDetach
+    /// Put the sample piece of music on the timeline where the playhead is: the
+    /// panel-free path Add Sound takes, so a walk never has to answer an open
+    /// panel.
+    case soundAddSample
+    /// Duck the picked layer: four points either side of a dip, which is all a
+    /// duck is. It is a walk's stand-in for dragging four dots on the bar.
+    case soundDuck
+    /// Pull the picked layer's fader down to half, so a walk can photograph a
+    /// level that is not the one it was recorded at.
+    case soundLevelHalf
+    /// Fail the walk unless sound is actually coming out: the engine running
+    /// with every piece of the mix scheduled on it. The one thing about playing
+    /// that can be checked without ears, so a walk never photographs a playhead
+    /// moving in silence and calls it playing.
+    case soundExpectPlaying
+    /// Write the mix out beside the walk's own pictures, and fail if nothing
+    /// lands: the one step that proves an export really happened.
+    case soundExportMix
     /// The bar's LEFT end dragged an eighth of the document inwards, and back
     /// out again by the same amount. The pair is the proof that nothing was
     /// thrown away: what the first one put out of play, the second one takes
@@ -740,6 +767,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .clipSplit, .clipDeletePiece, .clipHoldFrame,
              .clipSpeedDouble, .clipSpeedHalf,
+             .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
+             .soundExpectPlaying, .soundExportMix,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease: true
@@ -765,7 +794,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
              .videoTrimReset, .videoCopyGIF,
-             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
+             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters, .videoSeekStart,
              .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
              .videoSave, .videoCloseAndSave, .videoRevertToOriginal, .save,
              .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
@@ -787,7 +816,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone,
              .videoTrimCancel, .videoTrimReset, .videoPlay, .videoPause,
-             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters: true
+             .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
+             .videoSeekStart: true
         default: false
         }
     }

@@ -424,6 +424,10 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// that has been separated in this session, which is nearly all of them.
     /// It is the notice pill's count given somewhere it does not fade from.
     public let separationNote: SeparationLeftover?
+    /// Whether this row is a piece of sound and nothing else
+    /// (`SoundClip.swift`). It draws no pixels, so there is no thumbnail to
+    /// show and the slot carries a waveform mark instead of staying blank.
+    public let isSound: Bool
 
     public var id: UUID { row.id }
 
@@ -433,7 +437,9 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
                 isRasterizable: Bool,
                 canTurnIntoPath: Bool = false,
                 outOfView: RowOutOfView? = nil,
-                separationNote: SeparationLeftover? = nil) {
+                separationNote: SeparationLeftover? = nil,
+                isSound: Bool = false) {
+        self.isSound = isSound
         self.outOfView = outOfView
         self.separationNote = separationNote
         self.versionName = versionName
@@ -566,7 +572,8 @@ extension PhotonzDocument {
                     // takes the note with it instead of leaving a count sitting
                     // over a picture that holds everything again.
                     separationNote: separations.isEmpty
-                        ? nil : layer.imageRef.flatMap { separations[$0] }))
+                        ? nil : layer.imageRef.flatMap { separations[$0] },
+                    isSound: layer.isSoundOnly))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }
         }

@@ -52,7 +52,14 @@ extension EditorState {
         // A scrub while it plays takes over: the clock restarts from where the
         // hand put the playhead rather than snapping back to where it had got
         // to on its own.
-        if isDocumentPlaying { restartDocumentClock() }
+        if isDocumentPlaying {
+            restartDocumentClock()
+            // The sound is scheduled against one engine start, so a scrub
+            // mid-play has to schedule it again from where the hand put the
+            // playhead. Nothing is faded: a scrub is somebody looking for a
+            // moment, and what they want to hear is that moment.
+            startAudio()
+        }
         documentMomentChanged()
     }
 
@@ -87,11 +94,13 @@ extension EditorState {
         if documentTimeMS >= lastDocumentTimeMS { documentTimeMS = 0 }
         isDocumentPlaying = true
         restartDocumentClock()
+        startAudio()
     }
 
     func pauseDocument() {
         guard isDocumentPlaying else { return }
         isDocumentPlaying = false
+        stopAudio()
         documentPlaybackTask?.cancel()
         documentPlaybackTask = nil
         documentPlaybackStartedAt = nil
@@ -134,6 +143,10 @@ extension EditorState {
     /// the last frame it has and replaces it the instant the right one lands.
     func documentMomentChanged() {
         guard let document = shownDocument else { return }
+        // Every layer's level put where the plan says it is at this moment,
+        // which is what turns a pair of points into a duck you can hear
+        // (`EditorState+Audio.swift`).
+        followAudio()
         let wanted = document.movieFrames(atTimeMS: documentTimeMS)
         if !wanted.isEmpty {
             movieFrames.fetch(wanted)

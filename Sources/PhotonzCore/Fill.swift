@@ -17,6 +17,8 @@ public enum Fill {
     public static func filled(_ layer: Layer, colorHex: String, solidRef: ImageRef?) -> Layer? {
         var filled = layer
         switch layer.content {
+        // A colour dropped on a piece of sound has nothing to colour.
+        case .sound: return nil
         case .image:
             guard let solidRef else { return nil }
             filled.content = .image(solidRef)

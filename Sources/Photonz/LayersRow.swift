@@ -388,6 +388,13 @@ struct LayersRow: View, Equatable {
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 3))
                     .padding(1)
+            } else if display.isSound {
+                // A piece of sound draws nothing, so there is no picture of it
+                // to show. A blank grey square in the slot reads as a layer
+                // that failed to render; a waveform reads as what it is.
+                Image(systemName: "waveform")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(width: 40, height: 30)

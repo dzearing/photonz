@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.441Z",
-  "updated": "2026-09-20T22:51:57.331Z",
+  "updated": "2026-09-20T22:55:09.240Z",
   "deps": [
     "a-document-can-have-time",
     "a-clip-splits-into-pieces-and-the-pieces-can-be"
@@ -100,11 +100,16 @@
     {
       "t": "2026-09-20T22:51:57.330Z",
       "note": "LEFT ROUGH, all of it also in the audit's rough list. Filed as ONE follow-up (a-cut-clip-says-how-many-pieces-it-is-in-and-a-p, p2): the layers list still shows a cut clip as a plain row with no piece count (D18 says it should), and speed has no Properties row (video-speed says retiming is a property of the selected clip). Not filed, recorded here instead: letting go of a trim that shortened a piece reflows the pieces after it, so the bar shifts by the amount you trimmed at the moment you release - every editor does this and the ripple rule requires it, but it is a visible jump and the user may disagree; Hold This Frame has no keyboard shortcut because shift-F walks the Frame slot and option-F fills the flow and nothing free reads as freeze; the joins between pieces are a hairline when the clip is NOT picked, since the grips only come up on the picked clip; snapping has almost nothing to catch on in a one clip recording and will only earn its keep once titles and a second clip are on the timeline. ALSO WORTH KNOWING FOR THE NEXT RUNNER, and it is not an app bug: four walks reported CRASHED with no crash report during this task, including ones that had passed minutes earlier. The cause was two playtest runs overlapping - one run's probe quit kills the other's app, because there is one Photonz Probe bundle and both drive it. Run playtests one at a time; every one of those walks passed when re-run alone."
+    },
+    {
+      "t": "2026-09-20T22:55:09.238Z",
+      "note": "The timeline's clip bar is now the surface you cut on: split at the playhead (B), ripple delete a picked piece, carry a piece into a different place in the order with the landing drawn while you hold it, drag any edge of the bar, slide a whole clip and catch it on the playhead or another clip, hold a frame, and retime a piece with its sound. Nothing is destroyed. Model in PhotonzCore/ClipBarDrag.swift with 30 tests; surface in EditorState+ClipBar.swift and ClipPiecesBar.swift; ripple rule written into docs/design/video-surface.md 11. Verified: 8584 tests pass, two new walks (cut-on-the-timeline-walk, a-clip-shows-where-it-will-land-walk) pass with 15 real pictures of the window between them, and every trim, cut, clip, recording and motion-strip walk that can run on a locked screen still passes. Audit: queue/audits/2026-09-20-video-cutting.json. Commit a3fe52d7, pushed."
     }
   ],
   "started": "2026-09-20T22:08:56.474Z",
   "walks": [
     "cut-on-the-timeline-walk",
     "a-clip-shows-where-it-will-land-walk"
-  ]
+  ],
+  "completed": "2026-09-20T22:55:09.239Z"
 }

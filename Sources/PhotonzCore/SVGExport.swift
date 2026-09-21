@@ -354,6 +354,10 @@ public enum SVGExport {
                        carried: Bool = false) -> Answer {
         if let reason = styleReason(layer, carried: carried) { return .picture(reason) }
         switch layer.content {
+        // Sound has nothing to draw, so there is nothing to rasterise: it
+        // leaves no mark in an SVG either way.
+        case .sound:
+            return .vector
         case .image:
             return flatColor(of: layer, in: flatImages) == nil ? .picture(nil) : .vector
         case .path(let path):

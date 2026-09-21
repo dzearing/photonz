@@ -635,6 +635,13 @@ struct InspectorPanel: View {
         if editorState.motionLayer != nil || editorState.motionNeedsOneLayer {
             set.insert(.motion)
         }
+        // How loud the picked layer plays (Next, `next-sound-on-the-timeline`).
+        // Present only when what is picked actually makes a sound: a clip that
+        // still has its recording's sound on it, or a piece of sound. A level
+        // row on a rectangle would be a control for nothing.
+        if Experiments.shared.soundOnTheTimelineEnabled, editorState.soundLayerInHand != nil {
+            set.insert(.sound)
+        }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -1039,6 +1046,8 @@ struct InspectorPanel: View {
             }
         case .motion:
             MotionListInspector()
+        case .sound:
+            SoundInspector()
         case .shadow:
             ShadowInspector()
         case .library:

@@ -2312,6 +2312,98 @@ private final class Run {
                         + "to hold")
                 }
                 editor.holdFrameAtPlayhead()
+            case .soundDetach:
+                guard editor.canDetachSound else {
+                    throw Failure(description: "there is no sound to take off: pick a clip whose "
+                        + "recording has a sound track and has not been detached already")
+                }
+                editor.detachSound()
+            case .soundAddSample:
+                guard let url = TutorialSampleSound.fresh() else {
+                    throw Failure(description: "couldn't write the sample music")
+                }
+                let before = editor.document?.allLayers.count ?? 0
+                var landed: UUID?
+                let at = editor.documentTimeMS
+                Task { landed = await editor.addSound(from: url, atMS: at) }
+                try await poll("the sample music to land on the timeline", within: 20) {
+                    landed != nil && (editor.document?.allLayers.count ?? 0) > before
+                }
+            case .soundDuck:
+                guard editor.soundLayerInHand != nil else {
+                    throw Failure(description: "nothing picked makes a sound, so there is nothing "
+                        + "to duck")
+                }
+                // Down over a fifth of a second a quarter of the way in, back
+                // up three quarters of the way through: two points either side
+                // of a dip, which is what dragging four dots on the bar leaves.
+                let length = max(400, editor.soundLayerInHand?.time?.lengthMS ?? 4000)
+                editor.setSoundLevelPoint(atLayerMS: length / 4, gain: 1)
+                editor.setSoundLevelPoint(atLayerMS: length / 4 + 200, gain: 0.15)
+                editor.setSoundLevelPoint(atLayerMS: length * 3 / 4, gain: 0.15)
+                editor.setSoundLevelPoint(atLayerMS: length * 3 / 4 + 200, gain: 1)
+                guard editor.soundLevelInHand.points.count == 4 else {
+                    throw Failure(description: "the duck did not land: the level has "
+                        + "\(editor.soundLevelInHand.points.count) points on it, not 4")
+                }
+            case .soundLevelHalf:
+                guard editor.soundLayerInHand != nil else {
+                    throw Failure(description: "nothing picked makes a sound, so there is no level "
+                        + "to pull down")
+                }
+                editor.setSoundGain(0.5)
+            case .soundExpectPlaying:
+                guard editor.isDocumentPlaying else {
+                    throw Failure(description: "the document is not playing, so nothing can be "
+                        + "coming out of it; press play first")
+                }
+                // Everything audible, and everything audible that is still to
+                // come. The engine is loaded once when play starts, so what is
+                // on it is what was still to come THEN — somewhere between the
+                // two, since the playhead has moved since.
+                let audible = editor.audioMix.filter(\.isAudible)
+                let stillToCome = audible.filter { $0.endMS > editor.documentTimeMS }.count
+                guard editor.audioPlayer.isPlaying else {
+                    throw Failure(description: "the playhead is moving but the sound engine is not "
+                        + "running: \(stillToCome) piece(s) of sound should be playing and none are")
+                }
+                let on = editor.audioPlayer.scheduledCount
+                guard on >= max(1, stillToCome), on <= audible.count else {
+                    throw Failure(description: "\(on) piece(s) of sound are on the engine; the mix "
+                        + "has \(audible.count) audible piece(s), \(stillToCome) of them still to "
+                        + "come from \(editor.documentTimeMS) ms")
+                }
+                note(number, step.name,
+                     "sound: the engine is running with \(on) piece(s) of sound scheduled on it",
+                     state: describe())
+            case .soundExportMix:
+                let mix = editor.audioMix
+                guard !mix.isEmpty else {
+                    throw Failure(description: "there is no sound in this document to write out")
+                }
+                let destination = out.appendingPathComponent("mix.m4a")
+                let urls = SoundLibrary.shared.urls(for: mix)
+                var failure: String?
+                var finished = false
+                Task {
+                    do { try await AudioMixdown.write(mix, urls: urls, to: destination) }
+                    catch { failure = "\(error)" }
+                    finished = true
+                }
+                try await poll("the mix to be written", within: 60) { finished }
+                if let failure {
+                    throw Failure(description: "the mix could not be written: \(failure)")
+                }
+                let attributes = try? FileManager.default
+                    .attributesOfItem(atPath: destination.path)
+                let size = (attributes?[.size] as? Int) ?? 0
+                guard size > 1000 else {
+                    throw Failure(description: "the mix landed but is \(size) bytes, which is "
+                        + "not a sound file")
+                }
+                note(number, step.name,
+                     "sound: \(mix.count) pieces of sound written to mix.m4a, \(size) bytes",
+                     state: describe())
             case .clipSpeedDouble, .clipSpeedHalf:
                 let percent = action == .clipSpeedDouble ? 200 : 50
                 guard editor.canSetClipSpeed(percent) else {
@@ -2392,6 +2484,7 @@ private final class Run {
             case .videoTrimReset: editor.resetTrimSelection()
             case .videoPlay: editor.playDocument()
             case .videoPause: editor.pauseDocument()
+            case .videoSeekStart: editor.goToDocumentStart()
             case .videoSeekQuarter: editor.scrubDocument(toMS: editor.documentLengthMS / 4)
             case .videoSeekMiddle: editor.scrubDocument(toMS: editor.documentLengthMS / 2)
             case .videoSeekThreeQuarters:
@@ -2429,6 +2522,7 @@ private final class Run {
             case .videoTrimDone: video.commitTrim()
             case .videoTrimCancel: video.cancelTrim()
             case .videoCopyGIF: coordinator.copyRecording(video, as: .gif)
+            case .videoSeekStart: video.scrub(to: 0)
             case .videoSeekQuarter: video.scrub(to: video.duration * 0.25)
             case .videoSeekMiddle: video.scrub(to: video.duration * 0.5)
             case .videoSeekThreeQuarters: video.scrub(to: video.duration * 0.75)
@@ -2573,6 +2667,10 @@ private final class Run {
             // Handled in full above, where they can refuse the walk. Named
             // here only because this switch covers every action.
             case .holdColorRow, .paintHeldColorRow, .save: break
+            // Sound, handled in full above with the rest of the timeline, where
+            // each one can refuse the walk rather than quietly doing nothing.
+            case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
+                 .soundExpectPlaying, .soundExportMix, .videoSeekStart: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             case .copy: editor.copySelectedLayer()
@@ -3135,7 +3233,7 @@ private final class Run {
             case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
                  .videoTrimReset,
                  .videoCopyGIF,
-                 .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
+                 .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters, .videoSeekStart,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
                  .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
                  .videoDragTrimFreedNearCut,
@@ -9266,6 +9364,9 @@ private final class Run {
                 case .lens(let lens): kind = "lens:\(lens.adjustment.rawValue)"
                 case .measure: kind = "measure"
                 case .collage: kind = "collage"
+                // A piece of sound draws nothing, and the tree says so rather
+                // than leaving a row a walk cannot account for.
+                case .sound: kind = "sound"
                 case .group(let g): kind = g.isFrame ? "frame" : (g.instanceOf != nil ? "copy" : "group")
                 }
                 var line = String(repeating: "  ", count: depth)

@@ -942,6 +942,14 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case measure(MeasureContent)
     case collage(CollageContent)
     case group(GroupContent)
+    /// A layer that is nothing but sound (`SoundClip.swift`). It occupies a
+    /// stretch of the document's time and draws not one pixel, which is what
+    /// lets a mixer be lanes on the timeline rather than a separate app.
+    ///
+    /// Its own case rather than a picture with no picture in it, so that every
+    /// switch in the app is asked by the compiler what it means by a layer
+    /// with nothing to draw, instead of quietly drawing an empty rectangle.
+    case sound(SoundRef)
 
     /// True when this content's rendered appearance scales uniformly with the
     /// frame. Photos and collages do — every pixel is frame-relative. Annotation
@@ -950,6 +958,8 @@ public enum LayerContent: Hashable, Codable, Sendable {
     /// of that content must re-render rather than scale a sprite.
     var scalesUniformlyOnResize: Bool {
         switch self {
+        // Sound has no rendered appearance to scale.
+        case .sound: false
         case .image, .collage: true
         // A group holds strokes, glyphs and ticks whose sizes are fixed in
         // points, so scaling a sprite of it stretches them.
@@ -1570,6 +1580,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// clip stylable, maskable and effectable like anything else.
     public var movie: MovieRef?
 
+    /// Set on a clip whose sound has been taken off its picture and laid on a
+    /// layer of its own (`SoundClip.swift`). Nil, and so false, for every
+    /// layer in every document written before this existed.
+    ///
+    /// A flag rather than clearing something, because a clip's sound is its
+    /// recording's sound and the recording is still the same file: what changed
+    /// is that this layer no longer speaks for it.
+    public var soundDetached: Bool?
+
+    /// How loud this layer plays, and how that changes as it runs
+    /// (`AudioMix.swift`). Nil is the ordinary case and always means the same
+    /// thing: at the level it was recorded at, the whole way through.
+    public var soundLevel: AudioLevel?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1661,6 +1685,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // along with the stretch they are pieces of.
         copy.cuts = cuts
         copy.movie = movie
+        // A copy of a clip whose sound was taken off is still a clip with no
+        // sound on it, and a copy of a sound plays at the level the original
+        // was set to.
+        copy.soundDetached = soundDetached
+        copy.soundLevel = soundLevel
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText

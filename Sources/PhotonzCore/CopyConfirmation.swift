@@ -145,6 +145,17 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// it exists for: without it, Keep Overlap on two shapes that do not
         /// touch is a menu item that does nothing at all.
         case shapesCombined(PathCombinePlan)
+        /// A clip's sound was taken off its picture (`SoundClip.swift`). The
+        /// canvas does not change at all when it happens — the picture is
+        /// identical the instant after — so without a word on screen the
+        /// command reads as having done nothing.
+        case soundDetached(clip: String)
+        /// A sound was brought in from a file and put on the timeline. It
+        /// draws nothing on the canvas, so the same reason applies twice over:
+        /// the only place it shows up is the timeline and the layers list.
+        case soundAdded(name: String)
+        /// The mix was written out as one sound file, or could not be.
+        case mixWritten(file: String?)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -238,6 +249,9 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// The verdict, set in its own weight at the head of the pill.
     public var title: String {
         switch subject {
+        case .soundDetached: return "Sound taken off"
+        case .soundAdded: return "Sound added"
+        case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
@@ -267,6 +281,13 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// What was copied, in plain words.
     public var detail: String {
         switch subject {
+        case .soundDetached(let clip):
+            return "\(clip) keeps its picture. Its sound is a layer of its own now"
+        case .soundAdded(let name):
+            return "\(name) is on the timeline"
+        case .mixWritten(let file):
+            guard let file else { return "The mix could not be written" }
+            return file
         case .specList(let count):
             return "Spec list with \(count == 0 ? "no visible measurements" : Self.measurementPhrase(count))"
         case .measurements(let count):

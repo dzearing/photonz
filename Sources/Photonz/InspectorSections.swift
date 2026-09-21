@@ -101,6 +101,13 @@ enum InspectorSectionID: String, CaseIterable {
     // Effects row is something the layer paints, a Motion row is something
     // about it that changes.
     case motion
+    // How loud the picked layer plays and what shapes it (Next,
+    // `next-sound-on-the-timeline`). Directly above Motion because they are the
+    // same shape of thing said about two different properties: something about
+    // this layer that changes as the document runs. Present only when what is
+    // picked makes a sound at all, which is a clip or a piece of sound and
+    // nothing else in any document anybody has.
+    case sound
     // Shadow stays at the bottom. It is part of the same look family as Color
     // and Effects, but it is a switch you set once rather than a slider you
     // pull, and it is the tallest section in the panel: putting it above the
@@ -136,6 +143,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .canvas: "Canvas"
         case .effects: "Effects"
         case .motion: "Motion"
+        case .sound: "Sound"
         case .shadow: "Shadow"
         case .library: "Library"
         // Replaced at draw time by the scope's own noun; this is the fallback.

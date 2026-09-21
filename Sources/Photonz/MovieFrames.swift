@@ -45,14 +45,27 @@ final class MovieLibrary {
         // the picture the canvas gets is the rotated one, so the document's
         // canvas has to be that size too.
         let shown = size.applying(transform)
+        // Whether it has a sound track decides whether the app offers to take
+        // the sound off it, so it is read once, here, with everything else
+        // about the file (`SoundClip.swift`).
+        let hasSound = (try? await asset.loadTracks(withMediaType: .audio))?.isEmpty == false
         let ref = MovieRef(pixelSize: CGSize(width: abs(shown.width), height: abs(shown.height)),
-                           durationMS: Int((duration.seconds * 1000).rounded()))
+                           durationMS: Int((duration.seconds * 1000).rounded()),
+                           hasSound: hasSound)
         urls[ref.id] = standardized
         refsByURL[standardized] = ref
+        // A recording's sound is the same file as its picture, so the sound
+        // library can answer for it from the moment the recording is opened.
+        if let sound = ref.soundRef { SoundLibrary.shared.link(sound, to: standardized) }
         return ref
     }
 
     func url(for movie: MovieRef) -> URL? { urls[movie.id] }
+
+    /// The same question asked with an id on its own, which is what a
+    /// recording's SOUND has: a clip's sound shares the recording's identity
+    /// because it is the same file (`SoundClip.swift`).
+    func url(forID id: UUID) -> URL? { urls[id] }
 
     /// The reference this file already has, if anything has opened it.
     func existingMovie(at url: URL) -> MovieRef? { refsByURL[url.standardizedFileURL] }

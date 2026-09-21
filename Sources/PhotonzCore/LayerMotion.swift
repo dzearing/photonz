@@ -127,6 +127,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// the motion changes can never be two different colours.
     static func paintedColorHex(of layer: Layer) -> String? {
         switch layer.content {
+        // Sound paints nothing, so there is no colour of its own to change.
+        case .sound: return nil
         case let .annotation(annotation):
             switch annotation.shape {
             case .rectangle, .ellipse: return annotation.fillColorHex ?? annotation.colorHex

@@ -77,6 +77,8 @@ extension Layer {
     /// `resizeWidthOnly`); font size still goes through the picker.
     public var allowsFrameResize: Bool {
         switch content {
+        // Sound draws nothing and has no box on the canvas to take hold of.
+        case .sound: false
         case .text: true
         case .annotation: !hasEndpointHandles
         // Calipers edit via endpoint handles; alignment guides not at all

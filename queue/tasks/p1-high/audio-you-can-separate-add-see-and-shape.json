@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.610Z",
-  "updated": "2026-09-20T12:25:32.605Z",
+  "updated": "2026-09-21T12:11:04.515Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -45,6 +45,26 @@
     {
       "t": "2026-09-20T12:25:32.604Z",
       "note": "seq 40 -> 60"
+    },
+    {
+      "t": "2026-09-21T11:16:03.327Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T11:17:02.525Z",
+      "note": "adversarial review of the mock, before building. (1) The VU meters over the canvas are decorative here and the task notes already put meters with ballistics out of scope: cut. (2) The mock deletes the Layers group; video.md §5 already settled that it stays, and that argument wins over the page. (3) Solo, EQ and a compressor are a mixer's product, not this task's: cut. Mute stays, because separating a clip's sound from its picture is meaningless unless the picture's own sound can then be silenced. (4) The mock draws fades THREE ways at once: diamonds on the lane, In/Out second fields in Properties, and a curve picker. A fade is a special case of level over time, which this task owes anyway, so build ONE thing - points on the level line over the waveform - and a fade is what you get by putting a point at the start and one a second and a half in. Shorter and more powerful than the mock. (5) 'Duck music under voiceover' as a menu command needs the app to know which layer is a voice; skipped, the points do it by hand. (6) Library scope Media is a shelf of its own and is not what makes audio work; a file comes in through Add Sound and through a drop on the timeline, and the shelf is a follow-up."
+    },
+    {
+      "t": "2026-09-21T12:04:19.430Z",
+      "note": "owns these walks: sound-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-21T12:11:04.514Z",
+      "note": "left rough, not filed. (1) Dragging a sound file onto the window is refused rather than added: FileDrop.carriesUsableFile takes .image and the photonz type only, so the refusal is honest rather than silent, and Video > Add Sound is the way in. It is the first thing most people will try, and it is in the audit's rough for the user to react to. (2) The mock's Library scope Media shelf is not built, so a sound on the timeline is not listed anywhere as a file; nothing invented a second place for media, there is just no shelf yet, and it is a Library task rather than an audio one. (3) The Sound section's position in the panel is folded into appearance-is-below-the-fold-again-because-the-p. (4) While it plays the level is followed on the same 33ms clock the playhead runs on, so a fade shorter than about a tenth of a second is stepped live and sample accurate in the export; the plan is identical either way and only the smoothness differs at the extreme. All four are in the audit's rough list."
     }
+  ],
+  "started": "2026-09-21T11:16:03.326Z",
+  "walks": [
+    "sound-on-the-timeline-walk"
   ]
 }

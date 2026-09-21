@@ -427,6 +427,11 @@ extension Experiments {
     /// stored file and there is nothing left to switch off.
     var cutRecordingEnabled: Bool { isEnabled(FeatureCatalog.cutRecordingFlag) }
 
+    /// `next-sound-on-the-timeline`: whether a document's sound can be taken
+    /// off its picture, added to, seen as a waveform and shaped
+    /// (`docs/design/video-audio.md`).
+    var soundOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.soundOnTheTimelineFlag) }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.

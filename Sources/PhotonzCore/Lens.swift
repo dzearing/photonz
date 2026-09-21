@@ -306,6 +306,8 @@ extension LayerContent {
     /// than a picture of its own.
     public var readsBackdrop: Bool {
         switch self {
+        // Sound draws nothing, so it reads nothing either.
+        case .sound: false
         case .zoomCallout, .lens: true
         case .image, .text, .annotation, .measure, .collage, .group, .path: false
         }

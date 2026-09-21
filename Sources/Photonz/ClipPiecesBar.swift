@@ -27,6 +27,17 @@ struct ClipPiecesBar: View {
     /// drag is in flight.
     let bar: LayerTime
     let laneWidth: CGFloat
+    /// Whether this bar carries a sound, which is what puts a waveform inside
+    /// its pieces and a level line across the whole of it
+    /// (`docs/design/video-audio.md`).
+    var isSound: Bool = false
+
+    /// How tall the bar is drawn. A sound's is taller, because a waveform
+    /// squeezed into eighteen points is a smear and a level line needs room to
+    /// be dragged up and down in.
+    private var barHeight: CGFloat {
+        isSound ? MotionStripView.soundBarHeight : MotionStripView.barHeight
+    }
 
     /// The widest a grip gets. It gives way to the piece it is on rather than
     /// eating it: two fixed grips on a quarter second piece would leave no
@@ -50,7 +61,7 @@ struct ClipPiecesBar: View {
         return ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 5)
                 .fill(.quaternary.opacity(0.5))
-                .frame(height: MotionStripView.barHeight)
+                .frame(height: barHeight)
             if headShiftMS > 0 {
                 spare(width: shift, reading: ClipBarCopy.length(headShiftMS))
                     .offset(x: laneWidth * ruler.fraction(ofMS: Double(bar.inMS)))
@@ -66,12 +77,15 @@ struct ClipPiecesBar: View {
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
             }
+            if isSound {
+                levelLine(pieces, x0: x0, ruler: ruler)
+            }
             if let snap = editorState.clipBarSnap, isBeingDragged {
                 snapLine(atMS: snap.ms, ruler: ruler)
             }
             if let readout = editorState.clipBarReadout, isBeingDragged {
                 capsule(readout, x: x0)
-                    .frame(height: MotionStripView.barHeight)
+                    .frame(height: barHeight)
             }
         }
         .frame(width: laneWidth, alignment: .leading)
@@ -117,7 +131,7 @@ struct ClipPiecesBar: View {
         if width > 1 {
             RoundedRectangle(cornerRadius: 4)
                 .fill(.secondary.opacity(0.18))
-                .frame(width: width, height: MotionStripView.barHeight)
+                .frame(width: width, height: barHeight)
                 .overlay {
                     if width > 34 {
                         Text(reading)
@@ -159,7 +173,20 @@ struct ClipPiecesBar: View {
         let width = max(2, raw - (index == pieces.count - 1 ? 0 : 1.5))
         RoundedRectangle(cornerRadius: 4)
             .fill(fill(item, picked: isPiecePicked(index, of: pieces.count)))
-            .frame(width: width, height: MotionStripView.barHeight)
+            .frame(width: width, height: barHeight)
+            .overlay {
+                // The sound itself, drawn from the stretch of the file this
+                // piece plays. So a cut piece shows the part of the file it
+                // kept, wherever in the file that was, and a held frame shows
+                // nothing because there is no sound under one frame.
+                if isSound, let item, item.playsSound, let wave = waveform,
+                   width >= 2 {
+                    SoundWaveform(columns: wave.columns(count: Int(width),
+                                                        fromSourceMS: item.sourceInMS,
+                                                        toSourceMS: item.sourceOutMS))
+                        .padding(.vertical, 2)
+                }
+            }
             .overlay {
                 if let badge = Self.badge(item), width > 22 {
                     Text(badge)
@@ -177,6 +204,34 @@ struct ClipPiecesBar: View {
             }
             .playtestField(Self.pieceName(layerName: layerName, index: index, of: pieces.count))
             .panelHelp(Self.help(pieces, index: index))
+    }
+
+    /// The shape of this layer's sound, once it has been read off the file.
+    /// Asked for every time the bar draws, and asked for in the background the
+    /// first time, so a bar with no waveform in it yet is a bar rather than a
+    /// wait (`SoundFiles.swift`).
+    private var waveform: Waveform? {
+        guard let sound = editorState.document?.layer(id: layerID)?.sound else { return nil }
+        if let already = SoundLibrary.shared.waveform(for: sound) { return already }
+        SoundLibrary.shared.loadWaveform(for: sound)
+        return nil
+    }
+
+    /// The level, across the WHOLE bar rather than per piece: it is a property
+    /// of the layer measured from the layer's own start, so it runs over the
+    /// joins the way it runs over everything else.
+    @ViewBuilder
+    private func levelLine(_ pieces: ClipPieces, x0: CGFloat,
+                           ruler: MotionStripRuler) -> some View {
+        let width = laneWidth * ruler.fraction(ofMS: Double(pieces.totalLengthMS))
+        if width > 4 {
+            SoundLevelLine(layerID: layerID, layerName: layerName,
+                           level: editorState.document?.layer(id: layerID)?.soundLevel
+                               ?? AudioLevel(),
+                           lengthMS: pieces.totalLengthMS,
+                           width: width, height: barHeight)
+                .offset(x: x0)
+        }
     }
 
     private func fill(_ piece: ClipPiece?, picked: Bool) -> AnyShapeStyle {
@@ -233,7 +288,7 @@ struct ClipPiecesBar: View {
             Capsule()
                 .fill(Color.accentColor)
                 .overlay { Capsule().strokeBorder(Color.white.opacity(0.75), lineWidth: 1) }
-                .frame(width: width, height: MotionStripView.barHeight)
+                .frame(width: width, height: barHeight)
                 // The first grip sits inside the bar and the rest hang off the
                 // join to its left, so a grip never covers the piece after it.
                 .offset(x: x - (edge == 0 ? 0 : width))
@@ -317,10 +372,10 @@ struct ClipPiecesBar: View {
         ZStack {
             Capsule()
                 .fill(Color.green.opacity(0.35))
-                .frame(width: 8, height: MotionStripView.barHeight + 10)
+                .frame(width: 8, height: barHeight + 10)
             Rectangle()
                 .fill(Color.green)
-                .frame(width: 2, height: MotionStripView.barHeight + 10)
+                .frame(width: 2, height: barHeight + 10)
         }
         .offset(x: laneWidth * ruler.fraction(ofMS: Double(ms)) - 4, y: -5)
         .allowsHitTesting(false)

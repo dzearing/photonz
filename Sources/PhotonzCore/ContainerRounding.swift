@@ -164,6 +164,8 @@ extension Layer {
     var paintsItsOwnCorners: Bool {
         guard isVisible else { return false }
         switch content {
+        // Sound paints nothing anywhere, corners included.
+        case .sound: return false
         case .annotation, .image, .collage, .lens, .zoomCallout: return true
         case .text, .measure, .path: return false
         // A container paints its corners when it has a surface behind its

@@ -46,6 +46,10 @@ extension LayerContent {
     func rescaled(by scale: CGFloat) -> LayerContent {
         guard scale > 0, scale != 1, scale.isFinite else { return self }
         switch self {
+        // Sound states no length of its own: it is a stretch of time, and
+        // time is not what a resize changes.
+        case .sound:
+            return self
         case .image:
             return self
         case .text(var text):

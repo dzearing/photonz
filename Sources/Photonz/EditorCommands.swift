@@ -422,6 +422,25 @@ struct EditorCommands: Commands {
                 .disabled(editor?.clipSpeedInHand == nil)
                 Divider()
             }
+            // Sound rides the same time axis as the picture, so there is no
+            // mixer window and no audio mode: these four rows are the whole of
+            // it, and everything else a piece of sound needs — cut it, move it,
+            // name it, switch it off, undo any of it — is what the timeline
+            // already does to a layer (`docs/design/video-audio.md`).
+            if Experiments.shared.soundOnTheTimelineEnabled {
+                // No key on Detach Sound: it is done once per clip, and a key
+                // that close to ⌘D would be a key somebody presses by accident
+                // on a take they have already cut.
+                Button("Detach Sound") { editor?.detachSound() }
+                    .disabled(!(editor?.canDetachSound ?? false))
+                Button("Add Sound…") { editor?.addSoundFromFile() }
+                    .disabled(!(editor?.documentHasTime ?? false))
+                Button("Flatten Level") { editor?.clearSoundLevelPoints() }
+                    .disabled((editor?.soundLevelInHand.points.isEmpty ?? true))
+                Button("Export Sound…") { editor?.exportSound() }
+                    .disabled(!(editor?.documentHasAudio ?? false))
+                Divider()
+            }
             Button("Set Trim Start to Playhead") {
                 if let video { video.setTrimIn(video.currentTime) }
             }

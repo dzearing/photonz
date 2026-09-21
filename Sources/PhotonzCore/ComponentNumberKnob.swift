@@ -140,6 +140,8 @@ extension Layer {
     /// corners either way, so rounding them is a knob that would do nothing.
     var hasRoundableCorners: Bool {
         switch content {
+        // Sound has no corners, because it has nothing on screen at all.
+        case .sound: return false
         case .annotation(let annotation): return annotation.shape == .rectangle
         // A lens is masked to its box the way a picture is, so rounding it
         // rounds the region it covers: a blurred pill instead of a blurred box.

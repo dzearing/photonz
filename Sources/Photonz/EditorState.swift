@@ -906,6 +906,12 @@ final class EditorState {
     /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
     /// so a window holding a screenshot never makes one.
     @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?
+
+    /// Where this window's sound is played from, made the first time something
+    /// asks to be heard (`EditorState+Audio.swift`). Held rather than made per
+    /// press because an `AVAudioEngine` is not cheap to build, and outside the
+    /// observation graph because nothing on screen is drawn from it.
+    @ObservationIgnored var audioPlayerStorage: DocumentAudioPlayer?
     /// The trim in flight, where the Trim tool is in hand over a clip
     /// (`EditorState+Trim`). Held here rather than in the document, exactly as
     /// the crop rectangle is, so ⎋ throws it away without an undo step.

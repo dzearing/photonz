@@ -143,9 +143,11 @@ this task gave the document form timecode labels.
 ### The transport
 
 Only the controls that do something: where the playhead is, back a frame, play
-or pause, on a frame, and how long the whole thing runs for. No volume, because
-there is no audio yet. No loop, because a recording finishes. A control that
-only promises a feature is a dead end.
+or pause, on a frame, and how long the whole thing runs for. No volume: sound
+landed on 2026-09-21 and its level is a property of each LAYER that makes one
+(`video-audio.md`), so a master fader here would be a second place to turn the
+same thing down. No loop, because a recording finishes. A control that only
+promises a feature is a dead end.
 
 `space` plays and pauses. `←` and `→` step a frame, and only while nothing is
 picked, so they still nudge a layer somebody has taken hold of.
@@ -234,8 +236,11 @@ be added without it changing shape.
 
 - **Transitions.** A relationship between two clips at a cut, not a filter on a
   clip. `comp-video` §02–§04.
-- **Audio.** A separated track is a layer with an in and an out, so it rides the
-  same axis and the same trim.
+- ~~**Audio.**~~ **Built on 2026-09-21** (`video-audio.md`), and it pushed back
+  on the model exactly as little as hoped: one computed property on `Layer`, one
+  content case, two optional fields, and the strip drew it without being asked.
+  A separated track is a layer with an in and an out, so it rides the same axis
+  and the same trim.
 - **Captions.** What the Title / Text tool does when the document has time.
 - **Keyframes.** Already settled by the user on 2026-09-15: motion is a property
   of a layer opening into a timing surface with a lane per moving part. An icon

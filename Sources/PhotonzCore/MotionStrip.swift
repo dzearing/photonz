@@ -64,15 +64,21 @@ public struct MotionStripGroup: Identifiable, Hashable, Sendable {
     /// The stretch of the document's time this layer occupies, nil for a layer
     /// that is simply there the whole way through.
     public var bar: LayerTime?
+    /// Whether this row's bar carries a SOUND, which is the one thing that
+    /// makes a bar taller: a waveform squeezed into eighteen points is a smear,
+    /// and a level line with nowhere to go up or down is not draggable
+    /// (`docs/design/video-audio.md`).
+    public var isSound: Bool
 
     public var id: UUID { layerID }
 
     public init(layerID: UUID, layerName: String, lanes: [MotionStripLane],
-                bar: LayerTime? = nil) {
+                bar: LayerTime? = nil, isSound: Bool = false) {
         self.layerID = layerID
         self.layerName = layerName
         self.lanes = lanes
         self.bar = bar
+        self.isSound = isSound
     }
 }
 
@@ -118,7 +124,8 @@ extension PhotonzDocument {
                     MotionStripLane(layerID: layer.id, motionID: $0.id,
                                     title: $0.property.title, timing: $0.timing, isOn: $0.isOn)
                 },
-                bar: layer.time)
+                bar: layer.time,
+                isSound: layer.sound != nil)
         }
     }
 

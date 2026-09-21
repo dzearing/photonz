@@ -108,6 +108,9 @@ extension LayerContent {
     func inkDrawnLarger(by factor: CGFloat) -> LayerContent {
         guard factor.isFinite, factor > 0, factor != 1 else { return self }
         switch self {
+        // Sound draws no ink, so there is none to draw larger.
+        case .sound:
+            return self
         case .path(var path):
             path.strokeWidth *= factor
             return .path(path)

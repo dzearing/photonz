@@ -5809,3 +5809,84 @@
 {"t":"2026-09-20T21:13:37.463Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
 {"t":"2026-09-20T21:13:42.142Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
 {"t":"2026-09-20T21:13:42.199Z","ev":"task_blocked","id":"trim-becomes-a-tool-and-the-recording-window-ret","from":"in_progress","note":"Trim is a tool and it is shipped (commit 33e1cbc3, audit 2026-09-20-trim-is-a-tool). The rest of the task — Save, export and Revert to Original on the document path, the eleven walks rewritten, the flag on by default and the four old files deleted — all turn on one question that is now a card on the dashboard: what Command S should do to a recording you have also drawn on. Nothing else in the task can be decided without it."}
+{"t":"2026-09-20T22:08:56.352Z","ev":"sweep_pass","walks":263,"passed":263,"failed":0,"seconds":3290,"complete":false,"total":541,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T22:08:56.477Z","ev":"task_started","id":"cut-arrange-and-retime-what-is-on-the-timeline","title":"Cut, arrange and retime what is on the timeline","priority":"p1-high"}
+{"t":"2026-09-20T22:10:33.037Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T22:51:34.674Z","ev":"task_created","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p","priority":"p2-normal","title":"A cut clip says how many pieces it is in, and a piece can be retimed from the panel"}
+{"t":"2026-09-20T22:51:37.800Z","ev":"task_walks","id":"cut-arrange-and-retime-what-is-on-the-timeline","walks":["cut-on-the-timeline-walk","a-clip-shows-where-it-will-land-walk"]}
+{"t":"2026-09-20T22:51:47.560Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T22:51:52.836Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T22:51:57.332Z","ev":"task_note","id":"cut-arrange-and-retime-what-is-on-the-timeline"}
+{"t":"2026-09-20T22:55:09.241Z","ev":"task_done","id":"cut-arrange-and-retime-what-is-on-the-timeline","from":"in_progress","note":"The timeline's clip bar is now the surface you cut on: split at the playhead (B), ripple delete a picked piece, carry a piece into a different place in the order with the landing drawn while you hold it, drag any edge of the bar, slide a whole clip and catch it on the playhead or another clip, hold a frame, and retime a piece with its sound. Nothing is destroyed. Model in PhotonzCore/ClipBarDrag.swift with 30 tests; surface in EditorState+ClipBar.swift and ClipPiecesBar.swift; ripple rule written into docs/design/video-surface.md 11. Verified: 8584 tests pass, two new walks (cut-on-the-timeline-walk, a-clip-shows-where-it-will-land-walk) pass with 15 real pictures of the window between them, and every trim, cut, clip, recording and motion-strip walk that can run on a locked screen still passes. Audit: queue/audits/2026-09-20-video-cutting.json. Commit a3fe52d7, pushed."}
+{"t":"2026-09-20T23:53:22.769Z","ev":"sweep_pass","walks":265,"passed":264,"failed":1,"seconds":3471,"complete":false,"total":543,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-20T23:53:22.907Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep","title":"Every walk in the sweep either passes or is corrected","priority":"p1-high"}
+{"t":"2026-09-21T00:23:34.092Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:23:37.556Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:23:41.642Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:29:33.533Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-21T00:40:27.896Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:42:57.296Z","ev":"task_note","id":"resizing-one-piece-inside-a-turned-card-moves-th"}
+{"t":"2026-09-21T00:53:59.758Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:54:34.936Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:54:34.985Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:54:35.032Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:54:42.895Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":["what-a-separation-left-behind-walk","panel-reads-the-marquee-walk","panel-grip-walk","turn-two-shapes-into-pictures-walk","piece-geometry-walk","position-and-size-on-screen-walk","join-two-pen-paths-walk","text-style-row-drop-walk","crop-rounds-the-card-walk"]}
+{"t":"2026-09-21T00:54:59.697Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T00:54:59.744Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Batches 7-9 landed and pushed (e6744b07, fbc54a68, 8e2cd184, 536d1f2f): 7 walks corrected, 3 real app bugs fixed with tests, 9 of 9 real failures accounted for, 19 lock refusals still unproved. Sweep requested. Standing task, so it goes back to the queue."}
+{"t":"2026-09-21T01:50:26.960Z","ev":"sweep_pass","walks":265,"passed":265,"failed":0,"seconds":3305,"complete":false,"total":543,"screenLocked":true,"couldNotRun":278,"partial":true}
+{"t":"2026-09-21T01:50:27.087Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep","title":"Every walk in the sweep either passes or is corrected","priority":"p1-high"}
+{"t":"2026-09-21T02:13:55.429Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-21T02:13:59.273Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T02:14:05.571Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T02:14:05.619Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T02:14:08.684Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T02:14:08.732Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T02:14:24.421Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Batch 10 landed and pushed (3ae5baa4): 24 playtest step kinds were watched running under a locked screen and moved into PlaytestLockSafety.stepsThatSurviveALock, so 43 walks the sweep had been counting as unknown now run. All 43 were run unforced, twice each: 42 green, turned-piece-walk red on purpose against the task that owns its 3.5 point corner. A locked sweep now covers 309 of 543 walks instead of 266, and eight of the 38 walks the sweep was carrying as failing are settled green. 8591 tests pass. What is left refused is all genuine (focus 100, panelMenu 80, startGuide 39, menus 37, rightClick 19, menuShot 5) plus six kinds a forced run cannot reach, and the focus lever is folded into the task that owns the awake question. Full sweep requested. Back to pending: this is the standing task every sweep writes its result into."}
+{"t":"2026-09-21T03:16:53.312Z","ev":"sweep_pass","walks":308,"passed":307,"failed":1,"seconds":3726,"complete":false,"total":543,"screenLocked":true,"couldNotRun":235,"partial":true}
+{"t":"2026-09-21T03:16:53.445Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep","title":"Every walk in the sweep either passes or is corrected","priority":"p1-high"}
+{"t":"2026-09-21T03:52:13.095Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:42:49.913Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:42:49.962Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:42:58.032Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:42:58.079Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
+{"t":"2026-09-21T04:43:04.578Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":["tick-leads-walk","colour-onto-an-off-part-walk","motion-colour-picker-walk","motion-loop-preview-walk","motion-one-play-rule-walk","motion-pivot-in-a-corner-walk","motion-pivot-walk","motion-strip-way-back-walk","measure-row-menu-walk","tutorial-get-the-timing-right-walk","tutorial-make-something-move-walk","tutorial-start-on-an-icon-frame-walk"]}
+{"t":"2026-09-21T04:43:04.625Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:43:04.675Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T04:43:18.891Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Batches 11 and 12 landed and pushed (c9596c30, 40591cf6, 81567e25). The two biggest things a locked screen was hiding were not broken walks but refused ones, and both are gone: focus now asks the panel's own register for a field's name instead of accessibility, and an icon-only panel menu does the same, so a locked sweep runs 381 of 543 walks rather than 309. Of the 33 walks the sweep was carrying as failing, 21 are settled and pass twice on their own (14 needed nothing once they could run, 3 were corrected walks, 2 were fixed with new menu stand-ins, 2 are green when forced and still refused for another reason), 9 are still failing and each is now named in this log with its exact step and reading, and 3 are tutorial walks a lock cannot draw a card for. Three real corrections landed: shared-component-scale was typing a width into a panel that has not held one since the numbers moved into the Position and Size popout and then grouping a single layer, which nothing can do; width-reads-back read W off a panel its own Escape had put away; name-field-handback was asking for a field called Knob name that the app calls Property name. 8592 tests pass. Full sweep requested. Back to pending: this is the standing task every sweep writes its result into."}
+{"t":"2026-09-21T06:00:54.168Z","ev":"sweep_pass","walks":380,"passed":378,"failed":2,"seconds":4521,"complete":false,"total":543,"screenLocked":true,"couldNotRun":163,"partial":true}
+{"t":"2026-09-21T06:00:54.295Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep","title":"Every walk in the sweep either passes or is corrected","priority":"p1-high"}
+{"t":"2026-09-21T06:56:56.136Z","ev":"task_created","id":"a-colour-dropped-on-a-switched-off-effect-paints","priority":"p2-normal","title":"A colour dropped on a switched-off effect paints something nobody can see"}
+{"t":"2026-09-21T07:26:26.904Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":["motion-colour-picker-walk","tutorial-get-the-timing-right-walk","tutorial-make-something-move-walk","tutorial-start-on-an-icon-frame-walk","text-style-walk","text-style-arming-walk","text-style-drag-walk","text-style-row-drop-walk","text-style-comes-away-walk"]}
+{"t":"2026-09-21T07:26:31.104Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:31.154Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:36.442Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:36.492Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:41.873Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:41.921Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:41.970Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:46.296Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T07:26:49.451Z","ev":"task_pending","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Batch 13 landed and pushed (9e02b61f). The sweep's one crash was the sweep's own stop: out-of-view-mark-walk runs clean on its own, 37 steps and four real pictures in 9s. The real find was a press that went missing about one in six times right after a panel menu, measured over thirty runs, which is precisely what left a sweep unable to tell a break from a flake; the release is now queued and the press delivered by hand, which fixes it without hanging the walks whose views track the mouse themselves. Two lookups joined it: a menu can be named by the name the panel registered it under, and a row lends its name to a control whose middle it holds. Nine of the twelve carried walks are settled and pass twice on their own (four corrected, five needed nothing once the harness stopped stopping them); motion-colour-picker went from stopping at step 11 to stopping at step 57 on a real question about the app, and the three tutorial walks still need an unlocked Mac. One follow-up filed with its reproduction. 8592 tests pass. Full sweep requested."}
+{"t":"2026-09-21T08:42:17.694Z","ev":"sweep_pass","walks":380,"passed":379,"failed":1,"seconds":4507,"complete":false,"total":543,"screenLocked":true,"couldNotRun":163,"partial":true}
+{"t":"2026-09-21T08:42:17.828Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep","title":"Every walk in the sweep either passes or is corrected","priority":"p1-high"}
+{"t":"2026-09-21T10:00:15.338Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep","walks":["tutorial-start-on-an-icon-frame-walk"]}
+{"t":"2026-09-21T10:00:26.573Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:26.620Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:26.668Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:26.717Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:26.764Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:26.813Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:32.602Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:32.651Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:32.698Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:48.010Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-21T10:00:48.058Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep","from":"in_progress","note":"Batch 14 (bf03ef4d): panelMenu now ranks the words on a menu, then its row, then the register, so it opens the menu expect reads and the five text-style walks pass untouched; a synthesized press goes through the queue again so NSApp.currentEvent is set for it, which un-hangs zoom-readout-double-click-walk (180s hang to 28s ok, proved against 81567e25 that batch 13 caused it); three walks corrected. Verified: 8592 tests pass, all 80 panelMenu walks run twice green, a 48-walk sample of the rest green but for two tutorial cards a lock does not draw. One walk left, tutorial-start-on-an-icon-frame-walk, and only an unlocked Mac can read it. Full sweep requested."}
+{"t":"2026-09-21T11:16:03.115Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-4","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-09-21T11:16:03.196Z","ev":"sweep_pass","walks":380,"passed":378,"failed":2,"seconds":4492,"complete":false,"total":543,"screenLocked":true,"couldNotRun":163,"partial":true}
+{"t":"2026-09-21T11:16:03.329Z","ev":"task_started","id":"audio-you-can-separate-add-see-and-shape","title":"Audio you can separate, add, see and shape","priority":"p1-high"}
+{"t":"2026-09-21T11:17:02.527Z","ev":"task_note","id":"audio-you-can-separate-add-see-and-shape"}
+{"t":"2026-09-21T12:04:16.638Z","ev":"task_created","id":"hearing-the-sound-under-the-playhead-while-you-d","priority":"p2-normal","title":"Hearing the sound under the playhead while you drag it"}
+{"t":"2026-09-21T12:04:19.385Z","ev":"task_walks","id":"hearing-the-sound-under-the-playhead-while-you-d","walks":[]}
+{"t":"2026-09-21T12:04:19.432Z","ev":"task_walks","id":"audio-you-can-separate-add-see-and-shape","walks":["sound-on-the-timeline-walk"]}
+{"t":"2026-09-21T12:04:23.605Z","ev":"task_created","id":"a-mix-says-how-loud-it-is-and-stops-itself-runni","priority":"p2-normal","title":"A mix says how loud it is, and stops itself running past what a file can hold"}
+{"t":"2026-09-21T12:11:04.465Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-21T12:11:04.516Z","ev":"task_note","id":"audio-you-can-separate-add-see-and-shape"}
