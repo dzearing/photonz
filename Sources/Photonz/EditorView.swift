@@ -309,7 +309,7 @@ struct EditorView: View {
             }
         }
         .sheet(item: $editorState.videoExport) { run in
-            VideoExportProgressSheet(run: run)
+            VideoExportProgressSheet(run: run) { editorState.cancelVideoExport() }
         }
         .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
             // Where the canvas lands is the editor's call (empty window fills

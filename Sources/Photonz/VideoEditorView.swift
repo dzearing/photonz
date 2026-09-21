@@ -130,6 +130,11 @@ struct VideoEditorView: View {
         .sheet(isPresented: Bindable(state).isExportSheetPresented) {
             RecordingExportDialog()
         }
+        // While it writes: the same card a document's export puts up, with the
+        // encoder's own count of how far through it is and a way to stop.
+        .sheet(item: Bindable(state).recordingExport) { run in
+            VideoExportProgressSheet(run: run) { state.cancelRecordingExport() }
+        }
     }
 
     // MARK: - Auto-hide

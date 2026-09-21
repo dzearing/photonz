@@ -36,7 +36,11 @@ struct VideoExportDialog: View {
     }
 
     private var sizeLine: String {
-        RecordingExport.sizeLine(format: format, source: source)
+        RecordingExport.sizeLine(format: format, quality: quality, source: source)
+    }
+
+    private var purposeLine: String {
+        RecordingExport.purposeLine(format: format, quality: quality)
     }
 
     var body: some View {
@@ -54,13 +58,21 @@ struct VideoExportDialog: View {
             }
             if offersQuality {
                 ExportSheetRow("Quality") {
-                    Picker("Quality", selection: $quality) {
-                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                            Text(quality.shortLabel).tag(quality)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Quality", selection: $quality) {
+                            ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                                Text(quality.shortLabel).tag(quality)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        Text(purposeLine)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .playtestControl(RecordingExportDialog.purposeLabel,
+                                             detail: purposeLine)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
@@ -89,7 +101,7 @@ struct VideoExportDialog: View {
         .frame(width: ExportSheetMetrics.width)
         .onAppear {
             format = RecordingExportMemory.format
-            quality = RecordingExportMemory.quality
+            quality = RecordingExportMemory.quality(for: format)
             #if PHOTONZ_PLAYTEST
             if let asked = editor.playtestOpensExportOnRecordingFormat {
                 format = asked
@@ -101,6 +113,9 @@ struct VideoExportDialog: View {
             }
             #endif
             source = editor.videoExportSource
+        }
+        .onChange(of: format) { _, now in
+            quality = RecordingExportMemory.quality(for: now)
         }
     }
 }
@@ -114,15 +129,17 @@ struct VideoExportDialog: View {
 /// (`DocumentMovieWriter.write`), so there is nothing to tidy up afterwards and
 /// nothing to warn about here.
 struct VideoExportProgressSheet: View {
-    @Environment(EditorState.self) private var editor
     let run: VideoExportRun
+    /// What Stop does. The card is the same whichever door the export came
+    /// through; only the thing it stops differs.
+    let stop: () -> Void
 
     /// The name a walk finds the bar by.
     static let progressLabel = "Export progress"
 
     var body: some View {
         VStack(alignment: .leading, spacing: ExportSheetMetrics.spacing) {
-            Text("Writing the video")
+            Text(run.title)
                 .font(.headline)
             VStack(alignment: .leading, spacing: 6) {
                 ProgressView(value: min(1, max(0, run.fraction)))
@@ -134,7 +151,7 @@ struct VideoExportProgressSheet: View {
             }
             HStack {
                 Spacer()
-                Button("Stop") { editor.cancelVideoExport() }
+                Button("Stop") { stop() }
                     .keyboardShortcut(.cancelAction)
             }
         }

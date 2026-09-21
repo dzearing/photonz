@@ -67,6 +67,17 @@ public enum RecordingFormat: String, Codable, Sendable, CaseIterable {
         case .heic: return "Animated HEIC"
         }
     }
+
+    /// The heading on the card that is up while the file is being written. It
+    /// names what is being written, because a card saying "Writing the video"
+    /// over a GIF is a card nobody believes.
+    public var writingTitle: String {
+        switch self {
+        case .mp4: return "Writing the video"
+        case .gif: return "Writing the GIF"
+        case .heic: return "Writing the HEIC"
+        }
+    }
 }
 
 /// The user's recording choices, persisted as the "last used" config (phase

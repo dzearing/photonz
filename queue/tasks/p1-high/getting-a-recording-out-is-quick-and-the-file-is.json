@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 46,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.672Z",
-  "updated": "2026-09-21T13:54:35.767Z",
+  "updated": "2026-09-21T23:18:04.247Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This one does NOT depend on the time model: it improves the way out that exists today, and it is the step the user hits every single time they record something. There is already a pending task about making a recording small enough to send; read it and fold rather than duplicating.\n\nPairs with the picture export work: the task about choosing a quality and seeing the file size is the same idea for stills, and the two should not grow two different controls for one question.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -29,6 +29,30 @@
     {
       "t": "2026-09-21T13:54:35.766Z",
       "note": "seq 340 -> 46"
+    },
+    {
+      "t": "2026-09-21T21:52:46.117Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T21:54:24.498Z",
+      "note": "adversarial review, before building. (1) The mock-ish instinct is to give MP4 the same High/Standard/Small the GIF presets already mean — 24fps/1280px, 15/800, 10/480. Building that literally would be wrong twice: it would silently shrink a screen recording somebody asked to keep, and it would take away the verbatim-copy fast path that makes an untouched recording export instantly. So one enum, two meanings: for MP4, High is the recording as it is (full size, source frame rate) and only Standard and Small cap anything. The sheet's shape line always says the real px and fps, so nobody has to trust the word. (2) 'A couple of honest choices' is not three words on a segmented row: High/Standard/Small say nothing about who each is for. A purpose line under the row, one sentence, changing with the choice. (3) The reason the size cannot be predicted today is that exportMP4 is pinned to AVAssetExportPresetHighestQuality, which is an opaque target. If instead we ASK for a bitrate, the size is bitrate x seconds by construction. That is the whole fix for 'predictable': the estimate stops being a ratio somebody hopes holds and becomes the number we told the encoder. Cap it at what the content actually costs (measured off this recording) because an encoder never pads. (4) The recording window shows a fingernail spinner inside the Export button while a minute of encoding runs, with no way to stop it. The document door already has a proper card with a bar and a Stop. Give the recording door the same card. (5) 'Same file twice' is not obviously true for an AVFoundation re-encode: an MP4 carries a creation date in mvhd. Measure it before designing round it, and if the bytes differ, say exactly which bytes and why."
+    },
+    {
+      "t": "2026-09-21T23:17:51.080Z",
+      "note": "owns these walks: recording-export-sheet-walk"
+    },
+    {
+      "t": "2026-09-21T23:18:01.043Z",
+      "note": "what was built, and the numbers behind it. The MP4 export stopped asking AVFoundation for 'highest quality' and started asking for a number of bits per second worked out per pixel and per frame (VideoExportRecipe, PhotonzCore, pure and tested). That is what makes the weight on the sheet a prediction instead of a hope: the sheet now shows the smaller of the budget we are about to impose and what this very recording already costs per second and per pixel. Measured against files actually written on the eight second sample: copy 147 KB said / 147 KB landed (100%), Standard 147/134 (91%), Small 96/108 (113%), trimmed and cropped 26/22 (86%). Every estimate says 'about' except the copy, which is exact. The pixel term is a three quarter power rather than a straight ratio, because halving every side does not quarter the file: with the straight ratio Small promised 83 KB against 108 KB landing."
+    },
+    {
+      "t": "2026-09-21T23:18:04.246Z",
+      "note": "two real bugs found and fixed while building this, both of which would have frozen an export. (1) Feeding one AVAssetWriter both the pictures and the sound deadlocks: it stops asking for pictures part way through and never asks again, whoever is ahead. The eight second sample stopped at 45 to 65 frames every time, reproduced in a unit test the moment the source had a sound track on it (VideoExportBudgetTests, 'A recording with sound on it exports all the way through'). Fixed by writing the picture and the sound separately and joining them with a passthrough copy, which is the shape DocumentMovieWriter already settled on for the same reason. (2) Neither writer checked the writer's status while waiting for it to be hungry again, so a writer that had given up left the export waiting forever with a bar that never moved. That is what hung the whole test suite twice today at 0 per cent CPU. Both now throw with what AVFoundation said, and there is a 90 second stall limit as a backstop."
     }
+  ],
+  "started": "2026-09-21T21:52:46.116Z",
+  "walks": [
+    "recording-export-sheet-walk"
   ]
 }

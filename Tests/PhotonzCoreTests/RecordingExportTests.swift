@@ -29,50 +29,91 @@ struct RecordingExportTests {
 
     // MARK: - What it weighs
 
-    /// An untouched recording saved as MP4 is a verbatim file copy, so the
-    /// number is not an estimate at all: it is the file that is already there.
-    @Test func anUntouchedVideoIsWeighedExactly() {
-        #expect(RecordingExport.weight(format: .mp4, source: whole) == .exact(4_194_304))
+    /// An untouched recording saved as MP4 at the top choice is a verbatim file
+    /// copy, so the number is not an estimate at all: it is the file that is
+    /// already there.
+    @Test func anUntouchedVideoAtTheTopChoiceIsWeighedExactly() {
+        #expect(RecordingExport.weight(format: .mp4, quality: .high, source: whole)
+                == .exact(4_194_304))
     }
 
-    /// A trimmed one is re-encoded, so the only honest answer is measured from
-    /// the recording's own weight per second. Half the seconds, about half the
-    /// file.
-    @Test func atrimmedVideoIsWeighedFromWhatTheRecordingAlreadyCosts() {
-        #expect(RecordingExport.weight(format: .mp4, source: trimmed) == .about(2_097_152))
+    /// The two choices below it are asking for a SMALLER file than the one on
+    /// disk, which cannot be done without encoding, so even an untouched
+    /// recording is re-encoded there and the number falls with the choice. That
+    /// is the whole point of the row: the commonest reason to export a
+    /// recording nobody has touched is that the one on disk is too big to send.
+    @Test func theChoicesBelowTheTopMakeAnUntouchedRecordingSmaller() {
+        let high = RecordingExport.weight(format: .mp4, quality: .high, source: whole)
+        let standard = RecordingExport.weight(format: .mp4, quality: .standard, source: whole)
+        let small = RecordingExport.weight(format: .mp4, quality: .small, source: whole)
+        #expect(high == .exact(4_194_304))
+        #expect(standard == .about(2_457_600))
+        #expect(small == .about(864_000))
     }
 
-    /// A crop takes pixels out of every frame, so the estimate comes down with
+    /// A trimmed one is re-encoded whichever choice is showing: half the
+    /// seconds, about half the budget.
+    @Test func atrimmedVideoIsWeighedFromTheBudgetItIsGiven() {
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: trimmed)
+                == .about(1_228_800))
+    }
+
+    /// A crop takes pixels out of every frame, so the budget comes down with
     /// the pixel count. Quarter the pixels of a 1280 × 800: 640 × 400.
     @Test func aCropBringsTheEstimateDownWithThePixels() {
         var cropped = trimmed
         cropped.cropSize = CGSize(width: 640, height: 400)
-        // Half the seconds and a quarter of the pixels: an eighth of the file.
-        #expect(RecordingExport.weight(format: .mp4, source: cropped) == .about(524_288))
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: cropped)
+                == .about(307_200))
+    }
+
+    /// The other half of the estimate: a budget is a ceiling, and an encoder
+    /// never pads. A recording of a still screen costs a fraction of any
+    /// budget, and what the sheet says is what the recording itself already
+    /// costs per second and per pixel rather than the ceiling.
+    @Test func anEasyRecordingIsWeighedByWhatItCostsNotByTheCeiling() {
+        var easy = trimmed
+        easy.fileBytes = 40_000
+        // Half the seconds of a 40 KB recording, nowhere near the 1.2 MB the
+        // Standard budget would have allowed.
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: easy)
+                == .about(20_000))
     }
 
     /// A GIF or a HEIC is re-encoded frame by frame into a different container
     /// entirely. Nothing about the MP4 on disk predicts that, so the sheet says
     /// it does not know rather than showing a number it made up.
     @Test func anAnimatedPictureIsNotWeighedAtAll() {
-        #expect(RecordingExport.weight(format: .gif, source: whole) == .unknown)
-        #expect(RecordingExport.weight(format: .heic, source: trimmed) == .unknown)
+        #expect(RecordingExport.weight(format: .gif, quality: .standard, source: whole) == .unknown)
+        #expect(RecordingExport.weight(format: .heic, quality: .high, source: trimmed) == .unknown)
     }
 
-    /// A recording whose length has not loaded yet cannot be divided by, so
-    /// there is no estimate rather than a crash or a zero.
-    @Test func aRecordingWithNoLengthYetHasNoEstimate() {
+    /// A recording with nothing left in it has nothing to weigh.
+    @Test func aRecordingWithNothingKeptHasNoEstimate() {
         var empty = trimmed
-        empty.sourceDuration = 0
-        #expect(RecordingExport.weight(format: .mp4, source: empty) == .unknown)
+        empty.keptDuration = 0
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: empty) == .unknown)
     }
 
-    /// A recording the app has not managed to measure on disk has no number to
-    /// scale, so again nothing is invented.
-    @Test func aRecordingWithNoFileSizeHasNoEstimate() {
+    /// A recording whose length on disk has not loaded yet still has an
+    /// estimate, because the budget does not need it: what we are about to ASK
+    /// the encoder for is known whether or not the source has been measured.
+    /// This is what gives a document assembled out of nothing a number too.
+    @Test func aRecordingWithNoMeasuredSourceStillHasTheBudget() {
+        var unmeasured = trimmed
+        unmeasured.sourceDuration = 0
+        unmeasured.fileBytes = 0
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: unmeasured)
+                == .about(1_228_800))
+    }
+
+    /// A recording the app has not managed to measure on disk cannot be claimed
+    /// as an exact copy, so the top choice says nothing rather than nought.
+    @Test func aRecordingWithNoFileSizeHasNoExactAnswer() {
         var weightless = whole
         weightless.fileBytes = 0
-        #expect(RecordingExport.weight(format: .mp4, source: weightless) == .unknown)
+        #expect(RecordingExport.weight(format: .mp4, quality: .high, source: weightless)
+                == .unknown)
     }
 
     // MARK: - The size line
@@ -80,22 +121,23 @@ struct RecordingExportTests {
     /// The same shape of line the picture sheet uses: what the file is called,
     /// then what it costs.
     @Test func theSizeLineNamesTheFormatAndThenTheSize() {
-        #expect(RecordingExport.sizeLine(format: .mp4, source: whole) == "MP4 Video · 4.0 MB")
+        #expect(RecordingExport.sizeLine(format: .mp4, quality: .high, source: whole)
+                == "MP4 Video · 4.0 MB")
     }
 
     /// An estimate says so out loud. A number presented as a fact and then
     /// missed by a megabyte is worse than one that admitted what it was.
     @Test func anEstimateSaysAbout() {
-        #expect(RecordingExport.sizeLine(format: .mp4, source: trimmed)
-                == "MP4 Video · about 2.0 MB")
+        #expect(RecordingExport.sizeLine(format: .mp4, quality: .standard, source: trimmed)
+                == "MP4 Video · about 1.2 MB")
     }
 
     /// Where there is no honest number the line says that in plain words, in
     /// the same place, rather than going blank or spinning forever.
     @Test func noHonestNumberIsSaidInWords() {
-        #expect(RecordingExport.sizeLine(format: .gif, source: whole)
+        #expect(RecordingExport.sizeLine(format: .gif, quality: .standard, source: whole)
                 == "Animated GIF · size not known until it is written")
-        #expect(RecordingExport.sizeLine(format: .heic, source: whole)
+        #expect(RecordingExport.sizeLine(format: .heic, quality: .standard, source: whole)
                 == "Animated HEIC · size not known until it is written")
     }
 
@@ -104,15 +146,25 @@ struct RecordingExportTests {
     /// Where the picture sheet writes the pixel size, a recording writes its
     /// pixel size and how long it runs.
     @Test func theShapeLineSaysPixelsAndLength() {
-        #expect(RecordingExport.shapeLine(format: .mp4, quality: .standard, source: whole)
+        #expect(RecordingExport.shapeLine(format: .mp4, quality: .high, source: whole)
                 == "1280 × 800 px · 0:08")
+    }
+
+    /// A choice that re-encodes says the frame rate too, because the choice is
+    /// about to change it. A copy says nothing about frame rate, because
+    /// nothing touched it.
+    @Test func aReEncodedVideoSaysItsFrameRateAndACopyDoesNot() {
+        #expect(RecordingExport.shapeLine(format: .mp4, quality: .standard, source: whole)
+                == "1280 × 800 px · 30 fps · 0:08")
+        #expect(RecordingExport.shapeLine(format: .mp4, quality: .small, source: whole)
+                == "960 × 600 px · 30 fps · 0:08")
     }
 
     /// Trimmed, it says what is kept OF what there is, so the trim is legible
     /// on the sheet that is about to write it.
     @Test func aTrimmedRecordingSaysWhatIsKeptOfWhatThereIs() {
         #expect(RecordingExport.shapeLine(format: .mp4, quality: .standard, source: trimmed)
-                == "1280 × 800 px · 0:04 of 0:08")
+                == "1280 × 800 px · 30 fps · 0:04 of 0:08")
     }
 
     /// A cropped MP4 goes out at the crop's size, which is what the line says.
@@ -121,7 +173,7 @@ struct RecordingExportTests {
         cropped.cropSize = CGSize(width: 640, height: 400)
         cropped.isEdited = true
         #expect(RecordingExport.shapeLine(format: .mp4, quality: .standard, source: cropped)
-                == "640 × 400 px · 0:08")
+                == "640 × 400 px · 30 fps · 0:08")
     }
 
     /// A GIF is capped by the quality preset, so the line moves when the preset
@@ -155,13 +207,22 @@ struct RecordingExportTests {
 
     // MARK: - Which formats carry which controls
 
-    /// GIF and HEIC have a size/rate preset worth choosing. MP4 does not have
-    /// one yet, and a row that changes nothing is worse than no row, so the
-    /// sheet leaves it out exactly as it leaves the slider out for PNG.
-    @Test func onlyTheAnimatedPicturesOfferAQuality() {
-        #expect(!RecordingExport.offersQuality(.mp4))
+    /// All three formats have a preset worth choosing. MP4 joined the day its
+    /// export stopped asking for "highest quality, whatever that comes to" and
+    /// started asking for a number of bits per second.
+    @Test func everyFormatOffersAQuality() {
+        #expect(RecordingExport.offersQuality(.mp4))
         #expect(RecordingExport.offersQuality(.gif))
         #expect(RecordingExport.offersQuality(.heic))
+    }
+
+    /// And each choice says who it is for, in words about where the file is
+    /// going rather than about the encoder.
+    @Test func eachChoiceSaysWhoItIsFor() {
+        #expect(RecordingExport.purposeLine(format: .mp4, quality: .small)
+                == VideoExportQuality.small.purpose(for: .mp4))
+        #expect(RecordingExport.purposeLine(format: .mp4, quality: .high)
+                != RecordingExport.purposeLine(format: .gif, quality: .high))
     }
 
     /// The order the formats sit in on the sheet: the one nearly everybody
@@ -192,10 +253,12 @@ struct RecordingExportTests {
     /// The fast path: an MP4 of an unedited recording is a file copy, so it is
     /// instant and byte-identical. Anything else is a re-encode, and the sheet
     /// knows which it is about to ask for.
-    @Test func onlyAnUneditedVideoCopiesInsteadOfReEncoding() {
-        #expect(RecordingExport.copiesVerbatim(format: .mp4, source: whole))
-        #expect(!RecordingExport.copiesVerbatim(format: .mp4, source: trimmed))
-        #expect(!RecordingExport.copiesVerbatim(format: .gif, source: whole))
+    @Test func onlyAnUneditedVideoAtTheTopChoiceCopiesInsteadOfReEncoding() {
+        #expect(RecordingExport.copiesVerbatim(format: .mp4, quality: .high, source: whole))
+        #expect(!RecordingExport.copiesVerbatim(format: .mp4, quality: .standard, source: whole))
+        #expect(!RecordingExport.copiesVerbatim(format: .mp4, quality: .small, source: whole))
+        #expect(!RecordingExport.copiesVerbatim(format: .mp4, quality: .high, source: trimmed))
+        #expect(!RecordingExport.copiesVerbatim(format: .gif, quality: .high, source: whole))
     }
 
     /// What the file is called when the save box opens: the recording's own

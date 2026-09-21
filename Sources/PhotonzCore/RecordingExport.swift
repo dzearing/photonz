@@ -13,10 +13,12 @@ import Foundation
 ///
 /// - An untouched recording saved as MP4 is copied verbatim, so its size is
 ///   already known to the byte.
-/// - A trimmed or cropped MP4 is re-encoded, and the only honest estimate comes
-///   from what the recording itself already costs per second and per pixel.
-///   Both are measured from the file on disk rather than assumed, and the line
-///   says "about" so nobody reads it as a promise.
+/// - Any other MP4 is re-encoded, and the estimate is the smaller of two
+///   numbers: the budget the export ASKS the encoder for, which is a number we
+///   choose and so a ceiling we can trust (`VideoExportRecipe`), and what this
+///   very recording already costs per second and per pixel, measured off the
+///   file on disk. The line says "about", because an encoder spends less than
+///   its budget on an easy picture and nobody should read it as a promise.
 /// - A GIF or a HEIC is re-encoded into a different container entirely, and
 ///   nothing about the MP4 predicts it. The sheet says what it does know, the
 ///   pixels, the frame rate and the length, and says plainly that the size
@@ -44,16 +46,25 @@ public enum RecordingExport {
         /// Whether anything about the recording has been changed, which is what
         /// decides between a file copy and a re-encode.
         public var isEdited: Bool
+        /// How fast the recording itself runs. What a preset caps rather than
+        /// what it sets: nothing is ever sped up.
+        public var sourceFPS: Double
+        /// Whether the recording carries any sound, which is the difference
+        /// between a budget for pictures and a budget for both.
+        public var hasAudio: Bool
 
         public init(sourceDuration: TimeInterval, keptDuration: TimeInterval,
                     sourceSize: CGSize, cropSize: CGSize? = nil,
-                    fileBytes: Int, isEdited: Bool) {
+                    fileBytes: Int, isEdited: Bool,
+                    sourceFPS: Double = 30, hasAudio: Bool = false) {
             self.sourceDuration = sourceDuration
             self.keptDuration = keptDuration
             self.sourceSize = sourceSize
             self.cropSize = cropSize
             self.fileBytes = fileBytes
             self.isEdited = isEdited
+            self.sourceFPS = sourceFPS
+            self.hasAudio = hasAudio
         }
     }
 
@@ -80,65 +91,119 @@ public enum RecordingExport {
 
     /// Whether this format has a size/rate preset worth choosing.
     ///
-    /// GIF and HEIC do: the preset is what decides how big the frames are and
-    /// how many of them there are. MP4 has no such control today, and a row
-    /// that changes nothing is worse than no row, so the sheet leaves it out
-    /// exactly as it leaves the quality slider out for PNG.
-    public static func offersQuality(_ format: RecordingFormat) -> Bool {
-        format.isAnimatedImage
+    /// All three do. GIF and HEIC always did: the preset decides how big the
+    /// frames are and how many of them there are. MP4 joined them the day the
+    /// export stopped asking AVFoundation for "highest quality" and started
+    /// asking for a number of bits per second, because from then on the choice
+    /// changes both the picture and, predictably, the weight
+    /// (`VideoExportRecipe`).
+    public static func offersQuality(_ format: RecordingFormat) -> Bool { true }
+
+    /// What this format at this choice asks the encoder for.
+    public static func recipe(format: RecordingFormat, quality: VideoExportQuality,
+                              source: Source) -> VideoExportRecipe {
+        quality.recipe(format: format,
+                       sourceSize: source.cropSize ?? source.sourceSize,
+                       sourceFPS: source.sourceFPS)
     }
 
-    /// Whether the export is a file copy rather than a re-encode. Only an
-    /// untouched recording going out as MP4, which is what keeps that case
-    /// instant and byte-identical.
-    public static func copiesVerbatim(format: RecordingFormat, source: Source) -> Bool {
-        format == .mp4 && !source.isEdited
+    /// Whether the export is a file copy rather than a re-encode.
+    ///
+    /// An untouched recording going out as MP4 at the top choice, which is what
+    /// keeps that case instant and byte-identical. The two choices below it are
+    /// asking for a SMALLER file than the recording, and there is no way to
+    /// make one without encoding it, so they are always a re-encode even when
+    /// nothing has been edited. That is the point of them: the commonest reason
+    /// to export a recording nobody has touched is that the one on disk is too
+    /// big to send.
+    public static func copiesVerbatim(format: RecordingFormat, quality: VideoExportQuality,
+                                      source: Source) -> Bool {
+        format == .mp4 && quality == .high && !source.isEdited
     }
 
     /// The pixel size the written file will really have.
     public static func outputSize(format: RecordingFormat, quality: VideoExportQuality,
                                   source: Source) -> CGSize {
         let base = source.cropSize ?? source.sourceSize
-        guard format.isAnimatedImage else { return base }
         guard base.width > 0, base.height > 0 else { return base }
-        return Geometry.downscaledToFit(base, maxDimension: quality.maxDimension)
+        // An untouched recording going out as MP4 is copied, so its picture is
+        // whatever it already was, whichever choice the row is showing.
+        if copiesVerbatim(format: format, quality: quality, source: source) { return base }
+        return recipe(format: format, quality: quality, source: source).size
     }
 
     /// How well the size is known, and the best honest number where one exists.
-    public static func weight(format: RecordingFormat, source: Source) -> Weight {
+    ///
+    /// Two numbers meet here and the SMALLER of them wins, because an encoder
+    /// writes the smaller of what the picture costs and what it is allowed:
+    ///
+    /// - **What we allow.** The export asks for a number of bits per second
+    ///   (`VideoExportRecipe`), so that number times the length is the most the
+    ///   file can weigh. This is the number that exists even for a document
+    ///   assembled out of nothing, where there is no source file to measure.
+    /// - **What the picture costs.** Measured off this very recording: the
+    ///   share of its seconds that survive and the share of its pixels. A still
+    ///   screen costs a fraction of any budget, and asking for more never pads
+    ///   the file, so this is what an easy recording really comes out at.
+    public static func weight(format: RecordingFormat, quality: VideoExportQuality,
+                              source: Source) -> Weight {
         // A different container, written frame by frame. The MP4's weight says
         // nothing about it.
         guard format == .mp4 else { return .unknown }
-        guard source.fileBytes > 0, source.sourceDuration > 0 else { return .unknown }
-        if copiesVerbatim(format: format, source: source) { return .exact(source.fileBytes) }
-
-        // Two ratios, both measured off this recording: the share of the
-        // seconds that survive, and the share of the pixels. Neither is a
-        // constant somebody picked.
-        let seconds = min(max(0, source.keptDuration) / source.sourceDuration, 1)
-        let pixels = pixelShare(source)
-        let estimate = Int((Double(source.fileBytes) * seconds * pixels).rounded())
+        if copiesVerbatim(format: format, quality: quality, source: source) {
+            return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
+        }
+        let budget = recipe(format: format, quality: quality, source: source)
+            .expectedBytes(seconds: source.keptDuration, hasAudio: source.hasAudio)
+        let estimate: Int
+        if let measured = measuredCost(format: format, quality: quality, source: source) {
+            estimate = budget > 0 ? min(budget, measured) : measured
+        } else {
+            estimate = budget
+        }
         guard estimate > 0 else { return .unknown }
         return .about(estimate)
     }
 
-    /// What share of the recording's pixels survive the crop, never more than
-    /// all of them.
-    private static func pixelShare(_ source: Source) -> Double {
+    /// What this recording already costs for the seconds and the pixels that
+    /// survive, or nil when the file on disk could not be measured.
+    private static func measuredCost(format: RecordingFormat, quality: VideoExportQuality,
+                                     source: Source) -> Int? {
+        guard source.fileBytes > 0, source.sourceDuration > 0 else { return nil }
+        let seconds = min(max(0, source.keptDuration) / source.sourceDuration, 1)
+        let pixels = pixelShare(format: format, quality: quality, source: source)
+        return Int((Double(source.fileBytes) * seconds * pixels).rounded())
+    }
+
+    /// What share of the recording's COST the written file's pixels carry,
+    /// never more than all of it. The crop takes some out, and a preset that
+    /// shrinks the picture takes more.
+    ///
+    /// **Not the share of the pixels, a power of it.** Halving every side
+    /// quarters the pixels and does not quarter the file: a smaller picture is
+    /// harder to compress per pixel, because the detail that is left is
+    /// sharper relative to it. Three quarters is the exponent the measurements
+    /// bear out. On the eight second sample at Small, straight pixel counting
+    /// promised 83 KB against 108 KB landing, a third light; with the power it
+    /// promises 95 KB, and the line says "about" for the rest.
+    private static func pixelShare(format: RecordingFormat, quality: VideoExportQuality,
+                                   source: Source) -> Double {
         let whole = source.sourceSize.width * source.sourceSize.height
-        guard let crop = source.cropSize, whole > 0 else { return 1 }
-        let kept = crop.width * crop.height
+        guard whole > 0 else { return 1 }
+        let out = outputSize(format: format, quality: quality, source: source)
+        let kept = out.width * out.height
         guard kept > 0 else { return 1 }
-        return min(Double(kept / whole), 1)
+        return min(pow(Double(kept / whole), 0.75), 1)
     }
 
     /// The one line under the format: what the file is, and what it costs.
     ///
     /// The same shape as the picture sheet's line, so the eye looking for the
     /// size finds it in the same place and reads it in the same words.
-    public static func sizeLine(format: RecordingFormat, source: Source) -> String {
+    public static func sizeLine(format: RecordingFormat, quality: VideoExportQuality,
+                                source: Source) -> String {
         let name = format.displayName
-        switch weight(format: format, source: source) {
+        switch weight(format: format, quality: quality, source: source) {
         case .exact(let bytes):
             return "\(name) · \(ExportQuality.fileSize(bytes: bytes))"
         case .about(let bytes):
@@ -158,11 +223,26 @@ public enum RecordingExport {
         if size.width >= 1, size.height >= 1 {
             parts.append("\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
         }
-        if offersQuality(format) {
+        // The frame rate, wherever the choice is about to change it. An
+        // untouched recording copied as it is has nothing to say here: its
+        // frame rate is whatever it was recorded at and no choice touched it.
+        if format.isAnimatedImage {
             parts.append("\(Int(quality.targetFPS.rounded())) fps")
+        } else if !copiesVerbatim(format: format, quality: quality, source: source),
+                  size.width >= 1, size.height >= 1 {
+            let fps = recipe(format: format, quality: quality, source: source).fps
+            parts.append("\(Int(fps.rounded())) fps")
         }
         parts.append(lengthPhrase(source))
         return parts.joined(separator: " · ")
+    }
+
+    /// The one sentence under the Quality row saying who the chosen preset is
+    /// for. Three words on a segmented row say which is bigger and which is
+    /// smaller; this says which one you want.
+    public static func purposeLine(format: RecordingFormat,
+                                   quality: VideoExportQuality) -> String {
+        quality.purpose(for: format)
     }
 
     /// How long the written file runs, and what it was cut from when those are

@@ -406,7 +406,7 @@ final class AppCoordinator {
     /// trim/crop it's a real re-encode. GIF/HEIC always re-encode (trim+crop
     /// threaded through). Runs off the main actor with basic error reporting.
     func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
-                       quality: VideoExportQuality = .standard) {
+                       quality: VideoExportQuality = .high) {
         // Read from the edit source (the preserved original once one exists) so
         // the window's edits apply to full-length media rather than stacking on
         // an already-committed trim; name the file after the recording.
@@ -421,13 +421,40 @@ final class AppCoordinator {
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
+        beginRecordingExport(state, as: format, quality: quality, to: url)
+    }
+
+    /// Start writing the recording to `url`, with a card on screen saying how
+    /// far along it is and a Stop that leaves nothing behind.
+    ///
+    /// The part after the save box, so a scripted walk can watch the card
+    /// without a panel it cannot drive.
+    func beginRecordingExport(_ state: VideoEditorState, as format: RecordingFormat,
+                              quality: VideoExportQuality, to url: URL) {
+        guard state.recordingExport == nil else { return }
         isExportingRecording = true
-        Task {
+        // A card with a bar on it rather than a spinner the size of a
+        // fingernail: writing a minute of screen is a minute of work, and a
+        // person has to be able to watch it move and be able to stop it. A
+        // verbatim copy never gets one, because it is over before it could be
+        // read.
+        let run = RecordingExport.copiesVerbatim(format: format, quality: quality,
+                                                 source: state.exportSource)
+            ? nil : VideoExportRun(fileName: url.lastPathComponent, title: format.writingTitle)
+        state.recordingExport = run
+        state.recordingExportTask = Task {
             do {
-                try await writeRecording(state, as: format, quality: quality, to: url)
+                try await writeRecording(state, as: format, quality: quality, to: url) { done in
+                    Task { @MainActor in run?.fraction = done }
+                }
+            } catch is CancellationError {
+                // Stopped on purpose, and the writer took the half-written file
+                // with it. The card going away is the whole of the news.
             } catch {
                 reportExportFailure(error)
             }
+            state.recordingExport = nil
+            state.recordingExportTask = nil
             isExportingRecording = false
         }
     }
@@ -441,24 +468,35 @@ final class AppCoordinator {
     /// re-encode, so it is instant and byte-identical. Everything else is a
     /// real re-encode.
     func writeRecording(_ state: VideoEditorState, as format: RecordingFormat,
-                        quality: VideoExportQuality, to url: URL) async throws {
+                        quality: VideoExportQuality, to url: URL,
+                        onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard let sourceURL = state.editSourceURL else { throw CocoaError(.fileNoSuchFile) }
         let cuts = state.exportCuts
         let crop = state.crop
         let source = state.exportSource
 
-        if RecordingExport.copiesVerbatim(format: format, source: source) {
+        if RecordingExport.copiesVerbatim(format: format, quality: quality, source: source) {
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: sourceURL, to: url)
+            onProgress?(1)
             return
         }
         if format == .mp4 {
-            try await VideoExporter.exportMP4(from: sourceURL, to: url, cuts: cuts, crop: crop)
+            try await VideoExporter.exportMP4(
+                from: sourceURL, to: url, cuts: cuts, crop: crop,
+                recipe: RecordingExport.recipe(format: format, quality: quality, source: source),
+                onProgress: onProgress)
         } else {
+            let total = Double(max(1, AnimatedExportPlanner.plan(
+                cuts: cuts, crop: crop, sourceSize: source.sourceSize,
+                targetFPS: quality.targetFPS,
+                maxDimension: quality.maxDimension).frameCount))
             try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
                                                    crop: crop, cuts: cuts,
                                                    targetFPS: quality.targetFPS,
-                                                   maxDimension: quality.maxDimension)
+                                                   maxDimension: quality.maxDimension) { done, _ in
+                onProgress?(Double(done) / total)
+            }
         }
     }
 

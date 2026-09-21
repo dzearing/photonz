@@ -31,12 +31,20 @@ public struct VideoFramePlan: Hashable, Sendable {
     public let size: CGSize
     /// How long the file runs for, in milliseconds.
     public let durationMS: Int
+    /// What the encoder is allowed to spend on the picture, in bits per
+    /// second. Zero for an animated picture, which has no such budget.
+    public let videoBitsPerSecond: Int
+    /// What it is allowed to spend on the sound.
+    public let audioBitsPerSecond: Int
 
-    public init(frameCount: Int, fps: Double, size: CGSize, durationMS: Int) {
+    public init(frameCount: Int, fps: Double, size: CGSize, durationMS: Int,
+                videoBitsPerSecond: Int = 0, audioBitsPerSecond: Int = 128_000) {
         self.frameCount = max(0, frameCount)
         self.fps = max(1, fps)
         self.size = size
         self.durationMS = max(0, durationMS)
+        self.videoBitsPerSecond = videoBitsPerSecond
+        self.audioBitsPerSecond = audioBitsPerSecond
     }
 
     /// Nothing to photograph: a document with no time in it.
@@ -77,17 +85,25 @@ public enum DocumentVideoExport {
                             format: RecordingFormat,
                             quality: VideoExportQuality) -> VideoFramePlan {
         let length = max(0, durationMS)
+        // A movie is photographed on the document's own frame grid and then
+        // encoded within the budget the choice allows, so the choice means the
+        // same thing here as it does on a recording (`VideoExportRecipe`).
+        let recipe = quality.recipe(format: format, sourceSize: canvasSize, sourceFPS: movieFPS)
         let fps = format.isAnimatedImage ? quality.targetFPS : movieFPS
         let size = format.isAnimatedImage
             ? Geometry.downscaledToFit(canvasSize, maxDimension: quality.maxDimension)
-            : evenSize(canvasSize)
+            : recipe.size
         guard length > 0 else {
-            return VideoFramePlan(frameCount: 0, fps: fps, size: size, durationMS: 0)
+            return VideoFramePlan(frameCount: 0, fps: fps, size: size, durationMS: 0,
+                                  videoBitsPerSecond: recipe.videoBitsPerSecond,
+                                  audioBitsPerSecond: recipe.audioBitsPerSecond)
         }
         // At least one picture for anything with any length at all: a held
         // frame lasting a tenth of a second is still a thing somebody made.
         let count = max(1, Int((Double(length) / 1000 * fps).rounded()))
-        return VideoFramePlan(frameCount: count, fps: fps, size: size, durationMS: length)
+        return VideoFramePlan(frameCount: count, fps: fps, size: size, durationMS: length,
+                              videoBitsPerSecond: recipe.videoBitsPerSecond,
+                              audioBitsPerSecond: recipe.audioBitsPerSecond)
     }
 
     /// The nearest size with an even number of pixels on each side, never

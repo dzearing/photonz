@@ -44,7 +44,9 @@ extension EditorState {
             .flatMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize } ?? 0
         return RecordingExport.Source(sourceDuration: seconds, keptDuration: seconds,
                                       sourceSize: document?.canvasSize ?? .zero,
-                                      fileBytes: bytes, isEdited: untouched == nil)
+                                      fileBytes: bytes, isEdited: untouched == nil,
+                                      sourceFPS: DocumentVideoExport.movieFPS,
+                                      hasAudio: document?.audioMix().isEmpty == false)
     }
 
     /// **Export…** on a document that has time: pick a place, then write it.
@@ -75,7 +77,7 @@ extension EditorState {
     func startVideoExport(format: RecordingFormat, quality: VideoExportQuality, to url: URL) {
         guard videoExport == nil else { return }
         pauseDocument()
-        let run = VideoExportRun(fileName: url.lastPathComponent)
+        let run = VideoExportRun(fileName: url.lastPathComponent, title: format.writingTitle)
         videoExport = run
         videoExportTask = Task { [weak self] in
             guard let self else { return }
@@ -117,8 +119,11 @@ extension EditorState {
         guard let document, document.hasTime else { throw CocoaError(.fileNoSuchFile) }
 
         // The recording nobody has touched is already the answer: copy the file
-        // rather than photographing it back into existence.
-        if format == .mp4, let movie = document.untouchedRecording,
+        // rather than photographing it back into existence. Only at the top
+        // choice: the two below it are asking for a SMALLER file than the one
+        // on disk, and that cannot be done by copying it
+        // (`RecordingExport.copiesVerbatim`).
+        if format == .mp4, quality == .high, let movie = document.untouchedRecording,
            let source = MovieLibrary.shared.url(for: movie) {
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: source, to: url)
@@ -152,10 +157,14 @@ extension EditorState {
 final class VideoExportRun: Identifiable {
     let id = UUID()
     let fileName: String
+    /// What the card says it is writing, which follows the format rather than
+    /// always saying "video".
+    let title: String
     var fraction: Double = 0
 
-    init(fileName: String) {
+    init(fileName: String, title: String = "Writing the video") {
         self.fileName = fileName
+        self.title = title
     }
 
     /// The percentage, said the way a person reads one.

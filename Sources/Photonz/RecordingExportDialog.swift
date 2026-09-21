@@ -4,24 +4,36 @@ import SwiftUI
 /// What a recording was last exported as, and at what preset.
 ///
 /// Kept the way the picture sheet keeps its format: somebody who always sends
-/// GIFs picks GIF once. One preset for both animated formats, because the
-/// preset is a size choice rather than a format choice.
+/// GIFs picks GIF once.
+///
+/// **A video remembers its own choice, separately from the animated pair.** One
+/// preset covered GIF and HEIC because the preset means the same thing in both:
+/// how big the frames are and how many of them there are. It means something
+/// else in a video, where the top choice is "the recording as it is" and hands
+/// back the instant verbatim copy, so a video opens on High and an animated
+/// picture opens on Standard, and picking Small to squeeze one GIF does not
+/// quietly re-encode the next recording somebody exports.
 enum RecordingExportMemory {
     static let formatKey = "export.recording.format"
     static let qualityKey = "export.recording.quality"
+    static let movieQualityKey = "export.recording.quality.mp4"
 
     static var format: RecordingFormat {
         RecordingFormat(rawValue: UserDefaults.standard.string(forKey: formatKey) ?? "") ?? .mp4
     }
 
-    static var quality: VideoExportQuality {
-        VideoExportQuality(rawValue: UserDefaults.standard.string(forKey: qualityKey) ?? "")
-            ?? .standard
+    /// The preset this format was last exported at, or the one it opens on the
+    /// first time.
+    static func quality(for format: RecordingFormat) -> VideoExportQuality {
+        let key = format == .mp4 ? movieQualityKey : qualityKey
+        return VideoExportQuality(rawValue: UserDefaults.standard.string(forKey: key) ?? "")
+            ?? (format == .mp4 ? .high : .standard)
     }
 
     static func remember(format: RecordingFormat, quality: VideoExportQuality) {
         UserDefaults.standard.set(format.rawValue, forKey: formatKey)
-        UserDefaults.standard.set(quality.rawValue, forKey: qualityKey)
+        UserDefaults.standard.set(quality.rawValue,
+                                  forKey: format == .mp4 ? movieQualityKey : qualityKey)
     }
 }
 
@@ -56,9 +68,9 @@ struct RecordingExportDialog: View {
                                                        sourceSize: .zero, fileBytes: 0,
                                                        isEdited: false)
 
-    /// Whether this format has a size preset worth offering. MP4 has none yet,
-    /// and the row goes away rather than dimming, exactly as the quality slider
-    /// goes away for PNG.
+    /// Whether this format has a size preset worth offering. All three do,
+    /// since a video's preset started meaning a real budget rather than
+    /// "highest quality, whatever that comes to".
     private var offersQuality: Bool { RecordingExport.offersQuality(format) }
 
     private var shapeLine: String {
@@ -66,12 +78,20 @@ struct RecordingExportDialog: View {
     }
 
     private var sizeLine: String {
-        RecordingExport.sizeLine(format: format, source: source)
+        RecordingExport.sizeLine(format: format, quality: quality, source: source)
+    }
+
+    /// One sentence saying who the chosen preset is for.
+    private var purposeLine: String {
+        RecordingExport.purposeLine(format: format, quality: quality)
     }
 
     /// The name a walk finds the "what will this be" line by. Steady, because
     /// the words on the line are the thing under test.
     static let shapeLabel = "What it will be"
+
+    /// The name a walk finds the "who is it for" line by.
+    static let purposeLabel = "Who it is for"
 
     var body: some View {
         VStack(alignment: .leading, spacing: ExportSheetMetrics.spacing) {
@@ -88,13 +108,24 @@ struct RecordingExportDialog: View {
             }
             if offersQuality {
                 ExportSheetRow("Quality") {
-                    Picker("Quality", selection: $quality) {
-                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                            Text(quality.shortLabel).tag(quality)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Quality", selection: $quality) {
+                            ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                                Text(quality.shortLabel).tag(quality)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        // Three words on a row say which is bigger. This is the
+                        // line that says which one you want, and it is beside
+                        // the choice rather than under the whole sheet, because
+                        // it is about the choice.
+                        Text(purposeLine)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .playtestControl(Self.purposeLabel, detail: purposeLine)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
                 }
             }
             // The two lines the whole sheet exists for, in the order the
@@ -130,7 +161,7 @@ struct RecordingExportDialog: View {
         .frame(width: ExportSheetMetrics.width)
         .onAppear {
             format = RecordingExportMemory.format
-            quality = RecordingExportMemory.quality
+            quality = RecordingExportMemory.quality(for: format)
             #if PHOTONZ_PLAYTEST
             if let asked = state.playtestOpensExportOnRecordingFormat {
                 format = asked
@@ -144,6 +175,12 @@ struct RecordingExportDialog: View {
             }
             #endif
             source = state.exportSource
+        }
+        // Each format opens on its own remembered choice, so switching to GIF
+        // does not carry a video's "as it is" across to a format where it means
+        // the biggest possible file.
+        .onChange(of: format) { _, now in
+            quality = RecordingExportMemory.quality(for: now)
         }
     }
 }

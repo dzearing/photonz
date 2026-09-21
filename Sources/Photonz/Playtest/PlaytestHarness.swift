@@ -1394,11 +1394,13 @@ private final class Run {
                  + ", \(corners)")
 
         case .writeRecording(let name, let format, let quality, let seconds, let within,
-                             let width, let height, let copied):
+                             let width, let height, let copied, let twice,
+                             let estimateWithin):
             note(number, step.name,
                  try await writeRecordingFile(name: name, format: format, quality: quality,
                                               seconds: seconds, within: within,
-                                              width: width, height: height, copied: copied),
+                                              width: width, height: height, copied: copied,
+                                              twice: twice, estimateWithin: estimateWithin),
                  state: describe())
 
         case .writeVideo(let name, let format, let quality, let seconds, let within,
@@ -2263,6 +2265,47 @@ private final class Run {
             video.isExportSheetPresented = false
             await sleep(0.4)
             note(number, step.name, "the Export sheet is closed", state: describe())
+
+        case .action(let action) where action == .videoExportBegin:
+            let video = try requireRecording()
+            guard video.recordingExport == nil else {
+                throw Failure(description: "an export is already running out of this window")
+            }
+            let card = out.appendingPathComponent("export-while-it-runs.gif")
+            try? FileManager.default.removeItem(at: card)
+            coordinator.beginRecordingExport(video, as: .gif, quality: .high, to: card)
+            try await poll("the export card to come up", within: 20) {
+                video.recordingExport != nil
+            }
+            // Something on the bar, so the snapshot after this shows a number
+            // moving rather than a bar sitting at nought.
+            try await poll("the bar to start moving", within: 20) {
+                (video.recordingExport?.fraction ?? 0) > 0
+            }
+            note(number, step.name,
+                 "writing \(card.lastPathComponent), the card says "
+                    + "\(video.recordingExport?.percent ?? 0)%",
+                 state: describe())
+
+        case .action(let action) where action == .videoExportStop:
+            let video = try requireRecording()
+            guard video.recordingExport != nil else {
+                throw Failure(description: "there is no export running to stop. Either it finished "
+                    + "before the walk looked, or it never started")
+            }
+            let reached = video.recordingExport?.percent ?? 0
+            video.cancelRecordingExport()
+            try await poll("the export to stop", within: 20) { video.recordingExport == nil }
+            let card = out.appendingPathComponent("export-while-it-runs.gif")
+            let left = FileManager.default.fileExists(atPath: card.path)
+            if left {
+                throw Failure(description: "Stop left \(card.lastPathComponent) on the disk: a "
+                    + "stopped export has to take the half-written file with it, or the folder "
+                    + "fills up with files that play for two seconds")
+            }
+            note(number, step.name,
+                 "stopped at \(reached)%, and nothing was left on the disk",
+                 state: describe())
 
         case .action(let action) where action == .videoRevertToOriginal:
             let video = try requireRecording()
@@ -3373,7 +3416,8 @@ private final class Run {
                  .videoDragTrimEndNearCut, .videoDragTrimRelease,
                  .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
                  .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
-                 .videoExportSheetCancel, .videoCropMiddle,
+                 .videoExportSheetCancel, .videoExportBegin, .videoExportStop,
+                 .videoCropMiddle,
                  .openSampleRecording:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
@@ -7816,24 +7860,34 @@ private final class Run {
     /// and then opens the file: how long it runs, how big its picture is, what
     /// it weighs. A walk that only asked the app whether it had saved would
     /// never notice a trim that did not reach the file.
-    private func writeRecordingFile(name: String, format: String, quality: String,
+    private func writeRecordingFile(name: String, format: String, quality: String?,
                                     seconds: Double?, within: Double,
                                     width: Double?, height: Double?,
-                                    copied: Bool?) async throws -> String {
+                                    copied: Bool?, twice: Bool = false,
+                                    estimateWithin: Double? = nil) async throws -> String {
         let video = try requireRecording()
         guard let recordingFormat = RecordingFormat(rawValue: format) else {
             throw Failure(description: "\(format) is not a format a recording is written as: "
                 + RecordingExport.formats.map(\.rawValue).joined(separator: ", "))
         }
-        guard let preset = VideoExportQuality(rawValue: quality) else {
-            throw Failure(description: "\(quality) is not a size preset: "
-                + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+        // No preset named means the one the sheet itself would open on for this
+        // format, which is what a person pressing Export gets.
+        let preset: VideoExportQuality
+        if let quality {
+            guard let named = VideoExportQuality(rawValue: quality) else {
+                throw Failure(description: "\(quality) is not a size preset: "
+                    + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            preset = named
+        } else {
+            preset = RecordingExportMemory.quality(for: recordingFormat)
         }
         guard let sourceURL = video.editSourceURL else {
             throw Failure(description: "the recording has no file to read from yet")
         }
         let source = video.exportSource
-        let said = RecordingExport.sizeLine(format: recordingFormat, source: source)
+        let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
+                                            source: source)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
         let started = Date()
         do {
@@ -7910,12 +7964,80 @@ private final class Run {
         // What the sheet promised, beside what arrived, so an estimate that
         // drifts is visible in the log rather than only in somebody's inbox.
         facts.append("the sheet said \"\(said)\"")
+        let promised = RecordingExport.weight(format: recordingFormat, quality: preset,
+                                              source: source)
+        if let claimed = promisedBytes(promised), claimed > 0 {
+            let ratio = Double(landed) / Double(claimed)
+            facts.append("which is \(String(format: "%.0f", ratio * 100))% of what landed"
+                + " (\(ExportQuality.fileSize(bytes: claimed)) said, "
+                + "\(ExportQuality.fileSize(bytes: landed)) written)")
+            if let estimateWithin, abs(ratio - 1) > estimateWithin {
+                wrong.append("the sheet said \(ExportQuality.fileSize(bytes: claimed)) and "
+                    + "\(ExportQuality.fileSize(bytes: landed)) landed, which is "
+                    + "\(String(format: "%.0f", abs(ratio - 1) * 100))% out, past the "
+                    + "\(String(format: "%.0f", estimateWithin * 100))% this walk allows: "
+                    + "a size promised before anybody commits to it has to be close to the "
+                    + "file that arrives")
+            }
+        } else if estimateWithin != nil {
+            wrong.append("this walk checks the sheet's estimate against the file, and the "
+                + "sheet gave no number to check")
+        }
+
+        // The same recording exported twice has to give the same file. An
+        // encoder that reached a different answer the second time would mean
+        // nobody could tell a re-export from a different export.
+        if twice {
+            let again = out.appendingPathComponent(
+                "\(name)-again.\(recordingFormat.fileExtension)")
+            do {
+                try await coordinator.writeRecording(video, as: recordingFormat,
+                                                     quality: preset, to: again)
+            } catch {
+                throw Failure(description: "writing the recording a second time failed: \(error)")
+            }
+            let first = (try? Data(contentsOf: destination))?.count ?? 0
+            let second = (try? Data(contentsOf: again))?.count ?? 0
+            let drift = first > 0 ? abs(Double(first - second)) / Double(first) : 1
+            if copied == true || first == second {
+                // A copy is a copy: the bytes have to match, and if they do not
+                // something is re-encoding a recording nobody edited.
+                let same = (try? Data(contentsOf: destination)) == (try? Data(contentsOf: again))
+                facts.append(same
+                    ? "exported a second time it is byte for byte the same file"
+                    : "exported a second time it is the same size, \(first) bytes, and the "
+                        + "encoder's own decisions moved inside it")
+                if copied == true, !same {
+                    wrong.append("a copy exported twice gave two different files, which means it "
+                        + "is not a copy")
+                }
+            } else if drift < 0.02 {
+                // A re-encode is not reproducible to the byte: the system
+                // encoder's rate control moves with how busy the machine is.
+                // What has to hold is that the file does not change size on
+                // you (`VideoExportBudgetTests`).
+                facts.append("exported a second time it came out \(second) bytes against "
+                    + "\(first), \(String(format: "%.1f", drift * 100))% apart")
+            } else {
+                wrong.append("exporting the same recording twice gave files of quite different "
+                    + "sizes: \(first) bytes then \(second), "
+                    + "\(String(format: "%.0f", drift * 100))% apart")
+            }
+        }
 
         guard wrong.isEmpty else {
             throw Failure(description: wrong.joined(separator: "; ") + ". "
                 + facts.joined(separator: "; "))
         }
         return facts.joined(separator: "; ")
+    }
+
+    /// The number a weight carries, where it carries one.
+    private func promisedBytes(_ weight: RecordingExport.Weight) -> Int? {
+        switch weight {
+        case .exact(let bytes), .about(let bytes): return bytes
+        case .unknown: return nil
+        }
     }
 
     /// Write the open DOCUMENT out as a video and then READ BACK what landed.
@@ -7926,7 +8048,7 @@ private final class Run {
     /// whether it carries sound, what it weighs. A walk that only asked the app
     /// whether it had exported would never notice a cut that did not reach the
     /// file (`EditorState+VideoExport`).
-    private func writeVideoFile(name: String, format: String, quality: String,
+    private func writeVideoFile(name: String, format: String, quality: String?,
                                 seconds: Double?, within: Double,
                                 width: Double?, height: Double?,
                                 sound: Bool?, copied: Bool?) async throws -> String {
@@ -7939,12 +8061,18 @@ private final class Run {
             throw Failure(description: "\(format) is not a format a video is written as: "
                 + RecordingExport.formats.map(\.rawValue).joined(separator: ", "))
         }
-        guard let preset = VideoExportQuality(rawValue: quality) else {
-            throw Failure(description: "\(quality) is not a size preset: "
-                + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+        let preset: VideoExportQuality
+        if let quality {
+            guard let named = VideoExportQuality(rawValue: quality) else {
+                throw Failure(description: "\(quality) is not a size preset: "
+                    + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            preset = named
+        } else {
+            preset = RecordingExportMemory.quality(for: recordingFormat)
         }
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
-        let said = RecordingExport.sizeLine(format: recordingFormat,
+        let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
                                             source: editor.videoExportSource)
         let started = Date()
         do {

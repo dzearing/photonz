@@ -1,0 +1,45 @@
+{
+  "feature": "Getting a recording out at the size you need",
+  "epic": "video-share",
+  "summary": "A recording now leaves the app at one of three sizes rather than only at whatever the encoder felt like, the sheet says what the file will weigh before you commit to it, and a write long enough to notice puts a card on screen with a bar and a Stop.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-recording-export-sheet and next-export-the-video are on by default. Open any recording from History.",
+  "try": [
+    {
+      "do": "Press Shift Command S on an open recording.",
+      "shot": "2026-09-21-recording-export-size-1.png"
+    },
+    {
+      "do": "Read the two grey lines: the pixel size and length, then what it will weigh."
+    },
+    {
+      "do": "Press Small on the Quality row and watch both lines change."
+    },
+    {
+      "do": "Read the sentence under the Quality row and decide whether it told you which one you want."
+    },
+    {
+      "do": "Press High, then Export…, and notice it is over before you can read it."
+    },
+    {
+      "do": "Press Shift Command S again, pick GIF and High, press Export…, then press Stop on the card.",
+      "shot": "2026-09-21-recording-export-size-2.png"
+    },
+    {
+      "do": "Look in the folder you were saving into: nothing half written is there."
+    }
+  ],
+  "evaluate": [
+    "Does the weight line land where your eye already goes, or did you hunt for it?",
+    "Is High, Standard, Small the right set for a video, or do you want a plain size in megabytes to aim at instead?",
+    "Does the sentence under the Quality row earn its space, or is it noise once you have read it twice?",
+    "High on an untouched recording is an instant copy and the other two re-encode it. Is that difference clear enough from the sheet before you press Export?",
+    "The card says how far along it is and can be stopped. Would you rather it got out of the way and put the bar somewhere in the corner?"
+  ],
+  "rough": [
+    "A GIF and a HEIC still say \"size not known until it is written\". They are the formats most likely to be too big, and weighing one honestly means writing it. Left alone rather than guessing a number.",
+    "Exporting the same recording twice is byte for byte identical only on the copy path. A re-encode comes out the same size and the same picture to the eye, and not the same bytes: the system's own encoder decides differently under load. Measured, not assumed, and there is no setting that fixes it without doubling the file.",
+    "Standard is not guaranteed to be smaller than High. On material that spends neither budget, the only difference between them is the picture size, and a smaller picture is not always a smaller file: on one test clip 1440 x 900 came out 101,244 bytes against 1920 x 1200's 99,740. Standard earns its place on a big or a busy recording, where its cap and its budget both bite. The sheet always says what it thinks the chosen one will weigh, so nothing is hidden, but the word Standard implies a shrink it cannot always deliver.",
+    "Two exports at once used to be able to wedge each other, both stopping dead. They now queue, one at a time, so the second sits at nought per cent until the first finishes. That is honest but it is not explained on the card.",
+    "The weight estimate was 9 to 14 per cent out on every real case measured. On sharp synthetic material where downscaling costs bits rather than saving them it can be out the other way and by more. It always says \"about\"."
+  ]
+}

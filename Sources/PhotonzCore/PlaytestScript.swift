@@ -688,6 +688,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Shut the Export sheet the way Cancel does, so a walk can show that
     /// choosing a format and then backing out writes nothing.
     case videoExportSheetCancel
+    /// Start writing the recording out for real, straight past the save box a
+    /// walk cannot drive, so the card that says how far along it is can be
+    /// photographed while it is up. Deliberately the slowest of the three
+    /// formats at its biggest preset, because the thing under test is what a
+    /// write long enough to wait for looks like.
+    case videoExportBegin
+    /// Press Stop on that card. What has been written so far goes with it, so
+    /// the walk can then show there is no half a file on the disk.
+    case videoExportStop
     /// Crop the recording to the middle half of its frame, which is a real
     /// crop's outcome without a walk having to know how big the clip is. What
     /// lets a walk check that a saved copy comes out at the CROP's size rather
@@ -841,7 +850,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoDragTrimFreedNearCut,
              .videoDragTrimEndNearCut, .videoDragTrimRelease,
              .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
-             .videoExportSheetCancel, .videoCropMiddle: true
+             .videoExportSheetCancel, .videoExportBegin, .videoExportStop,
+             .videoCropMiddle: true
         default: false
         }
     }
@@ -1919,9 +1929,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// out. `copied` claims the fast path: an untouched recording going out as
     /// MP4 is a verbatim file copy, so the bytes on disk must match the
     /// recording's own, and a re-encode that has quietly crept in fails here.
-    case writeRecording(name: String, format: String, quality: String,
+    ///
+    /// `quality` names one of the three presets; leaving it out takes the one
+    /// the Export sheet itself would open on for that format, which is what a
+    /// person pressing Export gets.
+    ///
+    /// `twice` writes the same file a SECOND time and compares the two byte for
+    /// byte, which is the only way to find out whether exporting the same
+    /// recording twice really gives the same file. `estimateWithin` is the
+    /// fraction the sheet's own weight estimate is allowed to be out by: it is
+    /// what stops the number under the format quietly drifting away from the
+    /// file that lands.
+    case writeRecording(name: String, format: String, quality: String?,
                         seconds: Double?, within: Double,
-                        width: Double?, height: Double?, copied: Bool?)
+                        width: Double?, height: Double?, copied: Bool?,
+                        twice: Bool, estimateWithin: Double?)
     /// Write the DOCUMENT out as a video, exactly as pressing Export… on its
     /// sheet and choosing a place would, then read the file back and check it
     /// (`EditorState.writeVideo`).
@@ -1932,7 +1954,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// shorter than the recording. `sound` says whether the file must carry a
     /// sound track, `copied` claims the fast path, and `width`/`height` are the
     /// picture's size in the file rather than the app's idea of it.
-    case writeVideo(name: String, format: String, quality: String,
+    case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
                     width: Double?, height: Double?, sound: Bool?, copied: Bool?)
     /// Open a menu that lives INSIDE the window — the Add menu on a
@@ -2964,16 +2986,18 @@ public enum PlaytestStep: Sendable, Equatable {
         case "writeRecording":
             self = .writeRecording(name: try f.string("name"),
                                    format: try f.optionalString("format") ?? "mp4",
-                                   quality: try f.optionalString("quality") ?? "standard",
+                                   quality: try f.optionalString("quality"),
                                    seconds: try f.optionalNumber("seconds"),
                                    within: try f.optionalNumber("within") ?? 0.4,
                                    width: try f.optionalNumber("width"),
                                    height: try f.optionalNumber("height"),
-                                   copied: try f.optionalFlag("copied"))
+                                   copied: try f.optionalFlag("copied"),
+                                   twice: try f.optionalFlag("twice") ?? false,
+                                   estimateWithin: try f.optionalNumber("estimateWithin"))
         case "writeVideo":
             self = .writeVideo(name: try f.string("name"),
                                format: try f.optionalString("format") ?? "mp4",
-                               quality: try f.optionalString("quality") ?? "standard",
+                               quality: try f.optionalString("quality"),
                                seconds: try f.optionalNumber("seconds"),
                                within: try f.optionalNumber("within") ?? 0.4,
                                width: try f.optionalNumber("width"),

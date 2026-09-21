@@ -105,7 +105,7 @@ public enum DocumentMovieWriter {
                                          onProgress: (@Sendable (Double) -> Void)?) async throws {
         let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
         let input = AVAssetWriterInput(mediaType: .video,
-                                       outputSettings: videoSettings(size: plan.size))
+                                       outputSettings: videoSettings(plan: plan))
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: input,
@@ -124,7 +124,7 @@ public enum DocumentMovieWriter {
         }
         writer.startSession(atSourceTime: .zero)
         do {
-            try await writePictures(plan: plan, frames: frames, input: input,
+            try await writePictures(plan: plan, frames: frames, writer: writer, input: input,
                                     adaptor: adaptor, onProgress: onProgress)
         } catch {
             writer.cancelWriting()
@@ -213,6 +213,7 @@ public enum DocumentMovieWriter {
     // MARK: - The picture
 
     private static func writePictures(plan: VideoFramePlan, frames: FrameSource,
+                                      writer: AVAssetWriter,
                                       input: AVAssetWriterInput,
                                       adaptor: AVAssetWriterInputPixelBufferAdaptor,
                                       onProgress: (@Sendable (Double) -> Void)?) async throws {
@@ -226,6 +227,14 @@ public enum DocumentMovieWriter {
             last = picture
             while !input.isReadyForMoreMediaData {
                 try Task.checkCancellation()
+                // A writer that has given up never becomes hungry again, so
+                // without this the export waits for it forever with nothing on
+                // screen moving. Say what it said instead.
+                guard writer.status == .writing else {
+                    throw WriteError.writerFailed(
+                        writer.error.map(String.init(describing:))
+                            ?? "it stopped taking pictures")
+                }
                 try? await Task.sleep(for: .milliseconds(5))
             }
             guard let pool = adaptor.pixelBufferPool,
@@ -245,12 +254,26 @@ public enum DocumentMovieWriter {
         input.markAsFinished()
     }
 
-    private static func videoSettings(size: CGSize) -> [String: Any] {
-        [
+    /// What the encoder is asked for. The budget comes from the plan rather
+    /// than being left to AVFoundation, so the Export sheet can say what the
+    /// file will weigh before anybody commits to it (`VideoExportRecipe`).
+    private static func videoSettings(plan: VideoFramePlan) -> [String: Any] {
+        var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: Int(size.width),
-            AVVideoHeightKey: Int(size.height),
+            AVVideoWidthKey: Int(plan.size.width),
+            AVVideoHeightKey: Int(plan.size.height),
         ]
+        guard plan.videoBitsPerSecond > 0 else { return settings }
+        settings[AVVideoCompressionPropertiesKey] = [
+            AVVideoAverageBitRateKey: plan.videoBitsPerSecond,
+            AVVideoExpectedSourceFrameRateKey: Int(plan.fps.rounded()),
+            // A key frame every two seconds, so scrubbing and the preview a
+            // chat app builds both land quickly.
+            AVVideoMaxKeyFrameIntervalDurationKey: 2,
+            AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+            AVVideoAllowFrameReorderingKey: true,
+        ] as [String: Any]
+        return settings
     }
 
     private static func pixelBuffer(from image: CGImage, pool: CVPixelBufferPool,

@@ -6046,3 +6046,9 @@
 {"t":"2026-09-21T21:42:15.780Z","ev":"task_note","id":"layers-combine-over-the-tracks-below-them"}
 {"t":"2026-09-21T21:42:15.829Z","ev":"task_note","id":"layers-combine-over-the-tracks-below-them"}
 {"t":"2026-09-21T21:42:30.430Z","ev":"task_done","id":"layers-combine-over-the-tracks-below-them","from":"in_progress","note":"Keying and matting shipped behind next-layers-combine, and the timeline now stacks the way the layers list does. ChromaKey + LayerMatte in PhotonzCore (pure, Codable, 18 + 12 tests), the colour cube and the wall sampler in PhotonzRender, Key and Masked by rows in Appearance under Opacity and Blending. Verified by Scripts/test.sh (8824 green), by a new layers-combine-walk that passes with 7 real window captures, and by 30 walks the strip ordering could reach. Perf on the budget document: five keyed layers 15.5ms cpu against 10.1ms plain, five matted 12.0ms against 12.3ms, both inside 16ms. Audit: queue/audits/2026-09-21-layers-combine.json with three real captures. Follow-up filed: a-layer-being-used-as-a-mask-says-so-in-the-laye."}
+{"t":"2026-09-21T21:52:45.998Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":591,"of":551,"rotating":true}
+{"t":"2026-09-21T21:52:46.119Z","ev":"task_started","id":"getting-a-recording-out-is-quick-and-the-file-is","title":"Getting a recording out is quick and the file is the right size","priority":"p1-high"}
+{"t":"2026-09-21T21:54:24.500Z","ev":"task_note","id":"getting-a-recording-out-is-quick-and-the-file-is"}
+{"t":"2026-09-21T23:17:51.082Z","ev":"task_walks","id":"getting-a-recording-out-is-quick-and-the-file-is","walks":["recording-export-sheet-walk"]}
+{"t":"2026-09-21T23:18:01.045Z","ev":"task_note","id":"getting-a-recording-out-is-quick-and-the-file-is"}
+{"t":"2026-09-21T23:18:04.248Z","ev":"task_note","id":"getting-a-recording-out-is-quick-and-the-file-is"}

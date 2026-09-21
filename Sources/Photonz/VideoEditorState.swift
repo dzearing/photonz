@@ -64,6 +64,22 @@ final class VideoEditorState {
     /// Nominal frame rate (fps), for frame-accurate ←/→ stepping. Defaults to 30
     /// until metadata loads.
     private(set) var frameRate: Double = 30
+    /// Whether the recording carries any sound, which the Export sheet needs to
+    /// say what the file will weigh.
+    private(set) var hasSound = false
+    /// The export running out of this window, if one is. A card with a bar on
+    /// it hangs off this, the same card a document's export puts up, so a long
+    /// write is watchable and stoppable instead of being a spinner the size of
+    /// a fingernail.
+    var recordingExport: VideoExportRun?
+    /// The work behind that card, so Stop can reach it.
+    var recordingExportTask: Task<Void, Never>?
+
+    /// Stop an export that is running. What has been written so far goes with
+    /// it, so there is never half a file left on the disk.
+    func cancelRecordingExport() {
+        recordingExportTask?.cancel()
+    }
     /// Natural pixel size of the video, oriented (after `preferredTransform`),
     /// for the crop overlay. `.zero` until loaded.
     private(set) var naturalSize: CGSize = .zero
@@ -225,6 +241,7 @@ final class VideoEditorState {
         let oriented = await VideoExporter.orientedNaturalSize(of: url)
         let poster = await VideoExporter.posterFrame(of: url)
         let fps = await VideoExporter.frameRate(of: url)
+        let sound = await VideoExporter.hasAudio(of: url)
         // The asset reference is intentionally unused past metadata; AVPlayerItem
         // holds its own.
         _ = asset
@@ -233,6 +250,7 @@ final class VideoEditorState {
         self.naturalSize = oriented
         self.poster = poster
         self.frameRate = fps
+        self.hasSound = sound
         self.trim = VideoTrim(duration: seconds)
         // Recall the recording's edits so reopening it shows what it shows in
         // history. They fold straight into the applied window with NO undo step
@@ -972,7 +990,9 @@ final class VideoEditorState {
                                       sourceSize: naturalSize,
                                       cropSize: cropped,
                                       fileBytes: editSourceBytes,
-                                      isEdited: hasEdits)
+                                      isEdited: hasEdits,
+                                      sourceFPS: frameRate,
+                                      hasAudio: hasSound)
     }
 
     /// What the file the export reads from weighs, in bytes, or zero when it
