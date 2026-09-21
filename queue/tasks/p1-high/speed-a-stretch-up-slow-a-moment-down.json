@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 42,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:34.986Z",
-  "updated": "2026-09-21T13:54:35.092Z",
+  "updated": "2026-09-21T19:02:24.534Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -32,6 +32,31 @@
     {
       "t": "2026-09-21T13:54:35.086Z",
       "note": "seq 340 -> 42"
+    },
+    {
+      "t": "2026-09-21T18:39:44.657Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T18:41:36.651Z",
+      "note": "Adversarial review before building. What already exists: ClipPiece.speedPercent, atSpeed, setClipSpeed, the within-clip ripple (pieces are laid back to back so a retime pushes the rest along by construction), Video > Speed with 25/50/100/200/400, and a varispeed on playback. What is missing is everything that makes it a feature a person can find and trust: (1) nothing in the Properties panel, which is exactly where the mock puts it ('retiming is a property of the selected clip, so nothing new appears in the chrome'); (2) the audio answer is a code comment and nothing a user ever reads; (3) the goal's own example - a two minute wait becomes four seconds - is 30x, and the model caps at 10x, so the task cannot meet its own goal as built; (4) nothing anywhere says what retiming does about frames."
+    },
+    {
+      "t": "2026-09-21T19:01:55.069Z",
+      "note": "owns these walks: speed-a-stretch-walk"
+    },
+    {
+      "t": "2026-09-21T19:01:55.118Z",
+      "note": "left rough (no task, written here): (1) the mock's speed CURVE with draggable stops and a ramp between them is deliberately not built - speed varies across a clip by the clip being in pieces, which is the model cutting and reordering already use, and a smooth ramp is a cinematic flourish where these recordings are screens. It is an idea to react to in the audit, not a defect. (2) At 30x a two second piece becomes 67ms, two frames, which is very hard to grab again on the timeline. That is the honest consequence of the speed rather than a bug, and undo is easier than grabbing it. Neither clears the follow-up bar; the panel-order crowding did and was folded into appearance-is-below-the-fold-again-because-the-p."
+    },
+    {
+      "t": "2026-09-21T19:02:24.532Z",
+      "note": "A Speed section in the Properties panel retimes the clip or the piece in hand (Sources/Photonz/SpeedInspector.swift) over a new pure model in PhotonzCore/ClipSpeed.swift: the stops (25 to 3000 per cent), what the sound does at each of them, and what the retime did to the length and to the frames. Ceiling raised 10x -> 30x so the task's own goal (a two minute wait becomes four seconds) is reachable. The audio decision is made and stated: it goes with the picture between half speed and double and is SILENT outside that band, said in the panel in a sentence rather than dropped quietly, with ClipPiece.playsSound the one gate the player, exporter and waveform all read. Verified: 8740 tests green including 16 new; speed-a-stretch-walk drives the panel with real presses, takes 9 real window captures, and reads the exported files back (8s at 4x -> a 2.0s file, silent; at 2x -> 4.0s, with sound). Audit at queue/audits/2026-09-21-video-speed.json. Committed 70b781f1."
     }
-  ]
+  ],
+  "started": "2026-09-21T18:39:44.656Z",
+  "walks": [
+    "speed-a-stretch-walk"
+  ],
+  "completed": "2026-09-21T19:02:24.533Z"
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-20T22:51:34.670Z",
-  "updated": "2026-09-21T13:31:08.064Z",
+  "updated": "2026-09-21T19:01:52.133Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Both halves are gaps the 2026-09-20 cutting build left, recorded in queue/audits/2026-09-20-video-cutting.json. (1) UX-PATTERNS D18 and docs/design/video-surface.md 10.5 both say the layers list shows the layer once WITH its piece count; the row is LayersRow.swift and the count is layer.clipPieces?.count, nil-safe and already computed. (2) docs/design/mocks/pages/video-speed.html: \"Retiming is a property of the selected clip, so nothing new appears in the chrome\" - so it belongs in the Properties panel, not only in the Video menu. EditorState.clipSpeedInHand / setClipSpeedInHand / clipSpeeds are written and wired already (EditorState+ClipBar.swift); this is the panel row over them. ClipPiece.isHeld is the held case.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-21T13:31:08.063Z",
       "note": "seq 3070 -> 20"
+    },
+    {
+      "t": "2026-09-21T19:01:52.132Z",
+      "note": "Half of this landed on 2026-09-21 under speed-a-stretch-up-slow-a-moment-down: there is now a Speed section in the Properties panel (Sources/Photonz/SpeedInspector.swift) showing the piece in hand, its speed, what the retime did and what the sound is doing, with a held frame saying it is a held frame rather than showing a speed. Panel and Video > Speed are the same call (setClipSpeedInHand) so they are the same single undo step. What is LEFT of this task is the first half only: the piece count on the clip's row in the layers list (LayersRow.swift, layer.clipPieces?.count)."
     }
   ]
 }
