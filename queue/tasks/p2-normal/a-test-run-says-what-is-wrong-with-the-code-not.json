@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-20T13:05:00.303Z",
-  "updated": "2026-09-21T13:31:08.593Z",
+  "updated": "2026-09-21T21:42:05.329Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-20 while building ClipPieces. Added one optional stored property (Layer.cuts) to Sources/PhotonzCore/Layer.swift, then `Scripts/test.sh`: 20 failures in Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift plus `exited with unexpected signal code 11`. Every failure was the same shape - every run of text read as empty, so rows kept their numbered names: `(names -> [\"Text 9\", ... \"Background\"]).contains(words -> \"General\")`. The crash report (node Scripts/crash-report.mjs --file ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper-2026-09-20-054858.ips) is EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0x8 in swift_retain < outlined init with copy of Layer < openingASavedReadingLeavesNothingPending(). That is PhotonzRenderTests reading a Layer at the OLD field offsets: isARunOfText comes back false for every piece so nothing is read, and a copy retains whatever is at the wrong offset. PROVED it was the build folder and not the code, three runs: (1) with the change, `Scripts/test.sh --filter SeparatedRowsSayTheirWords` = 20 failures + signal 11; (2) same filter with the three files moved out of the tree = 11 tests passed; (3) `rm -rf .build` then the same filter with the change back in = 11 tests passed, and the full suite then passed 8509 tests in 675 suites. So swiftpm did not rebuild PhotonzRenderTests against the new layout. Why it matters here rather than being a toolchain curiosity: this is the command every runner must have green before it commits, and it spent fifteen minutes of this task looking like a real memory bug in the app. The cheap answer is probably for Scripts/test.sh to notice a signal-11 exit and retry once from a clean .build, saying which it did.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-21T13:31:08.592Z",
       "note": "seq 3020 -> 130"
+    },
+    {
+      "t": "2026-09-21T21:42:05.328Z",
+      "note": "Hit again on 2026-09-21, exactly as this task describes. Adding two stored properties (key, matte) to LayerStyle and running Scripts/test.sh gave: \"error: Process '.../swiftpm-testing-helper ...' exited with unexpected signal code 11\". The crash report's faulting frames were 'outlined destroy of LayerStyle < BorderEffectRenderTests.filledBox(_:)' — a render test that never touches the new fields, failing because the test module was still compiled against the old layout. It reproduced three times running with --filter BorderEffectRenderTests, so it reads exactly like a deterministic bug in the app. rm -rf .build and a clean run gave 8807 passing. Cost about twelve minutes of a task's turn: the only way to tell it from a real regression was to stash the whole change and run the suite twice (192s each)."
     }
   ],
   "walks": []

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 45,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.504Z",
-  "updated": "2026-09-21T13:54:35.604Z",
+  "updated": "2026-09-21T21:42:30.429Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -32,6 +32,35 @@
     {
       "t": "2026-09-21T13:54:35.599Z",
       "note": "seq 340 -> 45"
+    },
+    {
+      "t": "2026-09-21T20:54:35.414Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T20:56:19.544Z",
+      "note": "Adversarial review of the mock before building. (1) The mock offers three matte types (Shape, Luma, Text). Text is not a third thing: a text layer's alpha IS its letterforms, so Shape covers it. Building two, Shape and Brightness, loses nothing and removes a control. (2) The mock's matte source is a LAYER ID on a track. A stored id can point at a layer somebody deleted. 'Masked by the layer directly below it' is what Photoshop's clipping mask already means, needs no id, and makes reordering change the mask the same way it changes the composite, which is the task's own thesis. (3) Blend modes already shipped (next-blend-mode, five modes with a plain sentence each, previewed on the canvas). The mock draws a second blend control in Effects; building it would be the second way to say one thing the repo rules forbid. Blending stays where it is, and Key and Masked by go directly under it, because Opacity/Blending/Key/Masked by are one question: what of this layer survives and how it mixes. (4) The mock's open question (spill kill and light wrap as defaults or a single Key it button) is answered by making the key one click that samples the dominant edge colour and sets a sane tolerance, with tolerance/softness/spill sliders under it for anybody who wants them. Light wrap is not built: it is a look, not a key, and nothing in the acceptance asks for it. (5) The shortest version that still delivers: the key is chroma-distance in the Cb/Cr plane rather than RGB distance, so lighting variation across a flat colour does not defeat it, which is what 'clean enough to use rather than fringed' actually needs."
+    },
+    {
+      "t": "2026-09-21T21:42:15.728Z",
+      "note": "owns these walks: layers-combine-walk"
+    },
+    {
+      "t": "2026-09-21T21:42:15.778Z",
+      "note": "Built and verified. (1) The timeline now reads top down like the layers list: motionStrip() walks allLayersTopDown rather than allLayers, so a title laid over a clip draws its bar ABOVE the clip's instead of under it. Six order-dependent tests in MotionStripTests, MotionStripBarTests and TitleTimeTests carried the old order and were updated with the reason written in. (2) ChromaKey and LayerMatte in PhotonzCore, both on LayerStyle, both Codable with an unknown-word fallback. The key's maths is a pure function over one pixel, tested eighteen ways, and the renderer builds a 64 colour cube out of it: brightness is divided out before colours are compared, which is why a wall lit from one side keys out with its own shadow, and spill is gated on hue so a blue shirt is left alone. (3) Masked by borrows from the layer directly below; that layer stops drawing. (4) PlaytestAction gained bringToFront/bringForward/sendBackward/sendToBack with stand-ins for their four chords, because the stack IS the composite order and no walk could restack before today. (5) Perf on the budget document (4000x3000, ten layers): five keyed layers 15.5ms cpu against 10.1ms plain, five matted layers 12.0ms against 12.3ms. Inside 16ms. (6) Walks: layers-combine-walk is new and green with 7 real window captures; ran the 30 walks the strip ordering could reach (motion*, *timeline*, *recording*, transitions-at-a-cut, trim-is-a-tool, speed-a-stretch, hold-on-a-frame, two-parts-out-of-phase, blend-mode) and all passed but motion-pivot-in-a-corner-walk, which is a pre-existing failure already owned by walks-that-fail-in-the-full-sweep-4. blend-mode-walk, also on that list, passes now. Full suite 8824 green."
+    },
+    {
+      "t": "2026-09-21T21:42:15.827Z",
+      "note": "left rough: the Key rows only show on a layer made of pixels and a picture opens as a LOCKED Background, so keying a still is unlock-then-key rather than key. That is what a capture has always done and changing it is not this task's, but it takes the edge off the one-click claim. Also left rough: the key has only been run on a synthetic green screen and on flat plates, never on a real camera frame with noise and compression in it."
+    },
+    {
+      "t": "2026-09-21T21:42:30.427Z",
+      "note": "Keying and matting shipped behind next-layers-combine, and the timeline now stacks the way the layers list does. ChromaKey + LayerMatte in PhotonzCore (pure, Codable, 18 + 12 tests), the colour cube and the wall sampler in PhotonzRender, Key and Masked by rows in Appearance under Opacity and Blending. Verified by Scripts/test.sh (8824 green), by a new layers-combine-walk that passes with 7 real window captures, and by 30 walks the strip ordering could reach. Perf on the budget document: five keyed layers 15.5ms cpu against 10.1ms plain, five matted 12.0ms against 12.3ms, both inside 16ms. Audit: queue/audits/2026-09-21-layers-combine.json with three real captures. Follow-up filed: a-layer-being-used-as-a-mask-says-so-in-the-laye."
     }
-  ]
+  ],
+  "started": "2026-09-21T20:54:35.413Z",
+  "walks": [
+    "layers-combine-walk"
+  ],
+  "completed": "2026-09-21T21:42:30.428Z"
 }

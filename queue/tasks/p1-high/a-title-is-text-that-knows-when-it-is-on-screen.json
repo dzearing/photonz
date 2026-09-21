@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 44,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.338Z",
-  "updated": "2026-09-21T20:40:13.532Z",
+  "updated": "2026-09-21T20:44:05.295Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -64,10 +64,15 @@
     {
       "t": "2026-09-21T21:32:00.000Z",
       "note": "Left rough, not filed, because no person is stopped by them and open tasks cover the rest: the Motion section's Start and Over fields for a title read in the layer's own clock (Start 0 for a title that arrives at three seconds) while the lane beside them is now drawn in the document's, so the two say the same thing in two clocks; and nothing in the walk harness photographs a frame of the WRITTEN file and compares the picture with the canvas, so what-plays-is-what-exports is proved in the model and by the file's length rather than by two pictures. Folded rather than filed: the Time section being below the fold went onto appearance-is-below-the-fold-again, and the groundwork note went onto captions-that-write-themselves. Clip art and component instances on the timeline are the same clickthrough page and are already open tasks (components-on-the-timeline-animated-the-way-ever)."
+    },
+    {
+      "t": "2026-09-21T20:44:05.293Z",
+      "note": "Text placed on a document with time gets an in and an out, and nothing else about it is special: PhotonzCore/TitleTime.swift (placedSpan, isPlacedInTime, startIsFree, the fade as one Opacity motion, refitFade, motionShiftMS), EditorState+TitleTime.swift and the Time section in SpeedInspector for the panel, both ends of the bar draggable through the existing ClipBarDrag with a free start, and the canvas hiding chrome for a layer that is not on screen. Behind next-a-title-has-an-in-and-an-out, on by default in Next. Verified: 30 new core tests (8786 green), Scripts/playtest/title-on-the-timeline-walk.json green with six real window captures, and the motion, clip, hold, trim, recording, cut, text and speed walk batches green. Audit queue/audits/2026-09-21-a-title-has-an-in-and-an-out.json with three real screenshots. Commit 93bbc0cf, pushed."
     }
   ],
   "started": "2026-09-21T19:53:52.163Z",
   "walks": [
     "title-on-the-timeline-walk"
-  ]
+  ],
+  "completed": "2026-09-21T20:44:05.294Z"
 }

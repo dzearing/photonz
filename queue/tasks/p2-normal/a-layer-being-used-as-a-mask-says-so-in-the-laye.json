@@ -1,0 +1,31 @@
+{
+  "id": "a-layer-being-used-as-a-mask-says-so-in-the-laye",
+  "title": "A layer being used as a mask says so in the Layers list",
+  "goal": "When one layer is cut to the shape of the layer under it, that lower layer stops being drawn and becomes the shape instead. Right now it simply vanishes from the picture while its row in the Layers list looks exactly as it did, thumbnail and all, so the only way to find out where your rectangle went is to undo. Make the row say it.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T21:42:05.378Z",
+  "updated": "2026-09-21T21:42:05.381Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building layers-combine-over-the-tracks-below-them (2026-09-21). Reproduction: open any picture, unlock it, draw a rectangle with R, send it to the back with shift-cmd-[, select the picture and set Masked by to Its shape. The rectangle disappears from the canvas; its row still shows a red thumbnail and nothing else. queue/audits/2026-09-21-layers-combine-matte.png is the state.\n\nThe model already knows: PhotonzDocument.isSpentAsAMatte(_:) in Sources/PhotonzCore/LayerCompositing.swift answers it for any layer id, and the renderer uses exactly that rule to skip drawing it (DocumentRenderer.compositeLayers). The work is a LayerPanelRow field plus the row UI in the layers panel.",
+  "acceptance": [
+    "A layer that is being spent as the mask of the layer above it is marked as such in the Layers list, without a person having to select anything",
+    "The mark says which layer is using it, or the layer above says which layer it is borrowing from, so the pair can be read off the list",
+    "Turning the mask off puts the row straight back to normal",
+    "A layer that is not being used as a mask looks exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T21:42:05.380Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "layers-combine-walk"
+  ]
+}
