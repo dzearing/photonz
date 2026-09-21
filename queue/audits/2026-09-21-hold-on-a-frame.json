@@ -1,0 +1,50 @@
+{
+  "feature": "Hold on a frame",
+  "epic": "video-cutting",
+  "summary": "Stop on the frame that shows the result, hold it for as long as you like, and draw on it. The held frame is an ordinary piece of the clip, and a mark drawn on it is on screen for exactly as long as the frame is.",
+  "setup": "Photonz Dev, Experiments window, release Next, flags next-a-recording-is-a-document and next-cut-a-recording on. Open a recording from the capture history.",
+  "try": [
+    {
+      "do": "Scrub to the frame worth keeping, then click the clip on the timeline."
+    },
+    {
+      "do": "In Properties, open the Time section (it used to be called Speed) and click Hold This Frame.",
+      "shot": "2026-09-21-hold-2-a-frame-held-sc.png"
+    },
+    {
+      "do": "Read the badge at the top right of the picture: it says which frame you are looking at."
+    },
+    {
+      "do": "Click 5s under Hold for, and watch everything after the hold move along.",
+      "shot": "2026-09-21-hold-4-held-for-five-seconds-sc.png"
+    },
+    {
+      "do": "Press A and drag an arrow across the frozen frame at the thing you are pointing at.",
+      "shot": "2026-09-21-hold-5-an-arrow-on-the-held-frame-sc.png"
+    },
+    {
+      "do": "Drag the playhead out of the hold: the arrow goes with it, because it belongs to that frame."
+    },
+    {
+      "do": "Drag either end of the hold on the timeline for any length that is not on the list."
+    },
+    {
+      "do": "Export the video and scrub the file: the hold is five real seconds, not a stall."
+    }
+  ],
+  "evaluate": [
+    "Is Hold This Frame where you looked for it, or did you go to the menu bar first?",
+    "Does the badge on the picture answer the question a frozen frame raises, or is it noise once you know what you did?",
+    "Is a list of lengths right, or do you want to type a number?",
+    "An arrow drawn on a held frame lives exactly as long as the hold. Is that what you expected, or did you want it to stay up afterwards?",
+    "Is Time a better name for that panel section than Speed was?"
+  ],
+  "rough": [
+    "The Time section is a long way down the panel: with a clip picked you scroll past Reframe, Motion and Transition to reach it. Folded into the task that already covers panel order rather than filed again.",
+    "Scrub off the hold and the arrow goes, but its selection box and handles stay drawn on the empty picture, which reads as the arrow being there and broken. True of any layer with an in and an out, so it is folded into the title task that has to decide it for titles, clips and marks together.",
+    "A hold pushes the PICTURE. Sound on its own layer keeps running under it, which is what you want when you are talking over the frozen frame, and it means a detached voice and the picture after the hold drift apart on purpose. The clickthrough offers Everything or Picture only as a choice; only Picture only is built, and the choice is filed as a follow-up.",
+    "The clickthrough draws the held piece hatched on the timeline. Here it is drawn in the same shape as every other piece and labelled hold, because the bar already carries badges for speed and a second visual language on the same bar is one to learn for nothing.",
+    "The badge sits top right rather than the clickthrough's bottom left: the bottom of this canvas already carries the tool bar, the tool settings capsule and the notice pill.",
+    "No keyboard shortcut. The clickthrough asks for Shift F, which walks the Frame tool slot in this app; holding a frame is a thing you do once in a cut, so it stays a click in the panel and a row in the Video menu."
+  ]
+}

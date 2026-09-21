@@ -1,0 +1,31 @@
+{
+  "id": "say-whether-a-held-frame-pushes-the-sound-too",
+  "title": "Say whether a held frame pushes the sound too",
+  "goal": "Holding a frame makes the picture longer, and a voice track on its own layer carries straight on underneath it. That is right when you are talking over the frozen frame and wrong when the voice belongs to the shot, and at the moment there is no way to ask for the other one. Let the person say which, at the moment they freeze.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3050,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T19:40:15.109Z",
+  "updated": "2026-09-21T19:40:15.112Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From hold-on-a-frame (2026-09-21). The freeze clickthrough (docs/design/mocks/pages/video-freeze-wt.html) has a segmented row in Properties called \"The insert pushes\" with Everything and Picture only, and its own closing question asks whether the timeline should show the drift. Only Picture only is built, because that is what falls out of the model: ClipPieces.holdFrame edits ONE layer's pieces, and every other layer with time stays where it is.\n\nReproduced, in the model, as a test that now pins the behaviour: Tests/PhotonzCoreTests/HeldFrameTests.swift, \"A hold pushes the picture along, and sound on its own layer keeps running under it\". It lays a sound layer at 0..8000 beside an eight second clip, holds a frame for five seconds, and asserts the sound layer's time is byte for byte what it was while the picture now ends at 13s.\n\n  $ Scripts/test.sh --filter aHoldPushesThePictureOnly\n  ✔ Test \"A hold pushes the picture along, and sound on its own layer keeps running under it\" passed after 0.001 seconds.\n\nWhat \"Everything\" would mean is a ripple insert across the whole document rather than across one clip's pieces, which is why it is its own task rather than a flag on the freeze: every layer with an in past the hold moves by the hold's length, and a clip the hold lands INSIDE has to be cut. Worth settling what a title or a second clip does before building it.",
+  "acceptance": [
+    "When a frame is held in a document that has sound on its own layer, the person can choose whether everything moves along or only the picture does",
+    "The choice is made where the freeze is made, not in a settings window, and it can be changed after the fact on the hold that is picked",
+    "Whichever is chosen, the timeline shows what happened: it is obvious at a glance whether the voice still lines up with the picture",
+    "A walk covers both choices and the exported file proves each one"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T19:40:15.111Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "hold-on-a-frame-walk"
+  ]
+}

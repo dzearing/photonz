@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.338Z",
-  "updated": "2026-09-21T13:54:35.438Z",
+  "updated": "2026-09-21T19:41:08.745Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-21T13:54:35.433Z",
       "note": "seq 340 -> 44"
+    },
+    {
+      "t": "2026-09-21T19:41:08.744Z",
+      "note": "Found while building hold-on-a-frame (2026-09-21), and it lands on this task because it is about any layer with an in and an out: a layer that is NOT on screen at the current moment still draws its selection chrome. Scrub off the hold an arrow was drawn on and the arrow is gone, but its dashed box and both endpoint handles are still on the canvas, which reads as the arrow being there and broken. See queue/audits/2026-09-21-hold-on-a-frame.json and the walk picture hold-6-off-the-hold-the-arrow-is-gone-sc.png. Two defensible answers and it is worth deciding once for titles, clips and marks together: hide the chrome with the layer, or keep it so a layer picked in the list still has something to grab."
     }
   ]
 }

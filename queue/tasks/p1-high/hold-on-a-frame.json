@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 43,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.162Z",
-  "updated": "2026-09-21T13:54:35.267Z",
+  "updated": "2026-09-21T19:41:27.584Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-21T13:54:35.261Z",
       "note": "seq 340 -> 43"
+    },
+    {
+      "t": "2026-09-21T19:15:23.442Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T19:40:25.575Z",
+      "note": "owns these walks: hold-on-a-frame-walk"
+    },
+    {
+      "t": "2026-09-21T19:40:25.628Z",
+      "note": "ADVERSARIAL REVIEW, before building. Most of the MODEL was already here: ClipPiece.held, ClipPieces.holdFrame, a Hold This Frame row in the Video menu, and the bar drawing a held piece badged hold, all landed with the cutting work. What was missing was everything a person touches. (1) No chosen length: two seconds, or drag the bar. (2) No way in from where you are looking: the frame is on the canvas and the only row that freezes it is in the menu bar. (3) A mark drawn on the held frame stayed up for the whole recording, which is the opposite of why anybody freezes a frame. (4) Nothing on the picture said it was frozen, so a hold and a stall look the same. What I did NOT build, from the clickthrough: the hatched bar (the bar already badges pieces; a second visual language costs a lesson for nothing), and the Everything / Picture only segmented row, which is a ripple insert across the whole document rather than one clip and is filed as its own task."
+    },
+    {
+      "t": "2026-09-21T19:40:25.680Z",
+      "note": "BUILT. Core (TDD, Tests/PhotonzCoreTests/HeldFrameTests.swift, 16 tests): ClipPieces.setHoldLength + holdStopsMS/holdTitle, PhotonzDocument.setHoldLength, and a new HeldFrame.swift carrying HeldFrame (what is held at a moment, its span, its badge) plus PhotonzDocument.addLayerDrawn(_:atTimeMS:). App: EditorState.heldFrameNow / holdLengthInHand / setHoldLengthInHand; the Speed section renamed Time and given Hold This Frame and a Hold for list; a held frame badge over the canvas top right; and every drawing tool (annotation, text, pen, lens, zoom callout, paste) now lands through addLayerDrawn, so a mark made while the playhead stands in a hold takes the hold's in and out and animates over it. Ships under next-cut-a-recording with the rest of the cutting work, no new flag."
+    },
+    {
+      "t": "2026-09-21T19:41:24.200Z",
+      "note": "VERIFIED against the acceptance items, one by one. (1) Chosen length: the Hold for list in the Time section, and the hold's own end on the bar for anything else; it trims, moves, takes things over it like any other piece (HeldFrameTests, and the walk). (2) One move from the playhead: Hold This Frame in the panel, and the Video menu row. (3) Drawn and animated over it: the arrow takes the hold's in and out, gets its own bar lined up with it, and a motion on it runs over the hold. (4) Exports as frames: writeVideo reads the written file back at 13.0s for an eight second recording with a five second hold, and the model test shows every photographed frame inside the hold resolving to the same source frame. (5) Audit: queue/audits/2026-09-21-hold-on-a-frame.json with three real window captures."
+    },
+    {
+      "t": "2026-09-21T19:41:24.253Z",
+      "note": "Left rough, not filed: the held piece is drawn in the same shape as any other piece and badged hold rather than hatched as the clickthrough draws it, and the canvas badge sits top right rather than bottom left because the bottom of this canvas carries the tool bar, the tool settings capsule and the notice pill. Both are in the audit's rough for the user to react to. Filed or folded: the Everything / Picture only choice as say-whether-a-held-frame-pushes-the-sound-too; the panel-order crowding folded into appearance-is-below-the-fold-again-because-the-p; selection chrome still drawn for a layer that is off screen at this moment folded into a-title-is-text-that-knows-when-it-is-on-screen, which has to decide it for titles, clips and marks together."
+    },
+    {
+      "t": "2026-09-21T19:41:27.581Z",
+      "note": "A frame can be held for a chosen length from the Time section (renamed from Speed) or by dragging its end, made in one click from where the playhead is, and marked up: every drawing tool now lands through PhotonzDocument.addLayerDrawn, so an arrow drawn on a held frame is on screen for exactly that hold and animates over it. The canvas badges which frame is being held. Verified by 8756 tests (16 new in HeldFrameTests) and hold-on-a-frame-walk, which presses the real panel controls, takes 7 real window captures and reads the exported file back at 13.0s. Audit: queue/audits/2026-09-21-hold-on-a-frame.json. Commit cecb6bd8."
     }
-  ]
+  ],
+  "started": "2026-09-21T19:15:23.441Z",
+  "walks": [
+    "hold-on-a-frame-walk"
+  ],
+  "completed": "2026-09-21T19:41:27.583Z"
 }
