@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/motion-colour-picker",
-  "seed": "A motion that changes a layer's COLOUR has two colours to choose, From and To, and they used to be the only two colours in the panel that opened the Mac's own colour window: no shades, no colours out of the document, and none of the colours you had saved. This walk saves a colour called Brand off a shape's Fill, adds a Colour motion to that shape, then drives both wells. From is driven through the app's own picker, which is the proof on its own: a walk can press the app's picker and cannot touch the system colour panel at all. To is driven through the saved colours mark beside the well, by name. Both rows say the colour they are holding out loud, so each pick is read straight back, and one undo per pick puts it back.",
+  "seed": "A motion that changes a layer's COLOUR has two colours to choose, From and To, and they used to be the only two colours in the panel that opened the Mac's own colour window: no shades, no colours out of the document, and none of the colours you had saved. This walk saves a colour called Brand off a shape's Fill, adds a Colour motion to that shape, then drives both wells through the app's own picker, which is the proof on its own: a walk can press the app's picker and cannot touch the system colour panel at all. Then To is driven a second time from the saved colours mark beside the well, by name. Both ends are put on colours of their own first, because the motion starts with both on the layer's own crimson and Brand IS that crimson: picking it straight away would be picking the colour already there. Both rows say the colour they are holding out loud, so each pick is read straight back, and one undo per pick puts it back.",
   "setup": {
     "forget": [
       "tools",
@@ -219,6 +219,62 @@
       "name": "motion-colour-3-from-picked"
     },
     {
+      "do": "press",
+      "control": "Color",
+      "in": "To"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "HEX"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "#RRGGBB"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "type",
+      "text": "#1FA97C"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "To",
+      "reads": "#1FA97C",
+      "comment": "To is put on a green of its own FIRST, so that picking the saved colour next is a real change rather than the colour it is already holding. Adding the motion starts both ends on the layer's own crimson, and Brand IS that crimson, so a walk that went straight to the saved menu picked what was already there and proved nothing: the undo after it took back the From pick instead, and read as a no-op."
+    },
+    {
+      "do": "describe",
+      "stage": "4b-to-on-a-green-of-its-own",
+      "note": "both ends have now been driven through the app's own picker: From is blue, To is green, and neither touched the Mac's colour window"
+    },
+    {
       "do": "panelMenu",
       "menu": "To",
       "in": "Color",
@@ -277,12 +333,27 @@
     {
       "do": "expect",
       "field": "To",
-      "reads": "#2D7FF9"
+      "reads": "#1FA97C",
+      "comment": "one undo takes back the saved-colour pick and no more, so To is the green it was holding a moment ago."
     },
     {
       "do": "describe",
       "stage": "7-one-undo",
-      "note": "one undo per pick: choosing a colour is one step, not one step per frame of the slider"
+      "note": "one undo per pick: choosing a colour is one step, not one step per frame of the slider, and it takes back the To pick alone"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "To",
+      "reads": "#B0184A",
+      "comment": "and the one before that takes back the green typed into the picker, leaving To on the crimson it started at."
     },
     {
       "do": "action",
@@ -305,7 +376,7 @@
     {
       "do": "describe",
       "stage": "8-back-to-the-start",
-      "note": "and the one before it puts From back, so both picks were a single step each"
+      "note": "a third undo puts From back, so all three picks were a single step each and the motion is where it started"
     },
     {
       "do": "panel",

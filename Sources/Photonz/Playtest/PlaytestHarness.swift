@@ -3345,8 +3345,21 @@ private final class Run {
         // a tracking loop finds it waiting, and a button that does not track
         // gets it on the next turn of the run loop, which is the gap a real
         // click has anyway.
+        //
+        // And the press is delivered by hand THROUGH THE QUEUE, not straight
+        // to `sendEvent`. `NSApp.currentEvent` is set when an event is taken
+        // OUT of the queue, and a view is allowed to ask what event it is
+        // being hit tested for: the lid over the zoom percentage does exactly
+        // that, so that it can swallow clicks and let a hover fall through to
+        // the menu button under it (`ZoomReadoutClickLid`). Handed an event
+        // that had never been in the queue it saw a stale one, refused the
+        // click, and the double click meant to go back to a hundred percent
+        // fell through to the menu, which opened and held the main thread
+        // until the walk's clock ran out.
         NSApp.postEvent(up, atStart: false)
-        NSApp.sendEvent(down)
+        NSApp.postEvent(down, atStart: true)
+        NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
+                                        inMode: .default, dequeue: true) ?? down)
         // Long enough for the queue to drain and for whatever the press
         // changed to be laid out before the next step reads it.
         await sleep(0.30)
@@ -6264,7 +6277,14 @@ private final class Run {
         // words it happens to be showing, which do not. Both work, because a
         // menu on no named row has nothing but its words — and the words win,
         // so naming one exactly is never made ambiguous by a row elsewhere.
-        let byWords = buttons.first { PlaytestPanelMenu.title(of: $0) == name }
+        //
+        // WORDS means the words on the button and nothing else
+        // (`PlaytestPanelMenu.words`). `title(of:)` also answers with the name
+        // the panel filed an icon-only menu under, which is right for reading
+        // one and wrong for ranking one: fed in here it let a register name
+        // beat a row a walk could actually see, and `panelMenu "Style"` opened
+        // the shadow's Style row instead of the Text section's.
+        let byWords = buttons.first { PlaytestPanelMenu.words(of: $0) == name }
         let byRow = PlaytestSteadyName.isSteady(name)
             ? buttons.filter { button in
                 PlaytestPanelPress.steadyField(of: button, among: fields)
@@ -6279,18 +6299,30 @@ private final class Run {
         // touches it. The register knows each one as Around, Easing and Loop
         // whatever they are showing, so a walk can say `expect "Around" in
         // "Rotation"` and open that very menu with the same word.
+        //
+        // It comes LAST, after the row, so `panelMenu` opens the very menu
+        // `expect` reads under the same word. A register name is the app's
+        // private word for one control; a row name is the label beside it that
+        // a person and a walk author both read. When the two disagree the
+        // visible one has to win, or a walk claims a reading off one menu and
+        // silently drives another.
         let byMarker = buttons.filter { button in
             PlaytestPanelPress.registeredNames(of: button,
                                                among: PlaytestPanelPress.targets(around: button))
                 .own.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
         }
-        if byWords == nil, byMarker.isEmpty, byRow.count > 1 {
-            let showing = byRow.map { PlaytestPanelMenu.title(of: $0) }
-            throw Failure(description: "\(byRow.count) menus sit on a row called \"\(name)\", "
-                + "so it does not say which one: they are showing \(showing.joined(separator: ", ")). "
-                + "Name the one you mean by its words instead.")
+        // One of each rank, in order, and a rank holding more than one is a
+        // refusal rather than whichever the panel built first. A walk that
+        // opened the wrong menu of two wearing the same name would pass and
+        // prove nothing, which is the promise `press` has always made.
+        let only = [byRow, byMarker].first { !$0.isEmpty } ?? []
+        if byWords == nil, only.count > 1 {
+            let showing = only.map { Self.menuName(of: $0, among: fields, in: content) }
+            throw Failure(description: "\(only.count) menus answer to \"\(name)\", "
+                + "so it does not say which one: \(showing.joined(separator: ", ")). "
+                + "Name the row it sits on in \"in\", or name it by the words it is showing.")
         }
-        guard let button = byWords ?? byMarker.first ?? byRow.first
+        guard let button = byWords ?? only.first
                 ?? buttons.first(where: { PlaytestPanelMenu.title(of: $0).hasPrefix(name) }) else {
             let seen = buttons.map { Self.menuName(of: $0, among: fields, in: content) }.filter { !$0.isEmpty }
             throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "

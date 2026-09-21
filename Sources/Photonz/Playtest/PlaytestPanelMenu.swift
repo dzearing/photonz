@@ -90,11 +90,32 @@ enum PlaytestPanelMenu {
     /// button by, and a lock cannot empty an `NSView`. Accessibility stays as
     /// the last resort for anything nameless that carries no marker.
     @MainActor static func title(of button: NSPopUpButton) -> String {
-        if !button.title.isEmpty { return readable(button.title) }
+        if !words(of: button).isEmpty { return words(of: button) }
         let marked = PlaytestPanelPress.registeredNames(of: button,
                                                         among: PlaytestPanelPress.targets(around: button))
         if let named = marked.own.first, !named.isEmpty { return named }
         return button.accessibilityLabel() ?? button.accessibilityTitle() ?? ""
+    }
+
+    /// The WORDS ON THE BUTTON, and nothing else.
+    ///
+    /// `title(of:)` answers "what does a walk call this", which since the
+    /// register was added can be a name nobody can see: an icon-only menu
+    /// reports the word the panel filed it under. That is right for reading a
+    /// menu and wrong for FINDING one, because finding is ranked — the words a
+    /// menu is showing beat the row it sits on — and a register name that
+    /// arrives dressed as words jumps that queue.
+    ///
+    /// It cost five walks. The Text section's Style row and the Style row of
+    /// the shadow in a text layer's Effects list both answer to "Style"; the
+    /// shadow's carries a `playtestControl("Style")` marker and the Text
+    /// section's does not, so `panelMenu "Style"` stopped opening the row a
+    /// walk could see and started opening the shadow's, and "Save as Style"
+    /// saved a SHADOW called Heading while the Style row above it stayed
+    /// empty. Splitting the two questions puts the register back where it
+    /// belongs, one rank down, behind the row.
+    @MainActor static func words(of button: NSPopUpButton) -> String {
+        button.title.isEmpty ? "" : readable(button.title)
     }
 
     /// What a row of a menu SAYS, which is not always the string it was built

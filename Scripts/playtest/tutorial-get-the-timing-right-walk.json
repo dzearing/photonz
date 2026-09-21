@@ -41,7 +41,7 @@
     { "do": "panelMenu", "menu": "Curve", "choose": "Ease out back" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "make-it-wait-first", "timeout": 8 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Curve", "reads": "Ease out back" },
+    { "do": "expect", "control": "Curve", "in": "Rotation", "reads": "Ease out back" },
     { "do": "panel", "stage": "4-the-curve" },
     { "do": "snapshot", "name": "4-the-curve" },
 
@@ -58,7 +58,7 @@
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "slow-the-loop-down", "timeout": 5 },
     { "do": "wait", "seconds": 0.7 },
-    { "do": "expect", "control": "Repeat", "reads": "Forever, there and back" },
+    { "do": "expect", "control": "Repeat", "in": "Rotation", "reads": "Forever, there and back" },
     { "do": "describe", "stage": "6-how-often", "note": "and what happens once it has played. There and back goes out and comes home inside one lap, which is what an icon nearly always wants: a loop that does not come home is a jump cut." },
     { "do": "snapshot", "name": "6-slow-it-down" },
 
