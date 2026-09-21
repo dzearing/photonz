@@ -129,7 +129,7 @@ extension EditorState {
             // where the key explains itself. A click OUTSIDE the marquee is
             // still silent: that one is not a refusal, it is a miss.
             if let refusal = regionSliceRefusal(action: .fill) {
-                raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
+                raiseRegionSliceRefusal(refusal, layer: regionSubjectID)
                 return
             }
             guard let target = regionTargetID(preferring: hit) else { return }
@@ -155,7 +155,7 @@ extension EditorState {
         let hex = useBackground ? backgroundFillHex : foregroundFillHex
         if selectionTargetsPixels, selection != nil {
             if let refusal = regionSliceRefusal(action: .fill) {
-                raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
+                raiseRegionSliceRefusal(refusal, layer: regionSubjectID)
                 return
             }
             if let target = regionTargetID() { fillRegion(hex: hex, into: target) }
@@ -172,9 +172,18 @@ extension EditorState {
     /// saying different things about the same layer.
     func regionSliceRefusal(action: RegionSliceRefusal.Action) -> RegionSliceRefusal? {
         guard Experiments.shared.cutSaysWhatItCannotDoEnabled,
-              let picked = pickedLayerID, let layer = document?.layer(id: picked)
+              let subject = regionSubjectID, let layer = document?.layer(id: subject)
         else { return nil }
         return RegionSliceRefusal.refusal(for: layer, action: action)
+    }
+
+    /// The layer the refusal is ABOUT, which is the same one the op would have
+    /// acted on (`RegionTarget.subject`): the one row picked, or the one of
+    /// several picked rows the marquee is over.
+    var regionSubjectID: UUID? {
+        guard let document else { return nil }
+        return RegionTarget.subject(picked: selectedLayerID, multi: multiSelectedLayerIDs,
+                                    region: selection?.bounds ?? .null, in: document)
     }
 
     // MARK: - Region-targeted ops (17.5)
@@ -185,7 +194,7 @@ extension EditorState {
     /// when nothing is picked, and the locked Background answers last.
     private func regionTargetID(preferring hit: UUID? = nil) -> UUID? {
         guard let document, let region = selection else { return nil }
-        return RegionTarget.id(picked: selectedLayerID, hit: hit,
+        return RegionTarget.id(picked: selectedLayerID, multi: multiSelectedLayerIDs, hit: hit,
                                region: region.bounds, in: document)
     }
 
@@ -279,7 +288,7 @@ extension EditorState {
         // else (`RegionTarget`), so this used to be a key that did nothing and
         // said nothing. Say which it was instead (`RegionSliceRefusal`).
         if let refusal = regionSliceRefusal(action: .erase) {
-            raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
+            raiseRegionSliceRefusal(refusal, layer: regionSubjectID)
             return
         }
         guard let id = regionTargetID(),
@@ -338,7 +347,7 @@ extension EditorState {
         guard Experiments.shared.newLayerViaCutEnabled,
               selectionTargetsPixels, let region = selection, let document else { return }
         if let refusal = regionSliceRefusal(action: .cutToLayer) {
-            raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
+            raiseRegionSliceRefusal(refusal, layer: regionSubjectID)
             return
         }
         guard let id = regionTargetID(), let layer = document.layer(id: id),

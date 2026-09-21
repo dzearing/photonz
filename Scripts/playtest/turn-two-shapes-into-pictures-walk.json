@@ -56,9 +56,11 @@
     { "do": "shortcut", "key": "z", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "shortcut", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"] },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectLayers", "count": 3 },
-    { "do": "describe", "stage": "6-one-undo-takes-both-back", "note": "one undo puts the piece back, the SECOND takes both rectangles back to being shapes: turning two is ONE step, not two. Compare doc-6-both-back with doc-1-two-rectangles" },
+    { "do": "describe", "stage": "6-one-undo-takes-both-back", "note": "the first undo puts the piece back and the second puts the marquee back, since a marquee is a step of its own. The THIRD takes both rectangles back to being shapes at once: turning two is ONE step, not two. Compare doc-6-both-back with doc-1-two-rectangles" },
     { "do": "render", "name": "doc-6-both-back" },
 
     { "do": "key", "key": "escape" },

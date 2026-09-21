@@ -63,6 +63,8 @@
     { "do": "snapshot", "name": "6-back-to-layer" },
 
     { "do": "tool", "tool": "rectSelect" },
+    { "do": "key", "key": "escape", "note": "the Position and Size popout is open over the panel, and Escape puts a popout away before it reaches anything behind it, exactly as it does under a hand" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "panel", "stage": "7-no-selection" },
@@ -73,6 +75,8 @@
     { "do": "snapshot", "name": "7-no-selection" },
 
     { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape", "note": "the popout again: the first Escape shuts it, the second reaches the picture" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "tool", "tool": "rectSelect" },

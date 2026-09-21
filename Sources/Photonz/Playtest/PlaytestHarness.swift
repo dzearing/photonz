@@ -3699,12 +3699,28 @@ private final class Run {
         handle.end()
         await sleep(0.4)
         let after = probe.handle(named: area)?.reading ?? start
-        guard abs(after.height - wanted) <= 1 else {
+        // The ceiling can CLOSE IN during the drag, and that is the dock doing
+        // its job rather than the bar failing. The Library shelf may never be
+        // taller than the room the dock can spare, and that room is measured
+        // with the shelf at its current height, so growing the shelf spends
+        // it: on 2026-09-20 `panel-grip-walk` pulled the shelf down 400pt from
+        // 123pt and it stopped at 163pt, which is precisely where the dock ran
+        // out. Predicting only from the ceiling as it stood BEFORE the drag
+        // (560pt, the shelf's own hard limit) claimed 523pt and called a
+        // correct app wrong. So the bar is held to the tighter of the two
+        // ceilings: the one it started under and the one it ended under.
+        let wantedNow = PanelAreaResize.draggedHeight(base: start.height, translation: by,
+                                                      contentHeight: after.contentHeight,
+                                                      minHeight: after.minHeight,
+                                                      maxAllowedHeight: after.maxAllowedHeight)
+        let allowed = by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow)
+        guard abs(after.height - allowed) <= 1 else {
             throw Failure(description: "\(area) was \(pt(start.height)) tall, "
                 + "the bar was dragged \(pt(abs(by))) \(by < 0 ? "up" : "down"), "
-                + "and it is \(pt(after.height)) now, where it should be \(pt(wanted)) "
-                + "(content \(pt(start.contentHeight)), floor \(pt(start.minHeight)), "
-                + "ceiling \(pt(start.maxAllowedHeight)))")
+                + "and it is \(pt(after.height)) now, where it should be \(pt(allowed)) "
+                + "(content \(pt(start.contentHeight)) -> \(pt(after.contentHeight)), "
+                + "floor \(pt(start.minHeight)), "
+                + "ceiling \(pt(start.maxAllowedHeight)) -> \(pt(after.maxAllowedHeight)))")
         }
         note(number, "dragHandle",
              "\(area) dragged \(pt(abs(by))) \(by < 0 ? "up" : "down")\(held); "

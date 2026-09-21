@@ -165,8 +165,11 @@ extension EditorState {
     /// cut below, so drawing a box over half a rectangle and pressing ⌘X made
     /// the whole rectangle disappear with nothing on screen to say why.
     func cutSelectedLayer() {
+        // The subject rather than the primary pick, so ⌘X, ⌫, ⌥⌫ and ⇧⌘J all
+        // act on the same layer when several rows are picked and the marquee
+        // is over one of them (`RegionTarget.subject`).
         if Experiments.shared.copyPicksYourLayerEnabled, hasPixelRegion,
-           let id = pickedLayerID, canSliceRegion(from: id) {
+           let id = regionSubjectID, canSliceRegion(from: id) {
             // Nothing copied means nothing to cut: the marquee missed the
             // layer, and it already beeped.
             guard copyLayerRegion(id) else { return }
@@ -175,7 +178,7 @@ extension EditorState {
         }
         if Experiments.shared.copyPicksYourLayerEnabled,
            Experiments.shared.cutSaysWhatItCannotDoEnabled, hasPixelRegion,
-           let id = pickedLayerID, let layer = document?.layer(id: id),
+           let id = regionSubjectID, let layer = document?.layer(id: id),
            let refusal = RegionSliceRefusal.refusal(for: layer, action: .cut) {
             raiseRegionSliceRefusal(refusal, layer: id)
             return
