@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.920Z",
-  "updated": "2026-09-21T16:53:51.987Z",
+  "updated": "2026-09-21T17:36:36.393Z",
   "deps": [
     "cut-arrange-and-retime-what-is-on-the-timeline"
   ],
@@ -57,7 +57,23 @@
     {
       "t": "2026-09-21T16:53:51.986Z",
       "note": "Adversarial review BEFORE building. (1) The mock's world does not exist in this app: it draws three separate clips butting on a V1 track, but a Photonz document holds ONE clip layer cut into PIECES (ClipPieces, 'a split adds a piece to a clip, never a second clip') and there is no way to import a second recording into a document at all. So the cut that actually exists is the join between two pieces, and that is where the transition goes. Building layer-to-layer transitions would be building for a situation nobody can create. (2) The invisible dissolve: after a plain B split, the two pieces read adjacent frames of the same file, so a cross dissolve there blends a frame with itself and NOTHING VISIBLE HAPPENS. A first-time user would read that as broken. The cut has to say so. (3) Six behaviours in the mock; the mock's own open question asks whether to ship the honest few. Shipping three: cross dissolve (needs overlap), dip to black, dip to white (no overlap). Push/wipe/morph are cut. (4) 'The overlap sits: before / across / after' is cut: a dissolve means across, and three answers to a question nobody asks is three ways to get it wrong. (5) 'Hold on black 3.0s' is cut from this slice: inserting real black is inserting a piece, not a transition, and it is the one thing on that page that MOVES clips. (6) 'Expand the cut' into A/B rows is cut: a second drawing of the timeline for one gesture. The bill is said in words on the panel instead. (7) Effects over time invents nothing: MotionProperty gains blur, offered only on a layer that HAS a blur, and the existing colour property covers a colour shifting across a shot."
+    },
+    {
+      "t": "2026-09-21T17:36:26.656Z",
+      "note": "owns these walks: transitions-at-a-cut-walk"
+    },
+    {
+      "t": "2026-09-21T17:36:32.684Z",
+      "note": "Left rough, not filed: (1) the value readings in the dock's newer video sections sit hard against the right edge of the panel with no gutter (the cut's timecode here, Sound's level in decibels next door), while the Appearance rows have one. Sound shipped that way yesterday, so it is the dock's row metrics rather than this work, and nothing is unreadable; it is in the audit's rough list where the user can react to it. (2) Carrying a piece to the FRONT of the order drops the transition it arrived with, silently, because the first piece arrives at no cut. That is the honest answer to where it should go and undo takes it back; it is in the audit rough. (3) The pieces on a clip's bar draw two large grey triangles inside them in every screenshot, before and after this work; pre-existing and cosmetic, and I could not tell from the picture alone what draws them."
+    },
+    {
+      "t": "2026-09-21T17:36:36.391Z",
+      "note": "A transition lives at the cut between two pieces of a clip and opens in the panel like any other selection: cross dissolve spends spare media either side and says how much, dip to black and dip to white spend none, a cut that cannot pay refuses rather than quietly shortening, and its length is dragged on the band over the join. Effects over time invented nothing: MotionProperty.blur, offered only where the layer has a blur, riding the same lanes, curves and undo, with a motion on a timed layer now playing once rather than looping. Verified: Scripts/test.sh green (8697 tests, including a render test that the frame on the cut really is black and an export test that writes a real MP4 and reads its frames back, which is 'what plays is what exports' measured); new walk transitions-at-a-cut-walk with 11 real window captures; cut-on-the-timeline, clip, trim and sound walks all still pass. Audit: queue/audits/2026-09-21-transitions-at-a-cut.json. Design: docs/design/video-transitions.md. Committed 19076ad0 and pushed."
     }
   ],
-  "started": "2026-09-21T16:50:48.808Z"
+  "started": "2026-09-21T16:50:48.808Z",
+  "walks": [
+    "transitions-at-a-cut-walk"
+  ],
+  "completed": "2026-09-21T17:36:36.392Z"
 }
