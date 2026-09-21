@@ -63,11 +63,14 @@ struct MotionStripTests {
 
         let groups = document.motionStrip()
         #expect(groups.count == 2)
-        #expect(groups.map(\.layerName) == ["Bell body", "Knob"])
-        #expect(groups[0].lanes.map(\.title) == ["Rotation", "Opacity"])
-        #expect(groups[1].lanes.map(\.title) == ["Rotation"])
-        #expect(groups[0].lanes[0].layerID == bell.id)
-        #expect(groups[1].lanes[0].motionID == knob.motions![0].id)
+        // Topmost first, the way the layers panel reads it: the knob is the
+        // last layer in the document, so it is the one drawn on top
+        // (`LayerCompositing.swift`).
+        #expect(groups.map(\.layerName) == ["Knob", "Bell body"])
+        #expect(groups[1].lanes.map(\.title) == ["Rotation", "Opacity"])
+        #expect(groups[0].lanes.map(\.title) == ["Rotation"])
+        #expect(groups[1].lanes[0].layerID == bell.id)
+        #expect(groups[0].lanes[0].motionID == knob.motions![0].id)
     }
 
     @Test("A layer with nothing moving is not in the strip, even between two that are")
@@ -79,7 +82,7 @@ struct MotionStripTests {
         knob.motions = [Self.rotation(start: 90, over: 900)]
         let document = PhotonzDocument(canvasSize: CGSize(width: 240, height: 240),
                                        layers: [bell, clapper, knob])
-        #expect(document.motionStrip().map(\.layerName) == ["Bell body", "Knob"])
+        #expect(document.motionStrip().map(\.layerName) == ["Knob", "Bell body"])
     }
 
     @Test("A motion switched off keeps its lane, drawn as switched off")
@@ -125,7 +128,7 @@ struct MotionStripTests {
         #expect(!document.motionCycleIsAutomatic)
         // The knob finishes at 990, which is PAST the end of the lap: the whole
         // point of the dashed line, and what a lag in something that loops IS.
-        let knob = document.motionStrip()[1].lanes[0]
+        let knob = document.motionStrip()[0].lanes[0]
         #expect(knob.timing.endMS == 990)
         #expect(knob.timing.endMS > document.motionCycleLengthMS)
     }
@@ -355,7 +358,7 @@ struct MotionStripTests {
             drag: held, automatic: document.automaticMotionCycleLengthMS,
             current: document.motionCycleMS)
         #expect(document.motionCycleLengthMS == 900)
-        #expect(document.motionStrip()[1].lanes[0].timing.endMS == 990)
+        #expect(document.motionStrip()[0].lanes[0].timing.endMS == 990)
 
         // ...and push it back. The held number goes with it.
         let held2 = document.motionCycleLengthMS
@@ -414,7 +417,7 @@ struct MotionStripTests {
     @Test("The edges offered to a drag are every OTHER bar's two ends, plus the top of the lap")
     func edgesComeFromEveryOtherBar() {
         let document = Self.bellAndKnob(knobStart: 90)
-        let knob = document.motionStrip()[1].lanes[0]
+        let knob = document.motionStrip()[0].lanes[0]
         let edges = document.motionStripEdges(excluding: knob.motionID)
         #expect(edges.contains { $0.ms == 0 && $0.name == "Bell body" })
         #expect(edges.contains { $0.ms == 900 && $0.name == "Bell body" })

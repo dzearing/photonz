@@ -67,14 +67,16 @@ struct MotionStripBarTests {
         #expect(doc.motionStrip().isEmpty)
     }
 
-    @Test func clipsAreListedInTheOrderTheLayersAreIn() {
+    /// Topmost first, which is how the layers panel reads and how the stack
+    /// composites (`LayerCompositing.swift`).
+    @Test func clipsAreListedTheWayTheLayersPanelListsThem() {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
         doc.layers = (1...3).map { index in
             var clip = Self.shape("Piece \(index)")
             clip.time = LayerTime(inMS: (index - 1) * 1000, outMS: index * 1000)
             return clip
         }
-        #expect(doc.motionStrip().map(\.layerName) == ["Piece 1", "Piece 2", "Piece 3"])
+        #expect(doc.motionStrip().map(\.layerName) == ["Piece 3", "Piece 2", "Piece 1"])
     }
 
     // MARK: - What a drag can catch on

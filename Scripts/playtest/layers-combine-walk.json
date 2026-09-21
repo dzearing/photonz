@@ -1,0 +1,236 @@
+{
+  "out": "/tmp/photonz-playtest/layers-combine",
+  "seed": "Compositing is layers with a rule for how they combine. This walk opens a green screen still, keys the wall out in one click, puts a coloured plate UNDER the keyed layer so the subject stands on something, and then cuts the whole thing to the shape of the layer below it with Masked by. It finishes by undoing the mask, so the last picture is the composite again. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/green-screen.png",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-open",
+      "note": "a still off a green screen take: somebody in front of a wall of green that is lit from one side and falls off into its corners, which is what a real wall does"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-open"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-unlock",
+      "note": "a picture opens as a locked Background, the way a capture always has, so the first move is the padlock on its row"
+    },
+    {
+      "do": "press",
+      "control": "Lock"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-picked",
+      "note": "the picture picked, and the panel showing what a layer made of pixels can do: Opacity, Blending, Key, Masked by"
+    },
+    {
+      "do": "panel",
+      "stage": "2-picked"
+    },
+    {
+      "do": "expect",
+      "control": "Key it",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-picked"
+    },
+    {
+      "do": "press",
+      "control": "Key it"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-keyed",
+      "note": "THE TEST: one click and the wall is gone. Nobody picked the colour, nobody typed a number: the colour was read off the edges of the picture and the key was set from it. The lit corner and the dark corner both go, because the key measures colour and throws brightness away"
+    },
+    {
+      "do": "panel",
+      "stage": "3-keyed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "reads": "Key, on"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-keyed"
+    },
+    {
+      "do": "render",
+      "name": "3-keyed-canvas"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        140
+      ],
+      "to": [
+        900,
+        640
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "shortcut",
+      "key": "[",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Send to Back"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-over",
+      "note": "a plate sent to the back, so the subject is standing on it rather than on nothing. This is the whole of compositing: a layer over the layers below it, and the stack is the order"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-over"
+    },
+    {
+      "do": "render",
+      "name": "4-over-canvas"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "5-picked-again"
+    },
+    {
+      "do": "press",
+      "control": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-list",
+      "note": "THE TEST for the words: three choices, each with a plain sentence beside it, and the sentence names the layer it would borrow from rather than saying the layer below"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-masked-by-list"
+    },
+    {
+      "do": "press",
+      "control": "Its brightness",
+      "in": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Its brightness"
+    },
+    {
+      "do": "describe",
+      "stage": "6-matte",
+      "note": "THE TEST: the keyed picture is now cut to the BRIGHTNESS of the plate under it, and the plate has stopped drawing itself. It is not in the picture any more, it is the shape of the picture"
+    },
+    {
+      "do": "panel",
+      "stage": "6-matte"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-matte"
+    },
+    {
+      "do": "render",
+      "name": "6-matte-canvas"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Nothing"
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "THE TEST for undo: the mask was one step, so one press puts the composite back exactly as it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-undone"
+    }
+  ]
+}

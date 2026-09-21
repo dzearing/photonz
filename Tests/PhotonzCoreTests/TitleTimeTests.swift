@@ -329,8 +329,10 @@ struct TitleTimeTests {
         title.time = LayerTime(inMS: 2000, outMS: 5000)
         doc.layers.append(title)
         let rows = doc.motionStrip()
-        #expect(rows.last?.layerName == "Shipping today")
-        #expect(rows.last?.bar == title.time)
+        // The title is the last layer in the document, so it draws on top, so
+        // it is the FIRST row of the strip (`LayerCompositing.swift`).
+        #expect(rows.first?.layerName == "Shipping today")
+        #expect(rows.first?.bar == title.time)
     }
 
     @Test func aTitleSomebodyNamedKeepsTheNameTheyGaveIt() {
@@ -339,7 +341,7 @@ struct TitleTimeTests {
         title.name = "Opening card"
         title.time = LayerTime(inMS: 2000, outMS: 5000)
         doc.layers.append(title)
-        #expect(doc.motionStrip().last?.layerName == "Opening card")
+        #expect(doc.motionStrip().first?.layerName == "Opening card")
     }
 
     @Test func aFadesLaneIsDrawnWhereTheFadeActuallyHappens() {
@@ -354,7 +356,7 @@ struct TitleTimeTests {
         doc.layers.append(title)
         let did = doc.setTitleFade(id, toMS: 500)
         #expect(did)
-        let lane = doc.motionStrip().last?.lanes.first
+        let lane = doc.motionStrip().first?.lanes.first
         #expect(lane?.timing.startMS == 2000)
         #expect(lane?.timing.endMS == 5000)
         // ...and the motion itself is untouched, in its own clock.

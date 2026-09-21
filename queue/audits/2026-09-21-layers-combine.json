@@ -1,0 +1,30 @@
+{
+  "feature": "Layers combine over the tracks below them",
+  "epic": "video-transitions-motion",
+  "summary": "A layer can now key a colour out of itself and take its shape from the layer directly under it, both set in the panel under Opacity and Blending. Press Key it on a green screen still and the wall goes in one click, with the colour read off the picture rather than picked by hand. The timeline also reads top down the way the layers list does, so the bar on top is the layer on top.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"A layer can key a colour out and take its shape from the layer below\" (next-layers-combine), on by default. Open Tests/PhotonzRenderTests/Fixtures/green-screen.png to follow along, or any picture with a flat backdrop.",
+  "try": [
+    { "do": "Open a picture with a flat colour behind the subject. Click its row in Layers, then click the padlock on that row to unlock it." },
+    { "do": "Press Key it in Appearance, under Blending.", "shot": "2026-09-21-layers-combine-keyed.png" },
+    { "do": "Drag the Tolerance slider up and down and watch where the edge of the subject goes." },
+    { "do": "Press R and drag a rectangle over the whole picture, then press ⇧⌘[ to send it to the back.", "shot": "2026-09-21-layers-combine-over.png" },
+    { "do": "Click the picture's row again, open Masked by, and choose Its brightness.", "shot": "2026-09-21-layers-combine-matte.png" },
+    { "do": "Press ⌘Z once and check the composite comes straight back." },
+    { "do": "Open a recording, put a title over a clip, and check the title's bar is ABOVE the clip's bar on the timeline." }
+  ],
+  "evaluate": [
+    "Did one press of Key it get you close enough that you never reached for the colour swatch?",
+    "Is the edge the key left good enough to use, or can you see a rim of the old colour on the shoulders?",
+    "When Masked by ate the rectangle, did you know where the rectangle had gone?",
+    "Do Key and Masked by read as part of the same question Opacity and Blending ask, or as effects that wandered into the wrong section?",
+    "Does the timeline now agree with the layers list about which layer is on top, or does top-down still read backwards to you?"
+  ],
+  "rough": [
+    "A layer spent as somebody's mask stops drawing on the canvas, and its row in the Layers list says nothing about that. The rectangle simply vanishes and its row still shows a red thumbnail. Filed as its own task.",
+    "The Key rows only appear on a layer made of pixels, and a picture opens as a LOCKED Background, so the first move on a still is always unlocking it. That is what a capture has always done and it is not this feature's to change, but it is two clicks in front of the one-click claim.",
+    "Went further than the mock in one place and less far in two. Further: the mock picks the matte source off a track by name, and this borrows from the layer directly below, which is what Photoshop's clipping mask already means and which makes reordering change the mask the same way it changes the composite. Less far: the mock offers three matte kinds (Shape, Luma, Text) and this offers two, because a text layer's transparency IS its letterforms, so Shape already does what Text would. Also less far: the mock draws a second blend control in Effects, and Blending already shipped in Appearance, so building it would have been two controls for one thing.",
+    "The mock's open question was whether to surface spill kill and light wrap or keep the first pass to one button. Answered as one button plus three sliders (Tolerance, Softness, Spill) for anybody who wants them. Light wrap is not built: it is a look rather than a key.",
+    "Cost, on the repo's own budget document (4000 x 3000, ten layers, re-render): five keyed layers 15.5ms of cpu against 10.1ms plain, five matted layers 12.0ms against 12.3ms plain. Both inside the 16ms budget. The key's arithmetic runs once per colour into a lookup table that is then kept, so dragging the Tolerance slider does not pay for it again.",
+    "The key is measured on colour with brightness divided out, which is why a wall lit from one side keys out with its own shadow. It has only been run on a synthetic green screen and on flat plates, never on a real camera frame with noise and compression in it."
+  ]
+}

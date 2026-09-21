@@ -72,12 +72,22 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// round it has no side of an edge to pick (`Layer.ringsAnOpenLine`).
         /// The Border row's Position and Offset leave those out.
         public let hasOpenLine: Bool
+        /// True when this layer is made of pixels somebody could key a colour
+        /// out of: a photo, a capture, a frame of a recording. A shape or a
+        /// label has a colour you would simply change instead, so the Key rows
+        /// leave those out (`LayerCompositing.swift`).
+        public let hasPixelsToKey: Bool
+        /// True when there is a layer directly under this one among its own
+        /// siblings, which is the only thing a matte can borrow a shape from.
+        public let hasSomethingBelow: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
                     hasItsOwnThickness: Bool = false,
                     hasLetters: Bool = false,
                     hasFixedMixing: Bool = false,
-                    hasOpenLine: Bool = false) {
+                    hasOpenLine: Bool = false,
+                    hasPixelsToKey: Bool = false,
+                    hasSomethingBelow: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
@@ -85,6 +95,8 @@ public struct LayerStyleSelection: Hashable, Sendable {
             self.hasLetters = hasLetters
             self.hasFixedMixing = hasFixedMixing
             self.hasOpenLine = hasOpenLine
+            self.hasPixelsToKey = hasPixelsToKey
+            self.hasSomethingBelow = hasSomethingBelow
         }
     }
 
@@ -284,7 +296,9 @@ extension PhotonzDocument {
                 hasItsOwnThickness: layer.hasOutlineThickness,
                 hasLetters: layer.hasLetters,
                 hasFixedMixing: layer.mixingIsFixed,
-                hasOpenLine: layer.ringsAnOpenLine))
+                hasOpenLine: layer.ringsAnOpenLine,
+                hasPixelsToKey: layer.canBeKeyed,
+                hasSomethingBelow: siblings(of: id).map { $0.index > 0 } ?? false))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

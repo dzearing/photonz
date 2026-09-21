@@ -206,6 +206,10 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var blendModeEnabled: Bool { isEnabled(FeatureCatalog.blendModeFlag) }
 
+    /// Keying a colour out, and cutting a layer to the shape of the one below
+    /// it (`LayerCompositing.swift`).
+    var layersCombineEnabled: Bool { isEnabled(FeatureCatalog.layersCombineFlag) }
+
     /// `next-corner-handles`: whether a picked shape with corners wears a dot
     /// just inside each corner that rounds that corner when you pull it.
     /// Exists only in the Next release's catalog, so Current always reads

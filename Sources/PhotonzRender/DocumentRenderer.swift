@@ -453,7 +453,14 @@ public final class DocumentRenderer: @unchecked Sendable {
                                  onDesignedSurface: Bool,
                                  contentScale: CGFloat, magnifyNearest: Bool) -> CIImage {
         var output = base
-        for layer in layers where layer.isVisible {
+        for (index, layer) in layers.enumerated() where layer.isVisible {
+            // A layer being spent as the mask of the one above it is not in the
+            // picture: it IS the shape of the picture, so it draws nothing of
+            // its own (`LayerCompositing.swift`).
+            if index + 1 < layers.count {
+                let above = layers[index + 1]
+                if above.isVisible, above.style.matte != nil { continue }
+            }
             let frame = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
             // A component's own styling is its own; what it HOLDS is inside it.
             let holdsInside = onDesignedSurface || layer.startsDesignedSurface
@@ -531,7 +538,23 @@ public final class DocumentRenderer: @unchecked Sendable {
                     output = positioned.composited(over: output).cropped(to: clip)
                 }
             }
-            output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: clip)
+            // ...and what shape it is allowed to be, borrowed from the layer
+            // directly under it. Last, after its own styling, because the mask
+            // cuts the finished layer: a shadow on a matted layer is cut off
+            // at the same edge everything else is.
+            var drawn = layerImage
+            if let matte = layer.style.matte, index > 0 {
+                let below = layers[index - 1]
+                if below.isVisible,
+                   let mask = ciImage(for: below, origin: origin, in: document, store: store,
+                                      backdrop: backdrop,
+                                      onDesignedSurface: onDesignedSurface,
+                                      contentScale: contentScale,
+                                      magnifyNearest: magnifyNearest) {
+                    drawn = ChromaKeyFilter.matted(drawn, by: mask, kind: matte, extent: clip)
+                }
+            }
+            output = composite(drawn, over: output, mode: layer.effectiveBlendMode, extent: clip)
         }
         return output
     }
@@ -933,6 +956,16 @@ public final class DocumentRenderer: @unchecked Sendable {
         // it draws what it holds.
         case .group:
             return nil
+        }
+
+        // A colour keyed out of the layer's own pixels, and it happens HERE,
+        // before the crop, the scale and every effect below. A key is a thing
+        // done to what the layer is made of rather than a thing laid over it,
+        // so a shadow follows the keyed silhouette and a blur softens the edge
+        // the key left, exactly as they would if the transparency had come out
+        // of the file that way (`ChromaKeyFilter.swift`).
+        if let key = layer.style.key, key.isOn {
+            image = ChromaKeyFilter.keyed(image, with: key)
         }
 
         // Layer-local crop. The crop is in the same unit as the frame, and the

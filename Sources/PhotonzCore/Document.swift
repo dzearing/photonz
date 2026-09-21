@@ -179,6 +179,25 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         layers.flatMap(\.selfAndDescendants)
     }
 
+    /// Every layer in the document **in the order the layers panel reads them**:
+    /// topmost first, with a group's contents directly under it.
+    ///
+    /// The same walk `panelRows` makes, over the layers rather than over rows,
+    /// so any surface that has to agree with the panel about the stack — the
+    /// timeline above all — can agree with it by construction
+    /// (`LayerCompositing.swift`).
+    public var allLayersTopDown: [Layer] {
+        var found: [Layer] = []
+        func walk(_ list: [Layer]) {
+            for layer in list.reversed() {
+                found.append(layer)
+                if layer.isGroup { walk(layer.children) }
+            }
+        }
+        walk(layers)
+        return found
+    }
+
     /// Finds a layer anywhere in the tree, inside groups included. For a
     /// document with no groups this is exactly the flat lookup it always was.
     public func layer(id: UUID) -> Layer? {

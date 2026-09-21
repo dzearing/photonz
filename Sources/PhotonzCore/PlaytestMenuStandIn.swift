@@ -73,5 +73,12 @@ public enum PlaytestMenuStandIn {
         Chord(key: "c", modifiers: [.command, .option, .shift]): .copyLook,
         Chord(key: "v", modifiers: [.command, .option, .shift]): .pasteLook,
         Chord(key: "t", modifiers: [.command, .option]): .toggleTimingStrip,
+        // Layer ▸ the four arrange rows. The stack is the composite order, so
+        // these are the presses a compositing walk makes most, and every one of
+        // them hangs off the focused window like undo.
+        Chord(key: "]", modifiers: [.command, .shift]): .bringToFront,
+        Chord(key: "]", modifiers: [.command]): .bringForward,
+        Chord(key: "[", modifiers: [.command]): .sendBackward,
+        Chord(key: "[", modifiers: [.command, .shift]): .sendToBack,
     ]
 }

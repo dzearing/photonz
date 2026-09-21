@@ -104,14 +104,24 @@ public struct MotionStripEdge: Hashable, Sendable {
 extension PhotonzDocument {
 
     /// Every moving property in the document, grouped under the layer it is on,
-    /// in the order the layers themselves are in.
+    /// **in the order the layers panel reads: topmost first**.
     ///
     /// The WHOLE document, unlike the Motion list in the side column, which
     /// speaks for the one layer you have picked. That difference is the reason
     /// the strip exists: a lag is a relationship between two layers, and a
     /// surface that can only see one of them can never show it.
+    ///
+    /// **Top down, because the stack IS the composite order**
+    /// (`LayerCompositing.swift`). The renderer draws the array from the front,
+    /// so the LAST layer in it is the one on top, and the layers panel has
+    /// always turned that round to read topmost first. The strip used to read
+    /// the array straight, which put a title's bar UNDERNEATH the bar of the
+    /// clip it is laid over — saying, in the one surface where a video is
+    /// arranged, that the title is behind the picture. One order now, in both
+    /// places, and dragging a row up the layers list moves its bar up the
+    /// timeline to match.
     public func motionStrip() -> [MotionStripGroup] {
-        allLayers.compactMap { layer in
+        allLayersTopDown.compactMap { layer in
             let motions = layer.motions ?? []
             // A row earns its place by having something to draw: a stretch of
             // time, something moving, or both. A layer with neither is a

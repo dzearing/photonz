@@ -1025,6 +1025,12 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     /// unchanged.
     public var effects: [LayerEffect]
     public var blendMode: BlendMode
+    /// A colour made transparent wherever it appears in this layer, or nil for
+    /// the layers nobody has keyed (`LayerCompositing.swift`).
+    public var key: ChromaKey?
+    /// What this layer borrows its shape from the layer directly under it, or
+    /// nil for the layers nobody has masked (`LayerCompositing.swift`).
+    public var matte: LayerMatte?
 
     /// The layer's softness, as a plain number: what the renderer asks for and
     /// what every slider written before Effects became a list sets.
@@ -1209,7 +1215,7 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case opacity, blurRadius, cornerRadius, borderWidth, borderColorHex
         case borderPosition, ringIsAnEffect
-        case shadow, shadows, effects, blendMode
+        case shadow, shadows, effects, blendMode, key, matte
     }
 
     public init(from decoder: Decoder) throws {
@@ -1222,6 +1228,11 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         // opens as Normal here instead of throwing and taking the whole
         // document with it (`BlendMode.named`).
         blendMode = BlendMode.named(try c.decodeIfPresent(String.self, forKey: .blendMode))
+        key = try c.decodeIfPresent(ChromaKey.self, forKey: .key)
+        // Read as a plain word and matched, for the same reason the blend mode
+        // above is: a matte kind a later build adds opens as no matte here
+        // rather than throwing and taking the document with it.
+        matte = LayerMatte.named(try c.decodeIfPresent(String.self, forKey: .matte))
         if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
             effects = list
         } else {
@@ -1278,6 +1289,10 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         if borderPosition != .inside { try c.encode(borderPosition, forKey: .borderPosition) }
         try c.encode(true, forKey: .ringIsAnEffect)
         try c.encode(blendMode, forKey: .blendMode)
+        // Written only when there is one, so a document nobody has keyed or
+        // masked is byte for byte what it always was.
+        try c.encodeIfPresent(key, forKey: .key)
+        try c.encodeIfPresent(matte, forKey: .matte)
         // The first shadow and the blur are written where they have always been
         // written, so a file saved today still opens in a build from yesterday
         // with its shadow and its blur on. The list goes in beside them, which
@@ -1355,6 +1370,11 @@ extension LayerStyle {
         opacity >= 1 && blurRadius <= 0 && !cornerRadii.isRound
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
             && blendMode == .normal
+            // A key and a matte are both cuts taken out of the whole layer, so
+            // a group wearing either has to become one picture before the cut
+            // can be made. Passing its children straight through would key or
+            // mask each of them on its own instead.
+            && key == nil && matte == nil
     }
 }
 

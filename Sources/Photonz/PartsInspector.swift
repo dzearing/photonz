@@ -51,6 +51,15 @@ struct PartsInspector: View {
                 BlendModeRow()
                 FixedMixingNote()
             }
+            // ...and under those two, the other half of the same question:
+            // which of this layer's own pixels are there at all (Key), and what
+            // shape it is allowed to be (Masked by). Compositing is layers with
+            // a rule for how they combine, and these are the last two rules
+            // (`LayerCompositing.swift`).
+            if Experiments.shared.layersCombineEnabled {
+                KeyRows()
+                MaskedByRow()
+            }
             // A measurement's Role, right under it: it is a preset for every
             // colour below it, so it reads as "what this calls out, then what
             // that is painted" (`MeasurePartSettings`).

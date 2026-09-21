@@ -938,6 +938,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// pressed in a walk. A walk that checks what happens after something is
     /// taken away asks for it here.
     case deleteLayer
+    /// The four arrange rows in the Layer menu: Bring to Front, Bring Forward,
+    /// Send Backward, Send to Back. All four are menu chords hanging off the
+    /// focused window, so all four are dimmed and empty for the whole of a
+    /// walk (`PlaytestMenuStandIn`).
+    ///
+    /// The stack IS the composite order and it is the rule a matte reads, so a
+    /// walk about compositing that cannot restack is a walk that can only look
+    /// at half of it (`LayerCompositing.swift`).
+    case bringToFront, bringForward, sendBackward, sendToBack
     /// Edit ▸ Copy and Edit ▸ Paste. Both are menu chords, which do nothing
     /// while the probe is not the active app, so a walk that checks where a
     /// pasted layer lands asks for them here.

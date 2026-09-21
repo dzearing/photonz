@@ -2840,6 +2840,23 @@ private final class Run {
                 } else {
                     actionDetail = "nothing picked that holds anything, so no room was added"
                 }
+            case .bringToFront, .bringForward, .sendBackward, .sendToBack:
+                // The stack is the composite order, so what the log has to say
+                // is where the layer ENDED UP, not that a command ran.
+                let step: PhotonzDocument.RestackStep = switch action {
+                case .bringToFront: .toFront
+                case .bringForward: .forward
+                case .sendBackward: .backward
+                default: .toBack
+                }
+                let picked = editor.actionableLayerIDs
+                editor.restackSelectedLayers(step)
+                let order = editor.document?.layers.map(\.name) ?? []
+                let names = picked.compactMap { editor.document?.layer(id: $0)?.name }
+                actionDetail = names.isEmpty
+                    ? "nothing picked, so nothing moved"
+                    : "\(names.joined(separator: ", ")) moved; bottom to top the stack is now "
+                        + order.joined(separator: ", ")
             case .deleteLayer:
                 // Like Frame Selection above, this command can quietly do
                 // nothing, and the log has to say which nothing it was: the

@@ -148,6 +148,8 @@ public enum FeatureCatalog {
 
     public static let blendModeFlag = "next-blend-mode"
 
+    public static let layersCombineFlag = "next-layers-combine"
+
     public static let tutorialsFlag = "next-tutorials"
 
     public static let setupTakesNoForAnAnswerFlag = "next-setup-takes-no-for-an-answer"
@@ -861,6 +863,16 @@ public enum FeatureCatalog {
                     name: lensFlag,
                     title: "A layer that changes what is under it",
                     description: "Replaces the Zoom Callout with the Lens tool, K, in the same slot on the bar. Drag a box over anything and the picture underneath is drawn through it: Blur to soften an address until it cannot be read, Pixelate to break a name into blocks, Greyscale to drain the colour out of a region, Invert to flip it, Brightness to lift it or push it down, or Magnify to draw a bigger copy of the bit you dragged, with a line back to where it came from. Magnify is the Zoom Callout, which is why there is one box on the bar and one Lens section in the panel instead of two of each; Z still hands you the Lens set to Magnify. Each kind has its own settings, in the capsule over the tool bar before you draw and in the Lens section of the panel after, and switching a layer between them in that section is one undo step. It is an ordinary layer otherwise: move it, resize it, turn it, round its corners, give it a border or a shadow, fade it, reorder it, undo it. What leaves the app is flattened, so a pixelated region really is pixelated in the picture you export or copy. Off means the Zoom Callout and its own section come back and there is no Lens; a lens already in a document keeps drawing either way.",
+                    area: .layers,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: layersCombineFlag,
+                    title: "A layer can key a colour out and take its shape from the layer below",
+                    description: "Compositing is layers with a rule for how they combine, and this adds the two rules the app was missing, both of them right under Blending where Opacity already lives. Key out a colour takes one click: press Key it on a photo or a clip and the colour round the edges of the picture, the wall behind whoever is talking, goes transparent, with Tolerance, Softness and Spill underneath for tuning it by hand. It measures colour rather than brightness, so a wall lit from one side keys out with its own shadow instead of leaving a grey rind, and Spill pulls the green rim off a shoulder without darkening it. Masked by cuts a layer to the shape, or to the brightness, of the layer directly under it in the layers list: the layer below stops drawing and becomes the shape instead, so a gradient under a colour wash turns it into a fade, and dragging a different layer under it changes what it is cut to. Both are properties of the layer, both survive being saved, and both are drawn at whatever moment the playhead is on, so what you scrub past is what exports. The timeline reads top down the way the layers list does, so the bar on top is the layer on top. Off means no Key or Masked by rows; a document that already has either keeps drawing that way.",
                     area: .layers,
                     isEnabled: false,
                     parameters: []),
