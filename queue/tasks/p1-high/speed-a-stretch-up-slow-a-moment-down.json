@@ -1,0 +1,37 @@
+{
+  "id": "speed-a-stretch-up-slow-a-moment-down",
+  "title": "Speed a stretch up, slow a moment down",
+  "goal": "Long recordings have dead stretches and moments worth dwelling on. Let a piece be sped up or slowed down, so a two minute wait becomes four seconds and the click worth seeing gets half a second to land.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 42,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:34.986Z",
+  "updated": "2026-09-21T13:54:35.092Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-speed.html: \"Retiming is a property of the selected clip, so nothing new appears in the chrome. The clip sits on the timeline dock, its speed curve is plotted on the clip's own time axis right below it.\"\n\nSo no retime mode and no separate window. A speed curve under the clip is the page's answer and is a good one.\n\nThe audio question is the one people get wrong. Speeding up video and leaving the audio chipmunked is a bug; dropping the audio silently is worse. Decide, and say it where somebody will read it.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "A clip can be given a speed, and the timeline shows it taking less or more room as a result",
+    "Speed can change across a clip rather than only being one number for the whole thing",
+    "What happens to the audio is deliberate and stated: say whether it changes pitch, is corrected, or is dropped, and why",
+    "A sped up stretch still plays smoothly rather than stuttering, and the audit says what it did about frames",
+    "Everything downstream moves correctly when a clip changes length, following the same ripple rule cutting uses",
+    "What plays is what exports, timed rather than eyeballed",
+    "Audit under queue/audits/ with a real capture retimed, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:34.988Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.086Z",
+      "note": "seq 340 -> 42"
+    }
+  ]
+}

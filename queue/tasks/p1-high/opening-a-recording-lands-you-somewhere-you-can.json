@@ -1,0 +1,33 @@
+{
+  "id": "opening-a-recording-lands-you-somewhere-you-can",
+  "title": "Opening a recording lands you somewhere you can work",
+  "goal": "The way into editing a recording should be the shortest path from the thing you just captured to the thing you want to change, with no hunting and no empty window.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 47,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:35.839Z",
+  "updated": "2026-09-21T13:54:35.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-entry-wt.html, whose opening line is the situation to design for: \"No document open. The screen recording you made this morning is already in history, one keystroke away behind the menu-bar icon.\"\n\nDeliberately independent of the time model so it can be done now: this is about the path in, not about what you land on.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "A recording in history opens for editing in one move from where you already are",
+    "What you land on is ready to work in: the clip is loaded, the transport responds, and nothing is dimmed waiting for something to finish",
+    "Opening something that is still being written, or that has gone missing, says so plainly instead of opening an empty window",
+    "Coming back to a recording you already edited puts you back where you were rather than starting over",
+    "Audit under queue/audits/ with the path from capture to editing captured, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:35.841Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.930Z",
+      "note": "seq 340 -> 47"
+    }
+  ]
+}

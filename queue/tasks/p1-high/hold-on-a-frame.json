@@ -1,0 +1,35 @@
+{
+  "id": "hold-on-a-frame",
+  "title": "Hold on a frame",
+  "goal": "Sometimes the point of a recording is one frame: the result, the error, the final state. Let a frame be held on screen for as long as it needs, as an ordinary piece of the edit.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 43,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:35.162Z",
+  "updated": "2026-09-21T13:54:35.267Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-freeze-wt.html, which states the design and the test in one line: \"A freeze is not a special object: it is a clip whose in and out are the same frame, so it drops into the timeline like any other.\"\n\nThat is the check on the time model from the foundation task. If a held frame needs a special case, the model is wrong and that is worth saying rather than working around.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "A frame can be held for a chosen length, and it behaves on the timeline like any other piece: trim it, move it, put things over it",
+    "It is made from where the playhead is, in one move",
+    "Things can be drawn and animated over it, since pointing at the held frame is usually the reason for holding it",
+    "It exports as the frames it should be rather than as a still that stutters",
+    "Audit under queue/audits/ with a hold in a real edit, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:35.164Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.261Z",
+      "note": "seq 340 -> 43"
+    }
+  ]
+}

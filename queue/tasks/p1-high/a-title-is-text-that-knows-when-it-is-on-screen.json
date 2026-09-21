@@ -1,0 +1,37 @@
+{
+  "id": "a-title-is-text-that-knows-when-it-is-on-screen",
+  "title": "A title is text that knows when it is on screen",
+  "goal": "Words over a video are how you name what somebody is looking at. Let a piece of text have a moment it appears and a moment it leaves, and otherwise be exactly the text the app already has.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 44,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:35.338Z",
+  "updated": "2026-09-21T13:54:35.438Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-title-wt.html: \"A title is a text layer that happens to live in a document with time, so it gets an in and an out. Nothing else about it is special.\"\n\nThat sentence is the whole specification. The failure mode to avoid is a Titles feature with its own panel, its own presets and its own styling, which is what every other editor has and what this app's model makes unnecessary.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "Text placed on a document with time gets a start and an end, and nothing else about it is special: the same font controls, the same colours, the same effects",
+    "When it appears and leaves is set on the timeline as directly as trimming anything else",
+    "It can come on and go off over time rather than only snapping, using the animation model rather than a titles feature",
+    "It stays readable over whatever is behind it, using what the app already does for text over pictures it did not choose",
+    "A saved text style applies to it like any other text",
+    "What plays is what exports, compared frame to frame",
+    "Audit under queue/audits/ with a title over a real capture, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:35.340Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.433Z",
+      "note": "seq 340 -> 44"
+    }
+  ]
+}

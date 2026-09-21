@@ -1,0 +1,34 @@
+{
+  "id": "getting-a-recording-out-is-quick-and-the-file-is",
+  "title": "Getting a recording out is quick and the file is the right size",
+  "goal": "The last step of every recording is sending it to somebody, and that means a file small enough for the place it is going. Make the way out obvious, the size predictable, and the wait short.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 46,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:35.672Z",
+  "updated": "2026-09-21T13:54:35.767Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "This one does NOT depend on the time model: it improves the way out that exists today, and it is the step the user hits every single time they record something. There is already a pending task about making a recording small enough to send; read it and fold rather than duplicating.\n\nPairs with the picture export work: the task about choosing a quality and seeing the file size is the same idea for stills, and the two should not grow two different controls for one question.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "Exporting says how big the file will be before you commit to it, the way the picture formats are learning to",
+    "There are a couple of honest choices rather than a wall of codecs: say what they are and who each is for",
+    "A long recording exports without the app appearing to freeze, and says how far along it is",
+    "The result plays where it is going: check it in the places people actually send these, and name them in the audit",
+    "Exporting the same recording twice gives the same file",
+    "Audit under queue/audits/ with sizes and times for a short and a long recording, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:35.674Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.766Z",
+      "note": "seq 340 -> 46"
+    }
+  ]
+}

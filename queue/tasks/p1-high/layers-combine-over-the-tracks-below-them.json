@@ -1,0 +1,37 @@
+{
+  "id": "layers-combine-over-the-tracks-below-them",
+  "title": "Layers combine over the tracks below them",
+  "goal": "Putting one thing over another is the whole of compositing. Make the stack on the timeline mean what the layers list already means, and let a layer say how it combines with what is under it, including keying a colour out.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 45,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:35.504Z",
+  "updated": "2026-09-21T13:54:35.604Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-compositing.html: \"Compositing is just layers with a rule for how they combine. The stack is the timeline: a track composites over the tracks below it, and every rule (key, matte, blend) is a property of the selected layer in Properties.\"\n\nThe app already has blend modes in the model (normal, multiply, screen) and a renderer that composites layers, so this is extending what exists rather than starting. Check what the blend mode work landed before adding a second way to say the same thing.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "A layer on the timeline composites over what is below it, and reordering changes the result the way the layers list says it should",
+    "How a layer combines is a property of that layer, set where its other properties are set",
+    "A flat colour can be keyed out, and the edge it leaves is clean enough to use rather than fringed",
+    "A layer can be masked by another, and the audit shows one working",
+    "It composites correctly at a moment: scrubbing to a time shows what exports at that time",
+    "The cost is measured on a realistic stack and reported against the budget",
+    "Audit under queue/audits/ with a key and a mask over a real capture, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:35.506Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:35.599Z",
+      "note": "seq 340 -> 45"
+    }
+  ]
+}

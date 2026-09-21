@@ -1,0 +1,39 @@
+{
+  "id": "the-loop-spends-its-time-building-not-re-running",
+  "title": "The loop spends its time building, not re-running every walk",
+  "goal": "The walk sweep now runs fifteen times a day at about an hour each, so most of the loop's time goes to re-running walks rather than building anything. Make the regression sweep cost what it is worth.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:36.007Z",
+  "updated": "2026-09-21T13:54:49.287Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-20 and 21: fifteen sweep passes in twenty four hours, each 55 to 62 minutes (59, 55, 54, 56, 55, 62 on the 20th), starting every 80 to 105 minutes. So the loop gets roughly 20 to 45 minutes of building between hour-long sweeps.\n\nThe gate exists and is not gating. queue/bin/sweep.sh due only says yes when a request is pending, but runners request one after essentially every task, so in practice it runs continuously. The cheapest honest fix is probably a floor on how often the full set may run regardless of requests, plus leaning harder on the partial sweep that already exists (Scripts/playtest-all.sh --no-build <fragment> runs just the walks a change touched, in seconds).\n\nThis is the single biggest thing standing between the queue and visible progress, which is why it is filed at all: the user has twice asked why video is not moving, and this is a large part of the answer.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "Measure it first and write the numbers down: how many sweeps ran in the last day, how long each took, and what share of the loop's wall clock that is",
+    "After the change, the loop spends the clear majority of its time on tasks, measured over a day and reported the same way",
+    "A regression is still caught: show that changing something a walk covers still fails, rather than trading safety for speed silently",
+    "The walks a change actually touches still run straight after it, which is the fast path that already exists",
+    "The full set still runs on a stated schedule, and the schedule is written where somebody will find it",
+    "CLAUDE.md is corrected: it says 322 walks and about 52 minutes, and the set is now 539 walks",
+    "Audit under queue/audits/ with before and after shares of the loop's day, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:36.009Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:36.103Z",
+      "note": "seq 340 -> 48"
+    },
+    {
+      "t": "2026-09-21T13:54:49.286Z",
+      "note": "seq 48 -> 2"
+    }
+  ]
+}

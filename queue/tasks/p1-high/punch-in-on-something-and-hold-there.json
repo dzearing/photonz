@@ -1,0 +1,37 @@
+{
+  "id": "punch-in-on-something-and-hold-there",
+  "title": "Punch in on something and hold there",
+  "goal": "Half of what makes a screen recording watchable is moving the eye: start wide, push in on the thing being talked about, hold, and pull back out. Make that a couple of moves rather than an exercise.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 41,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T13:54:34.816Z",
+  "updated": "2026-09-21T13:54:34.921Z",
+  "deps": [
+    "a-document-can-have-time"
+  ],
+  "blockedBy": [],
+  "notes": "Build on docs/design/mocks/pages/video-zoom-wt.html, whose whole point is that this is not a special feature: \"The move is two keys on Scale and two on Centre, and it is built with the same three gestures as every other animation in Photonz: move the playhead, change the value, and it is recorded.\"\n\nSo this must NOT be a zoom tool. It is the animation model pointed at scale and position. If it needs machinery of its own, the animation model is wrong and that is the finding.\n\nSharpness is the acceptance item that will actually be hard: a screen recording pushed in on is being magnified past its native resolution, and the app already knows about crisp tiles and nearest-neighbour magnification for exactly this reason. Reuse that thinking.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
+  "acceptance": [
+    "A clip can be pushed in on and pulled back out over time, and the result is smooth rather than stepped",
+    "Where it pushes in to is chosen by pointing at the thing on screen, not by typing numbers",
+    "It holds where it lands for as long as you want before moving again",
+    "It survives a trim: pushing in and then cutting the clip does not leave the move pointing at the wrong place",
+    "It stays sharp at the size it ends up: pushing in on a recording does not turn it to mush, and the audit shows the pixels",
+    "What plays is what exports, compared frame to frame",
+    "Audit under queue/audits/ with a real capture punched in on, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T13:54:34.818Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-21T13:54:34.916Z",
+      "note": "seq 340 -> 41"
+    }
+  ]
+}
