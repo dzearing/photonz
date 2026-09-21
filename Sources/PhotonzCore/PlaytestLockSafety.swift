@@ -168,6 +168,14 @@ public enum PlaytestLockSafety {
         // It was one of the six nobody could reach; `focus` was what came
         // first.
         "expectOneNumberPerName",
+        // Watched on 2026-09-21: `motion-timing-strip-walk`, forced under a
+        // lock, dragged the same bar four times and read the milliseconds back
+        // each time — "Ellipse Rotation body dragged 90 ms: 0-900 ms became
+        // 90-990 ms", and a drag carried 400 ms and called off with a real
+        // Escape "is back at 90 to 990 ms". It drives the strip's own views and
+        // reads the document's own times. It was on the unreachable list
+        // because `panelMenu` came first.
+        "dragTiming",
         "expectReadout", "exportQuality", "expectLanding", "expectListStill", "panelEdge",
         "panelStart", "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
         "expectSVG", "expectOneUnit",
