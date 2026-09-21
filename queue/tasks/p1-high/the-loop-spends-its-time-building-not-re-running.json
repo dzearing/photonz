@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:36.007Z",
-  "updated": "2026-09-21T16:00:49.898Z",
+  "updated": "2026-09-21T16:01:17.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-20 and 21: fifteen sweep passes in twenty four hours, each 55 to 62 minutes (59, 55, 54, 56, 55, 62 on the 20th), starting every 80 to 105 minutes. So the loop gets roughly 20 to 45 minutes of building between hour-long sweeps.\n\nThe gate exists and is not gating. queue/bin/sweep.sh due only says yes when a request is pending, but runners request one after essentially every task, so in practice it runs continuously. The cheapest honest fix is probably a floor on how often the full set may run regardless of requests, plus leaning harder on the partial sweep that already exists (Scripts/playtest-all.sh --no-build <fragment> runs just the walks a change touched, in seconds).\n\nThis is the single biggest thing standing between the queue and visible progress, which is why it is filed at all: the user has twice asked why video is not moving, and this is a large part of the answer.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -74,8 +74,13 @@
     {
       "t": "2026-09-21T16:00:49.897Z",
       "note": "left rough: the rotating check builds the probe every time and that build is not inside the ten minute budget. Warm it is 2 seconds; cold it is minutes. The clock cap (three times the budget, floored at 20 minutes) absorbs it, and a capped run leaves the rotation where it was so nothing is skipped."
+    },
+    {
+      "t": "2026-09-21T16:01:17.000Z",
+      "note": "Asking for a sweep no longer starts one. queue/bin/sweep-schedule.mjs now decides: the full set at most once every twelve hours (PHOTONZ_SWEEP_FLOOR_HOURS), and in between, after any task that lands code, a ten minute ROTATING CHECK of every walk whose script changed plus the next chunk of the set, carrying on where it stopped (queue/sweep/rotation.json). A rotating check clears no request, closes no standing task, and writes a broken walk onto the standing walk task by name the same day. BEFORE, measured with the new queue/bin/loop-day.mjs at 2026-09-21T15:41Z: 24h tasks 41.4 per cent, sweeps 57.9 per cent over 13 whole-set runs; 48h 36.2 against 63.0 over 28 runs. AFTER is a projection until a day passes: roughly 21 to 27 per cent on walk checks, and check-the-loop-actually-builds-most-of-its-day-n goes and measures it tomorrow. Regression proof on the real app: LayerAngle.fullTurn 360 -> 400 made the rotating check report angle-field-walk FAILED at 'the field called \"A\" reads \"-30°\", not \"10°\"'; reverted it passes with 8 real window captures. changedWalks() over a real range found 41 changed walk scripts and all 41 ran first with the cursor at 400. Dashboard fixed to match (it would have sat amber round the clock on a pending request). Verified: Scripts/test.sh 8639 tests passed, 16 loop drills green, four rotating checks run end to end including one stopped on its clock cap. Schedule written into CLAUDE.md, queue/bin/runner-prompt.md, queue/README.md, queue/sweep/README.md, docs/design/playtest-harness.md and 'queue/bin/sweep.sh schedule'. Audit queue/audits/2026-09-21-sweep-schedule.json. Committed 131b10d0, pushed."
     }
   ],
   "started": "2026-09-21T15:39:59.274Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-21T16:01:17.001Z"
 }
