@@ -984,10 +984,39 @@ private final class Run {
             func labels(_ field: NSTextField) -> [String] {
                 [field.placeholderString, field.accessibilityLabel()].compactMap { $0 }
             }
-            func label(_ field: NSTextField) -> String { labels(field).first ?? "" }
-            guard let match = fields.first(where: { field in
-                labels(field).contains { $0.caseInsensitiveCompare(name) == .orderedSame }
-            }) else {
+            // And the panel's OWN register, which is the only one of the three
+            // a locked screen cannot empty. Accessibility hands back nothing
+            // while the login window is up, and a box whose placeholder stands
+            // in for a value rather than for a name ("None" on a limit that has
+            // none, on X, Y, W and H) then answers to nothing at all — which is
+            // exactly what a forced run showed on 2026-09-21, listing the dock
+            // as "Opacity, Corner Radius, None, None, None, None, Padding".
+            // The markers behind those same boxes say "Smallest width" and "W"
+            // whoever is or is not sitting at the Mac.
+            let marked = try panelTargets()
+            func registered(_ field: NSTextField) -> (own: [String], rows: [String]) {
+                PlaytestPanelPress.registeredNames(of: field, among: marked)
+            }
+            // For a listing a walk's author can paste from. A box whose
+            // placeholder stands in for a value says the value AND the row it
+            // sits on, so "None" is never the only thing offered back.
+            func label(_ field: NSTextField) -> String {
+                let named = registered(field)
+                let own = (named.own + labels(field)).first { !$0.isEmpty } ?? ""
+                guard let row = named.rows.first, row != own else { return own }
+                return own.isEmpty ? row : "\(own) (in \(row))"
+            }
+            func answers(_ names: [String]) -> Bool {
+                names.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+            }
+            // Three passes, narrowest first, so nothing that answered
+            // yesterday answers to something else today: the first is exactly
+            // the search this step has always done, and a row's word is only
+            // reached once no box has claimed the name itself.
+            let match = fields.first { answers(labels($0)) }
+                ?? fields.first { answers(registered($0).own) }
+                ?? fields.first { answers(registered($0).rows) }
+            guard let match else {
                 let seen = fields.map(label).filter { !$0.isEmpty }
                 throw Failure(description: "no editable field labelled \"\(name)\" is on screen; the ones that are: \(seen.isEmpty ? "none" : seen.joined(separator: ", "))")
             }
@@ -8520,6 +8549,7 @@ private final class Run {
                 // it will not. The popover's own close is what runs, so SwiftUI
                 // sees the dismissal and the chevron that opened it goes back
                 // to shut, exactly as it does under a hand.
+
                 window.performClose(nil)
                 takenBy = "the popover it was over"
             } else if flags.isEmpty, key.characters == "\r", window.isSheet, !window.isKeyWindow,

@@ -230,6 +230,45 @@ enum PlaytestPanelPress {
         fieldViews(of: view, among: fields).flatMap(\.steady).map(PlaytestSteadyName.written)
     }
 
+    /// The names the PANEL ITSELF hangs on a control, read out of the app's
+    /// own register instead of off accessibility.
+    ///
+    /// A locked Mac hands back an empty accessibility name for everything in
+    /// the app, which is the whole reason `focus` was refused outright: it
+    /// looked a box up by a name that was not there, and reported a field
+    /// missing that was on screen at the right size. The register is a
+    /// different thing entirely — an `NSView` the panel puts behind its own
+    /// controls carrying the word a person reads — and a lock has nothing to
+    /// take away from it, which is how `press`, `reveal` and `selectRow` go on
+    /// working with the login window up.
+    ///
+    /// Two kinds of name, kept apart because they are not equally specific.
+    /// `own` is the marker wrapped round the control itself, which is what the
+    /// Position and Size numbers carry ("W"). `rows` is the labelled rows it
+    /// sits in, nearest first, which is what a group's limits carry
+    /// ("Smallest width"). A caller tries its own word before it tries the
+    /// row's, so a row holding four boxes cannot quietly answer for one of
+    /// them.
+    @MainActor static func registeredNames(of view: NSView,
+                                           among targets: [PanelTargetView])
+        -> (own: [String], rows: [String]) {
+        let box: CGRect = view.convert(view.bounds, to: nil)
+        let here = targets.filter { $0.window === view.window }
+        let own = here
+            .filter { $0.kind == .control }
+            .map { (name: $0.name, frame: $0.convert($0.bounds, to: nil)) }
+            // A point of slack each way: the marker is the control's own
+            // background, so the two are the same rectangle and rounding can
+            // put an edge a hair outside.
+            .filter { !$0.frame.isEmpty && $0.frame.insetBy(dx: -1, dy: -1).contains(box) }
+            .sorted { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+            .map(\.name)
+        let rows = fieldViews(of: view, among: here.filter { $0.kind == .field })
+            .reversed()
+            .map(\.name)
+        return (own, rows)
+    }
+
     /// The rows this sits inside, as markers, widest first.
     @MainActor static func fieldViews(of view: NSView,
                                       among fields: [PanelTargetView]) -> [PanelTargetView] {

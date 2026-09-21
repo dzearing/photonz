@@ -141,7 +141,7 @@
     },
     {
       "do": "focus",
-      "field": "Knob name"
+      "field": "Property name"
     },
     {
       "do": "type",

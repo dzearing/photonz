@@ -4,10 +4,19 @@
   "steps": [
     { "comment": "The first document counts in twos: every number in it is half a point, exactly as a Retina capture's are.", "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900, "pixelScale": 2 },
 
-    { "do": "tool", "tool": "rectangle" },
+    { "comment": "A plate and a smaller box on it. Two things, because a group needs two: one layer on its own cannot be grouped, and only a group can be made into a component. Both are shapes, so the group has no smallest height of its own and the exact numbers below are taken as typed.", "do": "tool", "tool": "rectangle" },
     { "do": "drag", "from": [300, 300], "to": [700, 420] },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [340, 330], "to": [500, 390] },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [220, 220], "to": [860, 600] },
     { "do": "wait", "seconds": 0.4 },
-    { "comment": "Exact numbers, so what arrives in the second document can be checked against something rather than eyeballed.", "do": "focus", "field": "W" },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "comment": "Exact numbers on the group itself, so what arrives in the second document can be checked against something rather than eyeballed. W and H live in the Position and Size popout, so it has to be open before anything can be typed into them.", "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "W" },
     { "do": "type", "text": "240" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.4 },
@@ -17,10 +26,9 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "W", "reads": "240" },
     { "do": "expect", "field": "H", "reads": "80" },
-
-    { "do": "tool", "tool": "select" },
-    { "comment": "A component is made out of a group, the way the Components walk makes one.", "do": "action", "action": "group" },
+    { "comment": "Put the popout away before the component is made: it sits over the panel, and the name field a new component opens for is in the panel underneath it.", "do": "action", "action": "closePositionAndSize" },
     { "do": "wait", "seconds": 0.4 },
+
     { "do": "action", "action": "makeComponent" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "type", "text": "Save Button" },
@@ -39,6 +47,8 @@
     { "do": "action", "action": "insertPickedComponent" },
     { "do": "wait", "seconds": 1.2 },
 
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
     { "comment": "THE TEST. A document counting in ones holds it at 120 by 40: the same button, the same size on screen, restated in this document's unit. Before this it arrived at 240 by 80 and drew twice as big.", "do": "expect", "field": "W", "reads": "120" },
     { "do": "expect", "field": "H", "reads": "40" },
     { "do": "describe", "stage": "2-arrived-at-one", "note": "the second document counts one to one: the same button reads 120 by 40 and is the same size on screen as it was in the first" },

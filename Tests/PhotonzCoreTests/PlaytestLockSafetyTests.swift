@@ -34,17 +34,35 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.refusal(for: steps) == nil)
     }
 
-    @Test("A walk that types into a field by name cannot")
-    func focusCannot() {
+    /// `focus` used to be the biggest stop in the whole set, at 100 walks, and
+    /// stopped being one on 2026-09-21: it asks the panel's own register what a
+    /// box is called before it asks accessibility, and the register is an
+    /// `NSView` the panel puts behind its own controls that a lock cannot
+    /// empty. All 71 walks it was the only stop in were forced under a lock
+    /// that day and every one of them ran.
+    @Test("A walk that types into a field by name runs, because the panel names its own boxes")
+    func focusCan() {
         let steps: [PlaytestStep] = [
             .snapshot(name: "a-start", window: nil),
             .focus(field: "Corner radius"),
             .type("12"),
         ]
+        #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)
+        #expect(PlaytestLockSafety.canRunLocked(steps))
+        #expect(PlaytestLockSafety.refusal(for: steps) == nil)
+    }
+
+    @Test("A walk that opens a real menu still cannot")
+    func panelMenuCannot() {
+        let steps: [PlaytestStep] = [
+            .snapshot(name: "a-start", window: nil),
+            .panelMenu(menu: "Add Effect", in: nil, shot: nil, choose: "Shadow", clicking: nil),
+            .snapshot(name: "b-shadow", window: nil),
+        ]
         let blocked = PlaytestLockSafety.nameLookups(in: steps)
         #expect(blocked.count == 1)
         #expect(blocked.first?.step == 2)
-        #expect(blocked.first?.name == "focus")
+        #expect(blocked.first?.name == "panelMenu")
         #expect(!PlaytestLockSafety.canRunLocked(steps))
     }
 
@@ -276,15 +294,18 @@ struct PlaytestLockSafetyTests {
         }
     }
 
-    /// Six kinds are still unproven, and they stay refused. Not because anyone
+    /// Five kinds are still unproven, and they stay refused. Not because anyone
     /// thinks they break, but because every walk that carries one reaches a
-    /// `panelMenu`, a `focus` or a `startGuide` FIRST, so a forced run stops
-    /// before the step in question and there is nothing to watch. They need a
-    /// Mac somebody is logged in to, or a walk that reaches them earlier.
+    /// `panelMenu` or a `startGuide` FIRST, so a forced run stops before the
+    /// step in question and there is nothing to watch. They need a Mac somebody
+    /// is logged in to, or a walk that reaches them earlier. There were six
+    /// until 2026-09-21, when `focus` stopped being a stop and
+    /// `component-whole-path-walk` ran far enough to watch
+    /// `expectOneNumberPerName` work.
     @Test("The kinds a locked Mac cannot even reach are still refused, not assumed")
     func theKindsNobodyCouldReachAreStillRefused() {
         for name in ["expectSectionFits", "dragTiming", "expectCue", "pickUpTile",
-                     "setLensAmount", "expectOneNumberPerName"] {
+                     "setLensAmount"] {
             #expect(PlaytestLockSafety.stepsALockStops.contains(name),
                     "\(name) has never been watched under a lock")
             #expect(PlaytestLockSafety.lockStops[name]?.contains("never been watched") == true)

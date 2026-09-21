@@ -39,9 +39,11 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "focus", "field": "W" },
     { "do": "describe", "stage": "4-stepped-down", "note": "THE SECOND CLAIM: the arrow steps from 160, so it has nowhere to go and holds at 160 rather than counting on down from 50" },
-    { "do": "key", "key": "escape" },
+    { "comment": "Escape over the Position and Size popout puts the popout away as well as handing the keyboard back, so the third claim opens it again before it reads W.", "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.4 },
 
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "focus", "field": "W" },
     { "do": "type", "text": "240" },
     { "do": "key", "key": "return" },

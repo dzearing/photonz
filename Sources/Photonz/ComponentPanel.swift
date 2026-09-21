@@ -2156,6 +2156,13 @@ private struct InstanceTextKnob: View {
             .onAppear { draft = live }
             .onChange(of: live) { _, value in if !focused { draft = value } }
             .onChange(of: instances) { _, _ in draft = live }
+            // ...and once more in the panel's own register, which is the only
+            // one of the three names that survives a locked screen. The
+            // placeholder is gone while the copies differ and accessibility
+            // hands back nothing with the login window up, so without this the
+            // knob answers to nothing at all the moment it reads Mixed
+            // (copies-share-knobs-walk, 2026-09-21).
+            .playtestField(property.name)
     }
 
     /// Mixed in the value's own place, one step quieter, and out of the way the

@@ -110,6 +110,20 @@ public enum PlaytestLockSafety {
     ///   `PlaytestLockSafetyTests`. That un-refuses 43 walks, so a locked sweep
     ///   runs 309 of 543 rather than 266.
     ///
+    /// - `focus`, the single biggest stop in the set at 100 walks, watched on
+    ///   2026-09-21 in all 71 of the walks it was the ONLY thing stopping,
+    ///   forced on a Mac locked since the 17th, every one of them green. It
+    ///   stopped needing accessibility that day: it now asks the panel's own
+    ///   register what a box is called (`PlaytestPanelPress.registeredNames`),
+    ///   the same register `press`, `reveal` and `selectRow` have always used,
+    ///   and only falls back to the placeholder and the accessibility label
+    ///   after that. `width-reads-back-walk` typed into "Smallest width" and
+    ///   read "W" back three times under the lock; `piece-geometry-walk` ran
+    ///   all 63 of its steps. Two boxes had no register name and no usable
+    ///   placeholder and were given one: a copy's wording knob while it reads
+    ///   Mixed (`InstanceTextKnob`), and one walk that was asking for a field
+    ///   called "Knob name" that the app calls "Property name".
+    ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
@@ -136,6 +150,24 @@ public enum PlaytestLockSafety {
         // already holding. Neither is a name and neither is an NSMenu.
         "dropComponent", "dragComponent", "dragFile", "expectBox", "expectHint", "expectBuilds",
         "expectRegion", "toolFlyout", "expectClickReaches", "expectFeet", "expectCaption",
+        // Watched on 2026-09-21 in all 71 walks it was the only stop in, once
+        // it stopped asking accessibility for the name and started asking the
+        // panel's own register.
+        "focus",
+        // Watched on 2026-09-21: `turned-words-walk`, forced under a lock,
+        // read the canvas's typing field back four times — "corner (370.2,
+        // 288.9), leaning 20.0 degrees; draft \"Save\" ... 55.0 by 33.0". It
+        // was listed as an accessibility step and never was one: it asks the
+        // canvas for the geometry of the box it is drawing, which is the app's
+        // own state inside the app's own process.
+        "expectField",
+        // Watched on 2026-09-21: `component-whole-path-walk`, forced under a
+        // lock, reached both of its `expectOneNumberPerName` steps once
+        // `focus` stopped stopping it, and read "no two rows in the panel wear
+        // one name over different numbers, across 2 named readouts" each time.
+        // It was one of the six nobody could reach; `focus` was what came
+        // first.
+        "expectOneNumberPerName",
         "expectReadout", "exportQuality", "expectLanding", "expectListStill", "panelEdge",
         "panelStart", "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
         "expectSVG", "expectOneUnit",
@@ -149,16 +181,6 @@ public enum PlaytestLockSafety {
     /// failures are about the lock is exactly what sent runners hunting bugs
     /// that were not in the app on 2026-09-15.
     public static let lockStops: [String: String] = {
-        // Watched on 2026-09-17: `wrap-at-a-ceiling-walk`, forced under a lock,
-        // reached its `focus` step and listed the editable fields it could see
-        // as "Opacity, Corner Radius, None, None, Gap, Padding". The step
-        // itself runs — it walks the app's own views in the app's own process,
-        // which a lock cannot touch — and the two limit fields are right there.
-        // What comes back empty is their NAME, so they answer only to the
-        // placeholder "None" and never to "Smallest width" or "Largest width".
-        let accessibility = "finds what it needs by asking accessibility for a name, and a locked "
-            + "screen hands back an empty one, so it would report a control missing that is on "
-            + "screen at the right size with the right tooltip"
         let menu = "opens a real menu, and an open menu is a window of its own that the app can "
             + "neither drive nor photograph while the login window is up"
         // A `menus` step opens nothing: it reads NSApp.mainMenu inside the
@@ -181,8 +203,6 @@ public enum PlaytestLockSafety {
             + "rather than trusted; force the walk, and if the step works, say so and it moves "
             + "to the list of steps a lock cannot touch"
         var stops: [String: String] = [
-            "focus": accessibility,
-            "expectField": accessibility,
             "menus": frozenBar,
             "menuShot": menu,
             "panelMenu": menu,
