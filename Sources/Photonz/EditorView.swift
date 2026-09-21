@@ -298,7 +298,18 @@ struct EditorView: View {
             }
         }
         .sheet(isPresented: $editorState.isExportDialogPresented) {
-            ExportDialog()
+            // One Export key, one Export sheet, and what it offers follows what
+            // the document IS: a document with time leaves as a video, and a
+            // picture leaves exactly as it always did
+            // (`EditorState+VideoExport`).
+            if editorState.exportsVideo {
+                VideoExportDialog()
+            } else {
+                ExportDialog()
+            }
+        }
+        .sheet(item: $editorState.videoExport) { run in
+            VideoExportProgressSheet(run: run)
         }
         .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
             // Where the canvas lands is the editor's call (empty window fills

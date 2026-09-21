@@ -154,6 +154,12 @@ final class EditorState {
     /// (`PlaytestAction.exportDialogAsJPEG`). Nil leaves the sheet on whatever
     /// was last picked.
     var playtestOpensExportOnPicture: ImageCodec.Format?
+    /// Probe only: the video format and size preset the Export sheet opens on
+    /// for a document that has time, so a walk can photograph GIF and Small
+    /// without clicking inside a sheet (`EditorState+VideoExport`). Nil leaves
+    /// the sheet on whatever was last picked.
+    var playtestOpensExportOnRecordingFormat: RecordingFormat?
+    var playtestOpensExportAtQuality: VideoExportQuality?
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
@@ -912,6 +918,12 @@ final class EditorState {
     /// press because an `AVAudioEngine` is not cheap to build, and outside the
     /// observation graph because nothing on screen is drawn from it.
     @ObservationIgnored var audioPlayerStorage: DocumentAudioPlayer?
+    /// The video export running in this window, or nil where none is
+    /// (`EditorState+VideoExport`). It is what the progress sheet is drawn
+    /// from, so it is observed rather than ignored.
+    var videoExport: VideoExportRun?
+    /// The job doing the writing, so Stop can stop it.
+    @ObservationIgnored var videoExportTask: Task<Void, Never>?
     /// The trim in flight, where the Trim tool is in hand over a clip
     /// (`EditorState+Trim`). Held here rather than in the document, exactly as
     /// the crop rectangle is, so ⎋ throws it away without an undo step.

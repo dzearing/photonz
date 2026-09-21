@@ -1,0 +1,76 @@
+{
+  "out": "/tmp/photonz-playtest/an-edited-recording-comes-out-as-a-video-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-export-the-video": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-a-recording-just-opened", "note": "An eight second screen recording, opened as an ordinary document. Nothing has been done to it yet" },
+    { "do": "snapshot", "name": "1-a-recording-just-opened" },
+
+    { "do": "writeVideo", "name": "1-untouched", "format": "mp4", "seconds": 8.0, "within": 0.6, "copied": true },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-the-export-sheet", "note": "Export on a document that has time is the sheet a recording already leaves through: MP4, GIF and HEIC in that order, the same size presets, and two lines saying what the file will be and what it will weigh. An untouched recording is copied, so its weight is known to the byte" },
+    { "do": "snapshot", "name": "2-the-export-sheet" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-a-piece-thrown-away", "note": "The recording is cut at the playhead and the piece under it is thrown away. The timeline is half as long as it was, and the file that comes out has to be half as long too, with the recording's own sound cut at the same point" },
+    { "do": "snapshot", "name": "3-a-piece-thrown-away" },
+
+    { "do": "writeVideo", "name": "2-a-piece-thrown-away", "format": "mp4", "seconds": 4.0, "within": 0.6, "sound": true, "copied": false },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 120], "to": [620, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-something-drawn-over-the-picture", "note": "A box drawn over the video. It is an ordinary layer sitting above the clip, and it has to be in the file over every frame the clip plays, because what the canvas composites at a moment IS the frame" },
+    { "do": "snapshot", "name": "4-something-drawn-over-the-picture" },
+
+    { "do": "writeVideo", "name": "3-with-a-box-over-it", "format": "mp4", "seconds": 4.0, "within": 0.6, "copied": false },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "soundLevelHalf" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-music-under-it", "note": "A piece of music is on the timeline under the cut, at half its level. What plays on space is now two things at once, and that is what has to come out in the file" },
+    { "do": "snapshot", "name": "5-music-under-it" },
+
+    { "do": "writeVideo", "name": "4-with-the-mix", "format": "mp4", "sound": true, "copied": false },
+
+    { "do": "action", "action": "exportDialogAsSmallGIF" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-the-same-sheet-on-gif", "note": "Picking GIF brings the size presets out, exactly as it does for a recording: the line underneath says how big the picture will be, how fast it will run and how long it is, and says plainly that the size comes with the file" },
+    { "do": "snapshot", "name": "6-the-same-sheet-on-gif" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "5-small-gif", "format": "gif", "quality": "small", "width": 480 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-undo", "note": "Every edit behind the file is an ordinary edit, so Command Z steps back through them and the next export writes whatever the window says then" },
+    { "do": "snapshot", "name": "7-undo" }
+  ]
+}

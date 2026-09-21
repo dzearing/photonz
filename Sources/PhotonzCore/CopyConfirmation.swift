@@ -156,6 +156,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         case soundAdded(name: String)
         /// The mix was written out as one sound file, or could not be.
         case mixWritten(file: String?)
+        /// The document was written out as a video, or could not be
+        /// (`EditorState+VideoExport`). The window looks identical the instant
+        /// after, so without a word there is nothing to say a file landed.
+        case videoWritten(file: String?)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -252,6 +256,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
+        case .videoWritten(let file): return file == nil ? "Not written" : "Video written"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
@@ -287,6 +292,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(name) is on the timeline"
         case .mixWritten(let file):
             guard let file else { return "The mix could not be written" }
+            return file
+        case .videoWritten(let file):
+            guard let file else { return "The video could not be written" }
             return file
         case .specList(let count):
             return "Spec list with \(count == 0 ? "no visible measurements" : Self.measurementPhrase(count))"

@@ -1401,6 +1401,15 @@ private final class Run {
                                               width: width, height: height, copied: copied),
                  state: describe())
 
+        case .writeVideo(let name, let format, let quality, let seconds, let within,
+                         let width, let height, let sound, let copied):
+            note(number, step.name,
+                 try await writeVideoFile(name: name, format: format, quality: quality,
+                                          seconds: seconds, within: within,
+                                          width: width, height: height,
+                                          sound: sound, copied: copied),
+                 state: describe())
+
         case .exportQuality(let format, let percent):
             guard ExportQuality.applies(toFormat: format) else {
                 throw Failure(description: "\(format) has no quality to set")
@@ -3087,6 +3096,12 @@ private final class Run {
                 editor.isExportDialogPresented = true
             case .exportDialogAsWebP:
                 editor.playtestOpensExportOnPicture = .webp
+                editor.isExportDialogPresented = true
+            case .exportDialogAsVideo:
+                editor.isExportDialogPresented = true
+            case .exportDialogAsSmallGIF:
+                editor.playtestOpensExportOnRecordingFormat = .gif
+                editor.playtestOpensExportAtQuality = .small
                 editor.isExportDialogPresented = true
             case .exportDialogAsSVG:
                 // Asked for on the sheet itself rather than written into the
@@ -7752,6 +7767,113 @@ private final class Run {
 
         // What the sheet promised, beside what arrived, so an estimate that
         // drifts is visible in the log rather than only in somebody's inbox.
+        facts.append("the sheet said \"\(said)\"")
+
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + ". "
+                + facts.joined(separator: "; "))
+        }
+        return facts.joined(separator: "; ")
+    }
+
+    /// Write the open DOCUMENT out as a video and then READ BACK what landed.
+    ///
+    /// The save box cannot be driven by a walk, so this hands the exporter the
+    /// same document, format and preset the sheet's Export… button hands it,
+    /// and then opens the file: how long it runs, how big its picture is,
+    /// whether it carries sound, what it weighs. A walk that only asked the app
+    /// whether it had exported would never notice a cut that did not reach the
+    /// file (`EditorState+VideoExport`).
+    private func writeVideoFile(name: String, format: String, quality: String,
+                                seconds: Double?, within: Double,
+                                width: Double?, height: Double?,
+                                sound: Bool?, copied: Bool?) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "this window holds no document with time in it, "
+                + "so there is no video to write")
+        }
+        guard let recordingFormat = RecordingFormat(rawValue: format) else {
+            throw Failure(description: "\(format) is not a format a video is written as: "
+                + RecordingExport.formats.map(\.rawValue).joined(separator: ", "))
+        }
+        guard let preset = VideoExportQuality(rawValue: quality) else {
+            throw Failure(description: "\(quality) is not a size preset: "
+                + VideoExportQuality.allCases.map(\.rawValue).joined(separator: ", "))
+        }
+        let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
+        let said = RecordingExport.sizeLine(format: recordingFormat,
+                                            source: editor.videoExportSource)
+        let started = Date()
+        do {
+            try await editor.writeVideo(format: recordingFormat, quality: preset, to: destination)
+        } catch {
+            throw Failure(description: "writing the document as \(format) failed: \(error)")
+        }
+        let took = Int(Date().timeIntervalSince(started) * 1000)
+        guard let landed = try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+              landed > 0 else {
+            throw Failure(description: "nothing usable landed at \(destination.lastPathComponent)")
+        }
+        var facts = ["\(destination.lastPathComponent) is "
+                     + "\(ExportQuality.fileSize(bytes: landed)) (\(landed) bytes), "
+                     + "written in \(took) ms"]
+        var wrong: [String] = []
+
+        if recordingFormat == .mp4 {
+            let asset = AVURLAsset(url: destination)
+            let ran = (try? await asset.load(.duration).seconds) ?? 0
+            let size = await VideoExporter.orientedNaturalSize(of: destination)
+            let hasSound = (try? await asset.loadTracks(withMediaType: .audio))?.isEmpty == false
+            facts.append("it runs \(Self.round2(ran))s at "
+                         + "\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px"
+                         + (hasSound ? ", with sound on it" : ", silent"))
+            if let seconds, abs(seconds - ran) > within {
+                wrong.append("the file that landed runs \(Self.round2(ran))s, not "
+                    + "\(Self.round2(seconds))s, so what the timeline says is not what was written")
+            }
+            if let width, abs(width - Double(size.width)) > 2 {
+                wrong.append("the file that landed is \(Int(size.width.rounded())) px wide, not "
+                    + "\(Int(width.rounded()))")
+            }
+            if let height, abs(height - Double(size.height)) > 2 {
+                wrong.append("the file that landed is \(Int(size.height.rounded())) px tall, not "
+                    + "\(Int(height.rounded()))")
+            }
+            if let sound, sound != hasSound {
+                wrong.append(sound
+                    ? "the document has a mix in it and the file that landed is silent"
+                    : "the document makes no sound and the file that landed has a sound track")
+            }
+        } else {
+            let (frames, size) = animatedFacts(of: destination)
+            facts.append("it holds \(frames) frame\(frames == 1 ? "" : "s") at "
+                         + "\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
+            if let width, abs(width - Double(size.width)) > 2 {
+                wrong.append("each frame is \(Int(size.width.rounded())) px wide, not "
+                    + "\(Int(width.rounded()))")
+            }
+        }
+
+        // The fast path claim: a recording nobody has touched goes out as a
+        // file copy, so it must weigh exactly what the recording weighs.
+        if let copied {
+            let movie = document.untouchedRecording
+            let sourceBytes = movie
+                .flatMap { MovieLibrary.shared.url(for: $0) }
+                .flatMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize } ?? 0
+            let identical = landed == sourceBytes && sourceBytes > 0
+            facts.append(identical
+                ? "byte for byte the recording itself, so nothing was re-encoded"
+                : "made frame by frame from the document")
+            if copied != identical {
+                wrong.append(copied
+                    ? "this was supposed to be the fast path, a verbatim copy, and the file that "
+                        + "landed is \(landed) bytes against the recording's \(sourceBytes)"
+                    : "this was supposed to be made from the document and the file that landed is "
+                        + "byte for byte the recording, so the edits were dropped")
+            }
+        }
         facts.append("the sheet said \"\(said)\"")
 
         guard wrong.isEmpty else {

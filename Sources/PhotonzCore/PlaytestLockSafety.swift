@@ -144,6 +144,9 @@ public enum PlaytestLockSafety {
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
+        // A video export asks the editor to write a file and then opens the
+        // file: no name, no menu, and nothing on screen it depends on.
+        "writeVideo",
         // Watched on 2026-09-20, twenty-two walks forced under a lock and all
         // of them green. Every one of these either drives the app through its
         // own pasteboard and its own views, or reads a number the app is

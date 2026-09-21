@@ -69,6 +69,19 @@ final class MovieLibrary {
 
     /// The reference this file already has, if anything has opened it.
     func existingMovie(at url: URL) -> MovieRef? { refsByURL[url.standardizedFileURL] }
+
+    /// Which file every recording in a document is, taken once so a job that
+    /// runs off the main actor — writing a video out — never has to come back
+    /// here to ask (`EditorState+VideoExport`).
+    func urls(in document: PhotonzDocument) -> [UUID: URL] {
+        var found: [UUID: URL] = [:]
+        for layer in document.allLayers {
+            guard let movie = layer.movie, found[movie.id] == nil,
+                  let url = urls[movie.id] else { continue }
+            found[movie.id] = url
+        }
+        return found
+    }
 }
 
 /// The one place an `AVAssetImageGenerator` lives.

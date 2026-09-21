@@ -1,0 +1,29 @@
+{
+  "feature": "An edited recording comes out as a video file",
+  "epic": "video-share",
+  "summary": "Export on a document that has time now writes a video of what plays in the window: the pieces in the order they are in, the ones you threw away absent, everything drawn over the picture, and the mix you hear on space. A recording nobody has touched still goes out as a straight copy of its own file, so what was instant stays instant.",
+  "setup": "Photonz Dev, Experiments window, release Next. Turn on \"A recording opens in the editor you already know\", \"Cut a recording\", \"Sound on the timeline\" and \"An edited recording comes out as a video file\" (all on by default in Next except the first). Open any screen recording.",
+  "try": [
+    { "do": "Press ⇧⌘E on the recording as it opened. The sheet says MP4 · the file's exact size, because nothing has been edited yet.", "shot": "2026-09-21-video-export-2.png" },
+    { "do": "Press Export…, save it, then play the file that landed. It is the recording, byte for byte: nothing was re-encoded." },
+    { "do": "Put the playhead in the middle, press B to cut the clip, then press ⌫ to throw the piece under the playhead away." },
+    { "do": "Draw a rectangle over the video with the Rectangle tool.", "shot": "2026-09-21-video-export-1.png" },
+    { "do": "Press ⇧⌘E again and export. The file runs half as long, starts where the kept piece starts, and the box is over every frame of it." },
+    { "do": "Add a sound with Audio ▸ Add Sound, pull its level down, then export again and listen: the music is in the file at the level you set, under the recording's own sound." },
+    { "do": "Pick GIF on the sheet. The size presets appear, the same ones a recording already offers, and the line underneath says the size comes with the file." }
+  ],
+  "evaluate": [
+    "When you press Export on a recording, is a video obviously what you expected to get?",
+    "The card that counts up while it writes: does it tell you enough, and is Stop where you would look for it?",
+    "Is it fast enough to not think about? Four seconds of 1280 x 800 took about 1.3 seconds on this machine.",
+    "The sheet says \"size not known until it is written\" for anything edited. Is that honesty useful, or would a rough number be better than none?",
+    "A document whose music runs past its last clip ends in black. Is that what you would expect, or should the picture hold on its last frame?"
+  ],
+  "rough": [
+    "Export on a document with time is the video sheet only, so the still PNG of one frame that Export used to write is not reachable from there. Nobody has asked for it; when somebody does it is a fourth row on the same sheet, not a second sheet.",
+    "MP4 has no quality choice, on purpose: that is the separate task a-recording-can-be-made-small-enough-to-send, and a second set of answers to the same question is exactly what this task was told not to invent.",
+    "The Stop button on the progress card is not driven by a scripted walk: exports of the sample finish in about a second, so there is nothing for a walk to catch mid-flight. The half that matters is tested — cancelling the writer throws and leaves no file behind — but the button itself was checked by reading it, not by pressing it.",
+    "The export borrows the window's picture store for the frames it decodes and gives every one back as it goes. While it runs, the canvas can lose a frame it was holding and has to fetch it again.",
+    "A long recording is a long export: every frame is a decode plus a composite. Nothing is parallel yet, and nothing has been measured past fourteen seconds of document."
+  ]
+}

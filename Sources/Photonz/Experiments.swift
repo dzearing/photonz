@@ -459,6 +459,14 @@ extension Experiments {
         isEnabled(FeatureCatalog.recordingExportSheetFlag)
     }
 
+    /// Whether Export on a document that HAS TIME writes a video of what plays
+    /// in the window, rather than a still picture of it
+    /// (`EditorState+VideoExport`). Off, a timed document leaves through the
+    /// picture sheet exactly as it does today.
+    var videoExportEnabled: Bool {
+        isEnabled(FeatureCatalog.videoExportFlag)
+    }
+
     /// `next-motion-strip`: whether the timing strip runs across the bottom of
     /// the window. It NEEDS the Motion list, because with no way to tell a
     /// layer to move there is never anything to draw a bar for: a strip that

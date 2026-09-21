@@ -5,6 +5,8 @@ The model and the shell landed on 2026-09-20. What the old recording window
 still owns — trim, crop, save, export, revert — is named at the end, with what
 happens to each.
 
+Export landed on 2026-09-21 behind `next-export-the-video`: §8.
+
 This is the *what it is* document. Where the chrome goes and why is
 `docs/design/video-surface.md`; the fifteen clickthroughs under
 `docs/design/mocks/pages` are the ideas it was drawn against.
@@ -216,7 +218,7 @@ that is answered, which is why `next-a-recording-is-a-document` is still off.
 | `TrimTimeline` | Untouched. It is bound to `VideoEditorState` and goes when that does. |
 | `PlaybackScrubber` | Untouched, same reason. |
 | `VideoCutList` | **Reused.** `ClipPieces(cutList:)` and `VideoCutList.layerTimes()` project a cut recording straight into the document model, so the two agree about time without either owning the other's arithmetic. |
-| `VideoExporter`, `VideoAssetCommit` | Untouched. Export is `video-share` and is unchanged by any of this. |
+| `VideoExporter`, `VideoAssetCommit` | Untouched, and still what the old window's Export uses. A DOCUMENT with time leaves through `DocumentMovieWriter` instead (§8): the old exporter is a function of one file plus a cut list, and cannot say a reordered piece, a held frame, a second sound layer or an arrow drawn over the picture. |
 
 **Why there are two ways in for now.** Eleven walks drive the shipped trim flow
 through the old window, and the trim TOOL that replaces it (`video-surface.md`
@@ -229,7 +231,89 @@ not two editors nobody chose between, and the flag's whole job is to be deleted.
 
 ---
 
-## 8. What this deliberately does not do
+## 8. Getting it out: the document as a video file
+
+Built on 2026-09-21 (`next-export-the-video`). Until then the timeline could cut
+a recording into pieces, throw one away, carry them into a different order,
+speed one up, hold a frame, take the sound off the picture, put music under it
+and duck the music, and **none of it could leave the app**: Export wrote the
+recording that was opened, ignoring every edit, and Export Sound wrote the mix
+on its own.
+
+**One sentence: a video export is the canvas, photographed at every moment, with
+the mix laid beside it.**
+
+Three pieces, and each of them was already there but one:
+
+| Piece | Where | What it answers |
+| --- | --- | --- |
+| `DocumentVideoExport.plan` | PhotonzCore | Which moments get photographed and how big each picture is. Pure, and tested without writing a file. |
+| `PhotonzDocument.drawn(atTimeMS:)` | PhotonzCore | What the picture at a moment IS. Unchanged: §3's trick is what makes an export free. |
+| `PhotonzDocument.audioMix()` → `AudioMixdown` | PhotonzCore / PhotonzMedia | What it sounds like. Unchanged: the very function Export Sound calls. |
+| `DocumentMovieWriter` | PhotonzMedia | The loop between them, and the file. |
+
+So the exported frame and the frame on screen cannot be two different pictures,
+and the mix on disk cannot be a different mix from the one in the room. Neither
+is a promise anybody has to keep by hand; there is only one answer to each
+question and two readers of it.
+
+### How the file is made
+
+1. **Photograph it.** One picture per frame of the plan, at 33ms apart — the
+   grid a clip's frames are decoded on (`MovieRef.frameStepMS`), so asking for
+   more would photograph the same decoded frame twice. Each one is the window's
+   own renderer handed `drawn(atTimeMS:)`, off the main actor.
+2. **Write the mix** with `AudioMixdown.write`, which is Export Sound.
+3. **Put the two in one container**, passthrough, so the pictures are never
+   compressed twice and the sound is byte for byte the mix.
+
+Feeding pictures and sound into ONE `AVAssetWriter` would be a pass fewer and
+it deadlocks: a writer holds one input back until the other catches up, and the
+pictures cannot be interleaved with a mix that is not made yet. That was
+measured, not guessed — a walk hung for ten minutes on it.
+
+### Two things that are easy to get wrong
+
+- **A frame with nothing on it.** Pixel buffers come from a pool and a picture
+  is drawn OVER what is in one, so an empty frame — a document whose music runs
+  past its last clip — came out as whatever frame used that buffer last, which
+  reads as a freeze frame nobody asked for. Every buffer is cleared to black
+  first. A movie has no transparency to keep, so black is what an empty frame
+  is. There is a test.
+- **The recording nobody has touched.** Photographing a recording back into
+  existence to get the file it came from is minutes of work for a worse file.
+  `PhotonzDocument.untouchedRecording` answers "is this document EXACTLY what
+  opening that recording makes", by rebuilding it and comparing, so a layer
+  property added tomorrow takes the fast path away tomorrow without anybody
+  remembering to add it to a list. Anything at all different and the file is
+  made frame by frame.
+
+### What the sheet offers
+
+The recording Export sheet's own vocabulary, not a second one: MP4, GIF and
+HEIC in that order, the same size presets on the two that have them, and the
+same `RecordingExport` lines saying what the file will be and what it will
+weigh. An untouched recording is copied, so its weight is exact; anything made
+frame by frame says the size comes with the file, because it does.
+
+While it writes, a card says how far along it is and can stop it. Stopping
+takes the half-written file with it.
+
+### What it does not do yet
+
+- **No MP4 quality choice.** That is `a-recording-can-be-made-small-enough-to-send`,
+  and inventing one here would be a second set of answers to the same question.
+- **No still picture from a timed document.** Export on a document with time is
+  the video sheet, so the PNG of one frame that Export used to write is not
+  reachable. Nobody has asked for it; when somebody does, it is a fourth row on
+  the same sheet rather than a second sheet.
+- **The export borrows the window's picture store** for the frames it decodes
+  and gives every one of them back. While it runs, the canvas can lose a frame
+  it was holding and has to fetch it again.
+
+---
+
+## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can
 be added without it changing shape.

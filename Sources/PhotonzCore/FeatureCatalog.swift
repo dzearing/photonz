@@ -180,6 +180,8 @@ public enum FeatureCatalog {
 
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
+    public static let videoExportFlag = "next-export-the-video"
+
     public static let savingARecordingSaysSoFlag = "next-saving-a-recording-says-so"
 
     public static let lineEndsFlag = "next-line-ends"
@@ -648,6 +650,16 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: []),
+            Definition(
+                flag: FeatureFlag(
+                    name: videoExportFlag,
+                    title: "An edited recording comes out as a video file",
+                    description: "Everything the timeline can do to a recording could not leave the app. You can cut it into pieces, throw one away, carry them into a different order, speed a piece up, hold a frame, take the sound off the picture, put music under it and duck the music under a voice, and then Export wrote the recording you opened, ignoring every edit, while Export Sound wrote the sound on its own. With this on, Export on a document that has time writes a VIDEO of what plays in the window: the pieces in the order they are in, the ones you threw away absent, speed and held frames respected, every title, arrow and shape drawn over the picture, and the sound the mix you hear on space, level line and all, in step from the first frame to the last. The sheet offers the same three formats a recording already leaves through, MP4, GIF and HEIC, and the same size presets, because they mean the same thing whichever door they are asked for through. While it writes, a card says how far along it is and can stop it, and stopping leaves no half a file behind. A recording nobody has touched still goes out as a straight copy of its own file, so what is instant today stays instant. A document with no duration is untouched: a screenshot still leaves through the picture sheet it always did. Off means Export on a recording writes a still picture of it.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: soundOnTheTimelineFlag,
