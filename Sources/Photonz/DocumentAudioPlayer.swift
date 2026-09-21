@@ -79,6 +79,12 @@ final class DocumentAudioPlayer {
             engine.attach(node)
             var extra: [AVAudioNode] = []
             if segment.speedPercent != ClipPiece.asRecordedPercent {
+                // Always a rate a varispeed can actually take. `AVAudioUnitVarispeed`
+                // runs from 0.25 to 4, and the mix only ever carries pieces
+                // between half speed and double, because outside that band a
+                // piece plays silent and contributes no segment at all
+                // (`ClipSpeedSound`, `ClipPiece.playsSound`). Before that rule
+                // existed a piece at 10x asked this node for a rate of 10.
                 let speed = AVAudioUnitVarispeed()
                 speed.rate = Float(segment.speedPercent) / 100
                 engine.attach(speed)

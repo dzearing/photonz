@@ -659,6 +659,12 @@ struct InspectorPanel: View {
         // at least once. A recording nobody has cut has no join, and a section
         // about a join that is not there would be a section about nothing.
         if editorState.canWorkWithClipTransitions { set.insert(.transition) }
+        // How fast the piece in hand plays (Next, `next-speed-a-stretch`).
+        // Present wherever there is a piece to retime at all, which is a clip
+        // with time under it: unlike Transition it does NOT need the clip to
+        // have been cut, because an uncut recording is one piece and one piece
+        // can be sped up.
+        if editorState.canRetimeAClip { set.insert(.speed) }
         // Where the camera is pointed on the clip in hand (Next,
         // `next-punch-in-and-hold`). Present only where there is a picture with
         // time under it, which is what a camera can be moved on at all: a title
@@ -1072,6 +1078,8 @@ struct InspectorPanel: View {
             ReframeInspector()
         case .transition:
             TransitionInspector()
+        case .speed:
+            SpeedInspector()
         case .sound:
             SoundInspector()
         case .shadow:

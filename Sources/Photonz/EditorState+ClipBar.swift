@@ -51,6 +51,14 @@ extension EditorState {
         return pieces.pieceIndex(atMS: documentTimeMS - time.inMS)
     }
 
+    /// The piece itself, for a surface that wants to read it rather than edit
+    /// it: the Speed section reads its length, its speed and its silence
+    /// straight off it (`SpeedInspector`).
+    var clipPieceInHandPiece: ClipPiece? {
+        guard let index = clipPieceInHand else { return nil }
+        return clipInHandPieces?.piece(at: index)
+    }
+
     /// Pick a piece. Picking one picks its clip too, so the panel and the
     /// timeline are talking about the same thing.
     func selectClipPiece(layerID: UUID, index: Int?) {
@@ -177,19 +185,32 @@ extension EditorState {
 
     // MARK: Retiming
 
-    /// The speeds on offer. A short list of the ones people actually reach
-    /// for, rather than a number to type: retiming a stretch is a judgment you
-    /// make by watching it, and the judgment is "slower" long before it is
-    /// "sixty two percent".
-    static let clipSpeeds: [Int] = [25, 50, 100, 200, 400]
+    /// The speeds on offer, which live in the model beside everything else a
+    /// speed means, so the menu and the panel offer the same list
+    /// (`ClipSpeed.stops`).
+    static var clipSpeeds: [Int] { ClipSpeed.stops }
 
     /// What the piece in hand is playing at, or nil where there is no piece to
     /// ask about. A held frame answers nil: it reads no stretch of the
-    /// recording, so it has no speed.
+    /// recording, so it has no speed. The Speed section reads the piece itself
+    /// through `clipPieceInHandPiece`, so it can say "a held frame" rather
+    /// than showing nothing at all.
     var clipSpeedInHand: Int? {
         guard let pieces = clipInHandPieces, let index = clipPieceInHand,
               let piece = pieces.piece(at: index), !piece.isHeld else { return nil }
         return piece.speedPercent
+    }
+
+    /// Whether there is anything to retime at all, which is what decides
+    /// whether the Speed section is in the panel.
+    ///
+    /// Any clip with time under it, cut or not: an uncut recording is one
+    /// piece and one piece can be sped up. That is looser than Transition next
+    /// to it, which needs a join, and it is right: retiming is the first thing
+    /// somebody does to a recording, long before they cut one.
+    var canRetimeAClip: Bool {
+        Experiments.shared.cutRecordingEnabled && documentHasTime
+            && clipPieceInHandPiece != nil
     }
 
     func canSetClipSpeed(_ percent: Int) -> Bool {
@@ -203,7 +224,9 @@ extension EditorState {
     ///
     /// **Its sound goes with it**, at the same rate, because the sound is part
     /// of the piece rather than a separate thing to keep in step
-    /// (`ClipPiece.soundRatePercent`).
+    /// (`ClipPiece.soundRatePercent`) — and past double speed or below half it
+    /// stops rather than squealing, which the panel says in words before and
+    /// after you pick it (`ClipSpeedSound`).
     func setClipSpeedInHand(_ percent: Int) {
         endTrimBeforeCutting()
         guard canSetClipSpeed(percent), let id = clipInHandID,

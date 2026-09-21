@@ -46,11 +46,17 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// The speed a recording plays at when nobody has retimed it.
     public static let asRecordedPercent = 100
 
-    /// As slow and as fast as a piece may be asked to play. Ten times either
-    /// way: past that the sound is no longer sound and the pictures are no
-    /// longer a take.
+    /// As slow and as fast as a piece may be asked to play.
+    ///
+    /// Ten times slower, and thirty times faster. They are not symmetric on
+    /// purpose: slowing past a tenth shows the same frame for a third of a
+    /// second and stops being a take, while speeding up has a real job at the
+    /// far end — **a two minute wait becoming four seconds** is thirty times,
+    /// and that is the thing this feature was asked for. What the sound does
+    /// at either end is `ClipSpeedSound`, and it is not the limit: past double
+    /// speed the sound stops rather than the picture.
     public static let slowestPercent = 10
-    public static let fastestPercent = 1000
+    public static let fastestPercent = 3000
 
     /// Where in the file this piece starts reading.
     public private(set) var sourceInMS: Int
@@ -99,9 +105,19 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// at, for a held frame.
     public var sourceOutMS: Int { sourceInMS + sourceLengthMS }
 
-    /// Whether there is sound under this piece. A held frame is silent: one
-    /// frame has no sound to play.
-    public var playsSound: Bool { !isHeld }
+    /// Whether there is sound under this piece.
+    ///
+    /// Two ways to be silent, and `speedSound` says which: a held frame reads
+    /// no stretch of the recording, and a piece retimed past the band where a
+    /// voice is still a voice plays with no sound rather than with a squeal
+    /// (`ClipSpeedSound`). This is the ONE gate the player, the exporter and
+    /// the waveform all read, so all three agree without being told twice.
+    public var playsSound: Bool { speedSound.plays }
+
+    /// What the sound of this piece is doing, and why.
+    public var speedSound: ClipSpeedSound {
+        isHeld ? .silentHeld : ClipSpeed.sound(atPercent: speedPercent)
+    }
 
     /// How fast the sound runs, which is how fast the picture runs.
     ///
@@ -109,6 +125,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// 200, so it rises in pitch, and at 50 it falls. Nothing here corrects
     /// it: a control that holds the pitch while the speed changes is a thing
     /// the panel offers later, and it belongs with the rest of a clip's sound.
+    /// Past the band either way there is nothing to run at all, which is
+    /// `playsSound` rather than a rate (`ClipSpeedSound`).
     public var soundRatePercent: Int { speedPercent }
 
     /// Which frame of the file plays this far into the piece. The held frame,
@@ -260,7 +278,13 @@ public struct ClipPlayback: Hashable, Sendable {
     }
 
     public var isHeld: Bool { speedPercent == 0 }
-    public var playsSound: Bool { !isHeld }
+
+    /// The same one gate `ClipPiece` answers with, so what the exporter writes
+    /// and what the player schedules can never disagree (`ClipSpeedSound`).
+    public var speedSound: ClipSpeedSound {
+        isHeld ? .silentHeld : ClipSpeed.sound(atPercent: speedPercent)
+    }
+    public var playsSound: Bool { speedSound.plays }
 }
 
 /// A clip's pieces, in play order, laid back to back.

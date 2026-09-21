@@ -413,7 +413,7 @@ struct EditorCommands: Commands {
                 // (`video-speed`). Its sound goes with it, at the same rate.
                 Menu("Speed") {
                     ForEach(EditorState.clipSpeeds, id: \.self) { percent in
-                        Button(VideoSpeedNames.title(percent)) {
+                        Button(ClipSpeed.title(percent)) {
                             editor?.setClipSpeedInHand(percent)
                         }
                         .disabled(!(editor?.canSetClipSpeed(percent) ?? false))

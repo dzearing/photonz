@@ -627,7 +627,27 @@ anyway.
   a gap". That needs a model change and a card first.
 - **Roll trim** (moving a join without changing the clip's length) is absent on
   purpose.
-- **Reverse speed and pitch correction** are absent. Retiming takes the sound
-  with it at the same rate.
-- **A speed is chosen from a short list** in Video ▸ Speed, not typed. A
-  retiming panel row is the obvious next step and is not built.
+- **Reverse speed** is absent.
+- **Pitch correction** is absent, and deliberately so. Retiming takes the sound
+  with it at the same rate between half speed and double, so a piece sped up is
+  pitched up; outside that band it plays SILENT rather than as a squeal or a
+  drone, and the panel says which of the two is happening in a sentence
+  (`ClipSpeedSound`). A control that holds the pitch while the speed changes
+  belongs with the rest of a clip's sound if anybody asks for it.
+- **A speed is chosen from a short list**, not typed: 25, 50, 100, 200, 400,
+  1000 and 3000 per cent (`ClipSpeed.stops`). It runs to thirty times because
+  the job is a two minute wait becoming four seconds. The list is in Video ▸
+  Speed and in the **Speed** section of the Properties panel, which is the same
+  call and so the same single undo step (`SpeedInspector`, built 2026-09-21).
+- **Speed varies across a clip by the clip being in PIECES**, each with its own
+  speed, rather than by a curve laid over the top. `video-speed` draws a speed
+  curve with draggable stops and a ramp between them; a ramp is a cinematic
+  flourish where these recordings are screens, and the useful shape is the
+  install bar at thirty times next to the click at a quarter, which is
+  piecewise. The bar in the timeline is the plot: every piece is drawn at the
+  width its speed gives it and badged with it.
+- **Retiming samples and never invents.** Sped up, frames are skipped and none
+  are blended; slowed down, each recorded frame is shown more than once and
+  nothing is made up in between. There is no optical flow in the path, and the
+  panel says so rather than letting "slow motion" imply smoothing that is not
+  there (`ClipSpeedFrames`).

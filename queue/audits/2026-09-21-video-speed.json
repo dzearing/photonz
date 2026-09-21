@@ -1,0 +1,31 @@
+{
+  "feature": "Speed a stretch up, slow a moment down",
+  "epic": "video-cutting",
+  "summary": "A clip, or one piece of a cut clip, can now be given a speed from the Properties panel, and the timeline takes less or more room to show it. The panel says in words what that speed did to the length, what it did about frames, and what happened to the sound.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs \"Cut a recording\" and \"A recording is a document\" on, which they are by default. Open a screen recording, or File > Open a recording you already have.",
+  "try": [
+    { "do": "Open a recording and press space to stop it playing. Scroll the Properties panel to the Speed section." },
+    { "do": "Click 4x Speed. Watch the clip's bar on the timeline shrink to a quarter and the transport count to a quarter of what it did.", "shot": "speed-2-the-same-take-at-four-times-sc.png" },
+    { "do": "Read the three sentences under the speed. They say how much recording is in how much timeline, what was done about frames, and that the sound has stopped." },
+    { "do": "Click 2x Speed and read the sound sentence again. Inside half speed to double the sound plays and is pitched by the picture; outside it, it stops." },
+    { "do": "Click Quarter Speed. The clip is four times longer, and the frames sentence says each recorded frame is held rather than anything being invented between them.", "shot": "speed-5-a-quarter-speed-sc.png" },
+    { "do": "Click Normal, then press B twice at two different moments to cut the take into three pieces." },
+    { "do": "With the middle piece picked, click 30x Speed. Only that stretch collapses; the pieces either side stay exactly as they were.", "shot": "speed-7-one-stretch-at-thirty-times-sc.png" },
+    { "do": "Use Video > Hold This Frame, then look at the Speed section: a held frame says it is a held frame rather than showing a speed it does not have.", "shot": "speed-8-a-held-frame-is-not-a-speed-sc.png" }
+  ],
+  "evaluate": [
+    "Is the Speed section where you would look for it, or did you go hunting in the Video menu first?",
+    "Does the sound rule land as obviously right, or does silencing a 4x stretch feel like the app took something away from you?",
+    "Is 30x useful, or is the jump from 10x to 30x too big a step to aim with?",
+    "Do the three sentences earn their space, or is the length one enough on its own?",
+    "Retiming a stretch in the middle still costs two cuts and a click. Is that fine, or should there be one gesture for it?"
+  ],
+  "rough": [
+    "The mock draws a speed curve under the clip with draggable stops and a ramp between them, and this does not build it. Speed varies across a clip by the clip being in pieces, which is the same model cutting and reordering already use. A smooth ramp is a cinematic flourish and these recordings are screens: what you want is the install bar at 30x and the click at a quarter, and that is piecewise. If ramps turn out to matter, say so and they get built on top rather than instead.",
+    "The top speed was raised from 10x to 30x, because the thing this was asked for is a two minute wait becoming four seconds, and that is exactly 30x. Nothing below it can do that job.",
+    "The sound decision, in full: it goes WITH the picture between half speed and double, so it is pitched by the speed and nothing corrects it, and outside that band it is silent. Past double a voice is a squeal and below half it is a drone, and both are worse than silence because they sound like the app broke. It is never dropped quietly: the panel says it in a sentence in warning colour, and a silenced stretch draws no waveform on its bar.",
+    "What it does about frames: it samples and never invents. Sped up, frames are skipped and none are blended; slowed down, each recorded frame is shown more than once and nothing is made up in between. There is no optical flow anywhere in the path and the panel says so rather than letting \"slow motion\" imply smoothing that is not there.",
+    "The Speed section sits below Layers, Appearance, Effects, Reframe, Motion and Transition, so on a short window you scroll to reach it. Sections can be dragged into a different order by hand, but the shipped order puts a lot above it.",
+    "At 30x a two second piece becomes 67 milliseconds, which is two frames and is very hard to take hold of again on the timeline. That is the honest consequence of the speed rather than a bug, but a piece that small is easier to undo than to grab."
+  ]
+}
