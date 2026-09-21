@@ -3061,6 +3061,11 @@ private final class Run {
                 editor.turnIntoTextForSelection()
             case .fillWithForeground: editor.fillSelectedLayer(useBackground: false)
             case .fillWithBackground: editor.fillSelectedLayer(useBackground: true)
+            case .copyLook: editor.copyLook()
+            case .pasteLook: editor.pasteLook()
+            case .toggleTimingStrip:
+                editor.toggleMotionStrip()
+                actionDetail = editor.isMotionStripOpen ? "the timing strip is open" : "put away"
             case .renameSelectedLayer:
                 if let id = editor.selectedLayerID {
                     editor.renameLayer(id: id, to: "Renamed Layer")

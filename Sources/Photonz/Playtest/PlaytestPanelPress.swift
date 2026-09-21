@@ -230,6 +230,21 @@ enum PlaytestPanelPress {
         fieldViews(of: view, among: fields).flatMap(\.steady).map(PlaytestSteadyName.written)
     }
 
+    /// Every marker in this view's own window, read fresh. For the few places
+    /// that have a control in hand and no list of markers beside it.
+    @MainActor static func targets(around view: NSView) -> [PanelTargetView] {
+        guard let content = view.window?.contentView else { return [] }
+        var found: [PanelTargetView] = []
+        func walk(_ here: NSView) {
+            if let target = here as? PanelTargetView, !target.isHiddenOrHasHiddenAncestor {
+                found.append(target)
+            }
+            for sub in here.subviews { walk(sub) }
+        }
+        walk(content)
+        return found
+    }
+
     /// The names the PANEL ITSELF hangs on a control, read out of the app's
     /// own register instead of off accessibility.
     ///
@@ -254,15 +269,24 @@ enum PlaytestPanelPress {
         -> (own: [String], rows: [String]) {
         let box: CGRect = view.convert(view.bounds, to: nil)
         let here = targets.filter { $0.window === view.window }
-        let own = here
-            .filter { $0.kind == .control }
-            .map { (name: $0.name, frame: $0.convert($0.bounds, to: nil)) }
-            // A point of slack each way: the marker is the control's own
-            // background, so the two are the same rectangle and rounding can
-            // put an edge a hair outside.
-            .filter { !$0.frame.isEmpty && $0.frame.insetBy(dx: -1, dy: -1).contains(box) }
-            .sorted { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
-            .map(\.name)
+        let middle = CGPoint(x: box.midX, y: box.midY)
+        // Holding the whole control, or holding its MIDDLE. The second is
+        // needed because an AppKit control can be drawn a few points wider than
+        // the SwiftUI view it came from: the plus that opens Add Effect is 25
+        // points at x 1218 and its own marker is 20 at x 1223, so nothing
+        // contains it and the nearest name it could find was the section header
+        // it sits on.
+        var holding: [(name: String, area: CGFloat)] = []
+        for marked in here where marked.kind == .control {
+            let frame: CGRect = marked.convert(marked.bounds, to: nil)
+            if frame.isEmpty { continue }
+            let slack: CGRect = frame.insetBy(dx: -1, dy: -1)
+            guard slack.contains(box) || slack.contains(middle) else { continue }
+            holding.append((marked.name, frame.width * frame.height))
+        }
+        // Nearest wins, and nearest means smallest: the control's own marker
+        // before the row's, the row's before the section's.
+        let own: [String] = holding.sorted { $0.area < $1.area }.map(\.name)
         let rows = fieldViews(of: view, among: here.filter { $0.kind == .field })
             .reversed()
             .map(\.name)

@@ -78,10 +78,22 @@ enum PlaytestPanelMenu {
         return found
     }
 
-    /// What the button says, which is the name a walk uses for it. A menu drawn
-    /// as an icon says nothing, and reads as its accessibility label instead.
+    /// What the button says, which is the name a walk uses for it.
+    ///
+    /// A menu drawn as an ICON says nothing out loud, and the two that matter
+    /// most — the plus on the Effects header and the plus on the Motion
+    /// header — are both drawn that way. Its accessibility label used to be
+    /// the only answer, and a locked screen empties that, so 22 walks were
+    /// told there was no menu called Add Motion in a window it was plainly
+    /// in. So ask the panel's own register first: both pluses carry a
+    /// `playtestControl` marker, the same kind of marker `press` finds a
+    /// button by, and a lock cannot empty an `NSView`. Accessibility stays as
+    /// the last resort for anything nameless that carries no marker.
     @MainActor static func title(of button: NSPopUpButton) -> String {
         if !button.title.isEmpty { return readable(button.title) }
+        let marked = PlaytestPanelPress.registeredNames(of: button,
+                                                        among: PlaytestPanelPress.targets(around: button))
+        if let named = marked.own.first, !named.isEmpty { return named }
         return button.accessibilityLabel() ?? button.accessibilityTitle() ?? ""
     }
 

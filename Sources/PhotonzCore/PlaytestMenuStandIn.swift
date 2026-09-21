@@ -64,5 +64,14 @@ public enum PlaytestMenuStandIn {
         Chord(key: "backspace", modifiers: [.command]): .deleteLayer,
         Chord(key: "delete", modifiers: [.option]): .fillWithForeground,
         Chord(key: "backspace", modifiers: [.option]): .fillWithForeground,
+        // Layer ▸ Copy Look and Paste Look, and View ▸ Show Timing. All three
+        // hang off the focused window like undo, so all three are dimmed and
+        // empty for the whole of a walk: `copy-a-look-walk` and
+        // `motion-timing-strip-walk` both pressed their chord, both were told
+        // the item has no action behind it, and both stopped there once the
+        // panel menus above them stopped refusing (2026-09-21).
+        Chord(key: "c", modifiers: [.command, .option, .shift]): .copyLook,
+        Chord(key: "v", modifiers: [.command, .option, .shift]): .pasteLook,
+        Chord(key: "t", modifiers: [.command, .option]): .toggleTimingStrip,
     ]
 }

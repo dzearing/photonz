@@ -997,6 +997,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// menu rows, and the first carries a chord the field editor claims for
     /// itself, so a walk asks for them here rather than through the keyboard.
     case fillWithForeground, fillWithBackground
+    /// Layer ▸ Copy Look (⌥⇧⌘C) and Paste Look (⌥⇧⌘V): take one shape's
+    /// paint, borders and effects and put them on another. Window-scoped menu
+    /// rows, so a walk's chord reaches a frozen bar and does nothing; these
+    /// are the stand-ins (`PlaytestMenuStandIn`).
+    case copyLook, pasteLook
+    /// View ▸ Show Timing (⌥⌘T): the timing strip under the canvas, opened or
+    /// put away. A window-scoped row like the two above.
+    case toggleTimingStrip
     /// Expose the first piece of the selected original that could take a
     /// wording knob (Next, `next-components`, step C6). The Add menu is in the
     /// dock, which a walk cannot reach with the pointer, so this is how a knob
