@@ -1,0 +1,29 @@
+{
+  "feature": "The loop builds instead of re-running every walk",
+  "epic": "unmanned-loop",
+  "summary": "The loop was spending 58 per cent of every day re-running the whole walk set, because asking for a sweep started one and runners ask after every task. The full set now runs at most twice a day, and a ten minute rotating check runs in the gaps so a regression is still caught the day it lands.",
+  "setup": "Nothing to turn on. This is the go loop's own scheduling, in queue/. Run these from the repo root; none of them touch your dev app.",
+  "try": [
+    { "do": "Run `queue/bin/loop-day.mjs --hours 24` and read the share of the day the loop spent building." },
+    { "do": "Run `queue/bin/sweep.sh schedule` and read the four rules it prints." },
+    { "do": "Run `queue/bin/sweep.sh status` and read the last line: it says why nothing is sweeping right now." },
+    { "do": "Open the dashboard at http://127.0.0.1:8791 and find the walk sweep line under the heartbeat: it now says when the next full sweep is due and what the last rotating check covered." },
+    { "do": "Run `PHOTONZ_SLICE_MINUTES=1 queue/bin/sweep.sh slice` to watch a rotating check run: five walks, a minute, and it says out loud that the rest of the set is unchecked.", "shot": "2026-09-21-sweep-schedule-rotating-check.png" },
+    { "do": "Run it again and watch the cursor move on: `cat queue/sweep/rotation.json`." },
+    { "do": "Run `queue/bin/sweep.sh request --now \"changed the renderer\"` then `queue/bin/sweep.sh why-not` to see a change that really does need the whole set jump the floor. Delete queue/sweep/requested.json afterwards if you do not want the sweep." }
+  ],
+  "evaluate": [
+    "Twice a day for the whole set: is that often enough for you to trust what ships, given the rotating check is running the whole time in between?",
+    "When you look at the dashboard, does the walk sweep line tell you what you want to know in one glance, or is it doing too much now?",
+    "Ten minutes is a walk check you barely notice; an hour and three quarters is one you do. Is ten the right size, or would you rather have twenty and cover the set twice as fast?",
+    "A rotating check writes a broken walk onto the standing walk task rather than filing its own. Is that where you would look for it?",
+    "Does `queue/bin/loop-day.mjs` tell you what you actually want to know about how the loop spends its time?"
+  ],
+  "rough": [
+    "The after number is a projection, not a measurement. The full sweep is 113 minutes at most twice a day (15.7 per cent of a day) and a rotating check is 10 to 13 minutes after each task that lands code, so roughly 21 to 27 per cent on walk checks against 58 per cent before. The real day cannot be measured until a day has passed: `queue/bin/loop-day.mjs --hours 24` tomorrow says it, and a follow-up task is filed to go and look.",
+    "Twelve hours is a number I chose, not one I derived. It is the knob PHOTONZ_SWEEP_FLOOR_HOURS, and moving it is one edit.",
+    "The rotating check builds the probe every time. Today that was 2 seconds because the build was warm; after a big change it will be minutes, and those minutes are not in the ten minute budget.",
+    "The rotation covers the set in about eleven checks, so with a slow day (three tasks) a walk at the far end of the alphabet could go twelve hours without running. Only the full sweep answers for the whole set, which is why the floor is a floor and not a cancellation.",
+    "A whole-set run and the rotation are independent: a full sweep does not move the rotation cursor. That is deliberate (the cursor is about coverage between sweeps) but it means the walks just after the cursor get run slightly more often than the rest."
+  ]
+}

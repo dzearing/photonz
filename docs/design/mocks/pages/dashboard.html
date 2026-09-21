@@ -825,12 +825,18 @@
     if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
     return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
   }
-  // The 322-walk sweep runs between tasks, so nothing else on the page would
-  // ever mention it. Seven requests once sat unserved for three days with no
-  // sign of it anywhere; this is that sign.
+  // The walk sweep runs between tasks, so nothing else on the page would ever
+  // mention it. Seven requests once sat unserved for three days with no sign of
+  // it anywhere; this is that sign.
+  //
+  // A PENDING REQUEST IS NOT A STALL any more. Runners ask after every task and
+  // the full set runs at most twice a day, so amber-on-pending would be amber
+  // round the clock and would stop meaning anything. It goes amber only when
+  // the wait is over and nothing has run.
   function sweepLine() {
     var W = S.sweep || { pending: 0, last: null };
-    var cls = W.pending ? 'db-sweep waiting' : 'db-sweep';
+    var waiting = W.pending && !(W.nextFullInHours > 0);
+    var cls = waiting ? 'db-sweep waiting' : 'db-sweep';
     if (!W.last) {
       return '<span class="' + cls + '">' + (W.pending
         ? 'walk sweep: ' + W.pending + ' asked for since ' + rel(W.oldestRequest) + ', none run yet'
@@ -862,8 +868,22 @@
         + ' at ' + W.last.walks + (W.last.total ? ' of ' + W.last.total : '') + ' walks ' + rel(W.last.ended);
     }
     else if (W.last.failed) t += ' · ' + W.last.failed + ' failing';
-    if (W.pending) t += ' · ' + W.pending + ' more asked for';
-    return '<span class="' + cls + '">' + t + '</span>';
+    // What is happening in the gap: how long until the next full one, and what
+    // the rotating check covered last. The rotating check is a slice of the set
+    // and says so, so its green can never be read as the set passing.
+    if (W.pending && W.nextFullInHours > 0) {
+      t += ' · next full ' + (W.nextFullInHours >= 1
+        ? 'in ' + Math.round(W.nextFullInHours) + 'h'
+        : 'within the hour');
+    } else if (W.pending) {
+      t += ' · ' + W.pending + ' asked for, due now';
+    }
+    if (W.rotating) {
+      t += ' · rotating check ' + W.rotating.walks + ' of ' + W.rotating.of + ' ' + rel(W.rotating.ended)
+        + (W.rotating.failed ? ', ' + W.rotating.failed + ' failing' : '');
+    }
+    return '<span class="' + cls + '" title="The full set runs at most once every '
+      + (W.floorHours || 12) + ' hours. In between the loop runs a rotating check of about ten minutes: every walk whose script changed, then the next chunk of the set. A rotating check is a slice, never the state of the walk set.">' + t + '</span>';
   }
 
   // The walks are the only check that says whether what the loop just built

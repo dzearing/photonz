@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:36.007Z",
-  "updated": "2026-09-21T13:54:49.287Z",
+  "updated": "2026-09-21T16:00:49.898Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-20 and 21: fifteen sweep passes in twenty four hours, each 55 to 62 minutes (59, 55, 54, 56, 55, 62 on the 20th), starting every 80 to 105 minutes. So the loop gets roughly 20 to 45 minutes of building between hour-long sweeps.\n\nThe gate exists and is not gating. queue/bin/sweep.sh due only says yes when a request is pending, but runners request one after essentially every task, so in practice it runs continuously. The cheapest honest fix is probably a floor on how often the full set may run regardless of requests, plus leaning harder on the partial sweep that already exists (Scripts/playtest-all.sh --no-build <fragment> runs just the walks a change touched, in seconds).\n\nThis is the single biggest thing standing between the queue and visible progress, which is why it is filed at all: the user has twice asked why video is not moving, and this is a large part of the answer.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -34,6 +34,48 @@
     {
       "t": "2026-09-21T13:54:49.286Z",
       "note": "seq 48 -> 2"
+    },
+    {
+      "t": "2026-09-21T15:39:59.275Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T16:00:49.513Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-21T16:00:49.564Z",
+      "note": "Adversarial pass BEFORE building. The task's own suggestion (a floor plus lean on the targeted run) is half an answer: a floor on its own trades safety for speed, because twelve hours and ten commits can land between one whole-set answer and the next, and 'the walks a change touches' is not something a runner reliably works out. So the floor comes with a ROTATING CHECK the loop runs itself: about ten minutes of walks, every one whose script changed plus the next chunk of the set, cursor carried over. It is a real regression signal the whole time, it needs nothing from the runner, and the rotation covers the set about once a day anyway. What I cut: no sharding by area, no attempt to map source files to walks (that mapping does not exist and guessing it would be worse than the rotation), no per-task opt-in."
+    },
+    {
+      "t": "2026-09-21T16:00:49.612Z",
+      "note": "Measured BEFORE, 2026-09-21T15:41Z, queue/bin/loop-day.mjs: over 24h tasks 597m (41.4 per cent), sweeps 834m (57.9 per cent), between 9m, 13 full-set runs, 8 tasks. Over 48h: tasks 1042m (36.2 per cent), sweeps 1815m (63.0 per cent), 28 full-set runs, 25 tasks."
+    },
+    {
+      "t": "2026-09-21T16:00:49.661Z",
+      "note": "loop-day.mjs had to model the loop as SINGLE-THREADED to get an honest number. Read literally, the history says tasks took 81 per cent and sweeps 58 per cent, which adds to 139: sweep-report.mjs reopens the standing walk task every time it files failures, so that one task_started with no ending swallowed eight hours and three sweeps of 2026-09-20. A task's span now ends at its own ending or at the next thing the loop started, whichever is first."
+    },
+    {
+      "t": "2026-09-21T16:00:49.709Z",
+      "note": "Regression proof, done on the real app rather than argued. Set LayerAngle.fullTurn to 400 (PhotonzCore), rebuilt the probe, ran the rotating check with the cursor seeded at 10: angle-field-walk FAILED with 'step 48 (expect): the field called \"A\" reads \"-30°\", not \"10°\"', the other four walks passed, and the failure was written onto the standing walk task by name. Reverted, re-ran: exit 0 with 8 real window captures. Separately, changedWalks() against a real range (08e6450d..HEAD) found 41 changed walk scripts and pickSlice put all 41 first with the cursor at 400, so a walk rewritten today never waits for the rotation."
+    },
+    {
+      "t": "2026-09-21T16:00:49.755Z",
+      "note": "The AFTER share is a projection, not a measurement, and cannot be anything else inside one task: a day has to pass. Full sweep 113 minutes at most twice a day is 15.7 per cent; a rotating check is 10 to 13 minutes after each task that lands code, so 5.6 to 10.8 per cent at the observed 8 to 12 tasks a day. Roughly 21 to 27 per cent on walk checks against 58 per cent. Follow-up filed: check-the-loop-actually-builds-most-of-its-day-n runs loop-day.mjs --hours 24 tomorrow and writes the real number down."
+    },
+    {
+      "t": "2026-09-21T16:00:49.802Z",
+      "note": "Also fixed, because the change would otherwise have broken it: a pending sweep request is now the NORMAL state between full sweeps, and the dashboard coloured the walk sweep line amber whenever anything was pending. It would have sat amber round the clock and stopped meaning anything. sweepState now carries floorHours, nextFullInHours and the last rotating check, and the line says 'next full in 8h' instead, going amber only once the wait is over and nothing has run. sweep-line-drill covers all of it."
+    },
+    {
+      "t": "2026-09-21T16:00:49.850Z",
+      "note": "left rough: a full sweep does not move the rotation cursor, so walks just after the cursor run slightly more often than the rest. Deliberate (the cursor is about coverage BETWEEN sweeps) and too small to file."
+    },
+    {
+      "t": "2026-09-21T16:00:49.897Z",
+      "note": "left rough: the rotating check builds the probe every time and that build is not inside the ten minute budget. Warm it is 2 seconds; cold it is minutes. The clock cap (three times the budget, floored at 20 minutes) absorbs it, and a capped run leaves the rotation where it was so nothing is skipped."
     }
-  ]
+  ],
+  "started": "2026-09-21T15:39:59.274Z",
+  "walks": []
 }

@@ -5946,3 +5946,35 @@
 {"t":"2026-09-21T13:46:34.572Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
 {"t":"2026-09-21T13:46:34.621Z","ev":"task_note","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i"}
 {"t":"2026-09-21T13:46:48.416Z","ev":"task_done","id":"the-loop-holds-the-mac-awake-the-whole-time-it-i","from":"in_progress","note":"The go loop now holds the Mac awake from startup to stop, gaps between sweeps included: one caffeinate -d -i -w $$ in queue/bin/go-loop.sh, adopted rather than stacked across a reload, deferred to by Scripts/playtest-all.sh, and named on the Grants line by Scripts/probe-app.sh with three lines saying it cannot undo a lock already in place. Verified by queue/bin/awake-drill.sh (22 checks green) and live on this machine: one hold held continuously across three idle gaps and released on stop with the pidfile gone; a SIGKILLed loop released its hold in under a second; a reloaded loop kept one hold with the same pid. redline-walk exit 0, 14 real captures. Scripts/test.sh 8639 tests passed. Audit queue/audits/2026-09-21-loop-awake.json. It does NOT unlock this Mac, which has been locked since 2026-09-20 11:03 local; only a person logging in clears that."}
+{"t":"2026-09-21T13:47:03.259Z","ev":"loop_reloaded","from":"4a5f5d71ec19","to":"1e64ac577b2b"}
+{"t":"2026-09-21T13:47:03.360Z","ev":"loop_started","pid":3680}
+{"t":"2026-09-21T13:47:03.406Z","ev":"loop_awake","held":true,"pid":83166,"screenLocked":true}
+{"t":"2026-09-21T13:54:34.820Z","ev":"task_created","id":"punch-in-on-something-and-hold-there","priority":"p1-high","title":"Punch in on something and hold there"}
+{"t":"2026-09-21T13:54:34.918Z","ev":"task_resequenced","id":"punch-in-on-something-and-hold-there","from":340,"to":41}
+{"t":"2026-09-21T13:54:34.990Z","ev":"task_created","id":"speed-a-stretch-up-slow-a-moment-down","priority":"p1-high","title":"Speed a stretch up, slow a moment down"}
+{"t":"2026-09-21T13:54:35.088Z","ev":"task_resequenced","id":"speed-a-stretch-up-slow-a-moment-down","from":340,"to":42}
+{"t":"2026-09-21T13:54:35.166Z","ev":"task_created","id":"hold-on-a-frame","priority":"p1-high","title":"Hold on a frame"}
+{"t":"2026-09-21T13:54:35.263Z","ev":"task_resequenced","id":"hold-on-a-frame","from":340,"to":43}
+{"t":"2026-09-21T13:54:35.342Z","ev":"task_created","id":"a-title-is-text-that-knows-when-it-is-on-screen","priority":"p1-high","title":"A title is text that knows when it is on screen"}
+{"t":"2026-09-21T13:54:35.435Z","ev":"task_resequenced","id":"a-title-is-text-that-knows-when-it-is-on-screen","from":340,"to":44}
+{"t":"2026-09-21T13:54:35.508Z","ev":"task_created","id":"layers-combine-over-the-tracks-below-them","priority":"p1-high","title":"Layers combine over the tracks below them"}
+{"t":"2026-09-21T13:54:35.601Z","ev":"task_resequenced","id":"layers-combine-over-the-tracks-below-them","from":340,"to":45}
+{"t":"2026-09-21T13:54:35.676Z","ev":"task_created","id":"getting-a-recording-out-is-quick-and-the-file-is","priority":"p1-high","title":"Getting a recording out is quick and the file is the right size"}
+{"t":"2026-09-21T13:54:35.768Z","ev":"task_resequenced","id":"getting-a-recording-out-is-quick-and-the-file-is","from":340,"to":46}
+{"t":"2026-09-21T13:54:35.843Z","ev":"task_created","id":"opening-a-recording-lands-you-somewhere-you-can","priority":"p1-high","title":"Opening a recording lands you somewhere you can work"}
+{"t":"2026-09-21T13:54:35.932Z","ev":"task_resequenced","id":"opening-a-recording-lands-you-somewhere-you-can","from":340,"to":47}
+{"t":"2026-09-21T13:54:36.011Z","ev":"task_created","id":"the-loop-spends-its-time-building-not-re-running","priority":"p1-high","title":"The loop spends its time building, not re-running every walk"}
+{"t":"2026-09-21T13:54:36.105Z","ev":"task_resequenced","id":"the-loop-spends-its-time-building-not-re-running","from":340,"to":48}
+{"t":"2026-09-21T13:54:49.288Z","ev":"task_resequenced","id":"the-loop-spends-its-time-building-not-re-running","from":48,"to":2}
+{"t":"2026-09-21T15:39:59.149Z","ev":"sweep_pass","walks":544,"passed":537,"failed":7,"seconds":6775,"complete":true,"total":544}
+{"t":"2026-09-21T15:39:59.277Z","ev":"task_started","id":"the-loop-spends-its-time-building-not-re-running","title":"The loop spends its time building, not re-running every walk","priority":"p1-high"}
+{"t":"2026-09-21T15:55:54.515Z","ev":"task_created","id":"check-the-loop-actually-builds-most-of-its-day-n","priority":"p2-normal","title":"Check the loop actually builds most of its day now"}
+{"t":"2026-09-21T16:00:49.515Z","ev":"task_walks","id":"the-loop-spends-its-time-building-not-re-running","walks":[]}
+{"t":"2026-09-21T16:00:49.566Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.614Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.663Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.711Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.757Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.804Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.852Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}
+{"t":"2026-09-21T16:00:49.899Z","ev":"task_note","id":"the-loop-spends-its-time-building-not-re-running"}

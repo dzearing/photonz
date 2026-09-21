@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 530 walks and about 100 minutes. That size is COUNTED, not remembered:
+# about 540 walks and about 105 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -28,8 +28,20 @@
 # (playtest-all.sh quits and rebuilds the probe bundle, so a sweep running
 # beside a task would make both of them flaky):
 #
-#   queue/bin/sweep.sh due                    exit 0 when a sweep is pending
+#   queue/bin/sweep.sh due                    exit 0 when a whole-set run is due
 #   queue/bin/sweep.sh run                    run it, record it, file failures
+#   queue/bin/sweep.sh slice-due              exit 0 when a rotating check is due
+#   queue/bin/sweep.sh slice                  run it: ~10 minutes of walks
+#   queue/bin/sweep.sh schedule               when the full set runs, in words
+#
+# ASKING IS NOT STARTING. Until 2026-09-21 a request started a sweep, and since
+# a runner asks after every task the whole set ran after every task: thirteen
+# whole-set runs in twenty four hours, 58 per cent of the loop's wall clock
+# (queue/bin/loop-day.mjs --hours 24). Now the full set runs at most once every
+# twelve hours and requests pile up for it, while a ROTATING CHECK of about ten
+# minutes runs between tasks: every walk whose script changed, then the next
+# chunk of the set, carrying on where it stopped. The arithmetic and the words
+# are in queue/bin/sweep-schedule.mjs; `sweep.sh schedule` prints them.
 #
 # One walk is unaffected and still costs about ten seconds:
 #   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
@@ -66,15 +78,22 @@ case "${1:-}" in
 # them all, and each one's reason is carried into the result.
 request)
   shift
+  # --now jumps the twelve hour floor. It is for a change every walk touches
+  # (the renderer, the shell, the walk harness itself), and it costs the loop
+  # two hours, so it is a thing you say on purpose rather than the default.
+  URGENT=0
+  if [[ "${1:-}" == "--now" ]]; then URGENT=1; shift; fi
   why="${*:-unspecified}"
   node -e '
-    const fs = require("fs"), [file, why, by] = process.argv.slice(1);
+    const fs = require("fs"), [file, why, by, urgent] = process.argv.slice(1);
     let doc = { requests: [] };
     try { doc = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
     if (!Array.isArray(doc.requests)) doc.requests = [];
-    doc.requests.push({ t: new Date().toISOString(), by, why });
+    doc.requests.push({ t: new Date().toISOString(), by, why, ...(urgent === "1" ? { now: true } : {}) });
     fs.writeFileSync(file, JSON.stringify(doc, null, 2) + "\n");
-    console.log(`==> Sweep requested (${doc.requests.length} pending). The loop runs it after this task; nothing else for you to do.`);
+    console.log(`==> Sweep requested (${doc.requests.length} pending). Nothing else for you to do.`);
+    if (urgent === "1") console.log("    You asked for it STRAIGHT AWAY, so it jumps the twelve hour floor and runs after this task.");
+    else console.log("    The full set runs at most once every twelve hours; a rotating check of about ten minutes runs in between. See: queue/bin/sweep.sh schedule");
     console.log("    Read the result later with: queue/bin/sweep.sh status");
   ' "$REQ" "$why" "$(node -e '
       // Name the asker automatically: the runner knows its task, but nothing
@@ -84,29 +103,142 @@ request)
         const t = q.readAllTasks().find((t) => t.status === "in_progress");
         console.log(t ? t.id : "a task runner");
       }).catch(() => console.log("a task runner"));
-    ' 2>/dev/null || echo "a task runner")"
+    ' 2>/dev/null || echo "a task runner")" "$URGENT"
   ;;
 
 # -------------------------------------------------------------------- due ----
 # Exit 0 when there is a sweep to run. The loop tests this between tasks.
 due)
-  [[ -s "$REQ" ]] || exit 1
-  # While the screen is locked the loop can only ever run the part of the set a
-  # lock cannot touch, and that part takes about forty minutes. Running it again
-  # between every pair of tasks, on code it has already covered, would eat the
-  # loop and tell nobody anything new. So a partial repeats only once new code
-  # has landed, and never twice inside the floor below.
-  screen_locked || exit 0
+  # One question, one answer: queue/bin/sweep-schedule.mjs weighs the pending
+  # requests, when the last whole-set run began, whether code has landed since,
+  # and whether the screen is locked. Exit 0 means run the whole set.
+  LOCKED_FLAG=""
+  screen_locked && LOCKED_FLAG="--locked"
+  RUN=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
+        | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).run)}catch{console.log("nothing")}})')
+  [[ "$RUN" == "full" ]]
+  ;;
+
+# ------------------------------------------------------------- slice-due ----
+# Exit 0 when the rotating check should run instead of the whole set.
+slice-due)
+  LOCKED_FLAG=""
+  screen_locked && LOCKED_FLAG="--locked"
+  RUN=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
+        | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).run)}catch{console.log("nothing")}})')
+  [[ "$RUN" == "slice" ]]
+  ;;
+
+# -------------------------------------------------------------- schedule ----
+schedule)
+  queue/bin/sweep-schedule.mjs
+  ;;
+
+# ---------------------------------------------------------------- why-not ----
+# The whole decision in one sentence, for the loop's log.
+why-not)
+  LOCKED_FLAG=""
+  screen_locked && LOCKED_FLAG="--locked"
+  queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const d=JSON.parse(s);console.log(`${d.run}: ${d.why}`)}catch{console.log("nothing: could not read the schedule")}})'
+  ;;
+
+# ----------------------------------------------------------------- slice ----
+# The rotating check. Ten minutes, between tasks, in the loop's own shell.
+#
+# It is NOT a sweep and must never read as one: it never clears a request, never
+# closes the standing walk task, and says in its own output how small it is. Its
+# job is to catch a regression the day it lands rather than twelve hours later,
+# at a twelfth of the price.
+slice)
+  PICK="$SDIR/.slice-walks.txt"
+  SLICE_JSON="$SDIR/.slice-pick.json"
+  queue/bin/sweep-schedule.mjs --pick --json > "$SLICE_JSON" 2>/dev/null
   node -e '
     const fs = require("fs");
-    const [latest, head, floorMin] = process.argv.slice(1);
-    let r = null;
-    try { r = JSON.parse(fs.readFileSync(latest, "utf8")); } catch {}
-    if (!r || !r.screenLocked) process.exit(0);            // nothing locked to hold off
-    const age = (Date.now() - Date.parse(r.began || r.ended || 0)) / 60000;
-    const sameCode = r.head && head && r.head === head;
-    process.exit(sameCode || age < Number(floorMin) ? 1 : 0);
-  ' "$LATEST" "$(git rev-parse HEAD 2>/dev/null || echo '')" "${PHOTONZ_SWEEP_PARTIAL_FLOOR_MINUTES:-60}"
+    const o = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    fs.writeFileSync(process.argv[2], o.walks.join("\n") + "\n");
+  ' "$SLICE_JSON" "$PICK" 2>/dev/null || { echo "!! Could not work out which walks to check."; exit 1; }
+  N=$(wc -l < "$PICK" | tr -d ' ')
+  OF=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).of)' "$SLICE_JSON")
+  FROM=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).from)' "$SLICE_JSON")
+  CHANGED=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).changed.length)' "$SLICE_JSON")
+  if (( N == 0 )); then
+    echo "==> Rotating check: no walks to run."
+    exit 0
+  fi
+  stamp="$(date +%Y-%m-%d-%H%M%S)"
+  RUNLOG="$SDIR/slice-$stamp.log"
+  began_s=$SECONDS
+  began=$(now)
+  echo "==> Rotating check: $N of $OF walks, from $FROM in the rotation, $CHANGED of them because their script changed."
+  echo "    This is NOT the full sweep. What it does not run is unknown, not passing."
+  Q note "rotating walk check: $N of $OF walks" >/dev/null 2>&1
+  AWAKE_PIDFILE="$SDIR/.awake.pid"
+  rm -f "$AWAKE_PIDFILE"
+  export PHOTONZ_WALK_AWAKE_PIDFILE="$AWAKE_PIDFILE"
+
+  # A wall-clock cap, for the same reason the full sweep has one: each walk has
+  # its own 180s timeout, so a probe that launches but never drives would leave
+  # fifty walks timing out one after another and hold the loop for two and a
+  # half hours. Three times the budget, floored at twenty minutes, is well above
+  # a good check (about a minute a five walks) and well below a wedged one.
+  SLICE_BUDGET_MIN=${PHOTONZ_SLICE_MINUTES:-10}
+  SLICE_CAP=$(( SLICE_BUDGET_MIN * 60 * 3 ))
+  (( SLICE_CAP < 1200 )) && SLICE_CAP=1200
+  # An explicit cap is taken at its word, floor and all: that is how the cap is
+  # proved to fire in a minute rather than in twenty.
+  SLICE_CAP=${PHOTONZ_SLICE_MAX_SECONDS:-$SLICE_CAP}
+  Scripts/playtest-all.sh --only "$PICK" > "$RUNLOG" 2>&1 &
+  SLICE_PID=$!
+  SLICE_TIMED_OUT=0
+  while kill -0 "$SLICE_PID" 2>/dev/null; do
+    sleep 5
+    if (( SECONDS - began_s > SLICE_CAP )); then
+      SLICE_TIMED_OUT=1
+      echo "!! The rotating check passed its ${SLICE_CAP}s cap; stopping it."
+      kill -TERM "$SLICE_PID" 2>/dev/null; sleep 2; kill -KILL "$SLICE_PID" 2>/dev/null
+      # A SIGKILL leaves playtest-all.sh's EXIT trap unrun, so put down by pid
+      # any hold it took on the Mac, and never with pkill.
+      if [[ -s "$AWAKE_PIDFILE" ]]; then
+        kill "$(cat "$AWAKE_PIDFILE")" 2>/dev/null; rm -f "$AWAKE_PIDFILE"
+      fi
+      Scripts/probe-app.sh --quit >/dev/null 2>&1
+      break
+    fi
+  done
+  wait "$SLICE_PID" 2>/dev/null
+  SLICE_CODE=$?
+  cat "$RUNLOG"
+  [[ -s "$RUNLOG" && -n "$(tail -c1 "$RUNLOG" 2>/dev/null)" ]] && echo
+  took=$(( SECONDS - began_s ))
+  if (( SLICE_TIMED_OUT )); then
+    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."
+  elif (( SLICE_CODE == 3 )); then
+    echo "==> Some of these walks could not run: the Mac's screen is locked, so a walk that looks a control up by name was refused. The ones that ran are real."
+  fi
+  # Advance the rotation only once the run is over, and never past ground a
+  # stopped run never covered: a check cut off on the clock runs the same walks
+  # again next time rather than skipping them.
+  if (( SLICE_TIMED_OUT == 0 )); then
+    queue/bin/sweep-schedule.mjs --advance "$SLICE_JSON" >/dev/null 2>&1
+  fi
+  queue/bin/sweep-slice-record.mjs "$RUNLOG" "$SDIR/last-slice.json" "$began" "$(now)" "$took" "$N" "$OF" "$SLICE_JSON" "$SLICE_TIMED_OUT"
+  # Keep the last five rotating-check logs; they are small but there are many.
+  ls -t "$SDIR"/slice-*.log 2>/dev/null | tail -n +6 | while IFS= read -r old; do rm -f "$old"; done
+  exit 0
+  ;;
+
+# ---------------------------------------------------------- slice-summary ----
+slice-summary)
+  if [[ -s "$SDIR/last-slice.json" ]]; then
+    node -e '
+      const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, of: r.of, rotating: true }));
+    ' "$SDIR/last-slice.json"
+  else
+    echo '{}'
+  fi
   ;;
 
 # ----------------------------------------------------------------- status ----
@@ -126,15 +258,22 @@ status)
   else
     echo "No sweep has been recorded yet. Ask for one with: queue/bin/sweep.sh request \"<why>\""
   fi
-  if [[ -s "$REQ" ]]; then
-    echo "A sweep is pending; the loop runs it between tasks."
-    # Say why a pending sweep is not running right now, rather than letting it
-    # look stuck: while the screen stays locked the loop runs the lock-safe part
-    # once per commit, and holds off in between.
-    if screen_locked && ! queue/bin/sweep.sh due; then
-      echo "The screen is locked and the lock-safe part has already run against this commit, so the loop is holding off until new code lands or the screen is unlocked."
-    fi
+  if [[ -s "$SDIR/last-slice.json" ]]; then
+    node -e '
+      const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+      const bad = r.failed.length ? `, ${r.failed.length} failing: ${r.failed.join(", ")}` : ", nothing failing";
+      console.log(`Last rotating check ${r.ended}: ${r.walks} of ${r.of} walks in ${Math.round(r.seconds / 60)}m${bad}.`);
+      console.log("A rotating check is a slice of the set, never the state of it.");
+    ' "$SDIR/last-slice.json"
   fi
+  if [[ -s "$REQ" ]]; then
+    N=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).requests.length)}catch{console.log(0)}' "$REQ")
+    echo "$N sweep request(s) pending."
+    # Say WHY nothing is running rather than letting a pending request look
+    # stuck. The schedule decides; this prints its own sentence.
+    echo "Right now: $(queue/bin/sweep.sh why-not)"
+  fi
+  echo "The schedule: queue/bin/sweep.sh schedule"
   exit 0
   ;;
 

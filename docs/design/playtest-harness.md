@@ -412,7 +412,7 @@ trusted.
 
 ### The whole set is the loop's job, not a runner's
 
-The set is about 530 walks and about 100 minutes, counted by
+The set is about 540 walks and about 105 minutes, counted by
 `queue/bin/sweep-size.mjs` rather than typed in here. A task runner's
 background work is terminated at 600s, so a runner that starts the whole set is
 killed waiting for it and its task is handed back unfinished; eight of the
@@ -430,6 +430,23 @@ it and no task is in flight to fight it for the probe app. Any walk that fails
 comes back as the standing task first filed as "Walks that fail in the full
 sweep" (triage may rename it; the sweep finds it by its `standing` mark). Full
 detail: `queue/sweep/README.md`.
+
+**Asking is not starting.** Runners ask after essentially every task, and while
+every ask started a whole-set run the loop did thirteen of them in twenty four
+hours and spent 58 per cent of its wall clock re-running walks
+(`queue/bin/loop-day.mjs --hours 24`, 2026-09-21). The full set now runs at most
+once every twelve hours; in between, after any task that lands code, the loop
+runs a **rotating check** of about ten minutes: every walk whose script changed
+since the last check, then the next chunk of the set, carrying on where it
+stopped. A rotating check is never the state of the walk set and never closes
+the standing task; a walk it finds broken goes onto that task the same day. The
+rules live in `queue/bin/sweep-schedule.mjs` and print out of it:
+
+```bash
+queue/bin/sweep.sh schedule                                 # the rules
+queue/bin/sweep.sh request --now "<why the whole set now>"  # jump the floor
+queue/bin/loop-day.mjs                                      # where the day went
+```
 
 Naming walks is never gated, and while you are building it is the check you
 want: `Scripts/playtest-all.sh --no-build caption` is seconds, not an hour.

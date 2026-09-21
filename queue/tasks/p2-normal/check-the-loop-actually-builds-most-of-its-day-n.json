@@ -1,0 +1,27 @@
+{
+  "id": "check-the-loop-actually-builds-most-of-its-day-n",
+  "title": "Check the loop actually builds most of its day now",
+  "goal": "A day after the walk sweep was put on a schedule, look at where the loop actually spent its time and say whether the change worked. If it did not, the schedule needs another turn of the knob rather than another guess.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T15:55:54.511Z",
+  "updated": "2026-09-21T15:55:54.514Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Before the change, measured 2026-09-21T15:41Z over 24h: tasks 597m (41.4%), sweeps 834m (57.9%), between 9m (0.6%), 13 full-set runs, 8 tasks. Over 48h: tasks 36.2%, sweeps 63.0%, 28 full-set runs.\n\nThe projection in queue/audits/2026-09-21-sweep-schedule.json is 21 to 27 per cent on walk checks. The knob is PHOTONZ_SWEEP_FLOOR_HOURS (default 12, queue/bin/sweep-schedule.mjs) and PHOTONZ_SLICE_MINUTES (default 10).\n\nIf the share is still bad, the two likeliest causes are the rotating check costing more than budgeted (a cold probe build is minutes, and it is not in the ten minute budget) and the full sweep having grown past 113 minutes.",
+  "acceptance": [
+    "queue/bin/loop-day.mjs --hours 24 is run on or after 2026-09-22 and its numbers are written into this task",
+    "The share of the day spent on tasks is over 50 per cent, or the task says what is eating it instead",
+    "The number of full sweeps in that day is 2 or fewer, and the number of rotating checks is written down"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T15:55:54.513Z",
+      "note": "created (manual)"
+    }
+  ]
+}

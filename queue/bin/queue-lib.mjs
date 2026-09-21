@@ -1137,12 +1137,15 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 
 // ---- the full walk sweep ----------------------------------------------------
 // A runner cannot run the whole walk set: it is
-// about 530 walks and about 100 minutes, and a runner's background work is cut
+// about 540 walks and about 105 minutes, and a runner's background work is cut
 // off at 600s. So it asks with queue/bin/sweep.sh request and the loop runs one
 // between tasks. Requests that nothing ever serves used to be invisible: seven
 // of them sat unserved for three days because the loop had no code to run
 // them. The dashboard shows this so a stalled sweep says so on its own.
 const SWEEP = join(QUEUE, 'sweep');
+// Hours between whole-set runs. The one copy is queue/bin/sweep-schedule.mjs;
+// this is only here so the dashboard can say how long the wait has left.
+const SWEEP_FLOOR_HOURS = 12;
 // A sweep the LOCK stopped is not a sweep that broke. The walks find every
 // control by its name and a locked screen takes those names away, so the run
 // files nothing, claims nothing and hands its request back
@@ -1156,8 +1159,29 @@ export function sweepState(history = null) {
   const req = readJSON(join(SWEEP, 'requested.json'), { requests: [] });
   const requests = Array.isArray(req.requests) ? req.requests : [];
   const screenLocked = !!(latest && latest.screenLocked);
+  // A pending request is now the NORMAL state between full sweeps, not a
+  // stalled one: runners ask after every task and the full set runs at most
+  // twice a day (queue/bin/sweep-schedule.mjs). So the page needs to know how
+  // long that wait has left, or it would sit amber round the clock and stop
+  // meaning anything.
+  const floorHours = Number(process.env.PHOTONZ_SWEEP_FLOOR_HOURS || SWEEP_FLOOR_HOURS);
+  const began = latest && latest.began ? Date.parse(latest.began) : NaN;
+  const nextFullInHours = Number.isFinite(began)
+    ? Math.max(0, floorHours - (Date.now() - began) / 3600000)
+    : 0;
+  // The rotating check that runs in the gaps. Never the state of the walk set,
+  // and labelled that way everywhere it is shown.
+  const slice = readJSON(join(SWEEP, 'last-slice.json'), null);
   return {
     pending: requests.length,
+    floorHours,
+    nextFullInHours,
+    urgent: requests.some((r) => r && r.now),
+    rotating: slice ? {
+      ended: slice.ended, walks: slice.walks, of: slice.of,
+      passed: slice.passed, failed: (slice.failed || []).length,
+      seconds: slice.seconds,
+    } : null,
     oldestRequest: requests.length ? requests[0].t : null,
     reasons: requests.slice(-3).map((r) => ({ by: r.by, why: r.why })),
     last: latest ? {

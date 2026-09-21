@@ -35,9 +35,37 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | App + DMG | `Scripts/build-app.sh --dmg` |
 | Run the app | `open "dist/Photonz Dev.app"` |
 | Run the app *as an agent* | `Scripts/probe-app.sh [file]` → builds and launches `dist/Photonz Probe.app` (`….photonz.probe`). Unmanned runners use this, never the dev app — see below |
-| Full walk sweep | Not yours to run: it is about 530 walks and about 100 minutes, ten times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` and the go loop runs it between tasks. `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
+| Full walk sweep | Not yours to run: it is about 540 walks and about 105 minutes, ten times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` puts it on the pile; the loop runs the full set at most twice a day (`queue/bin/sweep.sh schedule`). `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
+| Where the loop's day went | `queue/bin/loop-day.mjs` (add `--hours 48`): the share of wall clock spent building, sweeping and idle |
 | Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
+
+### How often the whole walk set runs
+
+Asking for a sweep does not start one. Runners ask after every task, and while
+every ask started a whole-set run the loop spent most of its life re-running
+walks: thirteen runs in twenty four hours on 2026-09-21, 835 minutes of a 1440
+minute day, 58 per cent of its wall clock against 41 per cent building
+(`queue/bin/loop-day.mjs --hours 24`).
+
+The schedule now:
+
+* **The full set runs at most once every twelve hours**, so twice a day, and
+  only when code has landed since the last one. Requests pile up in between and
+  the next run serves them all.
+* **In between, after any task that lands code, a rotating check**: about ten
+  minutes of walks, made of every walk whose script changed since the last check
+  plus the next chunk of the set, carrying on where it stopped. Over a day the
+  rotation covers the whole set anyway, in ten minute pieces.
+* **A rotating check is not a sweep.** It never closes the standing walk task,
+  and fifty walks passing is never the state of five hundred. A walk it finds
+  broken is written onto the standing walk task the same day.
+* **A change every walk touches can jump the floor**:
+  `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
+
+`queue/bin/sweep.sh schedule` prints this, out of the code that runs it
+(`queue/bin/sweep-schedule.mjs`), and `queue/bin/sweep.sh status` says why
+nothing is running right now.
 
 ### A locked screen stops names, not the app
 

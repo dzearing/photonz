@@ -365,37 +365,58 @@ say_about_the_hold() {
   fi
 }
 
-# The full walk sweep, run BETWEEN tasks. A runner cannot run it: the set is
-# about 530 walks and about 100 minutes (queue/bin/sweep-size.mjs counts it, so
+# The walk checks, run BETWEEN tasks. A runner cannot run the whole set: it is
+# about 540 walks and about 105 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
 # terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07
 # 16:22 and 2026-09-08 00:03 among them). So a runner asks with
 # `queue/bin/sweep.sh request`, and the loop does the waiting here, in its own
 # shell, with no task claimed and nothing else touching the probe app.
+#
+# ASKING IS NOT STARTING. Runners ask after every task, and until 2026-09-21
+# every ask started a whole-set run: thirteen of them in twenty four hours,
+# 835 minutes of a 1440 minute day, 58 per cent of the loop's wall clock
+# (queue/bin/loop-day.mjs --hours 24). The schedule now decides
+# (queue/bin/sweep-schedule.mjs): the full set at most once every twelve hours,
+# and a ten minute ROTATING CHECK in between, so a regression is still caught
+# the day it lands.
 sweep_pass() {
   (( SANDBOX == 0 )) || return 0
-  queue/bin/sweep.sh due || return 0
-  # With the screen locked only the walks that never ask for a control by name
-  # can run, which is about half the set and about forty minutes. Say which of
-  # the two is happening, because one of them leaves most of the set unchecked.
-  # How long to say it takes, worked out from this machine's own recorded
-  # sweeps (queue/bin/sweep-size.mjs) rather than written down here. The two
-  # numbers written here were fifty and forty minutes, set when the set was
-  # half the size it is now.
   local full part what
-  full=$(queue/bin/sweep-size.mjs --minutes 2>/dev/null || echo 105)
-  part=$(queue/bin/sweep-size.mjs --partial-minutes 2>/dev/null || echo 55)
-  what="the full walk sweep (about $full minutes)"
-  if screen_locked; then
-    what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
+  if queue/bin/sweep.sh due; then
+    # With the screen locked only the walks that never ask for a control by name
+    # can run, which is about half the set. Say which of the two is happening,
+    # because one of them leaves most of the set unchecked.
+    # How long to say it takes, worked out from this machine's own recorded
+    # sweeps (queue/bin/sweep-size.mjs) rather than written down here.
+    full=$(queue/bin/sweep-size.mjs --minutes 2>/dev/null || echo 105)
+    part=$(queue/bin/sweep-size.mjs --partial-minutes 2>/dev/null || echo 55)
+    what="the full walk sweep (about $full minutes)"
+    if screen_locked; then
+      what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
+    fi
+    echo "[go-loop] $(date +%T) walk sweep due; running $what before the next task" | tee -a "$LOG"
+    Q busy "running $what before the next task"
+    banner "**Go loop** running $what. No task is claimed while it runs."
+    state busy
+    queue/bin/sweep.sh run 2>&1 | tee -a "$LOG"
+    Q event sweep_pass "$(queue/bin/sweep.sh summary 2>/dev/null || echo '{}')"
+    return 0
   fi
-  echo "[go-loop] $(date +%T) walk sweep requested; running $what before the next task" | tee -a "$LOG"
-  Q busy "running $what before the next task"
-  banner "**Go loop** running $what. No task is claimed while it runs."
-  state busy
-  queue/bin/sweep.sh run 2>&1 | tee -a "$LOG"
-  Q event sweep_pass "$(queue/bin/sweep.sh summary 2>/dev/null || echo '{}')"
+
+  # Inside the twelve hour floor, the rotating check instead: about ten minutes
+  # of walks, every one whose script changed plus the next chunk of the set.
+  # This is what keeps a floor from being a trade of safety for speed.
+  if queue/bin/sweep.sh slice-due; then
+    echo "[go-loop] $(date +%T) rotating walk check before the next task ($(queue/bin/sweep.sh why-not))" | tee -a "$LOG"
+    Q busy "running a rotating walk check (about 10 minutes) before the next task"
+    banner "**Go loop** running a rotating walk check, about 10 minutes. No task is claimed while it runs."
+    state busy
+    queue/bin/sweep.sh slice 2>&1 | tee -a "$LOG"
+    Q event slice_pass "$(queue/bin/sweep.sh slice-summary 2>/dev/null || echo '{}')"
+    return 0
+  fi
 }
 
 # ---- adopting a fix to this file -------------------------------------------

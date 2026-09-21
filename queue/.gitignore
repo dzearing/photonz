@@ -9,3 +9,10 @@ sweep/*.log
 sweep/latest.json
 sweep/requested.json
 sweep/.claimed.json
+# The rotating check's state: where it has got to in the set, what it last
+# found, and the pick it is running. Same reason, same folder.
+sweep/rotation.json
+sweep/last-slice.json
+sweep/.slice-pick.json
+sweep/.slice-walks.txt
+sweep/.awake.pid

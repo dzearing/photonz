@@ -83,7 +83,7 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
-  The whole set is about 530 walks and about 100 minutes, which is eleven times the 600s
+  The whole set is about 540 walks and about 105 minutes, which is eleven times the 600s
   ceiling on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
@@ -100,10 +100,24 @@ The machine you run on is the user's. Anything you start, you finish.
   queue/bin/sweep.sh request "<why you want the whole set>"
   queue/bin/sweep.sh status        # what the last sweep found
   ```
-  It returns instantly. The loop runs the sweep between tasks, where nothing
-  can terminate it, and any walk that fails comes back as a task with the walk
-  names in it. **You do not wait for it and you do not report on it.** Say in
-  your task log that you asked for one and why, and finish.
+  It returns instantly, and **asking is not starting**: the full set runs at
+  most once every twelve hours, and between those the loop runs a rotating
+  check of about ten minutes (every walk whose script changed, then the next
+  chunk of the set) so a regression is still caught the day it lands. Your
+  request waits for the next full run and is served by it along with everybody
+  else's. `queue/bin/sweep.sh schedule` says the whole of it;
+  `queue/bin/sweep.sh status` says why nothing is running right now.
+
+  If you changed something EVERY walk touches (the renderer, the shell, the
+  walk harness itself) you can jump that floor, and it costs the loop two
+  hours, so say it on purpose:
+
+  ```
+  queue/bin/sweep.sh request --now "<why the whole set, right now>"
+  ```
+
+  **You do not wait for it and you do not report on it.** Say in your task log
+  that you asked for one and why, and finish.
 
 - **A walk that says CRASHED means the app DIED, and that is yours to chase.**
   A walk has four endings and they are different news: it ran (`ok` or

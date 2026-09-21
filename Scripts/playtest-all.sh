@@ -5,6 +5,8 @@
 # walk, so run this twice in a row and expect the same answers both times.
 #
 #   Scripts/playtest-all.sh --no-build a b  only the walks whose names match
+#   Scripts/playtest-all.sh --only <file>   only the walks named in that file,
+#                                           one exact name per line
 #   Scripts/playtest-all.sh --no-build      reuse the built probe
 #   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh  all of them (see the gate below)
 #
@@ -17,7 +19,7 @@
 # crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
-# The whole set is now about 530 walks and about 100 minutes (counted by
+# The whole set is now about 540 walks and about 105 minutes (counted by
 # queue/bin/sweep-size.mjs, never typed in), and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
 # has its background work killed at 600s, and eight of the twenty recorded
@@ -34,22 +36,40 @@ cd "$(dirname "$0")/.."
 
 BUILD=1
 PATTERNS=()
+# An EXACT list of walks to run, one name per line, for the loop's rotating
+# check (queue/bin/sweep.sh slice). Substring patterns cannot express "these
+# fifty and no others": a name is a substring of itself but also of its
+# neighbours, so a list of fifty would quietly run sixty.
+ONLY_FILE=""
+NEXT_IS_ONLY=0
 for arg in "$@"; do
+  if (( NEXT_IS_ONLY )); then ONLY_FILE="$arg"; NEXT_IS_ONLY=0; continue; fi
   case "$arg" in
     --no-build) BUILD=0 ;;
+    --only) NEXT_IS_ONLY=1 ;;
     *) PATTERNS+=("$arg") ;;
   esac
 done
+ONLY_NAMES=""
+if [[ -n "$ONLY_FILE" ]]; then
+  if [[ ! -s "$ONLY_FILE" ]]; then
+    echo "!! --only $ONLY_FILE names no walks" >&2
+    exit 2
+  fi
+  # Newline-delimited, with a newline at both ends, so a grep for the whole
+  # line cannot match a name inside another name.
+  ONLY_NAMES=$'\n'"$(cat "$ONLY_FILE")"$'\n'
+fi
 
 # The whole set is
-# about 530 walks and about 100 minutes, which is ten times the 600s ceiling
+# about 540 walks and about 105 minutes, which is ten times the 600s ceiling
 # on a task runner's background work, so running it from inside a task ends with
 # the runner terminated and its task handed back unfinished. Point whoever did
 # that at the way that survives instead of letting them start the run.
-if (( ${#PATTERNS[@]} == 0 )) && [[ "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
+if (( ${#PATTERNS[@]} == 0 )) && [[ -z "$ONLY_FILE" && "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
   cat >&2 <<'EOM'
 !! Refusing to run the whole walk set here: it is
-!! about 530 walks and about 100 minutes, and a task runner's background work
+!! about 540 walks and about 105 minutes, and a task runner's background work
 !! is terminated at 600s, so this run would be killed
 !! and the task that started it would be handed back unfinished.
 !!
@@ -174,6 +194,9 @@ SLOWEST=""
 SLOWEST_S=0
 for walk in Scripts/playtest/*.json; do
   name="$(basename "$walk" .json)"
+  if [[ -n "$ONLY_NAMES" ]]; then
+    [[ "$ONLY_NAMES" == *$'\n'"$name"$'\n'* ]] || continue
+  fi
   if (( ${#PATTERNS[@]} )); then
     match=0
     for p in "${PATTERNS[@]}"; do [[ "$name" == *"$p"* ]] && match=1; done

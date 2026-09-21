@@ -1,15 +1,49 @@
 # queue/sweep
 
 The full walk sweep runs every scripted walk in `Scripts/playtest`:
-about 530 walks and about 100 minutes,
+about 540 walks and about 105 minutes,
 counted by `queue/bin/sweep-size.mjs` rather than written down here. This folder
 is where the go loop hands that run back and forth with the task runners.
 
 Nothing in here except this file is tracked by git: it is runtime state.
 
+## The schedule: asking is not starting
+
+Runners ask for a sweep after essentially every task, and until 2026-09-21
+every ask started a whole-set run. The loop did thirteen of them in twenty four
+hours and spent 58 per cent of its wall clock re-running walks against 41 per
+cent building anything (`queue/bin/loop-day.mjs --hours 24`, measured
+2026-09-21). The gate was there; the only question it asked was whether anybody
+had asked.
+
+Now `queue/bin/sweep-schedule.mjs` decides, and it is the one copy of these
+rules:
+
+* the **full set** runs at most once every twelve hours, and only when code has
+  landed since the last one. Requests pile up and the next run serves them all;
+* in between, after any task that lands code, a **rotating check** of about ten
+  minutes: every walk whose script changed since the last check, then the next
+  chunk of the set, carrying on from `rotation.json`. Over a day the rotation
+  covers the whole set anyway, in pieces;
+* a rotating check is **not a sweep**. It never clears a request, never closes
+  the standing walk task, and says so in its own output. A walk it finds broken
+  is written onto the standing walk task the same day;
+* a change every walk touches can jump the floor:
+  `queue/bin/sweep.sh request --now "<why>"`.
+
+```
+queue/bin/sweep.sh schedule     the rules, printed out of the code that runs them
+queue/bin/sweep.sh status       what the last run found, and why nothing is running now
+queue/bin/loop-day.mjs          where the loop's wall clock actually went
+```
+
+Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-drill.mjs`.
+
 | File | Written by | What it is |
 | --- | --- | --- |
-| `requested.json` | a task runner, via `queue/bin/sweep.sh request` | who asked for a sweep and why. Several asks before the next sweep collapse into the one run that serves them all. |
+| `requested.json` | a task runner, via `queue/bin/sweep.sh request` | who asked for a sweep and why. Several asks before the next sweep collapse into the one run that serves them all. Asking does not start one: see the schedule above. |
+| `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, and the commit it last checked. |
+| `last-slice.json` | the same | what the last rotating check ran and found. Never the state of the walk set. |
 | `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. |
 | `<date>-<time>.log` | the same run | the full output, one line per walk. The last ten are kept. |
 | `.claimed.json` | `sweep.sh run`, at the moment it starts | the requests this run is serving, plus who is running it, when it began, which log it is writing and how big the set is. Deleted when the run is written down. One left behind means a run that never finished. |

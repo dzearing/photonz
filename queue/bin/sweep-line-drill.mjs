@@ -188,8 +188,36 @@ check('a sweep that ran reads exactly as it always did', text(R.sweepLine()) ===
 check('and there is no strip', R.blindStrip() === '', R.blindStrip());
 
 R = render({ pending: 4, oldestRequest: ago(HOUR), blindSince: null, last: { ended: ago(HOUR), walks: 140, passed: 140, failed: 0, complete: false, screenLocked: false } });
-check('a sweep that ran out of time still reads as cut short', text(R.sweepLine()) === 'walk sweep cut short at 140 walks 1h ago · 4 more asked for', text(R.sweepLine()));
+check('a sweep that ran out of time still reads as cut short', text(R.sweepLine()) === 'walk sweep cut short at 140 walks 1h ago · 4 asked for, due now', text(R.sweepLine()));
 check('and it is not dressed as a lock', !/db-sweep blind/.test(R.sweepLine()), R.sweepLine());
+
+// The schedule. A pending request is the normal state between full sweeps now,
+// so the line has to say how long the wait has left rather than sitting amber
+// round the clock: runners ask after every task and the full set runs twice a
+// day (queue/bin/sweep-schedule.mjs).
+R = render({ pending: 3, oldestRequest: ago(HOUR), blindSince: null, nextFullInHours: 8.2, floorHours: 12,
+  last: { ended: ago(4 * HOUR), walks: 544, passed: 544, failed: 0, complete: true, screenLocked: false } });
+check('a request waiting on the floor says when the next full one is',
+  /next full in 8h/.test(text(R.sweepLine())), text(R.sweepLine()));
+check('...and is NOT dressed as a stall', !/db-sweep waiting/.test(R.sweepLine()), R.sweepLine());
+check('the title says what the schedule is', /at most once every 12 hours/.test(R.sweepLine()));
+R = render({ pending: 3, oldestRequest: ago(13 * HOUR), blindSince: null, nextFullInHours: 0, floorHours: 12,
+  last: { ended: ago(13 * HOUR), walks: 544, passed: 544, failed: 0, complete: true, screenLocked: false } });
+check('once the wait is over and nothing has run, it does go amber',
+  /db-sweep waiting/.test(R.sweepLine()) && /due now/.test(text(R.sweepLine())), R.sweepLine());
+
+// The rotating check that runs in the gaps, named as a slice so its green can
+// never be read as the whole set passing.
+R = render({ pending: 1, oldestRequest: ago(HOUR), blindSince: null, nextFullInHours: 9, floorHours: 12,
+  rotating: { ended: ago(20 * 60000), walks: 50, of: 544, passed: 50, failed: 0, seconds: 600 },
+  last: { ended: ago(3 * HOUR), walks: 544, passed: 544, failed: 0, complete: true, screenLocked: false } });
+check('the last rotating check is on the line, counted against the set',
+  /rotating check 50 of 544/.test(text(R.sweepLine())), text(R.sweepLine()));
+R = render({ pending: 1, oldestRequest: ago(HOUR), blindSince: null, nextFullInHours: 9, floorHours: 12,
+  rotating: { ended: ago(20 * 60000), walks: 50, of: 544, passed: 48, failed: 2, seconds: 600 },
+  last: { ended: ago(3 * HOUR), walks: 544, passed: 544, failed: 0, complete: true, screenLocked: false } });
+check('a rotating check that found something says so',
+  /rotating check 50 of 544 .*, 2 failing/.test(text(R.sweepLine())), text(R.sweepLine()));
 
 R = render({ pending: 2, oldestRequest: ago(DAY), blindSince: null, last: null });
 check('no sweep ever run still reads as it did', text(R.sweepLine()) === 'walk sweep: 2 asked for since 1d ago, none run yet', text(R.sweepLine()));
