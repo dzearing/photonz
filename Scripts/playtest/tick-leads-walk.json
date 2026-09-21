@@ -1,51 +1,196 @@
 {
   "out": "/tmp/photonz-playtest/tick-leads",
-  "seed": "The tick is what a row is for, so it comes before the name. Reported by the user on 2026-09-07 with a screenshot of the Effects list: you read Blur and then hunt for the switch somewhere after it. This walk reads both lists — Appearance, which has rows with a tick and rows without, and Effects, which is all ticks — and holds every one of them to the same order, with the settings rule hanging under the tick. Since 2026-09-08 a shape edge is a Border in Effects rather than an Outline row in Appearance, so the edge tick is read there.",
-  "setup": { "forget": ["panel", "shapes", "tools"] },
+  "seed": "The tick is what a row is for, so it comes before the name. Reported by the user on 2026-09-07 with a screenshot of the Effects list: you read Blur and then hunt for the switch somewhere after it. This walk reads both lists - Appearance, which has rows with a tick and rows without, and Effects, which is all ticks - and holds every one of them to the same order, with the settings rule hanging under the tick. Since 2026-09-08 a shape edge is a Border in Effects rather than an Outline row in Appearance, so the edge tick is read there; a box drawn from nothing arrives with an EMPTY Effects list (border-reads-as-a-border-walk), so this walk adds the Border from the plus the way a person would.",
+  "setup": {
+    "forget": [
+      "panel",
+      "shapes",
+      "tools"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1280, "height": 980 },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "key", "key": "r" },
-    { "do": "drag", "from": [160, 160], "to": [460, 380], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-
-    { "do": "describe", "stage": "1-appearance",
-      "note": "a rectangle. Appearance holds Fill, with a tick, and Opacity and Corner Radius, which have none, and Effects holds the Border the box arrived with, which has one. Every tick must sit left of the name it belongs to." },
-    { "do": "panel", "stage": "1-appearance" },
-    { "do": "snapshot", "name": "tick-leads-1-appearance" },
-
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "@shadow" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "@blur" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "2-effects",
-      "note": "the Effects list with a shadow and a blur in it, both open, so the rule that marks each one's settings is on screen under its tick." },
-    { "do": "panel", "stage": "2-effects" },
-    { "do": "snapshot", "name": "tick-leads-2-effects" },
-
-    { "do": "press", "control": "Switch", "in": "@blur" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "3-blur-off",
-      "note": "the blur switched off from its new place at the head of the row. The tick still works where it now is." },
-    { "do": "expect", "control": "Switch", "in": "@blur", "reads": "off" },
-    { "do": "press", "control": "Switch", "in": "@blur" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "control": "Switch", "in": "@blur", "reads": "on" },
-
-    { "do": "press", "control": "Switch", "in": "@border" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "off" },
-    { "do": "panel", "stage": "4-border-off" },
-    { "do": "snapshot", "name": "tick-leads-3-border-off" },
-
-    { "do": "key", "key": "a" },
-    { "do": "drag", "from": [560, 180], "to": [780, 340], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5-arrow",
-      "note": "an arrow. Its ink is a property rather than a part, so its row has no tick: its name must still start where a name with a tick in front of it starts." },
-    { "do": "panel", "stage": "5-arrow" },
-    { "do": "snapshot", "name": "tick-leads-4-arrow" }
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1280,
+      "height": 980
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        160,
+        160
+      ],
+      "to": [
+        460,
+        380
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-appearance",
+      "note": "a rectangle. Appearance holds Fill, with a tick, and Opacity and Corner Radius, which have none, and Effects is empty. Every tick must sit left of the name it belongs to."
+    },
+    {
+      "do": "panel",
+      "stage": "1-appearance"
+    },
+    {
+      "do": "snapshot",
+      "name": "tick-leads-1-appearance"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-effects",
+      "note": "the Effects list with a border, a shadow and a blur in it, all open, so the rule that marks each one's settings is on screen under its tick."
+    },
+    {
+      "do": "panel",
+      "stage": "2-effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "tick-leads-2-effects"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-blur-off",
+      "note": "the blur switched off from its new place at the head of the row. The tick still works where it now is."
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@blur",
+      "reads": "off"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@blur",
+      "reads": "on"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "off"
+    },
+    {
+      "do": "panel",
+      "stage": "4-border-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "tick-leads-3-border-off"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        180
+      ],
+      "to": [
+        780,
+        340
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-arrow",
+      "note": "an arrow. Its ink is a property rather than a part, so its row has no tick: its name must still start where a name with a tick in front of it starts."
+    },
+    {
+      "do": "panel",
+      "stage": "5-arrow"
+    },
+    {
+      "do": "snapshot",
+      "name": "tick-leads-4-arrow"
+    }
   ]
 }

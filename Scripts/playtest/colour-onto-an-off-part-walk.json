@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/colour-onto-an-off-part",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
     {
       "do": "blank",
@@ -78,7 +82,8 @@
     },
     {
       "do": "snapshot",
-      "name": "offpart-1-no-line"
+      "name": "offpart-1-no-line",
+      "note": "the box has a Border row with its switch off. An effect row keeps its swatch when it is off, so there is something to aim at. selectedColors must read fill #B0184A and stroke #FF3B30"
     },
     {
       "do": "dragColor",
@@ -86,17 +91,23 @@
       "onto": "@border",
       "hold": "offpart-2-in-flight",
       "expect": "takes",
-      "says": "painted with this colour",
-      "comment": "Letting go here does two things, and the line beside the row promises both: it turns the part on AND paints it."
+      "says": "Paints Border with this colour",
+      "comment": "An effect that is switched OFF keeps its swatch and its settings, so the colour lands on the swatch and the row says exactly what that does: it paints the Border. It does NOT promise to switch it on, and the next step holds it to that."
     },
     {
       "do": "wait",
       "seconds": 0.6
     },
     {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "off"
+    },
+    {
       "do": "describe",
       "stage": "2-landed",
-      "note": "letting go both gave the box a line and painted it: selectedColors must read stroke #B0184A and the Border switch must read on at 4 px"
+      "note": "the Border took the colour and stayed off: stroke must read #B0184A and the Border switch must still read off. Painting a part is not the same as switching it on."
     },
     {
       "do": "snapshot",
@@ -113,7 +124,7 @@
     {
       "do": "describe",
       "stage": "3-one-undo",
-      "note": "ONE undo took the whole thing back: the switch reads off again and stroke is #FF3B30"
+      "note": "ONE undo took the paint back: stroke is #FF3B30 again and the switch is still off"
     },
     {
       "do": "snapshot",
@@ -140,14 +151,15 @@
     {
       "do": "describe",
       "stage": "4-shadow-off",
-      "note": "a shadow added and then switched off. Its five settings and its colour are gone from the list, so the row itself is all there is to let a colour go on."
+      "note": "a shadow added and then switched off. It keeps its five settings and its colour, so its swatch is what a colour lands on."
     },
     {
       "do": "dragColor",
       "from": "@fill",
       "onto": "@shadow",
       "hold": "offpart-5-onto-shadow",
-      "expect": "takes"
+      "expect": "takes",
+      "says": "Paints Shadow with this colour"
     },
     {
       "do": "wait",
@@ -156,11 +168,82 @@
     {
       "do": "describe",
       "stage": "5-shadow",
-      "note": "the same gesture works on an effect that is switched off: the shadow comes back on in the fill colour"
+      "note": "the same gesture works on an effect that is switched off: the shadow wears the fill colour"
     },
     {
       "do": "snapshot",
       "name": "offpart-6-shadow"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@fill",
+      "reads": "off"
+    },
+    {
+      "do": "describe",
+      "stage": "6-fill-off",
+      "note": "the fill switched off. An Appearance part that is off shows NO swatch at all, so the row itself is the only thing left to let a colour go on: this is the 2026-09-07 complaint's own shape, and the sentence has to promise both halves of what letting go does."
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-7-fill-off"
+    },
+    {
+      "do": "dragColor",
+      "from": "@border",
+      "onto": "@fill",
+      "hold": "offpart-8-onto-fill",
+      "expect": "takes",
+      "says": "Turns Fill on, painted with this colour",
+      "comment": "Letting go here does two things and the line beside the row promises both: it turns the part on AND paints it."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@fill",
+      "reads": "on"
+    },
+    {
+      "do": "describe",
+      "stage": "7-fill-back",
+      "note": "letting go both gave the box its fill back and painted it in the border's colour"
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-9-fill-back"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@fill",
+      "reads": "off"
+    },
+    {
+      "do": "describe",
+      "stage": "8-fill-undo",
+      "note": "ONE undo took the whole thing back: the fill is off again, switch and colour together"
     }
   ]
 }

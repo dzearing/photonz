@@ -3328,11 +3328,28 @@ private final class Run {
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         ViewBuildMeter.shared.reset()
-        NSApp.postEvent(down, atStart: false)
+        // The release goes in the QUEUE and the press is delivered by hand.
+        //
+        // Both posted, and about one press in six right after a panel menu had
+        // changed the panel did nothing at all: the event reached the right
+        // view, the app woke for it, and no button fired. That is the flake
+        // that left the sweep unable to tell a break from one. Delivering the
+        // press by hand fixes it (0 misses in 30, against 5 in 30 posted).
+        //
+        // But the release cannot be delivered by hand as well. A view that
+        // tracks the mouse itself — the swatch grid inside the colour picker
+        // is one — runs its own event loop from inside the press and does not
+        // return until the release arrives, so a second `sendEvent` never gets
+        // to run and the walk hangs until its clock runs out. Four colour
+        // walks did exactly that. Queueing the release first is what both need:
+        // a tracking loop finds it waiting, and a button that does not track
+        // gets it on the next turn of the run loop, which is the gap a real
+        // click has anyway.
         NSApp.postEvent(up, atStart: false)
+        NSApp.sendEvent(down)
         // Long enough for the queue to drain and for whatever the press
         // changed to be laid out before the next step reads it.
-        await sleep(0.35)
+        await sleep(0.30)
         let place = target.detail.isEmpty ? "" : " in \(target.detail)"
         let along = across.map { " at \(Int(($0 * 100).rounded()))% across it" } ?? ""
         note(number, "press",
@@ -5784,7 +5801,15 @@ private final class Run {
                                             among fields: [PanelTargetView],
                                             in surface: NSView) -> String {
         let naming = PlaytestPanelMenu.naming(of: button, among: fields)
-        let head = naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
+        var head = naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
+        // The name the panel registered it under, when that is a third thing
+        // again: three menus on the Rotation row all read "Rotation" without
+        // it, and a walk told that has nothing to go on.
+        let marked = PlaytestPanelPress.registeredNames(of: button,
+                                                        among: PlaytestPanelPress.targets(around: button)).own
+        if let own = marked.first(where: { $0 != naming.name && $0 != naming.detail }) {
+            head = "\(own) on \(head)"
+        }
         let box = button.convert(button.bounds, to: nil)
         let said = PlaytestPanelHelp.tip(at: CGPoint(x: box.midX, y: box.midY), in: surface)
         // How wide the box is and where its left edge sits, in the window. "The
@@ -6246,13 +6271,26 @@ private final class Run {
                     .contains { $0.caseInsensitiveCompare(name) == .orderedSame }
             }
             : buttons.filter { PlaytestPanelMenu.naming(of: $0, among: fields).name == name }
-        if byWords == nil, byRow.count > 1 {
+        // ...or by the name the panel REGISTERED it under, which is what
+        // `press` and `expect` have always used. Three of the Motion row's
+        // menus sit on that one row — the pivot, the curve and the loop — so
+        // the row cannot tell them apart, and each of them shows its own value
+        // ("Custom", "Ease in out sine"), which changes the moment the walk
+        // touches it. The register knows each one as Around, Easing and Loop
+        // whatever they are showing, so a walk can say `expect "Around" in
+        // "Rotation"` and open that very menu with the same word.
+        let byMarker = buttons.filter { button in
+            PlaytestPanelPress.registeredNames(of: button,
+                                               among: PlaytestPanelPress.targets(around: button))
+                .own.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+        }
+        if byWords == nil, byMarker.isEmpty, byRow.count > 1 {
             let showing = byRow.map { PlaytestPanelMenu.title(of: $0) }
             throw Failure(description: "\(byRow.count) menus sit on a row called \"\(name)\", "
                 + "so it does not say which one: they are showing \(showing.joined(separator: ", ")). "
                 + "Name the one you mean by its words instead.")
         }
-        guard let button = byWords ?? byRow.first
+        guard let button = byWords ?? byMarker.first ?? byRow.first
                 ?? buttons.first(where: { PlaytestPanelMenu.title(of: $0).hasPrefix(name) }) else {
             let seen = buttons.map { Self.menuName(of: $0, among: fields, in: content) }.filter { !$0.isEmpty }
             throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "

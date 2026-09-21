@@ -309,15 +309,29 @@ enum PlaytestPanelPress {
             // sits outside every scroller cuts nothing off, so it keeps its say.
             let nearest = scrollAreas(of: field).first
             if let nearest, !holding.contains(nearest) { continue }
+            // The same tolerance `registeredNames` needs, and for the same
+            // reason: an AppKit control can be drawn wider than the SwiftUI
+            // view it came from. A pop up button is the clearest case -- the
+            // speed menu on the previews card is 37pt wide and the
+            // `playtestField` wrapped round it is narrower, so strict
+            // containment found no row and the menu answered to nothing but
+            // the value it happened to be showing ("1x"), which changes the
+            // moment a walk uses it. Holding the control's MIDDLE counts as
+            // holding it.
             if nearest == areas.first {
                 // Same scroller, so the two move as one and the whole frame
                 // counts, showing or not. That is what lets a walk name a
                 // control the dock has scrolled away and then scroll to it.
-                guard frame.contains(box) else { continue }
+                let slack: CGRect = frame.insetBy(dx: -1, dy: -1)
+                guard slack.contains(box)
+                        || slack.contains(CGPoint(x: box.midX, y: box.midY)) else { continue }
             } else {
                 // A row further out. Only the visible part of the control can
                 // honestly be said to sit in it.
-                guard !showing.isEmpty, frame.contains(showing) else { continue }
+                guard !showing.isEmpty else { continue }
+                let slack: CGRect = frame.insetBy(dx: -1, dy: -1)
+                guard slack.contains(showing)
+                        || slack.contains(CGPoint(x: showing.midX, y: showing.midY)) else { continue }
             }
             around.append((field, frame))
         }
