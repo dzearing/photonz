@@ -197,4 +197,97 @@ struct PlaytestLockSafetyTests {
             #expect(PlaytestLockSafety.lockTrouble(with: step)?.contains("opens a real menu") == true)
         }
     }
+
+    /// Twenty-four step kinds were refused for one reason only: nobody had
+    /// watched them run with the screen locked, and the default is to refuse
+    /// rather than to trust. On 2026-09-20, on a Mac locked since the 17th,
+    /// twenty-two walks were forced and every one of them finished `ok`, each
+    /// step reading back a real number off the real window. That un-refuses 43
+    /// walks the sweep had been counting as unknown, which is 43 walks a
+    /// locked sweep now actually runs.
+    ///
+    /// What was watched, and what it read back:
+    ///
+    /// - `dropComponent`, `dragComponent` — `corner-names-walk`: "at (245,
+    ///   265) document: would place a copy, box (180, 220) (130, 90), joining
+    ///   Frame". Both go through the app's own pasteboard and the canvas's own
+    ///   drop, never a name.
+    /// - `dragFile` — `panel-mark-walk`: "Package.swift held over (1148, 129)
+    ///   window: refused: the pointer shows the no-entry sign".
+    /// - `expectBox` — `frame-second-screen-walk`: "\"Frame\" at (80, 38),
+    ///   size 1440.0x1024.0, on the canvas (1600.0 by 1100.0)". It measures the
+    ///   document, not a control.
+    /// - `expectHint` — `pen-hands-back-walk`: the path chip's own sentence.
+    /// - `expectBuilds` — `color-row-leaves-alone-walk`: "\"colorRow\" built 0
+    ///   times, at most 0 allowed". A counter the app keeps.
+    /// - `expectRegion` — `drag-readout-walk`: "the marquee reads 180,470
+    ///   203x131".
+    /// - `toolFlyout` — `tool-flyout-picks-tool-walk`: "Measure lists Distance
+    ///   (ticked), Size, Gap, Alignment". The flyout is the app's own panel,
+    ///   not an NSMenu, so the objection that stops `panelMenu` does not arise.
+    /// - `expectClickReaches` — `a-notice-lets-a-click-through-walk`: "a click
+    ///   at (420, 774) view reaches the picture".
+    /// - `expectFeet` — `caliper-foot-keeps-its-grip-walk`: "feet (600, 500) to
+    ///   (800, 500), reading 100 px".
+    /// - `expectCaption` — `caption-caret-outline-walk`: "caret a full 23.8
+    ///   point line tall, no outline".
+    /// - `expectReadout` — `drag-readout-walk`: "no reading on the canvas,
+    ///   which is right with nothing in hand".
+    /// - `exportQuality` — `export-quality-walk`: "jpeg is remembered at 30%".
+    /// - `expectLanding` — `landing-mark-walk`: "a press would land on (128,
+    ///   96), 0.0pt from the (128, 96) claimed".
+    /// - `expectListStill` — `layer-pick-at-scale-walk`: "the list followed the
+    ///   pick: rows [7] at 0pt, list 200pt: scrolled to 118pt".
+    /// - `panelEdge` — `panel-edge-narrow-walk`: eight icon centres, all on one
+    ///   line.
+    /// - `panelStart` — `panel-start-margin-walk`: ten headings and rows, every
+    ///   one on the panel's 14.0pt margin. That walk still fails later on a
+    ///   `panelMenu`, which is the lock and not the step.
+    /// - `dragHandle` — `panel-grip-walk`: "Layers offers no grab bar, as
+    ///   expected: 80pt tall, content 80pt, floor 120pt, ceiling 600pt".
+    /// - `dragOver` — `panel-mark-walk`: "\"Fill\" carrying com.photonz.paint".
+    /// - `dragRow` — `row-put-down-walk`: "\"Rectangle 2\" let go below
+    ///   \"Rectangle\": the list would take it, drop landed".
+    /// - `dragSection` — `panel-section-drag`: "\"Layers\" carried down past
+    ///   \"Measure Tool\"".
+    /// - `expectChrome` — `path-chrome-follows-walk`: "the points stayed on the
+    ///   shape: worst 0.0pt over the last drag".
+    /// - `expectSVG` — `svg-export-redline-walk`: "every layer would go out as
+    ///   shapes; the file carries \"mix-blend-mode:multiply\"".
+    /// - `expectOneUnit` — `one-unit-word-walk`: "every length in the panel
+    ///   says px, across 5 readouts".
+    ///
+    /// Every one of them reads the app's own state inside the app's own
+    /// process, or drives the app through its own pasteboard and its own views.
+    /// None asks accessibility for a name, and none puts an NSMenu on screen,
+    /// which are the only two things a lock takes away.
+    @Test("The twenty-four kinds watched under a lock on 2026-09-20 are no longer refused")
+    func theKindsWatchedOn20SeptemberSurviveALock() {
+        let watched = ["dropComponent", "dragComponent", "dragFile", "expectBox", "expectHint",
+                       "expectBuilds", "expectRegion", "toolFlyout", "expectClickReaches",
+                       "expectFeet", "expectCaption", "expectReadout", "exportQuality",
+                       "expectLanding", "expectListStill", "panelEdge", "panelStart",
+                       "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
+                       "expectSVG", "expectOneUnit"]
+        for name in watched {
+            #expect(PlaytestLockSafety.stepsThatSurviveALock.contains(name),
+                    "\(name) was watched running under a lock on 2026-09-20")
+            #expect(!PlaytestLockSafety.stepsALockStops.contains(name))
+        }
+    }
+
+    /// Six kinds are still unproven, and they stay refused. Not because anyone
+    /// thinks they break, but because every walk that carries one reaches a
+    /// `panelMenu`, a `focus` or a `startGuide` FIRST, so a forced run stops
+    /// before the step in question and there is nothing to watch. They need a
+    /// Mac somebody is logged in to, or a walk that reaches them earlier.
+    @Test("The kinds a locked Mac cannot even reach are still refused, not assumed")
+    func theKindsNobodyCouldReachAreStillRefused() {
+        for name in ["expectSectionFits", "dragTiming", "expectCue", "pickUpTile",
+                     "setLensAmount", "expectOneNumberPerName"] {
+            #expect(PlaytestLockSafety.stepsALockStops.contains(name),
+                    "\(name) has never been watched under a lock")
+            #expect(PlaytestLockSafety.lockStops[name]?.contains("never been watched") == true)
+        }
+    }
 }

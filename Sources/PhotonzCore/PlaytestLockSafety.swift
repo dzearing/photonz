@@ -93,6 +93,23 @@ public enum PlaytestLockSafety {
     ///   captures come out "with 1 window hung on it"). Six walks that were
     ///   being refused now run.
     ///
+    /// - Twenty-two walks forced on 2026-09-20 under a lock three days old,
+    ///   every one of them `ok`, between them watching twenty-four kinds that
+    ///   had been refused for want of a witness: `dropComponent`,
+    ///   `dragComponent`, `dragFile`, `expectBox`, `expectHint`,
+    ///   `expectBuilds`, `expectRegion`, `toolFlyout`, `expectClickReaches`,
+    ///   `expectFeet`, `expectCaption`, `expectReadout`, `exportQuality`,
+    ///   `expectLanding`, `expectListStill`, `panelEdge`, `panelStart`,
+    ///   `dragHandle`, `dragOver`, `dragRow`, `dragSection`, `expectChrome`,
+    ///   `expectSVG`, `expectOneUnit`. The drags go through the app's own
+    ///   pasteboard and its own views, and every reading is the app's own
+    ///   state: `frame-second-screen-walk` measured "Frame" at (80, 38),
+    ///   1440x1024; `panel-edge-narrow-walk` put eight icon centres on one
+    ///   line; `row-put-down-walk` let a row go below another and the list took
+    ///   it. Which walk watched which kind is written out in
+    ///   `PlaytestLockSafetyTests`. That un-refuses 43 walks, so a locked sweep
+    ///   runs 309 of 543 rather than 266.
+    ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
@@ -113,6 +130,15 @@ public enum PlaytestLockSafety {
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
+        // Watched on 2026-09-20, twenty-two walks forced under a lock and all
+        // of them green. Every one of these either drives the app through its
+        // own pasteboard and its own views, or reads a number the app is
+        // already holding. Neither is a name and neither is an NSMenu.
+        "dropComponent", "dragComponent", "dragFile", "expectBox", "expectHint", "expectBuilds",
+        "expectRegion", "toolFlyout", "expectClickReaches", "expectFeet", "expectCaption",
+        "expectReadout", "exportQuality", "expectLanding", "expectListStill", "panelEdge",
+        "panelStart", "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
+        "expectSVG", "expectOneUnit",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.
