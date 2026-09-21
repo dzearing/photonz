@@ -1,0 +1,28 @@
+{
+  "feature": "A marquee acts on what you picked, and the app says so when it cannot",
+  "epic": "unmanned-loop",
+  "summary": "Pick two pictures, drag a marquee over one of them and press Delete: the piece comes out of that picture. Before, nothing visible happened and nothing was said, because a several-row pick read as no pick at all and the delete went quietly to the Background. Two other silences went with it: the numbers no longer stand open over a piece inside a copy that cannot take them, and a refused Join Paths finally says why.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw two rectangles side by side, then right click one and choose Turn Into Picture." },
+    { "do": "Click the first row in the Layers list, then Command click the second, so both are picked." },
+    { "do": "Press M for the marquee tool and drag a box over the left third of the LEFT picture.", "shot": "2026-09-20-marquee-multi-pick-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Press Delete. The piece comes out of the picture you marqueed." },
+    { "do": "Press Command Z three times: the piece, then the marquee, then both pictures back to shapes in one step." },
+    { "do": "Marquee over a shape again and press Delete: the pill under the canvas names the layer and says only a picture can have a piece taken out.", "shot": "2026-09-20-marquee-multi-pick-2.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with two known costs: colours can read dimmed, and a tutorial card does not draw at all because the login window is over it." },
+    { "do": "Draw two separate pen runs far apart, pick both rows with Command click, right click and choose Join Paths. The chip under the canvas says nothing joined and names the gap." },
+    { "do": "Open Layer, Position and Size over a copy of a component, then double click into the copy. The numbers close, because a piece inside a copy owns neither its place nor its size." }
+  ],
+  "evaluate": [
+    "With two pictures picked and a marquee over one, is taking the piece out of that one what you expected, or did you expect both to lose it?",
+    "When the band is across two picked pictures at once, nothing happens and nothing is said. Should that case say something?",
+    "Does the pill under the canvas catch your eye where it is, or did you find yourself looking at the layer instead?",
+    "Closing the Position and Size numbers when you step into a copy: helpful, or did losing them feel abrupt?",
+    "Does 'Nothing joined: no two ends are within 2 pt of each other' tell you enough to get the join to work on the second try?"
+  ],
+  "rough": [
+    "A marquee across TWO picked pictures still does nothing and says nothing. The one it is over is unambiguous and the two it is over is not, and inventing wording for that case is a product decision rather than a fix, so it is left. This is in the task log, not filed.",
+    "Grouping ONE layer is still refused: Command G needs two unlocked layers, which is deliberate, but the row dims with no explanation and a walk was written assuming it worked. Left in the task log.",
+    "Every picture here was taken with the Mac's screen locked, so colours read dimmed. The window, the drag and the delete are all real."
+  ]
+}
