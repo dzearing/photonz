@@ -58,7 +58,7 @@
     { "do": "wait", "seconds": 0.4 },
 
     {
-      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "do": "dragTile", "tile": "Heading", "onto": "Create account",
       "expect": "takes", "says": "Sets this text in Heading",
       "hold": "3-over-a-text-row"
     },
@@ -68,7 +68,7 @@
     { "do": "render", "name": "3-canvas" },
 
     {
-      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "do": "dragTile", "tile": "Heading", "onto": "Create account",
       "expect": "refuses", "says": "This text is already Heading",
       "hold": "4-already-wearing-it"
     },
@@ -79,22 +79,22 @@
     { "do": "describe", "stage": "5-undone", "note": "ONE undo puts the row drop back, exactly as one undo puts a canvas drop back" },
     { "do": "render", "name": "5-canvas" },
 
-    { "do": "press", "control": "Lock", "in": "Text 2" },
+    { "do": "press", "control": "Lock", "in": "Create account" },
     { "do": "wait", "seconds": 0.6 },
     {
-      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "do": "dragTile", "tile": "Heading", "onto": "Create account",
       "expect": "refuses", "says": "is locked",
       "hold": "6-over-a-locked-row"
     },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Lock", "in": "Text 2" },
+    { "do": "press", "control": "Lock", "in": "Create account" },
     { "do": "wait", "seconds": 0.6 },
 
     { "do": "click", "at": [180, 145] },
     { "do": "click", "at": [200, 315], "modifiers": ["shift"] },
     { "do": "wait", "seconds": 0.8 },
     {
-      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "do": "dragTile", "tile": "Heading", "onto": "Create account",
       "expect": "takes", "says": "Sets both of them in Heading",
       "hold": "7-over-two-picked-rows"
     },

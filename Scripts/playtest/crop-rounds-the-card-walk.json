@@ -9,9 +9,16 @@
 
     { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [520, 340] },
     { "do": "wait", "seconds": 1.0 },
+    { "comment": "A second thing to group, sitting well inside the photo so the card still closes around its contents with nothing hanging out. One layer on its own cannot be grouped: Command G wraps up two or more unlocked layers of one list and does nothing under that (PhotonzDocument.canGroup), so a walk that dropped one photo and asked for a group got no card, and every step after it was about a document with no card in it.", "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 290], "to": [500, 360], "steps": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Photonz drop probe" },
+    { "do": "selectRow", "row": "Rectangle", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "group" },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "1-card", "note": "a photo in a group. The group closes around it, so there is nothing hanging out and no Clip contents switch yet." },
+    { "do": "describe", "stage": "1-card", "note": "a photo and a small box in a group. The card closes around them both, so there is nothing hanging out and no Clip contents switch yet." },
     { "do": "snapshot", "name": "crop-round-1-card" },
     { "do": "panel", "stage": "1-card" },
 

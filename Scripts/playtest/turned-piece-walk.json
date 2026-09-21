@@ -41,6 +41,7 @@
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectBox", "layer": "Rectangle 2", "at": [340, 340], "size": [120, 60], "within": 1 },
+    { "comment": "The drawn corner BEFORE the pull, against the same number the step after the pull claims. The stage below says the bottom right must not move, and two claims of one number is the only way to say that in one place.", "do": "expectBox", "layer": "Rectangle 2", "corner": "bottomRight", "onScreen": [462.41, 386.32], "within": 1.5 },
 
     { "do": "drag", "from": [370, 289], "to": [320, 250], "steps": 10, "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
