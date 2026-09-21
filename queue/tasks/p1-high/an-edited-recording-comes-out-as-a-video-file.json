@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:30:22.622Z",
-  "updated": "2026-09-21T16:29:38.132Z",
+  "updated": "2026-09-21T16:39:11.387Z",
   "deps": [],
   "blockedBy": [],
   "notes": "VERIFIED MISSING on 2026-09-21 during the digest pass, by reading the two export paths:\n\n  Sources/Photonz/AppCoordinator.swift:456 -> VideoExporter.exportMP4(from: state.editSourceURL, to: url, cuts: state.exportCuts, crop: state.crop)\n  Sources/PhotonzMedia/VideoExporter.swift:151 -> builds an AVMutableComposition from ONE source URL plus a cut list and a crop rect\n\nSo export is a function of (source file, cuts, crop). It has no idea a document exists. Nothing in it can express a reordered piece, a held frame, a 2x piece, a detached sound layer, an added music layer with a level line on it, or an arrow drawn over the picture. Sources/PhotonzMedia/AudioMixdown.swift does build a real composition from the document's sound layers, and Export Sound writes that alone (EditorState+Audio.swift:183). That mixdown is the half that already exists; the picture half does not.\n\nThe 2026-09-21-video-audio audit says it in its own words: \"There is no video export from a document yet, so Export Sound writes the mix on its own. The composition it builds already has the volume ramps on it, so video export will pick it up unchanged when it is built.\"\n\nNOT the same as a-recording-can-be-made-small-enough-to-send, which gives the EXISTING recording export its three MP4 quality choices. That one makes the old path smaller; this one gives the new path a file at all.\n\nOVERLAPS trim-becomes-a-tool-and-the-recording-window-ret, which promises \"Save, export and Revert to Original all work on a recording opened as a document\". That task means the old window's export moved across, on a recording that is one clip; it is blocked on the Command S card and it predates cutting, pieces and sound. If the two are picked up together, this one owns the compositing and that one owns where the commands live.",
@@ -43,7 +43,27 @@
     {
       "t": "2026-09-21T16:29:38.131Z",
       "note": "Bug found by LOOKING at the file rather than at the walk's green tick: every frame after the last clip came out as the clip's last frame, held. The pictures are drawn into pixel buffers from a pool, and a picture is composited OVER what is in the buffer rather than replacing it, so a frame with nothing on it showed whatever frame used that buffer last. Reproduced as a test (an empty frame after a red one read back red), fixed by clearing each buffer to black first, test now passes. The walk could not have caught this: the file's duration, size and sound track were all correct."
+    },
+    {
+      "t": "2026-09-21T16:38:53.100Z",
+      "note": "owns these walks: an-edited-recording-comes-out-as-a-video-walk"
+    },
+    {
+      "t": "2026-09-21T16:39:06.571Z",
+      "note": "Left rough, not filed. (1) The Stop button on the progress card is not driven by a walk: an export of the sample finishes in about a second, so there is nothing to catch mid-flight. The half that can break silently IS tested (cancelling the writer throws CancellationError and removes the file); the button is three lines wired to Task.cancel. (2) The export borrows the window's ImageStore for the frames it decodes and gives each one back as it goes, so during an export the canvas can lose a frame it was holding and re-fetch it. A separate store would need the document's other bitmaps copied into it, which is worse. (3) Nothing about the frame loop is parallel and nothing has been measured past a fourteen second document; 4s of 1280x800 with sound is about 1.3s, 14s about 1.9s. If somebody exports a ten minute recording that is minutes of work with only a bar to watch, and THAT is the day to file something."
+    },
+    {
+      "t": "2026-09-21T16:39:11.338Z",
+      "note": "Adversarial review of the BUILT thing, on the real app (probe, screen unlocked, Screen Recording granted). Seven real pictures of the window and five real files written and read back. What I changed my mind about while using it: (1) the last frame held past the end of the picture looked like a feature and is a bug, now black, matching the window; (2) the sheet saying 'size not known until it is written' for anything edited felt thin until I tried the alternative, and an estimate off the source recording's bitrate is a number that is wrong in a different way every time, so the honest line stays and is an evaluate question in the audit instead; (3) one Export key and one sheet that follows what the document IS beats a second menu item, which is what the mock-less version of this would have been."
+    },
+    {
+      "t": "2026-09-21T16:39:11.385Z",
+      "note": "Export on a document with time writes a real video of what plays: pieces in order, thrown-away pieces absent, layers over the picture drawn in, the mix under it with its level line, behind next-export-the-video (on by default in Next). DocumentVideoExport (PhotonzCore, pure, 15 tests) plans the frames and answers whether the recording is untouched; DocumentMovieWriter (PhotonzMedia, 7 tests) photographs the document, writes the mix through the same AudioMixdown Export Sound uses, and joins the two passthrough; EditorState+VideoExport and VideoExportDialog give it the recording sheet's own formats and presets, a progress card with Stop, and a verbatim copy for a recording nobody has touched. Verified by a new walk (an-edited-recording-comes-out-as-a-video-walk) that writes five files and reads every one back, plus the recording, sound, clip and export walk sets, plus 8661 unit tests. Audit: queue/audits/2026-09-21-video-export.json. Commit a88e3c03, pushed."
     }
   ],
-  "started": "2026-09-21T16:01:36.244Z"
+  "started": "2026-09-21T16:01:36.244Z",
+  "walks": [
+    "an-edited-recording-comes-out-as-a-video-walk"
+  ],
+  "completed": "2026-09-21T16:39:11.386Z"
 }
