@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.610Z",
-  "updated": "2026-09-21T12:11:04.515Z",
+  "updated": "2026-09-21T12:11:31.887Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -61,10 +61,15 @@
     {
       "t": "2026-09-21T12:11:04.514Z",
       "note": "left rough, not filed. (1) Dragging a sound file onto the window is refused rather than added: FileDrop.carriesUsableFile takes .image and the photonz type only, so the refusal is honest rather than silent, and Video > Add Sound is the way in. It is the first thing most people will try, and it is in the audit's rough for the user to react to. (2) The mock's Library scope Media shelf is not built, so a sound on the timeline is not listed anywhere as a file; nothing invented a second place for media, there is just no shelf yet, and it is a Library task rather than an audio one. (3) The Sound section's position in the panel is folded into appearance-is-below-the-fold-again-because-the-p. (4) While it plays the level is followed on the same 33ms clock the playhead runs on, so a fade shorter than about a tenth of a second is stepped live and sample accurate in the export; the plan is identical either way and only the smoothness differs at the extreme. All four are in the audit's rough list."
+    },
+    {
+      "t": "2026-09-21T12:11:31.885Z",
+      "note": "Sound is a layer now. PhotonzCore: SoundRef, LayerContent.sound, AudioLevel (fader x points over time), AudioMixSegment, Waveform - 53 tests, written first. Detaching a clip's sound puts it on its own layer in step with the same cuts, so cutting the picture leaves the voiceover over it untouched (proved in SoundClipTests and photographed in the walk). Add Sound puts a file on the timeline and grows the document to hold it. Every layer that makes a sound draws its waveform on its bar, following its cuts, and its level is a line across that bar with a dot at every moment it is pinned: a fade and a duck are the same control. PhotonzMedia: SoundFile reads peaks in one forward pass, AudioMixdown turns the mix plan into a composition with volume ramps and writes it. App: DocumentAudioPlayer (AVAudioEngine, one mixer per layer, varispeed for a retimed piece), the Sound panel section, four rows in the Video menu. WHAT PLAYS AND WHAT EXPORTS ARE ONE FUNCTION - audioMix() - so they cannot drift; AudioMixdownTests measures the written file rather than trusting it (a duck comes out quieter, a cut reads the stretch it kept, three sounds are louder where they overlap). Verified: 8639 tests green; sound-on-the-timeline-walk passes with 8 real window captures and reports 3 pieces of sound on the engine and 3 written to a 15.75s mix.m4a; the 17 video, trim, clip and recording walks still pass with the sample recording's new sound track. Behind next-sound-on-the-timeline, on by default in Next, needs next-a-recording-is-a-document on. Design: docs/design/video-audio.md. Audit: queue/audits/2026-09-21-video-audio.json. Committed ffaa1c76, pushed. Two follow-ups filed (scrub audio, metering and clipping); a full sweep requested."
     }
   ],
   "started": "2026-09-21T11:16:03.326Z",
   "walks": [
     "sound-on-the-timeline-walk"
-  ]
+  ],
+  "completed": "2026-09-21T12:11:31.886Z"
 }
