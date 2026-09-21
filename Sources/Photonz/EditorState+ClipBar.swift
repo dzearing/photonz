@@ -293,7 +293,8 @@ extension EditorState {
         let drag = ClipBarDrag(grab: grab, pieces: pieces, clipStartMS: time.inMS,
                                others: document.clipBarEdges(excluding: layerID,
                                                              playheadMS: documentTimeMS),
-                               snapWithinMS: clipSnapMS)
+                               snapWithinMS: clipSnapMS,
+                               startIsFree: layer.startIsFree)
         clipBarDrag = ClipBarDragSession(layerID: layerID, grab: grab, drag: drag,
                                          landing: drag.landing(byMS: 0),
                                          heldTimelineMS: max(1, document.documentDurationMS))
@@ -318,6 +319,12 @@ extension EditorState {
         let landing = session.landing
         let id = session.layerID
         switch session.grab {
+        case .clipStart where session.drag.startIsFree:
+            // Nothing behind it to trim into, so this edge is simply the moment
+            // the layer arrives: it lands where the hand left it and the far
+            // end does not move (`TitleTime.moveLayerStart`).
+            guard landing.movedMS != 0 else { break }
+            perform { $0.moveLayerStart(id, toMS: landing.clipStartMS) }
         case .clipStart:
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipStart(id, ofPiece: 0, byMS: landing.movedMS) }

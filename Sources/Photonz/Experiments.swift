@@ -441,6 +441,11 @@ extension Experiments {
     /// (`ClipReframe.swift`).
     var punchInEnabled: Bool { isEnabled(FeatureCatalog.punchInFlag) }
 
+    /// `next-a-title-has-an-in-and-an-out`: whether text placed on a document
+    /// with time arrives and leaves rather than being on screen for all of it
+    /// (`TitleTime.swift`).
+    var titleOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.titleOnTheTimelineFlag) }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.

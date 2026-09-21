@@ -1,0 +1,32 @@
+{
+  "feature": "A title has an in and an out",
+  "epic": "video-titles-graphics",
+  "summary": "Type words over a recording with the ordinary text tool and they arrive where the playhead is and leave three seconds later, with a bar on the timeline you can drag at either end. They can fade on and off, and the fade is an ordinary Opacity animation you can open and change.",
+  "setup": "Photonz Dev, Experiments window, release Next, flags next-a-recording-is-a-document, next-cut-a-recording and next-a-title-has-an-in-and-an-out on. Open a recording from the capture history.",
+  "try": [
+    { "do": "Scrub to the moment the words should name." },
+    { "do": "Press T, click on the picture, type a few words, then press Command Return.", "shot": "2026-09-21-title-1-typed-on-the-shot-sc.png" },
+    { "do": "Read the Time section in Properties: it says when the words arrive and when they go." },
+    { "do": "Drag the playhead to the start of the recording: the words are gone, and so is their selection box." },
+    { "do": "Drag the right end of the words' bar on the timeline to keep them up longer.", "shot": "2026-09-21-title-3-both-ends-dragged-sc.png" },
+    { "do": "Drag the LEFT end of the same bar earlier: the words arrive sooner and their end does not move." },
+    { "do": "In the Time section, pick a Fade of 0.50s, then open the Motion section above it.", "shot": "2026-09-21-title-4-fades-on-sc.png" },
+    { "do": "Press Space and watch it play, then export the video and scrub the file." }
+  ],
+  "evaluate": [
+    "Three seconds is the length words get when nobody says. Is that the right guess, or do you find yourself dragging it every time?",
+    "Words arrive at the playhead. Did you expect them to start where you were, or to start at the beginning and be moved?",
+    "A title gets an in and an out; an arrow drawn over a playing shot still stays up for the whole recording. Is that the right split, or should anything drawn on a video be timed?",
+    "The fade is an Opacity animation rather than a fade setting. Is seeing it in the Motion list useful, or is it one thing too many to look at?",
+    "Start Here and End Here put an end on the playhead. Did you reach for those, or only ever drag the bar?",
+    "New words come out in the current foreground colour, which over a dark shot is dark with a light halo round it. Is that readable enough, or should text over a video pick its own colour?"
+  ],
+  "rough": [
+    "The Time section is a long way down the panel: with a title picked you scroll past Text, Appearance, Effects and Motion to reach it, and the Fade choices sit below the fold. Folded into the task that already covers panel order rather than filed again.",
+    "Pressing B or Delete while a title is picked now does nothing, because a title is not a clip and picking one leaves no clip in hand. That is the price of the panel never talking about the shot while the words are selected. Click the clip, or nothing, and both work again.",
+    "The clickthrough draws In and Out as two timecode fields. They are not built: a timecode is a thing to learn and to mistype, the bar on the timeline is the direct answer, and Start Here / End Here cover the moment you are already looking at. If typing an exact time turns out to matter, that is where it goes.",
+    "The clickthrough has an Insert menu with a Title row in it. Deliberately not built: a menu row called Title is the first brick of the Titles feature this whole task exists to avoid.",
+    "Clip art and component instances, which the same clickthrough page puts on the timeline beside the title, are not built. They are the same model (a layer with an in and an out) and each is its own task.",
+    "\"What plays is what exports\" is proved frame by frame in the model — every frame the exporter photographs is compared against what playback draws at that moment — plus the written file's length. Nothing yet photographs a frame of the finished file and compares the PICTURE with the canvas; a walk step that did would be worth having for every video feature after this one."
+  ]
+}

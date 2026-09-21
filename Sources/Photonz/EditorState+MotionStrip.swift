@@ -47,6 +47,8 @@ extension EditorState {
             for group in groups.indices {
                 for lane in groups[group].lanes.indices
                 where groups[group].lanes[lane].motionID == drag.motionID {
+                    // The hand works in the DOCUMENT's clock, which is what the
+                    // lanes are drawn in, so the landing goes straight on.
                     groups[group].lanes[lane].timing = drag.timing
                 }
             }
@@ -227,7 +229,12 @@ extension EditorState {
             document.updateLayer(id: drag.layerID) { layer in
                 guard var motions = layer.motions,
                       let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
-                motions[index] = motions[index].retimed(to: drag.timing)
+                // ...and back into the LAYER's own clock to be written down,
+                // because that is the clock a motion is stored in and the one
+                // that keeps it nailed to its frame through a trim
+                // (`Layer.motionShiftMS`).
+                motions[index] = motions[index].retimed(to: drag.timing
+                    .shifted(byMS: -layer.motionShiftMS))
                 layer.motions = motions
             }
             // What the drag did to the LAP, in the same step, so undo takes

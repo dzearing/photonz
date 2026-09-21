@@ -1,0 +1,79 @@
+{
+  "out": "/tmp/photonz-playtest/title-on-the-timeline-walk",
+  "seed": "A title is a text layer that happens to live in a document with time, so it gets an in and an out, and nothing else about it is special. This walk types one on a recording with the ordinary text tool, checks that it arrives at the playhead and leaves three seconds later rather than standing over the whole recording, drags both ends of its bar on the timeline, fades it on and off with an ordinary Opacity animation, and writes the file out.",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-a-title-has-an-in-and-an-out": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-frame-to-name", "note": "an eight second screen recording open as one clip, with the playhead four seconds in, on the moment the words are about to name" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [620, 330] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Shipping today" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-a-title", "note": "THE FIRST TEST: the ordinary text tool, on a document that has time. No Insert menu, no Titles panel, no preset. The words land as a text layer with an in and an out, and the timeline draws a bar for them beside the clip, named after what they say" },
+    { "do": "reveal", "control": "Time section" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:07 · 3.0s" },
+    { "do": "panel", "stage": "2-a-title" },
+    { "do": "snapshot", "name": "title-1-typed-on-the-shot" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-before-it-arrives", "note": "THE SECOND TEST, two claims at once: at the start of the recording the words are not there, and neither is their selection box. A layer that is not on screen at this moment draws no chrome, which is what used to make a mark read as being there and broken" },
+    { "do": "expectPicked", "layers": ["Shipping today"], "outline": "none" },
+    { "do": "expect", "field": "Timing Shipping today", "present": true },
+    { "do": "snapshot", "name": "title-2-before-it-arrives" },
+
+    { "do": "action", "action": "titleDragEndLater" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-longer", "note": "THE THIRD TEST: when it leaves is set on the timeline, by dragging the end of its bar, exactly as anything else on the timeline is trimmed. A second later and the reading follows" },
+    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:08 · 4.0s" },
+    { "do": "panel", "stage": "4-longer" },
+
+    { "do": "action", "action": "titleDragStartEarlier" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-earlier", "note": "THE FOURTH TEST, and the thing a title does that a clip cannot: its LEFT end moves the moment it arrives and leaves its far end where it is. A clip's left end trims into the frames behind it, because there are frames behind it. There is nothing behind a title" },
+    { "do": "expect", "field": "Time reading", "reads": "0:03 to 0:08 · 5.0s" },
+    { "do": "snapshot", "name": "title-3-both-ends-dragged" },
+
+    { "do": "reveal", "control": "Fade 0.50s" },
+    { "do": "press", "control": "Fade 0.50s" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-fades", "note": "THE FIFTH TEST: it comes on rather than snapping on, and what that IS is an ordinary Opacity animation on the layer. There is no fade property and no titles feature: the Motion list has it, with its own lane on the timeline, and it takes any curve" },
+    { "do": "panel", "stage": "6-fades" },
+    { "do": "snapshot", "name": "title-4-fades-on" },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "7-fully-up", "note": "and a second into it the words are fully up, over the shot, with the shadow every piece of text over a picture gets" },
+    { "do": "snapshot", "name": "title-5-fully-up" },
+
+    { "comment": "What plays is what EXPORTS: eight seconds of recording with words over five of them is an eight second file, made frame by frame rather than copied, because the recording is no longer the whole of what the document says.", "do": "writeVideo", "name": "title-eight-seconds", "format": "mp4", "seconds": 8.0, "within": 0.4, "copied": false },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "8-undone", "note": "THE SIXTH TEST: the fade, both drags and the words themselves are four ordinary history steps, so the recording is one uncut clip again with nothing over it" },
+    { "do": "snapshot", "name": "title-6-undone" }
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.757Z",
-  "updated": "2026-09-21T13:53:14.633054Z",
+  "updated": "2026-09-21T20:40:13.482Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -64,6 +64,10 @@
     {
       "t": "2026-09-21T13:53:14.633054Z",
       "note": "user: must handle any length by chunking; joins, offsets and progress added"
+    },
+    {
+      "t": "2026-09-21T20:40:13.481Z",
+      "note": "Groundwork landed 2026-09-21 in a-title-is-text-that-knows-when-it-is-on-screen: text placed on a document with time gets an in and an out (TitleTime.swift), the bar is draggable at both ends, a fade is an ordinary Opacity motion, and Layer.isPlacedInTime keeps clip-only edits away from it. A caption is a title with words somebody else wrote, so this task is now about where the words come from rather than about how they sit in time."
     }
   ]
 }

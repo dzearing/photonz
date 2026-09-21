@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 44,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.338Z",
-  "updated": "2026-09-21T19:41:08.745Z",
+  "updated": "2026-09-21T20:40:13.532Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -36,6 +36,38 @@
     {
       "t": "2026-09-21T19:41:08.744Z",
       "note": "Found while building hold-on-a-frame (2026-09-21), and it lands on this task because it is about any layer with an in and an out: a layer that is NOT on screen at the current moment still draws its selection chrome. Scrub off the hold an arrow was drawn on and the arrow is gone, but its dashed box and both endpoint handles are still on the canvas, which reads as the arrow being there and broken. See queue/audits/2026-09-21-hold-on-a-frame.json and the walk picture hold-6-off-the-hold-the-arrow-is-gone-sc.png. Two defensible answers and it is worth deciding once for titles, clips and marks together: hide the chrome with the layer, or keep it so a layer picked in the list still has something to grab."
+    },
+    {
+      "t": "2026-09-21T19:53:52.164Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T20:20:00.000Z",
+      "note": "Adversarial review BEFORE building, walking the flow as somebody who has never seen the mock. (1) The mock's Insert > Title menu item is the thing to cut: the whole thesis is that a title is text, and a menu row called Title would be the first brick of the Titles feature the notes warn against. Text is T, on a document with time as on any other. (2) The mock draws In and Out as two timecode fields. A timecode field is a thing to learn and to mistype; the playhead is already the app's cursor in time and the bar is already draggable, so the panel gets a readout plus Start Here / End Here and the timeline gets the direct manipulation. (3) The mock has no fade at all, and a title that snaps on is the one thing everybody notices. It has to be the animation model: one ordinary Opacity motion with four keys, which the Motion section can then edit, rather than a Fade property nothing else has. (4) What the mock could not know: a fade written in absolute milliseconds goes wrong the moment the title is dragged longer, because the last key stays where it was and the title goes invisible after it. A fade has to be refitted when the stretch changes. (5) Found while reading: a layer PLACED in time is treated as a clip today. Pick the arrow drawn on a held frame and the Time section offers Hold This Frame and 200%, and B would split it into pieces. A title would inherit all of that. clipToTrim has to stop answering with a layer that plays nothing."
+    },
+    {
+      "t": "2026-09-21T20:20:30.000Z",
+      "note": "Scope call. Building: the span on text placed in a document with time, the free start on the bar (a title's left end moves its in and leaves its out, unlike a clip's, which trims into media), Time section for a placed layer (readout, Start Here, End Here, Fade), fade as one Opacity motion refitted when the stretch changes, the clip-only capabilities stopping at layers that play nothing, and selection chrome hiding for a layer that is not on screen at this moment (the finding already filed on this task). Not building: clip art and component instances on the timeline (the same mock page, different layer kinds, and each is its own task), and a titles library."
+    },
+    {
+      "t": "2026-09-21T20:40:13.531Z",
+      "note": "owns these walks: title-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-21T21:30:00.000Z",
+      "note": "Adversarial review of the BUILT thing, on the real app, from the walk's own pictures. Three things were wrong and are fixed: (1) the title's bar on the timeline was labelled Text, among clips named after their recordings, so the strip now calls a layer what the layers list calls it and a title's bar says the words. (2) The Reframe section was on the panel with a title picked, offering Punch In on the clip underneath while the words were selected; clipToTrim now answers with nothing while something placed in time is picked, which takes Reframe, Transition and Sound off too. (3) The fade's lane was drawn at nought on the timeline while the fade actually happened at three seconds, because a motion is written in its layer's own clock and the strip is drawn in the document's; lanes are now moved along by Layer.motionShiftMS and the drag puts the landing back into the layer's clock when it writes it down. Left as it is: pressing B or Delete with a title picked now does nothing, which is the price of (2) and is in the audit."
+    },
+    {
+      "t": "2026-09-21T21:31:00.000Z",
+      "note": "Verified, item by item against the acceptance. (1) Text placed on a document with time gets a start and an end: TitleTime.placedSpan, wired into commitTextEdit behind next-a-title-has-an-in-and-an-out; walk step 24 reads the panel as 0:04 to 0:07 3.0s. (2) Set on the timeline as directly as trimming anything else: both ends of the bar drag through the same ClipBarDrag every clip uses, with the left end free because there is no media behind it; walk steps 26-35. (3) Comes on and goes off using the animation model: the Fade row writes ONE Opacity motion with four keys, which shows up in the Motion list as 0% to 100% to 100% to 0% over 5s with its own lane on the timeline (picture 2026-09-21-title-4-fades-on-sc.png). (4) Stays readable over whatever is behind it: the auto-contrast shadow every text layer in the app is built with, tested. (5) A saved text style applies to it like any other text: core test, the style binds and the stretch is untouched. (6) What plays is what exports, frame to frame: a test walks every frame index the exporter photographs and compares what is on screen there against playback, plus the walk writes a real mp4 and checks it runs 8.0s and was made frame by frame rather than copied. (7) Audit at queue/audits/2026-09-21-a-title-has-an-in-and-an-out.json with three real captures."
+    },
+    {
+      "t": "2026-09-21T21:32:00.000Z",
+      "note": "Left rough, not filed, because no person is stopped by them and open tasks cover the rest: the Motion section's Start and Over fields for a title read in the layer's own clock (Start 0 for a title that arrives at three seconds) while the lane beside them is now drawn in the document's, so the two say the same thing in two clocks; and nothing in the walk harness photographs a frame of the WRITTEN file and compares the picture with the canvas, so what-plays-is-what-exports is proved in the model and by the file's length rather than by two pictures. Folded rather than filed: the Time section being below the fold went onto appearance-is-below-the-fold-again, and the groundwork note went onto captions-that-write-themselves. Clip art and component instances on the timeline are the same clickthrough page and are already open tasks (components-on-the-timeline-animated-the-way-ever)."
     }
+  ],
+  "started": "2026-09-21T19:53:52.163Z",
+  "walks": [
+    "title-on-the-timeline-walk"
   ]
 }

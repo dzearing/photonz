@@ -698,3 +698,72 @@ language on the same bar is a lesson to learn for nothing.
   nothing is made up in between. There is no optical flow in the path, and the
   panel says so rather than letting "slow motion" imply smoothing that is not
   there (`ClipSpeedFrames`).
+
+## 12. Titles, answered: text that knows when it is on screen
+
+Built 2026-09-21 (`next-a-title-has-an-in-and-an-out`, `TitleTime.swift`), out
+of `video-title-wt`'s own sentence: **a title is a text layer that happens to
+live in a document with time, so it gets an in and an out, and nothing else
+about it is special.** So there is no Titles panel, no title preset, no Insert ▸
+Title and no fade property. You press T, click, and type, the way you would on a
+screenshot.
+
+### 12.1 Placed in time, as against playing
+
+The one distinction the timeline could not do without:
+
+**A layer PLACED in time is not a layer that PLAYS.**
+
+A clip has frames behind both its ends. A title has nothing behind it. Three
+things follow, and each of them was got wrong before this was written down:
+
+| | A clip | A title |
+| --- | --- | --- |
+| Left end of the bar | trims into the frames behind it; the clip stays where it was put (§11.1) | moves the moment it arrives; the far end does not budge |
+| Right end | the piece ends somewhere new, as far as the media goes | ends somewhere new, and nothing stops it |
+| Speed, hold a frame, split | yes, they are about frames | no: there are no frames |
+
+`Layer.isPlacedInTime` is the whole test, and `clipToTrim` answers with nothing
+while one is picked, so the Reframe, Transition and Sound sections leave the
+panel rather than talking about the clip underneath while the words are
+selected.
+
+### 12.2 Where a title comes from and how long it is
+
+It arrives at the playhead and runs for three seconds
+(`TitleTime.defaultLengthMS`), never past the last frame. On a HELD frame it
+takes the hold instead, which is the rule `HeldFrame` already set for a mark
+drawn on a frozen frame: what is there to be pointed at is there for as long as
+the frame is.
+
+### 12.3 A fade is an animation, not a setting
+
+**The Fade row writes one ordinary Opacity motion** with four keys — nought at
+the in, full after the fade, full again before the out, nought at the out — so
+it appears in the Motion list, gets a lane on the timeline, takes any curve,
+undoes and reaches the export with nothing written for it. Two motions on one
+property would be two answers to one question, which is why it is one motion
+with stops rather than a fade-in and a fade-out.
+
+What the clickthrough could not know: a motion is written in absolute
+milliseconds, so dragging the title longer would leave the last key where it was
+and the words would go out early and stay gone. `refitFade` re-cuts a fade of
+that shape whenever the stretch changes length, and leaves a motion somebody has
+edited by hand exactly as they left it.
+
+### 12.4 A lane is drawn where it happens
+
+A motion is written in its layer's own clock and the strip is drawn in the
+document's, so a lane is moved along by `Layer.motionShiftMS` to be drawn where
+it actually happens. Before this, a fade on a title arriving at three seconds
+drew its lane at nought, saying the words come on before they exist. The hand
+then works in the document's clock for the whole drag, and the landing is put
+back into the layer's own clock when it is written down.
+
+### 12.5 Chrome goes with the layer
+
+A layer with an in and an out draws no selection box and no handles at a moment
+it is not on screen. Scrub off the hold an arrow was drawn on and the arrow
+goes; its box staying behind on the empty picture read as the arrow being there
+and broken. The way back to it is its bar on the timeline and its row in the
+layers list, both of which are still there and still picked.

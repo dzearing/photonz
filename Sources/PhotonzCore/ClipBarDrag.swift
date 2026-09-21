@@ -65,14 +65,26 @@ public struct ClipBarDrag: Hashable, Sendable {
     public let others: [MotionStripEdge]
     /// How near a drop has to land to catch on one of those.
     public let snapWithinMS: Int
+    /// Whether the bar's left end is free to go where the hand puts it
+    /// (`Layer.startIsFree`).
+    ///
+    /// False for a clip, which is everything this file was written for: there
+    /// are frames behind its in point, so that edge is a trim into them and the
+    /// clip stays where it was put. True for something simply PLACED in time —
+    /// a title, a mark — where the in point is nothing but the moment it
+    /// arrives, so dragging it earlier makes it arrive earlier and its far end
+    /// does not move at all.
+    public let startIsFree: Bool
 
     public init(grab: ClipBarGrab, pieces: ClipPieces, clipStartMS: Int,
-                others: [MotionStripEdge] = [], snapWithinMS: Int = 0) {
+                others: [MotionStripEdge] = [], snapWithinMS: Int = 0,
+                startIsFree: Bool = false) {
         self.grab = grab
         self.pieces = pieces
         self.clipStartMS = clipStartMS
         self.others = others
         self.snapWithinMS = snapWithinMS
+        self.startIsFree = startIsFree
     }
 
     // MARK: Where the thing in the hand is right now
@@ -101,6 +113,11 @@ public struct ClipBarDrag: Hashable, Sendable {
         switch grab {
         case .clipStart:
             guard let range = pieces.trimStartRange(ofPiece: 0) else { return (0, 0) }
+            // A free start has nothing behind it to run out of, so the only
+            // thing stopping it going left is the first frame of the document.
+            if startIsFree {
+                return (-clipStartMS, pieces.totalLengthMS - ClipPiece.shortestMS)
+            }
             // The only thing stopping it going left is how much recording
             // there is behind the first frame. The clip does not move, so the
             // start of the document has nothing to say about it.
@@ -150,6 +167,16 @@ public struct ClipBarDrag: Hashable, Sendable {
         if case .carry(let piece) = grab { return carried(piece: piece, byMS: delta) }
         let (moved, caught) = clampedAndCaught(delta)
         switch grab {
+        case .clipStart where startIsFree:
+            // The bar ARRIVES where the hand is and its far end does not move,
+            // so the last piece pays for the difference. Nothing is drawn as
+            // spare, because there was never anything behind it to give back.
+            var next = pieces
+            guard moved != 0, next.trimEnd(ofPiece: next.count - 1, byMS: -moved) else {
+                return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
+            }
+            return Landing(pieces: next, clipStartMS: clipStartMS + moved,
+                           movedMS: moved, snappedTo: caught)
         case .clipStart:
             var next = pieces
             guard moved != 0, next.trimStart(ofPiece: 0, byMS: moved) else {

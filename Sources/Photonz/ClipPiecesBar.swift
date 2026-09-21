@@ -117,6 +117,11 @@ struct ClipPiecesBar: View {
     private var headShiftMS: Int {
         guard let session = editorState.clipBarDrag, session.layerID == layerID,
               case .clipStart = session.grab else { return 0 }
+        // A free start is not a trim: the bar itself is already drawn where the
+        // hand has it, because its in point moved, and there is no spare behind
+        // it to draw. Shifting it again would double the drag
+        // (`TitleTime.swift`).
+        guard !session.drag.startIsFree else { return 0 }
         return session.landing.movedMS
     }
 

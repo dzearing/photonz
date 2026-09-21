@@ -292,9 +292,20 @@ extension EditorState {
             }
             let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
                                                   hugsShortWords: hugsShortWords)
-            let layer = wearingArmedTextStyle(
+            var layer = wearingArmedTextStyle(
                 TextBuilder.layer(content: content, at: origin, naturalSize: size))
             let moment = documentTimeMS
+            // **A title is text that knows when it is on screen**
+            // (`next-a-title-has-an-in-and-an-out`). In a document with time,
+            // words arrive where the playhead is and run for three seconds
+            // rather than standing over the whole recording; on a held frame
+            // they take the hold, exactly as a mark drawn there does. In every
+            // other document there is no time to be placed in and nothing here
+            // happens at all.
+            if Experiments.shared.titleOnTheTimelineEnabled,
+               let span = document?.placedSpan(atTimeMS: moment) {
+                layer.time = span
+            }
             perform { $0.addLayerDrawn(layer, atTimeMS: moment) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.

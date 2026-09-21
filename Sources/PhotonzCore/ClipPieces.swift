@@ -750,6 +750,11 @@ extension PhotonzDocument {
               var pieces = layer.clipPieces else { return false }
         guard edit(&pieces, time) else { return false }
         updateLayer(id: id) { $0.setClipPieces(pieces) }
+        // A layer that comes on and goes off again is re-cut to the length it
+        // now has, or the words would fade out on the old end and stay gone
+        // (`TitleTime.refitFade`). Nothing at all for a clip, which carries no
+        // fade of this shape.
+        refitFade(id)
         // A document that was told how long it runs for is told again, because
         // the thing it was measuring just changed length. Without this, a clip
         // cut down to six seconds still had a ten second ruler, a transport

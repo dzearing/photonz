@@ -228,6 +228,10 @@ struct CanvasView: NSViewRepresentable {
     let onDocumentPlayToggle: () -> Void
     let onDocumentStepFrames: (Int) -> Void
     let documentHasTime: Bool
+    /// Where the playhead is, in a document that has time. The chrome reads it
+    /// to know whether the picked layer is on screen at all right now
+    /// (`TitleTime.swift`).
+    let documentTimeMS: Int
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -405,6 +409,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDocumentPlayToggle = onDocumentPlayToggle
         view.onDocumentStepFrames = onDocumentStepFrames
         view.documentHasTime = documentHasTime
+        view.documentTimeMS = documentTimeMS
         view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
@@ -533,6 +538,7 @@ final class CanvasNSView: NSView {
     var onDocumentPlayToggle: (() -> Void) = {}
     var onDocumentStepFrames: ((Int) -> Void) = { _ in }
     var documentHasTime = false
+    var documentTimeMS = 0
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }

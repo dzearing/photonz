@@ -182,6 +182,8 @@ public enum FeatureCatalog {
 
     public static let punchInFlag = "next-punch-in-and-hold"
 
+    public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
+
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
 
     public static let videoExportFlag = "next-export-the-video"
@@ -679,6 +681,16 @@ public enum FeatureCatalog {
                     name: punchInFlag,
                     title: "Punch in on something and hold there",
                     description: "Half of what makes a screen recording watchable is moving the eye: start wide, push in on the thing being talked about, hold there while it is explained, and pull back out. With this on that is two moves rather than an exercise. Pick a clip, drag a box round the part of the picture that matters, put the playhead on the moment it matters, and Punch In: by that moment the camera has arrived on it, having leaned in over about a second, and it stays there until you say otherwise. Put the playhead where you are done with it and Pull Back Out, and everything between the two is a hold nobody had to ask for. Punch in a second time and the camera travels from where it is rather than cutting back to wide. It is not a zoom tool and there is no crop mode: a reframe is Scale and Centre on the clip, the same two properties a title or a piece of clip art would be animated on, so it gets the easing, the lanes on the timing strip, undo and the export with nothing written for it. The move is nailed to the FRAME it was made on rather than to a moment of the finished cut, so trimming the front of the clip, cutting it or throwing a piece away carries the move along with the frames instead of leaving it pointing at the wrong thing. The panel says how far in you are, what is in the middle of the frame, and how far in the recording itself can go before there are no pixels left to show, because a screen recording is usually captured at twice the size it is laid out at and most punch-ins never spend that. Off means a clip is framed one way for its whole length.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: titleOnTheTimelineFlag,
+                    title: "Words over the picture arrive and leave",
+                    description: "Type words on a recording today and they are on screen for the whole of it, from the first frame to the last, because a document with a length in it makes no difference to where text lives. With this on, text placed on a document that has time gets a moment it arrives and a moment it leaves: it starts where the playhead is and runs for three seconds, and it draws a bar on the timeline beside the clip, named after the words. Drag either end of that bar to say when it comes on and when it goes, drag the middle to move the whole thing, and the Time section in the panel says the two moments in words with a button for each that puts it on the playhead. A title can come on rather than snap on: pick a fade length and the words arrive and leave over that long, written as an ordinary Opacity animation on the layer, so it turns up in the Motion list with a lane on the strip, takes a different curve, and undoes like anything else. Nothing else about the words is special. It is the same text tool, the same fonts, the same colours, the same saved text styles, the same shadow that keeps text readable over a picture nobody chose, and what plays is what exports. The same is true of anything else simply placed in time, which is why picking one stops offering a speed, a held frame and a split: those are about the frames behind a clip, and a title has none. Off means text on a recording is on screen for all of it.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

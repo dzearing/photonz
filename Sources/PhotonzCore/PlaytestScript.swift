@@ -759,6 +759,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case clipSlideOntoPlayheadHeld, clipCarryLastToFrontHeld
     /// Let go of whichever of those is in the hand.
     case clipDragRelease
+    /// The LEFT end of a TITLE's bar dragged an eighth of the document
+    /// earlier, and the RIGHT end an eighth later
+    /// (`next-a-title-has-an-in-and-an-out`).
+    ///
+    /// Not the same gesture as `clipDragStartIn` above, and that is the thing
+    /// they are here to prove: a clip's left end trims into the frames behind
+    /// it and the clip stays where it was put, while a title has nothing
+    /// behind it, so its left end simply moves the moment it arrives and its
+    /// far end does not budge. Both go through the real drag on the layer
+    /// PICKED, so they refuse loudly where what is picked is a clip.
+    case titleDragStartEarlier, titleDragEndLater
 
     // MARK: What happens at a cut (`ClipTransitions.swift`)
 
@@ -799,7 +810,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
-             .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn: true
+             .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
+             .titleDragStartEarlier, .titleDragEndLater: true
         default: false
         }
     }
@@ -1521,6 +1533,14 @@ public enum PlaytestTimingCancel: String, CaseIterable, Hashable, Codable, Senda
 }
 
 /// Which part of a bar on the timing strip a `dragTiming` step takes hold of.
+/// What a step claims about the selection chrome on the canvas.
+public enum PlaytestOutlineClaim: String, CaseIterable, Hashable, Codable, Sendable {
+    /// The blue box and its handles are drawn.
+    case drawn
+    /// Nothing is drawn round the picked layer.
+    case none
+}
+
 public enum PlaytestTimingGrab: String, CaseIterable, Hashable, Codable, Sendable {
     /// The bar itself: it moves, keeping its length, so WHEN the motion starts
     /// changes and how long it takes does not.
@@ -2111,7 +2131,13 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// An empty list is as much of the point as a full one: it says nothing
     /// should be picked here.
-    case expectPicked(layers: [String])
+    /// `outline` is the second claim, about the CHROME rather than about what
+    /// is picked: `drawn` means the blue box and its handles are on the canvas,
+    /// `none` means they are not. The one that matters is `none`, for a layer
+    /// with an in and an out at a moment it is not on screen: the words are
+    /// gone and their box must go with them, or the picture says the layer is
+    /// there and broken (`TitleTime.swift`).
+    case expectPicked(layers: [String], outline: PlaytestOutlineClaim?)
     /// What the icon previews strip is showing right now: the sizes its chips
     /// are labelled with, smallest first, or that there is no strip at all.
     ///
@@ -3481,7 +3507,13 @@ public enum PlaytestStep: Sendable, Equatable {
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")
             }
-            self = .expectPicked(layers: try f.optionalStrings("layers"))
+            self = .expectPicked(layers: try f.optionalStrings("layers"),
+                                 outline: try f.optionalString("outline").map {
+                                     guard let claim = PlaytestOutlineClaim(rawValue: $0) else {
+                                         throw f.invalid("outline", "outline is \"drawn\" or \"none\"")
+                                     }
+                                     return claim
+                                 })
         case "expectIconPreviews":
             let absent = try f.optionalFlag("absent") ?? false
             guard absent || fields["sides"] != nil else {

@@ -172,10 +172,20 @@ extension PhotonzDocument {
     /// The second half is what makes the fast lane free. A recording that has
     /// just been opened is one clip and the playhead is on it, so picking Trim
     /// up needs no click first (`docs/design/video-surface.md` §10.5).
+    /// **A layer that plays nothing is never a clip in hand**, however much time
+    /// it occupies (`TitleTime.swift`). A title and a mark on a held frame have
+    /// an in and an out and no frames behind them, so a trim, a split, a speed,
+    /// a held frame, a transition and a punch-in all mean nothing for one.
+    ///
+    /// Picking one leaves NOTHING in hand rather than quietly handing back the
+    /// clip underneath: the panel speaks for what you picked, and a Reframe
+    /// section pointed at the shot while the words are selected is a control
+    /// that does something other than what it appears to be about. The clip
+    /// comes back the moment the clip is picked, or nothing is.
     public func clipToTrim(pickedLayerID: UUID?, atTimeMS ms: Int) -> UUID? {
         if let pickedLayerID, let picked = layer(id: pickedLayerID), picked.time != nil {
-            return pickedLayerID
+            return picked.isPlacedInTime ? nil : pickedLayerID
         }
-        return allLayers.last { $0.time?.contains(ms: ms) == true }?.id
+        return allLayers.last { $0.time?.contains(ms: ms) == true && !$0.isPlacedInTime }?.id
     }
 }

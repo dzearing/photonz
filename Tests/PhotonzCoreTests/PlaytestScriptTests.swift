@@ -2023,7 +2023,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] } ] }
         """)
-        guard case .expectPicked(let layers) = script.steps[0] else {
+        guard case .expectPicked(let layers, _) = script.steps[0] else {
             Issue.record("expectPicked"); return
         }
         #expect(layers == ["Rectangle", "Rectangle 2"])
@@ -2037,7 +2037,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPicked", "layers": [] } ] }
         """)
-        guard case .expectPicked(let layers) = script.steps[0] else {
+        guard case .expectPicked(let layers, _) = script.steps[0] else {
             Issue.record("expectPicked"); return
         }
         #expect(layers.isEmpty)

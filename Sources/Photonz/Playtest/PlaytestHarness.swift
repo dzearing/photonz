@@ -1559,8 +1559,8 @@ private final class Run {
         case .expectEdited(let edited):
             note(number, step.name, try checkEdited(edited), state: describe())
 
-        case .expectPicked(let layers):
-            note(number, step.name, try checkPicked(layers), state: describe())
+        case .expectPicked(let layers, let outline):
+            note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
         case .expectIconPreviews(let sides, let absent):
             note(number, step.name, try checkIconPreviews(sides: sides, absent: absent),
@@ -2469,6 +2469,25 @@ private final class Run {
                 }
                 editor.commitClipBarDrag()
 
+            // A TITLE's bar, which is a different gesture at the left end:
+            // nothing behind it to trim into, so that edge is the moment the
+            // words arrive (`TitleTime.swift`).
+            case .titleDragStartEarlier, .titleDragEndLater:
+                guard let placed = editor.placedLayerInHand else {
+                    throw Failure(description: "\(action.rawValue) needs something PLACED in time "
+                        + "picked — a title, a mark — and what is picked is "
+                        + (editor.selectedLayerID == nil ? "nothing" : "not one"))
+                }
+                let pieces = (placed.clipPieces?.count ?? 1) - 1
+                editor.beginClipBarDrag(layerID: placed.id,
+                                        grab: action == .titleDragEndLater
+                                            ? .seam(after: pieces) : .clipStart)
+                guard editor.clipBarDrag != nil else {
+                    throw Failure(description: "\(action.rawValue) could not take hold of the bar")
+                }
+                editor.updateClipBarDrag(byMS: action == .titleDragEndLater ? step8 : -step8)
+                editor.commitClipBarDrag()
+
             // What happens at a cut (`EditorState+ClipTransitions`). Each one
             // refuses out loud, because the refusals ARE the feature: a cut
             // that cannot pay for a dissolve says so rather than making a
@@ -3346,7 +3365,8 @@ private final class Run {
                  .clipCarryLastToFront, .clipSlideLater,
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
-                 .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn:
+                 .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
+                 .titleDragStartEarlier, .titleDragEndLater:
                 break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)
@@ -4660,7 +4680,8 @@ private final class Run {
             + "an icon frame reads as 1-document-pixel blocks like this.")
     }
 
-    private func checkPicked(_ layers: [String]) throws -> String {
+    private func checkPicked(_ layers: [String],
+                             outline: PlaytestOutlineClaim? = nil) throws -> String {
         let editor = try requireEditor()
         let picked = editor.actionableLayerIDs
         let all = editor.document?.allLayers ?? []
@@ -4679,7 +4700,27 @@ private final class Run {
             throw Failure(description: "the layers picked are \(list(said)), not \(list(layers)); "
                 + "the ones in the document: \(list(all.map { $0.displayName(readWords: words) }))")
         }
-        return "picked: \(list(said)), as claimed"
+        guard let outline else { return "picked: \(list(said)), as claimed" }
+        // The chrome, which is a different question from what is picked: a
+        // layer with an in and an out is still PICKED at a moment it is not on
+        // screen, and must still draw nothing on the picture.
+        let canvas = try requireCanvas()
+        let drawn = canvas.playtestSelectionOutlineBox
+        switch outline {
+        case .drawn:
+            guard let drawn else {
+                throw Failure(description: "nothing is outlined on the canvas, and the step "
+                    + "claimed there would be: \(canvas.playtestOutlineAbsence)")
+            }
+            return "picked: \(list(said)), outlined at \(drawn.integral), as claimed"
+        case .none:
+            guard drawn == nil else {
+                throw Failure(description: "an outline is drawn round \(drawn!.integral), and the "
+                    + "step claimed there would be none")
+            }
+            return "picked: \(list(said)), with no chrome on the canvas: "
+                + canvas.playtestOutlineAbsence
+        }
     }
 
     /// Fails the run unless exactly `count` measurements are on the canvas.

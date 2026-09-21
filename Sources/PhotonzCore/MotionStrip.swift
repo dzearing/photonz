@@ -119,10 +119,21 @@ extension PhotonzDocument {
             guard !motions.isEmpty || layer.occupiesTime else { return nil }
             return MotionStripGroup(
                 layerID: layer.id,
-                layerName: layer.name,
+                // What the LAYERS LIST calls it, which for words nobody has
+                // renamed is the words themselves. A title's bar on the
+                // timeline saying "Text" among clips named after their
+                // recordings is a row you have to click to identify
+                // (`TitleTime.swift`).
+                layerName: layer.displayName(readWords: [:]),
+                // Drawn where it HAPPENS, on the document's clock, which for a
+                // layer that occupies time is its own clock moved along to
+                // where the layer sits (`Layer.motionShiftMS`). Nought for
+                // everything else, so an icon's strip is exactly what it was.
                 lanes: motions.map {
                     MotionStripLane(layerID: layer.id, motionID: $0.id,
-                                    title: $0.property.title, timing: $0.timing, isOn: $0.isOn)
+                                    title: $0.property.title,
+                                    timing: $0.timing.shifted(byMS: layer.motionShiftMS),
+                                    isOn: $0.isOn)
                 },
                 bar: layer.time,
                 isSound: layer.sound != nil)

@@ -30,7 +30,13 @@ struct SpeedInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let piece = editorState.clipPieceInHandPiece {
+            // Words placed on a document with time, which have an in and an
+            // out and nothing else about them that is about time: no speed,
+            // because there are no frames to run faster, and no held frame,
+            // because there is no frame (`TitleTime.swift`).
+            if let placed = editorState.placedLayerInHand, let time = placed.time {
+                placedInTime(time)
+            } else if let piece = editorState.clipPieceInHandPiece {
                 which(piece)
                 if piece.isHeld {
                     held(piece)
@@ -61,6 +67,89 @@ struct SpeedInspector: View {
         // The panel decides how wide this is, never the words in it, the same
         // rule the Transition section learned the hard way.
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: When words are on screen
+
+    /// **The whole of what a title is**: when it arrives, when it goes, and
+    /// how softly it does either.
+    ///
+    /// What the clickthrough drew here was two timecode fields, In and Out.
+    /// They are not built, and deliberately: a timecode is a thing to learn and
+    /// to mistype, and the app already has a cursor in time. The bar in the
+    /// timeline is the direct answer — drag either end, drag the middle — and
+    /// this is the other way round, for the frame you are already looking at.
+    @ViewBuilder
+    private func placedInTime(_ time: LayerTime) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(TitleTime.reading(time))
+                .font(.system(size: 11, design: .monospaced))
+                .panelReadout(TitleTime.reading(time))
+                .playtestField("Time reading")
+            HStack(spacing: 6) {
+                Button("Start Here") { editorState.startPlacedLayerHere() }
+                    .controlSize(.small)
+                    .disabled(!editorState.canStartPlacedLayerHere)
+                    .playtestControl("Start Here", detail: "the Time section")
+                    .panelHelp("Bring the words on at the playhead. Where they go is untouched.")
+                Button("End Here") { editorState.endPlacedLayerHere() }
+                    .controlSize(.small)
+                    .disabled(!editorState.canEndPlacedLayerHere)
+                    .playtestControl("End Here", detail: "the Time section")
+                    .panelHelp("Take the words off at the playhead. Where they arrive is "
+                               + "untouched.")
+            }
+            fade()
+            Text(TitleTime.sentence)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    /// How long the words take to arrive and to go.
+    ///
+    /// It writes an ORDINARY Opacity animation on the layer, which is why there
+    /// is no curve menu and no second control here: both of those are already
+    /// in the Motion section, on the motion this row wrote, and saying them
+    /// twice would be two places to change one thing.
+    @ViewBuilder
+    private func fade() -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Fade")
+                .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(TitleTime.fadeStopsMS, id: \.self) { ms in
+                    fadeStop(ms, isOn: editorState.placedLayerFadeMS == ms)
+                }
+            }
+            Text("A fade is an Opacity animation on the layer, not a setting of its own: "
+                 + "it is in the Motion list, with a lane on the timeline, and it takes any "
+                 + "curve.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    private func fadeStop(_ ms: Int, isOn: Bool) -> some View {
+        Button {
+            editorState.setPlacedLayerFade(ms)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+                Text(TitleTime.fadeTitle(ms))
+                    .font(.system(size: 11))
+                Spacer(minLength: 4)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isOn && !editorState.canSetPlacedLayerFade(ms))
+        .playtestControl("Fade \(TitleTime.fadeTitle(ms))",
+                         detail: "the Time section's \(TitleTime.fadeTitle(ms)) fade")
+        .panelHelp(ms <= 0
+            ? "The words cut on and cut off."
+            : "The words arrive and leave over \(TitleTime.fadeTitle(ms)).")
     }
 
     // MARK: Which piece

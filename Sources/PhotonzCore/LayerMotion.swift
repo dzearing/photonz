@@ -491,6 +491,13 @@ public struct MotionTiming: Hashable, Codable, Sendable {
     /// When this motion is over, measured from the top of the cycle.
     public var endMS: Int { startMS + durationMS }
 
+    /// The same stretch, moved along the clock. What turns a motion's own
+    /// timing into where it happens on the DOCUMENT's timeline
+    /// (`Layer.motionShiftMS`).
+    public func shifted(byMS ms: Int) -> MotionTiming {
+        MotionTiming(startMS: startMS + ms, durationMS: durationMS)
+    }
+
     public mutating func setStart(_ ms: Int) { startMS = max(0, ms) }
     public mutating func setDuration(_ ms: Int) { durationMS = max(1, ms) }
 }

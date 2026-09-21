@@ -664,7 +664,14 @@ struct InspectorPanel: View {
         // with time under it: unlike Transition it does NOT need the clip to
         // have been cut, because an uncut recording is one piece and one piece
         // can be sped up.
-        if editorState.canRetimeAClip { set.insert(.speed) }
+        // ...and the same section is where a TITLE says when it is on screen
+        // (Next, `next-a-title-has-an-in-and-an-out`). One section rather than
+        // two, because "when is this on screen" and "how fast does this play"
+        // are one question asked of two kinds of layer, and a second section
+        // called Time would be a second place to look for it.
+        if editorState.canRetimeAClip || editorState.placedLayerInHand != nil {
+            set.insert(.speed)
+        }
         // Where the camera is pointed on the clip in hand (Next,
         // `next-punch-in-and-hold`). Present only where there is a picture with
         // time under it, which is what a camera can be moved on at all: a title

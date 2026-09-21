@@ -853,6 +853,10 @@ extension CanvasNSView {
         if let id = selectedLayerID, document?.canvasLayer(id: id) == nil {
             return "the picked layer is not on the canvas"
         }
+        if documentHasTime, let id = selectedLayerID,
+           document?.canvasLayer(id: id)?.isOnScreen(atTimeMS: documentTimeMS) == false {
+            return "the picked layer is not on screen at this moment"
+        }
         // The outline is Select-mode chrome, so a fresh arrow's first caption
         // — typed with the Arrow tool still in hand — has none at all.
         if tool != .select { return "the \(tool.rawValue) tool is in hand" }
@@ -993,6 +997,20 @@ extension CanvasNSView {
             return
         }
         guard let selectedLayer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) }) else {
+            layerOutlineLayer.isHidden = true
+            snapGuideLayer.isHidden = true
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            return
+        }
+        // **A layer with an in and an out draws no chrome at a moment it is not
+        // on screen.** Scrub off the hold an arrow was drawn on and the arrow
+        // goes, and its box and handles used to stay behind on the empty
+        // picture, which reads as the arrow being there and broken
+        // (`2026-09-21-hold-on-a-frame` audit). The way back to it is its own
+        // bar in the timeline and its row in the layers list, both of which are
+        // still there and still picked.
+        if documentHasTime, !selectedLayer.isOnScreen(atTimeMS: documentTimeMS) {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
