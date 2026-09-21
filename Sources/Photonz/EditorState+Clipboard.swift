@@ -332,7 +332,8 @@ extension EditorState {
         // Pasted over a screen means pasted ONTO it: the layer keeps the spot
         // it looks like it landed on and becomes part of that screen, the same
         // way a shape drawn there does.
-        perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
+        let moment = documentTimeMS
+        perform { [layer] in $0.addLayerDrawn(layer, atTimeMS: moment) }
         selectedLayerID = layer.id
         recordPaste(layer.id, at: layer.frame)
         return layer.id

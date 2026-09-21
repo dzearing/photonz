@@ -1,8 +1,10 @@
 import PhotonzCore
 import SwiftUI
 
-/// **Speed**: how fast the piece you have picked plays
-/// (`docs/design/mocks/pages/video-speed.html`, `next-speed-a-stretch`).
+/// **Time**: what the piece you have picked does with time — how fast it plays
+/// (`docs/design/mocks/pages/video-speed.html`, `next-speed-a-stretch`) and
+/// holding one of its frames (`pages/video-freeze-wt.html`,
+/// `next-hold-on-a-frame`).
 ///
 /// The study's own sentence decides where this lives: "retiming is a property
 /// of the selected clip, so nothing new appears in the chrome". So there is no
@@ -33,6 +35,12 @@ struct SpeedInspector: View {
                 if piece.isHeld {
                     held(piece)
                 } else {
+                    // The way IN to a hold, where a person is already looking
+                    // at the frame they want to keep. The menu has the same row
+                    // and the clickthrough puts it here, because freezing is a
+                    // thing you decide about the shot in your hand rather than
+                    // a thing you go to the menu bar for.
+                    holdThisFrame()
                     // What it is doing FIRST, then the list that changes it.
                     // The three sentences are the whole answer and they were
                     // last in the section when it was first built, which put
@@ -73,7 +81,27 @@ struct SpeedInspector: View {
         }
     }
 
-    // MARK: A held frame has no speed
+    // MARK: Holding the frame under the playhead
+
+    @ViewBuilder
+    private func holdThisFrame() -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Button("Hold This Frame") { editorState.holdFrameAtPlayhead() }
+                .controlSize(.small)
+                .disabled(!editorState.canHoldFrameAtPlayhead)
+                .playtestControl("Hold This Frame", detail: "the Time section")
+                .panelHelp("Stop on the frame under the playhead and hold it there. It drops "
+                           + "onto the timeline as an ordinary piece: trim it, move it, draw "
+                           + "over it.")
+            Text("A freeze is not a new kind of object. It is a piece whose in and out are the "
+                 + "same frame, which is why it trims, moves and takes a transition like any "
+                 + "other piece.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    // MARK: A held frame has no speed, it has a length
 
     @ViewBuilder
     private func held(_ piece: ClipPiece) -> some View {
@@ -86,14 +114,54 @@ struct SpeedInspector: View {
             Text(reading.lengthSentence)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("Drag either end of it on the timeline to hold it for longer or less long. "
-                 + "To retime a stretch instead, pick a piece that plays.")
+                .panelReadout(reading.lengthSentence)
+                .playtestField("Held length reading")
+            holdLengths(piece)
+            Text("Any other length is the hold's own end, dragged on the timeline. To retime a "
+                 + "stretch instead, pick a piece that plays.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
             Text(reading.sound.sentence)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// How long to hold it for: the same shape of list as the speeds below,
+    /// because it is the same shape of judgment. One click is one undo step,
+    /// which a dragged number would not be.
+    @ViewBuilder
+    private func holdLengths(_ piece: ClipPiece) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Hold for")
+                .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(ClipPieces.holdStopsMS, id: \.self) { ms in
+                    holdStop(ms, isOn: piece.lengthMS == ms)
+                }
+            }
+        }
+    }
+
+    private func holdStop(_ ms: Int, isOn: Bool) -> some View {
+        Button {
+            editorState.setHoldLengthInHand(ms)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+                Text(ClipPieces.holdTitle(ms))
+                    .font(.system(size: 11))
+                Spacer(minLength: 4)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isOn && !editorState.canSetHoldLength(ms))
+        .playtestControl("Hold for \(ClipPieces.holdTitle(ms))",
+                         detail: "the Time section's \(ClipPieces.holdTitle(ms)) hold")
+        .panelHelp("Hold this frame for \(ClipPieces.holdTitle(ms)). Everything after it moves "
+                   + "along, because a hold inserts time rather than covering it over.")
     }
 
     // MARK: The speeds
@@ -140,7 +208,7 @@ struct SpeedInspector: View {
         // only way to test that the panel row really retimes the piece rather
         // than that the menu behind it does.
         .playtestControl(ClipSpeed.title(percent),
-                         detail: "the Speed section's \(ClipSpeed.title(percent))")
+                         detail: "the Time section's \(ClipSpeed.title(percent))")
         .panelHelp("\(ClipSpeed.title(percent)). \(ClipSpeed.sound(atPercent: percent).sentence)")
     }
 

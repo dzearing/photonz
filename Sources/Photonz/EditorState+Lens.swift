@@ -140,7 +140,8 @@ extension EditorState {
               let layer = LensBuilder.layer(from: start, to: end, canvas: document.canvasSize,
                                             adjustment: lensToolAdjustment,
                                             content: lensToolContent) else { return }
-        perform { $0.addLayerDrawnOnFrame(layer) }
+        let moment = documentTimeMS
+        perform { $0.addLayerDrawn(layer, atTimeMS: moment) }
         finishCreating(layer.id)
     }
 

@@ -1,0 +1,69 @@
+{
+  "out": "/tmp/photonz-playtest/hold-on-a-frame-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-frame-worth-holding", "note": "an eight second screen recording open as one clip, with the playhead on the frame worth keeping. A freeze always starts here: the frame you are looking at is the frame you are about to hold" },
+    { "do": "reveal", "control": "Time section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "1-the-frame-worth-holding" },
+    { "do": "snapshot", "name": "hold-1-the-frame-worth-holding" },
+
+    { "do": "press", "control": "Hold This Frame" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-held", "note": "THE FIRST TEST: one click and the clip splits at the playhead with a two second still between the halves. It is an ordinary piece of the clip, badged hold on the bar, and the panel says what it is rather than showing a speed it does not have. The cut is two seconds longer, because holding a frame INSERTS time" },
+    { "do": "expect", "field": "Held reading", "reads": "A held frame, not a speed." },
+    { "do": "expect", "field": "Held length reading", "reads": "One frame, on screen for 2s." },
+    { "do": "panel", "stage": "2-held" },
+    { "do": "snapshot", "name": "hold-2-a-frame-held" },
+
+    { "do": "describe", "stage": "3-the-badge", "note": "THE SECOND TEST, and the one that stops a freeze reading as a crash: the canvas says which frame it is showing you. Time is moving, the picture is not, and the badge on the canvas says why" },
+    { "do": "expect", "field": "Held frame badge", "reads": "Held frame · 0:04" },
+    { "do": "snapshot", "name": "hold-3-the-canvas-says-which-frame" },
+
+    { "do": "reveal", "control": "Hold for 5s" },
+    { "do": "press", "control": "Hold for 5s" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-longer", "note": "THE THIRD TEST: a chosen length. One click holds the frame for five seconds instead of two, the bar grows, everything after it moves along, and the frame on screen is the same one it was" },
+    { "do": "expect", "field": "Held length reading", "reads": "One frame, on screen for 5s." },
+    { "do": "expect", "field": "Held frame badge", "reads": "Held frame · 0:04" },
+    { "do": "panel", "stage": "4-longer" },
+    { "do": "snapshot", "name": "hold-4-held-for-five-seconds" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 560], "to": [640, 430] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-pointed-at", "note": "THE FOURTH TEST, and the reason anybody holds a frame: something standing still to point at. The arrow is drawn with the same tool a screenshot takes, and its bar on the timeline lines up exactly with the hold, because that is where the playhead was when it was drawn" },
+    { "do": "snapshot", "name": "hold-5-an-arrow-on-the-held-frame" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-outside-the-hold", "note": "THE FIFTH TEST: off the hold, the arrow is gone and the badge with it. The mark belongs to the frame it was pointing at rather than to the whole recording, which is what stops an annotation outliving the thing it explained" },
+    { "do": "snapshot", "name": "hold-6-off-the-hold-the-arrow-is-gone" },
+
+    { "comment": "What plays is what EXPORTS, timed rather than eyeballed: eight seconds of recording plus five seconds of one frame is a thirteen second file. A hold that came out as one long frame, or that a player stalled on, would not read back at this length.", "do": "writeVideo", "name": "hold-thirteen-seconds", "format": "mp4", "seconds": 13.0, "within": 0.4, "copied": false },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-undone", "note": "THE SIXTH TEST: the arrow, the length and the hold itself are three ordinary history steps. Command Z three times and the recording is one uncut clip again" },
+    { "do": "snapshot", "name": "hold-7-undone" }
+  ]
+}

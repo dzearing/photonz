@@ -114,10 +114,16 @@ enum InspectorSectionID: String, CaseIterable {
     // is the moment one piece stops and the next starts
     // (`docs/design/video-transitions.md`).
     case transition
-    // How fast the picked PIECE plays (Next, `next-speed-a-stretch`). Right
-    // under Transition because they are the two sections about what is in your
-    // hand on the timeline rather than about the whole layer: one is the join
-    // between two pieces, this is a piece.
+    // What the picked PIECE does with time: how fast it plays
+    // (`next-speed-a-stretch`), and holding one of its frames
+    // (`next-hold-on-a-frame`). Right under Transition because they are the two
+    // sections about what is in your hand on the timeline rather than about the
+    // whole layer: one is the join between two pieces, this is a piece.
+    //
+    // Named Time rather than Speed because the freeze clickthrough is right
+    // that they are one thing: "everything about how a clip behaves in time
+    // lives in one place: freeze, speed, and hold". Two sections here would be
+    // two places to look for one question.
     case speed
     // How loud the picked layer plays and what shapes it (Next,
     // `next-sound-on-the-timeline`). Directly above Motion because they are the
@@ -163,7 +169,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .motion: "Motion"
         case .reframe: "Reframe"
         case .transition: "Transition"
-        case .speed: "Speed"
+        case .speed: "Time"
         case .sound: "Sound"
         case .shadow: "Shadow"
         case .library: "Library"

@@ -383,6 +383,18 @@ struct EditorView: View {
                     // by the whole editor: see `IconPreviewsOverlay`.
                     IconPreviewsOverlay()
                 }
+                .overlay(alignment: .topTrailing) {
+                    // Why the picture has stopped moving while the clock has
+                    // not (`HeldFrame.swift`). A frozen frame and a stalled
+                    // player look exactly alike, and the difference is the
+                    // whole of whether somebody trusts what they are watching.
+                    //
+                    // Top RIGHT rather than the clickthrough's bottom left: the
+                    // bottom of this canvas already carries the tool bar, the
+                    // tool settings capsule and the notice pill, and the top
+                    // left is the icon previews.
+                    if let held = editorState.heldFrameNow { heldFrameBadge(held) }
+                }
                 .overlay(alignment: Self.alignment(for: editorState.measureLegendAnchor)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
@@ -559,6 +571,33 @@ struct EditorView: View {
             .padding(.bottom, EditorChromeLayout.aboveToolBar(
                 toolSettingsHeight: editorState.toolSettingsSize.height))
             .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+
+    /// The one line the canvas says while a frame is being held: which frame it
+    /// is, and how long it is up for.
+    ///
+    /// It names the FRAME rather than the moment, because the question somebody
+    /// looking at a still picture asks is "what am I looking at", and the answer
+    /// is the same wherever the playhead has got to inside the hold.
+    private func heldFrameBadge(_ held: HeldFrame) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "snowflake")
+                .font(.system(size: 11, weight: .semibold))
+            Text(held.badge)
+                .font(.system(size: 11, weight: .medium))
+                .monospacedDigit()
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .glassEffect(.regular, in: .capsule)
+        .padding(12)
+        // Read, never pressed: the picture underneath it still takes the
+        // pointer, so an arrow can be drawn through the corner it sits in.
+        .allowsHitTesting(false)
+        .playtestField("Held frame badge")
+        .panelReadout(held.badge)
+        .transition(.opacity)
     }
 
     /// The words at the end of a notice's line that are also the way to what

@@ -621,7 +621,49 @@ scrubbed to the frame you are looking at, so a tool to pick up and put down
 buys only cutting somewhere the playhead is not — which costs you the aim
 anyway.
 
-### 11.6 What §11 does not settle
+### 11.6 A frame held (built 2026-09-21)
+
+**A freeze is not a special object: it is a piece whose in and out are the same
+frame**, which is the one sentence `video-freeze-wt` and this section share. It
+is `ClipPiece` at `speedPercent` nought, so it trims, moves, takes a transition,
+throws away and undoes through exactly the calls every other piece uses, and the
+timeline draws it as a bar badged `hold` rather than as a second kind of object.
+
+Four things the surface adds to that model, and nothing else:
+
+- **The way in is where you are looking.** Hold This Frame is a button in the
+  Time section and a row in the Video menu; both hold the frame under the
+  playhead, because the frame you are watching is the frame you mean.
+- **A chosen length**, from a short list — 1, 2, 3, 5 and 10 seconds
+  (`ClipPieces.holdStopsMS`) — for the same reason the speeds are a list. Any
+  other length is the hold's own end dragged on the timeline, which has no
+  ceiling: a frame is held for as long as it needs.
+- **The picture says it is frozen.** A badge at the top right of the canvas
+  names the frame being held (`HeldFrame.badge`). A stopped picture and a
+  stalled one look identical, and the difference is whether somebody trusts what
+  they are watching.
+- **A mark drawn on a held frame is on screen for exactly that hold.** Every
+  drawing tool lands through `PhotonzDocument.addLayerDrawn(_:atTimeMS:)`, so an
+  arrow drawn while the playhead stands in a hold takes the hold's in and out,
+  gets its own bar lined up with it on the timeline, and animates over it
+  because a layer's motion is read on its own clock. Pointing at the frozen
+  frame is the reason people freeze one, and an arrow that outlives the frame it
+  was pointing at is an arrow pointing at the wrong thing. Where the picture is
+  playing, nothing changes: a mark stays up for the whole document as before.
+
+**A hold pushes the PICTURE.** Sound on its own layer runs straight on
+underneath it, which is what you want when you are talking over the frozen
+frame, and it means a detached voice and the picture after the hold drift apart
+on purpose. `video-freeze-wt` offers Everything or Picture only as a segmented
+choice; only Picture only is built, because Everything is a ripple insert across
+the whole document rather than across one clip's pieces
+(`say-whether-a-held-frame-pushes-the-sound-too`).
+
+What the clickthrough draws and this does not: the **hatched bar**. The bar
+already badges a piece with what is unusual about it, and a second visual
+language on the same bar is a lesson to learn for nothing.
+
+### 11.7 What §11 does not settle
 
 - **A hole INSIDE a clip cannot be written down**, so there is no "lift leaving
   a gap". That needs a model change and a card first.
@@ -637,8 +679,13 @@ anyway.
 - **A speed is chosen from a short list**, not typed: 25, 50, 100, 200, 400,
   1000 and 3000 per cent (`ClipSpeed.stops`). It runs to thirty times because
   the job is a two minute wait becoming four seconds. The list is in Video ▸
-  Speed and in the **Speed** section of the Properties panel, which is the same
+  Speed and in the **Time** section of the Properties panel, which is the same
   call and so the same single undo step (`SpeedInspector`, built 2026-09-21).
+- **That section is called Time, not Speed** (renamed 2026-09-21). It carries
+  everything the picked PIECE does with time — the speeds, and holding one of
+  its frames — because `video-freeze-wt` is right that they are one question:
+  "everything about how a clip behaves in time lives in one place: freeze,
+  speed, and hold". Two sections would be two places to look for one thing.
 - **Speed varies across a clip by the clip being in PIECES**, each with its own
   speed, rather than by a curve laid over the top. `video-speed` draws a speed
   curve with draggable stops and a ramp between them; a ramp is a cinematic

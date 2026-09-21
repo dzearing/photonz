@@ -41,7 +41,14 @@ extension EditorState {
         if let document {
             layer = document.wearingArmedColorStyles(layer, styles: annotationStyles)
         }
-        perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
+        // ...onto the frame in front of you, which in a document with time
+        // means the MOMENT in front of you too: a mark made on a held frame is
+        // on screen for exactly that hold (`HeldFrame.swift`). Pointing at the
+        // frozen frame is the usual reason for freezing one, and an arrow that
+        // outlives the frame it was pointing at is an arrow pointing at the
+        // wrong thing. Anywhere the picture is playing, nothing changes.
+        let moment = documentTimeMS
+        perform { [layer] in $0.addLayerDrawn(layer, atTimeMS: moment) }
         // ...and if the name could not come along, one line saying so, rather
         // than a shape that is quietly not the colour the swatch promised.
         // After the edit, so it wins the canvas slot the way a break does.
@@ -322,7 +329,8 @@ extension EditorState {
         // where this is the Lens set to Magnify, that word is Magnify; where it
         // is still the Zoom Callout, it is the Zoom it has always been.
         if Experiments.shared.lensEnabled { named.name = LensKind.magnify.title }
-        perform { $0.addLayerDrawnOnFrame(named) }
+        let moment = documentTimeMS
+        perform { $0.addLayerDrawn(named, atTimeMS: moment) }
         finishCreating(named.id)
     }
 

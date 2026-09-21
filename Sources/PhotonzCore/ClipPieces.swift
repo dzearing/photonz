@@ -316,6 +316,22 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     /// is long enough to read and short enough to drag out rather than in.
     public static let defaultHoldMS = 2000
 
+    /// The lengths a hold is offered in one click.
+    ///
+    /// A short list rather than a number to type, for the same reason the
+    /// speeds are one (`ClipSpeed.stops`): how long to hold a frame is a
+    /// judgment you make by watching it, and the judgment is "longer" long
+    /// before it is "three point four seconds". Anything not on the list is a
+    /// drag on the hold's own end in the timeline, which has no floor but the
+    /// shortest piece and no ceiling at all.
+    ///
+    /// Nothing here is a limit: `setHoldLength` takes any length, and a frame
+    /// is held for as long as it needs.
+    public static let holdStopsMS = [1000, 2000, 3000, 5000, 10_000]
+
+    /// What a hold length is called where it is offered.
+    public static func holdTitle(_ ms: Int) -> String { ClipSpeed.seconds(ms) }
+
     public init(pieces: [ClipPiece], sourceLengthMS: Int? = nil) {
         self.pieces = pieces.isEmpty
             ? [ClipPiece(sourceInMS: 0, lengthMS: ClipPiece.shortestMS)]
@@ -564,6 +580,24 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         return true
     }
 
+    /// Hold a frame for a chosen length rather than the one it was given.
+    ///
+    /// The same call the bar's own end handle makes, because it is the same
+    /// edit: a hold is a piece, and its length is its end edge. Everything
+    /// after it moves along, by the one gap rule.
+    ///
+    /// Refused for a piece that PLAYS — that is a speed, not a hold — and for
+    /// the length it already has, so the panel never records an undo step that
+    /// changed nothing. There is no ceiling: a frame is held for as long as it
+    /// needs.
+    @discardableResult
+    public mutating func setHoldLength(ofPiece index: Int, toMS length: Int) -> Bool {
+        guard let piece = piece(at: index), piece.isHeld else { return false }
+        let wanted = max(ClipPiece.shortestMS, length)
+        guard wanted != piece.lengthMS else { return false }
+        return trimEnd(ofPiece: index, byMS: wanted - piece.lengthMS)
+    }
+
     /// Give a piece a speed. It keeps the frames it reads and changes how long
     /// they take, so everything after it moves along.
     ///
@@ -682,6 +716,12 @@ extension PhotonzDocument {
             guard ms >= time.inMS, ms < time.outMS else { return false }
             return pieces.holdFrame(atMS: ms - time.inMS, forMS: length)
         }
+    }
+
+    /// Hold one of a clip's frames for a chosen length.
+    @discardableResult
+    public mutating func setHoldLength(_ id: UUID, ofPiece index: Int, toMS length: Int) -> Bool {
+        editClip(id) { pieces, _ in pieces.setHoldLength(ofPiece: index, toMS: length) }
     }
 
     /// Give a piece of a clip a speed.

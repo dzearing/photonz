@@ -52,7 +52,7 @@ extension EditorState {
     }
 
     /// The piece itself, for a surface that wants to read it rather than edit
-    /// it: the Speed section reads its length, its speed and its silence
+    /// it: the Time section reads its length, its speed and its silence
     /// straight off it (`SpeedInspector`).
     var clipPieceInHandPiece: ClipPiece? {
         guard let index = clipPieceInHand else { return nil }
@@ -183,6 +183,43 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// What is being held at the moment the canvas is drawing, or nil while the
+    /// picture is playing. The canvas says so on the picture
+    /// (`EditorView.heldFrameBadge`), because a picture that has stopped moving
+    /// while the clock carries on looks exactly like one that has stalled.
+    var heldFrameNow: HeldFrame? {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime else { return nil }
+        return document?.heldFrame(atTimeMS: documentTimeMS)
+    }
+
+    /// How long the held piece in hand is on screen for, or nil where the piece
+    /// in hand is one that plays.
+    var holdLengthInHand: Int? {
+        guard let piece = clipPieceInHandPiece, piece.isHeld else { return nil }
+        return piece.lengthMS
+    }
+
+    func canSetHoldLength(_ ms: Int) -> Bool {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime,
+              let current = holdLengthInHand else { return false }
+        return current != ms
+    }
+
+    /// Hold the frame in hand for a chosen length. Everything after it moves
+    /// along, exactly as it does when the hold's own end is dragged on the
+    /// timeline — this is the same edit, reached by clicking rather than by
+    /// dragging.
+    func setHoldLengthInHand(_ ms: Int) {
+        endTrimBeforeCutting()
+        guard canSetHoldLength(ms), let id = clipInHandID,
+              let index = clipPieceInHand else { return }
+        pauseDocument()
+        perform { $0.setHoldLength(id, ofPiece: index, toMS: ms) }
+        selectClipPiece(layerID: id, index: index)
+        documentTimeMS = min(documentTimeMS, lastDocumentTimeMS)
+        documentMomentChanged()
+    }
+
     // MARK: Retiming
 
     /// The speeds on offer, which live in the model beside everything else a
@@ -192,7 +229,7 @@ extension EditorState {
 
     /// What the piece in hand is playing at, or nil where there is no piece to
     /// ask about. A held frame answers nil: it reads no stretch of the
-    /// recording, so it has no speed. The Speed section reads the piece itself
+    /// recording, so it has no speed. The Time section reads the piece itself
     /// through `clipPieceInHandPiece`, so it can say "a held frame" rather
     /// than showing nothing at all.
     var clipSpeedInHand: Int? {
@@ -202,7 +239,7 @@ extension EditorState {
     }
 
     /// Whether there is anything to retime at all, which is what decides
-    /// whether the Speed section is in the panel.
+    /// whether the Time section is in the panel.
     ///
     /// Any clip with time under it, cut or not: an uncut recording is one
     /// piece and one piece can be sped up. That is looser than Transition next

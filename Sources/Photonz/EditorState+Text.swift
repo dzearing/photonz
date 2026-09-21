@@ -294,7 +294,8 @@ extension EditorState {
                                                   hugsShortWords: hugsShortWords)
             let layer = wearingArmedTextStyle(
                 TextBuilder.layer(content: content, at: origin, naturalSize: size))
-            perform { $0.addLayerDrawnOnFrame(layer) }
+            let moment = documentTimeMS
+            perform { $0.addLayerDrawn(layer, atTimeMS: moment) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.
             finishCreating(layer.id)
