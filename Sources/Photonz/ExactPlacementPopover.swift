@@ -40,7 +40,14 @@ extension View {
     /// it inside what is on screen so the arrow never points past the window.
     @MainActor
     func exactPlacementPopover(_ editorState: EditorState) -> some View {
-        popover(isPresented: Binding(get: { editorState.isExactPlacementPresented },
+        // ...and it stays open only while there is still something to place.
+        // Step into a copy while the numbers are up and a PIECE becomes the
+        // selection, which owns neither its place nor its size: the fields
+        // would stand there over it taking numbers that get written straight
+        // back over on the next redraw. So the same test that turns the
+        // command on keeps it open (`canOpenExactPlacement`).
+        popover(isPresented: Binding(get: { editorState.isExactPlacementPresented
+                                            && editorState.canOpenExactPlacement },
                                      set: { editorState.isExactPlacementPresented = $0 }),
                 attachmentAnchor: .rect(.rect(editorState.exactPlacementAnchor)),
                 arrowEdge: .trailing) {

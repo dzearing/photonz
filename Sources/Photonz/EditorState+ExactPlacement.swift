@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import PhotonzCore
 
 /// Typing an exact position or size, on demand (`ExactPlacement`).
@@ -15,8 +16,19 @@ extension EditorState {
     /// for the arrow keys and for the fields themselves.
     var exactPlacementSubject: ExactPlacement.Subject? {
         guard Experiments.shared.geometryFieldsEnabled else { return nil }
-        return ExactPlacement.subject(pickedLayers: actionableLayerIDs.count,
+        return ExactPlacement.subject(pickedLayers: placeableLayerIDs.count,
                                       hasMarquee: regionGeometry != nil)
+    }
+
+    /// The picked layers a number could actually land on. A piece inside a
+    /// copy owns nothing — its size and its place come from the original and
+    /// are written back over on the next redraw — so it is left out, exactly
+    /// as the canvas leaves it without handles (`offersOwnHandles`). Four
+    /// fields that refuse whatever you type into them are worse than a
+    /// command that is off, and the piece has its own way forward on the
+    /// panel: Edit Original.
+    var placeableLayerIDs: Set<UUID> {
+        actionableLayerIDs.filter { componentPiece(of: $0) == nil }
     }
 
     var canOpenExactPlacement: Bool { exactPlacementSubject != nil }

@@ -763,6 +763,10 @@ final class EditorState {
             // when the field opened, and those are not the layers any more
             // (Next, `next-styles`).
             if multiSelectedLayerIDs != oldValue {
+                // The line a join or a close left behind is about the layers
+                // that were picked when it ran, so picking a different handful
+                // takes it down, exactly as changing the single pick does.
+                if turnedIntoPathNotice != nil { turnedIntoPathNotice = nil }
                 colorStyleNaming = nil
                 isNamingTextStyle = false
                 namingEffectStyleRow = nil

@@ -88,7 +88,7 @@
     { "do": "expectLayers", "count": 4 },
 
     { "do": "selectRow", "row": "Path" },
-    { "do": "selectRow", "row": "Path 3", "modifiers": ["shift"] },
+    { "comment": "Command rather than Shift: Shift takes the RUN of rows between the two, which would bring Path 2 along, and Path 2 does meet Path. Two rows apart is what this half is about.", "do": "selectRow", "row": "Path 3", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "rightClick", "on": "Path 3", "choose": "Join Paths…" },
     { "do": "wait", "seconds": 1.2 },

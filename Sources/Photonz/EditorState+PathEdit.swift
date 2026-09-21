@@ -51,11 +51,17 @@ extension EditorState {
     /// to be excluded: it cannot be reshaped, and the chip is the only thing
     /// that can say so instead of leaving the points quietly missing.
     private var pathEditChipLayer: Layer? {
-        guard Experiments.shared.reshapePathEnabled,
-              activeTool == .select || (activeTool == .pen && Experiments.shared.penEnabled),
+        guard pathEditChipIsAllowed,
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
               layer.path != nil, !layer.isLocked else { return nil }
         return layer
+    }
+
+    /// Whether the chip may be up at all: a release that can reshape a path,
+    /// and a hand on a tool that shows points.
+    private var pathEditChipIsAllowed: Bool {
+        Experiments.shared.reshapePathEnabled
+            && (activeTool == .select || (activeTool == .pen && Experiments.shared.penEnabled))
     }
 
     /// The line on the chip under the canvas while a path's points are on show.
@@ -65,7 +71,16 @@ extension EditorState {
     /// a turned path has no points and so the canvas has nothing to announce:
     /// the line it last pushed is about the shape as it was before the turn.
     var pathEditHintText: String {
-        guard let layer = pathEditChipLayer else { return PathEditHint.opening }
+        // A line left behind by a join or a close speaks for the SELECTION,
+        // and a join is only ever asked for with two or more paths picked —
+        // which means no single primary pick, which meant no chip, which meant
+        // "Nothing joined: no two ends are within 2 pt of each other" could
+        // never be read by anybody. Asking Join Paths on two runs that do not
+        // meet then did nothing and said nothing, which is the one thing the
+        // command promised not to do (`join-two-pen-paths-walk`, 2026-09-20).
+        guard let layer = pathEditChipLayer else {
+            return turnedIntoPathNotice ?? PathEditHint.opening
+        }
         guard layer.transform.isIdentity else { return PathEditHint.turned }
         // A shape that has JUST been turned says so first, because the question
         // that would have said it can be silenced and then nothing does.
@@ -76,5 +91,7 @@ extension EditorState {
 
     /// Whether that chip is up: a path picked, with Select or the Pen in hand,
     /// in a release that can reshape one.
-    var showsPathEditHint: Bool { pathEditChipLayer != nil }
+    var showsPathEditHint: Bool {
+        pathEditChipLayer != nil || (pathEditChipIsAllowed && turnedIntoPathNotice != nil)
+    }
 }
