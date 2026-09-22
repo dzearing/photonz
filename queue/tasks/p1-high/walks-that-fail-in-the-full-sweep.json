@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-21T10:00:48.057Z",
+  "updated": "2026-09-22T04:57:23.937Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -106,17 +106,9 @@
       "note": "sweep 2026-09-14T05:18:56Z: 3 failing (contents-for-several-walk, dock-picked-first-walk, layers-lazy-rows-walk)"
     },
     {
-      "t": "2026-09-21T10:00:48.055Z",
-      "note": "... 85 earlier entries elided",
-      "elided": 85
-    },
-    {
-      "t": "2026-09-19T17:28:22.686Z",
-      "note": "sweep 2026-09-19T17:28:22Z: nothing failing in the 252 of 530 walks that ran"
-    },
-    {
-      "t": "2026-09-19T18:44:16.685Z",
-      "note": "sweep 2026-09-19T18:44:16Z: nothing failing in the 252 of 530 walks that ran"
+      "t": "2026-09-22T04:57:23.936Z",
+      "note": "... 87 earlier entries elided",
+      "elided": 87
     },
     {
       "t": "2026-09-19T19:01:40.512Z",
@@ -505,6 +497,14 @@
     {
       "t": "2026-09-21T10:00:48.054Z",
       "note": "Batch 14 (bf03ef4d): panelMenu now ranks the words on a menu, then its row, then the register, so it opens the menu expect reads and the five text-style walks pass untouched; a synthesized press goes through the queue again so NSApp.currentEvent is set for it, which un-hangs zoom-readout-double-click-walk (180s hang to 28s ok, proved against 81567e25 that batch 13 caused it); three walks corrected. Verified: 8592 tests pass, all 80 panelMenu walks run twice green, a 48-walk sample of the rest green but for two tutorial cards a lock does not draw. One walk left, tutorial-start-on-an-icon-frame-walk, and only an unlocked Mac can read it. Full sweep requested."
+    },
+    {
+      "t": "2026-09-22T04:57:23.885Z",
+      "note": "RE-TRIAGE against the panelMenu change (03a1d1c4), for the 23 walks this task carries as 'not run this time and still failing'. panelMenu is no longer refused under a lock, so 42 walks the sweep has been counting as unknown now run, and ten of the 23 are among them. All ten were run today, unforced, with somebody logged in: style-on-a-copy-walk ok, text-style-row-drop-walk ok, tick-leads-walk ok, colour-onto-an-off-part-walk ok, copy-a-look-walk ok, icon-export-animated-walk ok, motion-one-play-rule-walk ok, motion-pivot-walk ok, motion-strip-way-back-walk ok, motion-timing-strip-walk ok (42 passed, 0 failed, 11m 14s over the whole set of 42). Those ten were only ever unread, not broken, and the next sweep should drop them. The other thirteen are still stopped by something else: turn-two-shapes-into-pictures, columns-follow-the-screen, combine-shapes, component-whole-path, join-two-pen-paths, measure-row-menu, motion-colour-picker, motion-loop-preview, motion-pivot-in-a-corner, motion-swings-a-layer (rightClick, menus or a panelMenu that wants a picture), plus the three tutorial walks a lock will not draw a card for."
+    },
+    {
+      "t": "2026-09-22T04:57:23.935Z",
+      "note": "Read the sweep record before believing it. queue/sweep/latest.json right now is the run of 2026-09-22T02:13:14Z, which stopped being able to launch the app 117 walks in: every walk after 'distance-parking-preview' failed in 0s with 'no done.json', 436 of them, and sweep.sh status prints all 438 as failing. Four of those names were run on their own today and pass in about 20s each. Filed as a-sweep-that-goes-blind-says-so-instead-of-faili; until that lands, this task's own notes block is the honest record and latest.json is not."
     }
   ],
   "walks": [

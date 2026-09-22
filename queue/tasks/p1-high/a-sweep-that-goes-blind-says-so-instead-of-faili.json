@@ -1,0 +1,29 @@
+{
+  "id": "a-sweep-that-goes-blind-says-so-instead-of-faili",
+  "title": "A sweep that goes blind says so instead of failing four hundred walks",
+  "goal": "The whole-set walk run is the loop's only report on whether the app still works. On the night of 2026-09-21 the app under test stopped launching a third of the way through one, and every walk after that point was written down as broken: 438 of 553. That result is now what the loop tells every runner is wrong with the app, and almost none of it is real. A run that stops being able to start the app should stop and say the run went blind, not hand back hundreds of failures nobody can act on.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 340,
+  "status": "pending",
+  "release": "next",
+  "area": "infra",
+  "created": "2026-09-22T04:46:51.236Z",
+  "updated": "2026-09-22T04:46:51.239Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED from the artefacts, 2026-09-22.\n\n  queue/bin/sweep.sh status\n  -> Last sweep 2026-09-22T02:13:14Z: 115/553 walks passed in 26m.\n     Failing: copy-own-color-walk, delete-key-drops-a-piece-walk, distance-parking-preview, ... (438 names)\n\nThe run log says what really happened. queue/sweep/2026-09-21-184741.log runs normally for 117 walks and then every single walk from 'distance-parking-preview' on fails in 0s:\n\n  decided-size-walk                          13s  ok\n  delete-layer-key-walk                       9s  ok\n  distance-parking-preview                    0s  FAILED  no done.json\n  distance-three-clicks                       0s  FAILED  no done.json\n  ... 436 of them\n\n  grep -c 'no done.json' queue/sweep/2026-09-21-184741.log  -> 436\n\n0s and no done.json is the app never starting, not a walk failing: the whole run took 25m for 553 walks where a real sweep takes 105m for 544. Spot-checked four of the names against the real thing on 2026-09-22: border-offset-walk, corner-radius-rounds-walk, ellipse-border-walk and glow-effect-walk all pass on their own in about 20s.\n\nThe guard that exists only covers a run that never started at all: sweep-record.mjs has 'const nothingToSay = r.walks === 0 && r.couldNotRun === 0'. A run that answers 115 walks and then goes blind sails past it and overwrites queue/sweep/latest.json. The standing task's own notes block escaped (it still carries the 2026-09-21T08:42 sweep), so what is poisoned is latest.json and everything that reads it, which is sweep.sh status and the dashboard.\n\nWhat made the app stop launching that night is a second question and not the point of this task: the point is that the sweep could not tell 'the app will not start' from 'the app is broken in 438 ways', and the runner contract sends people to that list.",
+  "acceptance": [
+    "A run in which the app stops launching is recorded as blind, not as a list of failing walks",
+    "queue/bin/sweep.sh status does not name a walk as failing when the run could not start the app for it",
+    "There is a drill under queue/bin that feeds a run log with a run of 'no done.json' in it and checks the run is not written down as the state of the walk set",
+    "The poisoned record from 2026-09-22T02:13:14Z is replaced by the last run that really covered the set"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T04:46:51.238Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}
