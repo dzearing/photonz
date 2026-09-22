@@ -158,11 +158,13 @@ struct GroupChromeTests {
     /// The Nav Bar on the Library shelf, dropped and dragged wider. Everything
     /// the task asked for is here: nothing typed into the Layout section, and
     /// the four pieces still doing what a bar's four pieces do.
+    /// A drag off the shelf hands back an INSTANCE and stands the original
+    /// clear of it, and it is the ORIGINAL whose chrome is being read here
+    /// (`FirstDropIsAnInstanceTests`).
     private func droppedBar() -> Layer? {
         var document = PhotonzDocument(canvasSize: CGSize(width: 900, height: 700))
-        guard let id = document.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
-        else { return nil }
-        return document.layer(id: id)
+        document.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
+        return document.mainComponent(componentID: StarterComponent.navBar.componentID)
     }
 
     @Test("The Nav Bar arrives as a row")
@@ -207,9 +209,12 @@ struct GroupChromeTests {
     @Test("Controls added to the Nav Bar never land on top of its title")
     func addedControlsNeverCoverTheTitle() throws {
         var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 900, height: 700)))
-        var placed: UUID?
-        history.perform { placed = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        guard let barID = placed, let box = history.current.canvasBounds(of: barID)
+        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        // Controls are added to the ORIGINAL bar, because nothing goes inside
+        // an instance of one (`FirstDropIsAnInstanceTests`).
+        guard let barID = history.current
+                .mainComponent(componentID: StarterComponent.navBar.componentID)?.id,
+              let box = history.current.canvasBounds(of: barID)
         else { Issue.record("the bar did not land"); return }
         // Let go at the far end of the bar, which is where a person adding a
         // control to a bar reaches for.

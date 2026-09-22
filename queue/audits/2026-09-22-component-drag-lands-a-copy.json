@@ -1,0 +1,29 @@
+{
+  "feature": "Dragging a component hands you a copy, not the original",
+  "epic": "ui-components",
+  "summary": "Every drag of a component off the Library shelf now puts down a copy, the first one included, and the original arrives beside it clear of where you let go. Clicking what you just dropped gives the short panel, pick a look and fill in the values, instead of the authoring wall it used to give the first time.",
+  "setup": "Photonz Dev, a blank picture, release Next. Open the Library and switch it to Comps. Nothing to turn on.",
+  "try": [
+    { "do": "Drag the Button tile onto an empty part of the canvas and let go." },
+    { "do": "Read the line that appears along the bottom of the canvas." },
+    { "do": "Look at the two buttons: the one you dropped, and the one beside it wearing four small diamonds on its name chip.", "shot": "2026-09-22-component-drag-copy-panel.png" },
+    { "do": "Scroll the right hand panel up to the Component section and read what it offers." },
+    { "do": "Press Edit Original in that section and read the same section again.", "shot": "2026-09-22-component-drag-original-panel.png" },
+    { "do": "Drag the Button tile on a second time and check the panel reads exactly as it did the first time." },
+    { "do": "Right click the copy and choose Detach Instance to make it unique." }
+  ],
+  "evaluate": [
+    "Two buttons appear where you dropped one. Does the line along the bottom explain that fast enough, or does the second button still read as a mistake?",
+    "Is one gap to the right the correct place for the original, or should it go somewhere further out of the way?",
+    "The Component section is 171 points tall on a copy and 194 on the original. Is that difference big enough to feel like two different jobs, or does the copy's panel still read like a cut down version of the same thing?",
+    "Is Edit Original the right way back, or would you expect to reach the original from the canvas rather than from the panel?",
+    "Detach Instance is what the right click menu calls making a copy unique. Is that the word you want on it?"
+  ],
+  "rough": [
+    "The original lands immediately to the right of the drop, one 24 point gap away, so the first thing you see is two identical buttons. The only lasting difference is four diamonds instead of one on the name chip. The line along the bottom, Copy placed, The original of Button arrived beside it, was added for exactly this and it fades. Left in the log rather than filed: the placement is what the answered decision asked for and changing it is the user's call, not a defect.",
+    "After a drop the right hand panel scrolls itself to the Library, so the Component section about the thing you just placed sits above the top of the panel: measured at 1240x900 it spans -203 to -32 in a viewport of 841, entirely off screen. That is not new and not caused by this change, but it is the first thing standing between a person and picking a variant. Filed as the-panel-jumps-to-the-shelf-after-a-drop-instead-of-the-thing-you-dropped.",
+    "The whole dock is 1207 points tall for a copy and 1306 for the original, but only 23 of that 99 point difference is the Component section. Most of it is Layout, which shows a copy read-only rows and the original real controls. The authoring wall is genuinely gone; the copy's panel is not dramatically shorter, because the starter Button exposes one property.",
+    "A copy's Layout section still prints the original's arrangement as dead grey rows. That was chosen deliberately by an earlier task, a copy with no Layout at all reads as a bug, and the panel-sections control lets it be switched off. Left as it is.",
+    "Nothing goes inside a copy, so dragging a Nav Bar on and then dropping a Badge inside it now means dropping the Badge into the original beside it, not into the bar you just placed. That is how a component works everywhere else, and Detach Instance is the way out, but it is a thing a person could have done before and now cannot."
+  ]
+}

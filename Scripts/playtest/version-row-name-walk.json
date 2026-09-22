@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/version-row-name",
-  "seed": "A component called Save button grows a second variant. Both drawings sit in the layers list carrying the same name, so each row has to show the name AND which variant it is, at the dock's own width. The name used to be squeezed out between the mark and a variant chip until the row read as one ellipsis, so this walk photographs those two rows, and one of them being renamed. It then places a copy and switches it, because a copy showing a variant other than the first has to say so in its row as well.",
+  "seed": "A component called Save button grows a second variant. Both drawings sit in the layers list carrying the same name, so each row has to show the name AND which variant it is, at the dock's own width. The name used to be squeezed out between the mark and a variant chip until the row read as one ellipsis, so this walk photographs those two rows, and one of them being renamed. It then places a copy and switches it, because a copy showing a variant other than the first has to say so in its row as well. Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right, so this walk steps back to the original before it authors anything (FirstDropIsAnInstanceTests).",
   "setup": {
     "forget": [
       "panel",
@@ -41,6 +41,14 @@
         360,
         220
       ]
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "wait",

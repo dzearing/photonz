@@ -53,8 +53,11 @@ struct StarterSizingTests {
     @Test("A longer card title makes the card taller, and never wider")
     func aLongerTitleGrowsTheCardDownward() {
         var history = History(document: document())
-        var cardID: UUID?
-        history.perform { cardID = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag hands back an instance, and an instance's
+        // pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let cardID = history.current
+            .mainComponent(componentID: StarterComponent.card.componentID)?.id
         guard let cardID, let before = history.current.layer(id: cardID),
               let title = piece(before, "Title"), let body = piece(before, "Body")
         else { Issue.record("no card"); return }
@@ -90,8 +93,11 @@ struct StarterSizingTests {
     @Test("A copy told to say more grows too, and only the copy")
     func aCopyGrowsWithItsOwnWording() {
         var history = History(document: document())
-        var mainID: UUID?
-        history.perform { mainID = $0.insertStarterComponent(.card, at: CGPoint(x: 250, y: 200)) }
+        history.perform { _ = $0.insertStarterComponent(.card, at: CGPoint(x: 250, y: 200)) }
+        // The ORIGINAL: a drag hands back an instance, and an instance's
+        // pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let mainID = history.current
+            .mainComponent(componentID: StarterComponent.card.componentID)?.id
         var copyID: UUID?
         history.perform {
             copyID = $0.insertComponentInstance(of: StarterComponent.card.componentID,
@@ -160,8 +166,11 @@ struct StarterSizingTests {
     @Test("Hiding a card's picture closes the space it held")
     func hidingThePictureShortensTheCard() {
         var history = History(document: document())
-        var cardID: UUID?
-        history.perform { cardID = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag hands back an instance, and an instance's
+        // pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let cardID = history.current
+            .mainComponent(componentID: StarterComponent.card.componentID)?.id
         guard let cardID, let card = history.current.layer(id: cardID),
               let picture = piece(card, "Picture"), let title = piece(card, "Title")
         else { Issue.record("no card"); return }
@@ -183,8 +192,11 @@ struct StarterSizingTests {
         // So a longer title re-centres in the same room rather than growing
         // sideways out of the bar (`GroupChromeTests`).
         var history = History(document: document())
-        var barID: UUID?
-        history.perform { barID = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag hands back an instance, and an instance's
+        // pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let barID = history.current
+            .mainComponent(componentID: StarterComponent.navBar.componentID)?.id
         guard let barID, let before = history.current.layer(id: barID),
               let title = piece(before, "Title"), let back = piece(before, "Back")
         else { Issue.record("no bar"); return }
@@ -213,8 +225,11 @@ struct StarterSizingTests {
     @Test("A field holds its width and keeps its placeholder inside the box")
     func theFieldHoldsItsWidthAndWrapsItsPlaceholder() {
         var history = History(document: document())
-        var fieldID: UUID?
-        history.perform { fieldID = $0.insertStarterComponent(.textField, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.textField, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag hands back an instance, and an instance's
+        // pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let fieldID = history.current
+            .mainComponent(componentID: StarterComponent.textField.componentID)?.id
         guard let fieldID, let before = history.current.layer(id: fieldID),
               let placeholder = piece(before, "Placeholder")
         else { Issue.record("no field"); return }

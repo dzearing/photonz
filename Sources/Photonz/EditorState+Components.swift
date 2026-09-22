@@ -135,14 +135,17 @@ extension EditorState {
     /// of yours: the single path a drag from the shelf, a double click on a
     /// tile and the Layer menu row all run.
     ///
-    /// A starter the document has not taken yet arrives as the ORIGINAL, with
-    /// its named colors and its knobs; everything else, including a second
-    /// drop of the same starter, is a copy.
+    /// What you get back is always a COPY, whichever tile it was and however
+    /// many times you have used it. The first drop of a tile this document has
+    /// not taken yet also brings the ORIGINAL in — with its named colors and
+    /// its properties — and stands it clear of where you let go, so the thing
+    /// under your pointer is the copy you asked for
+    /// (`FirstDropIsAnInstanceTests`).
     @discardableResult
     func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil) -> UUID? {
-        // A component off the shared shelf that this document has not taken
-        // yet arrives as the ORIGINAL, following the shelf; the second drop of
-        // the same tile is a copy, the same as everything else here.
+        // A component off the shared shelf this document has not taken yet
+        // brings its original in too, following the shelf; every drop of the
+        // same tile after that just places another copy.
         if let shared = sharedComponent(entryID: componentID.uuidString) {
             return insertSharedComponent(shared, at: point)
         }
@@ -153,9 +156,10 @@ extension EditorState {
         return insertComponentInstance(componentID: componentID, at: point, version: version)
     }
 
-    /// Brings a starter into the open document, centred on a canvas point. One
-    /// undo step: the component, the colors it paints from and the knobs it
-    /// offers all arrive or none of them do.
+    /// Brings a starter into the open document, centred on a canvas point, and
+    /// picks the copy it placed. One undo step: the copy, the original behind
+    /// it, the colors it paints from and the properties it offers all arrive
+    /// or none of them do.
     @discardableResult
     func insertStarterComponent(_ kind: StarterComponent, at point: CGPoint) -> UUID? {
         guard starterComponentsEnabled, document != nil else { return nil }
@@ -163,6 +167,7 @@ extension EditorState {
         var placed: UUID?
         let context = dropContext
         let moment = placementMomentMS
+        let broughtTheOriginal = document?.mainComponent(componentID: kind.componentID) == nil
         perform {
             placed = $0.insertStarterComponent(kind, at: point, inside: context,
                                                measure: { TextRasterizer.naturalSize($0) },
@@ -173,7 +178,16 @@ extension EditorState {
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
         // Fetched off the shelf, so the shelf stays where you left it.
         askForLibraryAfterFetching()
+        if broughtTheOriginal { sayTheOriginalArrived(named: kind.name) }
         return placed
+    }
+
+    /// The word on screen after the FIRST drag of a component: two drawings
+    /// landed, not one, and the only thing telling them apart is a small mark
+    /// on a name chip. Said once per component, because the drag after this one
+    /// puts down a copy and nothing else.
+    func sayTheOriginalArrived(named name: String?) {
+        raiseCanvasNotice(.componentOriginalArrived(component: name))
     }
 
     // MARK: - The room a drag in the air is asking for

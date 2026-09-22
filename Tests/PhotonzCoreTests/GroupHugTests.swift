@@ -332,8 +332,11 @@ struct GroupHugTests {
     @Test("A longer label makes a starter button wider and keeps its padding")
     func awordingChangeWidensTheButton() {
         var history = History(document: document())
-        var buttonID: UUID?
-        history.perform { buttonID = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag off the shelf hands back an instance, and an
+        // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let buttonID = history.current
+            .mainComponent(componentID: StarterComponent.button.componentID)?.id
         guard let buttonID, let before = history.current.layer(id: buttonID) else {
             Issue.record("no button")
             return
@@ -374,8 +377,11 @@ struct GroupHugTests {
     @Test("A copy told to say something longer grows too")
     func aCopyGrowsWithItsOwnWording() {
         var history = History(document: document())
-        var mainID: UUID?
-        history.perform { mainID = $0.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200)) }
+        history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200)) }
+        // The ORIGINAL: a drag off the shelf hands back an instance, and an
+        // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let mainID = history.current
+            .mainComponent(componentID: StarterComponent.button.componentID)?.id
         var copyID: UUID?
         history.perform {
             copyID = $0.insertComponentInstance(of: StarterComponent.button.componentID,
@@ -424,8 +430,11 @@ struct GroupHugTests {
     @Test("Bigger type makes a starter button grow around its label")
     func biggerTypeGrowsTheButton() {
         var history = History(document: document())
-        var buttonID: UUID?
-        history.perform { buttonID = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag off the shelf hands back an instance, and an
+        // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let buttonID = history.current
+            .mainComponent(componentID: StarterComponent.button.componentID)?.id
         guard let buttonID, let before = history.current.layer(id: buttonID),
               let label = before.children.first(where: { $0.name == "Label" })
         else { Issue.record("no button"); return }
@@ -452,8 +461,11 @@ struct GroupHugTests {
     @Test("A starter button still arrives 36 tall")
     func theButtonStillArrivesAtItsOwnHeight() {
         var history = History(document: document())
-        var buttonID: UUID?
-        history.perform { buttonID = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL: a drag off the shelf hands back an instance, and an
+        // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let buttonID = history.current
+            .mainComponent(componentID: StarterComponent.button.componentID)?.id
         guard let buttonID, let button = history.current.layer(id: buttonID)
         else { Issue.record("no button"); return }
         #expect(button.localBounds.height == 36)
@@ -471,8 +483,11 @@ struct GroupHugTests {
     @Test("Bigger type grows a starter badge, and it still arrives 20 tall")
     func biggerTypeGrowsTheBadge() {
         var history = History(document: document())
-        var badgeID: UUID?
-        history.perform { badgeID = $0.insertStarterComponent(.badge, at: CGPoint(x: 100, y: 100)) }
+        history.perform { _ = $0.insertStarterComponent(.badge, at: CGPoint(x: 100, y: 100)) }
+        // The ORIGINAL: a drag off the shelf hands back an instance, and an
+        // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
+        let badgeID = history.current
+            .mainComponent(componentID: StarterComponent.badge.componentID)?.id
         guard let badgeID, let before = history.current.layer(id: badgeID),
               let count = before.children.first(where: { $0.name == "Count" })
         else { Issue.record("no badge"); return }

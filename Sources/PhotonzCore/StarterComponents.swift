@@ -667,17 +667,28 @@ extension PhotonzDocument {
     }
 
     /// Puts a starter in the picture, centred on a canvas point, and returns
-    /// the layer it placed.
+    /// the INSTANCE it placed.
     ///
-    /// The first drop brings the ORIGINAL in, along with the named colors it
-    /// paints from and the knobs it offers, and from then on it is an ordinary
-    /// component of this document: edit it and every copy follows. Every drop
-    /// after that places a copy, exactly as the shelf does for a component you
-    /// made yourself, so there is never a second original claiming the name.
+    /// Every drop gives you an instance: what you click is always the thing
+    /// you meant to click, and the panel you get never depends on whether you
+    /// have dropped this component before. The first drop also has to bring
+    /// the ORIGINAL in, along with the named colors it paints from and the
+    /// properties it offers, and that original is placed CLEAR of the drop —
+    /// where a second look of a component already lands — so it is there to
+    /// edit when you want it and never under your pointer.
+    ///
+    /// Until 2026-09-22 the first drop handed you the original itself and
+    /// every drop after handed you an instance, so what a drag gave you
+    /// depended on history nobody could see: drop one Button on a fresh
+    /// document, click it, and the panel was the whole authoring wall. Chosen
+    /// by the user on 2026-09-20, answering "When you drag a component onto
+    /// the canvas, should you get the original or a copy?" with "Always a
+    /// copy". See `FirstDropIsAnInstanceTests`.
     ///
     /// `context` is the group you have stepped INSIDE: let go in there and the
-    /// starter joins that group, which is how a bar or a card you are
-    /// arranging gets added to from the shelf.
+    /// instance joins that group, which is how a bar or a card you are
+    /// arranging gets added to from the shelf. The original never joins it — a
+    /// parts bin does not belong inside the bar you are building.
     @discardableResult
     public mutating func insertStarterComponent(
         _ kind: StarterComponent, at point: CGPoint, inside context: UUID? = nil,
@@ -689,27 +700,24 @@ extension PhotonzDocument {
         var main = StarterComponents.layer(kind, scale: max(pixelScale, 1),
                                            palette: palette, measure: measure)
         let box = main.localBounds
-        main.frame.origin = CGPoint(x: (point.x - box.width / 2).rounded(),
-                                    y: (point.y - box.height / 2).rounded())
-        if !main.isFrame, let host = dropHostID(under: point, inside: context),
-           canDropNewLayer(intoGroup: host) {
-            let corner = childOrigin(of: host) ?? .zero
-            main.frame = main.frame.offsetBy(dx: -corner.x, dy: -corner.y)
-            // A row decides the order of what it holds, so where along it you
-            // let go is where the starter goes (`dropSlot`).
-            var index: Int?
-            if let slot = dropSlot(inGroup: host, at: point) {
-                let box = main.contentBounds
-                main.frame = main.frame.offsetBy(dx: slot.origin.x - box.minX,
-                                                 dy: slot.origin.y - box.minY)
-                index = slot.index
-            }
-            guard addLayer(main, toGroup: host, at: index) else { return nil }
-        } else {
-            addLayerDrawnOnFrame(main)
-        }
+        main.frame.origin = originClearOfTheDrop(size: box.size, localBounds: box, at: point)
+        addLayerDrawnOnFrame(main)
         addStarterKnobs(kind, to: main.id)
-        return main.id
+        // The instance is the thing the hand asked for, so if it cannot be
+        // placed the original standing clear is still better than nothing.
+        return insertComponentInstance(of: kind.componentID, at: point, inside: context)
+            ?? main.id
+    }
+
+    /// Where an original should sit when the drop point is about to be taken by
+    /// the instance of it: clear of everything already drawn AND clear of the
+    /// drop itself, in the same place an extra look of a component lands.
+    func originClearOfTheDrop(size: CGSize, localBounds box: CGRect, at point: CGPoint) -> CGPoint {
+        let dropped = CGRect(x: (point.x - size.width / 2).rounded(),
+                             y: (point.y - size.height / 2).rounded(),
+                             width: size.width, height: size.height)
+        let landing = roomForDrawing(size: size, beside: dropped, alsoTaken: [dropped])
+        return CGPoint(x: landing.x - box.minX, y: landing.y - box.minY)
     }
 
     /// The styles a starter will paint from, brought into the document.

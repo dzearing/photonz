@@ -1,7 +1,11 @@
 {
   "out": "/tmp/photonz-playtest/dock-component-first",
-  "setup": { "forget": ["all"] },
-  "seed": "A laptop-sized window, and a Button component with two variants. The Component section says WHICH variant a copy is showing and holds its knobs, so it has to be readable the moment you pick the copy. Before 2026-09-06 it sat under Layout, the tallest section in the dock, which put every one of its rows below the bottom of the panel: you had to scroll to find out what you had picked. This walk reads the dock's own measurements back rather than trusting a picture, and makes four claims: a copy shows Component whole with its Variant row, an original does too, an ordinary rectangle still leads with Position & Size, and a dock somebody has scrolled stays exactly where they left it when the selection changes.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "A laptop-sized window, and a Button component with two variants. The Component section says WHICH variant a copy is showing and holds its knobs, so it has to be readable the moment you pick the copy. Before 2026-09-06 it sat under Layout, the tallest section in the dock, which put every one of its rows below the bottom of the panel: you had to scroll to find out what you had picked. This walk reads the dock's own measurements back rather than trusting a picture, and makes four claims: a copy shows Component whole with its Variant row, an original does too, an ordinary rectangle still leads with Position & Size, and a dock somebody has scrolled stays exactly where they left it when the selection changes. A drag off the shelf hands back a COPY now, first drag included, so this walk steps back to the original before it authors anything.",
   "steps": [
     {
       "do": "blank",
@@ -36,6 +40,14 @@
         360,
         200
       ]
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "wait",

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-22T02:48:36.362Z",
+  "updated": "2026-09-22T06:51:28.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -137,6 +137,10 @@
     {
       "t": "2026-09-22T02:48:36.361Z",
       "note": "Another section fell below the fold on 2026-09-21: with a component picked on a recording, the Time section (when it arrives, when it goes, Start Here, End Here, Fade) is the LAST section before Library, under Component, Appearance, Effects, Motion and Layout. On a document with a timeline that is the one question the panel is being asked, and it is the furthest thing down. Seen in queue/audits/2026-09-22-components-on-the-timeline-1.png."
+    },
+    {
+      "t": "2026-09-22T06:51:27.999Z",
+      "note": "A neighbouring case, filed separately as the-panel-jumps-to-the-shelf-after-a-drop-instea: after a component is dropped the dock scrolls itself to the Library (askForLibraryAfterFetching), putting the Component section above the TOP of the panel rather than below its bottom. Same symptom for a person, different cause: this one is a scroll the panel chooses, not a height it cannot find."
     }
   ],
   "started": "2026-09-16T16:42:58.097Z"

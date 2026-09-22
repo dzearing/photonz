@@ -1,0 +1,30 @@
+{
+  "id": "the-panel-jumps-to-the-shelf-after-a-drop-instea",
+  "title": "The panel jumps to the shelf after a drop, instead of the thing you dropped",
+  "goal": "Drag a component onto the canvas and the right hand panel scrolls itself down to the Library, so the section about the thing you just placed is above the top of the panel and you have to scroll back up to it. The panel should stay on what you just put down.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 3090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T06:51:24.741Z",
+  "updated": "2026-09-22T06:51:24.744Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-22 while finishing a-copy-of-a-component-is-configured-not-authored. Command: Scripts/playtest.sh Scripts/playtest/component-drag-lands-a-copy-walk.json --no-build. The walk s own panel reading at stage 1-copy: dockSections [Layers -366--203, Component -203--32, Appearance -32-215, Effects 215-283, Motion 283-364, Layout 364-623, Library 623-841], dockViewport 841, dockInView [Effects, Motion, Layout, Library]. The Component section spans -203 to -32, entirely above the visible top. Cause is EditorState.askForLibraryAfterFetching (EditorState.swift:276), called by insertStarterComponent and insertSharedComponent after a drop so the shelf stays where you left it; it sets pendingLibraryReveal, which scrolls the dock to the Library. Pre-dates the drag-lands-a-copy change: the same reveal ran when the first drop was the original. Related to appearance-is-below-the-fold-again-because-the-p, which is about the panel wanting more height than the window has; this one is about where the panel chooses to scroll.",
+  "acceptance": [
+    "After a component is dropped on the canvas, the Component section for what was placed is fully on screen without scrolling, at 1240x900",
+    "The shelf still ends up somewhere a person can reach for a second drop, so this does not just trade one hunt for another",
+    "A walk reads the dock section offsets back after a drop and fails if the Component section is off screen"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T06:51:24.743Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "component-drag-lands-a-copy-walk"
+  ]
+}

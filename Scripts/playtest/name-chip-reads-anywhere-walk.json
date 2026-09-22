@@ -1,97 +1,370 @@
 {
   "out": "/tmp/photonz-playtest/name-chip-reads-anywhere",
-  "seed": "The name that floats above a component has to be read over whatever the picture happens to be, and until 2026-09-15 it was violet letters straight on the picture: 1.0:1 against the blue a starter button is painted in, which is not a label, it is nothing. This walk puts four different components on four different things — the plain light canvas, a saturated shape, a dark shape, and a real screenshot — photographs all four labels at once, then adds a version to one of them and hovers it so the version part is photographed too, and finally checks the same labels at 200% and at 50%.",
-  "setup": { "forget": ["panel", "shapes", "color", "groups"] },
+  "seed": "The name that floats above a component has to be read over whatever the picture happens to be, and until 2026-09-15 it was violet letters straight on the picture: 1.0:1 against the blue a starter button is painted in, which is not a label, it is nothing. This walk puts four different components on four different things \u2014 the plain light canvas, a saturated shape, a dark shape, and a real screenshot \u2014 photographs all four labels at once, then adds a version to one of them and hovers it so the version part is photographed too, and finally checks the same labels at 200% and at 50%. Since 2026-09-22 a drag off the shelf hands back a COPY with the ORIGINAL standing clear of it, so this walk steps back to the original before adding a variant (FirstDropIsAnInstanceTests).",
+  "setup": {
+    "forget": [
+      "panel",
+      "shapes",
+      "color",
+      "groups"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 1900, "canvasHeight": 1200, "width": 1400, "height": 940 },
-    { "do": "wait", "seconds": 0.8 },
-
-    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [1350, 800] },
-    { "do": "wait", "seconds": 1.2 },
-
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [100, 620], "to": [600, 950] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.5 },
-
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [1000, 150], "to": [1500, 480] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "paintSelectionColor" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-
-    { "do": "describe", "stage": "backgrounds",
-      "note": "four things for a label to sit on: plain light canvas top left, a saturated shape bottom left, a deep crimson shape top right, and a real screenshot bottom right" },
-    { "do": "snapshot", "name": "chip-0-backgrounds" },
-
-    { "do": "action", "action": "showComponentShelf" },
-    { "do": "wait", "seconds": 1.2 },
-
-    { "do": "dragTile", "tile": "Button", "to": [320, 260], "space": "document" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "dragTile", "tile": "Badge", "to": [300, 760], "space": "document" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "dragTile", "tile": "Text Field", "to": [1230, 300], "space": "document" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "dragTile", "tile": "Nav Bar", "to": [1250, 900], "space": "document" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "move", "at": [40, 40] },
-    { "do": "wait", "seconds": 0.8 },
-
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "four-backgrounds",
-      "note": "four components, each wearing its own name, one on each background: Button on the plain canvas, Badge on the saturated shape, Text Field on the crimson shape, Nav Bar on the screenshot" },
-    { "do": "snapshot", "name": "chip-1-four-backgrounds" },
-
-    { "do": "click", "at": [320, 260], "space": "document" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "type", "text": "Pressed" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "version-word",
-      "note": "the Button now has two drawings, so each says which variant it is rather than repeating the component's name" },
-    { "do": "snapshot", "name": "chip-2-version" },
-
-    { "do": "move", "at": [320, 265], "space": "document" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "spelled-out",
-      "note": "the pointer resting on the first drawing: it spells out the component's name AND which variant this one is, which is the label the report was about" },
-    { "do": "snapshot", "name": "chip-3-spelled-out" },
-
-    { "do": "move", "at": [40, 40] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "pinch", "to": 2.0, "steps": 12 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "at-two-hundred",
-      "note": "the same labels at 200%: chrome, so they are the same size they always were" },
-    { "do": "snapshot", "name": "chip-4-at-200" },
-
-    { "do": "pinch", "to": 0.5, "steps": 12 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "at-fifty",
-      "note": "and at 50%, where the drawings are small and the labels are not" },
-    { "do": "snapshot", "name": "chip-5-at-50" },
-
-    { "do": "appearance", "value": "light" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "light-mode",
-      "note": "the same four labels with the app in light mode: the plate is the component violet either way, so a label does not change with the theme any more than the picture under it does" },
-    { "do": "snapshot", "name": "chip-6-light" },
-    { "do": "appearance", "value": "dark" },
-    { "do": "wait", "seconds": 0.8 }
+    {
+      "do": "blank",
+      "canvasWidth": 1900,
+      "canvasHeight": 1200,
+      "width": 1400,
+      "height": 940
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Hero banner.png",
+      "at": [
+        1350,
+        800
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        620
+      ],
+      "to": [
+        600,
+        950
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1000,
+        150
+      ],
+      "to": [
+        1500,
+        480
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "backgrounds",
+      "note": "four things for a label to sit on: plain light canvas top left, a saturated shape bottom left, a deep crimson shape top right, and a real screenshot bottom right"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-0-backgrounds"
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        320,
+        260
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
+        300,
+        760
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Text Field",
+      "to": [
+        1230,
+        300
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Nav Bar",
+      "to": [
+        1250,
+        900
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "move",
+      "at": [
+        40,
+        40
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "four-backgrounds",
+      "note": "four components, each wearing its own name, one on each background: Button on the plain canvas, Badge on the saturated shape, Text Field on the crimson shape, Nav Bar on the screenshot"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-1-four-backgrounds"
+    },
+    {
+      "do": "click",
+      "at": [
+        320,
+        260
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "type",
+      "text": "Pressed"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "version-word",
+      "note": "the Button now has two drawings, so each says which variant it is rather than repeating the component's name"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-2-version"
+    },
+    {
+      "do": "move",
+      "at": [
+        320,
+        265
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "spelled-out",
+      "note": "the pointer resting on the first drawing: it spells out the component's name AND which variant this one is, which is the label the report was about"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-3-spelled-out"
+    },
+    {
+      "do": "move",
+      "at": [
+        40,
+        40
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "pinch",
+      "to": 2.0,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "at-two-hundred",
+      "note": "the same labels at 200%: chrome, so they are the same size they always were"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-4-at-200"
+    },
+    {
+      "do": "pinch",
+      "to": 0.5,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "at-fifty",
+      "note": "and at 50%, where the drawings are small and the labels are not"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-5-at-50"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "light-mode",
+      "note": "the same four labels with the app in light mode: the plate is the component violet either way, so a label does not change with the theme any more than the picture under it does"
+    },
+    {
+      "do": "snapshot",
+      "name": "chip-6-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    }
   ]
 }

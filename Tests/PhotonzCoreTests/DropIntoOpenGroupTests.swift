@@ -23,12 +23,18 @@ struct DropIntoOpenGroupTests {
         layer?.children.first { $0.name == name }
     }
 
-    /// A bar on the canvas at 400,300, and the id of the bar itself.
+    /// A bar on the canvas, and the id of the ORIGINAL bar — the one you can
+    /// step inside and add to.
+    ///
+    /// A drag off the shelf hands back an INSTANCE now, and nothing goes
+    /// inside an instance, so the group these tests open is the original the
+    /// same drag brought in beside it (`FirstDropIsAnInstanceTests`).
     private func withBar() -> (History, UUID) {
         var history = History(document: document())
-        var barID: UUID?
-        history.perform { barID = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        return (history, barID!)
+        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        let barID = history.current
+            .mainComponent(componentID: StarterComponent.navBar.componentID)!.id
+        return (history, barID)
     }
 
     /// A point over the right-hand half of the bar, well clear of the back
@@ -288,14 +294,21 @@ struct DropIntoOpenGroupTests {
     func theOpenGroupBeatsTheScreenItSitsOn() {
         var history = History(document: document())
         var barID: UUID?
+        var frameID: UUID?
         history.perform { doc in
-            _ = doc.addFrame(origin: CGPoint(x: 100, y: 100), size: CGSize(width: 600, height: 500))
-            barID = doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
+            frameID = doc.addFrame(origin: CGPoint(x: 100, y: 100),
+                                   size: CGSize(width: 600, height: 500)).id
+            _ = doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
+            // The drop hands back an instance and stands the ORIGINAL clear of
+            // the screen, and it is the original you step inside, so it is put
+            // on the screen here (`FirstDropIsAnInstanceTests`).
+            barID = doc.mainComponent(componentID: StarterComponent.navBar.componentID)?.id
+            if let barID, let frameID { _ = doc.moveLayer(id: barID, toGroup: frameID) }
         }
         guard let barID else { Issue.record("no bar"); return }
         let doc = history.current
-        // The bar landed on the screen, so the screen is its parent...
-        #expect(doc.parentID(of: barID) != nil)
+        // The bar sits on the screen, so the screen is its parent...
+        #expect(doc.parentID(of: barID) == frameID)
         // ...and standing inside the bar, a point on the bar joins the BAR.
         #expect(doc.dropHostID(under: overTheBar(doc, barID), inside: barID) == barID)
     }

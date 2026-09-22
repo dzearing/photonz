@@ -118,8 +118,11 @@ struct SharedComponentScaleTests {
     @Test func anEditInTheSmallDocumentComesBackTheRightSizeInTheBigOne() {
         var c = documentSharing(pixelScale: 2)
         var target = blank(pixelScale: 1)
-        let placed = target.adoptSharedComponent(c.shared, at: CGPoint(x: 400, y: 300))!
-        // The second document widens the box inside it by 10 of its own points...
+        target.adoptSharedComponent(c.shared, at: CGPoint(x: 400, y: 300))
+        // The second document widens the box inside its ORIGINAL by 10 of its
+        // own points; a drop hands back an instance, whose pieces belong to
+        // that original (`FirstDropIsAnInstanceTests`)...
+        let placed = target.mainComponent(componentID: c.componentID)!.id
         let boxID = target.layer(id: placed)!.children.first(where: { $0.name == "Box" })!.id
         target.updateLayer(id: boxID) { $0.frame.size.width += 10 }
         let republished = target.sharedComponent(componentID: c.componentID)!

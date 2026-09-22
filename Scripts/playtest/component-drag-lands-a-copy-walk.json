@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/component-drag-lands-a-copy",
+  "seed": "The first drag of a component off the shelf used to land the ORIGINAL, and every drag after it landed a copy, so what you clicked depended on history nobody could see: one Button on a fresh document, clicked, gave the whole authoring wall. Every drag lands a copy now, and the original comes in beside it, clear of the drop. This walk drops one and reads back both panels.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [520, 420] },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-copy", "note": "the FIRST drag lands a COPY, picked, and its panel is the short one: which look it shows and a value per property, with no Name field, no sharing switch and no Add" },
+    { "do": "expectPicked", "layers": ["Button"] },
+    { "do": "expectLayers", "atLeast": 3 },
+    { "do": "expectNotice", "says": "The original of Button arrived beside it" },
+    { "do": "panel", "stage": "copy" },
+    { "do": "snapshot", "name": "drag-copy-1-copy" },
+    { "do": "render", "name": "drag-copy-1-copy-doc" },
+
+    { "do": "reveal", "control": "Edit Original" },
+    { "do": "press", "control": "Edit Original" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-original", "note": "the way back to the original is one move, and the original's panel is the long one: it still shows everything it showed before" },
+    { "do": "panel", "stage": "original" },
+    { "do": "snapshot", "name": "drag-copy-2-original" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [900, 700] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-second", "note": "a second drag reads exactly the same as the first: another copy, still one original" },
+    { "do": "panel", "stage": "second-copy" },
+    { "do": "snapshot", "name": "drag-copy-3-second" },
+    { "do": "render", "name": "drag-copy-3-second-doc" }
+  ]
+}

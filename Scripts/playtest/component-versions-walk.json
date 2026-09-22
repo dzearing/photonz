@@ -1,7 +1,11 @@
 {
   "out": "/tmp/photonz-playtest/component-versions",
-  "setup": { "forget": ["all"] },
-  "seed": "A button has a normal look and a disabled look. Before variants those were two components that drifted apart the first time somebody edited one. The walk drops a Button, gives it a second variant called Disabled, fades that drawing, then places two copies and puts one of them on Disabled.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "A button has a normal look and a disabled look. Before variants those were two components that drifted apart the first time somebody edited one. The walk drops a Button, gives it a second variant called Disabled, fades that drawing, then places two copies and puts one of them on Disabled. A drag off the shelf hands back a COPY now, first drag included, so this walk steps back to the original before it authors anything.",
   "steps": [
     {
       "do": "blank",
@@ -36,6 +40,14 @@
         360,
         220
       ]
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "wait",

@@ -257,13 +257,15 @@ extension PhotonzDocument {
 
     // MARK: - Taking one off the shelf
 
-    /// Puts a shared component in the picture, centred on a canvas point.
+    /// Puts a shared component in the picture, centred on a canvas point, and
+    /// returns the INSTANCE it placed.
     ///
-    /// The first drop brings the ORIGINAL in, along with the named styles it
-    /// paints from and every version of it, and from then on it is an ordinary
-    /// component of this document that happens to follow the shelf. Every drop
-    /// after that places a copy, exactly as the shelf does for a starter, so
-    /// there is never a second original claiming the name.
+    /// The first drop also brings the ORIGINAL in, along with the named styles
+    /// it paints from and every version of it, and from then on it is an
+    /// ordinary component of this document that happens to follow the shelf.
+    /// That original is placed CLEAR of the drop, exactly as a starter's is
+    /// (`insertStarterComponent`), so what you click is always the instance
+    /// you asked for.
     @discardableResult
     public mutating func adoptSharedComponent(_ shared: SharedComponent, at point: CGPoint,
                                               inside context: UUID? = nil) -> UUID? {
@@ -277,30 +279,13 @@ extension PhotonzDocument {
         guard var main = arriving.first else { return nil }
         adoptSharedStyles(shared)
         let box = main.localBounds
-        main.frame.origin = CGPoint(x: (point.x - box.width / 2).rounded(),
-                                    y: (point.y - box.height / 2).rounded())
-        if !main.isFrame, let host = dropHostID(under: point, inside: context),
-           canDropNewLayer(intoGroup: host) {
-            let corner = childOrigin(of: host) ?? .zero
-            main.frame = main.frame.offsetBy(dx: -corner.x, dy: -corner.y)
-            // A row decides the order of what it holds, so where along it you
-            // let go is where the component goes (`dropSlot`).
-            var index: Int?
-            if let slot = dropSlot(inGroup: host, at: point) {
-                let inner = main.contentBounds
-                main.frame = main.frame.offsetBy(dx: slot.origin.x - inner.minX,
-                                                 dy: slot.origin.y - inner.minY)
-                index = slot.index
-            }
-            guard addLayer(main, toGroup: host, at: index) else { return nil }
-        } else {
-            addLayerDrawnOnFrame(main)
-        }
+        main.frame.origin = originClearOfTheDrop(size: box.size, localBounds: box, at: point)
+        addLayerDrawnOnFrame(main)
         // The other versions land loose beside the first, the way adding a
         // version does, rather than dropping strays into whatever it landed in.
         placeExtraVersions(arriving, beside: main.id)
         repaintFromLocalStyles(shared)
-        return main.id
+        return insertComponentInstance(of: shared.id, at: point, inside: context) ?? main.id
     }
 
     /// The versions after the first, each somewhere clear on the canvas.

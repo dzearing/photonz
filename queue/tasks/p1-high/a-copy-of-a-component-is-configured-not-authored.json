@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:01:13.710Z",
-  "updated": "2026-09-21T13:31:04.368Z",
+  "updated": "2026-09-22T06:51:40.718Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CORRECTED 2026-09-15 by the runner that claimed this, after reproducing it. The premise below is inverted. A COPY's panel is already configured-not-authored: name as a label, one sentence, a Properties list led by the look picker, a value row per exposed property, and Edit Original / Detach. No name field, no sharing switch, no Add, no minus buttons. What the user clicked was the ORIGINAL, because the FIRST drag of any component off the shelf lands the original and every drag after it lands a copy (StarterComponents.swift:685; reproduced by test run). Acceptance items 1, 2, 4, 5 and 7 are already met in source. Items 3, 6 and 8 need the running app and the Mac's screen has been locked all afternoon, so no walk can run. A decision is open asking what a drag should hand you; this task waits on the answer.\n\n---\n\nReported by the user on 2026-09-15 with a screenshot of the Component section: 'the component ui for component instances . super confusing. info overload, can't adjust specific component properties defined for it, select a variant...'\n\nThe screenshot is the ORIGINAL's panel - it says 'This is the original. Copies you place will follow it.' - and it carries Name, the sharing switch, Versions with Add, and Adjustable with Add and a Label row. That is all authoring. The user's complaint is that selecting a copy does not give them the two things a copy is for: pick a version, set the values.\n\nThe app already knows the difference and already says so visually: ComponentPanel.swift:66 has an isInstance flag, four diamonds for an original and one for a copy, with different help text. So the distinction exists in the chrome and not in the contents.\n\nIt has also been thought about before, which is worth reading rather than rediscovering: 'a-copy-is-not-asked-to-decide-things-only-its-original-can' is done, as are 'the-knobs-panel-speaks-for-several-copies-at-once' and 'a-copy-does-not-say-which-version-it-is-showing'. Find out what each actually did before changing anything, because the gap the user hit may be narrower than the whole panel - it may be that the version picker is missing from the copy rather than that the copy shows too much.\n\nThe principle to land: an original is AUTHORED and a copy is CONFIGURED. Those are two jobs and they should not look the same.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.\n\nTHE MODEL, corrected by the user on 2026-09-15 while walking away. First: \"I don't think 'Variants' is any better. component properties makes sense. Variant is a property of the component.\" Then, still thinking: \"Maybe State is a separate property. or maybe variant is hierarchical.\"\n\nSo the direction is ONE concept, not two sections. A component has PROPERTIES. What the panel currently splits into 'Adjustable' and 'Versions' is one list: a property is anything a copy can be given its own answer for, and one KIND of property is a set of named looks, which is what Versions is today. That is why neither name worked: they are two names for halves of one idea.\n\nThis also collapses the copy's panel into the same list with values in it instead of definitions, which is what the sibling task a-copy-of-a-component-is-configured-not-authored is for.\n\nWHAT IS STILL OPEN, and the user was explicitly unsure, so settle it with a prototype rather than a preference:\n- Is a state just one property among many, named State with the values rest, hovered, pressed and disabled? That is the simplest answer and probably right.\n- Or does a component need more than one look-changing property at once, so that a Button has a Type of primary or secondary AND a State of rest or hovered, and the two combine into a matrix of drawings? That is what the user means by variant being hierarchical, and it is what real button components need almost immediately.\nThe second is strictly more powerful and strictly more work, and the first is a special case of it. Prototype the matrix case before choosing, because designing for one look-changing property and discovering later that two are needed is a rewrite rather than an addition.\n\nDo NOT settle this by picking a word. The question is whether the model holds one named-set property or several, and the naming falls out of the answer.\n",
@@ -95,7 +95,56 @@
     {
       "t": "2026-09-21T13:31:04.367Z",
       "note": "seq 110 -> 80"
+    },
+    {
+      "t": "2026-09-22T05:59:31.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T06:51:28.049Z",
+      "note": "owns these walks: component-drag-lands-a-copy-walk, component-versions-walk, dock-component-first-walk, apply-to-versions-walk, place-a-version-walk, version-labels-row-walk, version-lands-in-room-walk, version-row-name-walk, name-chip-reads-anywhere-walk, style-on-a-copy-walk, starter-components-walk"
+    },
+    {
+      "t": "2026-09-22T06:51:34.665Z",
+      "note": "The answered decision is built. Every drag off the shelf hands back a COPY now, the first one included, and the original arrives beside it clear of the drop: PhotonzDocument.insertStarterComponent and adoptSharedComponent place the main through originClearOfTheDrop (roomForDrawing with the drop box itself counted as taken, so the original can never sit under the pointer) and then return insertComponentInstance at the drop point. Dropped on a recording, both the copy and the original get the same stretch of timeline, or the parts bin would stand on every frame of the film (ComponentsInTime.placeOriginalInTime). New tests: Tests/PhotonzCoreTests/FirstDropIsAnInstanceTests.swift, 7 of them. Full suite green, 8898 tests in 711 suites."
+    },
+    {
+      "t": "2026-09-22T06:51:34.713Z",
+      "note": "Adversarial review before building, on the answered decision itself: the weak point of Always a copy is that you drag one Button and two appear, a 24 point gap apart, telling each other apart only by four diamonds instead of one on the name chip. The app already had the precedent for this exact problem, componentVersionAdded ('adding one puts a WHOLE SECOND DRAWING on the canvas, which is the part the command does not look like it did'), so the same answer was used: a new notice, componentOriginalArrived, saying 'Copy placed - The original of Button arrived beside it. Editing that changes every copy'. Photographed in queue/audits/2026-09-22-component-drag-copy-panel.png."
+    },
+    {
+      "t": "2026-09-22T06:51:34.761Z",
+      "note": "Acceptance 6, MEASURED in the running app rather than estimated, at 1240x900 with the Button starter, read out of the walk's own panel step. Component section: 171 points on a copy (-203 to -32), 194 on the original (-137 to 57). Whole dock: 1207 points on a copy, 1306 on the original. So the copy's panel is 99 points shorter overall, but only 23 of that is the Component section; most of it is Layout, 259 against 348, because a copy gets read-only rows where the original gets controls. Honest reading: the authoring wall is gone, and the Component section itself is not dramatically shorter because the starter Button exposes one property."
+    },
+    {
+      "t": "2026-09-22T06:51:34.810Z",
+      "note": "Acceptance 8: audit at queue/audits/2026-09-22-component-drag-lands-a-copy.json with two REAL window captures, screen unlocked and Screen Recording granted, the copy's panel and the original's panel. Acceptance 3 and 4 checked in the app: Edit Original is one press and it is in the walk as a press step, so a walk fails if it goes away. Acceptance 1, 2, 5 and 7 were already met in source and are unchanged by this work."
+    },
+    {
+      "t": "2026-09-22T06:51:40.620Z",
+      "note": "Walks: one new regression walk, component-drag-lands-a-copy-walk, which drops a component, claims the notice, claims what is picked, reads both panels back and takes three real pictures. Ten existing walks needed updating because they dropped a component and then authored what they had dropped: component-versions, dock-component-first, apply-to-versions, place-a-version, version-lands-in-room, version-row-name (each now steps back with selectComponentOriginal), version-labels-row (drop shifted one button and one gap left and the copy deleted, so the original lands exactly at 900,650 where that walk has always found it), name-chip-reads-anywhere (selectComponentOriginal before adding a variant), style-on-a-copy (last drag aimed at 552,300 where the original now stands) and starter-components (two stale notes). All 22 component walks, 13 copy walks, the version family, shelf, library, starter, drop, tile, knob and the suspect list green."
+    },
+    {
+      "t": "2026-09-22T06:51:40.669Z",
+      "note": "NOT mine, checked: copy-own-color-walk and copies-share-choice-walk both fail at a press of Related in Swatches with the panel reporting no controls in that row, and the rotating check at 05:59Z had already named both before this work was written. Folded into walks-that-fail-in-the-full-sweep-4. delete-key-drops-a-piece-walk also fails and is on the same task. One transient: shelf-tile-reveal-walk was reported CRASHED once inside a playtest-all run and left no crash report; it then ran green twice, once alone at 186 steps and once in the same family run. Left rough here rather than filed, because there is nothing to reproduce and no report to read."
+    },
+    {
+      "t": "2026-09-22T06:51:40.717Z",
+      "note": "left rough: nothing goes inside a copy, so dragging a Nav Bar on and then dropping a Badge inside it now means dropping into the original beside it rather than into the bar you just placed. That is how components work everywhere else and Detach Instance is the way out, but it is a thing a person could do before and now cannot. In the audit's rough for the user to react to; not filed, because it is the direct and intended consequence of the answered decision."
     }
   ],
-  "started": "2026-09-15T16:56:49.346Z"
+  "started": "2026-09-22T05:59:31.411Z",
+  "walks": [
+    "component-drag-lands-a-copy-walk",
+    "component-versions-walk",
+    "dock-component-first-walk",
+    "apply-to-versions-walk",
+    "place-a-version-walk",
+    "version-labels-row-walk",
+    "version-lands-in-room-walk",
+    "version-row-name-walk",
+    "name-chip-reads-anywhere-walk",
+    "style-on-a-copy-walk",
+    "starter-components-walk"
+  ]
 }

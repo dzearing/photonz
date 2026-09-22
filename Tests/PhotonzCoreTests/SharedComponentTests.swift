@@ -146,16 +146,19 @@ struct SharedComponentTests {
         var other = blankDocument()
         let placed = other.adoptSharedComponent(shared, at: CGPoint(x: 400, y: 300))
         #expect(placed != nil)
+        // What a drag hands you is an INSTANCE, centred on where it was let go
+        // (`FirstDropIsAnInstanceTests`)...
+        #expect(other.layer(id: placed!)?.isComponentInstance == true)
+        let box = other.canvasBounds(of: placed!)
+        #expect(box?.midX == 400)
+        #expect(box?.midY == 300)
+        // ...and the original came with it, standing clear.
         let main = other.mainComponent(componentID: c.componentID)
-        #expect(main?.id == placed)
+        #expect(main?.id != placed)
         #expect(main?.name == "Button")
         #expect(main?.children.map(\.name) == ["Box", "Label"])
         // It arrives following the shelf, so the next edit anywhere reaches it.
         #expect(main?.isSharedComponent == true)
-        // ...centred on where it was let go.
-        let box = other.canvasBounds(of: placed!)
-        #expect(box?.midX == 400)
-        #expect(box?.midY == 300)
     }
 
     @Test func aSecondDropPlacesACopyRatherThanASecondOriginal() {
@@ -192,8 +195,10 @@ struct SharedComponentTests {
         var shelf = SharedComponentShelf()
         shelf.put(c.doc.shareComponent(componentID: c.componentID)!)
         var b = blankDocument()
-        let bMain = b.adoptSharedComponent(shelf.component(id: c.componentID)!,
-                                           at: CGPoint(x: 400, y: 200))!
+        // The drop hands back an instance; the ORIGINAL it brought with it is
+        // what an edit on the shelf reaches (`FirstDropIsAnInstanceTests`).
+        b.adoptSharedComponent(shelf.component(id: c.componentID)!, at: CGPoint(x: 400, y: 200))
+        let bMain = b.mainComponent(componentID: c.componentID)!.id
         let copy = b.insertComponentInstance(of: c.componentID, at: CGPoint(x: 400, y: 400))!
         b.syncComponentInstances()
         return (c.doc, b, shelf, c.componentID, c.main, bMain, copy)
@@ -336,8 +341,10 @@ struct SharedComponentTests {
 
     @Test func aStarterCanBePutOnTheSharedShelfLikeAnythingElse() {
         var doc = blankDocument()
-        let placed = doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200))!
-        let componentID = doc.layer(id: placed)!.componentID!
+        doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200))
+        // A drag hands back an instance, and it is the ORIGINAL that goes on
+        // the shelf (`FirstDropIsAnInstanceTests`).
+        let componentID = doc.mainComponents.first!.componentID!
         let shared = doc.shareComponent(componentID: componentID)
         #expect(shared != nil)
         // It is the same component it always was, so the app's shelf still

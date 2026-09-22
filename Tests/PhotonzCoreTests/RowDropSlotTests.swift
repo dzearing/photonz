@@ -29,9 +29,11 @@ struct RowDropSlotTests {
     /// over, so it sits between the back label and the two badges.
     private func filledBar() -> (History, UUID) {
         var history = History(document: document())
-        var barID: UUID?
-        history.perform { barID = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        let bar = barID!
+        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL bar: a drag hands back an instance, and nothing goes
+        // inside an instance (`FirstDropIsAnInstanceTests`).
+        let bar = history.current
+            .mainComponent(componentID: StarterComponent.navBar.componentID)!.id
         let box = history.current.canvasBounds(of: bar)!
         // Two badges land on the end, and they are told apart by name: a copy
         // keeps its original's name, so both arrive called "Badge".
@@ -122,8 +124,11 @@ struct RowDropSlotTests {
     @Test("Down a column, the piece goes in the gap you let go in")
     func aColumnTakesTheSlotToo() {
         var history = History(document: document())
-        var cardID: UUID?
-        history.perform { cardID = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        history.perform { _ = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        // The ORIGINAL card, for the same reason the bar above uses its own
+        // (`FirstDropIsAnInstanceTests`).
+        let cardID = history.current
+            .mainComponent(componentID: StarterComponent.card.componentID)?.id
         guard let cardID, history.current.layer(id: cardID)?.group?.layout?.arranges == true,
               let items = history.current.layer(id: cardID).map({ GroupFlow.arrangedItems(of: $0) }),
               items.count >= 2 else { Issue.record("the card is not a column"); return }

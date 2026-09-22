@@ -67,17 +67,20 @@ extension PhotonzDocument {
         return placed
     }
 
-    /// The same, for a component taken off the shared shelf. The first drop
-    /// brings the original in and it is the original that is placed in time,
-    /// which is what makes a component built in a design file show up on a
-    /// recording at the moment you dropped it.
+    /// The same, for a component taken off the shared shelf. What is placed in
+    /// time is the COPY you let go of, which is what makes a component built in
+    /// a design file show up on a recording at the moment you dropped it.
     @discardableResult
     public mutating func adoptSharedComponent(_ shared: SharedComponent, at point: CGPoint,
                                               inside context: UUID? = nil,
                                               atTimeMS ms: Int?) -> UUID? {
+        let hadIt = mainComponent(componentID: shared.id) != nil
         guard let placed = adoptSharedComponent(shared, at: point, inside: context)
         else { return nil }
-        if let ms { placeInTime(placed, atTimeMS: ms) }
+        if let ms {
+            placeInTime(placed, atTimeMS: ms)
+            if !hadIt { placeOriginalInTime(componentID: shared.id, besides: placed, atTimeMS: ms) }
+        }
         return placed
     }
 
@@ -87,9 +90,28 @@ extension PhotonzDocument {
         _ kind: StarterComponent, at point: CGPoint, inside context: UUID? = nil,
         measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize,
         atTimeMS ms: Int?) -> UUID? {
+        let hadIt = mainComponent(componentID: kind.componentID) != nil
         guard let placed = insertStarterComponent(kind, at: point, inside: context,
                                                   measure: measure) else { return nil }
-        if let ms { placeInTime(placed, atTimeMS: ms) }
+        if let ms {
+            placeInTime(placed, atTimeMS: ms)
+            if !hadIt {
+                placeOriginalInTime(componentID: kind.componentID, besides: placed, atTimeMS: ms)
+            }
+        }
         return placed
+    }
+
+    /// The ORIGINAL a first drop brought in with it, given the same stretch of
+    /// the timeline as the copy you let go of.
+    ///
+    /// Without this, dragging a component onto a recording would leave its
+    /// original standing on top of the whole film: the copy comes and goes at
+    /// the moment you dropped it, and the parts bin beside it, which nothing
+    /// placed it in time, would be on screen from the first frame to the last.
+    private mutating func placeOriginalInTime(componentID: UUID, besides placed: UUID,
+                                              atTimeMS ms: Int) {
+        guard let main = mainComponent(componentID: componentID), main.id != placed else { return }
+        placeInTime(main.id, atTimeMS: ms)
     }
 }

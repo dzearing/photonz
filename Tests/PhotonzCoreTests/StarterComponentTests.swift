@@ -161,14 +161,18 @@ struct StarterComponentTests {
         let mine = doc.addColorStyle(name: StarterStyle.accent.name, colorHex: "#FF0000")
         doc.insertStarterComponent(.button, at: centre)
         #expect(doc.colorStyles.filter { $0.name == StarterStyle.accent.name }.count == 1)
+        // Two now: the original's pill and the pill of the instance the drop
+        // handed back (`FirstDropIsAnInstanceTests`). Both wear the color the
+        // document already kept under that name, which is the point.
         let painted = doc.allLayers.filter { $0.colorStyleID(for: .fill) == mine }
-        #expect(painted.count == 1)
-        #expect(painted.first?.colorHex(for: .fill) == "#FF0000")
+        #expect(painted.count == 2)
+        #expect(painted.allSatisfy { $0.colorHex(for: .fill) == "#FF0000" })
     }
 
-    /// The second drop is a copy, not a second original: a shelf with two
-    /// Buttons on it that do not follow each other is the thing components
-    /// exist to prevent.
+    /// Every drop is a copy, not a second original: a shelf with two Buttons on
+    /// it that do not follow each other is the thing components exist to
+    /// prevent. Since 2026-09-22 that includes the FIRST drop
+    /// (`FirstDropIsAnInstanceTests`).
     @Test func droppingTheSameStarterTwiceMakesACopy() {
         var doc = document()
         doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200))
@@ -176,7 +180,7 @@ struct StarterComponentTests {
         #expect(doc.mainComponents.count == 1)
         #expect(second != nil)
         #expect(doc.layer(id: second ?? UUID())?.isComponentInstance == true)
-        #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 1)
+        #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 2)
     }
 
     // MARK: - An ordinary component

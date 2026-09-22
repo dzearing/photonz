@@ -15,7 +15,7 @@
 
     { "do": "action", "action": "insertPickedComponent" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "3-added", "note": "the button is in the picture as the ORIGINAL, selected, with its knob and its named colors" },
+    { "do": "describe", "stage": "3-added", "note": "the button is in the picture as a COPY, selected, with the original it follows standing clear of it, its knob and its named colors" },
     { "do": "snapshot", "name": "starter-3-added" },
     { "do": "render", "name": "starter-3-added-doc" },
 
@@ -23,7 +23,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "dropComponent", "at": [700, 620] },
     { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "4-copy", "note": "dropping the same tile again places a COPY, not a second original: the tile should say 1 copy placed" },
+    { "do": "describe", "stage": "4-copy", "note": "dropping the same tile again places another COPY, still one original: the tile should say 2 copies placed" },
     { "do": "snapshot", "name": "starter-4-copy" },
 
     { "do": "action", "action": "pickFirstColorStyle" },

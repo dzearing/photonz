@@ -187,11 +187,15 @@ extension PhotonzDocument {
     /// A canvas with no room left anywhere falls back to the old behaviour, one
     /// gap along from `source`: an overlap is a worse answer than nothing at
     /// all, but losing the drawing entirely is worse than both.
+    /// `alsoTaken` is room that is spoken for but not drawn yet: the spot a
+    /// drop is about to land on, so the original a first drop brings in can be
+    /// placed clear of the instance before that instance exists.
     func roomForDrawing(size: CGSize, beside source: CGRect,
-                        gap: CGFloat = PhotonzDocument.componentVersionGap) -> CGPoint {
+                        gap: CGFloat = PhotonzDocument.componentVersionGap,
+                        alsoTaken: [CGRect] = []) -> CGPoint {
         let fallback = CGPoint(x: source.maxX + gap, y: source.minY)
         let canvas = CGRect(origin: .zero, size: canvasSize)
-        let taken = layers.compactMap { canvasBounds(of: $0.id) }
+        let taken = (layers.compactMap { canvasBounds(of: $0.id) } + alsoTaken)
             .filter { !$0.isEmpty && !$0.contains(canvas) }
         guard size.width <= canvas.width, size.height <= canvas.height else { return fallback }
 
