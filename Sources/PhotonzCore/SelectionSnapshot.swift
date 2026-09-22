@@ -13,10 +13,22 @@ public struct LayerPick: Equatable, Sendable {
     public var primary: UUID?
     /// The layers a band caught (two or more), or empty.
     public var multi: Set<UUID>
+    /// Which PIECE of the primary layer is in hand, for a clip that has been
+    /// cut, or nil when the whole layer is what you are holding.
+    ///
+    /// It belongs here because a piece is picked exactly the way a layer is
+    /// picked, and because the commands that act on one refuse to act unless
+    /// a piece is explicitly in hand: ⌫ drops the piece you picked and never
+    /// the one the playhead happens to be standing on. So an undo that put the
+    /// document back without putting the piece back handed you a recording
+    /// with nothing in your hand, and the key that had just worked answered
+    /// nothing — measured on the timeline on 2026-09-22.
+    public var piece: Int?
 
-    public init(primary: UUID? = nil, multi: Set<UUID> = []) {
+    public init(primary: UUID? = nil, multi: Set<UUID> = [], piece: Int? = nil) {
         self.primary = primary
         self.multi = multi
+        self.piece = piece
     }
 
     /// Everything picked, however it was picked: what a menu row would act on.

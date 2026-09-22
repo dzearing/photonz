@@ -28,6 +28,27 @@ public enum DeleteKeyCharacters {
     /// than left as a gap somebody has to rediscover.
     public static let backspaceControl: Character = "\u{8}"
 
+    /// What a MENU ROW has to carry to answer ⌫, which is not what ⌫ sends.
+    ///
+    /// AppKit normalises a delete press to backspace before it looks along the
+    /// menu bar, so `NSMenu.performKeyEquivalent` matches a real ⌫ against
+    /// U+0008 and never against the U+007F the key actually carries. A row
+    /// holding U+007F therefore prints ⌫ beside its name and cannot be reached
+    /// by the key at all: Video ▸ Delete This Piece did exactly that, and the
+    /// walk that presses ⌫ for it failed from 2026-09-21 until this was found.
+    ///
+    /// Measured on 2026-09-22, in a throwaway binary, with a ⌫ built by
+    /// CoreGraphics the way a keyboard builds one: a menu holding U+007F
+    /// matched it never, bare or with ⌘ or with ⌥; a menu holding U+0008
+    /// matched it every time. And a live row is safe beside typing — with a
+    /// field holding the keyboard the same press deleted a character and left
+    /// the row alone, and only with nothing focused did the row run.
+    ///
+    /// So: `backwards` is what a PRESS carries and what a view compares
+    /// against; this is what a MENU ITEM carries. They are different numbers
+    /// for the same key, which is the whole reason this constant has a name.
+    public static let menuKeyEquivalent: Character = backspaceControl
+
     /// Whether a pressed character is one of the delete keys.
     public static func means(deleteKey character: Character) -> Bool {
         character == backwards || character == forwards || character == backspaceControl

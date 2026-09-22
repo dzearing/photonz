@@ -26,6 +26,34 @@ struct SelectionHistoryTests {
                           targetsPixels: true)
     }
 
+    /// The piece of a cut clip you are holding rides in the same snapshot as
+    /// the layer holding it, for the reason the rest of it rides there: a
+    /// delete that takes the piece out of your hand and an undo that puts the
+    /// piece back have to put your HAND back too, or the key that dropped it
+    /// answers nothing the second time round.
+    @Test func undoPutsThePickedPieceBackInYourHand() {
+        var history = makeHistory()
+        let clip = UUID()
+        let holdingTheMiddlePiece = SelectionSnapshot(picked: LayerPick(primary: clip, piece: 1))
+        history.syncSelection(holdingTheMiddlePiece)
+        // The delete: the document changes and the piece leaves your hand.
+        history.record(history.preparing { $0.canvasSize = CGSize(width: 120, height: 100) })
+        history.syncSelection(SelectionSnapshot(picked: LayerPick(primary: clip, piece: nil)))
+        #expect(history.selection.picked.piece == nil)
+
+        history.undo()
+        #expect(history.selection.picked.piece == 1)
+        #expect(history.selection.picked.primary == clip)
+    }
+
+    @Test func aPieceIsPartOfWhatIsPicked() {
+        #expect(LayerPick(primary: UUID(), piece: 0) != LayerPick(primary: UUID(), piece: 0))
+        let clip = UUID()
+        #expect(LayerPick(primary: clip, piece: 0) != LayerPick(primary: clip, piece: 1))
+        #expect(LayerPick(primary: clip, piece: 2) == LayerPick(primary: clip, piece: 2))
+        #expect(LayerPick(primary: clip).piece == nil)
+    }
+
     @Test func startsWithNoSelection() {
         let history = makeHistory()
         #expect(history.selection == SelectionSnapshot())

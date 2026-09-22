@@ -1,0 +1,31 @@
+{
+  "id": "find-out-whether-delete-layer-and-the-fill-keys",
+  "title": "Find out whether Delete Layer and the fill keys really answer their menu rows",
+  "goal": "Two rows in the menus print a Delete key beside their name: Layer, Delete Layer with Command Delete, and Edit, Fill with Foreground with Option Delete. Neither row can actually be reached by that key, because the character each one carries is not the one macOS looks for. Today the canvas quietly does the same job when the picture has the keyboard, so nobody has noticed; the open question is whether there is anywhere in the app, a layers list row or a panel with focus, where the key then does nothing at all.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T12:59:43.658Z",
+  "updated": "2026-09-22T12:59:43.661Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-22 in a throwaway binary (/tmp/menukeytest2.swift): a menu whose item carries U+007F never matches a real backspace press built by CoreGraphics, bare or with command or with option; one carrying U+0008 matches every time. Output:\n  plain eventChars: [127] | U+007F: false | U+0008: true\n  cmd   eventChars: [127] | U+007F: false | U+0008: true\n  opt   eventChars: [127] | U+007F: false | U+0008: true\nAlso measured, with a window and a focused NSTextField: a live U+0008 row does NOT steal the key from a field (the field deleted a character, menuFired=false), and with nothing focused the row ran. So making these rows live is safe beside typing.\n\nEditorCommands.swift line 148 (Fill with Foreground) and line 993 (Delete Layer) both still pass DeleteKeyCharacters.backwards (U+007F). Video, Delete This Piece was fixed to DeleteKeyCharacters.menuKeyEquivalent on 2026-09-22 under delete-stops-dropping-a-piece-once-you-have-undo; those two were left alone because they are SHARED code and so would change Current-release behaviour, which a task has to say before a runner touches it.\n\nThe canvas answers keyCode 51 itself in CanvasKeys.swift (onDeleteLayer / onFillSelected), which is why both presses work today wherever the canvas is first responder. The comments at EditorCommands.swift lines 120-133 and 145-148 and 990-993 state the AppKit rule backwards and should be corrected whichever way this lands.",
+  "acceptance": [
+    "It is written down, with the press and what happened, whether Command Delete removes a layer when the layers list has the keyboard rather than the picture",
+    "It is written down the same way for Option Delete and the foreground fill",
+    "If either press does nothing, the two rows carry the character macOS matches and a walk presses each one",
+    "The comments in EditorCommands that state the rule backwards are corrected either way"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T12:59:43.660Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "delete-layer-key-walk"
+  ]
+}

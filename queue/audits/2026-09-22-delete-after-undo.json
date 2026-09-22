@@ -1,0 +1,26 @@
+{
+  "feature": "The Delete key keeps dropping a piece, after an undo and after another",
+  "epic": "video-cutting",
+  "summary": "Cut a recording, throw the middle piece away with Delete, press undo, and Delete drops it again. Before this it went quiet on the timeline the moment you changed your mind once, because the undo put the piece back on screen without putting it back in your hand.",
+  "setup": "Photonz Dev, Experiments window, release Next. Cut a recording into pieces and Undo puts the selection back are both on by default.",
+  "try": [
+    { "do": "Open a recording, let it land in the editor with the timeline under the picture." },
+    { "do": "Move the playhead to about a quarter in and press B, then to the middle and press B again." },
+    { "do": "Press Delete. The middle piece goes and the join closes.", "shot": "2026-09-22-delete-after-undo-1.png" },
+    { "do": "Press Command Z. The piece comes back, and watch whether it comes back LIT on the bar." },
+    { "do": "Press Delete again without clicking anything first. It should go, in one press." },
+    { "do": "Do the pair a third time: Command Z, then Delete." },
+    { "do": "Open the Video menu and read the Delete This Piece row: it is the row the key now runs, not a label beside a key that does nothing.", "shot": "2026-09-22-delete-after-undo-2.png" }
+  ],
+  "evaluate": [
+    "When the piece comes back after an undo, can you tell from the bar alone that it is the one in your hand?",
+    "Does pressing Delete straight after an undo feel safe, or do you want to click the piece first to be sure?",
+    "Is landing the playhead on the join after a delete the right place for it, or would you rather it stayed on the piece you might put back?",
+    "In the recording window, does Delete feel the same as it does on the timeline?"
+  ],
+  "rough": [
+    "Two other rows still print a Delete key they cannot be reached by: Layer, Delete Layer on Command Delete, and Edit, Fill with Foreground on Option Delete. Both do the right thing today because the picture answers the key itself, so nothing looks broken, but neither row is what answers. They were left alone because they are shared with the Current release, and a task now asks the question.",
+    "The piece coming back in your hand rides on the Undo puts the selection back flag. Switch that off and Delete goes quiet after an undo again, which is more than that switch sounds like it is about.",
+    "A walk cannot press this key over the timeline for real: macOS never gives the probe focus, so the menu bar it reads is frozen and the walk runs the command the press meant instead. The recording window half IS pressed for real and reaches the row."
+  ]
+}

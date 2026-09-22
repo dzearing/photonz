@@ -697,13 +697,22 @@ private final class Run {
                 // ⌘Z failed on the same macOS fact. Where the chord has a
                 // stand-in, run what the press meant and say so in one line
                 // nobody can misread as the press having worked.
-                guard let standIn = PlaytestMenuStandIn.action(for: key, modifiers: modifiers) else {
+                guard let written = PlaytestMenuStandIn.action(for: key, modifiers: modifiers) else {
                     throw Failure(description: "\(chord) is \(destination.path), but that item has no action behind it, "
                         + "so pressing it does nothing, and no stand-in is written down for this chord. "
                         + "\(Self.frozenMenuBar) "
                         + "Use an `action` step for the outcome and keep a `key` step if you want the press on record, "
                         + "or add the chord to PlaytestMenuStandIn so every walk gets it.")
                 }
+                // One key, two places it can land, exactly as the row itself
+                // splits: ⌫ drops a piece of the recording in the recording
+                // WINDOW and a piece of the clip on the TIMELINE
+                // (`EditorCommands`, Video ▸ Delete This Piece). The written
+                // stand-in names the window's command, so a walk pressing ⌫
+                // over a recording open as a document was told "no recording
+                // is open" about a document sitting right there. Send it where
+                // the row would have sent it.
+                let standIn = onTheTimeline(written)
                 note(number, step.name,
                      "\(chord) is \(destination.path). THE PRESS DID NOT RUN IT: \(Self.frozenMenuBar) "
                      + "The item carries the chord, so the walk ran what the press meant, `action \(standIn.rawValue)`, "
@@ -8759,14 +8768,38 @@ private final class Run {
             case .control: wanted.insert(.control)
             }
         }
-        return find(chord: key.characters, flags: wanted, in: bar, path: [], depth: 0)
+        return find(chord: menuCharacters(for: key), flags: wanted, in: bar, path: [], depth: 0)
     }
 
-    private static func find(chord: String, flags: NSEvent.ModifierFlags,
+    /// Every character a menu row may carry for this key, lowercased.
+    ///
+    /// One key, two numbers. ⌫ SENDS U+007F and a menu ROW that answers it
+    /// carries U+0008, because AppKit normalises the press to backspace before
+    /// it looks along the menu bar (`DeleteKeyCharacters.menuKeyEquivalent`).
+    /// Looking for only the character the press carries missed the row AppKit
+    /// would actually run, so a walk was told "no menu item carries delete"
+    /// about a row sitting in the Video menu with ⌫ printed beside its name.
+    /// Both are accepted, so a walk finds the row either way round.
+    private static func menuCharacters(for key: PlaytestKey) -> [String] {
+        let typed = key.characters.lowercased()
+        guard typed == String(DeleteKeyCharacters.backwards) else { return [typed] }
+        return [typed, String(DeleteKeyCharacters.menuKeyEquivalent)]
+    }
+
+    /// The stand-in a chord means HERE, for the few commands that reach two
+    /// surfaces under one key. Only the recording ones split that way; every
+    /// other chord is left exactly as it is written down.
+    private func onTheTimeline(_ action: PlaytestAction) -> PlaytestAction {
+        guard action == .videoDeletePiece, recording == nil,
+              editor?.documentHasTime == true else { return action }
+        return .clipDeletePiece
+    }
+
+    private static func find(chord: [String], flags: NSEvent.ModifierFlags,
                              in menu: NSMenu, path: [String], depth: Int) -> MenuDestination? {
         for item in menu.items where !item.isSeparatorItem && !item.isHidden {
             if !item.keyEquivalent.isEmpty,
-               item.keyEquivalent.lowercased() == chord.lowercased(),
+               chord.contains(item.keyEquivalent.lowercased()),
                effectiveFlags(of: item) == flags.intersection([.command, .shift, .option, .control]) {
                 return MenuDestination(item: item, path: (path + [item.title]).joined(separator: " ▸ "))
             }

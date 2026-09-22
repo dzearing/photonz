@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/delete-key-drops-a-timeline-piece-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 3 pieces" },
+    { "do": "describe", "stage": "1-three-pieces", "note": "a recording open as an ordinary document, cut twice, with the middle piece in hand: three pieces on one row" },
+    { "do": "snapshot", "name": "1-three-pieces" },
+
+    { "do": "shortcut", "key": "delete", "menuItem": "Delete This Piece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
+    { "do": "describe", "stage": "2-the-key-drops-the-piece", "note": "THE TEST: plain Delete on the timeline reaches Video ▸ Delete This Piece and drops the piece in hand. The recording is still one row with its own name, because what went was a PIECE and not the clip: the key that means throw this piece away must never be the key that throws the whole take away" },
+    { "do": "snapshot", "name": "2-the-key-dropped-the-piece" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 3 pieces" },
+    { "do": "shortcut", "key": "delete", "menuItem": "Delete This Piece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
+    { "do": "describe", "stage": "3-and-again-after-an-undo", "note": "undo puts the piece back and the same press drops it again, so changing your mind and changing it back never costs the key" }
+  ]
+}

@@ -343,7 +343,8 @@ final class EditorState {
     /// on screen.
     var selectionSnapshot: SelectionSnapshot {
         SelectionSnapshot(region: selection, targetsPixels: selectionTargetsPixels,
-                          picked: LayerPick(primary: selectedLayerID, multi: multiSelectedLayerIDs))
+                          picked: LayerPick(primary: selectedLayerID, multi: multiSelectedLayerIDs,
+                                            piece: selectedClipPieceIndex))
     }
     /// The outline and the pick that the NEXT step on the stack should carry,
     /// waiting here until the stack actually needs it.
@@ -947,7 +948,9 @@ final class EditorState {
     /// Which PIECE of the picked clip is in hand, where the clip is cut into
     /// more than one (`EditorState+ClipBar`). Nil means the clip as a whole:
     /// a recording nobody has cut has no piece to pick.
-    var selectedClipPieceIndex: Int?
+    var selectedClipPieceIndex: Int? {
+        didSet { noteSelectionForHistory() }
+    }
     /// Which CUT of the picked clip is in hand, named by the piece that arrives
     /// at it (`EditorState+ClipTransitions`). Nil means no cut is picked, which
     /// is every moment until somebody clicks a join.
@@ -3216,6 +3219,13 @@ final class EditorState {
         // things the band caught are picked again, undo a delete and ⌫
         // removes the same things again.
         if selectedLayerID != snapshot.picked.primary { selectedLayerID = snapshot.picked.primary }
+        // ...and the PIECE of a cut clip that was in hand, for the same reason
+        // and with the same consequence: ⌫ only drops a piece you explicitly
+        // picked, so an undo that left your hand empty made the key answer
+        // nothing on the way back (`LayerPick.piece`).
+        if selectedClipPieceIndex != snapshot.picked.piece {
+            selectedClipPieceIndex = snapshot.picked.piece
+        }
         if multiSelectedLayerIDs != snapshot.picked.multi {
             multiSelectedLayerIDs = snapshot.picked.multi
             // A band has no anchor row, the same as when it was first swept:

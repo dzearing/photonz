@@ -31,6 +31,14 @@
     { "do": "wait", "seconds": 1.2 },
     { "do": "expectRecording", "pieces": 2, "keeps": 2, "seconds": 4 },
     { "do": "describe", "stage": "4-the-menu-carries-the-same-key", "note": "the Video menu item called Delete This Piece really carries plain Delete, the key its own row shows and the trash tooltip promises, so the button, the menu and the key are three ways to the one command" },
-    { "do": "snapshot", "name": "4-the-menu-carries-the-same-key" }
+    { "do": "snapshot", "name": "4-the-menu-carries-the-same-key" },
+
+    { "do": "action", "action": "videoUndoEdit" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 3, "keeps": 3, "seconds": 8 },
+    { "do": "shortcut", "key": "delete", "menuItem": "Delete This Piece" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "pieces": 2, "keeps": 2, "seconds": 4 },
+    { "do": "describe", "stage": "5-the-pair-repeats", "note": "the second time round the pair, and the third press of the key: undo puts the piece back and Delete drops it again, so changing your mind and changing it back never costs the key. Nothing here is a one-off — the key reaches the same command every time because the row is what answers it" }
   ]
 }

@@ -406,11 +406,15 @@ struct EditorCommands: Commands {
                 Button("Delete This Piece") {
                     onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
                 }
-                // Not `.delete`: SwiftUI's is U+0008, and AppKit only
-                // matches a ⌫ press against U+007F, so `.delete` registers
-                // a chord the keyboard cannot type. See
-                // `DeleteKeyCharacters`.
-                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: [])
+                // A MENU ROW carries U+0008 for ⌫, which is not the U+007F
+                // the key sends: AppKit normalises the press to backspace
+                // before it looks along the menu bar, so a row holding U+007F
+                // prints ⌫ beside its name and the key never reaches it. This
+                // row held U+007F and the walk that presses ⌫ for it failed
+                // for five days. See `DeleteKeyCharacters.menuKeyEquivalent`
+                // for the measurement, including the half that says a text
+                // field with the keyboard still keeps the key.
+                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
                 .disabled(!(onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
                                        : (video?.canDeleteSelectedPiece ?? false)))
                 // A freeze is not a special object: it is a piece whose in and

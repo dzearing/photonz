@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T12:16:12.601Z",
-  "updated": "2026-09-22T12:16:23.106Z",
+  "updated": "2026-09-22T13:00:12.631Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-22 by the digest pass, on the probe built from 5ac6ce15, twice (once inside the full sweep, once on its own).\n\n  Scripts/playtest.sh Scripts/playtest/delete-key-drops-a-piece-walk.json --no-build\n  -> step 23 (shortcut): delete should have gone to Video ▸ Delete This Piece but was taken by window\n\nThe walk gets that far cleanly: three pieces, the middle one deleted (step 17 passes, stage 2-delete-dropped-the-middle-piece), then action videoUndoEdit, then expectRecording pieces 3 keeps 3 seconds 8 passes, so the undo itself is right and the document really is back to three pieces. It is only the SECOND Delete that misses. So the piece is coming back without whatever makes Delete This Piece the key's owner: either the piece selection is not restored by the undo, or the menu item is left disabled.\n\nFound in the 2026-09-22T12:10Z full sweep (queue/sweep/2026-09-22-031225.log), which named 16 failing walks; this is the only one of them in the focus epic, which is why it is out on its own rather than left in walks-that-fail-in-the-full-sweep-4.",
@@ -35,9 +35,23 @@
     {
       "t": "2026-09-22T12:16:23.105Z",
       "note": "Same shape as a-shape-that-was-turned-into-a-picture-and-undon, which is being dropped today because its own walk (turn-two-shapes-into-pictures-walk) now passes and image-editing is staged later: there, a marquee plus Backspace went silent after two undos; here, Delete goes silent after one. Two surfaces, one pattern: an undo puts the document back without putting back whatever made the delete key belong to that command. Worth checking for a third case while this one is open."
+    },
+    {
+      "t": "2026-09-22T12:22:11.074Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T13:00:12.580Z",
+      "note": "walks delete-key-drops-a-piece-walk -> delete-key-drops-a-piece-walk, delete-key-drops-a-timeline-piece-walk"
+    },
+    {
+      "t": "2026-09-22T13:00:12.630Z",
+      "note": "REPRODUCED and then found to be TWO bugs, not one. (1) The walk's step 23 was failing for a reason nothing to do with undo: Video ▸ Delete This Piece carried U+007F as its key equivalent, and AppKit normalises a ⌫ press to backspace before it looks along the menu bar, so NSMenu.performKeyEquivalent matched the row never. Measured in a throwaway binary: a menu holding U+007F matched a real CoreGraphics ⌫ never, bare or with ⌘ or with ⌥; one holding U+0008 matched every time. Also measured: a live U+0008 row does NOT steal the key from a focused text field (the field deleted a character, the row did not run), and with nothing focused the row ran, so making it live is safe beside typing. (2) The task's own title was right about a surface the walk never touched: on the TIMELINE, deleteClipPieceInHand clears selectedClipPieceIndex and an undo put the document back without putting the piece back in your hand, so canDeleteClipPieceInHand was false and ⌫ answered nothing. Found by a new walk, which failed with \"no piece is picked to throw away\" exactly where the task said it would."
     }
   ],
   "walks": [
-    "delete-key-drops-a-piece-walk"
-  ]
+    "delete-key-drops-a-piece-walk",
+    "delete-key-drops-a-timeline-piece-walk"
+  ],
+  "started": "2026-09-22T12:22:11.073Z"
 }
