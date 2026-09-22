@@ -47,10 +47,17 @@ struct AudioMixdownTests {
     /// Export a plan and read the loudness of the result straight back.
     static func exported(_ mix: [AudioMixSegment], urls: [UUID: URL],
                          named name: String) async throws -> Waveform {
+        try await written(mix, urls: urls, named: name).wave
+    }
+
+    /// The same, keeping what the export said about how loud the plan was
+    /// before it was held down.
+    static func written(_ mix: [AudioMixSegment], urls: [UUID: URL], named name: String)
+        async throws -> (wave: Waveform, headroom: AudioHeadroom) {
         let out = folder.appendingPathComponent("\(name)-out.m4a")
-        try await AudioMixdown.write(mix, urls: urls, to: out)
+        let headroom = try await AudioMixdown.write(mix, urls: urls, to: out)
         let reading = try #require(await SoundFile.read(at: out))
-        return reading.waveform
+        return (reading.waveform, headroom)
     }
 
     /// How loud a stretch of the written file is. A mean rather than a peak,
@@ -160,7 +167,7 @@ struct AudioMixdownTests {
 
     // MARK: - Several at once
 
-    @Test("Three sounds laid over each other all come out, and where they overlap it is louder")
+    @Test("Three sounds at the level they were recorded at come out as three sounds, not as a clipped flat top")
     func severalSoundsMixTogether() async throws {
         let bed = try Self.flatTone("bed")
         var doc = Self.document()
@@ -170,24 +177,69 @@ struct AudioMixdownTests {
         _ = doc.addSound(a, name: "one", atMS: 0)
         _ = doc.addSound(b, name: "two", atMS: 2000)
         _ = doc.addSound(c, name: "three", atMS: 4000)
-        // All three at a quarter, so three together is still inside the ceiling
-        // and the difference between one and three is a difference in level
-        // rather than a clip.
-        for index in doc.layers.indices {
-            doc.layers[index].setSoundLevel(AudioLevel(gain: 0.25))
-        }
+        // At the level they were recorded at, with nobody touching a fader:
+        // the case that used to come out as the flat top of a clipped waveform
+        // and now comes out as three sounds.
         let mix = doc.audioMix()
         #expect(mix.count == 3)
         #expect(doc.audioMix(atMS: 5000).count == 3)
 
         let urls = [a.id: bed, b.id: bed, c.id: bed]
-        let wave = try await Self.exported(mix, urls: urls, named: "three")
-        let alone = Self.loudness(wave, fromMS: 400, toMS: 1600)
-        let together = Self.loudness(wave, fromMS: 4400, toMS: 5600)
-        #expect(alone > 0.05)
-        #expect(together > alone * 1.5)
+        let out = try await Self.written(mix, urls: urls, named: "three")
+        // The plan on its own is well past what a file can hold, and the export
+        // says so rather than discovering it afterwards.
+        #expect(out.headroom.isOver)
+        #expect(out.headroom.peak > 2)
+
+        let alone = Self.loudness(out.wave, fromMS: 400, toMS: 1600)
+        let together = Self.loudness(out.wave, fromMS: 4400, toMS: 5600)
+        #expect(alone > 0.2)
+        // Three really is three times one. Clipped, it would be barely louder
+        // than one, because everything past the top is sheared off flat — which
+        // is exactly what this number caught before the mix was held down.
+        #expect(together > alone * 2.5)
+        // ...and nothing came out louder than a file can carry.
+        #expect(together <= 1)
+        #expect(out.wave.peaks.allSatisfy { $0 <= 1 })
         // ...and it runs as long as the last one leaves.
-        #expect(wave.durationMS > 9000)
+        #expect(out.wave.durationMS > 9000)
+    }
+
+    @Test("A mix that fits is written at the level it was mixed at, not quietly turned down")
+    func aMixThatFitsIsWrittenAsItIs() async throws {
+        let bed = try Self.flatTone("fits")
+        var doc = Self.document()
+        let sound = SoundRef(durationMS: 4000)
+        _ = doc.addSound(sound, name: "one", atMS: 0)
+        let out = try await Self.written(doc.audioMix(), urls: [sound.id: bed], named: "fits")
+        #expect(!out.headroom.isOver)
+        #expect(out.headroom.trim == 1)
+        // The tone was written at 0.8 and comes back at 0.8.
+        #expect(Self.loudness(out.wave, fromMS: 400, toMS: 3600) > 0.6)
+    }
+
+    @Test("Two sounds laid over each other are held down together, keeping the balance between them")
+    func twoSoundsKeepTheirBalance() async throws {
+        let loud = try Self.flatTone("balance")
+        var doc = Self.document()
+        let a = SoundRef(durationMS: 4000)
+        let b = SoundRef(durationMS: 4000)
+        _ = doc.addSound(a, name: "loud", atMS: 0)
+        _ = doc.addSound(b, name: "quiet", atMS: 0)
+        // One of them half as loud as the other, which is the thing a limiter
+        // chewing at the peaks would flatten and a straight trim keeps.
+        let quietID = try #require(doc.layers.last?.id)
+        doc.updateLayer(id: quietID) { $0.setSoundLevel(AudioLevel(gain: 0.5)) }
+
+        let mix = doc.audioMix()
+        let out = try await Self.written(mix, urls: [a.id: loud, b.id: loud], named: "balance")
+        #expect(out.headroom.isOver)
+        // 0.8 + 0.4 is 1.2, so the pair comes down by a fifth and lands at the
+        // top rather than past it.
+        #expect(abs(out.headroom.peak - 1.2) < 0.1)
+        #expect(abs(out.headroom.trim - 1 / out.headroom.peak) < 0.0001)
+        #expect(Self.loudness(out.wave, fromMS: 400, toMS: 3600) > 0.8)
+        #expect(out.wave.peaks.allSatisfy { $0 <= 1 })
     }
 
     @Test("A sound with nothing behind it is refused rather than written as an empty file")

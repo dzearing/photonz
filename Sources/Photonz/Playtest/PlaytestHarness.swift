@@ -2813,22 +2813,22 @@ private final class Run {
                      "sound: the engine is running with \(on) piece(s) of sound scheduled on it",
                      state: describe())
             case .soundExportMix:
-                let mix = editor.audioMix
-                guard !mix.isEmpty else {
+                guard !editor.audioPlan.isEmpty else {
                     throw Failure(description: "there is no sound in this document to write out")
                 }
                 let destination = out.appendingPathComponent("mix.m4a")
-                let urls = SoundLibrary.shared.urls(for: mix)
-                var failure: String?
                 var finished = false
+                // Export Sound's own path, minus the save panel a walk cannot
+                // answer, so the words that land on the canvas afterwards are
+                // the app's own rather than a walk's stand-in for them.
                 Task {
-                    do { try await AudioMixdown.write(mix, urls: urls, to: destination) }
-                    catch { failure = "\(error)" }
+                    await editor.writeMix(to: destination)
                     finished = true
                 }
                 try await poll("the mix to be written", within: 60) { finished }
-                if let failure {
-                    throw Failure(description: "the mix could not be written: \(failure)")
+                if !FileManager.default.fileExists(atPath: destination.path) {
+                    throw Failure(description: "the mix could not be written: nothing landed at "
+                        + destination.lastPathComponent)
                 }
                 let attributes = try? FileManager.default
                     .attributesOfItem(atPath: destination.path)
@@ -2838,7 +2838,102 @@ private final class Run {
                         + "not a sound file")
                 }
                 note(number, step.name,
-                     "sound: \(mix.count) pieces of sound written to mix.m4a, \(size) bytes",
+                     "sound: \(editor.audioPlan.count) pieces of sound written to mix.m4a, "
+                        + "\(size) bytes",
+                     state: describe())
+            case .soundExpectMixOver:
+                let plan = editor.audioPlan
+                guard !plan.isEmpty else {
+                    throw Failure(description: "there is no sound in this document, so there is "
+                        + "no mix to be too loud")
+                }
+                let reading = editor.audioHeadroom
+                guard reading.isOver else {
+                    throw Failure(description: "the mix peaks at \(String(format: "%.2f", reading.peak)) "
+                        + "of full scale, which fits: lay more sound over the same moment before "
+                        + "asking whether the app holds it down")
+                }
+                // What the player and the export are actually handed.
+                let held = editor.audioMix
+                let after = AudioHeadroom.reading(of: held, peaks: editor.soundShapes)
+                guard !after.isOver else {
+                    throw Failure(description: "the mix is \(String(format: "%.1f", reading.overByDB ?? 0)) dB "
+                        + "over and what plays is STILL "
+                        + "\(String(format: "%.1f", after.overByDB ?? 0)) dB over: it is not being "
+                        + "held down at all")
+                }
+                // Held down, not flattened: every layer came down by the same
+                // amount, so the quiet one is still quieter than the loud one.
+                let plannedGains = plan.map { $0.gain(atMS: reading.atMS) }.filter { $0 > 0 }
+                let heldGains = held.map { $0.gain(atMS: reading.atMS) }.filter { $0 > 0 }
+                guard plannedGains.count == heldGains.count, let first = plannedGains.first,
+                      let heldFirst = heldGains.first, first > 0 else {
+                    throw Failure(description: "the mix lost pieces on the way down: "
+                        + "\(plannedGains.count) audible before, \(heldGains.count) after")
+                }
+                let ratio = heldFirst / first
+                for (planned, heldGain) in zip(plannedGains, heldGains) {
+                    guard abs(heldGain / planned - ratio) < 0.01 else {
+                        throw Failure(description: "the layers did not all come down by the same "
+                            + "amount, so the balance between them changed: one moved by "
+                            + "\(String(format: "%.3f", heldGain / planned)), another by "
+                            + "\(String(format: "%.3f", ratio))")
+                    }
+                }
+                note(number, step.name,
+                     "sound: the mix is \(String(format: "%.1f", reading.overByDB ?? 0)) dB over at "
+                        + "\(reading.atMS) ms and every layer is held down by "
+                        + "\(String(format: "%.2f", ratio)), so what plays peaks at "
+                        + "\(String(format: "%.2f", after.peak))",
+                     state: describe())
+            case .soundExpectMeterReads:
+                guard !editor.audioPlan.isEmpty else {
+                    throw Failure(description: "there is no sound in this document, so the meter "
+                        + "has nothing to read")
+                }
+                // At the LOUDEST moment of the mix rather than at whatever
+                // moment the playhead happens to be on: a recording with a gap
+                // in its sound is silent at some moments on purpose, and a
+                // meter reading nothing there is the meter working.
+                let reading = editor.audioHeadroom
+                let shapes = editor.soundShapes
+                let here = AudioHeadroom.level(of: editor.audioMix, peaks: shapes,
+                                               atMS: reading.atMS)
+                guard here > 0.02 else {
+                    throw Failure(description: "the meter reads "
+                        + "\(String(format: "%.3f", here)) at \(reading.atMS) ms, which is the "
+                        + "LOUDEST moment the mix has: it is not following the mix at all")
+                }
+                let fraction = AudioHeadroom.meterFraction(ofLevel: here)
+                guard fraction > 0.2, fraction <= 1 else {
+                    throw Failure(description: "the meter is drawn at "
+                        + "\(String(format: "%.2f", fraction)) of its length for a level of "
+                        + "\(String(format: "%.3f", here)), which is not a reading anybody could "
+                        + "see")
+                }
+                // ...and it is not simply pinned: every file's shape has been
+                // read, so the meter is drawing the sound rather than the safe
+                // guess it makes for a file it has not looked at yet.
+                guard reading.assumedFiles == 0 else {
+                    throw Failure(description: "\(reading.assumedFiles) sound(s) in this document "
+                        + "have not been read yet, so the meter is drawing the safe guess rather "
+                        + "than the sound; give the shapes a moment to land")
+                }
+                // ...and it really is reading the mix rather than sitting at a
+                // constant: past the end of everything it reads nothing.
+                let end = (editor.audioPlan.map(\.endMS).max() ?? 0) + 1000
+                let after = AudioHeadroom.level(of: editor.audioMix, peaks: editor.soundShapes,
+                                                atMS: end)
+                guard after == 0 else {
+                    throw Failure(description: "the meter still reads "
+                        + "\(String(format: "%.3f", after)) at \(end) ms, past the end of every "
+                        + "sound there is")
+                }
+                note(number, step.name,
+                     "sound: the meter reads \(String(format: "%.2f", here)) of full scale at "
+                        + "\(reading.atMS) ms, \(String(format: "%.0f", fraction * 100))% up the "
+                        + "bar, \(String(format: "%.2f", editor.audioLevelNow)) under the playhead "
+                        + "at \(editor.documentTimeMS) ms, and nothing at all past the end",
                      state: describe())
             case .soundScrubAcrossIt:
                 guard Experiments.shared.scrubAuditionEnabled else {
@@ -3374,6 +3469,7 @@ private final class Run {
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
                  .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
+                 .soundExpectMixOver, .soundExpectMeterReads,
                  .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one
             // refuses the walk rather than quietly doing nothing.

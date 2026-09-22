@@ -787,8 +787,11 @@ private struct MotionStripMarksView: View {
 /// the whole thing runs for.
 ///
 /// Only the controls that DO something. There is no volume and no loop button
-/// because there is no sound yet and a recording finishes rather than
-/// repeating, and a control that only promises a feature is a dead end.
+/// because a recording finishes rather than repeating, and a control that only
+/// promises a feature is a dead end. The meter is here rather than over the
+/// canvas — where the mock drew it — because the canvas is the picture you are
+/// judging and a meter parked on it is the one thing you cannot move out of the
+/// way, and because this is where the eye already is while it plays.
 struct DocumentTransportBar: View {
     @Environment(EditorState.self) private var editorState
 
@@ -800,6 +803,7 @@ struct DocumentTransportBar: View {
                 .monospacedDigit()
                 .frame(minWidth: 38, alignment: .leading)
             Spacer(minLength: 0)
+            MixMeter()
             button("backward.frame.fill", name: "Previous Frame",
                    help: "Back one frame (←)") { editorState.stepDocument(byFrames: -1) }
             button(editorState.isDocumentPlaying ? "pause.fill" : "play.fill",
@@ -831,6 +835,75 @@ struct DocumentTransportBar: View {
         .accessibilityLabel(name)
         .panelHelp(help)
         .playtestControl(name, detail: "Transport")
+    }
+}
+
+/// **How loud the mix is coming out** (`AudioHeadroom.swift`).
+///
+/// A slim bar that rises and falls with the sound, and an amber mark when the
+/// mix adds up to more than a file can hold. Two things about it are deliberate
+/// and neither is what the mock drew:
+///
+/// * **It reads the plan, not the engine.** Every piece of sound under the
+///   playhead, at the level its own line says, times how loud its file actually
+///   is there. So it moves while you DRAG the playhead and not only while it
+///   plays, which is how you find the loud moment by hand, and it says the same
+///   thing the export will, because it is the same arithmetic.
+/// * **It says when the mix is over, not just that it is loud.** A meter that
+///   only pins at the top tells you something is wrong and not what. This one
+///   carries the number of decibels it is over, which is the number that gets
+///   taken off every layer before anything is written.
+private struct MixMeter: View {
+    @Environment(EditorState.self) private var editorState
+
+    /// How wide the bar is. Enough to read a rise and a fall in, short enough
+    /// that it never crowds the buttons it sits beside.
+    private static let width: CGFloat = 56
+
+    var body: some View {
+        if Experiments.shared.mixLoudnessEnabled, editorState.documentHasAudio {
+            HStack(spacing: 5) {
+                bar
+                if editorState.isMixHeldDown { overMark }
+            }
+            .playtestField("Mix meter")
+            .panelHelp(editorState.audioHeadroom.label)
+            .help(editorState.audioHeadroom.label)
+            // A file whose shape has not been read is counted at full scale,
+            // which is the safe guess for the ceiling and a bad one to DRAW:
+            // it pins the meter at the top the moment a document opens. So the
+            // meter asks for the shapes itself, and the guess lasts about as
+            // long as reading the file does.
+            .task(id: editorState.audioPlan.count) { editorState.loadSoundShapes() }
+        }
+    }
+
+    private var bar: some View {
+        let fraction = editorState.audioMeterFraction
+        return ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Color.primary.opacity(0.10))
+            Capsule()
+                .fill(editorState.isMixHeldDown ? Color.orange : Color.accentColor)
+                .frame(width: Self.width * CGFloat(fraction))
+        }
+        .frame(width: Self.width, height: 5)
+        // No spring and no ballistics: the number under it is the truth at this
+        // frame, and a meter that lags is a meter that lies about where the
+        // loud moment was.
+        .animation(.linear(duration: 0.05), value: fraction)
+        .accessibilityLabel("Mix meter")
+        .accessibilityValue(editorState.audioHeadroom.label)
+    }
+
+    /// What an over mix says, in the number that matters: how much is coming
+    /// off every layer to make it fit.
+    private var overMark: some View {
+        Text(String(format: "%.1f dB over", editorState.audioHeadroom.overByDB ?? 0))
+            .font(.system(size: 9, weight: .semibold))
+            .monospacedDigit()
+            .foregroundStyle(Color.orange)
+            .playtestField("Mix over")
     }
 }
 

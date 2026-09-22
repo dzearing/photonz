@@ -453,6 +453,14 @@ extension Experiments {
         soundOnTheTimelineEnabled && isEnabled(FeatureCatalog.scrubAuditionFlag)
     }
 
+    /// `next-the-mix-says-how-loud-it-is`: whether the transport carries a
+    /// meter, and whether a mix that adds up past what a file can hold is
+    /// brought down instead of clipped (`AudioHeadroom.swift`). Leans on the
+    /// one above it: with no sound on the timeline there is no mix to measure.
+    var mixLoudnessEnabled: Bool {
+        soundOnTheTimelineEnabled && isEnabled(FeatureCatalog.mixLoudnessFlag)
+    }
+
     /// `next-transitions-at-a-cut`: whether a cut can carry a transition, and
     /// whether an effect a layer already has can be changed over time
     /// (`docs/design/video-transitions.md`).

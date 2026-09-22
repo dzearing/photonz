@@ -1,0 +1,198 @@
+{
+  "out": "/tmp/photonz-playtest/mix-says-how-loud-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-the-mix-says-how-loud-it-is": true
+    }
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-sound-and-a-meter",
+      "note": "An eight second screen recording with its own sound. The meter sits in the transport beside the play button, not over the canvas where the mock drew it: the canvas is the picture you are judging, and a meter parked on it is the one thing you cannot move out of the way"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-sound-and-a-meter"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "soundExpectPlaying"
+    },
+    {
+      "do": "action",
+      "action": "soundExpectMeterReads"
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-meter-follows-the-mix",
+      "note": "Playing, and the meter is reading. The step fails unless it really is following the mix: high where the plan says there is sound, and nothing at all past the end of every sound there is. A meter that never moves photographs exactly like one that does, so it is checked rather than looked at"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-the-meter-follows-the-mix"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-three-sounds-add-up-past-the-top",
+      "note": "THE WHOLE OF IT. Three pieces of music laid over each other at the level they were recorded at, on top of the recording's own sound. Sound adds up, so this is well past what a sound file can hold, and until now the app said nothing about it: no meter, no mark on the export, and a written file that came out as the flat top of a clipped waveform. The meter is amber and carries the number of decibels it is over, which is the number that comes off every layer before anything is played or written"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-three-sounds-add-up-past-the-top"
+    },
+    {
+      "do": "action",
+      "action": "soundExpectMixOver"
+    },
+    {
+      "do": "describe",
+      "stage": "4-and-the-app-holds-it-down",
+      "note": "Checked rather than looked at: the plan reads over, the plan the player and the export are handed does not, and every layer came down by exactly the same amount, so the balance between them survived. That last part is what makes three sounds still three sounds rather than a limiter chewing at whichever one happened to be loudest"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-and-the-app-holds-it-down"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "soundExpectPlaying"
+    },
+    {
+      "do": "action",
+      "action": "soundExpectMeterReads"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-what-plays-is-what-exports",
+      "note": "Playing the held down mix. The player and the export are handed the same list, so the holding down is true of both or of neither: there is one plan and two renderers of it, and that is as true of the trim as of everything else"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-what-plays-is-what-exports"
+    },
+    {
+      "do": "action",
+      "action": "videoTrimCancel"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-the-file-says-it-came-down",
+      "note": "Export Sound writes the mix out, and the notice says it had to be held down and by how much, rather than leaving somebody to find out by listening. The file that landed is beside this walk's own pictures"
+    },
+    {
+      "do": "action",
+      "action": "soundExportMix"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-the-file-says-it-came-down"
+    }
+  ]
+}

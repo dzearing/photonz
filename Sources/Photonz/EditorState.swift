@@ -932,6 +932,15 @@ final class EditorState {
     /// drags one (`ScrubAudioPlayer.swift`). Its own engine because a scrub
     /// and a playthrough want opposite things from the same plan.
     @ObservationIgnored var scrubAudioStorage: ScrubAudioPlayer?
+    /// The last answer to how loud the mix gets, against the plan and the
+    /// shapes it was worked out from (`EditorState+Audio.swift`).
+    ///
+    /// Kept because the meter asks thirty times a second and the answer is a
+    /// walk over every twenty milliseconds of sound in the document. Checking
+    /// whether the plan changed costs one pass over the segments; working it
+    /// out again costs one pass over the whole timeline.
+    @ObservationIgnored var audioHeadroomCache:
+        (plan: [AudioMixSegment], shapes: Int, reading: AudioHeadroom)?
     /// The listening running in this window, or nil where none is
     /// (`EditorState+Captions`). It is what the Captions section's progress
     /// line is drawn from, so it is observed rather than ignored.

@@ -142,9 +142,64 @@ extension EditorState {
 
     // MARK: - What it sounds like
 
+    /// The plan the document says, before anything is done about how loud it
+    /// adds up to (`AudioMix.swift`).
+    var audioPlan: [AudioMixSegment] { document?.audioMix() ?? [] }
+
     /// The plan: what plays, in one list, read by the player and by an export
-    /// without either working anything out (`AudioMix.swift`).
-    var audioMix: [AudioMixSegment] { document?.audioMix() ?? [] }
+    /// without either working anything out.
+    ///
+    /// Held under what a sound file can carry (`AudioHeadroom`), because sound
+    /// adds up: three things at the level they were recorded at are three times
+    /// full scale where they overlap, and everything past the top is sheared
+    /// off flat. So the plan the player is handed and the plan the export is
+    /// handed are both the held-down one, which keeps the promise this whole
+    /// module is built on — what you hear is what exports — true of the
+    /// holding down as well as of everything else.
+    var audioMix: [AudioMixSegment] { AudioHeadroom.limited(audioPlan, by: audioHeadroom.trim) }
+
+    /// The shape of every sound in the document, as far as the app has read
+    /// them. Missing ones are counted at full scale, which is the safe guess.
+    var soundShapes: [UUID: Waveform] { SoundLibrary.shared.waveforms(for: audioPlan) }
+
+    /// How loud this document's mix gets, and by how much it is over.
+    ///
+    /// Kept between asks: the meter wants this thirty times a second and the
+    /// answer is a walk over every twenty milliseconds of sound there is, while
+    /// noticing that nothing changed costs one pass over the segments.
+    var audioHeadroom: AudioHeadroom {
+        let plan = audioPlan
+        let shapes = soundShapes
+        if let cached = audioHeadroomCache, cached.shapes == shapes.count, cached.plan == plan {
+            return cached.reading
+        }
+        let reading = AudioHeadroom.reading(of: plan, peaks: shapes)
+        audioHeadroomCache = (plan, shapes.count, reading)
+        return reading
+    }
+
+    /// Whether the mix has to be held down to fit in a file. What the mark on
+    /// the meter and the line on the export notice are drawn from.
+    var isMixHeldDown: Bool { audioHeadroom.isOver }
+
+    /// How loud the mix is coming out at the moment the playhead is on, nought
+    /// to one and beyond.
+    ///
+    /// Read off the plan rather than off a tap on the engine, on purpose: it
+    /// moves while you drag the playhead and not only while it plays, it says
+    /// the same thing the export will, and it is arithmetic a test can pin.
+    var audioLevelNow: Double {
+        AudioHeadroom.level(of: audioMix, peaks: soundShapes, atMS: documentTimeMS)
+    }
+
+    /// Where that level sits on the meter, nought at the bottom, one at the top.
+    var audioMeterFraction: Double { AudioHeadroom.meterFraction(ofLevel: audioLevelNow) }
+
+    /// Read the shape of every sound in the document, so the meter and any
+    /// export are working off the real files rather than off the safe guess.
+    func loadSoundShapes() {
+        SoundLibrary.shared.loadWaveforms(for: audioPlan)
+    }
 
     /// Where a layer's sound is, as the app has it. Made the first time
     /// something asks to be heard.
@@ -159,6 +214,7 @@ extension EditorState {
     /// two are hung off the same press.
     func startAudio() {
         guard documentHasAudio else { return }
+        loadSoundShapes()
         audioPlayer.play(audioMix, fromMS: documentTimeMS)
     }
 
@@ -224,7 +280,11 @@ extension EditorState {
     /// document video export yet (`video-share`), and because a mix you can
     /// play in anything is the fastest way to check a mix by ear.
     func exportSound() {
-        let mix = audioMix
+        // The PLAN rather than the held-down mix, so the export does the
+        // holding down itself and can say by how much. It is the same
+        // arithmetic off the same shapes, so what lands is the same file
+        // either way; this is only about who gets to tell the story.
+        let mix = audioPlan
         guard !mix.isEmpty else {
             raiseCanvasNotice(.mixWritten(file: nil))
             return
@@ -234,14 +294,33 @@ extension EditorState {
         panel.nameFieldStringValue = mixFileName + ".m4a"
         panel.message = "Write the mix out as one sound file"
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task { await writeMix(to: url) }
+    }
+
+    /// The same thing without the panel: what a scripted walk drives, so the
+    /// words on screen after an export are the app's own rather than a walk's
+    /// stand-in for them.
+    func writeMix(to url: URL) async {
+        let mix = audioPlan
+        guard !mix.isEmpty else {
+            raiseCanvasNotice(.mixWritten(file: nil))
+            return
+        }
         let urls = SoundLibrary.shared.urls(for: mix)
-        Task { [weak self] in
-            do {
-                try await AudioMixdown.write(mix, urls: urls, to: url)
-                self?.raiseCanvasNotice(.mixWritten(file: url.lastPathComponent))
-            } catch {
-                self?.raiseCanvasNotice(.mixWritten(file: nil))
+        let shapes = soundShapes
+        do {
+            let headroom = try await AudioMixdown.write(mix, urls: urls, to: url, peaks: shapes)
+            // Said before the file is judged by ear rather than after: a mix
+            // that had to come down is quieter on disk than it was in the room,
+            // and somebody who is not told that spends the next ten minutes
+            // wondering why.
+            if let over = headroom.overByDB {
+                raiseCanvasNotice(.mixHeldDown(file: url.lastPathComponent, byDB: over))
+            } else {
+                raiseCanvasNotice(.mixWritten(file: url.lastPathComponent))
             }
+        } catch {
+            raiseCanvasNotice(.mixWritten(file: nil))
         }
     }
 }

@@ -251,6 +251,93 @@ with no sound on the timeline there is nothing under the playhead to hear.
 
 ---
 
+## 5c. How loud it adds up to
+
+Sound adds up. Three things playing at the level they were recorded at are
+three times as loud as one of them where they overlap, and a sound file has no
+room for that: everything past the top is sheared off flat, and what should
+have been three sounds comes out as noise. Until 2026-09-22 the app said
+nothing about it — no meter, no mark on the export, and a written file you
+found out about by listening to it. §8 listed a meter as deliberately absent
+and §7 cut the mock's VU meters as answering nothing about the edit. Both were
+right about a meter with ballistics and wrong about the fact underneath it,
+which is not decoration: it is a file coming out broken.
+
+**One piece of arithmetic answers all of it.** `AudioHeadroom` (pure,
+`PhotonzCore`) takes the mix plan and the shape of each file it plays and says
+how loud the whole thing gets:
+
+```
+AudioHeadroom.reading(of: mix, peaks:)   -> the loudest it ever gets, where, and how far over
+AudioHeadroom.level(of: mix, peaks:, atMS:) -> how loud it is at ONE moment   (the meter)
+AudioHeadroom.limited(mix, peaks:)       -> the same plan, held under the ceiling
+```
+
+- **It measures the sound, not the fader.** A layer at full level playing a
+  quiet recording is quiet, and the only thing that knows that is the file. The
+  app has already read every file to draw its waveform (§4), so the shapes cost
+  nothing extra. A file not read yet is counted at full scale: the guess is
+  quieter than the truth, never louder.
+- **It is a worst case on purpose.** Peaks are summed rather than combined by
+  power, so two sounds that might line up are assumed to line up. A ceiling
+  that holds only for sounds that disagree is not a ceiling.
+- **The ceiling is full scale, not a decibel under it.** A recording that
+  already peaks at the top is a legal file, and pulling it down on the way out
+  would be the app quietly turning somebody's work down for a reason nobody can
+  hear.
+
+### Holding it down
+
+`limited` multiplies every level by one number, so the balance between the
+layers and the shape of every fade survive: it is the whole mix brought down,
+not a limiter chewing at whichever layer happened to be loudest. A mix that
+already fits is handed back untouched — nothing is ever quietly turned down —
+and trimming an already-trimmed mix changes nothing, which is what lets it be
+applied wherever the plan is read without anybody tracking whether it was
+applied already.
+
+`EditorState.audioMix` hands over the held-down plan, so the player, the scrub
+and the export are all given a mix that cannot clip, and §2's promise stays
+true of the trim as well as of everything else. `AudioMixdown.composition` does
+it again on the way past, which means a headless export or a video export
+cannot write a clipped file whatever it was handed.
+
+### The meter
+
+A slim bar in the **transport**, beside the play button. Not over the canvas,
+where the mock drew it: the canvas is the picture being judged and a meter
+parked on it is the one thing you cannot move out of the way. Not in the Sound
+section either, because that is only there when a layer that makes a sound is
+picked, and how loud the mix is is a question about the whole document.
+
+**It reads the plan, not the engine.** Every piece under the playhead, at the
+level its own line says, times how loud its file actually is there. Two things
+follow, and both are better than a tap on the mixer would have been: it moves
+while you DRAG the playhead and not only while it plays, so the loud moment can
+be hunted by hand; and it says the same thing the export will, because it is
+the same arithmetic.
+
+Over the ceiling the bar turns amber and says the number of decibels it is
+over, which is exactly the number coming off every layer. A meter that only
+pins at the top says something is wrong without saying what.
+
+Export Sound's notice says when the mix had to be held down and by how much
+(`CopyConfirmation.mixHeldDown`), so it is marked before the file is written
+rather than discovered afterwards.
+
+Behind `next-the-mix-says-how-loud-it-is`, which leans on
+`next-sound-on-the-timeline`. The FLAG is the meter and the mark; holding the
+mix inside what a file can hold happens either way, because writing a
+distorted file is a fault rather than an experiment.
+
+The walk is `mix-says-how-loud-walk`, and it checks rather than photographs:
+`soundExpectMeterReads` fails unless the meter follows the mix (high where the
+plan says sound, nothing past the end of it), and `soundExpectMixOver` fails
+unless the plan really is over, what plays is not, and every layer came down by
+the same amount.
+
+---
+
 ## 6. Where it is in the window
 
 | What | Where |
@@ -274,7 +361,7 @@ points is a smear and a level line has nowhere to be dragged.
 | Audio tracks are lanes on the timeline dock | Kept, exactly | It is the thesis, and it came free: a sound is a layer with a time, so the strip already drew it |
 | The selected track's channel strip opens in Properties | Kept, as the Sound section | |
 | Source files live in Library, scope Media | **Not built.** Add Sound opens a file; the shelf is a follow-up | The shelf is not what makes sound work, and the task said not to invent a third place for media — this invents none, it just has no shelf yet |
-| Live VU meters over the canvas | **Cut** | The task notes put meters with ballistics out of scope, and they answer nothing about the edit |
+| Live VU meters over the canvas | **Built, somewhere else** | Cut on 2026-09-21 as answering nothing about the edit. That was right about a meter with ballistics and wrong about the fact underneath it: a mix that adds up past full scale writes a broken file. The meter is in the transport rather than on the canvas, and it reads the plan rather than the engine (§5c) |
 | Mute and Solo | **Cut** | A level at nought IS mute. Solo is a mixer's product |
 | EQ and Compressor in Effects | **Cut** | An effects rack is its own feature |
 | Fade in field, fade out field, curve picker, diamonds on the lane | **One thing: points on the level line** | §3 |
@@ -294,7 +381,11 @@ points is a smear and a level line has nowhere to be dragged.
   composition with the sound already laid in and its volume ramps beside it, so
   when video export moves onto the document path it adds a video track to the
   same composition rather than growing a second idea of what a mix is.
-- **A meter.** Nothing on screen says how loud it is coming out right now.
+- ~~**A meter.**~~ Built on 2026-09-22, and §5c says where and why. The reason
+  it was out of scope — a meter with ballistics answers nothing about the edit
+  — was right about ballistics and missed the thing underneath: three sounds
+  at the level they were recorded at wrote a file that was clipped, and nothing
+  said so.
 - **Recording sound in the app.** Sound arrives with a recording, from a file,
   or let go on the window (§5a).
 - **Dropping onto the timeline itself.** A sound let go on the picture lands at

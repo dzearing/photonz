@@ -18933,3 +18933,58 @@ Next: the standing video set. The audit is
 `queue/audits/2026-09-22-hold-pushes-the-sound.json`; the question it most wants
 answered is whether everything waiting is the right default, or whether people
 freeze frames mainly in order to talk over them.
+
+## 2026-09-22 — A mix says how loud it is, and stops itself clipping
+
+Sound adds up, and nothing in the app said so. Three pieces of music at the
+level they were recorded at are three times full scale where they overlap;
+everything past the top was sheared off flat and the written file came out as
+noise. The test that first caught it had to pull all three down to a quarter by
+hand to have something worth asserting on.
+
+`AudioHeadroom` (pure, `PhotonzCore`, 18 tests) is the whole answer. It takes
+the mix plan and the shape of each file it plays — the waveforms the timeline
+already read — and says how loud the whole thing gets, how loud it is at one
+moment, and the same plan held under the ceiling. Peaks are summed rather than
+combined by power, so two sounds that might line up are assumed to line up: a
+ceiling that holds only for sounds that disagree is not a ceiling. A file whose
+shape has not landed yet counts as full scale, which is the safe way round.
+
+`EditorState.audioMix` hands over the held-down plan, so the player, the scrub
+and the export all get a mix that cannot clip and §2's promise stays true of the
+trim too. `AudioMixdown.composition` does it again on the way past, which means
+a headless or video export cannot write a clipped file whatever it was handed;
+trimming an already-trimmed mix changes nothing, so it does not matter who did
+it first. A mix that already fits is untouched.
+
+The meter is in the **transport**, not over the canvas where the mock drew it:
+the canvas is the picture being judged. It reads the PLAN rather than a tap on
+the engine, so it moves while you drag the playhead and not only while it plays,
+and a test can pin it. Over the ceiling it turns amber and says how many
+decibels — 9.3 dB over, for three copies of the sample music — which is exactly
+what comes off every layer. Export Sound's notice says it had to hold the mix
+down.
+
+Worth knowing: two walk runs here judged code that was not in the app. A
+`mix.count` left behind by an edit type-checked in debug and did not in release,
+so the probe's release build failed; `Scripts/probe-app.sh` refused to launch
+and said so, and the walk was then run with `--no-build` against the bundle
+already on disk. The script is not at fault (a deliberate type error makes it
+exit 1 with the binary untouched). The rule that would have saved it: never send
+`probe-app.sh`'s output to `/dev/null`, and never pass `--no-build` to a walk
+you are running to check a change you just made.
+
+New: `mix-says-how-loud-walk` (6 real window captures), and two playtest actions
+that check rather than photograph — `soundExpectMeterReads` (high at the
+loudest moment, nothing past the end, every shape read) and
+`soundExpectMixOver` (the plan over, what plays not over, every layer down by
+the same amount).
+
+Filed: a word the canvas says while a trim is in hand is printed underneath the
+trim bar. Found while trying to photograph the export notice; both are
+`.overlay(alignment: .bottom)` on the same surface.
+
+Next: the standing video set. The audit is
+`queue/audits/2026-09-22-mix-loudness.json`; the question it most wants answered
+is whether bringing the whole mix down by itself feels right, or like the app
+turning your work down behind your back.

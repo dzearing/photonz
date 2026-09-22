@@ -1,0 +1,32 @@
+{
+  "id": "a-word-the-canvas-says-is-readable-when-a-trim-i",
+  "title": "A word the canvas says is readable when a trim is in hand",
+  "goal": "Open a recording, add a sound, and the line telling you what just happened is printed underneath the trim bar at the bottom of the picture, half of it hidden. It happens to every word the canvas says while a trim is up: sound added, mix written, a refusal. Give them somewhere to sit that is not on top of each other.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T18:51:11.568Z",
+  "updated": "2026-09-22T18:51:20.594Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED while building the mix loudness task. Both are .overlay(alignment: .bottom) on the same EditorCanvasSurface: the notice pill in EditorView.swift line ~352 (canvasNoticeChip, padded above the tool bar by EditorChromeLayout.aboveToolBar) and the trim bar the recording door leaves in hand. They land in the same band and the trim bar wins.\n\nHow to see it: Scripts/playtest.sh on a walk that opens the sample recording and calls soundAddSample, snapshotting 0.3s later. The exact run: copy Scripts/playtest/mix-says-how-loud-walk.json, cut it off after the first soundAddSample, add {\"do\":\"wait\",\"seconds\":0.3} and a snapshot. The capture shows In 0:00 · Out 0:08 · 0:08 kept · Reset · Cancel · Trim drawn ON TOP of Sound added · Sample Music is on the timeline, with the pill legible only where the trim bar does not cover it. Picture kept at /tmp/notice-under-trim.png for as long as /tmp survives.\n\nWhy it matters beyond the cosmetics: mix-says-how-loud-walk had to cancel the trim before its export step to photograph the notice at all, which is a walk working around the app.\n\nNot in scope of the task that found it: that one is about how loud the mix is.",
+  "acceptance": [
+    "A notice raised while a trim is in hand is readable end to end, with nothing drawn over it",
+    "The trim bar stays where it is and stays readable too",
+    "A walk photographs both at once and the picture shows two separate things"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T18:51:11.570Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T18:51:20.593Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}

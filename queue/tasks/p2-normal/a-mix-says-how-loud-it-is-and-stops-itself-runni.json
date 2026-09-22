@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T12:04:23.601Z",
-  "updated": "2026-09-22T12:17:52.715Z",
+  "updated": "2026-09-22T18:59:26.333Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 2). The task that built sound named this as the follow-up to file rather than build: \"Anything past that - buses, effects racks, meters with ballistics - is a follow-up\".\n\nREPRODUCED while writing Tests/PhotonzMediaTests/AudioMixdownTests.swift. The test severalSoundsMixTogether lays three copies of the same tone over each other and had to pull every one of them down to a quarter by hand, with this comment, to get a result worth asserting on:\n\n    // All three at a quarter, so three together is still inside the ceiling\n    // and the difference between one and three is a difference in level\n    // rather than a clip.\n\nAt the level they were recorded at the three sum past full scale and the difference between one sound and three stops being a difference in level. Nothing in the app warns.\n\nWhere it goes: AudioMixdown.composition(for:urls:) in Sources/PhotonzMedia/AudioMixdown.swift builds the composition and the AVMutableAudioMix. PhotonzDocument.audioMix() in Sources/PhotonzCore/AudioMix.swift already knows every segment and its gain at every moment, so the arithmetic for \"how loud could this get\" is pure and testable there. The live meter would read off DocumentAudioPlayer's main mixer.\n\nThe mock (docs/design/mocks/pages/video-audio.html) draws live meters over the canvas. docs/design/video-audio.md §7 says why they were cut for now; this is the task that decides whether they come back, and where.",
@@ -31,6 +31,42 @@
     {
       "t": "2026-09-22T12:17:52.714Z",
       "note": "seq 70 -> 60"
+    },
+    {
+      "t": "2026-09-22T18:19:53.268Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T18:22:19.440Z",
+      "note": "Adversarial review of the idea, before building. (1) The mock puts live VU meters OVER THE CANVAS. Rejected: in a video editor the canvas is the picture you are judging, and a meter parked on it is the one thing you cannot move out of the way. It also only exists while sound plays, so it is dead space the rest of the time. (2) The Sound section in the panel is the other obvious home and is also wrong: it is only there when a layer that makes a sound is picked, and the question 'is the mix too loud' is about the whole document, not about the layer in hand. (3) So: a slim meter in the transport bar, beside the play button, which is where the eye already is while it plays and which is on screen whenever the document has time. (4) A meter with real ballistics off an engine tap was rejected too: it reads nothing while paused or while you drag the playhead, it cannot be checked by a walk, and it is a second idea of how loud the mix is beside the plan's own. The meter reads the PLAN - every segment's gain at that moment times the peak of the file it is playing - so it moves while you scrub, it agrees with what exports by construction, and it is pure arithmetic a unit test can pin. (5) Shortest version that delivers the value: the clipping is the bug, the meter is how you see it. Both fall out of one piece of arithmetic (the summed peak envelope), so neither is speculative."
+    },
+    {
+      "t": "2026-09-22T18:51:20.648Z",
+      "note": "owns these walks: mix-says-how-loud-walk"
+    },
+    {
+      "t": "2026-09-22T18:58:41.853Z",
+      "note": "Built and verified. (1) AudioHeadroom in PhotonzCore, pure, 18 tests: reading(of:peaks:) walks every 20ms bucket of the mix summing gain x the file's own peak there, level(of:peaks:atMS:) is one moment, limited() is the same plan multiplied by one number. Ceiling is full scale exactly, NOT a decibel under it: a recording that already peaks at the top is a legal file and pulling it down would be turning somebody's work down for nothing anybody can hear. (2) EditorState.audioMix hands over the held-down plan, so the player, the scrub and the export all get it and 'what you hear is what exports' stays true of the trim as well. AudioMixdown.composition limits again on the way past, so a headless or video export cannot write a clipped file whatever it was handed; limiting is idempotent, so it does not matter who did it first. (3) The meter is in the transport, reads the plan rather than an engine tap, and turns amber with the number of decibels over. (4) Behind next-the-mix-says-how-loud-it-is, which gates the METER only: keeping a file inside what it can hold happens either way, because writing a distorted file is a fault rather than an experiment."
+    },
+    {
+      "t": "2026-09-22T18:58:41.903Z",
+      "note": "Acceptance, each checked rather than assumed. (1) 'something on screen says how loud the mix is': mix-says-how-loud-walk step soundExpectMeterReads fails unless the meter reads high at the mix's loudest moment, reads nothing past the end of every sound, and every file's shape has actually been read; six real window captures. (2) 'marked before it is written': the meter says 9.3 dB over the whole time the three sounds are stacked, and Export Sound's notice reads 'mix.m4a was 9.3 dB past what a file can hold, so the whole mix came down by that much' - photographed in 2026-09-22-mix-loudness-2.png. (3) 'never louder than it can carry': AudioMixdownTests exports a real m4a of three full-level tones and reads it back; every peak is inside full scale. (4) 'three sounds rather than noise': the same test's together-over-alone ratio is above 2.5, where a clipped mix would be about 1.25, and severalSoundsMixTogether no longer pulls the three layers down to a quarter by hand."
+    },
+    {
+      "t": "2026-09-22T18:58:41.952Z",
+      "note": "Adversarial review of the BUILT thing, on the real app. Fixed on the way: the meter said '9.3 over' with no unit, now '9.3 dB over'; the meter pinned at the top for the first second of a document because an unread file counts as full scale, so the meter now asks for the shapes itself; soundExportMix wrote the file behind the app's back and so never raised the app's own notice, so Export Sound's write-and-say path is now writeMix(to:) and the walk drives it. Left rough and written into the audit: there is no way to let a mix clip on purpose; the meter has no ballistics, on purpose; the unread-file window still reads high for a fraction of a second."
+    },
+    {
+      "t": "2026-09-22T18:58:42.001Z",
+      "note": "left rough: Scripts/probe-app.sh launched a STALE bundle after its release build failed, and two walk runs judged code that was not in the app before I noticed. The failure was a mix.count reference left behind by an edit, which the debug build resolved to something else and the release build did not. Not filed as its own task: it is one line of a script and the loop has an open task about walk trust already, but it cost twenty minutes here and would cost anybody the same. Written down so the next pass that touches probe-app.sh sees it."
+    },
+    {
+      "t": "2026-09-22T18:59:26.332Z",
+      "note": "CORRECTION to the note above about Scripts/probe-app.sh. It is NOT broken and it did not launch a stale bundle. Reproduced properly: I appended a deliberate type error to Sources/Photonz/AppInfo.swift, ran Scripts/probe-app.sh, and it exited 1 with the probe binary's checksum unchanged and nothing launched - set -euo pipefail plus a direct call to Scripts/build-app.sh --probe does exactly what it should. What actually happened was mine: I ran probe-app.sh with its output sent to /dev/null, never saw the exit code, and then ran Scripts/playtest.sh with --no-build, which launched the bundle that was already on disk. So the lesson is the opposite of the one I wrote down: do not redirect probe-app.sh's output away, and do not pass --no-build to a walk you are running to check a change you just made. Nothing to file."
     }
+  ],
+  "started": "2026-09-22T18:19:53.267Z",
+  "walks": [
+    "mix-says-how-loud-walk"
   ]
 }

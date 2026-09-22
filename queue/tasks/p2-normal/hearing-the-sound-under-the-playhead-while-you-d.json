@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T12:04:16.634Z",
-  "updated": "2026-09-22T12:17:52.667Z",
+  "updated": "2026-09-22T18:09:26.558Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 1). Nothing is broken: the waveform is the primary answer to aiming a cut and it works. This is the second answer people reach for.\n\nThe model already has what it needs: PhotonzDocument.audioMix(atMS:) says exactly which files and offsets are audible at a moment. What is missing is the app half. The live player (Sources/Photonz/DocumentAudioPlayer.swift) schedules whole segments against one engine start, which is right for playing and wrong for scrubbing: a scrub wants a short window of samples per pointer move, played once. That is its own path through the engine, probably a second player node fed AVAudioPCMBuffers read straight out of an AVAudioFile at the source offset the mix gives.\n\nHook: EditorState.scrubDocument(toMS:) in Sources/Photonz/EditorState+Time.swift is where every scrub lands.",
@@ -35,7 +35,35 @@
     {
       "t": "2026-09-22T12:17:52.666Z",
       "note": "seq 60 -> 50"
+    },
+    {
+      "t": "2026-09-22T17:36:20.731Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T17:39:03.770Z",
+      "note": "Adversarial review before building. (1) The idea earns its place: finding a word by ear is what the waveform cannot answer, and every NLE has jog audio. (2) A first-time user learns nothing new: they drag, it sounds. (3) What the mock/doc assumed and the app cannot deliver: the playhead drag in MotionStripView has no onEnded at all, so 'stops when you let go' needs the gesture extended. (4) Cut: a single CLICK on the timeline must NOT blip. A tap is one onChanged, so the first move of a session is deliberately silent and only movement after it sounds. (5) Cut: no in-app toggle, no meter, no scrub-speed control. The flag in Experiments is the off switch; a control with no home in the shell is not worth inventing. (6) Collision: scrubbing WHILE playing already restarts the playback audio from the new spot, which is the right sound, so scrub audio stands down entirely while playing rather than layering a second engine over the first. (7) Shortest version that delivers it: one short grain of source samples per ~60ms of drag, one node per layer, faded at both ends so the joins do not click."
+    },
+    {
+      "t": "2026-09-22T18:08:32.931Z",
+      "note": "walks none -> hear-the-scrub-walk"
+    },
+    {
+      "t": "2026-09-22T18:09:02.805Z",
+      "note": "Post-build review on the real app, through hear-the-scrub-walk (5 real window captures, screen unlocked, Screen Recording granted). Numbers from the walk: 15 grains over a 24-move drag out and 24 back, 2 layers heard, 7 grains reversed, loudest sample 0.579 (so real audio, not silence), worst grain 0.0ms and worst move 0.1ms on the main thread. The first two builds FAILED this walk and that is the story of the task: main-thread engine start cost 70.2ms a grain, and after moving warm-up to the press a compressed-file seek still cost 18.9ms on the second drag. The engine, the open files and the reads now live in an actor off the main actor and the hand pays 0.1ms."
+    },
+    {
+      "t": "2026-09-22T18:09:02.853Z",
+      "note": "left rough, none of it filed: (1) nobody has LISTENED to it, and no agent can; that is the first line of the audit for the user to judge. (2) Arrow-key jog is still silent - folded as a line onto the-transport-says-the-arrow-keys-step-a-frame-a rather than filed, because a key press has no end the way a drag does and nobody has asked for it yet. (3) A grain plays at natural pitch even on a piece that is sped up; every other editor does the same, and it is in the audit's rough for the user to disagree with. (4) No in-app toggle, only the Experiments flag - deliberately not filed, because whether it needs one is an evaluate question on the audit and building a control nobody asked for is how a declined feature gets built. (5) Dragging a CLIP or a trim handle is still silent; only the playhead sounds."
+    },
+    {
+      "t": "2026-09-22T18:09:26.556Z",
+      "note": "Dragging the playhead now plays the sound under it. ScrubAudition (pure PhotonzCore, 13 tests) says which file, which frames, which way round and how loud, off the same audioMix() plan playing and exporting read; ScrubAudioPlayer paces the grains on the main actor and ScrubAudioEngine (an actor) owns the engine, the files and the reads, so the hand pays 0.1ms a grain. Behind next-hear-the-scrub, Next only. All four acceptance items verified by hear-the-scrub-walk: sound comes out of a forward drag and stops on release, 7 of 15 grains played backwards on the way back, both layers heard, loudest sample 0.579 so it was real audio and not silence, and no move or grain cost the picture a frame. Scripts/test.sh 9006 green; 4 sound walks and 7 timeline walks green. Audit: queue/audits/2026-09-22-video-audio-scrub.json with two real window captures. Committed 8dbefa04 and pushed."
     }
   ],
-  "walks": []
+  "walks": [
+    "hear-the-scrub-walk"
+  ],
+  "started": "2026-09-22T17:36:20.730Z",
+  "completed": "2026-09-22T18:09:26.557Z"
 }

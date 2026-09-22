@@ -175,6 +175,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         case mediaWouldNotOpen(name: String)
         /// The mix was written out as one sound file, or could not be.
         case mixWritten(file: String?)
+        /// The mix was written, and it had to be held down to fit in a file
+        /// (`AudioHeadroom`). Its own case rather than a quieter `mixWritten`
+        /// because the level on disk is not the level in the room, and a person
+        /// who is not told that spends the next ten minutes wondering why the
+        /// file sounds quieter than the timeline did.
+        case mixHeldDown(file: String, byDB: Double)
         /// The app listened to the recording and wrote the captions
         /// (`Captions.swift`). The words land in the title-safe band at the
         /// bottom of the picture and on the timeline, and on a long recording
@@ -291,6 +297,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .clipAdded: return "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
+        case .mixHeldDown: return "Mix written, held down"
         case .captionsWritten: return "Captions written"
         case .captionsCameTo: return "Captions"
         case .captionsFileWritten(let file): return file == nil ? "Not written" : "Captions written"
@@ -336,6 +343,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .mixWritten(let file):
             guard let file else { return "The mix could not be written" }
             return file
+        case .mixHeldDown(let file, let byDB):
+            return String(format: "%@ was %.1f dB past what a file can hold, so the whole mix came down by that much",
+                          file, byDB)
         case .captionsWritten(let words, let cues, let ofMS):
             return CaptionProgress.heard(words: words, cues: cues, ofMS: ofMS)
         case .captionsCameTo(let said):

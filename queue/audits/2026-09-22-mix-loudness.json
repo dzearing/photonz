@@ -1,0 +1,30 @@
+{
+  "feature": "A mix says how loud it is, and stops itself running past what a file can hold",
+  "epic": "video-audio",
+  "summary": "The transport now carries a meter that rises and falls with the mix, and a mix that adds up past what a sound file can hold is brought down by exactly the amount it is over instead of being written distorted. Three sounds at the level they were recorded at come out as three sounds.",
+  "setup": "Photonz Dev, release Next. Needs a recording open, so Sound on the timeline and A recording is a document are both on. The new flag is The mix says how loud it is, on by default.",
+  "try": [
+    { "do": "Open a recording: Video menu, Open Sample Recording." },
+    { "do": "Press space. Watch the slim bar left of the play button rise and fall with the sound." },
+    { "do": "Press space again to stop, then drag the playhead slowly across the timeline and watch the same bar move under your hand." },
+    { "do": "Video menu, Add Sound, three times, taking the sample music each time so three copies stack up at the playhead.", "shot": "2026-09-22-mix-loudness-1.png" },
+    { "do": "Look at the meter: it is amber now and says 9.3 dB over." },
+    { "do": "Video menu, Export Sound, and read the line the canvas prints.", "shot": "2026-09-22-mix-loudness-2.png" },
+    { "do": "Play the written file in QuickTime and listen for three separate sounds rather than a buzz." },
+    { "do": "Pull one layer's Level fader down until the meter goes back to blue, and notice nothing else changed." }
+  ],
+  "evaluate": [
+    "Is the meter where your eye already is while it plays, or did you have to go looking for it?",
+    "Does a meter that moves while you DRAG the playhead earn its keep, or would one that only moves during playback have been enough?",
+    "Is 9.3 dB over the right thing to say, or would you rather it just said the mix is too loud?",
+    "The whole mix comes down at once rather than only the loud moments. Does that feel like the app doing the right thing, or like it turning your work down behind your back?",
+    "The export notice tells you after you pressed Export. Is the amber meter enough warning before that, or do you want stopping and asking?"
+  ],
+  "rough": [
+    "There is no way to say no. A mix over the ceiling always comes down, with no control to let it clip on purpose, because a distorted file is a fault rather than a choice. If you ever want the clipped version, there is nothing to click.",
+    "The meter reads the plan rather than a tap on the sound coming out, so it is a peak meter with no ballistics: it does not hold a peak, it has no decay, and it is exact rather than smooth. That is on purpose (it moves while you scrub and a test can pin it) and it does mean it looks busier than a meter you are used to.",
+    "The mock drew live VU meters over the canvas. That was not built: in a video editor the canvas is the picture you are judging and a meter parked on it is the one thing you cannot move out of the way.",
+    "A word the canvas says while a trim is in hand is printed underneath the trim bar, so Sound added and Mix written are half hidden when a recording has just been opened. Filed separately, not fixed here.",
+    "For the fraction of a second before a sound's shape has been read off disk, the meter counts that file at full scale and reads high. It is the safe guess for the ceiling and a poor one to draw. It lasts about as long as reading the file does."
+  ]
+}

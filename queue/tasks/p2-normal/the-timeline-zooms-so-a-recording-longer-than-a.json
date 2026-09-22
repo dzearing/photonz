@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:30:46.553Z",
-  "updated": "2026-09-22T12:17:52.475Z",
+  "updated": "2026-09-22T14:59:53.241Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-20-a-recording-is-a-document audit rough list, word for word: \"The timeline's local bar has no zoom. An eight second recording fits the width; a five minute one would be unreadable. D8 puts timeline zoom in the timeline's own bar and it is not built.\"\n\nVERIFIED still missing on 2026-09-21: Sources/Photonz/CutStrip.swift is 148 lines and contains no zoom, no scale and no pixels-per-second; the strip is laid out against the document duration and the available width.\n\nThe design already says where it goes. docs/design/video-surface.md:111: \"Timeline zoom, blade, and what is scoped to the timeline | .tlbar, the timeline's own local bar | D8's last row. Today only video.html draws a zoom at all.\"\n\nWhy it is worth doing before more video features rather than after: the 2026-09-21-video-audio audit already has to ask \"Is the waveform legible enough to aim a cut at a word, at the width your timeline actually is?\" Every feature added to the timeline from here (captions, transitions, components with a start and an end) makes the unzoomed strip more crowded, so each one lands on a surface that is already too small to read.",
@@ -34,6 +34,35 @@
     {
       "t": "2026-09-22T12:17:52.474Z",
       "note": "seq 30 -> 10"
+    },
+    {
+      "t": "2026-09-22T14:02:09.001Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T14:14:04.386Z",
+      "note": "core landed: TimelineZoom + TimelineSpan in PhotonzCore, MotionStripRuler windowed (startMS, fraction(spanningMS:), msSpanning). 26 new tests written first, whole suite green (8952 tests)."
+    },
+    {
+      "t": "2026-09-22T14:54:01.579Z",
+      "note": "adversarial review before building, written into the task as the contract asks. (1) The mock (video.html) draws a zoom SLIDER. Rejected: five minutes opens out 300x, so nine tenths of a slider's travel is the first two seconds of useful range. Built a minus, a plus, a readout saying what is on screen, and Fit. (2) A first-time user has to be able to SEE there is a zoom, so it is a permanent control in the timeline's own bar rather than only a pinch. (3) Nothing decorative: no percentage readout (1200% says nothing about time), no blade (cutting is the playhead and B). (4) Shortest version that still delivers: window the ruler, four controls, an overview bar, and bounded drawing. The overview earns its place because a zoom CREATES the question 'where am I in the whole thing' and it also does the panning."
+    },
+    {
+      "t": "2026-09-22T14:57:00.535Z",
+      "note": "owns these walks: open-out-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-22T14:57:00.628Z",
+      "note": "left rough, below the follow-up bar and recorded here rather than filed: (1) no keyboard shortcut for the zoom, left alone deliberately so plus and minus do not mean two different zooms in one window; (2) panning is the overview bar and a pinch only, because the lanes already scroll vertically and SwiftUI gives a view no sideways scroll without dropping to AppKit; (3) the window readout rounds to whole seconds so it can read 4:56 to 4:58 while the ruler counts tenths; (4) how far you opened out is forgotten when the document closes, which is deliberate for now (opening a recording restores the playhead, not the zoom); (5) a picked piece is drawn in solid accent, which makes its waveform hard to read at exactly the zoom where the waveform became worth reading -- worth watching, and if it shows up again it has earned a task. FILED instead: the-transport-says-the-arrow-keys-step-a-frame-a, because the transport's own tooltip promises a shortcut that edits your document instead."
+    },
+    {
+      "t": "2026-09-22T14:59:53.239Z",
+      "note": "The timeline opens out. Shipped in 249c3509 behind next-open-out-the-timeline, on by default in Next. The ruler (MotionStripRuler) now carries a window, so everything on the strip zooms through the one piece of arithmetic it was always laid out by; the control is in the timeline's own local bar (minus, plus, what is on screen said as two moments, Fit), a thin overview bar over the ruler says where you are in the whole recording and pans it, a pinch opens out around the point under the fingers, and playing pages the window along. Every zoom keeps the playhead where it is on screen. Verified: 26 core tests written before the code plus the whole suite green at 8952; a new walk open-out-the-timeline-walk that drives the real buttons on a document made five minutes long and leaves 7 real pictures of the window; and the timeline (7), trim (12), cut (9), motion (9) and clip (2) walk sets all passing. Audit: queue/audits/2026-09-22-timeline-zoom.json. Design: docs/design/video-surface.md section 13."
     }
-  ]
+  ],
+  "started": "2026-09-22T14:02:09.000Z",
+  "walks": [
+    "open-out-the-timeline-walk"
+  ],
+  "completed": "2026-09-22T14:59:53.240Z"
 }

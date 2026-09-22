@@ -76,6 +76,34 @@ final class SoundLibrary {
     /// The shape of this sound, if it has been read yet.
     func waveform(for ref: SoundRef) -> Waveform? { waveforms[ref.id] }
 
+    /// The shape of every sound a mix plays, as far as they have been read.
+    ///
+    /// What "how loud does this mix get" is worked out from (`AudioHeadroom`):
+    /// a fader says how loud a layer is ASKED to play, and only the file says
+    /// how loud it actually is. Anything not read yet is simply missing, and
+    /// the arithmetic counts a missing shape at full scale rather than at
+    /// silence, so the guess is always the safe way round.
+    func waveforms(for mix: [AudioMixSegment]) -> [UUID: Waveform] {
+        var found: [UUID: Waveform] = [:]
+        for segment in mix where found[segment.sound.id] == nil {
+            found[segment.sound.id] = waveforms[segment.sound.id]
+        }
+        return found.compactMapValues { $0 }
+    }
+
+    /// Read the shape of everything a mix plays, once each.
+    ///
+    /// Called where sound starts mattering rather than where a bar is drawn,
+    /// so the meter and the export are working off the real files even when
+    /// nothing has scrolled the timeline into view.
+    func loadWaveforms(for mix: [AudioMixSegment]) {
+        var asked: Set<UUID> = []
+        for segment in mix where !asked.contains(segment.sound.id) {
+            asked.insert(segment.sound.id)
+            loadWaveform(for: segment.sound)
+        }
+    }
+
     /// Read the shape of this sound in the background, once.
     ///
     /// The timeline asks for this every time it draws a bar and does not wait

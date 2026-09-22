@@ -188,6 +188,8 @@ public enum FeatureCatalog {
 
     public static let scrubAuditionFlag = "next-hear-the-scrub"
 
+    public static let mixLoudnessFlag = "next-the-mix-says-how-loud-it-is"
+
     public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
 
     public static let punchInFlag = "next-punch-in-and-hold"
@@ -787,6 +789,16 @@ public enum FeatureCatalog {
                     name: scrubAuditionFlag,
                     title: "Hear the sound under the playhead while you drag it",
                     description: "Dragging the playhead over a recording is silent, so the only way to find the exact word somebody says, or the exact beat to cut on, is to read the shape of the sound and guess. With this on, the sound plays under the playhead as you drag it: a short piece of whatever is under it, over and over, for as long as your hand is moving. Drag backwards and it plays backwards. Two sounds laid over each other are both heard, each at the level its own line says at that moment. Stop moving and it is quiet within a fraction of a second, let go and it stops; a single click to put the playhead somewhere makes no sound at all, because a click is not a drag. It is the same plan that plays when you press space and the same plan that exports, read a sliver at a time, so what you hunt with is what you get. Needs the sound on the timeline to be on, because without it there is nothing to hear. Off means dragging the playhead is silent and the waveform on the bar is the only answer.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: mixLoudnessFlag,
+                    title: "See how loud the mix is, and be told when it has to come down",
+                    description: "Sound adds up. Three things playing at the level they were recorded at are three times as loud as one of them where they overlap, and a sound file has no room for that: everything past the top is sheared off flat, so what should have been three sounds comes out as noise. Nothing on screen said how loud the mix was, so the first anybody knew was listening to the file afterwards. With this on, a meter sits in the transport beside the play button and rises and falls with the mix as it plays. It moves while you drag the playhead as well, not only while it plays, so the loudest moment can be found by hand. When the mix adds up to more than a file can carry the meter turns amber and says by how much it is over, and Export Sound says in its notice that it had to hold the mix down. Needs the sound on the timeline to be on, because without it there is no mix to measure. Off means the meter is not there. Keeping the mix inside what a file can hold is not part of this switch and happens either way, because writing a file that is distorted is a fault rather than an experiment: the whole mix comes down by exactly the amount it is over, so the balance between the layers and the shape of every fade survive, and a mix that already fits is never touched.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

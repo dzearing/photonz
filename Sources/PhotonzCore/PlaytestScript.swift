@@ -817,6 +817,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Write the mix out beside the walk's own pictures, and fail if nothing
     /// lands: the one step that proves an export really happened.
     case soundExportMix
+    /// Fail the walk unless the document's mix really does add up past what a
+    /// sound file can hold, AND unless the app is holding it down: the plan
+    /// reads over, the plan the player and the export are handed does not, and
+    /// the balance between the layers survived the trip. The one thing about
+    /// clipping that can be checked without ears
+    /// (`docs/design/video-audio.md` §9).
+    case soundExpectMixOver
+    /// Fail the walk unless the meter reads what is actually under the
+    /// playhead: high where there is sound and nothing where there is none.
+    /// A meter that never moves photographs exactly like one that does.
+    case soundExpectMeterReads
     /// Drag the playhead across a sound and back again, through the very three
     /// calls the timeline's own hand makes, and fail the walk unless sound came
     /// out of it: grains forward, grains backward, every layer under the
@@ -923,6 +934,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept,
              .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
+             .soundExpectMixOver, .soundExpectMeterReads,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
