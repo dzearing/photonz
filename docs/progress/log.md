@@ -19033,3 +19033,43 @@ Next: the standing video set. The audit is
 `queue/audits/2026-09-22-mix-loudness.json`; the question it most wants answered
 is whether bringing the whole mix down by itself feels right, or like the app
 turning your work down behind your back.
+
+## 2026-09-22 — A turned card holds still while one piece in it changes
+
+Fixed `resizing-one-piece-inside-a-turned-card-moves-th`. A turned group swings
+about the middle of the box its contents make, and that box is measured live, so
+the moment one piece inside grew, the point the whole card swung about slid and
+every other piece swung with it. On a 20 degree card, widening a label by 20
+points walked the bar beside it 4 points down the screen with nobody touching
+it.
+
+`PhotonzDocument.holdingTurnedPivots` (`Sources/PhotonzCore/TurnedContentsPivot.swift`)
+runs a change and then gives every turned card above the layer its pivot back.
+What is drawn for a piece stored at `x` is `M(x - m) + m + O`, so a contents'
+middle that moves by `d` moves the whole picture by `(I - M)d`; hand the card's
+own anchor `(M - I)d` back and it does not. It is the other half of
+`uprightPoint`, which takes the card's swing off the pointer. Wired into the
+drag preview, the drag commit, multi-selection moves, arrow-key nudges, typed
+Position & Size numbers and deletes; a no-op in any document where no group has
+been turned.
+
+The design call worth knowing about: the alternative was storing on the group
+what it swings about. That was rejected because the stored answer goes STALE —
+add a piece to a turned card and the knob later spins it about a point that is
+no longer its middle — and because it has to be pinned, cleared, scaled and
+carried through flow, ungroup and component sync, each a place to get it wrong
+again. Holding the pivot without stored state necessarily shifts the canvas
+coordinate of pieces inside the card (the pivot is a function of those
+coordinates), which is why `turned-piece-walk` needed new numbers for its two
+`at` claims. Every claim it makes about what is on SCREEN is untouched and now
+passes, including the one that caught the bug, and the changed numbers are
+pinned by arithmetic in `TurnedCardPivotTests` as well as by the walk.
+
+Filed: `the-export-size-test-fails-about-one-run-in-thre`. Three back-to-back
+full runs of `Scripts/test.sh` on one commit gave fail / fail / pass, always on
+`VideoExportBudgetTests.swift:155`, where the `.small` export is claimed to be
+smaller than the `.standard` one and both land around 120KB with the encoder on
+its own floor.
+
+Next: the standing video set. Audit for this one:
+`queue/audits/2026-09-22-turned-card-pivot.json`.
