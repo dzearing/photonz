@@ -92,6 +92,12 @@ struct LayersRow: View, Equatable {
         if let left = display.separationNote {
             parts.append(left.text.lowercased())
         }
+        // How many pieces a cut clip is in, in the row's own words, so a walk
+        // can prove the count landed on the row without reading a picture of
+        // a caption six points high (`ClipPiecesNote`).
+        if let pieces = display.piecesNote {
+            parts.append(pieces.text)
+        }
         return parts.joined(separator: ", ")
     }
     private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
@@ -294,6 +300,18 @@ struct LayersRow: View, Equatable {
             // first and the offer second, so the narrow row truncates the tail
             // and never the number.
             if let left = display.separationNote { separationNote(left) }
+            // How many pieces this clip has been cut into. The list is the
+            // same layers read a different way as the timeline, and a cut
+            // adds a piece rather than a row (D18 item 3), so without this
+            // line a recording chopped into six reads here exactly like one
+            // nobody has touched.
+            if let pieces = display.piecesNote {
+                Text(pieces.text)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .panelHelp(pieces.help)
+            }
         }
     }
 

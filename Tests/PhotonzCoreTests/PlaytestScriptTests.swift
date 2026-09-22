@@ -2739,10 +2739,10 @@ struct PlaytestScriptTests {
         }
     }
 
-    // A field, a menu and a control all SHOW words that change. A row and a
-    // tile show their own names, so "reads" on one of those is a walk author
-    // expecting something the step cannot check.
-    @Test("Only a field, a menu or a control can be asked what it reads")
+    // A field, a menu and a control all SHOW words that change. A tile shows
+    // its own name, so "reads" on one is a walk author expecting something the
+    // step cannot check.
+    @Test("Only a field, a menu, a control or a row can be asked what it reads")
     func expectStepReadsOnlyWhereThereAreWords() throws {
         let script = try decode("""
         { "steps": [ { "do": "expect", "control": "Outline", "reads": "off" } ] }
@@ -2752,13 +2752,30 @@ struct PlaytestScriptTests {
         }
         #expect(thing == .control)
         #expect(reads == "off")
-        for named in ["row", "tile"] {
-            #expect(throws: PlaytestScriptError.self) {
-                _ = try decode("""
-                { "steps": [ { "do": "expect", "\(named)": "Card", "reads": "Card" } ] }
-                """)
-            }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expect", "tile": "Card", "reads": "Card" } ] }
+            """)
         }
+    }
+
+    // A row says MORE than its name: whether it is a group and open, what a
+    // shut group is hiding, whether it is a copy of a component, what a
+    // separation left in it, how many pieces a clip is cut into. Those second
+    // lines are six point captions, and claiming one in words is the only
+    // alternative to photographing it and squinting.
+    @Test("A row can be asked what it says under its name")
+    func expectStepReadsARowsOwnWords() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "row": "Screen recording",
+                       "reads": "layer, 3 pieces" } ] }
+        """)
+        guard case .expect(let thing, let named, _, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .row)
+        #expect(named == "Screen recording")
+        #expect(reads == "layer, 3 pieces")
     }
 
     // A shelf is built in two places from one catalogue — the menu bar once at

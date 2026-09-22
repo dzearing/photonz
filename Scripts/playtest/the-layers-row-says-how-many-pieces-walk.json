@@ -1,0 +1,49 @@
+{
+  "out": "/tmp/photonz-playtest/the-layers-row-says-how-many-pieces-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer" },
+    { "do": "describe", "stage": "1-uncut", "note": "an eight second recording nobody has cut. Its row in the layers list says its own name and nothing else, exactly as a screenshot's row has always read" },
+    { "do": "snapshot", "name": "1-uncut" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
+    { "do": "describe", "stage": "2-two-pieces", "note": "one cut, and the layers list says so: still ONE row with the recording's own name, now saying 2 pieces under it. A cut adds a piece rather than a row, and this line is the only place outside the timeline that says it happened" },
+    { "do": "snapshot", "name": "2-two-pieces" },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 3 pieces" },
+    { "do": "describe", "stage": "3-three-pieces", "note": "a second cut, and the count follows: 3 pieces, one row, one name" },
+    { "do": "snapshot", "name": "3-three-pieces" },
+
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
+    { "do": "describe", "stage": "4-a-piece-thrown-away", "note": "Delete threw the middle piece away and the count came down with it, in the list as well as on the bar" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer" },
+    { "do": "describe", "stage": "5-back-to-one-take", "note": "undone all the way back to one uncut take, and the line is gone: a clip that is not cut says nothing extra, so an ordinary document's layers list reads exactly as it always did" },
+    { "do": "snapshot", "name": "5-back-to-one-take" }
+  ]
+}

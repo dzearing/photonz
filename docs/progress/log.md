@@ -18813,3 +18813,28 @@ Next: the standing video set. Open questions for the user are in
 `queue/audits/2026-09-22-components-on-the-timeline.json`, chiefly whether a
 shape drawn straight onto a recording should get an in and an out the way a
 component and a title now do.
+
+## 2026-09-22 — A cut clip says how many pieces it is in
+
+The layers list had no sign a recording had ever been cut: a take chopped into
+six read exactly like one nobody had touched, because a cut adds a piece rather
+than a row (UX-PATTERNS D18 item 3). Its row now says how many pieces it is in,
+under the recording's own name, in the same caption line a component copy and a
+separation leftover already use. `ClipPiecesNote` is the whole rule: nil below
+two pieces, "3 pieces" above, and the sentence the slot has no room for in the
+hover. That closes the last open half of
+`a-cut-clip-says-how-many-pieces-it-is-in-and-a-p`; the Speed section in the
+Properties panel landed on 2026-09-21 and its walk still passes.
+
+A row can now be asked what it SAYS, not just whether it is there:
+`expect` with `row` plus `reads` claims the row's own words
+(`LayersRow.rowDetail`), so a caption six points high is provable without
+photographing it and squinting. No walk used `row` + `reads` before, so nothing
+changed under any existing walk. New walk:
+`the-layers-row-says-how-many-pieces-walk`.
+
+Next: the standing video set. The audit is
+`queue/audits/2026-09-22-video-cutting-piece-count.json`; the question it most
+wants answered is whether the row should also say what is unusual about the
+pieces (a held frame, one stretch at 30x) or whether that stays the timeline's
+job.

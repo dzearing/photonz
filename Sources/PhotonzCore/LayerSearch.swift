@@ -78,7 +78,9 @@ extension PhotonzDocument {
                     componentNote: display.componentNote,
                     isRasterizable: display.isRasterizable,
                     canTurnIntoPath: display.canTurnIntoPath,
-                    separationNote: display.separationNote)
+                    separationNote: display.separationNote,
+                    isSound: display.isSound,
+                    piecesNote: display.piecesNote)
             }
     }
 }

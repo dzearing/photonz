@@ -1,0 +1,35 @@
+{
+  "feature": "A cut clip says how many pieces it is in",
+  "epic": "video-cutting",
+  "summary": "Cut a recording and its row in the layers list now says how many pieces it is in, under the recording's own name. It stays one row with one name however many times you cut it, and a recording nobody has cut says nothing extra.",
+  "setup": "Photonz Dev, Experiments window, release Next, with \"A recording is a document\" and \"Cut a recording\" on. Open a screen recording (File ▸ Open on any .mp4) and the timeline appears across the bottom.",
+  "try": [
+    {
+      "do": "Look at the recording's row in the Layers list before you touch anything.",
+      "shot": "2026-09-22-pieces-1-uncut.png"
+    },
+    {
+      "do": "Scrub to two seconds and press B.",
+      "shot": "2026-09-22-pieces-2-two-pieces.png"
+    },
+    {
+      "do": "Scrub to four seconds and press B again, then read the row.",
+      "shot": "2026-09-22-pieces-3-three-pieces.png"
+    },
+    { "do": "Hover the words \"3 pieces\" and read what the tip says." },
+    { "do": "Press Delete once to throw the picked piece away, and watch the count come down." },
+    { "do": "Press ⌘Z until the recording is one take again, and watch the line go." }
+  ],
+  "evaluate": [
+    "Does \"3 pieces\" under the name tell you what you want to know, or were you looking for something else there, like how long the clip runs?",
+    "The line only appears once a clip has been cut. Is a silent row the right answer for an uncut recording, or would you rather every clip said \"1 piece\" so the slot never moves?",
+    "It sits under the name in the same place a component copy says \"Copy of Save Button\". Does the Layers list read as one thing with both in it?",
+    "The count is a readout, not a way in: clicking it does nothing and the pieces are still reached on the timeline. Did you try to click it?",
+    "A piece held as a freeze, or one running at 4x, is counted the same as any other. Should the row say anything about those, or is that the timeline's job?"
+  ],
+  "rough": [
+    "The row says how many pieces and nothing about them. A clip with a held frame in it, or one piece at 30x, reads exactly like three ordinary cuts. The bar badges both on the piece it is true of, so this is deliberate rather than missed, but it is the obvious next thing to want.",
+    "There is no way from the count to the pieces. The words are not a button and clicking them selects the row like anywhere else on it.",
+    "The line is measured to fit the narrow dock: \"3 pieces\" rather than \"Cut into 3 pieces\", with the longer sentence in the hover. On a wide dock there is room to spare, so the short form may read as terse where it does not need to be."
+  ]
+}

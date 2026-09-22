@@ -428,6 +428,10 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// (`SoundClip.swift`). It draws no pixels, so there is no thumbnail to
     /// show and the slot carries a waveform mark instead of staying blank.
     public let isSound: Bool
+    /// How many pieces a cut clip is in (`ClipPiecesNote`). Nil on every row
+    /// but a clip somebody has cut, because a cut adds a piece rather than a
+    /// row and the list would otherwise show no sign it ever happened.
+    public let piecesNote: ClipPiecesNote?
 
     public var id: UUID { row.id }
 
@@ -438,7 +442,9 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
                 canTurnIntoPath: Bool = false,
                 outOfView: RowOutOfView? = nil,
                 separationNote: SeparationLeftover? = nil,
-                isSound: Bool = false) {
+                isSound: Bool = false,
+                piecesNote: ClipPiecesNote? = nil) {
+        self.piecesNote = piecesNote
         self.isSound = isSound
         self.outOfView = outOfView
         self.separationNote = separationNote
@@ -573,7 +579,13 @@ extension PhotonzDocument {
                     // over a picture that holds everything again.
                     separationNote: separations.isEmpty
                         ? nil : layer.imageRef.flatMap { separations[$0] },
-                    isSound: layer.isSoundOnly))
+                    isSound: layer.isSoundOnly,
+                    // Read off `cuts` rather than `clipPieces`, which builds a
+                    // one-piece value for every layer with time: the pieces
+                    // are only stored once a clip is actually cut, so this
+                    // costs a nil check on the rows that are not clips, which
+                    // is nearly all of them.
+                    piecesNote: layer.cuts.flatMap { ClipPiecesNote(pieces: $0) }))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }
         }

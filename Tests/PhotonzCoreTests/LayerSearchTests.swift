@@ -131,4 +131,24 @@ struct LayerSearchTests {
         let document = doc([text("Save Changes")])
         #expect(document.layerRows(matching: "cancel", selected: []).isEmpty)
     }
+
+    /// A result is drawn flat and away from its neighbours, and that is the
+    /// ONLY thing a search takes off a row. What the row IS travels with it:
+    /// a piece of sound still carries the waveform mark in the slot where a
+    /// thumbnail would be, and a cut clip still says how many pieces it is in.
+    @Test mutating func aResultIsStillTheRowItWas() {
+        let sound = Layer.sound(SoundRef(durationMS: 4000), name: "Voice over",
+                                time: LayerTime(inMS: 0, outMS: 4000,
+                                                sourceInMS: 0, sourceLengthMS: 4000))
+        var clip = ClipPiecesTests.clipLayer()
+        clip.name = "Screen recording"
+        var pieces = clip.clipPieces!
+        let split = pieces.split(atMS: 4000)
+        #expect(split)
+        clip.setClipPieces(pieces)
+        let document = doc([sound, clip])
+        #expect(document.layerRows(matching: "voice", selected: []).first?.isSound == true)
+        #expect(document.layerRows(matching: "recording", selected: [])
+            .first?.piecesNote?.text == "2 pieces")
+    }
 }
