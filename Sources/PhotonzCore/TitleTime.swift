@@ -68,6 +68,42 @@ public enum TitleTime {
     public static let sentence = "A title is a text layer that happens to live in a document "
         + "with time, so it gets an in and an out. Nothing else about it is special."
 
+    /// The same thesis about a component somebody built and put on the
+    /// timeline (`ComponentsInTime.swift`). Said about a component because
+    /// that is the claim: the badge in the film is the badge in the design
+    /// file, not a picture of it.
+    public static let componentSentence = "A component is the thing you built, living in a "
+        + "document with time, so it gets an in and an out. Edit the original and it "
+        + "changes here too."
+
+    /// ...and about anything else simply placed: a shape, an arrow, a picture.
+    public static let placedSentence = "Anything placed on a document with time gets an in "
+        + "and an out. Nothing else about it is special."
+
+    /// Which of the three the Time section says, for the thing in your hand.
+    public static func sentence(for layer: Layer) -> String {
+        if case .text = layer.content { return sentence }
+        if layer.isComponentInstance || layer.isMainComponent { return componentSentence }
+        return placedSentence
+    }
+
+    /// What the two buttons promise, named after the thing they are about:
+    /// words for words, and "it" for everything else, because "bring the
+    /// words on" over a badge is a sentence about somebody else's layer.
+    public static func startHelp(for layer: Layer) -> String {
+        if case .text = layer.content {
+            return "Bring the words on at the playhead. Where they go is untouched."
+        }
+        return "Bring it on at the playhead. Where it goes is untouched."
+    }
+
+    public static func endHelp(for layer: Layer) -> String {
+        if case .text = layer.content {
+            return "Take the words off at the playhead. Where they arrive is untouched."
+        }
+        return "Take it off at the playhead. Where it arrives is untouched."
+    }
+
     /// One ordinary Opacity motion that brings a layer on and takes it off
     /// again, or nil where there is no room for one.
     ///

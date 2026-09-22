@@ -35,7 +35,7 @@ struct SpeedInspector: View {
             // because there are no frames to run faster, and no held frame,
             // because there is no frame (`TitleTime.swift`).
             if let placed = editorState.placedLayerInHand, let time = placed.time {
-                placedInTime(time)
+                placedInTime(time, placed)
             } else if let piece = editorState.clipPieceInHandPiece {
                 which(piece)
                 if piece.isHeld {
@@ -80,7 +80,7 @@ struct SpeedInspector: View {
     /// timeline is the direct answer — drag either end, drag the middle — and
     /// this is the other way round, for the frame you are already looking at.
     @ViewBuilder
-    private func placedInTime(_ time: LayerTime) -> some View {
+    private func placedInTime(_ time: LayerTime, _ layer: Layer) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(TitleTime.reading(time))
                 .font(.system(size: 11, design: .monospaced))
@@ -91,16 +91,15 @@ struct SpeedInspector: View {
                     .controlSize(.small)
                     .disabled(!editorState.canStartPlacedLayerHere)
                     .playtestControl("Start Here", detail: "the Time section")
-                    .panelHelp("Bring the words on at the playhead. Where they go is untouched.")
+                    .panelHelp(TitleTime.startHelp(for: layer))
                 Button("End Here") { editorState.endPlacedLayerHere() }
                     .controlSize(.small)
                     .disabled(!editorState.canEndPlacedLayerHere)
                     .playtestControl("End Here", detail: "the Time section")
-                    .panelHelp("Take the words off at the playhead. Where they arrive is "
-                               + "untouched.")
+                    .panelHelp(TitleTime.endHelp(for: layer))
             }
             fade()
-            Text(TitleTime.sentence)
+            Text(TitleTime.sentence(for: layer))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }

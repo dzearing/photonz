@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/icon-into-a-component-onto-the-timeline-walk",
+  "seed": "The chain the whole product argument rests on, walked end to end in one sitting: draw an icon, make it a component, and show it on a video timeline, with nothing exported, converted or imported anywhere along the way. It draws two shapes in an ordinary document, turns them into a component, puts that component on the shelf every document shares, opens a recording, and drops the icon onto it at the playhead, where it arrives with an in and an out like anything else on that timeline.",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-a-title-has-an-in-and-an-out": true,
+      "next-a-component-on-the-timeline": true,
+      "next-motion": true,
+      "next-motion-strip": true
+    }
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [320, 300], "to": [420, 400], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [440, 330], "to": [620, 370], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [260, 250], "to": [700, 450], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Live Badge" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-an-icon-you-drew", "note": "Two shapes drawn with the ordinary tools, grouped and made a component called Live Badge. Nothing here knows anything about video" },
+    { "do": "snapshot", "name": "chain-1-an-icon-you-drew" },
+
+    { "do": "action", "action": "shareSelectedComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-on-the-shelf", "note": "One switch puts it on the shelf every document shares. This is the only step between the two halves of the chain, and it is not an export: the drawing stays a drawing" },
+    { "do": "snapshot", "name": "chain-2-on-the-shelf" },
+
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-the-shelf-in-the-recording", "note": "A recording, open as an ordinary document with a timeline, and the same shelf in the same place with the icon on it. Nothing was imported" },
+    { "do": "snapshot", "name": "chain-3-the-shelf-in-the-recording" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-the-icon-on-the-film", "note": "THE TEST: the icon is on the film, at the playhead, for three seconds, with a bar of its own on the timeline beside the clip. It is still the component you drew, and editing the original still reaches it" },
+    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:07 · 3.0s" },
+    { "do": "panel", "stage": "4-the-icon-on-the-film" },
+    { "do": "snapshot", "name": "chain-4-the-icon-on-the-film" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-before-it-arrives", "note": "and at the start of the recording it is not there yet, because it has an in and an out like everything else on this timeline" },
+    { "do": "snapshot", "name": "chain-5-before-it-arrives" }
+  ]
+}

@@ -396,6 +396,88 @@ appears has moved off the moment before you can look at it.
 
 ---
 
+## 8c. Something you built, on the timeline
+
+*Built 2026-09-21, `next-a-component-on-the-timeline`.*
+
+This is the part no other editor can do, and the reason for all of the above:
+**what you draw and what you edit are one document**, so a component you built
+goes on a video timeline without being exported, converted or imported. The
+chain the user asked for — "you can make an icon and use it in your component",
+"you can create a component, and then show that on a video timeline" — is two
+walks: `icon-into-a-component-onto-the-timeline-walk` draws an icon, makes it a
+component, shares it and drops it on a recording;
+`component-on-the-timeline-walk` does the rest.
+
+It cost one rule, one bug fix and one correction.
+
+### The rule: anything placed arrives at the playhead
+
+`ComponentsInTime.placeInTime(_:atTimeMS:)` is the whole of it, and it is the
+rule titles already had, said about everything: **something that lands in a
+document with time arrives at the playhead and runs for three seconds**
+(`TitleTime.placedSpan`). It refuses four cases, all harmlessly: a document with
+no time in it, something that already says when it is on screen, something with
+media behind it, and something dropped INSIDE a layer that is itself placed —
+a part of a thing arrives when the thing does, and a second opinion is how a
+part goes missing while its parent is on screen.
+
+The three ways a component arrives each take a moment now
+(`insertComponentInstance`, `adoptSharedComponent`, `insertStarterComponent`,
+all `atTimeMS:`), and the app hands them one answer, `placementMomentMS`, so a
+component cannot land knowing when it is on screen by one route and not by
+another. It is inside the same `perform`, so the copy and its stretch are one
+undo step.
+
+Everything else was already there and needed nothing: the bar on the timeline
+(a row draws a bar when its layer has a time), the Time section with Start Here,
+End Here and Fade (it asks `placedLayerInHand`, never "is this text"), the
+dragging of either end, `drawn(atTimeMS:)` taking it off screen outside its
+stretch, and the export writing it because the export is the canvas
+photographed.
+
+### The bug: a copy did not move
+
+`rebound` builds a copy's contents field by field, and it did not carry
+`motions`. So a component whose pieces animate **stopped animating the moment it
+was copied**, silently: the copy simply stood still, and nothing anywhere said
+why. One line, and with it the model answers the question the animation model
+was chosen against — two parts of one thing moving out of phase — for a
+component placed on a film, with each copy running the animation from the moment
+IT arrives rather than from the start of the recording. That last part is free:
+`movedTree(atDocumentTimeMS:)` already gives a child the clock of the thing it
+is inside.
+
+What is deliberately NOT carried is a part's own `time`. A part inside a copy is
+on screen when the copy is.
+
+### The correction: a lane drawn where it happens
+
+`motionStrip()` shifted a lane by its OWN layer's `motionShiftMS`, which is
+nought for a part inside a placed component. So a badge placed at four seconds
+whose pieces move drew those lanes at the start of the film: the strip said the
+badge moves three seconds before it exists, while the canvas played it
+correctly. The strip now carries the shift down the tree, the same inheritance
+`drawn(atTimeMS:)` samples by.
+
+### What it does not do
+
+- **A placed thing cannot be cut in two with the blade.** A clip has frames
+  behind it, so cutting it is a cut into media; a component has none, and
+  `TitleTime` already refuses a speed, a hold and a split for anything placed.
+  Cutting a placed thing in two would be a different gesture and nobody has
+  asked for it.
+- **A motion cannot be overridden per copy.** Animate the ORIGINAL and every
+  copy runs it from its own in point, which is the smaller answer and the one
+  that matches what a component is. A copy's own motions are its own and
+  survive an edit to the original; what a copy cannot do is change the
+  original's.
+- **A shape drawn straight onto a recording still stands over the whole film.**
+  Only components take the new rule. That is deliberate rather than forgotten:
+  `an-edited-recording-comes-out-as-a-video-walk` asserts a box drawn over a
+  video is in every frame, and changing what a mark drawn on a film means is a
+  question for the user, not a side effect of this task.
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

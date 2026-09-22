@@ -19,10 +19,24 @@ extension EditorState {
     /// The layer whose in and out the Time section speaks for: the picked one,
     /// where it is placed in time rather than played.
     var placedLayerInHand: Layer? {
-        guard Experiments.shared.titleOnTheTimelineEnabled, documentHasTime,
+        guard Experiments.shared.titleOnTheTimelineEnabled
+                || Experiments.shared.componentOnTheTimelineEnabled,
+              documentHasTime,
               let id = selectedLayerID, let layer = document?.layer(id: id),
               layer.isPlacedInTime else { return nil }
         return layer
+    }
+
+    /// The moment something placed right now should arrive at, or nil where
+    /// this document has no time in it and nothing is placed in time at all.
+    ///
+    /// One answer for every way a thing arrives — dragged off the shelf,
+    /// double clicked on a tile, inserted from the menu — so a component can
+    /// never land knowing when it is on screen by one route and not by
+    /// another.
+    var placementMomentMS: Int? {
+        guard Experiments.shared.componentOnTheTimelineEnabled, documentHasTime else { return nil }
+        return documentTimeMS
     }
 
     /// `0:02 to 0:05 · 3.0s`, for the panel and for a walk to read.

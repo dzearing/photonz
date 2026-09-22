@@ -599,6 +599,15 @@ extension PhotonzDocument {
                          colorStyleBindings: layer.colorStyleBindings,
                          placement: layer.placement, flowFill: layer.flowFill)
         copy.effectStyleBindings = layer.effectStyleBindings
+        // **How a part MOVES is part of the drawing**, so it is copied along
+        // with everything else about the part
+        // (`components-on-the-timeline-animated-the-way-ever`). Without this a
+        // component whose pieces animate stopped animating the moment it was
+        // copied, and there was no way to tell from looking at the copy: it
+        // simply stood still. What is deliberately NOT copied is the part's
+        // place in time, because a part inside a copy is on screen when the
+        // copy is (`ComponentsInTime.placeInTime`).
+        copy.motions = layer.motions
         if let nested = layer.instanceOf {
             let version = layer.instanceVersionID
             copy.children = resolvedChildren(of: nested, version: version, instance: id,

@@ -162,9 +162,11 @@ extension EditorState {
         discardDragPreview()
         var placed: UUID?
         let context = dropContext
+        let moment = placementMomentMS
         perform {
             placed = $0.insertStarterComponent(kind, at: point, inside: context,
-                                               measure: { TextRasterizer.naturalSize($0) })
+                                               measure: { TextRasterizer.naturalSize($0) },
+                                               atTimeMS: moment)
         }
         guard let placed else { return nil }
         selectedLibraryItemID = nil
@@ -308,9 +310,10 @@ extension EditorState {
         discardDragPreview()
         var placed: UUID?
         let context = dropContext
+        let moment = placementMomentMS
         perform {
             placed = $0.insertComponentInstance(of: componentID, at: point, inside: context,
-                                                version: version)
+                                                version: version, atTimeMS: moment)
         }
         guard let placed else { return nil }
         selectedLibraryItemID = nil

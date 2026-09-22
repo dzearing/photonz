@@ -121,33 +121,55 @@ extension PhotonzDocument {
     /// places, and dragging a row up the layers list moves its bar up the
     /// timeline to match.
     public func motionStrip() -> [MotionStripGroup] {
-        allLayersTopDown.compactMap { layer in
-            let motions = layer.motions ?? []
-            // A row earns its place by having something to draw: a stretch of
-            // time, something moving, or both. A layer with neither is a
-            // labelled hairline with nothing under it.
-            guard !motions.isEmpty || layer.occupiesTime else { return nil }
-            return MotionStripGroup(
-                layerID: layer.id,
-                // What the LAYERS LIST calls it, which for words nobody has
-                // renamed is the words themselves. A title's bar on the
-                // timeline saying "Text" among clips named after their
-                // recordings is a row you have to click to identify
-                // (`TitleTime.swift`).
-                layerName: layer.displayName(readWords: [:]),
-                // Drawn where it HAPPENS, on the document's clock, which for a
-                // layer that occupies time is its own clock moved along to
-                // where the layer sits (`Layer.motionShiftMS`). Nought for
-                // everything else, so an icon's strip is exactly what it was.
-                lanes: motions.map {
-                    MotionStripLane(layerID: layer.id, motionID: $0.id,
-                                    title: $0.property.title,
-                                    timing: $0.timing.shifted(byMS: layer.motionShiftMS),
-                                    isOn: $0.isOn)
-                },
-                bar: layer.time,
-                isSound: layer.sound != nil)
+        var groups: [MotionStripGroup] = []
+        // **A part inherits the clock of the thing it is inside**, which is
+        // the rule `drawn(atTimeMS:)` already samples motion by
+        // (`DocumentTime.movedTree`). Without it here, a badge placed at four
+        // seconds whose pieces move drew those pieces' lanes at nought: the
+        // strip said the badge moves three seconds before it is on screen,
+        // while the canvas played it correctly
+        // (`components-on-the-timeline-animated-the-way-ever`).
+        func walk(_ list: [Layer], shiftMS: Int) {
+            for layer in list.reversed() {
+                let shift = layer.occupiesTime ? layer.motionShiftMS : shiftMS
+                if let group = stripGroup(layer, shiftMS: shift) { groups.append(group) }
+                if layer.isGroup { walk(layer.children, shiftMS: shift) }
+            }
         }
+        walk(layers, shiftMS: 0)
+        return groups
+    }
+
+    /// One layer's row on the strip, or nil where it has nothing to draw.
+    ///
+    /// `shiftMS` is how far this layer's own clock sits along the document's:
+    /// its own where it occupies time, and whatever it is inside where it does
+    /// not.
+    private func stripGroup(_ layer: Layer, shiftMS: Int) -> MotionStripGroup? {
+        let motions = layer.motions ?? []
+        // A row earns its place by having something to draw: a stretch of
+        // time, something moving, or both. A layer with neither is a
+        // labelled hairline with nothing under it.
+        guard !motions.isEmpty || layer.occupiesTime else { return nil }
+        return MotionStripGroup(
+            layerID: layer.id,
+            // What the LAYERS LIST calls it, which for words nobody has
+            // renamed is the words themselves. A title's bar on the
+            // timeline saying "Text" among clips named after their
+            // recordings is a row you have to click to identify
+            // (`TitleTime.swift`).
+            layerName: layer.displayName(readWords: [:]),
+            // Drawn where it HAPPENS, on the document's clock. Nought in a
+            // document with no time in it, so an icon's strip is exactly what
+            // it was.
+            lanes: motions.map {
+                MotionStripLane(layerID: layer.id, motionID: $0.id,
+                                title: $0.property.title,
+                                timing: $0.timing.shifted(byMS: shiftMS),
+                                isOn: $0.isOn)
+            },
+            bar: layer.time,
+            isSound: layer.sound != nil)
     }
 
     /// The ends of every bar except one: what the bar being dragged can catch

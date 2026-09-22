@@ -1,0 +1,240 @@
+{
+  "out": "/tmp/photonz-playtest/component-on-the-timeline-walk",
+  "seed": "What you draw and what you edit are the same document, so a component you built goes on a video timeline without being exported, converted or imported first. This walk opens a recording, puts a component on it from the Library shelf, checks that it arrives at the playhead and leaves three seconds later rather than standing over the whole film, drops a second copy, repaints the original to show both copies follow it, animates one of them with the ordinary Motion list so it gets a lane on the timeline where it actually happens, and writes the file out.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-a-title-has-an-in-and-an-out": true,
+      "next-a-component-on-the-timeline": true,
+      "next-motion": true,
+      "next-motion-strip": true
+    }
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-frame-to-badge",
+      "note": "an eight second screen recording open as one clip, with the playhead four seconds in, on the moment the badge is about to land on"
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "2-a-component-on-the-film",
+      "note": "THE FIRST TEST: a component off the Library shelf, dropped on a recording with the ordinary shelf. No import, no convert, no export. It lands where the playhead is and runs for three seconds, and the timeline draws a bar for it beside the clip, named after the component"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-1-on-the-film"
+    },
+    {
+      "do": "expect",
+      "field": "Time reading",
+      "reads": "0:04 to 0:07 · 3.0s"
+    },
+    {
+      "do": "panel",
+      "stage": "2-a-component-on-the-film"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-before-it-arrives",
+      "note": "THE SECOND TEST: at the start of the recording the badge is not there, and neither is its selection box, because a layer that is not on screen at this moment draws no chrome"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-2-before-it-arrives"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        700,
+        430
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-a-second-copy",
+      "note": "THE THIRD TEST: a second drop is a COPY of the same component, and it gets its own place in time at the playhead. Two bars on the timeline now, both starting at four seconds"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-3-two-copies"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Motion",
+      "choose": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "5-it-animates",
+      "note": "THE FOURTH TEST: it animates with the machinery everything else animates with. The ordinary Motion list, the same plus, the same curve, the same undo. The lane lands on the timeline at four seconds, where the badge actually is, rather than at the start of the film"
+    },
+    {
+      "do": "panel",
+      "stage": "5-it-animates"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-5-animating"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "recolorPickedColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "6-the-original-still-drives-it",
+      "note": "THE FOURTH TEST: repainting the component's named colour once repaints BOTH copies on the timeline. What is in the film is the component, still linked to the original, not a picture of it"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-4-repainted"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "What plays is what EXPORTS: eight seconds of recording with a component over three of them, made frame by frame because the recording is no longer the whole of what the document says.",
+      "do": "writeVideo",
+      "name": "component-eight-seconds",
+      "format": "mp4",
+      "seconds": 8.0,
+      "within": 0.4,
+      "copied": false
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "THE SIXTH TEST: the motion, the copy and the component itself are ordinary history steps, so the recording is one uncut clip again with nothing over it"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-6-undone"
+    }
+  ]
+}

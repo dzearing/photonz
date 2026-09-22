@@ -123,7 +123,10 @@ extension EditorState {
         discardDragPreview()
         var placed: UUID?
         let context = dropContext
-        perform { placed = $0.adoptSharedComponent(shared, at: point, inside: context) }
+        let moment = placementMomentMS
+        perform {
+            placed = $0.adoptSharedComponent(shared, at: point, inside: context, atTimeMS: moment)
+        }
         guard let placed else { return nil }
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))

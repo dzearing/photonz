@@ -450,6 +450,13 @@ extension Experiments {
     /// (`TitleTime.swift`).
     var titleOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.titleOnTheTimelineFlag) }
 
+    /// `next-a-component-on-the-timeline`: whether a component placed on a
+    /// document with time arrives at the playhead with an in and an out, and
+    /// animates from the moment it arrives (`ComponentsInTime.swift`).
+    var componentOnTheTimelineEnabled: Bool {
+        isEnabled(FeatureCatalog.componentOnTheTimelineFlag)
+    }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.
