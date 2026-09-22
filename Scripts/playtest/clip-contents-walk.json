@@ -9,6 +9,8 @@
 
     { "do": "dragTile", "tile": "Card", "to": [420, 300] },
     { "do": "wait", "seconds": 1.0 },
+    { "comment": "Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right. Limits and Clip contents are authored on the original, so step back to it (FirstDropIsAnInstanceTests).", "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "1-arrives", "note": "the starter Card, as tall as what is inside it. The Layout section has Width and Height and NO Clip contents switch: a group that closes around its contents has nothing hanging out of it to cut off." },
@@ -43,6 +45,8 @@
     { "do": "panel", "stage": "4-not-clicked" },
 
     { "do": "click", "at": [470, 320] },
+    { "do": "wait", "seconds": 0.8 },
+    { "comment": "The click lands on the COPY sitting where the card was dropped; Clip contents lives on the original it follows.", "do": "action", "action": "selectComponentOriginal" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "reveal", "control": "Clip contents" },
     { "do": "press", "control": "Clip contents" },

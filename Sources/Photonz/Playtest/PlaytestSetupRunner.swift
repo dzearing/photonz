@@ -177,6 +177,7 @@ struct PlaytestSetupRunner {
         // rather than about the walk: a run before this one was killed with a
         // feature still switched, and the launch put it back.
         if let recovered = PlaytestFlagOverrides.recoveryNote { said.append(recovered) }
+        if let recovered = PlaytestLentCaptures.recoveryNote { said.append(recovered) }
         if !setup.flags.isEmpty {
             if let problem = PlaytestFlagOverrides.problem {
                 throw PlaytestSetupError(description: problem)
@@ -235,6 +236,10 @@ struct PlaytestSetupRunner {
             try? FileManager.default.setAttributes(
                 [.creationDate: stamp, .modificationDate: stamp], ofItemAtPath: destination.path)
             lentCaptures.append(destination)
+            // Written down as it happens, so a kill between this lend and the
+            // next leaves a record the next launch can act on
+            // (`PlaytestLentCaptures`).
+            PlaytestLentCaptures.remember(destination)
             placed.append(source.lastPathComponent)
         }
         return placed
@@ -345,6 +350,7 @@ struct PlaytestSetupRunner {
         let names = lentCaptures.map(\.lastPathComponent)
         for url in lentCaptures { try? FileManager.default.removeItem(at: url) }
         lentCaptures = []
+        PlaytestLentCaptures.forget()
         return "took back \(names.joined(separator: ", "))"
     }
 }

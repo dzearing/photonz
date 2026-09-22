@@ -9,6 +9,10 @@
 
     { "do": "dragTile", "tile": "Card", "to": [420, 300] },
     { "do": "wait", "seconds": 1.0 },
+    { "comment": "Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right (FirstDropIsAnInstanceTests). This walk is about one card that is too small for what is in it, so the copy is thrown away and the original is the card the rest of the walk works on: two cards would make two of every row in the layers list and push the Layout rows off the bottom.", "do": "action", "action": "deleteLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "selectRow", "row": "Card" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.9 },
 

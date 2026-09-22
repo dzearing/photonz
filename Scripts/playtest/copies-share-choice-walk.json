@@ -305,6 +305,15 @@
       "seconds": 0.5
     },
     {
+      "comment": "A drop leaves the dock scrolled down to the Library, so the Component section sits above the panel's top and the colour well at the very top edge opens no picker at all. Scroll back to the section first, which is what a person does. The scroll itself is the-panel-jumps-to-the-shelf-after-a-drop-instea.",
+      "do": "reveal",
+      "control": "Component section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
       "do": "press",
       "control": "Color",
       "in": "Fill"
@@ -366,6 +375,14 @@
     {
       "do": "snapshot",
       "name": "copies-share-choice-5-colour-mixed"
+    },
+    {
+      "do": "reveal",
+      "control": "Component section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "press",

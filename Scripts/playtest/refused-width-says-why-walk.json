@@ -46,6 +46,15 @@
       "seconds": 0.8
     },
     {
+      "comment": "Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right. Limits are authored on the original, so step back to it (FirstDropIsAnInstanceTests).",
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "scrollPanel",
       "by": -200,
       "row": "Layout section"

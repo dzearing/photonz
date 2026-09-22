@@ -7,6 +7,9 @@
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },
 
+    { "comment": "Keylines come on by default (IconKeylinesStore: an icon frame that showed nothing until a menu was found would be the blank square the feature exists to fix), so the guide's keylines step arrives already satisfied and shows Next instead of waiting. This walk is about the step really waiting for the switch, so it starts from somebody who has them off.", "do": "action", "action": "hideIconKeylines" },
+    { "do": "wait", "seconds": 0.4 },
+
     { "do": "startGuide", "guide": "start-on-an-icon-frame" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "a-clear-page", "timeout": 10 },
     { "do": "wait", "seconds": 0.9 },

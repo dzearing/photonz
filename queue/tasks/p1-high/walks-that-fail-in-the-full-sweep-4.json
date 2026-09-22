@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-09-21T11:16:03.111Z",
-  "updated": "2026-09-22T12:16:39.684Z",
+  "updated": "2026-09-22T13:50:59.534Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-22T12:10:35Z: 544 of 560 walks passed in 118 minutes.\n\nFailing walks (16): button-hug-walk, clip-contents-walk, container-too-small-walk, copies-share-choice-walk, copy-own-color-walk, delete-key-drops-a-piece-walk, dock-picked-first-walk, find-what-stayed-a-picture-walk, history-thumbnail-shapes-walk, layout-fits-walk, out-of-view-mark-walk, refused-width-says-why-walk, size-limits-walk, turned-piece-walk, tutorial-start-on-an-icon-frame-walk, width-reads-back-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  turned-piece-walk -> resizing-one-piece-inside-a-turned-card-moves-th (that task says it owns this walk)\n\nThis task owns the other 15: button-hug-walk, clip-contents-walk, container-too-small-walk, copies-share-choice-walk, copy-own-color-walk, delete-key-drops-a-piece-walk, dock-picked-first-walk, find-what-stayed-a-picture-walk, history-thumbnail-shapes-walk, layout-fits-walk, out-of-view-mark-walk, refused-width-says-why-walk, size-limits-walk, tutorial-start-on-an-icon-frame-walk, width-reads-back-walk\n\nStopped failing since the last sweep (3): a-silenced-question-comes-back-walk, blend-mode-walk, motion-pivot-in-a-corner-walk\n\nFull output: queue/sweep/2026-09-22-031225.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: components-on-the-timeline-animated-the-way-ever: components on the timeline changed two things every document touches: a component copy now carries its parts' motions (rebound), and the timing strip shifts a nested layer's lanes by the clock of the thing it is inside. The component and motion walks pass; the rest of the set has not seen either change.; captions-that-write-themselves-and-titles-that-b: Layer gained an optional stored property, CopyConfirmation gained three notice cases and the playtest harness gained nine actions, so every walk touches the changed types even though captions are behind a flag. The whole test suite (8884) is green and the sound, title and captions walks were run by hand.; a-hundred-and-fifteen-walks-fail-on-code-that-pa: panelMenu is no longer refused under a locked screen (03a1d1c4), so 42 walks the sweep has been counting as unknown now run and a locked sweep covers 436 of 557 instead of 394. All 42 were run here and pass, but only a whole sweep can give an honest count of what is left refused and say whether the new coverage holds across the set. The last recorded sweep is also poisoned: it went blind 117 walks in and wrote 436 phantom failures.; a-hundred-and-fifteen-walks-fail-on-code-that-pa: the lock-safety list changed (startGuide and expectTutorialStep now run under a lock, 469 of 557 rather than 435) and every walk's snapshot step now checks a guide's card before it photographs, so the whole set is worth one pass; a-copy-of-a-component-is-configured-not-authored: The component drop path changed for every component in every document: the first drag now lands a copy with the original beside it. Ten walks needed updating and every component, copy, version, shelf, library and starter walk was run green by hand, but the drop path is reached from the Library, the Layer menu, a double click on a tile and the timeline, and only the whole set covers all of those.; swap-the-window-into-a-mode-from-a-chip-beside-t: next-window-modes changed PanelSectionVisibility.footerLabel, which every walk that opens the right hand panel reads, and added a View > Mode submenu to the menu bar. The 22 panel walks and the 14 menu walks are green; the rest of the set has not been run against it.; a-sweep-that-goes-blind-says-so-instead-of-faili: Scripts/playtest.sh and Scripts/playtest-all.sh changed, which every walk goes through: playtest.sh now exits 5 with a spoken verdict when the probe will not launch instead of dying silently under set -e, and playtest-all counts those apart and stops after five in a row. One walk (redline-walk, 14 real captures) and a narrowed run of eight prove both paths, but only the whole set proves the normal path is untouched at scale.; a task runner: LayersRow grew a caption line for cut clips and the walk harness now lets an expect step claim a row's own words; 20 neighbouring cut and layers walks pass here, the whole set has not run since 27h ago\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -122,7 +122,59 @@
     {
       "t": "2026-09-22T12:16:39.683Z",
       "note": "The remaining five, each on its own: history-thumbnail-shapes-walk is not an app fault at all, its setup refuses because 'Shape 1 wide 2400x300.png' is already sitting in ~/Pictures/Screenshots from an earlier run, so a walk is leaving its lent fixture behind on the real machine; move it aside and also find what fails to put it back. find-what-stayed-a-picture-walk says the row 'Text 8' is in the panel when the step says it should not be. dock-picked-first-walk times out on sectionInView(\"Appearance\") and is the same complaint as the open task appearance-is-below-the-fold-again-because-the-p, so read that one before touching it. tutorial-start-on-an-icon-frame-walk times out on tutorialStep(\"what-the-frame-knows\"). delete-key-drops-a-piece-walk has been taken out of this task into its own, delete-stops-dropping-a-piece-once-you-have-undo, because it is a real bug in the focus feature rather than a walk that needs correcting."
+    },
+    {
+      "t": "2026-09-22T13:12:17.978Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T13:50:03.294Z",
+      "note": "owns these walks: button-hug-walk, clip-contents-walk, container-too-small-walk, copies-share-choice-walk, copy-own-color-walk, find-what-stayed-a-picture-walk, history-thumbnail-shapes-walk, layout-fits-walk, out-of-view-mark-walk, refused-width-says-why-walk, size-limits-walk, tutorial-start-on-an-icon-frame-walk, width-reads-back-walk"
+    },
+    {
+      "t": "2026-09-22T13:50:39.815Z",
+      "note": "Nine of the fifteen were ONE cause and the WALKS were what moved, not the app. Since 1beb145e every drag or drop off the shelf hands back a COPY, with the original standing clear one gap to the right, and a copy gets the two row placed-component panel instead of the authoring wall. Each of these dropped a starter and then authored what it had dropped. Fixed the way the ten walks in that commit were: an action selectComponentOriginal after the drop, with a comment saying why. button-hug, clip-contents, layout-fits, out-of-view-mark, refused-width-says-why, size-limits, width-reads-back. container-too-small needed more: with two Cards in the layers list the Layout rows sit past the bottom and its rightClick on Body could not reach, so it deletes the copy and works on the original, leaving the document exactly the one card the walk is about."
+    },
+    {
+      "t": "2026-09-22T13:50:59.291Z",
+      "note": "copies-share-choice and copy-own-color were NOT that cause, despite sharing its shape. Both stop at a press of Related in Swatches because the colour picker never opens: a drop or an insert scrolls the dock down to the Library, which leaves the Fill well hard against the panel's top edge, and pressing it there opens nothing. Proven both ways in one walk: strip the reveals and the panel listing holds no picker control at all; put a reveal of the Component section in front of the same press and the same run lists Close (the picker), Save style, Shades, Related, Document, Recent. The walks now reveal first, which is what a person does; the swatch that opens nothing is filed as a-colour-swatch-at-the-very-top-of-the-panel-ope."
+    },
+    {
+      "t": "2026-09-22T13:50:59.340Z",
+      "note": "history-thumbnail-shapes was not an app fault and not a walk fault: six fixtures from a run that was KILLED on 2026-09-22 01:09 were still sitting in ~/Pictures/Screenshots, and lending refuses a name that is already taken. Fixed properly rather than by hand: Sources/Photonz/Playtest/PlaytestLentCaptures.swift writes every lend down as it happens, and PhotonzApp.init takes back whatever a killed run left before the capture shelf is built, exactly the way PlaytestFlagOverrides already recovers a feature left switched. Verified by putting a leftover and a marker back by hand and running the walk: its setup line read 'a run before this one was killed with captures still lent, so Shape 1 wide 2400x300.png was taken back out of /Users/dzearing/Pictures/Screenshots before this walk started', and the walk passed. The six leftovers were byte identical to the repo fixtures and are gone; nothing of the user's was touched (488 files left, 494 before, six removed)."
+    },
+    {
+      "t": "2026-09-22T13:50:59.388Z",
+      "note": "find-what-stayed-a-picture was the walk being out of date. It scrolls the layers panel to push the three stray labels out of view, then presses the count and claims the list moves back to them. The dock at 1400x900 with the Library hidden now has only about 360 points of scroll in it, so Text 3 still drops off and Text 8 no longer does; the old precondition could not be met. The walk now claims what is still true and still worth claiming: Text 3 is out of the list before the press, back in it after, and Text 8 is fully in view. Checked that the app really does refuse to bring all three into view (it lands on the first and leaves the other two below), which is what the walk always said."
+    },
+    {
+      "t": "2026-09-22T13:50:59.436Z",
+      "note": "tutorial-start-on-an-icon-frame was the walk asking the app to do something it had already done. Keylines default to ON, so the guide's show-the-keylines step arrives already satisfied and the card shows Next instead of waiting, and the walk's showIconKeylines is a no-op that sends no note. The walk now switches keylines off before it starts the guide, so the step has a switch to wait for, which is the case the walk exists to prove. The card that tells everybody to choose a menu row reading Hide is filed as the-keylines-step-of-the-icon-guide-asks-for-som."
+    },
+    {
+      "t": "2026-09-22T13:50:59.485Z",
+      "note": "dock-picked-first is LEFT FAILING on purpose: the walk is right and the app is not. With an Arrow picked at 1200x720 Appearance is 498 points tall in a 661 point panel, so its last 6 points and the whole of Effects and Motion are below the fold. That is exactly appearance-is-below-the-fold-again-because-the-p, which now names this walk as its own and carries the reading. delete-key-drops-a-piece was taken out into its own task and landed in 3e5d6ddc. turned-piece belongs to resizing-one-piece-inside-a-turned-card-moves-th."
+    },
+    {
+      "t": "2026-09-22T13:50:59.533Z",
+      "note": "left rough: Scripts/playtest/copies-share-choice-walk.json and refused-width-says-why-walk.json are stored expanded one-field-per-line while most walks are one step per line, so a hand edit to them is four times the diff. Not worth a task; a batch reformat would touch every walk and bury a real change."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-09-22T13:12:17.977Z",
+  "walks": [
+    "button-hug-walk",
+    "clip-contents-walk",
+    "container-too-small-walk",
+    "copies-share-choice-walk",
+    "copy-own-color-walk",
+    "find-what-stayed-a-picture-walk",
+    "history-thumbnail-shapes-walk",
+    "layout-fits-walk",
+    "out-of-view-mark-walk",
+    "refused-width-says-why-walk",
+    "size-limits-walk",
+    "tutorial-start-on-an-icon-frame-walk",
+    "width-reads-back-walk"
+  ]
 }

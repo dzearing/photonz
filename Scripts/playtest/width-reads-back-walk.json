@@ -10,6 +10,8 @@
     { "do": "wait", "seconds": 1.0 },
     { "do": "click", "at": [400, 300] },
     { "do": "wait", "seconds": 0.8 },
+    { "comment": "Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right. Limits are authored on the original, so step back to it (FirstDropIsAnInstanceTests).", "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "0-button-picked" },
     { "do": "describe", "stage": "0-button-picked", "note": "one button picked, as wide as its words" },
 

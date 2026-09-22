@@ -11,6 +11,8 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "dropComponent", "at": [420, 300] },
     { "do": "wait", "seconds": 1.0 },
+    { "comment": "Since 2026-09-22 a drop hands back a COPY, first drop included, with the ORIGINAL standing clear of it one gap to the right. Limits are authored on the original, so step back to it (FirstDropIsAnInstanceTests).", "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "1-arrives", "note": "the starter Button, exactly as wide as its word plus its room. The Layout section's Width and Height rows each carry a twist-open beside them. Width's is shut, because nothing holds it; Height's has opened itself and says Smallest 36, which is the reason the pill is 36 tall and not the height of one small word." },

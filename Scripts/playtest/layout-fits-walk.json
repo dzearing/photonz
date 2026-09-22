@@ -19,6 +19,8 @@
 
     { "do": "click", "at": [360, 200] },
     { "do": "wait", "seconds": 0.8 },
+    { "comment": "Since 2026-09-22 a drag off the shelf hands back a COPY, first drag included, with the ORIGINAL standing clear of it one gap to the right, so the thing under the first drop is a copy too and the original is one step back from it (FirstDropIsAnInstanceTests).", "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-original", "note": "THE OTHER CLAIM: the original picked. Layout ran 585-1074 (489 points), of which 79 was a five-line paragraph and 108 was the four padding side fields opening themselves. It should now be around 300, and Effects and Shadow should start that much nearer the top." },
     { "do": "panel", "stage": "2-original" },
     { "do": "snapshot", "name": "layout-fits-2-original" },

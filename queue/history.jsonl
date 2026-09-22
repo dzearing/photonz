@@ -6247,3 +6247,17 @@
 {"t":"2026-09-22T13:00:12.632Z","ev":"task_note","id":"delete-stops-dropping-a-piece-once-you-have-undo"}
 {"t":"2026-09-22T13:01:18.291Z","ev":"task_note","id":"delete-stops-dropping-a-piece-once-you-have-undo"}
 {"t":"2026-09-22T13:01:18.341Z","ev":"task_done","id":"delete-stops-dropping-a-piece-once-you-have-undo","from":"in_progress","note":"Two bugs, both fixed and both verified on the probe. (1) Video ▸ Delete This Piece carried U+007F, which AppKit never matches for a ⌫ press: it carries DeleteKeyCharacters.menuKeyEquivalent (U+0008) now, measured both ways in a throwaway binary including that a focused text field still keeps the key. (2) On the timeline an undo put the document back without putting the picked piece back in your hand, so ⌫ went silent: the picked piece now rides in LayerPick with the layers, restored by restoreSelectionFromHistory like the rest of a pick. Verified: Scripts/test.sh green (8924 tests, 712 suites, including new tests for both); delete-key-drops-a-piece-walk ok twice on its own, now going round the delete-and-undo pair twice; new delete-key-drops-a-timeline-piece-walk ok; delete, undo, cut, menu and shortcut walk batches all green (36 walks, the one failure clip-contents-walk being identical to its failure in the last two sweeps and nothing to do with this). Audit: queue/audits/2026-09-22-delete-after-undo.json with two real window captures. Full sweep requested because the harness's menu lookup changed."}
+{"t":"2026-09-22T13:12:17.869Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":626,"of":561,"rotating":true}
+{"t":"2026-09-22T13:12:17.980Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-4","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-09-22T13:50:03.296Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-4","walks":["button-hug-walk","clip-contents-walk","container-too-small-walk","copies-share-choice-walk","copy-own-color-walk","find-what-stayed-a-picture-walk","history-thumbnail-shapes-walk","layout-fits-walk","out-of-view-mark-walk","refused-width-says-why-walk","size-limits-walk","tutorial-start-on-an-icon-frame-walk","width-reads-back-walk"]}
+{"t":"2026-09-22T13:50:03.346Z","ev":"task_walks","id":"appearance-is-below-the-fold-again-because-the-p","walks":["dock-picked-first-walk"]}
+{"t":"2026-09-22T13:50:09.697Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-22T13:50:22.680Z","ev":"task_created","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","priority":"p2-normal","title":"A colour swatch at the very top of the panel opens no picker"}
+{"t":"2026-09-22T13:50:33.524Z","ev":"task_created","id":"the-keylines-step-of-the-icon-guide-asks-for-som","priority":"p2-normal","title":"The keylines step of the icon guide asks for something already done"}
+{"t":"2026-09-22T13:50:39.817Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.293Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.342Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.390Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.438Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.487Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T13:50:59.535Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}

@@ -93,13 +93,9 @@
       "seconds": 0.4
     },
     {
+      "comment": "Only the LAST of the three can be pushed out of view now. The dock at 1400x900 with the Library hidden has about 360 points of scroll in it, so the list slides far enough to drop Text 3 off the bottom and no further; Text 8 sits near the top of the list and stays. Before 2026-09-22 the dock was long enough that both went.",
       "do": "expect",
       "row": "Text 3",
-      "present": false
-    },
-    {
-      "do": "expect",
-      "row": "Text 8",
       "present": false
     },
     {
@@ -138,7 +134,12 @@
     {
       "do": "describe",
       "stage": "3-they-are-in-view",
-      "note": "And the layers list moved to them rather than staying where it was left. It cannot show all three at once, because they are six rows apart and the list holds five, so it lands on the first of them and the other two are one turn of the wheel below."
+      "note": "And the layers list moved to them rather than staying where it was left. It cannot show all three at once, because they are six rows apart and the list holds fewer, so it lands on the first of them and the other two are one turn of the wheel below. Text 3, which the scroll a moment ago pushed out of the list altogether, is back in it without anybody turning that wheel."
+    },
+    {
+      "do": "expect",
+      "row": "Text 3",
+      "present": true
     },
     {
       "do": "expectInView",

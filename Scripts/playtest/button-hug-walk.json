@@ -11,7 +11,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "dropComponent", "at": [420, 300] },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "1-arrives", "note": "the starter Button arrives as wide as the word Button plus 16 either side, not at some width somebody picked" },
+    { "do": "describe", "stage": "1-arrives", "note": "the starter Button arrives as wide as the word Button plus 16 either side, not at some width somebody picked. Two drawings land: the copy where it was dropped, and the original it follows one gap to the right." },
     { "do": "snapshot", "name": "hug-1-arrives" },
     { "do": "render", "name": "hug-1-arrives-doc" },
 
@@ -19,7 +19,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "dropComponent", "at": [420, 520] },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "2-copy", "note": "a copy of the Button, the same size as the original" },
+    { "do": "describe", "stage": "2-copy", "note": "a second copy of the Button, the same size as the original" },
     { "do": "render", "name": "hug-2-copy-doc" },
 
     { "do": "click", "at": [420, 520], "count": 2 },
@@ -35,6 +35,8 @@
 
     { "do": "click", "at": [420, 300] },
     { "do": "wait", "seconds": 0.6 },
+    { "comment": "Since 2026-09-22 a drop hands back a COPY, first drop included, with the ORIGINAL standing clear of it one gap to the right. Padding is authored on the original, so step back to it (FirstDropIsAnInstanceTests).", "do": "action", "action": "selectComponentOriginal" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-layout-section", "note": "the Button's Layout section: Arrangement Free, Width Hug, Height Hug with a Smallest of 36, and Padding showing the room it keeps" },

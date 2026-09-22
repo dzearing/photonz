@@ -17,6 +17,11 @@ struct PhotonzApp: App {
         // off while the Help menu is being built, or the shelf it claims is
         // gone is still hanging there (`PlaytestFlagOverrides`).
         PlaytestFlagOverrides.applyEarly()
+        // And before the capture shelf is built: a run that was killed halfway
+        // leaves its lent fixtures in the person's own Screenshots folder, and
+        // the next run of that walk refuses to start because the name is taken
+        // (`PlaytestLentCaptures`).
+        PlaytestLentCaptures.recoverFromAKilledRun()
         #endif
         // The document model measures text — a box around words has to know how
         // tall the words are — and it is pure, so CoreText's answer is handed
