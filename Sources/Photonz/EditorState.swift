@@ -893,6 +893,12 @@ final class EditorState {
     /// drag is one step to undo, and read by BOTH the strip and the Start and
     /// Over fields in the side column so the two can never disagree.
     var motionTimingDrag: MotionTimingDrag?
+    /// How far the timeline is opened out, and which stretch of the document
+    /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
+    /// are looking at a recording is not part of the recording, so it is
+    /// nobody's undo step and two windows on one document may be looking at
+    /// different seconds of it.
+    var timelineZoom: TimelineZoom = .fit
 
     // MARK: Time in the document (`docs/design/video.md`)
 
@@ -2039,6 +2045,11 @@ final class EditorState {
         // sets AFTER this (`openRecordingAsDocument`).
         pauseDocument()
         documentTimeMS = 0
+        // ...and the timeline goes back to the whole document, for the same
+        // reason the playhead goes back to the first frame: how far you had
+        // opened out the last recording says nothing about this one
+        // (`EditorState+TimelineZoom`).
+        timelineZoom = .fit
         recordingURL = nil
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there

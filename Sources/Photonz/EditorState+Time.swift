@@ -157,6 +157,10 @@ extension EditorState {
     /// the last frame it has and replaces it the instant the right one lands.
     func documentMomentChanged() {
         guard let document = shownDocument else { return }
+        // A timeline opened out carries its window along with the playhead, a
+        // screenful at a time (`EditorState+TimelineZoom`). Free where the
+        // playhead is already on screen, which is nearly every call.
+        followTimelineWindow()
         // Every layer's level put where the plan says it is at this moment,
         // which is what turns a pair of points into a duck you can hear
         // (`EditorState+Audio.swift`).

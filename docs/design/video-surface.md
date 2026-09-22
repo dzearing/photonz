@@ -108,7 +108,7 @@ already names.
 | The picture | `.canvas` | The document, same as ever. Playing is the canvas drawing a different moment. |
 | Play, scrub, timecodes | `.transport`, bottom dock, top row | D8 stands: volume · skip · play · loop · timecode · scrubber · timecode, nothing else. |
 | Clips, cuts, waveforms, property lanes | `.timeline`, bottom dock, under the transport | The shipped timing strip, given a duration instead of a lap. |
-| Timeline zoom, blade, and what is scoped to the timeline | `.tlbar`, the timeline's own local bar | D8's last row. Today only `video.html` draws a zoom at all. |
+| Timeline zoom, blade, and what is scoped to the timeline | `.tlbar`, the timeline's own local bar | D8's last row. The zoom is built, §13. The blade is not: cutting is the playhead and B. |
 | Which layers exist, their order, their eyes | Layers, in the one dock | Not deleted. See §3. |
 | What the thing you picked IS | the section named after it, in the one dock | Clip · Transition · Caption · Title. It REPLACES Text, it does not stack on it. |
 | What it looks like | Appearance, Effects | Unchanged. A clip takes a drop shadow like anything else. |
@@ -767,3 +767,80 @@ it is not on screen. Scrub off the hold an arrow was drawn on and the arrow
 goes; its box staying behind on the empty picture read as the arrow being there
 and broken. The way back to it is its bar on the timeline and its row in the
 layers list, both of which are still there and still picked.
+
+---
+
+## 13. Opening the timeline out, answered (built 2026-09-22)
+
+The strip drew the whole document across whatever width the window happened to
+be. Eight seconds fits; five minutes, which is what a real screen recording is,
+is a bar a few hundred points wide where every cut is a guess.
+
+### 13.1 A zoom is the ruler measuring less, and nothing else
+
+`MotionStripRuler` carries a `startMS` as well as a span, and everything on the
+strip is already laid out through its two calls. So the whole feature is the
+ruler covering a WINDOW of the document instead of all of it
+(`TimelineZoom.swift`): no second layout, no zoomed mode, and no bar, join,
+waveform, grip or playhead that has to know it happened.
+
+The one trap, and it is worth naming because it would have been silent: half
+the strip asks where a MOMENT falls and the other half asks how wide a LENGTH
+is. Unwindowed they are the same arithmetic. Windowed they are not, so the
+ruler now answers them separately (`fraction(ofMS:)` against
+`fraction(spanningMS:)`), and a duration that went through the moment call
+would have drawn every bar on a zoomed timeline the wrong size.
+
+### 13.2 Steps and a Fit, not a slider
+
+Five minutes opens out three hundred times. A slider from the whole thing to a
+second of it spends nine tenths of its travel in the first two seconds of
+useful range, so the control is a minus, a plus, what is on screen said as two
+moments (`1:00 to 1:30`), and Fit. Doubling reaches the closest window in eight
+presses and every press is the same size. Fit is the whole way back in one
+press, from however far in.
+
+The closest window is **one second across the width**, which on an ordinary
+lane is about six hundred points a second: a spoken word of a third of a second
+is two hundred points of timeline, so a cut goes in the middle of a word rather
+than near it. Closer buys nothing, because the frames are forty milliseconds
+apart.
+
+### 13.3 It opens out around the moment you are looking at
+
+Every zoom keeps the playhead exactly where it is on screen. Opening out about
+the left hand edge would throw you back towards the start of the recording on
+every press, so the cut you were lining up would be the first thing you lost. A
+playhead that is somewhere else entirely is not chased: the middle of the
+window is held still instead, because holding a playhead you cannot see would
+throw away the stretch you were actually looking at.
+
+Near either end of the recording the window stops at the end, so the playhead
+can sit hard against an edge. That is not the zoom failing to centre it: there
+is nothing after the last frame to show.
+
+### 13.4 Where you are, and how to move
+
+A zoom creates a question the ruler cannot answer: how much of the recording is
+behind and ahead of you. So while the strip is opened out, a thin bar over the
+ruler draws the whole recording with your window marked on it and the playhead
+in it. Drag the mark to move along; press the track anywhere else and the
+window jumps there. It is not drawn at all when the whole document is on
+screen, because then it would say only what the strip already says.
+
+Playing a recording that is opened out **pages**: when the playhead runs off the
+end, the window jumps a screenful and the playhead lands near its left hand
+edge, so what is about to happen is on screen. A window that crept along a
+frame at a time would pin the playhead to the right hand edge and slide the
+whole strip under the pointer.
+
+### 13.5 What is drawn is what is on screen
+
+Opened right out, a five minute clip's bar is a hundred and eighty thousand
+points wide and a waveform sampled across it is a hundred and eighty thousand
+columns nobody can see. Every piece, spare, band and level line is drawn only
+where it shows, plus enough slack to carry its rounded ends off screen where
+the lane clips them (`TimelineSpan`). The drawing is identical; the work is
+bounded by the width of the window rather than by how far the zoom has gone. A
+waveform is read from the part of the file in the window, which is what makes a
+zoomed waveform real detail instead of the same picture stretched.

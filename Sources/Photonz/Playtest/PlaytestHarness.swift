@@ -2974,6 +2974,76 @@ private final class Run {
                     $0.timing.setStart(editor.documentTimeMS)
                     $0.timing.setDuration(1000)
                 }
+            // Opening the timeline out (`EditorState+TimelineZoom`). Each of
+            // these refuses at its own end of the range, so a walk cannot
+            // photograph a press that did nothing and call it a zoom.
+            case .timelineZoomIn, .timelineZoomOut:
+                let inward = action == .timelineZoomIn
+                guard Experiments.shared.timelineZoomEnabled else {
+                    throw Failure(description: "the timeline has no zoom: the switch for it is "
+                        + FeatureCatalog.timelineZoomFlag)
+                }
+                guard editor.canOpenOutTheTimeline else {
+                    throw Failure(description: "this document is "
+                        + "\(editor.documentLengthMS) ms long, which is shorter than the closest "
+                        + "window the timeline opens out to, so there is nothing to open out into")
+                }
+                guard inward ? editor.canZoomTimelineIn : editor.canZoomTimelineOut else {
+                    throw Failure(description: "the timeline is already showing "
+                        + "\(editor.timelineWindowReading) and cannot go "
+                        + (inward ? "further in" : "further out"))
+                }
+                inward ? editor.zoomTimelineIn() : editor.zoomTimelineOut()
+            case .timelineFit:
+                guard editor.isTimelineOpenedOut else {
+                    throw Failure(description: "the timeline is already showing the whole "
+                        + "document, so Fit has nothing to put back")
+                }
+                editor.fitTimeline()
+                guard !editor.isTimelineOpenedOut else {
+                    throw Failure(description: "Fit left the timeline showing "
+                        + "\(editor.timelineWindowReading)")
+                }
+            case .timelineFiveMinutes:
+                let wanted = 5 * 60 * 1000
+                guard editor.documentLengthMS < wanted else {
+                    throw Failure(description: "this document is already "
+                        + "\(editor.documentLengthMS) ms long")
+                }
+                // The take is slid until it ENDS at five minutes, which is
+                // the only stand-in that stays five minutes: a document's
+                // duration follows what is in it (`refreshDuration`), so an
+                // eight second take with four and a half minutes of nothing
+                // after it collapses back to eight seconds the moment
+                // anything is edited. Slid to the end, the content really is
+                // five minutes long and every edit keeps it that way.
+                let shift = wanted - editor.documentLengthMS
+                // Long enough to slide INTO first. A clip dropped past the end
+                // is allowed, and the ruler then says the new length.
+                editor.perform { $0.durationMS = wanted }
+                let timed = (editor.document?.allLayers ?? []).filter { $0.time != nil }
+                // Taking hold of a bar picks its layer, so what the walk had
+                // picked before the slide is put back afterwards: the slide is
+                // scenery, and it must not quietly hand the next step a
+                // different layer to cut.
+                let held = editor.selectedLayerID
+                let heldPiece = editor.selectedClipPieceIndex
+                for layer in timed {
+                    editor.beginClipBarDrag(layerID: layer.id, grab: .body)
+                    guard editor.clipBarDrag != nil else {
+                        throw Failure(description: "could not take hold of \(layer.name)'s bar "
+                            + "to slide it into the middle")
+                    }
+                    editor.updateClipBarDrag(byMS: shift)
+                    editor.commitClipBarDrag()
+                }
+                if let held { editor.selectClipPiece(layerID: held, index: heldPiece) }
+                editor.scrubDocument(toMS: editor.documentTimeMS + shift)
+                editor.documentMomentChanged()
+                guard editor.documentLengthMS == wanted else {
+                    throw Failure(description: "the document is \(editor.documentLengthMS) ms "
+                        + "long and should be \(wanted)")
+                }
             default: break
             }
             await sleep(0.35)
@@ -2981,6 +3051,7 @@ private final class Run {
             note(number, step.name,
                  "\(action.rawValue): the timeline runs \(editor.documentLengthMS) ms"
                  + " (was \(before))"
+                 + ", showing \(editor.timelineWindowReading)"
                  + ", the clip is in \(pieces?.count ?? 0) piece(s)"
                  + (editor.selectedClipPieceIndex.map { ", piece \($0 + 1) picked" } ?? "")
                  + (editor.clipCutInHand.map { cut in
@@ -3820,7 +3891,8 @@ private final class Run {
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
-                 .titleDragStartEarlier, .titleDragEndLater:
+                 .titleDragStartEarlier, .titleDragEndLater,
+                 .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)

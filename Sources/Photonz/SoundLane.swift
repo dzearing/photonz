@@ -51,6 +51,13 @@ struct SoundLevelLine: View {
     let layerName: String
     let level: AudioLevel
     let lengthMS: Int
+    /// The stretch of the layer this drawing covers, which is the whole of it
+    /// until the timeline is opened out and only part of the bar is on screen
+    /// (`TimelineZoom.swift`). Everything below measures against this pair, so
+    /// a dot is drawn where the window puts it and dragging one lands on the
+    /// moment under the hand at any zoom.
+    let fromMS: Int
+    let toMS: Int
     let width: CGFloat
     let height: CGFloat
 
@@ -63,7 +70,7 @@ struct SoundLevelLine: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             line
-            ForEach(level.points, id: \.atMS) { point in
+            ForEach(shownPoints, id: \.atMS) { point in
                 dot(point)
             }
         }
@@ -82,6 +89,13 @@ struct SoundLevelLine: View {
         }
     }
 
+    /// The points inside the stretch on screen. One off the side of the
+    /// window would otherwise be drawn pinned to the edge, where it reads as a
+    /// point somebody put there.
+    private var shownPoints: [AudioLevelPoint] {
+        level.points.filter { $0.atMS >= fromMS && $0.atMS <= toMS }
+    }
+
     private var line: some View {
         Path { path in
             let points = shape
@@ -98,8 +112,8 @@ struct SoundLevelLine: View {
     /// which is exactly what `AudioLevel.gain(atLayerMS:)` describes.
     private var shape: [CGPoint] {
         guard lengthMS > 0, width > 0 else { return [] }
-        var moments = [0] + level.points.map(\.atMS) + [lengthMS]
-        moments = Array(Set(moments)).sorted().filter { $0 >= 0 && $0 <= lengthMS }
+        var moments = [fromMS] + level.points.map(\.atMS) + [toMS]
+        moments = Array(Set(moments)).sorted().filter { $0 >= fromMS && $0 <= toMS }
         return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: level.gain(atLayerMS: $0))) }
     }
 
@@ -140,13 +154,14 @@ struct SoundLevelLine: View {
     // MARK: Where a number is on the bar
 
     private func x(atMS ms: Int) -> CGFloat {
-        guard lengthMS > 0 else { return 0 }
-        return width * CGFloat(min(max(0, ms), lengthMS)) / CGFloat(lengthMS)
+        let span = max(1, toMS - fromMS)
+        return width * CGFloat(min(max(fromMS, ms), toMS) - fromMS) / CGFloat(span)
     }
 
     private func ms(atX x: CGFloat) -> Int {
-        guard width > 0 else { return 0 }
-        return Int((Double(min(max(0, x), width)) / Double(width) * Double(lengthMS)).rounded())
+        guard width > 0 else { return fromMS }
+        let span = Double(max(1, toMS - fromMS))
+        return fromMS + Int((Double(min(max(0, x), width)) / Double(width) * span).rounded())
     }
 
     /// The top of the bar is as loud as a level goes and the bottom is silence,

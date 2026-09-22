@@ -18838,3 +18838,50 @@ Next: the standing video set. The audit is
 wants answered is whether the row should also say what is unusual about the
 pieces (a held frame, one stretch at 30x) or whether that stays the timeline's
 job.
+
+## 2026-09-22 — the timeline opens out
+
+The timeline drew the whole document across the width, however long the
+document was, so a five minute screen recording was a bar a few hundred points
+wide where every cut was a guess. It now zooms
+(`the-timeline-zooms-so-a-recording-longer-than-a`, flag
+`next-open-out-the-timeline`, on by default in Next).
+
+The whole feature is the RULER measuring less. `MotionStripRuler` gained a
+`startMS`, and everything on the strip was already laid out through its two
+calls, so no bar, join, waveform, grip or playhead knows a zoom exists
+(`TimelineZoom.swift`, `docs/design/video-surface.md` §13). The one trap was
+real and would have been silent: half the strip asks where a MOMENT falls and
+the other half asks how wide a LENGTH is, which are the same arithmetic until
+the ruler has a window and different after. The ruler now answers them
+separately (`fraction(ofMS:)` against `fraction(spanningMS:)`) and every call
+site was classified by hand.
+
+In the timeline's own bar (`.tlbar`, where D8 puts it): minus, plus, what is on
+screen said as two moments, and Fit. Steps rather than the slider the mock
+drew, because five minutes opens out three hundred times and nine tenths of
+that slider would be unaimable. Every zoom keeps the playhead where it is on
+screen. While the strip is opened out a thin bar over the ruler draws the whole
+recording with your window on it, which is both where-am-I and how-to-pan, and
+playing pages the window along a screenful at a time.
+
+Opened right out a clip's bar is wider than any screen, so every piece, spare,
+band and level line is drawn only where it shows plus slack
+(`TimelineSpan`), and a waveform is read from the part of the file in the
+window rather than stretched.
+
+New: `open-out-the-timeline-walk` (7 real window captures), playtest actions
+`timelineZoomIn/Out`, `timelineFit` and `timelineFiveMinutes`. That last one is
+a stand-in worth knowing about: a document's duration follows what is IN it
+(`refreshDuration`), so empty time cannot be faked, and it slides the eight
+second sample along until it ends at the five minute mark.
+
+Also found on the way, not a regression and not filed: the right arrow key over
+the editor nudges the picked LAYER, it does not step the playhead a frame, so a
+walk cannot move the playhead with it.
+
+Next: the standing video set. The audit is
+`queue/audits/2026-09-22-timeline-zoom.json`; the questions it most wants
+answered are whether doubling is the right step and whether the overview bar
+tells you where you are quickly enough.
+

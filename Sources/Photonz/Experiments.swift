@@ -455,6 +455,11 @@ extension Experiments {
     /// (`ClipReframe.swift`).
     var punchInEnabled: Bool { isEnabled(FeatureCatalog.punchInFlag) }
 
+    /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
+    /// zoom, so a recording longer than a few seconds can be worked on a
+    /// second at a time (`TimelineZoom.swift`).
+    var timelineZoomEnabled: Bool { isEnabled(FeatureCatalog.timelineZoomFlag) }
+
     /// `next-a-title-has-an-in-and-an-out`: whether text placed on a document
     /// with time arrives and leaves rather than being on screen for all of it
     /// (`TitleTime.swift`).

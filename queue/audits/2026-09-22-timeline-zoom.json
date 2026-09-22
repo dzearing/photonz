@@ -1,0 +1,51 @@
+{
+  "feature": "The timeline opens out",
+  "epic": "video-cutting",
+  "summary": "The timeline's own bar now carries a zoom, so a recording longer than a few seconds can be worked on a second at a time instead of as a sliver. Open it out around the playhead, see where you are in the whole recording on a thin bar over the ruler, and press Fit to get the whole thing back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open a recording (or the sample one) so the timeline is up. The flag is next-open-out-the-timeline and it is on by default in Next; next-sound-on-the-timeline gives the waveform this is best judged on.",
+  "try": [
+    {
+      "do": "Open a recording and cut it into a few pieces with B, so there are joins to aim at."
+    },
+    {
+      "do": "Look at the right hand end of the TIMELINE bar: a minus, a plus, what is on screen said as two moments, and Fit."
+    },
+    {
+      "do": "Press the plus three times and watch the playhead: it stays on the same pixel while the ruler shrinks to half a minute.",
+      "shot": "2026-09-22-timeline-zoom-2.png"
+    },
+    {
+      "do": "Press the plus until the ruler counts in tenths of a second, then put a cut on a particular sound in the waveform.",
+      "shot": "2026-09-22-timeline-zoom-3.png"
+    },
+    {
+      "do": "Drag the thin bar over the ruler to move along the recording, and press somewhere else on it to jump there."
+    },
+    {
+      "do": "Pinch on the lanes with two fingers to open out around the point under them."
+    },
+    {
+      "do": "Press space and watch a zoomed timeline play: the window pages along with the playhead."
+    },
+    {
+      "do": "Press Fit to put the whole recording back across the width in one go.",
+      "shot": "2026-09-22-timeline-zoom-1.png"
+    }
+  ],
+  "evaluate": [
+    "Is doubling the right size of step, or does getting from the whole recording to one second of it feel like too many presses?",
+    "When you press the plus, does the timeline open out where you expected, or does it move something you were looking at?",
+    "Does the thin bar over the ruler tell you where you are quickly enough, or do you find yourself pressing Fit just to get your bearings?",
+    "Is 1:00 to 1:30 the right thing for the readout to say, or would you rather it said how far in you are?",
+    "Playing a zoomed timeline jumps a screenful at a time rather than scrolling smoothly. Does that read as keeping up, or as jumping?"
+  ],
+  "rough": [
+    "There is no keyboard shortcut. Every other timeline in the world zooms on plus and minus, and those keys are left alone here because the canvas already has a zoom and a key that means two zooms is worse than one you have to reach for.",
+    "The two finger pinch is the one part of this a walk cannot drive, so it is built and compiled and has not been watched working. Everything else in this list was driven by the walk that ships with it (open-out-the-timeline-walk), which left seven real pictures of the window.",
+    "The only way to move along a zoomed timeline with the pointer is the bar over the ruler. Two fingers sideways over the lanes does nothing, because the lanes already scroll up and down and SwiftUI hands a view no sideways scroll without dropping to AppKit.",
+    "The readout rounds to whole seconds, so at the closest window it can say 4:56 to 4:58 while the ruler above it is counting tenths. It is never wrong, but it is coarser than what it is describing.",
+    "How far you have opened the timeline out is forgotten when the window closes. Coming back to a recording puts the playhead where you left it and the timeline at the whole thing.",
+    "A picked piece is drawn in solid accent, which makes its waveform hard to read at exactly the zoom where the waveform became worth reading.",
+    "The walk stands in for a five minute recording by sliding the eight second sample to the five minute mark: a document's duration follows what is in it, so empty time cannot be faked, and there is no long recording in the repo to test on."
+  ]
+}

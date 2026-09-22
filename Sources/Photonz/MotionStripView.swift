@@ -29,6 +29,10 @@ import SwiftUI
 struct MotionStripView: View {
     @Environment(EditorState.self) private var editorState
 
+    /// How far a pinch in flight has got, so each move opens the strip out by
+    /// the CHANGE rather than by the whole gesture again.
+    @State private var pinchedTo: CGFloat?
+
     /// The column down the left holding the lane names.
     static let labelWidth: CGFloat = 92
     /// One lane, and the bar in it.
@@ -66,6 +70,15 @@ struct MotionStripView: View {
                 // ruler drawn above it.
                 let laneWidth = max(1, geo.size.width - Self.labelWidth)
                 VStack(spacing: 0) {
+                    // Where you are in the whole recording, and the way to
+                    // move along it. Only while the strip is showing less than
+                    // all of it (`TimelineZoomBar.swift`).
+                    if editorState.isTimelineOpenedOut {
+                        TimelineOverviewBar(laneWidth: laneWidth)
+                            .padding(.leading, Self.labelWidth)
+                            .padding(.bottom, 3)
+                    }
+                    VStack(spacing: 0) {
                     MotionStripRulerView(ruler: editorState.motionStripRuler)
                         .padding(.leading, Self.labelWidth)
                     ScrollView(.vertical) {
@@ -81,12 +94,13 @@ struct MotionStripView: View {
                         .padding(.top, 11)
                     }
                     .scrollBounceBehavior(.basedOnSize)
-                }
+                    }
                 // The dashed repeats line and the playhead sit OVER the lanes
                 // in the lanes' own coordinates, so they land on the same pixel
                 // a time on the ruler above them does.
                 .overlay(alignment: .topLeading) {
                     MotionStripMarksView(laneWidth: laneWidth)
+                        .clipShape(TimelineEdgeClip())
                         .padding(.leading, Self.labelWidth)
                         .allowsHitTesting(false)
                 }
@@ -96,8 +110,15 @@ struct MotionStripView: View {
                 .overlay(alignment: .topLeading) {
                     if editorState.motionStripMeasuresADocument {
                         DocumentPlayheadView(laneWidth: laneWidth)
+                            .clipShape(TimelineEdgeClip())
                             .padding(.leading, Self.labelWidth)
                     }
+                }
+                // A pinch opens the strip out about the point under the
+                // fingers, which is the gesture a trackpad already means by it
+                // everywhere else in this app. Simultaneous, so it never takes
+                // a drag on a bar away from the bar.
+                .simultaneousGesture(pinch(laneWidth: laneWidth))
                 }
             }
             .frame(height: bodyHeight)
@@ -119,6 +140,25 @@ struct MotionStripView: View {
             ? MotionStripCopy.documentTitle : MotionStripCopy.title
     }
 
+    /// A pinch on the lanes: the scale follows the fingers, about the moment
+    /// under the point they started from. That moment is worked out against
+    /// the ruler as it is NOW rather than as it was when the pinch began, so
+    /// it is the moment the zoom is keeping still and the strip cannot creep
+    /// out from under the hand.
+    private func pinch(laneWidth: CGFloat) -> some Gesture {
+        MagnifyGesture(minimumScaleDelta: 0.01)
+            .onChanged { value in
+                guard editorState.canOpenOutTheTimeline else { return }
+                let x = value.startLocation.x - Self.labelWidth
+                let fraction = min(max(0, x / laneWidth), 1)
+                let anchorMS = editorState.motionStripRuler.ms(atFraction: Double(fraction))
+                let previous = pinchedTo ?? 1
+                editorState.zoomTimeline(by: value.magnification / previous, anchorMS: anchorMS)
+                pinchedTo = value.magnification
+            }
+            .onEnded { _ in pinchedTo = nil }
+    }
+
     /// As tall as it has to be for the lanes it holds, and no taller.
     private var bodyHeight: CGFloat {
         let groups = editorState.motionStripGroups
@@ -134,7 +174,10 @@ struct MotionStripView: View {
             + CGFloat(lanes) * Self.laneHeight
             // Room over the top lane for the bracket a drag draws.
             + 10
-        return min(Self.bodyCeiling, content)
+        // The overview is added OUTSIDE the ceiling, so opening the timeline
+        // out never costs a lane its room.
+        let overview = editorState.isTimelineOpenedOut ? TimelineOverviewBar.height + 3 : 0
+        return overview + min(Self.bodyCeiling, content)
     }
 
     // MARK: The bar along the top
@@ -150,6 +193,10 @@ struct MotionStripView: View {
             // nothing here to type.
             if !editorState.motionStripMeasuresADocument { cycleField }
             Spacer(minLength: 0)
+            // The zoom, in the timeline's OWN bar rather than in the transport
+            // above it: what it scopes is this strip, which is where
+            // UX-PATTERNS D8 and `docs/design/video-surface.md` put it.
+            if editorState.canOpenOutTheTimeline { TimelineZoomControl() }
             // How fast the playhead below crosses this ruler. It belongs on the
             // strip as well as on the previews card because motion is on every
             // layer, not only on icons: a lag dragged out on this ruler has to
@@ -430,6 +477,7 @@ private struct ClipTrimBar: View {
             handle(atX: xOut, isStart: false)
         }
         .frame(width: laneWidth, alignment: .leading)
+        .clipShape(TimelineEdgeClip())
         .panelReadout("\(layerName) trimming, \(editorState.trimReadout)")
     }
 
@@ -507,6 +555,7 @@ private struct MotionStripLaneView: View {
                 MotionStripBar(lane: lane, layerName: layerName, laneWidth: laneWidth)
             }
             .frame(width: laneWidth, alignment: .leading)
+            .clipShape(TimelineEdgeClip())
         }
         .frame(height: MotionStripView.laneHeight)
         .playtestField("Timing \(layerName) \(lane.title)")
@@ -550,7 +599,7 @@ private struct MotionStripBar: View {
         let ruler = editorState.motionStripRuler
         let x = laneWidth * ruler.fraction(ofMS: Double(lane.timing.startMS))
         let width = max(Self.minimumWidth,
-                        laneWidth * ruler.fraction(ofMS: Double(lane.timing.durationMS)))
+                        laneWidth * ruler.fraction(spanningMS: Double(lane.timing.durationMS)))
         RoundedRectangle(cornerRadius: 5)
             .fill(fill)
             .overlay {
@@ -660,7 +709,9 @@ private struct MotionStripBar: View {
     }
 
     private func ms(_ points: CGFloat) -> Int {
-        Int((editorState.motionStripRuler.ms(atFraction: Double(points / laneWidth))).rounded())
+        // A sideways TRAVEL, which is a length rather than a moment: where the
+        // window starts has nothing to do with how far a hand moved.
+        Int((editorState.motionStripRuler.msSpanning(fraction: Double(points / laneWidth))).rounded())
     }
 }
 
@@ -793,8 +844,11 @@ private struct DocumentPlayheadView: View {
     let laneWidth: CGFloat
 
     var body: some View {
-        let length = max(1, editorState.documentLengthMS)
-        let x = laneWidth * CGFloat(editorState.documentTimeMS) / CGFloat(length)
+        // Against the RULER rather than against the document's length, so the
+        // playhead lands on the same pixel as the moment under it once the
+        // timeline is opened out (`TimelineZoom.swift`).
+        let ruler = editorState.motionStripRuler
+        let x = laneWidth * CGFloat(ruler.fraction(ofMS: Double(editorState.documentTimeMS)))
         ZStack(alignment: .topLeading) {
             // The whole width takes the click, so landing anywhere on the
             // timeline puts the playhead there rather than only landing on the
@@ -821,9 +875,9 @@ private struct DocumentPlayheadView: View {
     private var scrub: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let length = max(1, editorState.documentLengthMS)
                 let fraction = min(max(0, value.location.x / max(1, laneWidth)), 1)
-                editorState.scrubDocument(toMS: Int(fraction * CGFloat(length)))
+                let ms = editorState.motionStripRuler.ms(atFraction: Double(fraction))
+                editorState.scrubDocument(toMS: Int(ms.rounded()))
             }
     }
 }

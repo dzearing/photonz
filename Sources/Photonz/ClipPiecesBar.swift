@@ -56,7 +56,7 @@ struct ClipPiecesBar: View {
         // through a gesture whose result is the bar closing up from its far
         // end: you see what you are taking off, in place, and it shuts when
         // you let go (`docs/design/video-surface.md` §11.2).
-        let shift = laneWidth * ruler.fraction(ofMS: Double(headShiftMS))
+        let shift = laneWidth * ruler.fraction(spanningMS: Double(headShiftMS))
         let x0 = laneWidth * ruler.fraction(ofMS: Double(bar.inMS)) + shift
         return ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 5)
@@ -67,9 +67,9 @@ struct ClipPiecesBar: View {
                     .offset(x: laneWidth * ruler.fraction(ofMS: Double(bar.inMS)))
             }
             if let behind = spareBehindMS, behind > 0 {
-                spare(width: laneWidth * ruler.fraction(ofMS: Double(behind)),
+                spare(width: laneWidth * ruler.fraction(spanningMS: Double(behind)),
                       reading: ClipBarCopy.length(behind))
-                    .offset(x: x0 + laneWidth * ruler.fraction(ofMS: Double(pieces.totalLengthMS)))
+                    .offset(x: x0 + laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)))
             }
             ForEach(0..<pieces.count, id: \.self) { index in
                 piece(pieces, index: index, x0: x0, ruler: ruler)
@@ -177,37 +177,50 @@ struct ClipPiecesBar: View {
         let start = pieces.startMS(ofPiece: index)
         let item = pieces.piece(at: index)
         let length = item?.lengthMS ?? 0
-        let x = x0 + laneWidth * ruler.fraction(ofMS: Double(start))
+        let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(start))
         // A hairline of air at each join, so two pieces read as two rather
         // than as one long bar. It comes out of the piece, never out of the
         // clip, so the bar still ends exactly where the clip does.
-        let raw = laneWidth * ruler.fraction(ofMS: Double(length))
+        let raw = laneWidth * ruler.fraction(spanningMS: Double(length))
         let width = max(2, raw - (index == pieces.count - 1 ? 0 : 1.5))
+        // Only the part of the piece that is on screen is drawn. Opened right
+        // out, a five minute clip's bar is a hundred and eighty thousand
+        // points wide, and a waveform sampled across the whole of it is a
+        // hundred and eighty thousand columns nobody can see
+        // (`TimelineSpan`). What shows is identical; the work is bounded by
+        // the width of the window instead of by the zoom.
+        let shown = TimelineSpan.drawn(x: x, width: width, across: laneWidth)
+        if shown.width > 0 {
         RoundedRectangle(cornerRadius: 4)
             .fill(fill(item, picked: isPiecePicked(index, of: pieces.count)))
-            .frame(width: width, height: barHeight)
+            .frame(width: shown.width, height: barHeight)
             .overlay {
                 // The sound itself, drawn from the stretch of the file this
                 // piece plays. So a cut piece shows the part of the file it
                 // kept, wherever in the file that was, and a held frame shows
-                // nothing because there is no sound under one frame.
+                // nothing because there is no sound under one frame. Read
+                // across the part of the file the WINDOW is showing, which is
+                // what makes a zoomed waveform real detail rather than the
+                // same drawing stretched.
                 if isSound, let item, item.playsSound, let wave = waveform,
-                   width >= 2 {
-                    SoundWaveform(columns: wave.columns(count: Int(width),
-                                                        fromSourceMS: item.sourceInMS,
-                                                        toSourceMS: item.sourceOutMS))
+                   shown.width >= 2 {
+                    let file = Double(item.sourceOutMS - item.sourceInMS)
+                    SoundWaveform(columns: wave.columns(
+                        count: Int(shown.width),
+                        fromSourceMS: item.sourceInMS + Int(file * Double(shown.startFraction)),
+                        toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))))
                         .padding(.vertical, 2)
                 }
             }
             .overlay {
-                if let badge = Self.badge(item), width > 22 {
+                if let badge = Self.badge(item), shown.width > 22 {
                     Text(badge)
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
                         .shadow(radius: 1)
                 }
             }
-            .offset(x: x)
+            .offset(x: shown.x)
             .contentShape(Rectangle())
             .gesture(carry(pieces, index: index))
             .onTapGesture {
@@ -216,6 +229,7 @@ struct ClipPiecesBar: View {
             }
             .playtestField(Self.pieceName(layerName: layerName, index: index, of: pieces.count))
             .panelHelp(Self.help(pieces, index: index))
+        }
     }
 
     /// The shape of this layer's sound, once it has been read off the file.
@@ -235,14 +249,20 @@ struct ClipPiecesBar: View {
     @ViewBuilder
     private func levelLine(_ pieces: ClipPieces, x0: CGFloat,
                            ruler: MotionStripRuler) -> some View {
-        let width = laneWidth * ruler.fraction(ofMS: Double(pieces.totalLengthMS))
-        if width > 4 {
+        let whole = laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS))
+        let shown = TimelineSpan.drawn(x: x0, width: whole, across: laneWidth)
+        if shown.width > 4 {
             SoundLevelLine(layerID: layerID, layerName: layerName,
                            level: editorState.document?.layer(id: layerID)?.soundLevel
                                ?? AudioLevel(),
                            lengthMS: pieces.totalLengthMS,
-                           width: width, height: barHeight)
-                .offset(x: x0)
+                           // The stretch of the layer that is on screen, so a
+                           // dot is drawn and dragged in the window's own
+                           // scale rather than off a bar wider than the Mac.
+                           fromMS: Int(Double(pieces.totalLengthMS) * Double(shown.startFraction)),
+                           toMS: Int(Double(pieces.totalLengthMS) * Double(shown.endFraction)),
+                           width: shown.width, height: barHeight)
+                .offset(x: shown.x)
         }
     }
 
@@ -300,8 +320,8 @@ struct ClipPiecesBar: View {
     @ViewBuilder
     private func band(_ cut: ClipCut, x0: CGFloat, ruler: MotionStripRuler) -> some View {
         if let transition = cut.drawnTransition {
-            let width = laneWidth * ruler.fraction(ofMS: Double(transition.lengthMS))
-            let x = x0 + laneWidth * ruler.fraction(ofMS: Double(cut.atMS - transition.beforeMS))
+            let width = laneWidth * ruler.fraction(spanningMS: Double(transition.lengthMS))
+            let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(cut.atMS - transition.beforeMS))
             let picked = editorState.selectedClipCutIndex == cut.index && isPicked
             ZStack {
                 RoundedRectangle(cornerRadius: 3)
@@ -317,7 +337,7 @@ struct ClipPiecesBar: View {
                         .shadow(radius: 1)
                 }
             }
-            .frame(width: max(3, width), height: barHeight)
+            .frame(width: max(3, min(width, laneWidth + TimelineSpan.slack * 2)), height: barHeight)
             .contentShape(Rectangle())
             .onTapGesture { editorState.selectClipCut(layerID: layerID, index: cut.index) }
             .overlay(alignment: .leading) { bandGrip(cut, leading: true, width: width) }
@@ -371,7 +391,7 @@ struct ClipPiecesBar: View {
     private func grip(_ pieces: ClipPieces, edge: Int, x0: CGFloat,
                       ruler: MotionStripRuler) -> some View {
         let ms = edge == 0 ? 0 : (pieces.rangeMS(ofPiece: edge - 1)?.end ?? 0)
-        let x = x0 + laneWidth * ruler.fraction(ofMS: Double(ms))
+        let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(ms))
         let room = min(neighbourWidth(pieces, edge: edge, ruler: ruler),
                        Self.gripWidth * 3)
         let width = max(3, min(Self.gripWidth, room / 3))
@@ -410,7 +430,7 @@ struct ClipPiecesBar: View {
         let after = edge < pieces.count ? (pieces.piece(at: edge)?.lengthMS ?? 0) : Int.max
         let smallest = min(before, after)
         guard smallest != Int.max else { return laneWidth }
-        return laneWidth * ruler.fraction(ofMS: Double(smallest))
+        return laneWidth * ruler.fraction(spanningMS: Double(smallest))
     }
 
     static func gripName(layerName: String, edge: Int, of count: Int) -> String {
@@ -458,7 +478,9 @@ struct ClipPiecesBar: View {
 
     /// How many milliseconds a sideways travel is worth on this ruler.
     static func ms(_ points: CGFloat, laneWidth: CGFloat, ruler: MotionStripRuler) -> Int {
-        Int(ruler.ms(atFraction: Double(points / max(1, laneWidth))).rounded())
+        // A TRAVEL rather than a moment: how far the hand moved has nothing to
+        // do with where the window starts (`TimelineZoom.swift`).
+        Int(ruler.msSpanning(fraction: Double(points / max(1, laneWidth))).rounded())
     }
 
     // MARK: What a drag draws

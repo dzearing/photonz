@@ -48,7 +48,7 @@ struct CutStrip: View {
             ZStack(alignment: .leading) {
                 ForEach(Array(times.enumerated()), id: \.offset) { index, time in
                     let x = width * ruler.fraction(ofMS: Double(time.inMS))
-                    let w = width * ruler.fraction(ofMS: Double(time.lengthMS))
+                    let w = width * ruler.fraction(spanningMS: Double(time.lengthMS))
                     let style = CutStripBlockStyle.block(
                         isPicked: index == selected,
                         playedFraction: playedFraction(in: time, playheadMS: playheadMS(duration: duration)))

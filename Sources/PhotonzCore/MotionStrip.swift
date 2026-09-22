@@ -279,8 +279,13 @@ public enum MotionStripSummary {
 public struct MotionStripRuler: Hashable, Sendable {
     /// How long one lap is. For a document that finishes, the document itself.
     public let cycleMS: Double
-    /// How much time the strip's width covers, lap and headroom together.
+    /// How much time the strip's width covers, lap and headroom together. On
+    /// a timeline opened out, how much time the WINDOW covers.
     public let spanMS: Double
+    /// The moment at the strip's left hand edge. Nought unless the timeline
+    /// has been opened out, which is the only thing that moves it
+    /// (`TimelineZoom.swift`).
+    public let startMS: Double
     /// Whether what this ruler measures starts over when it gets to the end.
     ///
     /// True for an icon, which is what the headroom and the dashed line are
@@ -298,6 +303,7 @@ public struct MotionStripRuler: Hashable, Sendable {
         let cycle = Double(max(1, cycleMS))
         self.cycleMS = cycle
         self.spanMS = cycle * (1 + Self.headroom)
+        self.startMS = 0
         self.repeats = true
     }
 
@@ -308,15 +314,48 @@ public struct MotionStripRuler: Hashable, Sendable {
         let length = Double(max(1, documentMS))
         self.cycleMS = length
         self.spanMS = length
+        self.startMS = 0
+        self.repeats = false
+    }
+
+    /// The ruler a document gets once the timeline has been **opened out**: it
+    /// measures the stretch on screen rather than the whole document
+    /// (`TimelineZoom.swift`).
+    ///
+    /// Everything drawn on the strip goes through the two calls below, so
+    /// windowing the ruler is the whole of the zoom: no bar, join, waveform or
+    /// playhead knows it has happened.
+    public init(documentMS: Int, zoom: TimelineZoom) {
+        let length = Double(max(1, documentMS))
+        let window = zoom.clamped(documentMS: length)
+        self.cycleMS = length
+        self.spanMS = window.visibleMS(documentMS: length)
+        self.startMS = window.startMS
         self.repeats = false
     }
 
     /// Where a millisecond falls across the strip's width, nought at the left
     /// edge and one at the right.
-    public func fraction(ofMS ms: Double) -> Double { ms / spanMS }
+    ///
+    /// A MOMENT, which on an opened out timeline is measured from the left
+    /// hand edge of the window rather than from the start of the document.
+    public func fraction(ofMS ms: Double) -> Double { (ms - startMS) / spanMS }
 
     /// The other way round: the millisecond a fraction of the width lands on.
-    public func ms(atFraction fraction: Double) -> Double { fraction * spanMS }
+    public func ms(atFraction fraction: Double) -> Double { startMS + fraction * spanMS }
+
+    /// How wide a LENGTH of time is, as a share of the strip's width.
+    ///
+    /// Not the same question as `fraction(ofMS:)` and the difference only
+    /// shows once the strip is opened out: a moment is measured from the
+    /// window's left hand edge, a length is measured from nothing. Taking the
+    /// window's start off a duration would make every bar on a zoomed
+    /// timeline the wrong size.
+    public func fraction(spanningMS ms: Double) -> Double { ms / spanMS }
+
+    /// The other way round: how long a sideways travel across the strip is
+    /// worth, which is what a drag asks.
+    public func msSpanning(fraction: Double) -> Double { fraction * spanMS }
 
     /// Where the dashed line goes: the moment the lap starts over. It sits on
     /// the right hand edge, and so is not drawn, for a ruler that does not
@@ -335,8 +374,12 @@ public struct MotionStripRuler: Hashable, Sendable {
     public var ticks: [Tick] {
         let step = Self.step(for: spanMS)
         var values: [Double] = []
-        var ms = 0.0
-        while ms <= spanMS + 0.001 {
+        // The first round number at or after the window's left hand edge, so
+        // an opened out ruler reads off the same ladder the whole one does
+        // rather than counting from wherever the window happens to start.
+        var ms = (startMS / step).rounded(.down) * step
+        if ms < startMS - 0.001 { ms += step }
+        while ms <= startMS + spanMS + 0.001 {
             values.append(ms)
             ms += step
         }
@@ -345,7 +388,7 @@ public struct MotionStripRuler: Hashable, Sendable {
         // lap stays in milliseconds, because ninety of them is the whole reason
         // the strip exists (`docs/design/video.md`).
         guard repeats else {
-            return values.map { Tick(ms: $0, label: MotionStripRuler.timecode($0)) }
+            return values.map { Tick(ms: $0, label: MotionStripRuler.timecode($0, step: step)) }
         }
         return values.enumerated().map { index, ms in
             let number = MotionStripRuler.number(ms)
@@ -354,13 +397,23 @@ public struct MotionStripRuler: Hashable, Sendable {
     }
 
     /// `0:04`, or `1:02:11` once there are hours in it.
-    static func timecode(_ ms: Double) -> String {
+    public static func timecode(_ ms: Double) -> String {
         let total = Int((max(0, ms) / 1000).rounded(.down))
         let seconds = total % 60
         let minutes = (total / 60) % 60
         let hours = total / 3600
         if hours > 0 { return String(format: "%d:%02d:%02d", hours, minutes, seconds) }
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    /// The same, in tenths where the numbers are closer together than a
+    /// second. A timeline opened right out puts a second across the whole
+    /// width, and a row reading "0:12 0:12 0:12 0:12" is not a ruler.
+    static func timecode(_ ms: Double, step: Double) -> String {
+        guard step < 1000 else { return timecode(ms) }
+        let tenths = (max(0, ms) / 100).rounded()
+        let whole = (tenths / 10).rounded(.down) * 1000
+        return timecode(whole) + "." + String(Int(tenths) % 10)
     }
 
     /// A step that gives between four and nine numbers, chosen off the 1, 2, 5

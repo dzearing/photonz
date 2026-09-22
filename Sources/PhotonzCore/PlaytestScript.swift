@@ -878,6 +878,31 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// calls the Effects plus and the Motion plus make.
     case clipBlurComesOn
 
+    // MARK: Opening the timeline out (`TimelineZoom.swift`)
+
+    /// The minus and the plus in the timeline's own bar: show more of the
+    /// recording, or open out around the playhead. Each refuses out loud at
+    /// its end of the range, so a walk cannot photograph a press that did
+    /// nothing and call it a zoom.
+    case timelineZoomIn, timelineZoomOut
+    /// Fit: the whole recording back across the width, in one press, from
+    /// however far in.
+    case timelineFit
+    /// **Make this document five minutes long**, which is the length of a real
+    /// screen recording and the length the timeline is unreadable at.
+    ///
+    /// A stand-in, and it says so: the sample every other walk is driven on is
+    /// eight seconds, there is no five minute file to ship in the repo, and
+    /// the thing under test is the RULER rather than the pixels. So the
+    /// take is slid along until it ends at the five minute mark, playhead and
+    /// all, which is exactly what the strip has to draw when somebody is
+    /// working on one moment of a long recording. Slid rather than left at the
+    /// front with empty time after it because a document's duration follows
+    /// what is in it: four and a half minutes of nothing would collapse the
+    /// moment anything was edited, and content that really runs to five
+    /// minutes does not.
+    case timelineFiveMinutes
+
     /// Whether this action drives the TIMELINE in the ordinary editor: cutting,
     /// arranging and retiming what is on it. Answered by the editor, never by
     /// the old recording window, which has its own ids above.
@@ -896,7 +921,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
-             .titleDragStartEarlier, .titleDragEndLater: true
+             .titleDragStartEarlier, .titleDragEndLater,
+             .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes: true
         default: false
         }
     }

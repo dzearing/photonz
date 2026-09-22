@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/open-out-the-timeline-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-open-out-the-timeline": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "soundDetach" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "0-eight-seconds", "note": "where every other video walk lives: an eight second take with its sound taken off onto a lane of its own, and that sound cut into three pieces. Two joins you can see and a waveform you can aim them at. The timeline's own bar now carries a zoom, and it reads all 0:08, because the whole recording is across the width" },
+    { "do": "snapshot", "name": "0-eight-seconds-fits" },
+
+    { "do": "action", "action": "timelineFiveMinutes" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-five-minutes", "note": "THE PROBLEM, in one picture: the same three pieces, in a document five minutes long, which is what a real screen recording is. The whole take is a sliver in the middle, both joins are inside the same few pixels, and the waveform under it is a smear. Nothing is wrong with the timeline except that it is drawing three hundred seconds across the width of a window" },
+    { "do": "snapshot", "name": "1-five-minutes-is-a-sliver" },
+
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-three-presses", "note": "three presses of the plus in the timeline's own bar. The ruler now measures about half a minute instead of five, the readout beside it says which half minute, and the thin bar over the ruler says where that half minute is in the whole recording. The playhead has not moved on screen: every press opened out AROUND it, which is the difference between a zoom you can use and one that throws you back to the start" },
+    { "do": "snapshot", "name": "2-three-presses-in" },
+
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-opened-out", "note": "six presses. The pieces are things you can point at again, the joins between them are edges you can take hold of, and the waveform is drawn from the part of the sound file that is on screen rather than stretched, so the blips in it are where the blips are. This is the state the task asks for: a cut can be aimed rather than guessed" },
+    { "do": "snapshot", "name": "3-opened-out-on-the-take" },
+
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "press", "control": "Timeline Zoom In" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-right-out", "note": "eight presses, which on five minutes is about a second across the whole width. The numbers along the top have gone to tenths of a second rather than saying 2:31 five times over, which is the one place the ruler had to learn something new" },
+    { "do": "snapshot", "name": "4-a-second-across-the-width" },
+
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-a-cut-aimed", "note": "a cut put down at this scale, two seconds before the end of the five minutes. It is the same B that cuts at any other zoom, but here the playhead is standing on a tenth of a second you can see, so the cut lands where you meant it rather than within a guess of it. The window is already up against the end of the recording, which is why the playhead sits at its right hand edge: there is nothing after the last frame to show" },
+    { "do": "snapshot", "name": "5-a-cut-aimed-at-a-moment" },
+
+    { "do": "press", "control": "Timeline Fit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-back-out", "note": "one press of Fit and the whole five minutes is back across the width, sliver and all, with the overview bar gone because there is nothing left for it to say. Getting back out is never a sequence of presses" },
+    { "do": "snapshot", "name": "6-back-out-in-one-press" }
+  ]
+}

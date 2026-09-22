@@ -80,9 +80,14 @@ extension EditorState {
     /// itself spare past the end so a bar that overruns the restart has
     /// somewhere to be drawn. A document has a last frame, so its ruler ends
     /// where the picture does and there is no restart to mark.
+    ///
+    /// A document's ruler measures the WINDOW, which is the whole of the zoom:
+    /// everything on the strip is laid out through this one ruler, so opening
+    /// the timeline out is the ruler covering less time and nothing else
+    /// (`EditorState+TimelineZoom`).
     var motionStripRuler: MotionStripRuler {
         motionStripMeasuresADocument
-            ? MotionStripRuler(documentMS: motionStripCycleMS)
+            ? MotionStripRuler(documentMS: motionStripCycleMS, zoom: timelineWindow)
             : MotionStripRuler(cycleMS: motionStripCycleMS)
     }
 
