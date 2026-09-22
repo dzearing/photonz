@@ -25,6 +25,25 @@ import Foundation
 
 // MARK: - What is in the strip
 
+/// One value a property is nailed to part way along its bar: a mark on the
+/// bar, and the thing a hand can move without moving the rest of the move.
+///
+/// The two ENDS are not in here. They are the bar's own two handles, they
+/// already have a gesture on them, and a mark sitting on top of one would take
+/// the hand that was reaching for it.
+public struct MotionStripKey: Hashable, Sendable {
+    /// The moment, on the same clock the bar it sits on is drawn in.
+    public var ms: Int
+    /// What the property IS there, in the words the side column uses, so the
+    /// mark can say "200%" rather than being an anonymous tick.
+    public var reading: String
+
+    public init(ms: Int, reading: String) {
+        self.ms = ms
+        self.reading = reading
+    }
+}
+
 /// One bar: one property of one layer, changing over time.
 public struct MotionStripLane: Identifiable, Hashable, Sendable {
     public var layerID: UUID
@@ -33,6 +52,15 @@ public struct MotionStripLane: Identifiable, Hashable, Sendable {
     /// the same words the entry in the side column wears.
     public var title: String
     public var timing: MotionTiming
+    /// The moments BETWEEN the bar's two ends that the value is nailed to,
+    /// first to last (`MotionStop`).
+    ///
+    /// Empty on everything that simply goes from one value to another, which
+    /// is nearly everything, so a plain bar draws exactly as it always did. A
+    /// punch in that pushes in, holds and pulls back out has two of them, and
+    /// without them on the bar its four seconds say that something happens and
+    /// nothing about where the camera arrives or how long it sits there.
+    public var keys: [MotionStripKey]
     /// The switch on the entry in the side column. A lane that is off keeps its
     /// bar and is drawn quiet, exactly the way the eye on an effect works.
     public var isOn: Bool
@@ -40,12 +68,33 @@ public struct MotionStripLane: Identifiable, Hashable, Sendable {
     public var id: UUID { motionID }
 
     public init(layerID: UUID, motionID: UUID, title: String,
-                timing: MotionTiming, isOn: Bool) {
+                timing: MotionTiming, isOn: Bool, keys: [MotionStripKey] = []) {
         self.layerID = layerID
         self.motionID = motionID
         self.title = title
         self.timing = timing
+        self.keys = keys
         self.isOn = isOn
+    }
+
+    /// This lane re-timed, with its keys carried along in proportion.
+    ///
+    /// The same bargain `LayerMotion.retimed(to:)` strikes, and for the same
+    /// reason: a bar under a hand is drawn where the hand has it, so its marks
+    /// have to travel with it or the hold would appear to slide out of the move
+    /// that owns it for as long as the drag lasts.
+    public func retimed(to timing: MotionTiming) -> MotionStripLane {
+        var moved = self
+        moved.timing = timing
+        guard !keys.isEmpty, self.timing.durationMS > 0 else { return moved }
+        let stretch = Double(timing.durationMS) / Double(self.timing.durationMS)
+        moved.keys = keys.map {
+            var key = $0
+            let along = Double($0.ms - self.timing.startMS) * stretch
+            key.ms = timing.startMS + Int(along.rounded())
+            return key
+        }
+        return moved
     }
 }
 
@@ -162,11 +211,17 @@ extension PhotonzDocument {
             // Drawn where it HAPPENS, on the document's clock. Nought in a
             // document with no time in it, so an icon's strip is exactly what
             // it was.
-            lanes: motions.map {
-                MotionStripLane(layerID: layer.id, motionID: $0.id,
-                                title: $0.property.title,
-                                timing: $0.timing.shifted(byMS: shiftMS),
-                                isOn: $0.isOn)
+            lanes: motions.map { motion in
+                MotionStripLane(layerID: layer.id, motionID: motion.id,
+                                title: motion.property.title,
+                                timing: motion.timing.shifted(byMS: shiftMS),
+                                isOn: motion.isOn,
+                                // The ones BETWEEN the ends, on the document's
+                                // clock like the bar they sit on.
+                                keys: motion.keys.dropFirst().dropLast().map {
+                                    MotionStripKey(ms: $0.atMS + shiftMS,
+                                                   reading: motion.property.format($0.value))
+                                })
             },
             bar: layer.time,
             isSound: layer.sound != nil)
@@ -357,6 +412,16 @@ public struct MotionStripRuler: Hashable, Sendable {
     /// worth, which is what a drag asks.
     public func msSpanning(fraction: Double) -> Double { fraction * spanMS }
 
+    /// One moment, said out loud, in the units this ruler is written in.
+    ///
+    /// A recording is read in seconds, because that is how long one is and how
+    /// everything that has ever played one says so. A lap stays in
+    /// milliseconds, because ninety of them is the whole reason the strip
+    /// exists.
+    public func reading(ofMS ms: Int) -> String {
+        repeats ? "\(ms) ms" : String(format: "%.1fs", Double(ms) / 1000)
+    }
+
     /// Where the dashed line goes: the moment the lap starts over. It sits on
     /// the right hand edge, and so is not drawn, for a ruler that does not
     /// repeat.
@@ -524,6 +589,64 @@ public struct MotionStripDrag: Hashable, Sendable {
             return Landing(timing: free, snappedTo: nil)
         }
         return Landing(timing: moved(byMS: delta + (nearest.ms - moving)), snappedTo: nearest)
+    }
+}
+
+// MARK: - Dragging one key along a bar
+
+/// One of the keys between a bar's two ends, under a hand.
+///
+/// A whole bar in the hand is `MotionStripDrag`: the move happens later, or
+/// takes longer, and everything nailed down inside it travels in proportion.
+/// This is the other half of the same surface and it is deliberately the
+/// opposite bargain: **the move stays exactly where it is and ONE of its
+/// moments changes.** On a punch in that pushes in, holds and pulls back out,
+/// that is the difference between "start the whole thing a second later" and
+/// "sit there a second longer before pulling out", and only one of those two
+/// could be said before.
+///
+/// Like the bar drag, it works everything out from the keys as they were when
+/// the mark was GRABBED, so a drag can never creep frame by frame.
+public struct MotionStopDrag: Hashable, Sendable {
+
+    /// A key never lands nearer than this to the key either side of it. Nearer
+    /// and the two marks are one mark to the eye and neither can be grabbed
+    /// again; past it they would swap over, which draws one move as a
+    /// different move.
+    public static let shortestMS = 10
+
+    /// Every key on the bar when the mark was taken hold of, first to last,
+    /// the bar's own two ends included.
+    public let keys: [Int]
+    /// Which of the ones BETWEEN those ends is in the hand, counting from
+    /// nought at the left.
+    public let middle: Int
+
+    /// Nil where there is no such mark to take hold of. The two ends are not
+    /// keys a hand can move here: they are the bar's own handles and they
+    /// already have a gesture on them.
+    public init?(keys: [Int], middle: Int) {
+        let index = middle + 1
+        guard middle >= 0, index < keys.count - 1 else { return nil }
+        self.keys = keys
+        self.middle = middle
+    }
+
+    /// Where the key is into the bar's index of keys, ends counted.
+    private var index: Int { middle + 1 }
+
+    /// Where the key was when it was grabbed.
+    public var heldMS: Int { keys[index] }
+
+    /// Where it lands once the hand has moved this many milliseconds.
+    public func moved(byMS delta: Int) -> Int {
+        let earliest = keys[index - 1] + Self.shortestMS
+        let latest = keys[index + 1] - Self.shortestMS
+        // Two keys already crowded closer than twice the gap leave nowhere to
+        // go. The mark stays put rather than jumping to a bound it is already
+        // the wrong side of.
+        guard earliest <= latest else { return heldMS }
+        return min(max(heldMS + delta, earliest), latest)
     }
 }
 

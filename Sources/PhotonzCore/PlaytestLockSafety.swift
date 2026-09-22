@@ -265,7 +265,19 @@ public enum PlaytestLockSafety {
         let unproven = "has never been watched running with the screen locked, so it is refused "
             + "rather than trusted; force the walk, and if the step works, say so and it moves "
             + "to the list of steps a lock cannot touch"
+        // `dragMotionKey` is the same machinery as `dragTiming` pointed at one
+        // key rather than the whole bar — it drives the strip's own views and
+        // reads the document's own times, and nothing in it asks for a name —
+        // and it is still refused, because a kind joins the list above by being
+        // watched and nobody has watched this one. It was written on
+        // 2026-09-22 on an unlocked Mac. The first runner to find the screen
+        // locked should force `punch-in-and-hold-walk`, and if its two
+        // `dragMotionKey` steps read their milliseconds back, move it up.
+        let keyDrag = "has never been watched running with the screen locked. It is the same "
+            + "machinery as dragTiming, which a lock cannot touch, so forcing the walk will very "
+            + "likely work: do that, say so, and it moves to the list of steps a lock cannot touch"
         var stops: [String: String] = [
+            "dragMotionKey": keyDrag,
             "menus": frozenBar,
             "menuShot": menu,
             "rightClick": menu,

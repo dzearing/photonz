@@ -1,0 +1,31 @@
+{
+  "feature": "A move with a hold in it shows its keys on the strip",
+  "epic": "video-transitions-motion",
+  "summary": "A move that is nailed to a value part way through now draws a mark on its bar at every one of those moments, so a punch in that pushes in, holds and pulls back out says where the camera arrives and how long it sits there. Drag one of those marks and that moment alone moves: the move itself stays exactly where it is.",
+  "setup": "Photonz Dev, Experiments window, release Next, with A recording is a document, Cut a recording, Motion and Punch in and hold all on.",
+  "try": [
+    { "do": "Open a recording and pause it, then press J to seek a quarter of the way in." },
+    { "do": "Press M, drag a box round the one thing in the frame worth looking at, then press Punch In in the Reframe section." },
+    { "do": "Seek to the middle, and press Pull Back Out." },
+    { "do": "Look at the Scale lane on the Timeline: one bar, with a small diamond where the camera arrives and another where it starts to leave.",
+      "shot": "2026-09-22-keys-on-the-strip-1.png" },
+    { "do": "Drag the second diamond to the right. The readout over it says the moment it is on, and the bar's two ends do not move.",
+      "shot": "2026-09-22-keys-on-the-strip-2.png" },
+    { "do": "Scrub across the middle of the bar: the camera now sits on what it was pointed at for longer before it pulls out." },
+    { "do": "Press Command Z once. The whole drag comes back in one step." },
+    { "do": "Drag the bar itself, by its middle or either end. The marks travel with it in proportion." }
+  ],
+  "evaluate": [
+    "Is a diamond on the bar what you expected a nailed-down value to look like, or were you looking for something else?",
+    "Is it obvious that dragging a diamond does something different from dragging the bar, before you try it?",
+    "The readout over the key says the moment it is at (4.7s). Would you rather it said how long the hold is?",
+    "Is the hold, the stretch between the two diamonds where nothing changes, readable as a hold, or does it look the same as the parts where the camera is moving?",
+    "Does the diamond feel the right size to take hold of on a lane this short?"
+  ],
+  "rough": [
+    "The hold is only visible as the distance between two marks. The bar is drawn the same colour and the same weight whether the value is moving or sitting still, so the parts where the camera travels and the part where it holds look identical. A flatter fill or a hairline through the held stretch would say it outright, and that is a change to how the bar is painted rather than something to add on, so it is not in this task.",
+    "A key dragged along its bar does not catch on anything: not the playhead, not another bar's end, not a cut. Lining the moment a camera arrives up with the moment a title comes in is done by eye. The bar's own drag has caught on other bars' ends since it was built, so this is a gap between the two halves of one surface.",
+    "A key sitting within about seven points of either end of its bar is drawn, but the hand reaching for it lands on the bar's own end grip instead, because the ends are what stretch the bar and they win. In practice a key that close to an end is a key nobody put there on purpose, but it means the way out of it is to move or stretch the bar first.",
+    "The readout capsule over a key being dragged sits on top of the row above it while the hand is down. The bracket a bar drag draws has always done the same, so it is the strip's habit rather than this feature's, and it goes away when the hand lifts."
+  ]
+}

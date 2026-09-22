@@ -1618,6 +1618,10 @@ private final class Run {
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
                                  cancel: cancel, number: number)
 
+        case .dragMotionKey(let bar, let key, let byMS, let hold, let cancel):
+            try await dragMotionKey(bar, key: key, byMS: byMS, hold: hold,
+                                    cancel: cancel, number: number)
+
         case .panel(let stage):
             let inventory = try readPanel()
             write(json: inventory, to: "panel-\(stage).json")
@@ -4662,6 +4666,96 @@ private final class Run {
         if after.endMS > cycle { said += "; the bar runs \(after.endMS - cycle) ms past the restart" }
         if let hold { said += "; held \(hold).png" }
         note(number, "dragTiming", said, state: describe())
+    }
+
+    /// One KEY on a bar carried along it: the moment a value is nailed to,
+    /// between the bar's two ends (`MotionStripKey`).
+    ///
+    /// The opposite of `dragTiming` and it checks the difference: the bar's own
+    /// start and finish have to come out of this exactly as they went in, or
+    /// the mark moved the whole move instead of one moment of it.
+    private func dragMotionKey(_ bar: String, key: Int, byMS: Int,
+                               hold: String?, cancel: Bool, number: Int) async throws {
+        let editor = try requireEditor()
+        guard editor.isMotionStripShown else {
+            throw Failure(description: "the timing strip is not on screen, so its keys are not "
+                + "there to be dragged")
+        }
+        let lanes = editor.motionStripGroups.flatMap { group in
+            group.lanes.map { (name: "\(group.layerName) \($0.title)", lane: $0) }
+        }
+        guard let found = lanes.first(where: {
+            $0.name.compare(bar, options: .caseInsensitive) == .orderedSame
+        }) else {
+            throw Failure(description: "there is no bar called \"\(bar)\" on the timing strip; "
+                + "there is \(lanes.isEmpty ? "none at all" : lanes.map(\.name).joined(separator: ", "))")
+        }
+        let middle = key - 1
+        guard found.lane.keys.indices.contains(middle) else {
+            throw Failure(description: "\(bar) has \(found.lane.keys.count) mark"
+                + "\(found.lane.keys.count == 1 ? "" : "s") on it, so there is no mark \(key) to "
+                + "drag. A move only carries marks where a value is nailed down between its ends.")
+        }
+        let before = found.lane.keys[middle].ms
+        let span = found.lane.timing
+
+        editor.beginMotionStopDrag(motionID: found.lane.motionID, key: middle)
+        guard editor.motionStopDrag != nil else {
+            throw Failure(description: "mark \(key) on \(bar) could not be taken hold of")
+        }
+        // Carried in a handful of moves rather than one jump, the way a hand
+        // does it, so anything that only shows up mid-drag really happens.
+        for fraction in [0.35, 0.7, 1.0] {
+            editor.updateMotionStopDrag(byMS: Int((Double(byMS) * fraction).rounded()))
+            await sleep(0.05)
+        }
+        let reading = editor.motionStopDragReading
+        if let hold, let window = try? requireWindow(), let content = window.contentView {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+        }
+        if cancel {
+            editor.cancelMotionStopDrag()
+            await sleep(0.3)
+            guard editor.motionStopDrag == nil else {
+                throw Failure(description: "the drag on mark \(key) of \(bar) was called off and "
+                    + "the key is still in hand")
+            }
+            let now = editor.motionStripGroups.flatMap(\.lanes)
+                .first { $0.motionID == found.lane.motionID }
+                .flatMap { $0.keys.indices.contains(middle) ? $0.keys[middle].ms : nil }
+            guard now == before else {
+                throw Failure(description: "the drag was called off and mark \(key) of \(bar) did "
+                    + "not go back: it was at \(before) ms and is now at "
+                    + "\(now.map(String.init) ?? "gone")")
+            }
+            note(number, "dragMotionKey",
+                 "mark \(key) of \(bar) carried \(byMS) ms and called off; it is back at "
+                 + "\(before) ms", state: describe())
+            return
+        }
+        editor.commitMotionStopDrag()
+        await sleep(0.4)
+        guard let after = editor.motionStripGroups.flatMap(\.lanes)
+            .first(where: { $0.motionID == found.lane.motionID }) else {
+            throw Failure(description: "\(bar) is not on the strip any more after the drag")
+        }
+        guard after.timing == span else {
+            throw Failure(description: "dragging mark \(key) of \(bar) moved the whole bar: it "
+                + "ran \(span.startMS)-\(span.endMS) ms and now runs "
+                + "\(after.timing.startMS)-\(after.timing.endMS) ms. A key drag changes one "
+                + "moment and nothing else.")
+        }
+        guard after.keys.indices.contains(middle) else {
+            throw Failure(description: "mark \(key) of \(bar) is gone after the drag")
+        }
+        var said = "mark \(key) of \(bar) dragged \(byMS) ms: \(before) ms became "
+            + "\(after.keys[middle].ms) ms, with the bar still at "
+            + "\(after.timing.startMS)-\(after.timing.endMS) ms"
+        said += "; it reads \(after.keys[middle].reading)"
+        if let reading { said += "; the readout said \(reading)" }
+        if let hold { said += "; held \(hold).png" }
+        note(number, "dragMotionKey", said, state: describe())
     }
 
     private func dragHandle(_ area: String, by: CGFloat,

@@ -48,8 +48,22 @@ extension EditorState {
                 for lane in groups[group].lanes.indices
                 where groups[group].lanes[lane].motionID == drag.motionID {
                     // The hand works in the DOCUMENT's clock, which is what the
-                    // lanes are drawn in, so the landing goes straight on.
-                    groups[group].lanes[lane].timing = drag.timing
+                    // lanes are drawn in, so the landing goes straight on. The
+                    // marks on the bar travel with it in proportion, the same
+                    // way the stops under them will when the drag is written
+                    // down (`MotionStripLane.retimed(to:)`).
+                    groups[group].lanes[lane] = groups[group].lanes[lane].retimed(to: drag.timing)
+                }
+            }
+        }
+        // ...and a KEY under the hand is drawn where the hand has it, while
+        // everything else on its bar stays exactly where it was.
+        if let drag = motionStopDrag {
+            for group in groups.indices {
+                for lane in groups[group].lanes.indices
+                where groups[group].lanes[lane].motionID == drag.motionID
+                    && groups[group].lanes[lane].keys.indices.contains(drag.middle) {
+                    groups[group].lanes[lane].keys[drag.middle].ms = drag.atMS
                 }
             }
         }
@@ -185,8 +199,10 @@ extension EditorState {
     private func watchForMotionTimingEscape() {
         guard motionTimingEscapeWatch == nil else { return }
         motionTimingEscapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.keyCode == 53, let self, motionTimingDrag != nil else { return event }
+            guard event.keyCode == 53, let self,
+                  motionTimingDrag != nil || motionStopDrag != nil else { return event }
             cancelMotionTimingDrag()
+            cancelMotionStopDrag()
             // Swallowed: the press called this drag off and must not go on to
             // clear the selection behind it.
             return nil
@@ -261,6 +277,89 @@ extension EditorState {
         rerender()
     }
 
+    // MARK: Dragging one key along a bar
+
+    /// A mark on a bar taken hold of.
+    ///
+    /// The other half of the same surface, and deliberately the opposite
+    /// bargain to dragging the bar: **the move stays where it is and one of its
+    /// moments changes.** On a punch in that pushes in, holds and pulls back
+    /// out, that is the difference between starting the whole thing a second
+    /// later and sitting there a second longer before pulling out.
+    ///
+    /// `middle` counts the keys BETWEEN the bar's two ends, from nought at the
+    /// left. The ends themselves are the bar's own handles.
+    func beginMotionStopDrag(motionID: UUID, key middle: Int) {
+        guard let document,
+              let lane = document.motionStrip().flatMap(\.lanes)
+                  .first(where: { $0.motionID == motionID }),
+              let grab = MotionStopDrag(
+                  keys: [lane.timing.startMS] + lane.keys.map(\.ms) + [lane.timing.endMS],
+                  middle: middle)
+        else { return }
+        // Taking hold of a mark picks its layer, so the row in the side column
+        // is the row the mark belongs to.
+        if selectedLayerID != lane.layerID { selectLayer(lane.layerID) }
+        // The preview keeps running while the key moves, for the reason a bar
+        // drag does: a hold is a length of time and it cannot be judged on a
+        // still picture.
+        motionGestureBegan()
+        motionStopDrag = MotionStopDragState(
+            motionID: motionID,
+            layerID: lane.layerID,
+            middle: middle,
+            grab: grab,
+            atMS: grab.heldMS,
+            shiftMS: document.layer(id: lane.layerID)?.motionShiftMS ?? 0)
+        watchForMotionTimingEscape()
+    }
+
+    /// The hand moved. Nothing is written down: the strip and the canvas both
+    /// read the drag, so the whole thing stays one step to undo.
+    func updateMotionStopDrag(byMS delta: Int) {
+        guard var drag = motionStopDrag else { return }
+        drag.atMS = drag.grab.moved(byMS: delta)
+        motionStopDrag = drag
+        rerender()
+    }
+
+    /// Let go: one step for undo covering the whole drag.
+    func commitMotionStopDrag() {
+        stopWatchingForMotionTimingEscape()
+        guard let drag = motionStopDrag else { return }
+        motionStopDrag = nil
+        guard drag.atMS != drag.grab.heldMS else {
+            rerender()
+            return
+        }
+        perform { document in
+            document.updateLayer(id: drag.layerID) { layer in
+                guard var motions = layer.motions,
+                      let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
+                // ...back into the LAYER's own clock to be written down, the
+                // same conversion a bar drag makes (`Layer.motionShiftMS`).
+                motions[index] = motions[index].movingKey(drag.middle, toMS: drag.atMS - drag.shiftMS)
+                layer.motions = motions
+            }
+        }
+        motionChanged()
+    }
+
+    /// Escape, or a drag that went nowhere.
+    func cancelMotionStopDrag() {
+        stopWatchingForMotionTimingEscape()
+        guard motionStopDrag != nil else { return }
+        motionStopDrag = nil
+        rerender()
+    }
+
+    /// What the mark under the hand says while it is moving: the moment it is
+    /// at, in the units the ruler under it is written in.
+    var motionStopDragReading: String? {
+        guard let drag = motionStopDrag else { return nil }
+        return motionStripRuler.reading(ofMS: drag.atMS)
+    }
+
     /// How near a drop has to land to catch on another bar's end, in
     /// milliseconds. Deliberately tiny — a fortieth of the lap, so about
     /// twenty milliseconds on a nine hundred millisecond loop — because the job
@@ -278,8 +377,18 @@ extension EditorState {
     /// while the preview runs would otherwise show you the lag you had before
     /// you started moving it, at every size at once.
     func withDraggedMotionTiming(_ document: PhotonzDocument) -> PhotonzDocument {
-        guard Experiments.shared.motionStripEnabled, let drag = motionTimingDrag else { return document }
         var document = document
+        // A KEY under the hand, so the hold you are lengthening plays at the
+        // length you are giving it rather than the one written down.
+        if let key = motionStopDrag {
+            document.updateLayer(id: key.layerID) { layer in
+                guard var motions = layer.motions,
+                      let index = motions.firstIndex(where: { $0.id == key.motionID }) else { return }
+                motions[index] = motions[index].movingKey(key.middle, toMS: key.atMS - key.shiftMS)
+                layer.motions = motions
+            }
+        }
+        guard Experiments.shared.motionStripEnabled, let drag = motionTimingDrag else { return document }
         document.updateLayer(id: drag.layerID) { layer in
             guard var motions = layer.motions,
                   let index = motions.firstIndex(where: { $0.id == drag.motionID }) else { return }
@@ -321,6 +430,26 @@ struct MotionTimingDrag {
     let heldCycleMS: Int
     var snappedTo: MotionStripEdge?
     var gap: MotionStripGap?
+}
+
+/// A key on a bar under a hand: which one, where it started, and where the
+/// hand has it now.
+///
+/// Kept out of the document for the reason the bar drag is: the whole drag has
+/// to be one step to undo rather than forty.
+struct MotionStopDragState {
+    let motionID: UUID
+    let layerID: UUID
+    /// Which of the keys between the bar's two ends, from nought at the left.
+    let middle: Int
+    /// The arithmetic, holding every key's moment as it was when the mark was
+    /// taken hold of.
+    let grab: MotionStopDrag
+    /// Where the key is now, on the document's clock.
+    var atMS: Int
+    /// How far this layer's own clock sits along the document's, so the moment
+    /// under the hand can be written back in the clock a motion is stored in.
+    let shiftMS: Int
 }
 
 /// What the bottom of the window is showing: nothing, the row a put-away strip

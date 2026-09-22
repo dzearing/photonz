@@ -613,6 +613,7 @@ private struct MotionStripBar: View {
             .frame(width: width, height: MotionStripView.barHeight)
             .contentShape(Rectangle())
             .offset(x: x)
+            .overlay(alignment: .leading) { marks(width: width) }
             .overlay(alignment: .topLeading) { bracket }
             .gesture(drag(width: width))
             .onTapGesture { editorState.selectLayer(lane.layerID) }
@@ -634,6 +635,27 @@ private struct MotionStripBar: View {
             LinearGradient(colors: [Color.accentColor.opacity(0.85),
                                     Color.accentColor.opacity(0.45)],
                            startPoint: .leading, endPoint: .trailing))
+    }
+
+    /// The moments the value is NAILED TO between the bar's two ends, one mark
+    /// each (`MotionStripKey`).
+    ///
+    /// Without these a punch in that pushes in, holds and pulls back out is
+    /// four seconds of plain bar: it says something happens and nothing about
+    /// where the camera arrives, how long it sits there, or when it leaves,
+    /// while the row in the side column right above it reads
+    /// "100% → 200% → 200% → 100%". A bar with nothing nailed down inside it
+    /// has no marks and draws exactly as it always did.
+    @ViewBuilder private func marks(width: CGFloat) -> some View {
+        let ruler = editorState.motionStripRuler
+        let barX = laneWidth * ruler.fraction(ofMS: Double(lane.timing.startMS))
+        ForEach(Array(lane.keys.enumerated()), id: \.offset) { index, key in
+            let x = min(max(laneWidth * ruler.fraction(ofMS: Double(key.ms)) - barX, 1),
+                        width - 1)
+            MotionStripKeyMark(lane: lane, layerName: layerName, key: key,
+                               middle: index, laneWidth: laneWidth)
+                .offset(x: x - MotionStripKeyMark.grabWidth / 2)
+        }
     }
 
     /// The pale handle at each end, which is what says the ends are draggable
@@ -711,6 +733,113 @@ private struct MotionStripBar: View {
     private func ms(_ points: CGFloat) -> Int {
         // A sideways TRAVEL, which is a length rather than a moment: where the
         // window starts has nothing to do with how far a hand moved.
+        Int((editorState.motionStripRuler.msSpanning(fraction: Double(points / laneWidth))).rounded())
+    }
+}
+
+/// One key on a bar: a mark saying the value is nailed down here, and the one
+/// thing on the strip a hand can move without moving the whole move.
+///
+/// Dragging the bar says "the whole thing happens later, or takes longer".
+/// Dragging one of these says "it arrives here", or "it sits there a second
+/// longer before it pulls out", which is the sentence the strip could not say
+/// at all before.
+private struct MotionStripKeyMark: View {
+    @Environment(EditorState.self) private var editorState
+    let lane: MotionStripLane
+    let layerName: String
+    let key: MotionStripKey
+    /// Which of the keys between the bar's ends this is, from nought at the
+    /// left, which is how the drag names it.
+    let middle: Int
+    let laneWidth: CGFloat
+
+    /// How wide the part of it a hand can land on is. A mark is drawn as a
+    /// hairline because a wide one would hide the bar it is on, and a hairline
+    /// is not something anybody can aim at, so what is DRAWN and what can be
+    /// GRABBED are two different widths.
+    static let grabWidth: CGFloat = 13
+
+    @State private var carrying = false
+    /// Escape happened part way through, so the rest of this gesture is
+    /// dropped on the floor (`MotionStripBar`).
+    @State private var calledOff = false
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(.white.opacity(lane.isOn ? 0.9 : 0.35))
+                .frame(width: 1.5, height: MotionStripView.barHeight - 4)
+            // The diamond, which is what every timeline anybody has used means
+            // by a key. It is what makes the mark readable as something to take
+            // hold of rather than as a join between two pieces.
+            Rectangle()
+                .fill(.white.opacity(lane.isOn ? 0.95 : 0.4))
+                .frame(width: 5.5, height: 5.5)
+                .rotationEffect(.degrees(45))
+                .shadow(color: .black.opacity(0.35), radius: 1, y: 0.5)
+        }
+        .frame(width: Self.grabWidth, height: MotionStripView.barHeight)
+        .contentShape(Rectangle())
+        .overlay(alignment: .top) { readout }
+        // High priority, because the bar underneath has a drag of its own and
+        // the whole point of this mark is that landing on it means something
+        // different from landing on the bar.
+        .highPriorityGesture(drag)
+        .panelHelp("\(lane.title) on \(layerName) is \(key.reading) at "
+                   + "\(editorState.motionStripRuler.reading(ofMS: key.ms)). "
+                   + "Drag it to move just this moment; the rest of the move stays put.")
+        .accessibilityLabel("\(layerName) \(lane.title) key, \(key.reading) at \(key.ms) milliseconds")
+        .playtestControl("Timing Key",
+                         detail: "\(layerName) \(lane.title), \(key.reading) at \(key.ms) ms")
+    }
+
+    /// What the mark says while it is moving: the moment it is at, in the
+    /// units the ruler above it is written in.
+    @ViewBuilder private var readout: some View {
+        if let drag = editorState.motionStopDrag, drag.motionID == lane.motionID,
+           drag.middle == middle, let reading = editorState.motionStopDragReading {
+            Text(reading)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(Color.accentColor)
+                .fixedSize()
+                .padding(.horizontal, 4)
+                .background(.regularMaterial, in: Capsule())
+                .offset(y: -13)
+                .panelReadout("key \(reading)")
+        }
+    }
+
+    private var drag: some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                guard !calledOff else { return }
+                if editorState.motionStopDrag?.motionID != lane.motionID
+                    || editorState.motionStopDrag?.middle != middle {
+                    guard !carrying else {
+                        calledOff = true
+                        return
+                    }
+                    carrying = true
+                    editorState.beginMotionStopDrag(motionID: lane.motionID, key: middle)
+                    guard editorState.motionStopDrag != nil else {
+                        calledOff = true
+                        return
+                    }
+                }
+                editorState.updateMotionStopDrag(byMS: ms(value.translation.width))
+            }
+            .onEnded { value in
+                let carried = carrying && !calledOff
+                carrying = false
+                calledOff = false
+                guard carried, editorState.motionStopDrag?.motionID == lane.motionID else { return }
+                editorState.updateMotionStopDrag(byMS: ms(value.translation.width))
+                editorState.commitMotionStopDrag()
+            }
+    }
+
+    private func ms(_ points: CGFloat) -> Int {
         Int((editorState.motionStripRuler.msSpanning(fraction: Double(points / laneWidth))).rounded())
     }
 }

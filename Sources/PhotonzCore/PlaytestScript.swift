@@ -2225,6 +2225,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// to prove the key is wired to anything at all.
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
+    /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
+    /// value is nailed to, between the bar's two ends (`MotionStripKey`).
+    ///
+    /// The opposite bargain to `dragTiming`: the move stays exactly where it
+    /// is and one of its moments changes, which is how a hold is made longer
+    /// or shorter. `key` counts the marks from ONE at the left hand end, the
+    /// way a person would say "the second one". `cancel` calls the drag off
+    /// and checks the key went back where it was.
+    case dragMotionKey(bar: String, key: Int, byMS: Int, hold: String?, cancel: Bool)
     /// Click a row in the layers list by the name it shows, the way a person
     /// picks a layer out of the list rather than off the picture. `modifiers`
     /// read as they do under a pointer: shift ranges from the anchor row,
@@ -2830,7 +2839,7 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
-        "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
+        "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
@@ -2882,6 +2891,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragColor: "dragColor"
         case .dragSection: "dragSection"
         case .dragTiming: "dragTiming"
+        case .dragMotionKey: "dragMotionKey"
         case .dragHandle: "dragHandle"
         case .selectRow: "selectRow"
         case .press: "press"
@@ -3236,6 +3246,17 @@ public enum PlaytestStep: Sendable, Equatable {
                                hold: try f.optionalString("hold"),
                                cancel: try f.optionalFlag("cancel") ?? false,
                                cancelBy: cancelBy)
+        case "dragMotionKey":
+            let key = Int(try f.number("key").rounded())
+            guard key >= 1 else {
+                throw PlaytestScriptError.invalidField(index: index, step: name, field: "key",
+                                                      reason: "counts the marks from 1 at the "
+                                                          + "left hand end of the bar")
+            }
+            self = .dragMotionKey(bar: try f.string("bar"), key: key,
+                                  byMS: Int(try f.number("byMS").rounded()),
+                                  hold: try f.optionalString("hold"),
+                                  cancel: try f.optionalFlag("cancel") ?? false)
         case "selectRow":
             self = .selectRow(row: try f.string("row"), modifiers: try f.modifiers())
         case "press":

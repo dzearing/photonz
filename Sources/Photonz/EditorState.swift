@@ -893,6 +893,10 @@ final class EditorState {
     /// drag is one step to undo, and read by BOTH the strip and the Start and
     /// Over fields in the side column so the two can never disagree.
     var motionTimingDrag: MotionTimingDrag?
+    /// One KEY on a bar under a hand, kept out of the document for the same
+    /// reason: the whole drag is one step to undo
+    /// (`EditorState+MotionStrip`).
+    var motionStopDrag: MotionStopDragState?
     /// How far the timeline is opened out, and which stretch of the document
     /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
     /// are looking at a recording is not part of the recording, so it is

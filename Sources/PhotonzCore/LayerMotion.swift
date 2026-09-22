@@ -691,6 +691,29 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
         return list
     }
 
+    /// This motion with the key at `index` among the ones BETWEEN its ends
+    /// moved to `ms`, and every other number on it left alone.
+    ///
+    /// What dragging a mark on the timing strip writes down. It is about WHEN
+    /// and never about what: the key keeps its value, the two ends keep theirs,
+    /// and the span is untouched, which is exactly what a bar drag does not do.
+    ///
+    /// The moment is kept inside the span, and the stops come back in order, so
+    /// a key carried past its neighbour settles beside it rather than swapping
+    /// the two over and drawing a different move.
+    public func movingKey(_ index: Int, toMS ms: Int) -> LayerMotion {
+        var middle = Array(keys.dropFirst().dropLast())
+        guard middle.indices.contains(index) else { return self }
+        middle[index].atMS = min(max(ms, timing.startMS + 1), timing.endMS - 1)
+        // Anything already outside the span is left where it is rather than
+        // quietly dropped: it is not drawn and it does not play, but losing it
+        // on an unrelated drag would be an edit nobody asked for.
+        let outside = (stops ?? []).filter { $0.atMS <= timing.startMS || $0.atMS >= timing.endMS }
+        var moved = self
+        moved.stops = (middle + outside).sorted { $0.atMS < $1.atMS }
+        return moved
+    }
+
     /// The value this motion has a fraction of the way along its span.
     ///
     /// One segment between each pair of keys, each eased by the motion's own

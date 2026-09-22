@@ -50,6 +50,25 @@
     { "do": "describe", "stage": "6-leaving", "note": "THE FOURTH TEST: pull back out, setting off from the playhead. Everything between the punch-in's last key and this one is now the hold, and it was never asked for. The Scale lane on the strip runs from the first move to this one as a single bar, because it is one property with four keys on it rather than two motions fighting over one answer" },
     { "do": "snapshot", "name": "6-pulling-back-out" },
 
+    { "do": "describe", "stage": "6b-the-keys-are-on-the-bar", "note": "THE FIFTH TEST: the bar says what happens ON it. The Scale lane is no longer four seconds of plain blue: there is a mark at the moment the camera arrives and another at the moment it starts to leave, and the stretch between the two is the hold, drawn as itself. Before this the strip said that something happened over four seconds and nothing about where it got to or how long it stayed." },
+    { "do": "expect", "control": "Timing Key", "present": true },
+    { "do": "snapshot", "name": "6b-keys-on-the-bar" },
+
+    { "do": "dragMotionKey", "bar": "Tutorial Sample Scale", "key": 2, "byMS": 700,
+      "hold": "6c-lengthening-the-hold" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6c-a-longer-hold", "note": "THE SIXTH TEST, and the one the strip could not say at all before: the second mark is carried later, so the camera SITS THERE longer before it pulls out. The bar's two ends have not moved a millisecond, which is the whole difference between this and dragging the bar: one says the move happens later, this says it arrives in the same place and stays." },
+    { "do": "expect", "field": "Scale Summary", "reads": "100% → 200% → 200% → 100% over 4.4s, after 0.8s" },
+    { "do": "snapshot", "name": "6c-a-longer-hold" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6d-undone", "note": "one undo takes the whole key drag back, not one frame of it" },
+
+    { "do": "dragMotionKey", "bar": "Tutorial Sample Scale", "key": 1, "byMS": 9000, "cancel": true },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6e-called-off", "note": "and a key carried far past the mark beside it, then let go of without keeping it, leaves the move exactly as it found it" },
+
     { "do": "action", "action": "videoSeekThreeQuarters" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "field": "Scale reading", "reads": "100%" },
