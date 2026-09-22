@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:52:52.142Z",
-  "updated": "2026-09-22T15:32:51.059Z",
+  "updated": "2026-09-22T15:44:44.116Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the video design pass on 2026-09-20. Evidence, run from the repo root:\n\n  $ for f in docs/design/mocks/pages/video*.html; do echo \"$(grep -c 'ttl\">Layers' $f) $(basename $f)\"; done\n  0 video-audio.html\n  0 video-captions.html\n  0 video-compositing.html\n  0 video-cut-wt.html\n  0 video-entry-wt.html\n  0 video-freeze-wt.html\n  0 video-motion.html\n  0 video-move-wt.html\n  4 video-shell.html\n  0 video-speed.html\n  0 video-title-wt.html\n  0 video-transition-wt.html\n  0 video-transitions.html\n  0 video-zoom-wt.html\n  0 video.html\n\nOnly video-shell draws it. video-entry-wt.html line 148 still carries the comment \"no Layers group here: the timeline below IS the layer list\" and line 342 still tells the reader \"there is no separate Layers panel to manage\", which is exactly what UX-PATTERNS D18 now forbids.\n\nThe 2026-09-19 pass corrected video.html's caption (it says out loud that removing Layers was wrong) and renamed rows on fifteen pages, but putting the GROUP back is a change to fourteen laid-out docks and the scripts that drive them, so it was left. video-surface.md §7 now says so rather than claiming it was done.\n\nSecond half, same pages: video-entry-wt.html lines 156-166 draw the Clip section as a four box grid (In, Out, Speed, Vol) with an explaining paragraph under it. video-surface.md §2 settles that time is never a number in the panel (in, out, duration and speed are dragged on the strip, and an exact number opens the way Position and Size opens, which is worth 130 points every time), and §5 settles that a section needing a paragraph inside it is misnamed. The settled Clip section is Reads, Volume, Speed as three rows. Careful with the walkthrough script: step data-set writes #pOut, so removing that field without touching the step breaks the walk.",
@@ -55,7 +55,21 @@
     {
       "t": "2026-09-22T15:32:51.058Z",
       "note": "Docs updated so the pages and the study now agree in writing too: video-surface.md §7 says the Layers row is done rather than filed, §5 records what was applied; UX-PATTERNS D18 gains a paragraph saying the fourteen conform and how (one list builds both views where the strip is scripted). Audit at queue/audits/2026-09-22-video-layers.json with two real browser screenshots. The panel-room cost was folded into the open task appearance-is-below-the-fold-again-because-the-p rather than filed as its own."
+    },
+    {
+      "t": "2026-09-22T15:44:26.570Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-22T15:44:36.514Z",
+      "note": "Correction on my own last act: I asked for a full walk sweep on the grounds that shared/components/dock.js changed. That was the wrong call and I am saying so rather than leaving it to look deliberate. The walk set drives the built app; docs/design/mocks/ is HTML on the design dashboard and no walk touches it. Nothing under Sources/ changed in this task, so the sweep has nothing to find here. Asking is not starting and four requests were already pending, so it costs the loop nothing extra, but the next runner should not read this as evidence the sweep was needed."
+    },
+    {
+      "t": "2026-09-22T15:44:44.114Z",
+      "note": "All fifteen docs/design/mocks/pages/video*.html pages now open Layers as the first group of every dock, listing the same rows as the strip in the same order with the same icons, with selection wired both ways; the five pages that script their strip build the Layers group from that same list so they cannot drift. Every grid of boxed in/out/duration fields is gone (a clip's section is Reads, Volume, Speed) and so is every paragraph inside a panel section explaining what the section was for. Six leftover track-model errors fixed along the way (V1 -> Story, a title and a component sharing one row, Source/Retimed drawn as timeline rows, video-captions having no row for its recording, a permanent empty voice-over track, and video-compositing calling its layers two different things). Also fixed a defect this pass introduced: the dock's Panels footer offered a switch that turned Layers off, which D18 forbids; a required pane is now listed without a switch (shared/components/dock.js + dock.css, documented on panes-panels.html). Verified in a real browser on the dev server: 15/15 pages render Layers first in every dock, no dock overflows, no horizontal overflow, seven walkthroughs run all 59 steps and reset, no JS errors. All eight mock gates green; Scripts/test.sh green (8952 tests in 713 suites). Docs brought in line: video-surface.md §5 and §7, UX-PATTERNS D18. Audit: queue/audits/2026-09-22-video-layers.json with two real screenshots. Committed and pushed as 7cb506b1."
     }
   ],
-  "started": "2026-09-22T15:12:20.252Z"
+  "started": "2026-09-22T15:12:20.252Z",
+  "walks": [],
+  "completed": "2026-09-22T15:44:44.115Z"
 }
