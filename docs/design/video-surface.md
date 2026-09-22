@@ -242,6 +242,12 @@ panes can be hidden and there is an automatic mode.
 | Pan | second row of the same | no | one row | yes | n/a |
 | **A channel strip** | — | — | — | — | **cut, see below** |
 
+Applied to the pages on 2026-09-22: every `.grid2` of boxed `.field`s holding a
+clip's in, out or duration is gone from the fourteen, and so is every paragraph
+inside a panel section that existed to say what the section was for. A clip's
+selection section is `Reads · Volume · Speed`; a row with a way in (the Volume
+stepper, the transition's Length select) is NOT a number box and stays.
+
 Three things the clickthroughs ask for are cut here:
 
 - **A channel strip.** `video-audio` wants a mixer-shaped column of faders. That
@@ -306,7 +312,7 @@ answer wins and what happens to the pages.
 
 | The question | Answered N ways | The answer | What changes |
 | --- | --- | --- | --- |
-| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **Yes.** §3. | `video.html`'s "Resolved" caption is wrong and is rewritten (done 2026-09-19). Putting the group back into the fourteen docks is a change to fourteen laid-out pages and their scripts, so it is filed rather than claimed: only `video-shell` draws it today. |
+| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **Yes.** §3. | Done 2026-09-22. All fifteen `video*` pages now open Layers as the first group of every dock, listing the same rows as the strip in the same order with the same icons, and every dock with a rail gained a Layers tab. Where a page builds its strip from a list in JS (`video.html`, `video-motion`, `video-compositing`, `video-audio`, `video-captions`), the Layers group is built from that SAME list, so the two cannot drift. `video.html`'s "Resolved" caption was rewritten on 2026-09-19. |
 | **What is a timeline row called?** | `V1 V2 V3 V4` · `Gfx` · `Audio` · `Source`/`Retimed` · `Position`/`Scale`/`Centre` · layer names (`pane-load`, and the shipped strip) | **The layer's own name, in the layer's own letters.** | `.track .tl` widens 58 → 92 to match `MotionStripView.labelWidth` and stops uppercasing somebody's layer name. Page labels change with it. |
 | **What can a row BE?** | a track · a property lane · a before/after comparison | **A layer, or a property lane nested under one.** Nothing else. | `video-speed`'s Source/Retimed rows are a diagram about retiming, not timeline rows, and belong inside the retime settings. `video-move-wt`/`video-zoom-wt` property lanes nest under their layer. |
 | **Where does the audio of a clip live?** | a permanent `Audio` track on six pages · welded to the clip on others | **Inside the clip's own row as a waveform, until you separate it; then it is its own layer with its own name and its own row.** | The permanent empty `Audio` track goes. |

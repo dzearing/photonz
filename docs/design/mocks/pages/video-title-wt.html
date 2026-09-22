@@ -197,8 +197,20 @@
           <!-- THE RIGHT DOCK -->
           <div class="pdock" id="dock">
 
-            <!-- No Layers group in a workspace that has a timeline: the
-                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
+            <!-- LAYERS · UX-PATTERNS D18. The timeline is this same list read
+                 sideways: same rows, same order, same icons. Each row arrives
+                 when its layer does, in both views at once. -->
+            <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span></div>
+              <div class="dgrp-b">
+                <div class="lrow wt-off" id="lrArt"><i class="ic ic-sparkle"></i><span class="nm">Sparkle</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrTitle"><i class="ic ic-text"></i><span class="nm" id="nmTitle">Title</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrL3"><i class="ic ic-component"></i><span class="nm">Lower third</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrRec"><i class="ic ic-film"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrVoice"><i class="ic ic-waveform"></i><span class="nm">voice-over</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:222px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -216,14 +228,6 @@
                       <span class="stepper sm"><span class="k">Size</span><input id="pSize" value="28" aria-label="Size"></span>
                       <span class="select sm"><span class="lead" id="pWeight">Regular</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
-                  </div>
-                  <div class="section">
-                    <div class="sec-h">Time <span class="mut" id="pTime">0:04 to 0:07</span></div>
-                    <div class="grid2">
-                      <div class="field"><span class="k">In</span><span class="v">0:04</span></div>
-                      <div class="field"><span class="k">Out</span><span class="v">0:07</span></div>
-                    </div>
-                    <p class="note">A title is a text layer that happens to live in a document with time, so it gets an in and an out. Nothing else about it is special.</p>
                   </div>
                   <div class="section">
                     <div class="sec-h">Animate <span class="mut">no keys</span></div>
@@ -252,11 +256,6 @@
                     </div>
                   </div>
                   <div class="section">
-                    <div class="sec-h">Time <span class="mut" id="pArtTime">0:04 to 0:09</span></div>
-                    <div class="irow"><span class="rl">Length</span><span class="select"><span class="lead" id="pArtLen">5.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                    <p class="note" id="pArtNote">Clip art is an asset layer. Drag its edge on the timeline to say how long it is on screen, exactly like you would with a clip of footage.</p>
-                  </div>
-                  <div class="section">
                     <div class="sec-h">Animate <span class="mut">no keys</span></div>
                     <div class="irow split"><span class="rl">Opacity</span><span class="field"><span class="v">100%</span></span>
                       <button class="btn ghost icon sm" title="Keyframe Opacity"><i class="ic ic-keyframe"></i></button></div>
@@ -277,7 +276,7 @@
                     <div class="sec-h comp">Component <span class="mut">Lower third</span></div>
                     <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Name · role</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                     <div class="irow"><span class="rl">Name</span><span class="select"><span class="lead">Dana Zearing</span><span class="car"><i class="ic xs ic-pencil"></i></span></span></div>
-                    <p class="note">This is a linked instance of the component you built on a UI canvas. Edit the main and every instance in every document follows.</p>
+                    <div class="irow split"><span class="rl">Linked to</span><span class="val">Lower third · main</span></div>
                   </div>
                 </div>
               </div>
@@ -339,6 +338,7 @@
           </div>
 
           <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
@@ -375,18 +375,23 @@
             </div>
           </div>
 
-          <div class="track wt-off" id="trackTitle"><span class="tl"><i class="ic xs ic-text"></i> Lower third</span>
+          <div class="track wt-off" id="trackTitle"><span class="tl"><i class="ic xs ic-text"></i> <span id="tlTitle">Title</span></span>
             <div class="lane abs">
               <div class="clip txt wt-off" id="clipTitle" style="left:22%;width:17%" tabindex="0" role="button">Title</div>
+            </div>
+          </div>
+
+          <div class="track wt-off" id="trackL3"><span class="tl"><i class="ic xs ic-component"></i> Lower third</span>
+            <div class="lane abs">
               <div class="clip cmp wt-off" id="clipL3" style="left:56%;width:22%" tabindex="0" role="button">Lower third</div>
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> screen-recording</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> screen-recording</span>
             <div class="lane abs"><div class="clip v1" style="left:0;width:100%">screen-recording</div></div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> voice-over</span>
             <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
 
@@ -429,15 +434,15 @@
           data-title="Click on the frame"
           data-cue="#cvFrame" data-cue-label="Click where the title should sit" data-cue-place="left"
           data-tool="#tTitle"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
-          data-select="#clipTitle" data-class="#cvTitle=caret"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
+          data-select="#clipTitle,#lrTitle" data-class="#cvTitle=caret"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
-          data-set="#tcCur=0:04|#propKind=Text layer">
+          data-set="#tcCur=0:04|#propKind=Text layer|#layerCount=3">
         <div class="wt-cap vid">
           <span class="wt-n">3</span>
           <p class="wt-do">on the <b>frame</b>, where the words should sit</p>
           <p class="wt-where">the canvas</p>
-          <p class="wt-res">three things appear at once and they are the same thing seen three ways: a caret on the canvas, a clip on a new <b>Title</b> track that starts at the playhead and runs three seconds, and Properties speaking for the text layer. The track was not there a moment ago because nothing needed it.</p>
+          <p class="wt-res">three things appear at once and they are the same thing seen three ways: a caret on the canvas, a row of its own on the timeline carrying a clip that starts at the playhead and runs three seconds, a new line in <b>Layers</b>, and Properties speaking for the text layer. The row was not there a moment ago because the layer was not.</p>
         </div>
       </li>
 
@@ -445,15 +450,15 @@
           data-title="Type the words"
           data-cue="#cvTitle" data-cue-label="Type the title" data-cue-place="bottom"
           data-tool="#tTitle"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
-          data-select="#clipTitle" data-class="#cvTitle=caret"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
+          data-select="#clipTitle,#lrTitle" data-class="#cvTitle=caret"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
-          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster">
+          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster">
         <div class="wt-cap vid">
           <span class="wt-n">4</span>
           <p class="wt-do" data-verb="Type"><b>Ship it faster</b></p>
           <p class="wt-where">straight onto the canvas, where the caret is</p>
-          <p class="wt-res">the words go in on the frame, at the size they will really be. The clip on the timeline names itself from its own text, so a busy Title track stays readable without you naming anything.</p>
+          <p class="wt-res">the words go in on the frame, at the size they will really be. The clip, its row on the timeline and its line in <b>Layers</b> all name themselves from the words, so a busy cut stays readable without you naming anything.</p>
         </div>
       </li>
 
@@ -461,10 +466,10 @@
           data-title="Give it a type style"
           data-cue="#styDisplay" data-cue-label="Click Display / 48" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
-          data-open="#gLibrary" data-scope="styles" data-select="#styDisplay,#clipTitle"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
+          data-open="#gLibrary" data-scope="styles" data-select="#styDisplay,#clipTitle,#lrTitle"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
-          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
+          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
         <div class="wt-cap vid">
           <span class="wt-n">5</span>
           <p class="wt-do"><b>Display / 48</b></p>
@@ -477,10 +482,10 @@
           data-title="Switch the Library back to Media"
           data-cue="#scopeMedia" data-cue-label="Click Media" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
-          data-open="#gLibrary" data-scope="media" data-select="#clipTitle"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
+          data-open="#gLibrary" data-scope="media" data-select="#clipTitle,#lrTitle"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
-          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
+          data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
           <p class="wt-do"><b>Media</b></p>
@@ -493,15 +498,15 @@
           data-title="Drag clip art onto the frame"
           data-cue="#artSparkle" data-cue-label="Drag Sparkle onto the frame" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#cvArt,#trackGfx,#lrArt,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt,#lrArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
-          data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster">
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag"><b>Sparkle</b> onto the frame</p>
           <p class="wt-where">Library at scope Media, over to the canvas</p>
-          <p class="wt-res">the art lands where you dropped it, selected, with handles. A <b>Gfx</b> track appears under the Title track carrying its clip, so the thing you see on the frame and the thing you see on the timeline are one layer, never two objects to keep in sync.</p>
+          <p class="wt-res">the art lands where you dropped it, selected, with handles. A <b>Sparkle</b> row appears above the title's, carrying its clip, and <b>Sparkle</b> joins the layers list, so the thing on the frame, the row on the strip and the line in the list are one layer, never three objects to keep in sync.</p>
         </div>
       </li>
 
@@ -509,10 +514,10 @@
           data-title="Size it and place it"
           data-cue="#artH2" data-cue-label="Drag the corner handle" data-cue-place="right"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#cvArt,#trackGfx,#lrArt,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt,#lrArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px"
-          data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104">
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do" data-verb="Drag">the corner <b>handle</b> in, then the art itself up beside the title</p>
@@ -525,31 +530,31 @@
           data-title="Say how long it stays"
           data-cue="#clipArt" data-cue-label="Drag the clip's right edge to 0:07" data-cue-place="top"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#cvArt,#trackGfx,#lrArt,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt,#lrArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px|#clipArt=width:17%"
-          data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104|#pArtTime=0:04 to 0:07|#pArtLen=3.0s|#pArtNote=Both clips now start and end together. Drag either edge to change it, or select both and trim them as one.">
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104">
         <div class="wt-cap vid">
           <span class="wt-n">9</span>
           <p class="wt-do" data-verb="Drag">the art clip's <b>right edge</b> back until it lines up with the title</p>
-          <p class="wt-where">the Gfx track on the timeline</p>
-          <p class="wt-res">the art now comes and goes with the words. Trimming a piece of clip art is the same gesture as trimming footage, because on the timeline they are the same kind of object: a layer with an in and an out.</p>
+          <p class="wt-where">the <b>Sparkle</b> row on the timeline</p>
+          <p class="wt-res">the art now comes and goes with the words, and nothing was typed to say so. Trimming a piece of clip art is the same gesture as trimming footage, because on the timeline they are the same kind of object: a layer with an in and an out.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Reuse something you already built"
-          data-cue="#libL3" data-cue-label="Drag Lower third onto the Title track" data-cue-place="left"
+          data-cue="#libL3" data-cue-label="Drag Lower third onto the timeline" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
-          data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#cvL3,#clipL3,#propsComp" data-hide="#propsEmpty,#propsText,#propsArt,#artRing,#artH1,#artH2"
-          data-open="#gLibrary" data-scope="components" data-select="#clipL3"
+          data-show="#cvTitle,#trackTitle,#lrTitle,#clipTitle,#cvArt,#trackGfx,#lrArt,#clipArt,#cvL3,#trackL3,#lrL3,#clipL3,#propsComp" data-hide="#propsEmpty,#propsText,#propsArt,#artRing,#artH1,#artH2"
+          data-open="#gLibrary" data-scope="components" data-select="#clipL3,#lrL3"
           data-css="#scrubFill=width:56%|#scrubKnob=left:56%|#playhead=--t:0.56|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em;opacity:.25|#cvArt=left:60%;top:26%;width:52px;height:52px;opacity:.25|#clipArt=width:17%"
-          data-set="#tcCur=0:10|#propKind=Component instance|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster">
+          data-set="#tcCur=0:10|#propKind=Component instance|#layerCount=5|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#tlTitle=Ship it faster|#nmTitle=Ship it faster">
         <div class="wt-cap vid">
           <span class="wt-n">10</span>
-          <p class="wt-do" data-verb="Drag"><b>Lower third</b> onto the <b>Title</b> track, after the title</p>
+          <p class="wt-do" data-verb="Drag"><b>Lower third</b> onto the timeline, after the title</p>
           <p class="wt-where">Library at scope Components, down to the timeline</p>
-          <p class="wt-res">a linked instance lands at 0:10, so the playhead jumps there and the earlier layers fade out of the frame the way they will in the cut. It is the component you built on a UI canvas, with its variant and its text still editable. One library, three kinds of thing, one gesture for all of them.</p>
+          <p class="wt-res">a linked instance lands at 0:10 on a row of its own, so the playhead jumps there and the earlier layers fade out of the frame the way they will in the cut. It is the component you built on a UI canvas, with its variant and its text still editable. One library, three kinds of thing, one gesture for all of them.</p>
         </div>
       </li>
 

@@ -2719,6 +2719,13 @@ beside it does not uppercase, and shouting somebody's file name back at them is
 not a style. Canonical pages: `pages/comp-video.html` §07 (the primitive),
 `pages/video-shell.html` (the whole surface).
 
+**The fourteen pages conform as of 2026-09-22.** Every `video*` page opens
+**Layers** as the first group of its dock, its rows match the strip one for one
+in order and icon, and picking a clip lights both. Where the strip is built from
+a list in JS (`video`, `video-motion`, `video-compositing`, `video-audio`,
+`video-captions`), the group is built from the SAME list, so a later edit cannot
+put the two out of step. No numbered row is left anywhere in the set.
+
 ---
 
 ### D19 — "Timeline when time" and a mode are different questions, and they compose

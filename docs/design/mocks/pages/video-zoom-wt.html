@@ -184,8 +184,16 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <!-- No Layers group in a workspace that has a timeline: the
-                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
+            <!-- LAYERS · UX-PATTERNS D18. The timeline is this same list read
+                 sideways: same rows, same order, same icons. -->
+            <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2</span></div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrRec"><i class="ic ic-film"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrVoice"><i class="ic ic-waveform"></i><span class="nm">voice-over</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:330px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -194,10 +202,10 @@
                 <div id="propsClip" class="wt-off">
                   <div class="section">
                     <div class="sec-h">Clip <span class="mut">screen-recording</span></div>
-                    <div class="grid2">
-                      <div class="field"><span class="k">In</span><span class="v">0:00</span></div>
-                      <div class="field"><span class="k">Out</span><span class="v">0:18</span></div>
-                    </div>
+                    <div class="irow split"><span class="rl">Reads</span><span class="val">screen-recording.mov</span></div>
+                    <div class="irow split"><span class="rl">Volume</span>
+                      <span class="stepper sm"><input value="100" aria-label="Volume"><span class="k">%</span></span></div>
+                    <div class="irow split"><span class="rl">Speed</span><span class="val">1.00×</span></div>
                   </div>
 
                   <div class="section">
@@ -207,7 +215,6 @@
                     <div class="irow split"><span class="rl">Centre</span><span class="field"><span class="v" id="vCentre">960, 540</span></span>
                       <button class="btn ghost icon sm" id="kfCentre" title="Keyframe Centre"><i class="ic ic-keyframe"></i></button></div>
                     <div class="irow"><span class="rl">&nbsp;</span><button class="btn secondary sm" id="btnReset"><i class="ic ic-undo"></i> Reset reframe</button></div>
-                    <p class="note" id="pZoomNote">Reframing is Scale and Centre on the clip. A punch-in is those two values changing over time, which is why it uses the same keys and the same lanes as anything else that moves.</p>
                   </div>
 
                   <div class="section">
@@ -225,7 +232,6 @@
                     <div class="irow"><span class="rl">Curve</span>
                       <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
-                    <p class="note" id="pEaseNote">A linear punch-in reads like a machine. Easing in and out is what makes it look like someone leaned in.</p>
                   </div>
                 </div>
               </div>
@@ -275,6 +281,7 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
@@ -309,7 +316,7 @@
 
         <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:18" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> screen-recording</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> screen-recording</span>
             <div class="lane abs"><div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div></div>
           </div>
 
@@ -328,7 +335,7 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> voice-over</span>
             <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
           <div class="playhead" id="playhead" style="--t:0"></div>
@@ -342,20 +349,20 @@
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
-          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-set="#propKind=Clip">
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>screen-recording</b> clip</p>
-          <p class="wt-where">the V1 track</p>
-          <p class="wt-res">the clip outlines on the timeline, a ring lands on the frame, and Properties shows a <b>Reframe</b> section: Scale and Centre. There is no crop mode and no separate effect. Where you are looking is a property of the clip.</p>
+          <p class="wt-where">the <b>screen-recording</b> row, which is the <b>screen-recording</b> layer</p>
+          <p class="wt-res">the clip outlines on the timeline, its row lights up in <b>Layers</b>, a ring lands on the frame, and Properties shows a <b>Reframe</b> section: Scale and Centre. There is no crop mode and no separate effect. Where you are looking is a property of the clip.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Go to where the move starts"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:03" data-cue-place="top"
-          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
           data-set="#propKind=Clip|#tcCur=0:03">
         <div class="wt-cap vid">
@@ -369,7 +376,7 @@
       <li class="wt-step"
           data-title="Record the wide shot"
           data-cue="#kfScale" data-cue-label="Click the keyframe button on Scale" data-cue-place="left"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
           data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
           data-set="#propKind=Clip|#tcCur=0:03|#pKeyCount=1 key|#vScale=100%">
         <div class="wt-cap vid">
@@ -383,7 +390,7 @@
       <li class="wt-step"
           data-title="Go to where it should be tight"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:05" data-cue-place="top"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=1 key|#vScale=100%">
         <div class="wt-cap vid">
@@ -397,7 +404,7 @@
       <li class="wt-step"
           data-title="Zoom in"
           data-cue="#vScale" data-cue-label="Drag the Scale value up to 220%" data-cue-place="left"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=2 keys|#vScale=220%">
         <div class="wt-cap vid">
@@ -411,7 +418,7 @@
       <li class="wt-step"
           data-title="Put the button in the middle"
           data-cue="#cvFrame" data-cue-label="Drag the picture to frame the button" data-cue-place="left"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810">
         <div class="wt-cap vid">
@@ -426,7 +433,7 @@
           data-title="Ease the move"
           data-cue="#easInOut" data-cue-label="Open Curve, choose Ease in out" data-cue-place="left"
           data-pop="#curveMenu"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#curveVal=Ease in out|#pEaseState=Ease in out">
         <div class="wt-cap vid">
@@ -440,9 +447,9 @@
       <li class="wt-step"
           data-title="Let it hold"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
-          data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#curveVal=Ease in out|#pEaseState=Ease in out|#pZoomNote=After the last key a value simply stays. Pulling back out later is one more key holding the old 100%, which is why the wide shot was worth recording in step 3.">
+          data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#curveVal=Ease in out|#pEaseState=Ease in out">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do" data-verb="Drag">the <b>playhead</b> on to <b>0:08</b></p>

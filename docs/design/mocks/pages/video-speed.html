@@ -42,8 +42,14 @@
 #video-speed .tlgrid .track{margin:var(--s1) 0}
 #video-speed .tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
 #video-speed .tlgrid .track .lane{display:block}
-#video-speed .tlgrid .track .lane.srclane{height:18px}
 /* ghost source bar: the original clip length, fixed */
+#video-speed .vs-cmpbody{padding:var(--s2) var(--s3) var(--s3)}
+#video-speed .vs-cmp{display:grid;grid-template-columns:62px 1fr 58px;align-items:center;gap:var(--gap-sm);margin-bottom:5px}
+#video-speed .vs-cmpt{display:block;width:100%}
+#video-speed .vs-cmpt>*{display:block}
+#video-speed .vs-cmpv{font-size:10px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+#video-speed .vs-cmpl{font-size:10px;color:var(--faint)}
+#video-speed .vs-outbar{height:16px;border-radius:var(--r1);background:color-mix(in srgb,var(--accent) 24%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent)}
 #video-speed .srcbar{height:16px;border-radius:var(--r1);background:repeating-linear-gradient(45deg,transparent,transparent 6px,color-mix(in srgb,var(--line) 60%,transparent) 6px,color-mix(in srgb,var(--line) 60%,transparent) 12px);border:1px dashed var(--line-strong)}
 /* the retimed clip is the SHARED .clip (label, .speed badge, .sel ring). Its
    width tracks output length; the sampled speed-band underlay is page local. */
@@ -238,8 +244,17 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · no Layers group here: the timeline IS the layer list -->
+      <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18): the timeline is the
+           same list read sideways, one row for the one layer. -->
       <div class="pdock" id="dock">
+
+        <!-- SELECTION, place 1 of 3: the stack -->
+        <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">1</span></div>
+          <div class="dgrp-b">
+            <div class="lrow sel"><i class="ic ic-film"></i><span class="nm">hero-shot</span><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
 
         <!-- SELECTION, place 2 of 3 is the timeline clip; place 3 of 3: everything the selected stop can do -->
         <div class="dgrp grow" id="gProps">
@@ -249,12 +264,9 @@
           <div class="dgrp-b">
             <div class="section">
               <div class="sec-h">Clip <span class="mut">hero-shot</span></div>
-              <div class="grid2">
-                <div class="field"><span class="k">Source</span><span class="v">0:03.00</span></div>
-                <div class="field"><span class="k">Output</span><span class="v" id="outLenVal">0:04.50</span></div>
-                <div class="field"><span class="k">Stops</span><span class="v" id="stopCount">7</span></div>
-                <div class="field"><span class="k">Frames</span><span class="v">90</span></div>
-              </div>
+              <div class="irow split"><span class="rl">Reads</span><span class="val">hero-shot.mov</span></div>
+              <div class="irow split"><span class="rl">Frames</span><span class="val">90</span></div>
+              <div class="irow split"><span class="rl">Stops</span><span class="val" id="stopCount">7</span></div>
             </div>
 
             <div class="section">
@@ -282,7 +294,6 @@
                 <button class="on" data-mode="ramp">Ramp</button>
                 <button data-mode="hold">Hold</button>
               </div>
-              <p class="note"><b>Ramp</b> eases between stops for a smooth speed ramp. <b>Hold</b> keeps each section flat. A stop at zero holds a single frame, so two zeros side by side make a freeze.</p>
             </div>
           </div>
         </div>
@@ -293,7 +304,6 @@
           </div>
           <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
             <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Optical flow</span><span class="emeta">later</span></div>
-            <p class="note">Frame blending sells slow motion, but real optical flow is heavy. It is off until the timeline chapter is funded.</p>
           </div>
         </div>
 
@@ -325,6 +335,7 @@
 
       <!-- THE RAIL -->
       <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
@@ -372,10 +383,7 @@
 
       <div class="tlz">
         <div class="tlgrid">
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> Source</span>
-            <div class="lane srclane"><div class="srcbar" title="Original clip length, fixed"></div></div>
-          </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-speed"></i> Retimed</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> hero-shot</span>
             <div class="lane">
               <div class="clip sel" id="vsClip">
                 <span class="vs-cells" id="vsCells"></span>
@@ -394,6 +402,11 @@
         </div>
       </div>
 
+      <div class="schdr"><h4>Retime</h4></div>
+      <div class="vs-cmpbody">
+        <div class="vs-cmp"><span class="vs-cmpl">Original</span><span class="vs-cmpt"><span class="srcbar" id="vsSrcBar" title="Original clip length, fixed"></span></span><span class="vs-cmpv">0:03.00</span></div>
+        <div class="vs-cmp"><span class="vs-cmpl">On the cut</span><span class="vs-cmpt"><span class="vs-outbar" id="vsOutBar"></span></span><span class="vs-cmpv" id="outLenVal">0:04.50</span></div>
+      </div>
       <div class="schdr"><h4>Speed curve</h4></div>
       <div class="scbody">
         <div class="scaxis" id="scAxis"><span>3x</span><span>1x</span><span>0</span></div>
@@ -540,6 +553,12 @@
     if(tlDock) tlDock.setAttribute("data-tl-summary","hero-shot · "+avg.toFixed(2)+"x · "+tcode(SRC_SEC)+" / "+fmt(L));
     if(clipPlay){ clipPlay.style.left=(playT*vsClip.getBoundingClientRect().width)+"px"; }
     var ov=document.getElementById("outLenVal"); if(ov) ov.textContent=fmt(L);
+    /* the before-and-after comparison: two bars on one scale, so the retime
+       reads as a length rather than as a number (video-surface.md §7) */
+    var sb=document.getElementById("vsSrcBar"), ob=document.getElementById("vsOutBar");
+    if(sb&&ob){ var span=Math.max(SRC_SEC,L);
+      sb.style.width=(SRC_SEC/span*100).toFixed(2)+"%";
+      ob.style.width=(L/span*100).toFixed(2)+"%"; }
     var sc=document.getElementById("stopCount"); if(sc) sc.textContent=stops.length;
   }
 

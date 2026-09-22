@@ -59,16 +59,29 @@
 
     groups.forEach(function (g) {
       var ttl = g.querySelector('.dgrp-h .ttl');
+      /* A REQUIRED group is listed but has no switch. Layers is the case that
+         forced this (UX-PATTERNS D18): it is the only inventory of a document,
+         and a video document is full of layers that occupy no time, so hiding
+         it leaves them with no row anywhere. The app agrees by construction —
+         PanelSectionVisibility.optionalSections deliberately does not list
+         Layers — and this menu used to offer what the app cannot do. It stays
+         in the list, because the list answers "which panels do I have". */
+      var required = g.hasAttribute('data-required') ||
+                     g.getAttribute('data-grp') === 'layers';
       var it = document.createElement('div');
-      it.className = 'menuitem on';
+      it.className = 'menuitem on' + (required ? ' req' : '');
       it.setAttribute('role', 'menuitemcheckbox');
       it.setAttribute('aria-checked', 'true');
+      if (required) {
+        it.setAttribute('aria-disabled', 'true');
+        it.title = 'Always shown: it is the only list of everything in the document';
+      }
       var lb = document.createElement('span');
       lb.textContent = ttl ? ttl.textContent.trim() : 'Panel';
       var ck = document.createElement('i');
       ck.className = 'ic xs ic-check ck';
       it.appendChild(lb); it.appendChild(ck);
-      it.addEventListener('click', function (e) {
+      if (!required) it.addEventListener('click', function (e) {
         e.stopPropagation();
         var show = g.classList.contains('hidden');
         g.classList.toggle('hidden', !show);

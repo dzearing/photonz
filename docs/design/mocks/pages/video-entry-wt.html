@@ -145,9 +145,16 @@
 
               <div class="splitter v" data-min="220" data-max="420"></div>
 
-              <!-- THE RIGHT DOCK · no Layers group here: the timeline below IS
-                   the layer list (UX-PATTERNS D9 note) -->
+              <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18): the timeline
+                   is the same list read sideways, not a replacement for it. -->
               <div class="pdock" id="dock">
+
+                <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">1</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow" id="lrRec"><i class="ic ic-film"></i><span class="nm">demo-run</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
 
                 <div class="dgrp" id="gProps" style="--gh:250px">
                   <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -156,13 +163,10 @@
                     <div id="propsClip" class="wt-off">
                       <div class="section">
                         <div class="sec-h">Clip <span class="mut">demo-run</span></div>
-                        <div class="grid2">
-                          <div class="field"><span class="k">In</span><span class="v">0:00</span></div>
-                          <div class="field"><span class="k">Out</span><span class="v" id="pOut">0:14</span></div>
-                          <div class="field"><span class="k">Speed</span><span class="v">100%</span></div>
-                          <div class="field"><span class="k">Vol</span><span class="v">0 dB</span></div>
-                        </div>
-                        <p class="note">In and out are where you start and stop reading the source. Trimming never touches the file, so the frames you cut off are still there if you drag the edge back out.</p>
+                        <div class="irow split"><span class="rl">Reads</span><span class="val">demo-run.mov</span></div>
+                        <div class="irow split"><span class="rl">Volume</span>
+                          <span class="stepper sm"><input value="100" aria-label="Volume"><span class="k">%</span></span></div>
+                        <div class="irow split"><span class="rl">Speed</span><span class="val">1.00×</span></div>
                       </div>
                     </div>
                   </div>
@@ -208,6 +212,7 @@
 
               <!-- THE RAIL · what the dock collapses to -->
               <div class="drail">
+                <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
                 <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
                 <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
               </div>
@@ -236,7 +241,7 @@
 
             <div class="timeline" id="timeline" data-tl-summary="demo-run · 0:00 / 0:14" style="min-height:110px">
               <div class="ruler"><span>0s</span><span>2s</span><span>4s</span><span>6s</span><span>8s</span><span>10s</span><span>12s</span><span>14s</span></div>
-              <div class="track"><span class="tl"><i class="ic xs ic-image"></i> demo-run</span>
+              <div class="track"><span class="tl"><i class="ic xs ic-film"></i> demo-run</span>
                 <div class="lane abs">
                   <div class="clip v1" id="clipMain" style="left:0;width:100%" tabindex="0" role="button"><span class="lbl">demo-run</span>
                     <span class="edge l"></span><span class="edge r" id="clipEdgeR"></span>
@@ -339,40 +344,40 @@
           <span class="wt-n">5</span>
           <p class="wt-do">the <b>Photonz</b> icon again, or press <code>⎋</code>, or click anywhere else</p>
           <p class="wt-where">the menu bar. The pane is chromeless, so there is no close button to hunt for</p>
-          <p class="wt-res">the overlay retracts and the editor stands alone: canvas, floating tool bar, one right dock, and the recording as the one clip on the timeline. The timeline is the layer list here; there is no separate Layers panel to manage.</p>
+          <p class="wt-res">the overlay retracts and the editor stands alone: canvas, floating tool bar, one right dock, and the recording as the one clip on the timeline. <b>Layers</b> lists that same clip at the top of the dock: the timeline is the same list read sideways.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipMain" data-cue-label="Click the demo-run clip" data-cue-place="top"
-          data-select="#clipMain" data-show="#propsClip,#frameRing" data-hide="#propsEmpty"
+          data-select="#clipMain,#lrRec" data-show="#propsClip,#frameRing" data-hide="#propsEmpty"
           data-set="#propKind=Clip">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
           <p class="wt-do">the <b>demo-run</b> clip</p>
-          <p class="wt-where">the V1 track on the timeline</p>
-          <p class="wt-res">the clip outlines on the timeline, a ring lands on the frame, and Properties shows what a clip is: a layer with an <b>in</b> and an <b>out</b>. The last three seconds are a flubbed retake, and the out point is how they leave.</p>
+          <p class="wt-where">the <b>demo-run</b> row on the timeline, which is the <b>demo-run</b> layer</p>
+          <p class="wt-res">the clip outlines on the timeline, its row lights up in <b>Layers</b>, and a ring lands on the frame: one selection, three views of it. Properties shows what the clip <i>is</i> rather than where it sits in time. The last three seconds are a flubbed retake, and the clip's right edge is how they leave.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Trim the flubbed ending"
           data-cue="#clipEdgeR" data-cue-label="Drag the right edge to 0:11" data-cue-place="top"
-          data-select="#clipMain" data-css="#clipMain=width:78.6%"
-          data-set="#pOut=0:11|#docLen=0:11|#tcEnd=0:11">
+          data-select="#clipMain,#lrRec" data-css="#clipMain=width:78.6%"
+          data-set="#docLen=0:11|#tcEnd=0:11">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag">the clip's <b>right edge</b> left, to <b>0:11</b></p>
           <p class="wt-where">the clip itself; the edge is the trim handle</p>
-          <p class="wt-res">the flub is gone and the document is <b>0:11</b> everywhere at once: the clip, the Out field, the transport, and the title bar. The trim only moved a read point, so dragging the edge back out would bring every frame back.</p>
+          <p class="wt-res">the flub is gone and the document is <b>0:11</b> everywhere at once: the clip, the transport, and the title bar. Nothing was typed: the edge is the control, and <code>⌥⌘T</code> is there when the number has to be exact. The trim only moved a read point, so dragging the edge back out would bring every frame back.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Export the result"
           data-cue="#miExport" data-cue-label="Click Export video…" data-cue-place="left"
-          data-pop="#cmdMenu" data-select="#clipMain" data-show="#toastExport">
+          data-pop="#cmdMenu" data-select="#clipMain,#lrRec" data-show="#toastExport">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do"><b>Export video…</b>, or press <code>⌘E</code></p>

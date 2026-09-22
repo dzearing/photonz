@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:52:52.142Z",
-  "updated": "2026-09-22T12:17:52.523Z",
+  "updated": "2026-09-22T15:32:51.059Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the video design pass on 2026-09-20. Evidence, run from the repo root:\n\n  $ for f in docs/design/mocks/pages/video*.html; do echo \"$(grep -c 'ttl\">Layers' $f) $(basename $f)\"; done\n  0 video-audio.html\n  0 video-captions.html\n  0 video-compositing.html\n  0 video-cut-wt.html\n  0 video-entry-wt.html\n  0 video-freeze-wt.html\n  0 video-motion.html\n  0 video-move-wt.html\n  4 video-shell.html\n  0 video-speed.html\n  0 video-title-wt.html\n  0 video-transition-wt.html\n  0 video-transitions.html\n  0 video-zoom-wt.html\n  0 video.html\n\nOnly video-shell draws it. video-entry-wt.html line 148 still carries the comment \"no Layers group here: the timeline below IS the layer list\" and line 342 still tells the reader \"there is no separate Layers panel to manage\", which is exactly what UX-PATTERNS D18 now forbids.\n\nThe 2026-09-19 pass corrected video.html's caption (it says out loud that removing Layers was wrong) and renamed rows on fifteen pages, but putting the GROUP back is a change to fourteen laid-out docks and the scripts that drive them, so it was left. video-surface.md §7 now says so rather than claiming it was done.\n\nSecond half, same pages: video-entry-wt.html lines 156-166 draw the Clip section as a four box grid (In, Out, Speed, Vol) with an explaining paragraph under it. video-surface.md §2 settles that time is never a number in the panel (in, out, duration and speed are dragged on the strip, and an exact number opens the way Position and Size opens, which is worth 130 points every time), and §5 settles that a section needing a paragraph inside it is misnamed. The settled Clip section is Reads, Volume, Speed as three rows. Careful with the walkthrough script: step data-set writes #pOut, so removing that field without touching the step breaks the walk.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-22T12:17:52.522Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-09-22T15:12:20.253Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T15:21:00.200Z",
+      "note": "Adversarial review before building. (1) The correction itself holds: a video document carries layers that never occupy time (background, adjustment, matte, component master), and with Layers deleted those have no row anywhere, so the mocks' 'the timeline IS the layer list' was wrong on its own terms. Build it. (2) Cheapest honest version: one dgrp data-grp=layers data-gh=sm at the TOP of each dock (132px, the canonical video-shell size) plus a Layers rail tab, NOT a restructure of each page's Properties group into per-selection top-level groups the way video-shell draws them. That second change has no mandate in the acceptance and would rewrite fourteen docks for no user-visible gain; left out deliberately. (3) A Layers group that never lights up when you click a clip would be decoration, so every walkthrough step that selects a clip now also selects its row: data-select clears .sel across .lrow, so the two views cannot disagree. (4) Risk found and handled: removing #pOut etc. breaks any step whose data-set writes it; every such step was rewritten in the same pass."
+    },
+    {
+      "t": "2026-09-22T15:32:50.895Z",
+      "note": "Built and verified in a real browser (chrome devtools on the dev server), not by grep. All 15 video* pages: Layers is the FIRST group of every visible dock, its rows match the strip one for one in name, order and icon, no dock overflows, every walkthrough runs to its last step and resets, and no page throws a JS error or scrolls horizontally. Seven walkthroughs cover 59 steps between them. Five pages build their strip from a list in JS (video, video-motion, video-compositing, video-audio, video-captions) and their Layers group is now built from that SAME list, so the two cannot drift. Selection is wired both ways on every page that has a selection."
+    },
+    {
+      "t": "2026-09-22T15:32:50.952Z",
+      "note": "Adversarial review AFTER building, on the pages themselves. (1) Found a real defect I had just introduced: the dock's Panels footer is generated from the groups, so adding Layers to fourteen docks also added a switch that turns Layers OFF, which D18 says nothing may do and which the app cannot do (PanelSectionVisibility.optionalSections deliberately does not list Layers). Fixed in shared/components/dock.js: a group marked data-required, or any data-grp=layers, is still LISTED (the list answers 'which panes do I have') but carries no switch and says why on hover. Verified: clicking Layers in the Panels menu does nothing, clicking Library still hides it. Documented on pages/panes-panels.html, which is that mechanism's own page. This is wider than the video pages: 13 sample pages across the study re-checked, all clean, all gates green. (2) On video-transition-wt nothing in Layers ever lights up, because a cut is not a layer, and a group that never responds reads as broken. Rather than fake a selection I gave the page a caption saying what the list is for there (the eye beside voice-over is how you audition a cut without the music). (3) video-title-wt drew a title layer and a component instance as two clips sharing ONE row called 'Lower third' - a track model. Split into two rows, one per layer, and the title row now renames itself from its own words in both views."
+    },
+    {
+      "t": "2026-09-22T15:32:51.006Z",
+      "note": "Judgment calls, so a later pass does not undo them by accident. (a) What counts as 'a number box': a .grid2 of boxed .field elements is out everywhere; an .irow with a way in (the Volume stepper, a transition's Length select) is the shape video-shell and UX-PATTERNS D-rules already bless, so it stays. A transition's length and a dip's Hold on black are therefore kept - they are also not a CLIP's in, out or duration, which is what the acceptance names. Written up in the audit's rough so the user can disagree in one click. (b) Left rough, not filed: the library-scope explainer paragraphs (a shared idiom on 7 pages, mostly non-video) and the history-sheet footers are not paragraphs inside a panel SECTION explaining what the section is for, so they stayed. (c) Left rough, not filed: video-transition-wt's Black clip is drawn as its own clip object where video-surface.md §2 says a dip is an outline inside each clip's own time. Out of this task's acceptance and it would rewrite the page's central mechanic. (d) I deliberately did NOT restructure the fourteen docks into video-shell's per-selection top-level groups (Clip/Appearance/Motion instead of one Properties group holding sections). No acceptance item asks for it and it is fourteen laid-out docks for no user-visible gain. (e) Icons were unified with video-shell while matching them across the two views: a video clip is ic-film (was ic-image), an audio layer is ic-waveform (was ic-audio)."
+    },
+    {
+      "t": "2026-09-22T15:32:51.058Z",
+      "note": "Docs updated so the pages and the study now agree in writing too: video-surface.md §7 says the Layers row is done rather than filed, §5 records what was applied; UX-PATTERNS D18 gains a paragraph saying the fourteen conform and how (one list builds both views where the strip is scripted). Audit at queue/audits/2026-09-22-video-layers.json with two real browser screenshots. The panel-room cost was folded into the open task appearance-is-below-the-fold-again-because-the-p rather than filed as its own."
     }
-  ]
+  ],
+  "started": "2026-09-22T15:12:20.252Z"
 }

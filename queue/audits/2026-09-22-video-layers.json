@@ -1,0 +1,30 @@
+{
+  "feature": "The video clickthroughs say the same thing the video design says",
+  "epic": "video-cutting",
+  "summary": "All fifteen video mock pages now open a Layers list at the top of the dock, listing exactly the rows the timeline shows in the same order with the same icons, and no page asks you to type a clip's start, end or length into a box any more.",
+  "setup": "The design dashboard at http://127.0.0.1:8791. Open the Video section; every page under it is in this pass. Nothing to switch on.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#video and look at the right-hand dock.", "shot": "2026-09-22-video-layers-1.png" },
+    { "do": "Read the five names in Layers against the five rows on the strip below: same names, same order, same icons." },
+    { "do": "Click any row in Layers and watch the clip on the strip light up, and the other way round." },
+    { "do": "Open the Panels list at the bottom of the dock and try to switch Layers off." },
+    { "do": "Open http://127.0.0.1:8791/index.html#video-cut-wt and step to 'Get the sound out of the picture'.", "shot": "2026-09-22-video-layers-2.png" },
+    { "do": "Watch Layers go from one to two at the moment the voice-over becomes its own layer, and a row appear on the strip to match." },
+    { "do": "Read the Clip section in the panel: Reads, Volume, Speed, and nowhere to type a start or an end." },
+    { "do": "Open http://127.0.0.1:8791/index.html#video-speed and look under the strip: the before-and-after of a retime is two bars on one scale now, not two fake timeline rows." }
+  ],
+  "evaluate": [
+    "With Layers back, does the dock read as one place with a job, or does it feel like the timeline and the list are saying the same thing twice?",
+    "A clip's start and end are now only on the strip. Is that a relief or does something feel missing when you want the exact number?",
+    "On the transitions page nothing in Layers ever lights up, because a cut is not a layer. Does the list read as broken there, or as correctly quiet?",
+    "The main sequence row is called 'Story' on the pages that lay shots end to end. Is that a name you would recognise, or should the row take the name of the first clip on it?",
+    "Layers costs the panel about 130 points in every video document. Watching Properties scroll sooner, is that trade worth it?"
+  ],
+  "rough": [
+    "Layers takes real room and the panel pays for it. On video-transition-wt the Properties group now scrolls with a row cut in half at the fold. That is the dock's normal behaviour and it is the exact arithmetic video-surface.md §4 names (a 968 point panel with 733 left once the strip is open), but it is the first thing a reviewer will point at.",
+    "A transition's Length and a dip's Hold on black are still numbers you pick in the panel. I kept them: they are rows with a way in, the same shape as Volume, not a grid of number boxes, and they are not a clip's in, out or duration. If the rule is meant to cover them too, they are two one-line changes.",
+    "video-transition-wt's main row is now called Story rather than V1, following video.html, which already used that name for a row of shots laid end to end. Nobody has settled whether a storyline row should be called Story or take the name of the first clip on it.",
+    "video-speed lost its Source and Retimed rows, which were never layers. The before-and-after comparison they were really drawing now sits under the strip as two bars on one scale, which is smaller and, I think, clearer, but it is a change away from what the page drew.",
+    "The Panels list in the dock used to let you switch Layers off, which the app cannot do (PanelSectionVisibility.optionalSections deliberately does not list Layers). I made required panes list without a switch across the whole study, not just the video pages. That touches every page with a dock; the gates are green and thirteen sample pages render clean, but it is wider than this task."
+  ]
+}

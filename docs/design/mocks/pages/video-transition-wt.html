@@ -229,8 +229,18 @@
           <!-- THE RIGHT DOCK -->
           <div class="pdock" id="dock">
 
-            <!-- No Layers group in a workspace that has a timeline: the
-                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
+            <!-- LAYERS · UX-PATTERNS D18. Two layers, two rows on the strip,
+                 same order and same icons. Shots laid end to end are pieces of
+                 one row, so three shots do not make three layers; A and B below
+                 are that one row opened up, not layers of their own. -->
+            <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2</span></div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrStory"><i class="ic ic-film"></i><span class="nm">Story</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrVoice"><i class="ic ic-waveform"></i><span class="nm">voice-over</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
             <!-- PROPERTIES · a cut is not a layer, so this is the one place it
                  can speak for itself, including what it can afford -->
             <div class="dgrp" id="gProps" style="--gh:398px">
@@ -241,15 +251,10 @@
                 <div id="propsCut" class="wt-off">
                   <div class="section">
                     <div class="sec-h">Edit point <span class="mut" id="pCutAt">at 0:08</span></div>
-                    <div class="grid2">
-                      <div class="field"><span class="k">Out</span><span class="v" id="pOutName">screen-rec</span></div>
-                      <div class="field"><span class="k">In</span><span class="v" id="pInName">b-roll</span></div>
-                    </div>
-                    <div class="grid2" style="margin-top:7px">
-                      <div class="field"><span class="k">Spare after</span><span class="v" id="pSpareA">2.0s</span></div>
-                      <div class="field"><span class="k">Spare before</span><span class="v" id="pSpareB">1.5s</span></div>
-                    </div>
-                    <p class="note" id="pSpareNote">Spare media is the frames either side is not using yet: the recording keeps running for two seconds past its out point, and b-roll starts a second and a half after its own first frame. That spare is what an overlap gets paid for with.</p>
+                    <div class="irow split"><span class="rl">Outgoing</span><span class="val" id="pOutName">screen-rec</span></div>
+                    <div class="irow split"><span class="rl">Incoming</span><span class="val" id="pInName">b-roll</span></div>
+                    <div class="irow split"><span class="rl">Spare after</span><span class="val" id="pSpareA">2.0s</span></div>
+                    <div class="irow split"><span class="rl">Spare before</span><span class="val" id="pSpareB">1.5s</span></div>
                   </div>
 
                   <div class="section">
@@ -283,7 +288,6 @@
                       <span class="select" id="selHold" tabindex="0" role="button"><span class="lead" id="pHold">0.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
 
-                    <p class="note" id="pTransNote">Nothing on the timeline moved. The dissolve is drawn over the seam because that is what it is: an interval where both clips are on screen, not a third object wedged between them.</p>
 
                     <div class="warnbox wt-off" id="warnBox"><i class="ic sm ic-warning"></i>
                       <span><b>outro.mov has no spare frames before its in point.</b> A dissolve here can only be paid for by shortening the cut by 1.0s, which moves outro and everything after it. That is a decision, so it is offered rather than taken.</span>
@@ -337,6 +341,7 @@
           </div>
 
           <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
@@ -366,11 +371,11 @@
         <div class="timeline" id="timeline" data-tl-summary="Cross dissolve · 1.0s at 0:08" style="min-height:186px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
 
-          <!-- V1 · the result. Clips butt. A cut draws nothing until you point
+          <!-- STORY · the result. Clips butt. A cut draws nothing until you point
                at it, and a transition is drawn ON the clips, never between. -->
           <div class="track"><span class="tl">
               <button class="xbtn" id="btnExpand" title="Expand the cut (⌥E)"><i class="ic xs ic-chevron-down"></i></button>
-              <i class="ic xs ic-image"></i> V1</span>
+              <i class="ic xs ic-film"></i> Story</span>
             <div class="lane abs">
               <div class="clip v1" id="clipA" style="left:0;width:44.444%" tabindex="0" role="button">screen-recording</div>
               <div class="clip blk wt-off" id="clipBlack" style="left:38.095%;width:14.286%" tabindex="0" role="button">Black</div>
@@ -414,7 +419,7 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> voice-over</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> voice-over</span>
             <div class="lane abs"><div class="clip aud" id="clipAud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
 
@@ -434,7 +439,7 @@
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>seam</b> where screen-recording ends and b-roll begins</p>
-          <p class="wt-where">the V1 track. Nothing is drawn there: the two clips butt, and an untouched cut takes no width on the timeline</p>
+          <p class="wt-where">the <b>Story</b> row. Nothing is drawn there: the two clips butt, and an untouched cut takes no width on the timeline</p>
           <p class="wt-res">the seam highlights and Properties speaks for it. The two dashed strips are the <b>spare media</b> either side: the recording runs two seconds past its out point, and b-roll has a second and a half before its in point. Hold on to those two numbers, because a dissolve is about to spend them.</p>
         </div>
       </li>
@@ -472,7 +477,7 @@
           data-cue="#xband" data-cue-label="Drag the band's edge out to 1.0s" data-cue-place="top"
           data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign" data-hide="#propsEmpty,#rowAdd"
           data-css="#xband=left:41.667%;width:5.556%"
-          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare|#pSpareNote=A full second of overlap spends half a second from each side. There is still 1.5s of spare on the left and 1.0s on the right, so this cut could carry a dissolve three times this long before it ran out of frames.">
+          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare">
         <div class="wt-cap vid">
           <span class="wt-n">4</span>
           <p class="wt-do" data-verb="Drag">the band's <b>edge</b> outward until it reads <b>1.0s</b></p>
@@ -483,15 +488,15 @@
 
       <li class="wt-step"
           data-title="See the overlap"
-          data-cue="#btnExpand" data-cue-label="Click the chevron on V1" data-cue-place="right"
+          data-cue="#btnExpand" data-cue-label="Click the chevron on Story" data-cue-place="right"
           data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign,#rowA,#rowB,#usedA,#usedB,#bothMark" data-hide="#propsEmpty,#rowAdd"
           data-class="#btnExpand=open"
           data-css="#xband=left:41.667%;width:5.556%|#xClipA=width:47.222%|#xClipB=left:41.667%;width:36.111%"
           data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare">
         <div class="wt-cap vid">
           <span class="wt-n">5</span>
-          <p class="wt-do">the <b>chevron</b> on the V1 track label, or press <code>⌥E</code></p>
-          <p class="wt-where">the timeline, at the left of the track</p>
+          <p class="wt-do">the <b>chevron</b> on the <b>Story</b> row label, or press <code>⌥E</code></p>
+          <p class="wt-where">the timeline, at the left of the row</p>
           <p class="wt-res">the cut opens into the two clips it is made of, and there is the answer to how a dissolve works: <b>A now runs half a second past the cut and B starts half a second early</b>, so for one second both are on screen. The hatched pieces are the spare frames being spent. This is why the overlapping types need media to spend and the dips do not.</p>
         </div>
       </li>
@@ -517,7 +522,7 @@
           data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark"
           data-class="#btnExpand=open|#xband=blk"
           data-css="#xband=left:41.667%;width:5.556%|#frB=opacity:0|#frBlk=opacity:1|#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#xClipA=width:44.444%|#xClipB=left:44.444%;width:33.333%"
-          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pTransNote=Nothing overlaps now. A fades out inside its own last half second and B fades in inside its own first half second, so the borrowed spare goes back and the clips are still exactly where they were.">
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do">the <b>Type</b> row, and pick <b>Dip to black</b></p>
@@ -532,7 +537,7 @@
           data-select="#xband,#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
           data-class="#btnExpand=open|#xband=blk"
           data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:38.095%;width:9.524%|#spareB=left:30.952%;width:7.143%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:1|#scrubFill=width:38.1%|#scrubKnob=left:38.1%|#playhead=--t:0.381"
-          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s|#docLen=0:21|#tcEnd=0:21|#pTransNote=This is the only thing on this page that moved a clip, and you asked for it by name. Set the hold back to 0.0s and b-roll and outro slide back to where they were.">
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do">the <b>Hold on black</b> row, and choose <b>3.0s</b></p>
@@ -563,11 +568,11 @@
           data-class="#btnExpand=open|#xband=blk|#txDiss=off|#txPush=off|#txWipe=off|#txBlur=off"
           data-pop="#transPick"
           data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:80.952%;width:3.81%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:0|#frB=opacity:1|#scrubFill=width:81%|#scrubKnob=left:81%|#playhead=--t:0.81"
-          data-set="#propKind=Edit point|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pCutAt=at 0:17|#pOutName=b-roll|#pInName=outro|#pSpareA=0.8s|#pSpareB=none|#pickSpare=spare 0.8s / none|#spareALb=0.8s spare|#mtDiss=no spare|#mtPush=no spare|#mtWipe=no spare|#mtBlur=no spare|#pTransState=None|#pSpareNote=outro.mov was exported from its own first frame, so there is nothing before its in point to borrow. b-roll has 0.8s spare on its side, but an overlap has to come from both.|#pickNote=The dips are still fine here, because they never needed an overlap. Forcing a dissolve would mean shortening the cut, which moves outro and everything after it, so Photonz offers that rather than doing it quietly.">
+          data-set="#propKind=Edit point|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pCutAt=at 0:17|#pOutName=b-roll|#pInName=outro|#pSpareA=0.8s|#pSpareB=none|#pickSpare=spare 0.8s / none|#spareALb=0.8s spare|#mtDiss=no spare|#mtPush=no spare|#mtWipe=no spare|#mtBlur=no spare|#pTransState=None|#pickNote=The dips are still fine here, because they never needed an overlap. Forcing a dissolve would mean shortening the cut, which moves outro and everything after it, so Photonz offers that rather than doing it quietly.">
         <div class="wt-cap vid">
           <span class="wt-n">10</span>
           <p class="wt-do">the <b>second seam</b>, between b-roll and outro</p>
-          <p class="wt-where">the V1 track</p>
+          <p class="wt-where">the <b>Story</b> row</p>
           <p class="wt-res">only one dashed strip this time: <b>outro.mov starts at its own first frame</b>, so there is nothing on that side to borrow. The picker greys out everything that needs an overlap and says why, the dips stay available, and Properties offers the only other way to pay for one: shorten the cut, which moves outro and everything after it. Your positions are never spent without you saying so.</p>
         </div>
       </li>
@@ -585,6 +590,7 @@
 
   <div class="caption">
     <div class="c"><div class="lab">The idea</div><p>A transition is <b>an interval where two clips are both on screen</b>, not an object that sits between them. So it is drawn over the seam, and it costs <b>spare media</b> rather than position. An untouched cut draws nothing and takes no width, because nothing is there. The only thing here that ever moves a clip is a hold on black, and that is a number you choose.</p></div>
+    <div class="c"><div class="lab g2">Why Layers is here</div><p>Nothing in this walk ever selects a layer, and the group still earns its place: <b>Story</b> and <b>voice-over</b> are what the document is made of, the eye beside each one is how you audition a cut without the music, and the strip below is that same list read sideways. A cut is not a layer, which is why picking one lights nothing in the list and Properties speaks for the seam instead.</p></div>
     <div class="c"><div class="lab g2">A direction</div><p>Spare media could be visible <b>all the time</b> as a hairline past every clip edge, so you could see at a glance which cuts in a forty-clip edit can take a dissolve. The risk is a timeline that looks busy when transitions are the last thing on your mind, which is why here it appears only on the selected cut.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>With no spare, the choices are shorten the cut, use a dip, or go back and re-trim. Should there be a fourth: <b>hold the last frame</b> for the length of the dissolve, so outro freezes for half a second instead of moving? It costs no position and no media, and on a title card nobody would ever see it.</p></div>
   </div>

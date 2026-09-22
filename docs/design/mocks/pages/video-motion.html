@@ -334,10 +334,17 @@
 
       <div class="splitter v" data-min="220" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups.
-           NO Layers group here: this workspace has a timeline, and the timeline
-           IS the layer list (same objects, same order, plus when each starts). -->
+      <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18). The timeline is the
+           same list read sideways: same rows, same order, same icons, plus when
+           each one starts. -->
       <div class="pdock" id="mgDock">
+
+        <!-- SELECTION, place 1 of 3: the stack, built from the same list the
+             strip below is built from, so the two cannot drift -->
+        <div class="dgrp" data-grp="layers" data-gh="sm" id="mgLayers">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="mgLayerCount">6</span></div>
+          <div class="dgrp-b" id="mgLayerList"><!-- rows injected by JS --></div>
+        </div>
 
         <!-- SELECTION, place 3 of 3: the reveal is a normal set of properties -->
         <div class="dgrp" id="mgProps" data-grp="props">
@@ -361,11 +368,8 @@
                   <button id="mgDown" aria-label="Less offset"><i class="ic ic-chevron-down"></i></button>
                 </b>
               </div>
-              <div class="grid2">
-                <div class="field"><span class="k">Each</span><span class="v">520 ms</span></div>
-                <div class="field"><span class="k">Total</span><span class="v" id="mgDur">0.82s</span></div>
-              </div>
-              <p class="note">One number drives the whole cascade. Each layer inherits the same reveal, offset by a fixed step.</p>
+              <div class="irow split"><span class="rl">Each</span><span class="val">520 ms</span></div>
+              <div class="irow split"><span class="rl">Total</span><span class="val" id="mgDur">0.82s</span></div>
             </div>
             <div class="section">
               <div class="sec-h">Easing <span class="mut">shared curve</span></div>
@@ -404,6 +408,7 @@
 
       <!-- THE RAIL -->
       <div class="drail">
+        <button class="drailtab" data-group="#mgLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#mgProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#mgLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
@@ -522,6 +527,7 @@
   "use strict";
   var stage = document.getElementById("mgStage");
   var grid  = document.getElementById("mgTlGrid");
+  var layerList = document.getElementById("mgLayerList");
   if(!stage || !grid) return;
 
   var ANIM = 520;            // ms · per-layer reveal duration (matches CSS)
@@ -533,8 +539,9 @@
 
   // ordered reveal targets · order index drives the stagger offset.
   // cls is a SHARED clip variant (video.css): v1/v2/txt, plus the component
-  // clip colour video.html's Title track uses. sel marks the selected layer,
-  // because in a timeline workspace the timeline is the layer list.
+  // clip colour video.html's Title track uses. sel marks the selected layer.
+  // ONE list builds the Layers group and the strip, so D18 holds by
+  // construction: same rows, same order, same icons.
   var targets = [
     {id:"path",  el:document.getElementById("mgKick"), label:'Kicker · on path', cls:"v1", icon:"ic-pen", sel:true},
     {id:"head",  el:document.getElementById("mgHead"), label:'Headline', cls:"v2", icon:"ic-text"},
@@ -612,6 +619,19 @@
       lane.appendChild(clip);
       row.appendChild(lab); row.appendChild(lane); grid.appendChild(row);
     });
+    // the Layers group, off the same list, in the same order
+    if(layerList){
+      layerList.innerHTML="";
+      targets.forEach(function(t){
+        var r=document.createElement("div");
+        r.className="lrow"+(t.sel?" sel":"");
+        r.innerHTML='<i class="ic '+t.icon+'"></i><span class="nm">'+t.label+'</span>'+
+          '<i class="ic sm ic-eye eye"></i>';
+        layerList.appendChild(r);
+      });
+      var lc=document.getElementById("mgLayerCount");
+      if(lc) lc.textContent=targets.length;
+    }
     // playhead overlay spanning every row (the video.html playstrip idiom)
     var strip=document.createElement("div"); strip.className="playstrip";
     playhead=document.createElement("div"); playhead.className="playhead";
