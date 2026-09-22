@@ -322,7 +322,22 @@ from coming back. Nothing is stored in the document, so nothing here contradicts
 prototype holds to them: **no segmented control in the title bar** (the switch is
 a quiet popup in the window's status), and **the timeline appears because the
 document has time**, never because of a mode. Prototype and full argument:
-`pages/modes.html` and `docs/design/modes.md`; a decision card is open.
+`pages/modes.html` and `docs/design/modes.md`.
+
+**Answered by the user on 2026-09-20, and §4f now reads with it.** They picked
+"modes and the whole chain, video included", so two things are settled for good:
+
+- **Modes exist, as presets of what is folded away.** A named bundle of the
+  panel-section choices and tool groups the app already stores, swapped from a
+  quiet chip in the window's status. No segmented control in the title bar, no
+  tool removed, nothing written into a document. §4f's "there is no mode to
+  switch" stands as written about *experiences* and no longer about this.
+- **Video is not a separate application, and that bill is paid.** A recording is
+  a layer with a start and an end; the timeline is a view over the layers that
+  have one. "Timeline when time" is unchanged and is now literally how it works
+  (`DocumentTime`, `MovieClip`, `ComponentsInTime`). The three-link chain (icon
+  into component onto a video timeline, in one document, nothing converted) was
+  checked in the running app on 2026-09-22.
 
 ---
 

@@ -1,0 +1,28 @@
+{
+  "id": "the-library-holds-what-this-document-has-not-eve",
+  "title": "The Library holds what this document has, not every screenshot you ever took",
+  "goal": "Open the Library in a brand new document and its Media shelf is already full of screenshots from other work, because it is showing the app wide capture folder. That is the wrong shelf: History is where everything you have ever captured lives, across every document, and the Library is meant to be what THIS document contains and can place again. Make Media show the pictures this document uses.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T07:08:27.495Z",
+  "updated": "2026-09-22T07:08:27.498Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The bill named by the shelves prototype (http://127.0.0.1:8791/index.html#shelves, docs/design/modes.md section 6), settled by the user on 2026-09-15 in their own words: the split is by SCOPE, not by kind. History is the global shelf, the Library is the document own shelf.\n\nWhere it is today, verified by reading the code on 2026-09-22: Sources/Photonz/LibraryPanel.swift, header comment, Media shows the captures the app already keeps in the capture folder. That was a deliberate choice at the time so the panel was useful the first time it opened rather than four empty boxes, which is why the empty state matters here: replacing a full shelf with a blank box is a step backwards unless the blank box says what belongs there.\n\nNot a regression and not a crash; it is the app and the settled model disagreeing about what the Library is for.",
+  "acceptance": [
+    "A new empty document shows an empty Media shelf that says in plain words what will appear there, instead of captures from other documents",
+    "A picture placed in the document appears on the Media shelf, and placing it again from the shelf does not make a second copy of the file",
+    "Everything captured is still one click away in History, and nothing a person could reach before has become unreachable",
+    "A walk opens a new document, photographs the Library, places a picture, and photographs it again"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T07:08:27.497Z",
+      "note": "created (manual)"
+    }
+  ]
+}

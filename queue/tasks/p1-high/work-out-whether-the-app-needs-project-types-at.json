@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-21T13:31:04.418Z",
+  "updated": "2026-09-22T07:19:18.130Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -155,7 +155,24 @@
     {
       "t": "2026-09-21T13:31:04.417Z",
       "note": "seq 120 -> 90"
+    },
+    {
+      "t": "2026-09-22T07:06:20.220Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T07:08:46.865Z",
+      "note": "ADVERSARIAL REVIEW, this run. The study and its prototype were delivered on 2026-09-15 and all seventeen acceptance items were met then. The user answered the card on 2026-09-20 with option b, modes AND the whole chain. So the thing to attack this run was not the prototype: it was whether the answer is still the right answer six days later, and whether anything on the page has since become a lie.\n\n(1) The expensive claim is no longer a claim. The page's one costly sentence was that the three-link chain is only real if video stops being a separate window. That bill has been paid since: a-document-can-have-time, cut-arrange-and-retime, a-title-is-text-that-knows-when-it-is-on-screen and components-on-the-timeline-animated-the-way-ever are all done, and DocumentTime / MovieClip / ComponentsInTime are in PhotonzCore. So I did not take the page's word for it, I ran the chain.\n\n(2) The chain RUNS. Scripts/playtest.sh Scripts/playtest/icon-into-a-component-onto-the-timeline-walk.json, 44 steps, status ok in 14.6s, screen unlocked and Screen Recording granted, five real pictures of the window. chain-4-the-icon-on-the-film-sc.png shows the drawn icon saved as the Live Badge component, on the Library Comps shelf, placed over a recording, with the panel reading Time 0:04 to 0:07 3.0s and the sentence 'A component is the thing you built, living in a document with time, so it gets an in and an out. Edit the original and it changes here too.' No export step and no import step anywhere in the walk. The acid test the whole prototype rested on is now a fact about shipped code.\n\n(3) What has NOT been built is modes themselves. Nothing in Sources knows the word: no WindowMode, no ModePreset, no chip. ModeIsAPresetTests.swift exists but is evidence written during the study against PanelSectionVisibility.Choices, not an implementation. So the answer is half delivered, and the half that is missing is the half the user actually asked about in their own words.\n\n(4) The one place the answer could still be wrong, checked rather than assumed: PRODUCT-MODEL.md section 4f says in so many words 'they are not different apps, and there is no mode to switch'. That was written about a lens toggle that changes the EXPERIENCE, not about a preset of what is folded away, and the user has now answered over the top of it. Left as it was, a future runner reads 4f and argues against work the user approved. Fixed rather than filed."
+    },
+    {
+      "t": "2026-09-22T07:08:52.803Z",
+      "note": "WHAT THIS RUN SHIPPED. No app code: the answer's app work is filed, not done here, because it is a different task.\n\nRecord reconciled with the answer, so nothing in the study still says the question is open:\n- docs/design/modes.md: status is now decided, with a new section 8 saying what the answer was, that the chain is built and checked in the running app on 2026-09-22 with the walk and the panel reading quoted, and that modes themselves are still to build with sections 2 to 4 as their specification.\n- docs/design/mocks/shared/PRODUCT-MODEL.md section 4f: 'a decision card is open' replaced with the answer. Two things settled for good: modes exist as presets of what is folded away, and video is not a separate application and that bill is paid. Section 4f's 'there is no mode to switch' is kept, scoped explicitly to experiences.\n- docs/design/mocks/pages/modes.html: kicker now reads 'decided 2026-09-20', an answered banner at the top of the page, and the recommendation's closing note no longer says the video work is a separate decision waiting to be answered.\n- queue/audits/2026-09-15-modes.json: setup line no longer says a decision card is waiting; it says what was chosen and where the remaining work is filed.\n\nFiled, all searched for first and none covered:\n- swap-the-window-into-a-mode-from-a-chip-beside-t (p1, seq 20): the first slice, panel sections only, with the way back in the same slice.\n- a-mode-is-written-down-so-pixel-art-can-be-added (p2, deps on the first): modes as data, tool groups into the overflow, pixel art as the worked example, and the smooth-curve test that stops a mode reaching backwards into a document.\n- the-library-holds-what-this-document-has-not-eve (p2): the one bill the shelves half names, verified by reading LibraryPanel.swift rather than assumed.\n\nBoth mode tasks are filed under icon-svg, matching this task's epic. Their honest home is the shell, interaction-foundations, which is staged next and so may not hold open tasks; said so in their notes for the manager pass.\n\nNo new audit. This run changed no app behaviour, the study's own audit is 2026-09-15-modes.json and is now current, and the chain already has 2026-09-22-components-on-the-timeline.json written by the task that built it. Writing a third would be a report of somebody else's work.\n\nLeft rough, not filed: the 2026-09-22-components-on-the-timeline audit notes that a shape drawn straight onto a recording still stands over the whole film while a component placed on it runs for three seconds. Under this task's model both are layers and the inconsistency is visible, but it is already written in that audit as a question for the user and an existing walk asserts the current behaviour, so it is a decision rather than a defect and is not mine to file over the top of."
+    },
+    {
+      "t": "2026-09-22T07:19:18.128Z",
+      "note": "The study is answered and closed. The user picked modes AND the whole chain on 2026-09-20, and the expensive half of that answer is already built: the walk icon-into-a-component-onto-the-timeline ran all 44 steps green against the real app on 2026-09-22 and photographed five real windows, showing a drawn icon saved as a component, dropped onto a recording, with the panel reading Time 0:04 to 0:07 3.0s and no export or import anywhere in the chain. Reconciled the record with the answer so nothing still reads as an open question: docs/design/modes.md (status decided, new section 8 on what was answered and what is left), PRODUCT-MODEL.md section 4f (the card is answered; modes exist as presets, video is not a separate app and that bill is paid), the modes page (decided banner, kicker, recommendation), and the 2026-09-15 audit's setup line. The modes half is not built and is filed as swap-the-window-into-a-mode-from-a-chip-beside-t (p1) and a-mode-is-written-down-so-pixel-art-can-be-added (p2), plus the-library-holds-what-this-document-has-not-eve (p2) for the one bill the shelves half names. No app code changed this run; suite green at 8899 tests."
     }
   ],
-  "started": "2026-09-15T17:02:48.204Z"
+  "started": "2026-09-22T07:06:20.219Z",
+  "completed": "2026-09-22T07:19:18.129Z"
 }

@@ -1,0 +1,31 @@
+{
+  "id": "swap-the-window-into-a-mode-from-a-chip-beside-t",
+  "title": "Swap the window into a mode from a chip beside the document name",
+  "goal": "Setting a window up for the job in front of you is a chore you do by hand, one panel at a time, in every window. Give the window a mode: a quiet chip beside the document name that you click to pick Icon, Redline, Video or Design, and the panels that job does not need fold away in one go. Nothing about the document changes, nothing is written into the file, and everything folded is one visible click from coming back.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T07:08:08.212Z",
+  "updated": "2026-09-22T07:08:08.215Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Specification is already written and the user has answered the decision that authorises it: docs/design/modes.md sections 2, 3 and 4, and the prototype at http://127.0.0.1:8791/index.html#modes. Decision work-out-whether-the-app-needs-project-types-at-should-a-window-have-modes-you-s resolved 2026-09-20 with option b.\n\nThis is the FIRST slice: panel sections only. Folding tool groups into the overflow, and modes as data so a new one can be added without touching Swift, are the second slice and are filed separately.\n\nThe mechanism exists and must not be duplicated. PanelSectionVisibility.Choices is already a per-section yes/no that saves and reads back, and its own header says an override is exactly the shape a mode will want. PanelSectionVisibility.Reason already tells you turned this off apart from the document has nothing for it. PanelSectionVisibility.optionalSections is the whole list of what may fold, and the layers list, the picked layer own section, Appearance and Effects are deliberately not in it, so no mode can hide what makes this one app.\n\nModel in PhotonzCore, TDD, Codable, pure. ModeIsAPresetTests.swift already pins the behaviour a mode must have, written as evidence during the study; grow it rather than writing a second file. Nothing about a mode may reach the document: a mode may set a default for new work and change what the window offers, it may not reinterpret what is already there.\n\nEpic: filed under icon-svg because that is the epic the study ran under and Icon is the worked example. Its honest home is the shell, which is interaction-foundations, staged next and so not allowed to hold open tasks; re-home it if that epic is promoted.",
+  "acceptance": [
+    "A chip in the window status, beside the document name, says which mode the window is in and opens a list to change it; the same list is on View > Mode and on a keyboard shortcut",
+    "Picking a mode folds and unfolds panel sections in one step, and the document, the layers, the selection, the zoom and every tool shortcut are untouched by the swap",
+    "Nothing about a mode is written into a document: save, close, reopen and the file is byte for byte what it was, and an old document opens with no question asked",
+    "Show everything unfolds the lot in one click, and swapping back to a mode restores exactly the arrangement you left",
+    "Turning a section on or off by hand while in a mode keeps it that way and the chip says so, with a way to put the mode back as it was",
+    "A section folded by a mode is listed in the dock Panels button and says you turned this off, not that the document has nothing for it",
+    "A walk drives the chip through at least three modes and photographs the window in each, and the audit carries those pictures"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T07:08:08.214Z",
+      "note": "created (manual)"
+    }
+  ]
+}

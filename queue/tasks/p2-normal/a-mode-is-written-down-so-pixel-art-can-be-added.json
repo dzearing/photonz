@@ -1,0 +1,32 @@
+{
+  "id": "a-mode-is-written-down-so-pixel-art-can-be-added",
+  "title": "A mode is written down, so pixel art can be added without touching the app",
+  "goal": "If the modes the app ships with are the only ones possible, they are four applications wearing one name. Make a mode a record you can write: which panels show, which tool groups sit in the bar, what a new canvas starts at, what the canvas draws. Then add pixel art as a real one and prove the point: a small canvas, a grid at one pixel, blocky magnification instead of smoothing, a pencil rather than a brush, and no editor rebuild to get it.",
+  "epic": "icon-svg",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T07:08:14.121Z",
+  "updated": "2026-09-22T07:08:14.124Z",
+  "deps": [
+    "swap-the-window-into-a-mode-from-a-chip-beside-t"
+  ],
+  "blockedBy": [],
+  "notes": "Second slice of modes; the first is swap-the-window-into-a-mode-from-a-chip-beside-t and this depends on it. Specification: docs/design/modes.md section 4, prototype http://127.0.0.1:8791/index.html#modes.\n\nThree of the five ingredients of a pixel art mode are already running: magnifyNearest in DocumentRenderer.swift mirrors the canvas rule past 2x, CanvasGridStore and CanvasGridSettingsView make the grid settable, and an icon frame already carries context that changes what a shape drawn into it looks like.\n\nThe line to hold, and it is the line that stops this turning back into the document type the user rejected: a mode may fold what the window offers, set a default for the next thing you make, and change what you are LOOKING at (grid, magnification, which are view settings exactly like zoom). It may not change how existing work comes out, touch anything in the file, or take a capability away. The test case is the smooth curve above.\n\nOne small thing this needs that the study does not propose: a hard edge switch on a raster layer, so that hard edges are a property of a LAYER a mode can arm rather than a property of the mode. That belongs with the drawing work.\n\nOne known cost: the tool bar overflow button is display:none today until the bar runs out of room. A mode that folds tool groups has to make it permanent, because there is now always something in it.",
+  "acceptance": [
+    "A mode is a record with named parts, and the modes the app ships with are written in that form rather than coded one by one",
+    "Pixel art exists as a mode and sets a small canvas, a grid at one pixel, blocky magnification and a hard edged pencil",
+    "Tool groups a mode does not want move into the tool bar overflow, never one tool out of a group, and every tool keeps its keyboard shortcut and its menu item in every mode",
+    "Pressing the shortcut of a tool a mode folded arms that tool and says quietly where it went",
+    "Switching to pixel art with a smooth curve already on the canvas leaves that curve smooth: a mode arms new work, it never redraws old work",
+    "A walk photographs the window in pixel art mode and the audit carries the picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T07:08:14.123Z",
+      "note": "created (manual)"
+    }
+  ]
+}

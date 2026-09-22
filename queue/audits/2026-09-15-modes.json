@@ -2,7 +2,7 @@
   "feature": "Modes you can swap, and the icon into component into timeline chain",
   "epic": "icon-svg",
   "summary": "The window can now be drawn in a mode: a preset of which panels are unfolded and which tools are in front, swapped in one click, with nothing stored in the document and everything folded one visible click from coming back. The prototype draws the hardest flow first, an icon used inside a component placed on a video timeline in one document, and follows an edit all the way down it.",
-  "setup": "A browser at http://127.0.0.1:8791/index.html#modes (Icons ▸ \"One app, four jobs: modes you can swap\"), and #shelves for the companion. Nothing in the app changed, so there is nothing to launch. A decision card is waiting on the dashboard.",
+  "setup": "A browser at http://127.0.0.1:8791/index.html#modes (Icons > \"One app, four jobs: modes you can swap\"), and #shelves for the companion. Nothing in the app changed by this study, so there is nothing to launch. ANSWERED on 2026-09-20: you picked modes and the whole chain, video included. The chain half has since shipped and was checked in the running app on 2026-09-22; the modes half is filed as swap-the-window-into-a-mode-from-a-chip-beside-t and a-mode-is-written-down-so-pixel-art-can-be-added.",
   "try": [
     {
       "do": "Open the modes page and read the first paragraph, then the three linked cards under The acid test.",

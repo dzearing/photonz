@@ -1,6 +1,8 @@
 # Modes you can swap, rather than project types you are stuck in
 
-Status: prototype delivered, decision open.
+Status: **decided.** The user answered on 2026-09-20 with the option that takes
+modes AND the whole chain, video included. The video half has since shipped and
+was checked in the running app on 2026-09-22; the modes half is still to build.
 Pages: <http://127.0.0.1:8791/index.html#modes> and
 <http://127.0.0.1:8791/index.html#shelves>.
 Evidence: `Tests/PhotonzCoreTests/ModeIsAPresetTests.swift`,
@@ -228,5 +230,33 @@ Open questions inside that model, answered on `shelves.html`:
 3. **Modes are written down, not coded.** If the four we ship are the only four
    possible, they are four applications.
 
-Video moving into the layer document is a **separate decision**: modes are worth
-building either way, but the three-link chain is only real if it happens.
+Video moving into the layer document WAS a separate decision. It was answered
+yes on 2026-09-20, and it has been paid for: a recording is a layer with a start
+and an end (`DocumentTime`, `MovieClip`, `ComponentsInTime`), and the timeline is
+a view over the layers that have one.
+
+---
+
+## 8. What the answer was, and what is left
+
+**Answered 2026-09-20: "Modes and the whole chain, video included."**
+
+### The chain: built, and checked in the running app
+
+On 2026-09-22 the walk `icon-into-a-component-onto-the-timeline-walk` ran all 44
+of its steps against the real app and photographed five real windows. It draws an
+icon, saves it to the shelf as a component, opens a recording, drops the
+component onto it, and the panel shows a Time section reading `0:04 to 0:07 ·
+3.0s` beside the sentence *"A component is the thing you built, living in a
+document with time, so it gets an in and an out. Edit the original and it changes
+here too."* No export step, no import step, no conversion anywhere. The claim the
+whole prototype rested on is now a fact about shipped code rather than a drawing.
+
+### Modes: still to build
+
+Nothing in the app knows the word mode yet. `PanelSectionVisibility.Choices`,
+`ToolBarLayout` groups, `CanvasGridStore` and `magnifyNearest` are the pieces a
+mode is a named bundle of, and they are all running; what is missing is the
+bundle, the chip in the window's status that swaps it, and the way back shipping
+in the same slice rather than after it. Sections 2, 3 and 4 above are the
+specification for that work.
