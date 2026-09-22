@@ -44,6 +44,10 @@ struct VideoExportDialog: View {
     /// unlike a GIF it really can be weighed while somebody watches.
     @State private var stillFile: Data?
     @State private var weighing: Task<Void, Never>?
+    /// A GIF or a HEIC being written into a scratch file so the sheet can say
+    /// what it will weigh. There is no formula for an animated picture, so the
+    /// only honest number comes from writing one (`ExportWeigh`).
+    @State private var weigh = ExportWeigh()
 
     private var offersQuality: Bool { RecordingExport.offersQuality(choice) }
 
@@ -56,7 +60,7 @@ struct VideoExportDialog: View {
 
     private var sizeLine: String {
         RecordingExport.sizeLine(choice: choice, quality: quality, source: source,
-                                 stillBytes: stillFile?.count)
+                                 stillBytes: stillFile?.count, weighing: weigh.result)
     }
 
     private var purposeLine: String {
@@ -141,14 +145,18 @@ struct VideoExportDialog: View {
             momentMS = editor.documentTimeMS
             source = editor.videoExportSource
             weighTheFrame()
+            weighTheAnimation()
         }
         .onChange(of: choice) { _, now in
             if let format = now.format { quality = RecordingExportMemory.quality(for: format) }
             weighTheFrame()
+            weighTheAnimation()
         }
+        .onChange(of: quality) { _, _ in weighTheAnimation() }
         .onDisappear {
             weighing?.cancel()
             weighing = nil
+            weigh.stop()
         }
     }
 
@@ -174,12 +182,30 @@ struct VideoExportDialog: View {
         }
     }
 
+    /// Write this GIF or HEIC of the document into a scratch file so the line
+    /// under the row can say what it weighs, and so pressing Export after
+    /// reading that number saves the very file that was weighed.
+    ///
+    /// A video is never weighed this way: it has a real budget and answers
+    /// instantly (`VideoExportRecipe`).
+    private func weighTheAnimation() {
+        guard let format = choice.format, format.isAnimatedImage else { weigh.stop(); return }
+        let quality = quality
+        weigh.weigh(format: format, quality: quality) { [editor] url, onProgress in
+            try await editor.writeVideo(format: format, quality: quality, to: url,
+                                        onProgress: onProgress)
+        }
+    }
+
     /// Hand what was chosen to the save box.
     private func export() {
         RecordingExportMemory.remember(choice: choice, quality: quality)
+        // Taken before dismissing: dismissing stops the weigh and throws its
+        // scratch file away, and that file is the export.
+        let weighed = choice.format.flatMap { weigh.take(format: $0, quality: quality) }
         dismiss()
         if let format = choice.format {
-            editor.exportVideo(format: format, quality: quality)
+            editor.exportVideo(format: format, quality: quality, weighed: weighed)
         } else {
             editor.exportStillFrame(atMS: momentMS, weighed: stillFile)
         }

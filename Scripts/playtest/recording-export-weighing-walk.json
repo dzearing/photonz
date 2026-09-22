@@ -1,0 +1,153 @@
+{
+  "out": "/tmp/photonz-playtest/recording-export-weighing-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoExportSheet"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "GIF"
+    },
+    {
+      "do": "press",
+      "control": "High"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "1-it-says-it-is-working-on-it",
+      "note": "THE TEST: a GIF has no formula, so the sheet finds out what one weighs by writing one, and the biggest preset on eight seconds of screen takes a few seconds. While it does, the line counts up rather than sitting blank or spinning: you can see how long it is going to be"
+    },
+    {
+      "do": "snapshot",
+      "name": "recording-weigh-1-counting"
+    },
+    {
+      "do": "panel",
+      "stage": "1-it-says-it-is-working-on-it"
+    },
+    {
+      "do": "expect",
+      "control": "What it will weigh",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Small"
+    },
+    {
+      "do": "describe",
+      "stage": "2-nothing-is-frozen",
+      "note": "THE OTHER TEST: pressing Small lands while the High GIF is still being written. The sheet is not frozen for the length of the writing, and the answer being worked out is thrown away rather than shown under the wrong word: the number always belongs to the choice showing"
+    },
+    {
+      "do": "waitFor",
+      "condition": "exportSizeWeighed",
+      "timeout": 120
+    },
+    {
+      "do": "snapshot",
+      "name": "recording-weigh-2-small"
+    },
+    {
+      "do": "panel",
+      "stage": "2-nothing-is-frozen"
+    },
+    {
+      "do": "press",
+      "control": "High"
+    },
+    {
+      "do": "waitFor",
+      "condition": "exportSizeWeighed",
+      "timeout": 120
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-number-moves-with-the-choice",
+      "note": "back to High, and the number is worked out again from scratch: High against Small on the same eight seconds is the difference between a file that will not go in a message and one that will. That is what the preset row is for, and until now it moved the pixel size and the frame rate while the weight said nothing"
+    },
+    {
+      "do": "snapshot",
+      "name": "recording-weigh-3-high"
+    },
+    {
+      "do": "panel",
+      "stage": "3-the-number-moves-with-the-choice"
+    },
+    {
+      "do": "action",
+      "action": "videoExportWeighed"
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-file-you-were-shown-is-the-file-you-get",
+      "note": "THE PAYOFF: the seconds spent working out the size are not spent twice. The GIF written to answer the question IS the export, so pressing Export after reading the number saves it at once, and the file that lands is exactly the number that was on the sheet"
+    },
+    {
+      "do": "press",
+      "control": "MP4"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-a-video-is-not-written-to-be-weighed",
+      "note": "MP4 answers instantly and says about, because a video is weighed from the budget the encoder is asked for rather than by writing one. Nothing starts writing when this is pressed"
+    },
+    {
+      "do": "panel",
+      "stage": "4-a-video-is-not-written-to-be-weighed"
+    },
+    {
+      "do": "action",
+      "action": "videoExportSheetCancel"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 1,
+      "seconds": 8
+    },
+    {
+      "do": "expectStoredRecording",
+      "seconds": 8,
+      "original": false
+    },
+    {
+      "do": "describe",
+      "stage": "5-cancel-wrote-nothing",
+      "note": "three formats weighed and then Cancel. The recording is still eight seconds and the file on disk is untouched: the scratch copies the sheet wrote to answer the question are the sheet's own business and go with it"
+    }
+  ]
+}

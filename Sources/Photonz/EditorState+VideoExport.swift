@@ -52,7 +52,13 @@ extension EditorState {
     }
 
     /// **Export…** on a document that has time: pick a place, then write it.
-    func exportVideo(format: RecordingFormat, quality: VideoExportQuality) {
+    ///
+    /// - weighed: the scratch file the sheet already wrote to say what this
+    ///   would weigh (`ExportWeigh`). An animated export lands at the same size
+    ///   every time, so that file IS the export and is moved into place rather
+    ///   than written again.
+    func exportVideo(format: RecordingFormat, quality: VideoExportQuality,
+                     weighed: URL? = nil) {
         guard let document, document.hasTime else { return }
         RecordingExportMemory.remember(format: format, quality: quality)
         let panel = NSSavePanel()
@@ -61,8 +67,11 @@ extension EditorState {
             recording: videoExportName, format: format)
         panel.canCreateDirectories = true
         panel.message = "Write what plays in this window out as a file"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        startVideoExport(format: format, quality: quality, to: url)
+        guard panel.runModal() == .OK, let url = panel.url else {
+            if let weighed { try? FileManager.default.removeItem(at: weighed) }
+            return
+        }
+        startVideoExport(format: format, quality: quality, to: url, weighed: weighed)
     }
 
     /// What the file is called before anybody renames it: the document's own
@@ -76,8 +85,15 @@ extension EditorState {
     /// Playing is paused first: an export is a minute of decoding and
     /// compositing, and a playhead running through it would be fighting for the
     /// same frames.
-    func startVideoExport(format: RecordingFormat, quality: VideoExportQuality, to url: URL) {
+    func startVideoExport(format: RecordingFormat, quality: VideoExportQuality, to url: URL,
+                          weighed: URL? = nil) {
         guard videoExport == nil else { return }
+        // Already written, to answer what it would weigh: move it into place
+        // and there is nothing to watch.
+        if let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
+            raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
+            return
+        }
         pauseDocument()
         let run = VideoExportRun(fileName: url.lastPathComponent, title: format.writingTitle)
         videoExport = run

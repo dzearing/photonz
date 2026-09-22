@@ -2,6 +2,51 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-22 — A GIF says how big it will be
+
+The Export sheet could say what a video would weigh and not what a GIF or a
+HEIC would, which are the two formats most likely to come out too big to send.
+The task offered two ways out: sample some frames and multiply, or write the
+whole thing in the background. Both were measured against real files before
+either was built, and the first one died on the numbers. Eight frames spread
+across a recording, encoded on their own and multiplied, came out between 100
+and 420 per cent over. Runs of consecutive frames with a marginal-cost model
+swung from 76 per cent under to 48 per cent over; flat per-frame in a run, from
+46 per cent under to 121 per cent over. ImageIO compresses each frame against
+the frame before it, so frames sampled from far apart are all expensive and a
+short run is all cheap. The bar to beat was the video's 9 to 14 per cent. There
+is no formula here.
+
+So the sheet writes one. `ExportWeigh` puts the GIF in a scratch file while the
+sheet is open, the line counts up in whole per cent, and the number it lands on
+is the size of the file that landed. Pressing Export then MOVES that file into
+place: the walk's own check has it arriving in 0 ms at exactly the size the
+sheet promised. Nothing is written when nobody is looking — the weigh restarts
+when the format or the preset changes and is cancelled with its scratch file
+when the sheet shuts.
+
+The word "about" is gone for those two formats, which the task had asked to
+keep. It was measured away: written twice, a GIF is identical to the byte and a
+HEIC is identical in size with one byte of encoder state moving inside it, so
+"about" would have been false modesty. MP4 keeps it, because its hardware
+encoder really does vary.
+
+Worth knowing: the first cut of the progress line redrew the sheet on every
+frame the writer laid down, fifty times a second, for a line written in whole
+per cent. It now redraws only when the percentage changes.
+
+New: `recording-export-weighing-walk` (3 real window captures), the
+`exportSizeWeighed` wait condition, and the `videoExportWeighed` action, which
+exports what the sheet just weighed and fails if the file that lands is not the
+number that was shown. `recording-export-sheet-walk` now holds the sheet's GIF
+and HEIC numbers against the files that land at nought per cent of drift
+allowed.
+
+Next: the audit is `queue/audits/2026-09-22-gif-weight.json`, and the question
+it most wants answered is whether a few seconds of counting for a real number
+beats the instant "size not known" it replaced — and whether there is a
+recording long enough that it should not try.
+
 ## 2026-09-22 — A sweep that goes blind says so
 
 On the night of 2026-09-21 the probe stopped launching 117 walks into a full

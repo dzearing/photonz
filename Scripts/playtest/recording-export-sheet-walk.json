@@ -93,13 +93,18 @@
       "control": "GIF"
     },
     {
+      "do": "waitFor",
+      "condition": "exportSizeWeighed",
+      "timeout": 120
+    },
+    {
       "do": "wait",
       "seconds": 0.8
     },
     {
       "do": "describe",
       "stage": "2-gif-on-the-same-sheet",
-      "note": "GIF is one press away rather than a different menu item, and picking it grows the Quality row the submenu used to hold. The line under it says what the preset does, live: 800 by 500 at 15 fps"
+      "note": "GIF is one press away rather than a different menu item, and picking it grows the Quality row the submenu used to hold. THE NEW TEST: the line that used to say \"size not known until it is written\" now says what the GIF weighs. There is no formula for one, so the sheet writes the GIF into a scratch file while it is open, counts up as it goes, and says the size of the file that landed. That is why it is a plain number and not an \"about\": it is the file, and pressing Export saves that very file"
     },
     {
       "do": "snapshot",
@@ -114,13 +119,18 @@
       "control": "Small"
     },
     {
+      "do": "waitFor",
+      "condition": "exportSizeWeighed",
+      "timeout": 120
+    },
+    {
       "do": "wait",
       "seconds": 0.8
     },
     {
       "do": "describe",
       "stage": "3-the-preset-does-something-visible",
-      "note": "Small asked for, and the line underneath answers 480 by 300 at 10 fps. That is the whole reason the preset moved out of a submenu: in a submenu you picked it blind"
+      "note": "Small asked for, and the line underneath answers 480 by 300 at 10 fps. The weight moves with it too, because the scratch GIF is written again at the new preset: the number on the sheet always belongs to the choice showing on the sheet"
     },
     {
       "do": "snapshot",
@@ -135,13 +145,18 @@
       "control": "HEIC"
     },
     {
+      "do": "waitFor",
+      "condition": "exportSizeWeighed",
+      "timeout": 120
+    },
+    {
       "do": "wait",
       "seconds": 0.8
     },
     {
       "do": "describe",
       "stage": "4-heic-too",
-      "note": "the third format, same sheet, same two lines. All three are now reachable from one place instead of from three menu items"
+      "note": "the third format, same sheet, same two lines, and a weight on it for the first time. All three are now reachable from one place instead of from three menu items, and all three say what the file will weigh"
     },
     {
       "do": "snapshot",
@@ -360,12 +375,27 @@
       "format": "gif",
       "quality": "small",
       "width": 480,
-      "height": 300
+      "height": 300,
+      "estimateWithin": 0.0
     },
     {
       "do": "describe",
       "stage": "8-the-gif-too",
       "note": "the same edits out as an animated GIF at the Small preset. The crop is 640 by 400 and Small caps the long side at 480, so the frames land at 480 by 300: the preset is a cap rather than a size, and the crop is carried into the GIF as well as into the video"
+    },
+    {
+      "do": "writeRecording",
+      "name": "recording-export-trimmed-heic",
+      "format": "heic",
+      "quality": "standard",
+      "width": 640,
+      "height": 400,
+      "estimateWithin": 0.0
+    },
+    {
+      "do": "describe",
+      "stage": "8b-and-the-heic",
+      "note": "the same edits out as an animated HEIC. The number the sheet worked out by writing a scratch copy is held against the file that landed at nought per cent of drift allowed: an animated export written twice comes out the same size, which is what lets the sheet promise a size instead of an estimate"
     }
   ]
 }

@@ -85,6 +85,10 @@ struct RecordingExportDialog: View {
     @State private var source = RecordingExport.Source(sourceDuration: 0, keptDuration: 0,
                                                        sourceSize: .zero, fileBytes: 0,
                                                        isEdited: false)
+    /// A GIF or a HEIC being written into a scratch file so the sheet can say
+    /// what it will weigh, since nothing short of writing one tells the truth
+    /// about it (`ExportWeigh`).
+    @State private var weigh = ExportWeigh()
 
     /// Whether this format has a size preset worth offering. All three do,
     /// since a video's preset started meaning a real budget rather than
@@ -96,7 +100,8 @@ struct RecordingExportDialog: View {
     }
 
     private var sizeLine: String {
-        RecordingExport.sizeLine(format: format, quality: quality, source: source)
+        RecordingExport.sizeLine(format: format, quality: quality, source: source,
+                                 weighing: weigh.result)
     }
 
     /// One sentence saying who the chosen preset is for.
@@ -168,9 +173,16 @@ struct RecordingExportDialog: View {
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button("Export…") {
+                    // The file already written to answer "how big is it" is the
+                    // file being asked for, so it goes with the press: a GIF
+                    // somebody waited to see the size of saves instantly. Taken
+                    // before dismissing, because dismissing stops the weigh and
+                    // throws its scratch file away.
+                    let weighed = weigh.take(format: format, quality: quality)
                     dismiss()
                     RecordingExportMemory.remember(format: format, quality: quality)
-                    coordinator.saveRecording(state, as: format, quality: quality)
+                    coordinator.saveRecording(state, as: format, quality: quality,
+                                              weighed: weighed)
                 }
                 .keyboardShortcut(.defaultAction)
             }
@@ -193,12 +205,31 @@ struct RecordingExportDialog: View {
             }
             #endif
             source = state.exportSource
+            startWeighing()
         }
         // Each format opens on its own remembered choice, so switching to GIF
         // does not carry a video's "as it is" across to a format where it means
         // the biggest possible file.
         .onChange(of: format) { _, now in
             quality = RecordingExportMemory.quality(for: now)
+            startWeighing()
+        }
+        .onChange(of: quality) { _, _ in startWeighing() }
+        // Nothing keeps writing once the sheet is gone, and the scratch file
+        // goes with it.
+        .onDisappear { weigh.stop() }
+    }
+
+    /// Write this GIF or HEIC into a scratch file so the line under the row can
+    /// say what it weighs. A video is never weighed this way: it has a real
+    /// budget and answers instantly, and a minute of screen would be a minute
+    /// of work for a number that is already on the sheet.
+    private func startWeighing() {
+        guard format.isAnimatedImage else { weigh.stop(); return }
+        let format = format, quality = quality
+        weigh.weigh(format: format, quality: quality) { [coordinator, state] url, onProgress in
+            try await coordinator.writeRecording(state, as: format, quality: quality, to: url,
+                                                 onProgress: onProgress)
         }
     }
 }

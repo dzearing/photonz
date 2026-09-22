@@ -499,8 +499,13 @@ final class AppCoordinator {
     /// trim/crop (phase 13.5). MP4 with no edits is a fast verbatim copy; with
     /// trim/crop it's a real re-encode. GIF/HEIC always re-encode (trim+crop
     /// threaded through). Runs off the main actor with basic error reporting.
+    /// - weighed: the scratch file the Export sheet already wrote to say what
+    ///   this would weigh (`ExportWeigh`). An animated export lands at the same
+    ///   size every time, so that file IS the export: it is moved into place
+    ///   rather than written a second time. Whoever passes one hands over
+    ///   ownership, and it is removed here if the save box is cancelled.
     func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
-                       quality: VideoExportQuality = .high) {
+                       quality: VideoExportQuality = .high, weighed: URL? = nil) {
         // Read from the edit source (the preserved original once one exists) so
         // the window's edits apply to full-length media rather than stacking on
         // an already-committed trim; name the file after the recording.
@@ -513,9 +518,12 @@ final class AppCoordinator {
         panel.nameFieldStringValue = RecordingExport.suggestedFileName(
             recording: recordingURL.lastPathComponent, format: format)
         panel.canCreateDirectories = true
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard panel.runModal() == .OK, let url = panel.url else {
+            if let weighed { try? FileManager.default.removeItem(at: weighed) }
+            return
+        }
 
-        beginRecordingExport(state, as: format, quality: quality, to: url)
+        beginRecordingExport(state, as: format, quality: quality, to: url, weighed: weighed)
     }
 
     /// Start writing the recording to `url`, with a card on screen saying how
@@ -524,8 +532,13 @@ final class AppCoordinator {
     /// The part after the save box, so a scripted walk can watch the card
     /// without a panel it cannot drive.
     func beginRecordingExport(_ state: VideoEditorState, as format: RecordingFormat,
-                              quality: VideoExportQuality, to url: URL) {
+                              quality: VideoExportQuality, to url: URL,
+                              weighed: URL? = nil) {
         guard state.recordingExport == nil else { return }
+        // Already written, to answer what it would weigh: move it into place
+        // and there is nothing to watch. The same shape as the verbatim copy
+        // below — a write that is already done gets no card.
+        if let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) { return }
         isExportingRecording = true
         // A card with a bar on it rather than a spinner the size of a
         // fingernail: writing a minute of screen is a minute of work, and a
@@ -591,6 +604,30 @@ final class AppCoordinator {
                                                    maxDimension: quality.maxDimension) { done, _ in
                 onProgress?(Double(done) / total)
             }
+        }
+    }
+
+    /// Move the file the Export sheet already wrote to where the save box said,
+    /// and say whether that worked.
+    ///
+    /// An animated export written twice lands at the same size
+    /// (`AnimatedExportWeighTests`), so the scratch copy the sheet weighed is
+    /// the export: writing it again would spend the same seconds to arrive at
+    /// the same file. If the move fails for any reason the scratch copy is
+    /// dropped and the caller writes it properly, which is slower and always
+    /// correct.
+    static func putWeighedFileInPlace(_ weighed: URL, at url: URL) -> Bool {
+        defer { try? FileManager.default.removeItem(at: weighed) }
+        guard (try? weighed.resourceValues(forKeys: [.fileSizeKey]).fileSize).map({ $0 > 0 })
+                == true else { return false }
+        try? FileManager.default.removeItem(at: url)
+        do {
+            try FileManager.default.moveItem(at: weighed, to: url)
+            return true
+        } catch {
+            // A move across volumes, or a folder that will not take it. Copy
+            // instead, and if even that fails let the export write it.
+            return (try? FileManager.default.copyItem(at: weighed, to: url)) != nil
         }
     }
 

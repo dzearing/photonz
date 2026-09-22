@@ -20,12 +20,18 @@ import Foundation
 ///   file on disk. The line says "about", because an encoder spends less than
 ///   its budget on an easy picture and nobody should read it as a promise.
 /// - A GIF or a HEIC is re-encoded into a different container entirely, and
-///   nothing about the MP4 predicts it. The sheet says what it does know, the
-///   pixels, the frame rate and the length, and says plainly that the size
-///   comes with the file.
+///   nothing about the MP4 predicts it. There is no formula to find: eight
+///   frames sampled across the recording and multiplied came out 100 to 400 per
+///   cent over, because ImageIO spends a fraction as much on a frame that
+///   follows a frame like it. So the app WRITES one, into a scratch file, while
+///   the sheet is open, and hands the answer back through `Weighing`: the line
+///   says how far along it is and then what the file weighs. That number is
+///   exact rather than an estimate, because an animated export written twice is
+///   byte for byte the same file (`AnimatedExportWeighTests`).
 ///
 /// Everything here is pure: the sheet, the walk and the tests all read the same
-/// sentences.
+/// sentences. The writing itself lives in the app layer, which is the only part
+/// that knows how to make a frame.
 public enum RecordingExport {
 
     /// What the app knows about the recording being exported, in the order the
@@ -106,13 +112,53 @@ public enum RecordingExport {
 
     /// How well the size of the file about to be written is known.
     public enum Weight: Sendable, Hashable {
-        /// The file is copied, so this is its size to the byte.
+        /// The file is copied, or it has already been written once to find
+        /// out, so this is its size to the byte.
         case exact(Int)
         /// Worked out from what this very recording already costs. Close, and
         /// said as an estimate.
         case about(Int)
-        /// Not knowable without writing the whole thing.
+        /// Being written right now to find out, this far along: nought to one.
+        case working(Double)
+        /// Not knowable without writing the whole thing, and nobody is.
         case unknown
+    }
+
+    /// A scratch copy of an animated picture being written so the sheet can say
+    /// what the real one will weigh.
+    ///
+    /// The only honest answer for a GIF or a HEIC, since there is no formula
+    /// that survives contact with a real recording, and a usable one because an
+    /// animated export is reproducible: the scratch file and the file Export
+    /// writes are byte for byte the same, so the number is exact rather than an
+    /// estimate, and the scratch file can simply be moved into place.
+    ///
+    /// It carries the format and the preset it was written at, so an answer
+    /// cannot outlive the choice it belongs to: press Small after reading the
+    /// High number and the High number goes away rather than sitting under the
+    /// wrong word.
+    public struct Weighing: Sendable, Hashable {
+        /// The format this was written as.
+        public var format: RecordingFormat
+        /// The preset it was written at.
+        public var quality: VideoExportQuality
+        /// How far through writing it is, nought to one.
+        public var fraction: Double
+        /// What it weighed, once it finished. Nil while it is still running.
+        public var bytes: Int?
+
+        public init(format: RecordingFormat, quality: VideoExportQuality,
+                    fraction: Double, bytes: Int? = nil) {
+            self.format = format
+            self.quality = quality
+            self.fraction = fraction
+            self.bytes = bytes
+        }
+
+        /// Whether this is the answer to the choice showing on the sheet.
+        public func answers(format: RecordingFormat, quality: VideoExportQuality) -> Bool {
+            self.format == format && self.quality == quality
+        }
     }
 
     /// The formats a recording can leave the app as, in the order they sit on
@@ -181,11 +227,24 @@ public enum RecordingExport {
     ///   share of its seconds that survive and the share of its pixels. A still
     ///   screen costs a fraction of any budget, and asking for more never pads
     ///   the file, so this is what an easy recording really comes out at.
+    /// - weighing: a scratch copy of an animated picture being written, or
+    ///   finished, which is the only thing that can answer for a GIF or a HEIC.
     public static func weight(format: RecordingFormat, quality: VideoExportQuality,
-                              source: Source) -> Weight {
+                              source: Source, weighing: Weighing? = nil) -> Weight {
         // A different container, written frame by frame. The MP4's weight says
-        // nothing about it.
-        guard format == .mp4 else { return .unknown }
+        // nothing about it, so the answer is whatever the scratch copy has got
+        // to, and nothing at all when none is being written.
+        guard format == .mp4 else {
+            guard let weighing, weighing.answers(format: format, quality: quality) else {
+                return .unknown
+            }
+            guard let bytes = weighing.bytes else {
+                return .working(min(max(weighing.fraction, 0), 1))
+            }
+            // Nothing landed: the writing failed, and a GIF does not weigh
+            // nothing. Say what is said when there is no answer.
+            return bytes > 0 ? .exact(bytes) : .unknown
+        }
         if copiesVerbatim(format: format, quality: quality, source: source) {
             return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
         }
@@ -237,13 +296,19 @@ public enum RecordingExport {
     /// The same shape as the picture sheet's line, so the eye looking for the
     /// size finds it in the same place and reads it in the same words.
     public static func sizeLine(format: RecordingFormat, quality: VideoExportQuality,
-                                source: Source) -> String {
+                                source: Source, weighing: Weighing? = nil) -> String {
         let name = format.displayName
-        switch weight(format: format, quality: quality, source: source) {
+        switch weight(format: format, quality: quality, source: source, weighing: weighing) {
         case .exact(let bytes):
             return "\(name) · \(ExportQuality.fileSize(bytes: bytes))"
         case .about(let bytes):
             return "\(name) · about \(ExportQuality.fileSize(bytes: bytes))"
+        case .working(let fraction):
+            // The percentage is the whole of the comfort here: a GIF of a long
+            // recording takes a while to write, and a line that only said
+            // "working it out" would be indistinguishable from one that had
+            // stopped.
+            return "\(name) · working out the size… \(Int((fraction * 100).rounded()))%"
         case .unknown:
             return "\(name) · size not known until it is written"
         }
@@ -372,9 +437,11 @@ public enum RecordingExport {
     /// Nil is the moment before that lands, and says what everything else that
     /// cannot be weighed says.
     public static func sizeLine(choice: Choice, quality: VideoExportQuality,
-                                source: Source, stillBytes: Int? = nil) -> String {
+                                source: Source, stillBytes: Int? = nil,
+                                weighing: Weighing? = nil) -> String {
         guard case .still = choice else {
-            return sizeLine(format: choice.format ?? .mp4, quality: quality, source: source)
+            return sizeLine(format: choice.format ?? .mp4, quality: quality, source: source,
+                            weighing: weighing)
         }
         let name = displayName(choice)
         guard let stillBytes, stillBytes > 0 else {

@@ -1193,6 +1193,8 @@ private final class Run {
             var editorForCondition: EditorState?
             if case .tutorialStep = condition {
                 editorForCondition = editor
+            } else if case .exportSizeWeighed = condition {
+                editorForCondition = editor
             } else {
                 editorForCondition = try requireEditor()
             }
@@ -2513,6 +2515,37 @@ private final class Run {
             video.isExportSheetPresented = false
             await sleep(0.4)
             note(number, step.name, "the Export sheet is closed", state: describe())
+
+        case .action(let action) where action == .videoExportWeighed:
+            let video = try requireRecording()
+            guard let weigher = ExportWeigh.onScreen, let answer = weigher.result,
+                  let said = answer.bytes, said > 0 else {
+                throw Failure(description: "the sheet has not weighed anything, so there is "
+                    + "nothing for Export to hand over; wait for exportSizeWeighed first")
+            }
+            guard let weighed = weigher.take(format: answer.format, quality: answer.quality) else {
+                throw Failure(description: "the sheet said \(said) bytes and then had no file to "
+                    + "hand over, so pressing Export would write the whole thing again")
+            }
+            let landing = out.appendingPathComponent(
+                "weighed-export.\(answer.format.fileExtension)")
+            try? FileManager.default.removeItem(at: landing)
+            let began = Date()
+            coordinator.beginRecordingExport(video, as: answer.format,
+                                             quality: answer.quality, to: landing,
+                                             weighed: weighed)
+            let landed = (try? landing.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            guard landed == said else {
+                throw Failure(description: "the sheet said \(said) bytes and "
+                    + "\(landed) landed at \(landing.lastPathComponent): the file that was "
+                    + "weighed is not the file that was saved")
+            }
+            note(number, step.name,
+                 "\(landing.lastPathComponent) is \(ExportQuality.fileSize(bytes: landed)) "
+                 + "(\(landed) bytes), exactly what the sheet said, and it landed in "
+                 + "\(Int(Date().timeIntervalSince(began) * 1000)) ms because it was already "
+                 + "written",
+                 state: describe())
 
         case .action(let action) where action == .videoExportBegin:
             let video = try requireRecording()
@@ -4100,7 +4133,8 @@ private final class Run {
                  .videoDragTrimEndNearCut, .videoDragTrimRelease,
                  .videoSave, .videoCloseAndSave, .videoRevertToOriginal,
                  .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
-                 .videoExportSheetCancel, .videoExportBegin, .videoExportStop,
+                 .videoExportSheetCancel, .videoExportBegin, .videoExportWeighed,
+                 .videoExportStop,
                  .videoCropMiddle,
                  .openSampleRecording, .openRecordingFromDisk, .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture:
@@ -8664,6 +8698,36 @@ private final class Run {
         return saying + ", after \(String(format: "%.1f", waited))s of waiting for the save to land"
     }
 
+    /// What the Export sheet would say a GIF or a HEIC weighs, worked out the
+    /// way the sheet works it out: by writing one into a scratch file and
+    /// reading its size (`ExportWeigh`). Nil for a video, which has a budget
+    /// and needs no such thing.
+    ///
+    /// This is what lets a walk hold the sheet's number against the file that
+    /// lands, at `estimateWithin: 0`, since an animated export written twice
+    /// lands at the same size (`AnimatedExportWeighTests`).
+    private func weighAnimated(_ format: RecordingFormat, quality: VideoExportQuality,
+                               write: @escaping ExportWeigh.Write) async throws
+        -> RecordingExport.Weighing? {
+        guard format.isAnimatedImage else { return nil }
+        let weigher = ExportWeigh()
+        weigher.weigh(format: format, quality: quality, write: write)
+        defer { weigher.stop() }
+        let deadline = Date().addingTimeInterval(180)
+        while weigher.result?.bytes == nil {
+            guard Date() < deadline else {
+                throw Failure(description: "the sheet was still working out what the "
+                    + "\(format.rawValue) would weigh after 180s")
+            }
+            await sleep(0.1)
+        }
+        guard let answer = weigher.result, let bytes = answer.bytes, bytes > 0 else {
+            throw Failure(description: "the sheet could not work out what the "
+                + "\(format.rawValue) would weigh at all: writing the scratch copy failed")
+        }
+        return answer
+    }
+
     /// Write the open recording out and then READ BACK what landed.
     ///
     /// The save box cannot be driven by a walk, so this hands the exporter the
@@ -8697,8 +8761,17 @@ private final class Run {
             throw Failure(description: "the recording has no file to read from yet")
         }
         let source = video.exportSource
+        // A GIF or a HEIC has no formula, so the sheet weighs one by writing
+        // one (`ExportWeigh`). Do exactly what the sheet does, here, so the
+        // number this walk checks against the file is the number a person
+        // reads on the sheet rather than a second opinion.
+        let weighed = try await weighAnimated(recordingFormat, quality: preset) {
+            [coordinator] url, onProgress in
+            try await coordinator.writeRecording(video, as: recordingFormat, quality: preset,
+                                                 to: url, onProgress: onProgress)
+        }
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
-                                            source: source)
+                                            source: source, weighing: weighed)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
         let started = Date()
         do {
@@ -8776,7 +8849,7 @@ private final class Run {
         // drifts is visible in the log rather than only in somebody's inbox.
         facts.append("the sheet said \"\(said)\"")
         let promised = RecordingExport.weight(format: recordingFormat, quality: preset,
-                                              source: source)
+                                              source: source, weighing: weighed)
         if let claimed = promisedBytes(promised), claimed > 0 {
             let ratio = Double(landed) / Double(claimed)
             facts.append("which is \(String(format: "%.0f", ratio * 100))% of what landed"
@@ -8847,7 +8920,8 @@ private final class Run {
     private func promisedBytes(_ weight: RecordingExport.Weight) -> Int? {
         switch weight {
         case .exact(let bytes), .about(let bytes): return bytes
-        case .unknown: return nil
+        // Still being written, or never going to be: no number to check.
+        case .working, .unknown: return nil
         }
     }
 
@@ -8883,8 +8957,13 @@ private final class Run {
             preset = RecordingExportMemory.quality(for: recordingFormat)
         }
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
+        let weighed = try await weighAnimated(recordingFormat, quality: preset) {
+            [editor] url, onProgress in
+            try await editor.writeVideo(format: recordingFormat, quality: preset, to: url,
+                                        onProgress: onProgress)
+        }
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
-                                            source: editor.videoExportSource)
+                                            source: editor.videoExportSource, weighing: weighed)
         let started = Date()
         do {
             try await editor.writeVideo(format: recordingFormat, quality: preset, to: destination)
@@ -9967,8 +10046,16 @@ private final class Run {
         if case .tutorialFinished(let id) = condition {
             return TutorialController.shared.finished?.guideID == id
         }
+        // What a GIF will weigh is a fact about the sheet, and the sheet a
+        // recording exports through lives in a window that has no editor in it
+        // at all.
+        if case .exportSizeWeighed = condition {
+            return ExportWeigh.onScreen?.isSettled == true
+        }
         guard let editor else { return false }
         return switch condition {
+        // Answered above, where it does not need a window with an editor in it.
+        case .exportSizeWeighed: ExportWeigh.onScreen?.isSettled == true
         case .edgeMap: !editor.snappingEdgeMap.isEmpty
         case .captionField: window?.firstResponder is NSTextView
         case .tool(let tool): editor.activeTool == tool

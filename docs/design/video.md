@@ -291,13 +291,29 @@ measured, not guessed — a walk hung for ten minutes on it.
 ### What the sheet offers
 
 The recording Export sheet's own vocabulary, not a second one: MP4, GIF and
-HEIC in that order, the same size presets on the two that have them, and the
-same `RecordingExport` lines saying what the file will be and what it will
-weigh. An untouched recording is copied, so its weight is exact; anything made
-frame by frame says the size comes with the file, because it does.
+HEIC in that order, the same size presets on all three, and the same
+`RecordingExport` lines saying what the file will be and what it will weigh.
 
-While it writes, a card says how far along it is and can stop it. Stopping
-takes the half-written file with it.
+**Every format says what it will weigh, and they get there differently.** An
+untouched recording going out as MP4 at the top choice is copied, so its weight
+is the file that is already there. Any other MP4 is weighed from the budget the
+encoder is asked for, which is why it says "about" (`VideoExportRecipe`). A GIF
+or a HEIC has no budget and no formula: measured, eight frames sampled from
+across a recording and multiplied came out 100 to 400 per cent over, and runs of
+consecutive frames swung from 76 per cent under to 120 per cent over, because
+ImageIO compresses each frame against the one before it. So the sheet WRITES
+one, into a scratch file, while it is open, counts up in whole per cent as it
+goes, and says the size of what landed (`ExportWeigh`). That number is exact
+rather than an estimate because an animated export written twice lands at the
+same size, and pressing Export moves that very file into place, so the seconds
+spent answering the question are the seconds the export would have cost anyway.
+
+Nothing is written when nobody is looking: the weigh starts when the sheet shows
+an animated format, starts again when the format or the preset changes, and is
+cancelled with its scratch file when the sheet closes.
+
+While it writes for real, a card says how far along it is and can stop it.
+Stopping takes the half-written file with it.
 
 ### What it does not do yet
 

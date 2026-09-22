@@ -539,6 +539,12 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// which used to be a moment nothing could describe: the callout simply
     /// vanished (`TutorialFinish`).
     case tutorialFinished(String)
+    /// The Export sheet has finished working out what a GIF or a HEIC will
+    /// weigh, which it does by writing one (`ExportWeigh`). How long that takes
+    /// is how long the recording is, so a walk that photographs the number
+    /// waits for it here rather than guessing at a delay and photographing a
+    /// percentage.
+    case exportSizeWeighed
     /// A dialog is up (or has gone), named by the words at the top of it:
     /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
     ///
@@ -734,6 +740,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// formats at its biggest preset, because the thing under test is what a
     /// write long enough to wait for looks like.
     case videoExportBegin
+    /// Export what the sheet has just weighed, straight past the save box.
+    ///
+    /// A GIF's size is found out by writing one, so by the time the sheet says
+    /// a number the file exists; pressing Export hands that very file over
+    /// rather than writing it again (`ExportWeigh`). This is that press, so a
+    /// walk can check that the file which lands is the file that was weighed,
+    /// and that it lands at once.
+    case videoExportWeighed
     /// Press Stop on that card. What has been written so far goes with it, so
     /// the walk can then show there is no half a file on the disk.
     case videoExportStop
@@ -3075,9 +3089,10 @@ public enum PlaytestStep: Sendable, Equatable {
             case "layerRowInView": .layerRowInView(try f.string("value"))
             case "tutorialStep": .tutorialStep(try f.string("value"))
             case "tutorialFinished": .tutorialFinished(try f.string("value"))
+            case "exportSizeWeighed": .exportSizeWeighed
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, dialogUp or dialogGone")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, dialogUp or dialogGone")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

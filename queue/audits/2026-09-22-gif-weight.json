@@ -1,0 +1,48 @@
+{
+  "feature": "A GIF says how big it will be",
+  "epic": "video-share",
+  "summary": "Pick GIF or HEIC on the Export sheet and the line that used to say \"size not known until it is written\" now says what the file weighs, and it is the real size rather than an estimate, because the app writes the file to find out and then saves that very file when you press Export.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-recording-export-sheet and next-export-the-video are on by default. Open any recording from History.",
+  "try": [
+    {
+      "do": "Press Shift Command S on an open recording."
+    },
+    {
+      "do": "Press GIF on the Format row, then High on the Quality row.",
+      "shot": "2026-09-22-gif-weight-1-counting.png"
+    },
+    {
+      "do": "Watch the second grey line count up and then settle on a size.",
+      "shot": "2026-09-22-gif-weight-2-number.png"
+    },
+    {
+      "do": "Press Small, then High again, and watch the number be worked out afresh each time."
+    },
+    {
+      "do": "Press Export…, pick a folder, and notice the file is there before the box has closed."
+    },
+    {
+      "do": "Open that GIF and check it is the size the sheet said."
+    },
+    {
+      "do": "Press Shift Command S again, press HEIC, and read its number too."
+    },
+    {
+      "do": "Press MP4 and notice it still answers instantly, and still says \"about\"."
+    }
+  ],
+  "evaluate": [
+    "Waiting a few seconds for a real number, against the instant \"size not known\" you had before: is that the right trade?",
+    "While it works the line says \"working out the size… 58%\" and nothing else. Would you rather have a rough number straight away that settled as it went, even though it would move while you read it?",
+    "Picking GIF starts writing one. Is that right, or should it wait until you ask for the number, for the times you were only passing through the row?",
+    "GIF and HEIC now give a plain size and MP4 still says \"about\". Does that difference read as meaningful, or as an inconsistency?",
+    "On a long recording this takes as long as writing the GIF does. Is there a length past which you would rather it did not try?"
+  ],
+  "rough": [
+    "Weighing a GIF costs what writing one costs: measured between 0.10 and 0.62 times the recording's own length, so eight seconds of screen is about four seconds at High and five minutes of screen would be about three minutes and a few hundred megabytes in the scratch folder. Nothing runs once the sheet is shut, and there is no length at which it gives up.",
+    "Pressing Export before the number arrives throws away what has been written and starts again, so the worst case is waiting for the same work twice. Handing the half-finished weigh to the export card instead would fix it and was not built.",
+    "The task asked to keep saying \"about\" for these two formats. Measured, an animated export written twice lands at the same size to the byte for a GIF and to the byte-count for a HEIC, so \"about\" would have been false modesty: the word is gone for GIF and HEIC and kept for MP4, whose encoder really does vary.",
+    "Sampling was tried first and abandoned on the numbers: eight frames spread across a recording and multiplied came out 100 to 400 per cent over, and runs of consecutive frames swung from 76 per cent under to 120 per cent over. Both are in the tests as the reason there is no formula here.",
+    "MP4 is still an estimate 9 to 14 per cent out while GIF and HEIC are now exact, which is the opposite of what the Export sheet's three formats used to promise."
+  ]
+}
