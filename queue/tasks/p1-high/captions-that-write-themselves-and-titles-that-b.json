@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:42.757Z",
-  "updated": "2026-09-22T03:06:08.688Z",
+  "updated": "2026-09-22T03:55:29.378Z",
   "deps": [
     "a-document-can-have-time"
   ],
@@ -72,7 +72,43 @@
     {
       "t": "2026-09-22T03:06:08.687Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T03:47:55.400Z",
+      "note": "owns these walks: captions-from-the-sound-walk"
+    },
+    {
+      "t": "2026-09-22T03:47:55.450Z",
+      "note": "ADVERSARIAL REVIEW, before building. The clickthrough draws a captioning PANEL: a language picker, a safe-area picker, a cue counter, a caption-style picker (Caption / Lower third / Karaoke) and a karaoke word highlight. Walked as a first-time user, every one of those is a question asked before anybody has a reason to answer it, and a panel of questions is exactly what makes captioning feel like a mode, which the page's own thesis forbids. Cut all five. What is left is the one button that does the work, the honest reading of what came back, two nudges, and the way out. The style picker is the sharpest cut: a caption wears a text style, text styles already exist and are already in the Text section directly above, so a second picker would be a second place to change one thing. The page's own open question (per-word nudge chips vs re-transcription plus a global offset) is answered with the global offset PLUS the per-line bar-end drag the timeline already had, which covers the two common cases with no new surface."
+    },
+    {
+      "t": "2026-09-22T03:47:55.498Z",
+      "note": "EVIDENCE for Apple over Whisper, measured on this Mac 2026-09-21 rather than assumed. macOS 26 SpeechTranscriber: on device, WORD level timings with a confidence per word, 30 locales with 9 English variants installed, and NO permission at all (nothing leaves the Mac). 7.5s of speech in 0.25s; 42:05 of speech in 28.3s, which is 89x faster than listening to it. The older SFSpeechRecognizer was measured too and is the wrong answer for a different reason: it asks for a TCC permission (auth came back denied). Whisper would mean a model file of tens to hundreds of MB in an app whose whole DMG is 8MB, and it would have to be better by a wide margin to earn that, which is not established on this audio. Table and reasoning in docs/design/video-captions.md section 2. Nothing but SpeechTranscription.swift would change if the evidence flips."
+    },
+    {
+      "t": "2026-09-22T03:47:59.931Z",
+      "note": "LEFT ROUGH, did not earn its own task: the caption sits at the title-safe floor of the picture, which in the editing window is directly behind the floating tool bar and the transport, so you cannot read the bottom line while you work unless you scroll the canvas. It is CORRECT in the film that comes out, since the chrome is not exported, and it is not specific to captions (any text a person puts there is under the same bar). Searched 'floating tool bar hides' and 'tool bar covers the bottom of the canvas' and found nothing open. In the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-22T03:47:59.980Z",
+      "note": "LEFT ROUGH, did not earn its own task: no active-word highlight (the clickthrough's karaoke), no language picker, and captions are written from the LONGEST sound in the document with no way to pick another. All three are deliberate cuts written up in docs/design/video-captions.md section 7; the per-word timings are kept on the layer so karaoke can be added later without re-transcribing. Also: writing captions selects the first one, which scrolls the Captions section out of view. All four are in the audit's rough list."
+    },
+    {
+      "t": "2026-09-22T03:48:00.030Z",
+      "note": "The walk found a real defect on real speech and it is fixed with a test: two captions were on screen at once at 2160ms, because the 300ms a line lingers after its last word lingers OVER the next line in continuous speech (the next line starts the instant this one's last word ends). CaptionCues now fits every line to the next one's arrival; pinned by testNoLineIsEverOnScreenWhileTheNextOneIs. A second defect was found in the same run: captionsLanded selected the first caption off the document captured BEFORE the edit, which has no captions in it, so it quietly selected nothing and left the clip picked."
+    },
+    {
+      "t": "2026-09-22T03:55:29.327Z",
+      "note": "ACCEPTANCE, item by item, all verified rather than assumed. (1) Generated on the machine and landing at the right times: SpeechTranscriber on device, walk step 3, 62 words in 10 captions off a real voiceover. (2) A caption is text: walk step 5 types over a word and captionsExpectTimingsKept passes; the panel shows Font/Size/Weight/Across/Down for the picked caption in the step 3 screenshot. (3) Timing by hand: bar ends were already draggable for a placed layer, plus Earlier/Later on the whole track, both in the walk. (4) Progress and stop keeping what it had: TranscriptionProgress drives the panel; testStoppingPartWayKeepsWhatItAlreadyHeard cancels after the first piece and asserts words kept and listenedToMS < ofMS. (5) Seams: five unit tests plus the 42 minute run asserting order, no phrase doubled within 2s, and the last word landing near the END of the recording. (6) Any length: 42:05 tested, 8200 words, 22 pieces, 28.3s. (7) A title is text with an in and an out: landed earlier in a-title-is-text-that-knows-when-it-is-on-screen; this task uses it unchanged. (8) Burn-in: the walk writes an MP4 and the frame at 4s carries the words (queue/audits/2026-09-21-captions-burned-in.png); SRT built, WebVTT not, said in the audit. (9) Readable: title-safe band plus TextBuilder.autoContrastShadow, the same shadow every text layer gets. (10) Declines honestly: captionsWriteHearingNothing runs Write Captions on the tone-only sample and fails the walk unless zero captions land AND the pill says the heard-nothing sentence. (11) Audit filed with four real screenshots."
+    },
+    {
+      "t": "2026-09-22T03:55:29.376Z",
+      "note": "Write Captions listens to a recording on this Mac and puts the words on the timeline as ordinary text layers with an in and an out. Model in PhotonzCore/Captions.swift (words, cues, seams, chunk plan, file-clock to document-clock mapping, SRT, progress copy), listening in PhotonzMedia/SpeechTranscription.swift (macOS 26 SpeechTranscriber, on device, no permission), window in EditorState+Captions.swift and CaptionsInspector.swift, Video menu rows, flag next-captions-from-the-sound. Verified: 30 core tests, 7 media tests against real speech, the whole suite green at 8884, captions-from-the-sound-walk green with 9 real screenshots including a burned-in export frame, and a 42:05 recording transcribed in 28.3s with the seams checked. Design doc docs/design/video-captions.md; audit queue/audits/2026-09-21-captions-from-the-sound.json. Pushed as a2507317."
     }
   ],
-  "started": "2026-09-22T03:06:08.686Z"
+  "started": "2026-09-22T03:06:08.686Z",
+  "walks": [
+    "captions-from-the-sound-walk"
+  ],
+  "completed": "2026-09-22T03:55:29.377Z"
 }

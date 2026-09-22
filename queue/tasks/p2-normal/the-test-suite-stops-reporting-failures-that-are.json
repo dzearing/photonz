@@ -9,7 +9,7 @@
   "release": "next",
   "area": "infra",
   "created": "2026-09-20T19:47:11.338Z",
-  "updated": "2026-09-21T13:31:08.545Z",
+  "updated": "2026-09-22T03:47:40.291Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED on 2026-09-20 while landing a-document-can-have-time, and it cost that runner most of an hour.\n\nWhat happens: Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift reads the words off Fixtures/settings-pane-2x.png with TextReader (Vision) and checks that the layers list names its rows after them. Under load Vision hands back nothing, every displayName falls through to the auto name, and the eleven tests report 21 issues that all look like this:\n\n  Expectation failed: (names -> [\"Text 9\", ..., \"Background\"]).contains(words -> \"General\")\n\nThe evidence, all on the same machine and the same tree:\n\n  Scripts/test.sh                       (walks/builds running)  -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (busy)    -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.45s\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.42s\n  Scripts/test.sh                       (idle)                  -> passed, 8530 tests, 190.9s\n\nA throwaway diagnostic in the same tree showed the whole path working when nothing else was running: 19 pieces, 9 runs, TextReader returning General / Launch at login / Show in menu bar, and the layers list naming all nine rows correctly. So the reading is right and the timing is not.\n\nWHY IT IS WORTH FIXING rather than living with: a runner that sees this cannot tell a break from a flake. This one stashed its own work twice and spent a full extra test cycle bisecting a regression that did not exist, and it very nearly filed the wrong bug against itself. That is the same failure mode the unmanned-loop epic was promoted for.\n\nWhere to look: TextReader.words(in:) in Sources/PhotonzRender/TextReader.swift and whatever timeout or request reuse is behind it.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-21T13:31:08.544Z",
       "note": "seq 3060 -> 120"
+    },
+    {
+      "t": "2026-09-22T03:47:40.290Z",
+      "note": "Another flake for the pile, seen 2026-09-21 while building captions: the whole SeparatedRowsSayTheirWordsTests suite (PhotonzRenderTests, Vision OCR over a real 2x settings-pane capture) failed 21 assertions in one run, with every row still named 'Text N' / 'Box N' because TextReader.words came back empty for all nine runs of text. It was reproduced once on a filtered run, then passed four times in a row on the same source, including the full suite twice (8884 tests green). It failed while the machine was loaded (a 42-minute on-device transcription had just finished). So the OCR read is load-sensitive and this suite can currently report a break where there is none. It cost a real bisect: the first \"culprit\" it fingered was an unrelated new stored property on Layer, which turned out to be innocent."
     }
   ]
 }
