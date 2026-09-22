@@ -1,0 +1,27 @@
+{
+  "feature": "A layer used as a mask says so on its row",
+  "epic": "video-transitions-motion",
+  "summary": "Cutting a layer to the shape of the one under it takes that lower layer off the canvas. Both rows in the Layers list now say so and name each other, so you can see where the layer went without selecting anything or undoing.",
+  "setup": "Photonz Dev, release Next. Open any picture. Nothing to switch on.",
+  "try": [
+    { "do": "Open a screenshot and click the padlock on the Background row to unlock it." },
+    { "do": "Press R and drag a rectangle over the picture." },
+    { "do": "Press shift-command-[ to send the rectangle to the back." },
+    { "do": "Click the Background row, then set Masked by to Its shape in the panel." },
+    { "do": "Read the two rows in the Layers list: Background says Masked by Rectangle, Rectangle says Mask for Background, with arrows pointing at each other.", "shot": "2026-09-22-mask-row-1.png" },
+    { "do": "Hover the Rectangle row's line to read the sentence that says where its pixels went and how to get them back." },
+    { "do": "Press command-Z. Both lines go, and the rows are exactly as they were." }
+  ],
+  "evaluate": [
+    "When the rectangle vanishes off the canvas, does your eye find the line on its row without hunting?",
+    "Do Mask for and Masked by read the right way round at a glance, or do the two lines blur into each other?",
+    "Is the arrow pulling its weight, or is it noise on a narrow row?",
+    "The mask row keeps its ordinary thumbnail even though none of those pixels are on the canvas. Does that look wrong to you?",
+    "With a long layer name the line cuts off at the tail. Is leading with Mask for enough, or do you want the name first?"
+  ],
+  "rough": [
+    "Three deep, a middle layer is both halves at once: it is spent as the top layer's mask and it wears one of its own. The row says only the first, because a layer that is not in the picture at all is the more surprising truth and its own Masked by is changing no pixel. The chain still reads down the list.",
+    "The timeline draws the same layers and says nothing about a mask on its lanes. Only the Layers list was in this task.",
+    "The line rides on shared code rather than Next-only code, so a document that already carries a mask says so in Current too. That matches what Current already renders: the lower layer has always stopped drawing there."
+  ]
+}

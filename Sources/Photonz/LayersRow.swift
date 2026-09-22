@@ -98,6 +98,12 @@ struct LayersRow: View, Equatable {
         if let pieces = display.piecesNote {
             parts.append(pieces.text)
         }
+        // Which half of a mask this row is, in the row's own words, so a walk
+        // can prove a layer that has vanished off the canvas says where it went
+        // (`LayerMaskNote`).
+        if let mask = display.maskNote {
+            parts.append(mask.text)
+        }
         return parts.joined(separator: ", ")
     }
     private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
@@ -312,7 +318,33 @@ struct LayersRow: View, Equatable {
                     .lineLimit(1)
                     .panelHelp(pieces.help)
             }
+            // Which half of a mask this row is. A layer spent as the mask of
+            // the one above it draws none of its own pixels, so without this
+            // line the row of a layer that has just vanished off the canvas
+            // looks exactly as it did, thumbnail and all (`LayerMaskNote`).
+            if let mask = display.maskNote { maskNote(mask) }
         }
+    }
+
+    /// The line that says this row is half of a mask, with an arrow saying
+    /// which half.
+    ///
+    /// The arrow points at the OTHER row, which is always the next one: up from
+    /// the layer being spent as the shape, down from the layer being cut to it.
+    /// It is there because the two lines start with nearly the same word, and a
+    /// glance down a list of rows should not have to read them to tell which
+    /// way round the pair is.
+    @ViewBuilder
+    private func maskNote(_ mask: LayerMaskNote) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: mask.role == .theMask ? "arrow.up" : "arrow.down")
+                .font(.system(size: 8, weight: .semibold))
+            Text(mask.text)
+                .font(.caption2)
+                .lineLimit(1)
+        }
+        .foregroundStyle(.secondary)
+        .panelHelp(mask.help)
     }
 
     /// The second line on a picture that has been taken apart: how many pieces

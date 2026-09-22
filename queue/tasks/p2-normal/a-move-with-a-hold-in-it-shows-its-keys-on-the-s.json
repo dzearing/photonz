@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T18:27:09.970Z",
-  "updated": "2026-09-22T12:17:52.765Z",
+  "updated": "2026-09-22T19:54:06.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building next-punch-in-and-hold on 2026-09-21. The keys are in the model already: LayerMotion.stops, with LayerMotion.keys giving the whole list first to last, and retimed(to:) already carries them when the bar is moved or stretched. What is missing is entirely in the strip: MotionStrip.swift builds one lane per motion with a single span, and MotionStripView draws it as one rounded bar. Reproduced by running Scripts/playtest.sh Scripts/playtest/punch-in-and-hold-walk.json --no-build and looking at 6-pulling-back-out-sc.png: the Scale lane is a single bar from 0.8s to 5.2s with nothing on it, while the panel above says 100% -> 200% -> 200% -> 100%.",
@@ -27,9 +27,52 @@
     {
       "t": "2026-09-22T12:17:52.764Z",
       "note": "seq 3040 -> 70"
+    },
+    {
+      "t": "2026-09-22T19:12:33.037Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T19:36:39.103Z",
+      "note": "Reproduced first: ran punch-in-and-hold-walk and read 6-pulling-back-out-sc.png. The Scale lane was one plain bar 800-5200 ms with nothing on it while the row above read 100% -> 200% -> 200% -> 100%. Exactly the report."
+    },
+    {
+      "t": "2026-09-22T19:53:14.725Z",
+      "note": "walks punch-in-and-hold-walk -> punch-in-and-hold-walk, motion-timing-strip-walk"
+    },
+    {
+      "t": "2026-09-22T19:53:14.775Z",
+      "note": "Built. Core: MotionStripKey + MotionStripLane.keys (interior stops, on the document clock, each carrying the value read back as the side column writes it), MotionStripLane.retimed(to:) so a bar under a hand carries its marks, MotionStopDrag (clamps a key between its two neighbours, never past them), LayerMotion.movingKey(_:toMS:), MotionStripRuler.reading(ofMS:). 15 new tests in MotionStripKeysTests, written first. App: MotionStripKeyMark in MotionStripView draws a diamond on a hairline at each key with a 13pt grab zone and a highPriorityGesture so it beats the bar under it; EditorState begin/update/commit/cancelMotionStopDrag, one undo step, Escape watch shared with the bar drag, and the canvas plays the key under the hand through withDraggedMotionTiming."
+    },
+    {
+      "t": "2026-09-22T19:53:14.824Z",
+      "note": "Verified: Scripts/test.sh green, 9041 tests in 720 suites. Walks: 9 motion + 7 timeline + punch-in-and-hold, 17 of 17 ok, all with real window captures on an unlocked screen. punch-in-and-hold-walk now proves the marks are there, drags the second one 700 ms (4000 -> 4700 ms with the bar still 800-5200), undoes it, and carries the first one 9000 ms and calls it off."
+    },
+    {
+      "t": "2026-09-22T19:53:25.683Z",
+      "note": "Adversarial review before building: the shortest version that pays is marks plus one draggable key, so no snapping, no value editing on the mark and no new panel. Two things were cut on purpose. (1) A key drag does not catch on anything, not the playhead and not another bar's end, because the snap that helps you line things up is exactly the width of the fine control this is for; the bar's own drag keeps its catching. (2) The hold is left as the distance between two marks rather than painted differently, which is a change to how the bar is FILLED and a bigger question than this task. Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-22T19:53:25.732Z",
+      "note": "left rough: a key within about 7pt of either end of its bar is drawn but cannot be grabbed, because the bar's end grips win the hand that reaches for it. It needs a key nobody put there on purpose (the ends are the two values a move goes between), and the way out is to move or stretch the bar first, so it did not earn a task."
+    },
+    {
+      "t": "2026-09-22T19:53:25.780Z",
+      "note": "dragMotionKey is deliberately NOT on PlaytestLockSafety.stepsThatSurviveALock. It is the same machinery as dragTiming, which a lock cannot touch, but the rule is that a kind joins that list by being WATCHED and this Mac was unlocked all day. It carries its own line in lockStops saying so and telling the next runner who finds a locked screen to force punch-in-and-hold-walk and move it up if the two key drags read their milliseconds back. The cost until then is that a locked sweep refuses that one walk."
+    },
+    {
+      "t": "2026-09-22T19:53:39.534Z",
+      "note": "Follow-up bar: searched the queue for both rough items (hold drawn on the bar, key catching on the playhead or another bar's end). Nothing open covers either, and neither is broken: they are judgements about how the bar should be painted and how much a key drag should help, which is what the audit's evaluate and rough are for. Both stay here and in the audit rather than becoming tasks the user did not ask for."
+    },
+    {
+      "t": "2026-09-22T19:54:06.037Z",
+      "note": "Every key between a bar's two ends now draws a diamond on the timing strip, and dragging one moves that moment alone while the bar keeps both its ends. Core arithmetic in MotionStrip.swift and LayerMotion.movingKey, tested first (MotionStripKeysTests, 15 tests); the mark and its drag in MotionStripView and EditorState+MotionStrip. Verified with Scripts/test.sh green (9041 tests, 720 suites) and 17 motion and timeline walks all ok, including punch-in-and-hold-walk which now drags a key 700 ms, undoes it, and calls one off. Audit: queue/audits/2026-09-22-keys-on-the-strip.json with two real window captures. Commit 87d31ca3, pushed."
     }
   ],
   "walks": [
-    "punch-in-and-hold-walk"
-  ]
+    "punch-in-and-hold-walk",
+    "motion-timing-strip-walk"
+  ],
+  "started": "2026-09-22T19:12:33.036Z",
+  "completed": "2026-09-22T19:54:06.038Z"
 }

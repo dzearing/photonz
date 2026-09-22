@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T21:42:05.378Z",
-  "updated": "2026-09-22T12:17:52.814Z",
+  "updated": "2026-09-22T20:34:15.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building layers-combine-over-the-tracks-below-them (2026-09-21). Reproduction: open any picture, unlock it, draw a rectangle with R, send it to the back with shift-cmd-[, select the picture and set Masked by to Its shape. The rectangle disappears from the canvas; its row still shows a red thumbnail and nothing else. queue/audits/2026-09-21-layers-combine-matte.png is the state.\n\nThe model already knows: PhotonzDocument.isSpentAsAMatte(_:) in Sources/PhotonzCore/LayerCompositing.swift answers it for any layer id, and the renderer uses exactly that rule to skip drawing it (DocumentRenderer.compositeLayers). The work is a LayerPanelRow field plus the row UI in the layers panel.",
@@ -27,9 +27,30 @@
     {
       "t": "2026-09-22T12:17:52.813Z",
       "note": "seq 3060 -> 80"
+    },
+    {
+      "t": "2026-09-22T20:07:26.641Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T20:34:08.176Z",
+      "note": "Reproduced first: ran layers-combine-walk before touching anything. At stage 6-matte the canvas showed the keyed subject cut to the plate's brightness with the plate gone, and the Rectangle row still read plain 'layer' with a full red thumbnail. That is the bug exactly as filed."
+    },
+    {
+      "t": "2026-09-22T20:34:08.227Z",
+      "note": "Adversarial review before building: (1) a mark on the spent row alone is a dead end, since you still have to work out who took it, so BOTH rows carry a line and each names the other; (2) the line has to follow the PICTURE and not the setting, so hiding either half takes both lines off, which is the same rule the renderer composites by; (3) no new switch, no flag: the renderer has always skipped a spent layer, so the row telling the truth about it is not a feature to opt into; (4) shortest version that works: one caption line in the slot the pieces and separation notes already use, so no row gets taller."
+    },
+    {
+      "t": "2026-09-22T20:34:15.398Z",
+      "note": "Built: LayerMaskNote in PhotonzCore (role, matte kind, the other layer's name, the line and the hover), the sibling-list rule moved into PhotonzDocument.matteSource(in:at:)/matteUser(in:at:) so the renderer, the panel and the inspector cannot drift, LayerRowDisplay.maskNote filled in one pass of the tree, and a caption line with an up/down arrow in LayersRow. 19 new core tests, all 9058 tests green. layers-combine-walk now claims both rows in words at 6-matte and claims them plain again after undo; 38 row-touching walks and 11 layers- walks all pass."
+    },
+    {
+      "t": "2026-09-22T20:34:15.446Z",
+      "note": "left rough, no task filed: (1) three deep, a middle layer is both halves and says only that it is being spent, deliberately, since a layer that is not in the picture at all is the more surprising truth and its own Masked by is changing no pixel; (2) the timeline draws the same layers and its lanes say nothing about a mask, but the Layers list is on screen beside it in the same window, so it is not a person stuck with no answer; (3) the mask row keeps its ordinary thumbnail, which is what the layer IS even though none of it is on the canvas, and it is in the audit as a question for the user."
     }
   ],
   "walks": [
     "layers-combine-walk"
-  ]
+  ],
+  "started": "2026-09-22T20:07:26.640Z"
 }

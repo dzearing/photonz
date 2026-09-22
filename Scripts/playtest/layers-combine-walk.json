@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/layers-combine",
-  "seed": "Compositing is layers with a rule for how they combine. This walk opens a green screen still, keys the wall out in one click, puts a coloured plate UNDER the keyed layer so the subject stands on something, and then cuts the whole thing to the shape of the layer below it with Masked by. It finishes by undoing the mask, so the last picture is the composite again. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "seed": "Compositing is layers with a rule for how they combine. This walk opens a green screen still, keys the wall out in one click, puts a coloured plate UNDER the keyed layer so the subject stands on something, and then cuts the whole thing to the shape of the layer below it with Masked by, where the spent layer's own row says so. It finishes by undoing the mask, so the last picture is the composite again and both rows are ordinary again. Canvas coordinates are window points measured down from the top-left of the editor view.",
   "setup": {
     "forget": [
       "tools",
@@ -199,6 +199,21 @@
       "note": "THE TEST: the keyed picture is now cut to the BRIGHTNESS of the plate under it, and the plate has stopped drawing itself. It is not in the picture any more, it is the shape of the picture"
     },
     {
+      "do": "describe",
+      "stage": "6-rows",
+      "note": "THE TEST for the list: the plate has vanished off the canvas, so its row has to say where it went. Both rows say it and they name each other, so the pair reads off the list with nothing selected"
+    },
+    {
+      "do": "expect",
+      "row": "Rectangle",
+      "reads": "layer, Mask for Background"
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "reads": "layer, Masked by Rectangle"
+    },
+    {
       "do": "panel",
       "stage": "6-matte"
     },
@@ -224,9 +239,19 @@
       "reads": "Masked by, Nothing"
     },
     {
+      "do": "expect",
+      "row": "Rectangle",
+      "reads": "layer"
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "reads": "layer"
+    },
+    {
       "do": "describe",
       "stage": "7-undone",
-      "note": "THE TEST for undo: the mask was one step, so one press puts the composite back exactly as it was"
+      "note": "THE TEST for undo: the mask was one step, so one press puts the composite back exactly as it was, and both rows go straight back to saying nothing but what they are"
     },
     {
       "do": "snapshot",

@@ -432,6 +432,12 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// but a clip somebody has cut, because a cut adds a piece rather than a
     /// row and the list would otherwise show no sign it ever happened.
     public let piecesNote: ClipPiecesNote?
+    /// Which half of a mask this row is, when it is one (`LayerMaskNote`). Nil
+    /// on every row that is not touching a mask, which is nearly all of them.
+    /// A layer spent as the mask of the one above it stops being drawn at all,
+    /// so without this line the row of a layer that has vanished from the
+    /// canvas looks exactly as it did.
+    public let maskNote: LayerMaskNote?
 
     public var id: UUID { row.id }
 
@@ -443,7 +449,9 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
                 outOfView: RowOutOfView? = nil,
                 separationNote: SeparationLeftover? = nil,
                 isSound: Bool = false,
-                piecesNote: ClipPiecesNote? = nil) {
+                piecesNote: ClipPiecesNote? = nil,
+                maskNote: LayerMaskNote? = nil) {
+        self.maskNote = maskNote
         self.piecesNote = piecesNote
         self.isSound = isSound
         self.outOfView = outOfView
@@ -506,8 +514,17 @@ extension PhotonzDocument {
         // Which containers are cutting layers off at this level of the tree,
         // outermost first. Empty for the whole walk of a document that clips
         // nothing, which is nearly every document.
+        // What the list is CALLING a layer, which a mask note needs for the
+        // other half of its pair as well as for the row's own name.
+        func naming(_ layer: Layer) -> String {
+            saysItsWords ? layer.displayName(readWords: readWords) : layer.name
+        }
         func walk(_ list: [Layer], depth: Int, parent: UUID?, clips: [ClipScope]) {
-            for layer in list.reversed() {
+            // By index rather than by element: a mask is a fact about a layer
+            // and its NEIGHBOURS, so the row has to know where in its own
+            // sibling list it sits.
+            for index in list.indices.reversed() {
+                let layer = list[index]
                 // A copy of a component has no twist open: what is inside it
                 // belongs to its original, so a row you could open would show
                 // pieces nobody can keep an edit to.
@@ -556,7 +573,7 @@ extension PhotonzDocument {
                                        isExpanded: open, parentID: parent),
                     // Not `layer.name`: a piece of text nobody has renamed by
                     // hand says the words it holds (`Layer.displayName`).
-                    name: saysItsWords ? layer.displayName(readWords: readWords) : layer.name,
+                    name: naming(layer),
                     isVisible: layer.isVisible,
                     isLocked: layer.isLocked,
                     isSelected: selected.contains(layer.id),
@@ -566,8 +583,7 @@ extension PhotonzDocument {
                     componentNote: ComponentRowNote.forRow(
                         isMain: layer.isMainComponent,
                         isInstance: layer.isComponentInstance,
-                        rowName: saysItsWords
-                            ? layer.displayName(readWords: readWords) : layer.name,
+                        rowName: naming(layer),
                         componentName: layer.instanceOf.flatMap { componentNames[$0] },
                         versionName: version),
                     isRasterizable: layer.isRasterizable,
@@ -585,7 +601,11 @@ extension PhotonzDocument {
                     // are only stored once a clip is actually cut, so this
                     // costs a nil check on the rows that are not clips, which
                     // is nearly all of them.
-                    piecesNote: layer.cuts.flatMap { ClipPiecesNote(pieces: $0) }))
+                    piecesNote: layer.cuts.flatMap { ClipPiecesNote(pieces: $0) },
+                    // Which half of a mask this row is, if either. Two index
+                    // checks on a row with no mask anywhere near it, and the
+                    // neighbour is only named when there is one.
+                    maskNote: LayerMaskNote.forRow(in: list, at: index, naming: naming)))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }
         }

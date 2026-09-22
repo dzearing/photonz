@@ -3285,8 +3285,9 @@ public enum PlaytestStep: Sendable, Equatable {
             // it reads is a claim the step could never test. A ROW is not like
             // that: it says whether it is a group and open, what a shut group
             // is hiding, whether it is a copy of a component, what a
-            // separation left in it and how many pieces a clip is cut into,
-            // all in captions six points high (`LayersRow.rowDetail`).
+            // separation left in it, how many pieces a clip is cut into and
+            // which half of a mask it is, all in captions six points high
+            // (`LayersRow.rowDetail`).
             // Claiming those in words is the only alternative to photographing
             // them and squinting.
             if reads != nil, thing == .tile {

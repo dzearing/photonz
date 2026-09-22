@@ -5337,8 +5337,8 @@ private final class Run {
             // A row READS what it says about itself, which is more than its
             // name: whether it is a group and open, what a shut group is
             // hiding, whether it is a copy of a component, what a separation
-            // left in it, how many pieces a clip is cut into
-            // (`LayersRow.rowDetail`). Those second lines used to be provable
+            // left in it, how many pieces a clip is cut into and which half of
+            // a mask it is (`LayersRow.rowDetail`). Those second lines used to be provable
             // only by photographing a caption six points high; naming the row
             // and claiming what it reads is the way to ask.
             guard let match = targets.first(where: { matches($0.name) }) else {

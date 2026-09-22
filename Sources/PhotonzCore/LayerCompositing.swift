@@ -240,6 +240,15 @@ public enum LayerMatte: String, Hashable, Codable, Sendable, CaseIterable {
         }
     }
 
+    /// The thing being borrowed, as a noun that drops into the middle of a
+    /// sentence: "cut to the shape of Rectangle".
+    public var borrowedThing: String {
+        switch self {
+        case .shape: "shape"
+        case .brightness: "brightness"
+        }
+    }
+
     /// What it does, for somebody who has never masked anything. One sentence,
     /// and no vocabulary from another tool.
     public var explanation: String {
@@ -271,17 +280,42 @@ extension PhotonzDocument {
     /// be quietly cutting somebody else's shape out.
     public func matteSource(for id: UUID) -> Layer? {
         guard let found = siblings(of: id), found.layer.style.matte != nil else { return nil }
-        guard found.index > 0 else { return nil }
-        let below = found.list[found.index - 1]
-        return below.isVisible ? below : nil
+        return Self.matteSource(in: found.list, at: found.index)
     }
 
     /// Whether this layer is being spent as the layer above's mask, so it draws
     /// no pixels of its own.
     public func isSpentAsAMatte(_ id: UUID) -> Bool {
-        guard let found = siblings(of: id), found.index + 1 < found.list.count else { return false }
-        let above = found.list[found.index + 1]
-        return above.isVisible && above.style.matte != nil && found.layer.isVisible
+        guard let found = siblings(of: id), found.layer.isVisible else { return false }
+        return Self.matteUser(in: found.list, at: found.index) != nil
+    }
+
+    /// The same two questions asked of a sibling list directly, which is how
+    /// the layers panel asks them: it already has the list in its hand from its
+    /// own walk of the tree, and looking each row up by id again would search
+    /// the whole document once per row.
+    ///
+    /// The rule lives here, once, because three places act on it — the
+    /// renderer skips the lower layer, the panel marks both rows, and the
+    /// inspector names what a Masked by row would borrow from — and any drift
+    /// between them is a row that lies about the picture.
+
+    /// The layer directly under `index` whose shape this one would borrow, or
+    /// nil when there is nothing under it or that layer is hidden. It does not
+    /// ask whether `index` wants a mask: the inspector asks this to name what a
+    /// Masked by set to Nothing WOULD borrow from.
+    static func matteSource(in list: [Layer], at index: Int) -> Layer? {
+        guard index > 0 else { return nil }
+        let below = list[index - 1]
+        return below.isVisible ? below : nil
+    }
+
+    /// The layer directly above `index` that is spending it as a mask, or nil
+    /// when nothing is.
+    static func matteUser(in list: [Layer], at index: Int) -> Layer? {
+        guard index + 1 < list.count else { return nil }
+        let above = list[index + 1]
+        return above.isVisible && above.style.matte != nil ? above : nil
     }
 
     /// The list a layer sits in, and where in it. The top level or a group's
