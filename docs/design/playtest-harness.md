@@ -195,6 +195,20 @@ made only of the first runs, with nothing to set:
 | `queue/bin/sweep.sh` | — | Files nothing, records `screenLocked: true`, and hands the request back: half the set covered is not the state of the walk set. |
 | `Scripts/probe-app.sh` | Says `· screen locked` on its `Grants:` line, with the cost spelled out. | Same. |
 
+Opening a panel menu joined that list on 2026-09-22, and it was the biggest
+stop left in the set at 80 walks. Nothing about a `panelMenu` step needs the
+menu to be ON SCREEN: its rows are read out of the button's own `NSMenu` and a
+row is chosen with `performActionForItem(at:)`, both inside the app's own
+process, and the menu's own name comes from the panel's register. What is still
+refused is a `panelMenu` that asks for a `shot`, which is the one part that
+really does need the menu drawn, and one opened by `clicking` another control,
+which nobody has watched. The doubt that had kept the whole kind refused was the
+colour picker, and it turned out to be about how a synthesized press was
+delivered rather than about the lock: with the screen locked on 2026-09-22,
+`picker-controls-walk` pressed a colour well and then pressed Solid, Linear, Add
+a stop, Radial and Angular inside the popover it raised, and passed, as did nine
+other walks that press a well.
+
 A step kind joins the survives-a-lock list by being WATCHED working under one,
 never by looking safe; anything unproven is refused rather than trusted. Force a
 refused walk with `PHOTONZ_ALLOW_LOCKED_WALK=1` when you need the pictures it

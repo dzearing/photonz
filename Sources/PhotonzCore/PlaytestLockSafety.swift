@@ -171,6 +171,32 @@ public enum PlaytestLockSafety {
         // It was one of the six nobody could reach; `focus` was what came
         // first.
         "expectOneNumberPerName",
+        // Watched on 2026-09-22, and the biggest single stop left in the set
+        // at 80 walks. Nothing about opening a panel menu needs the menu to be
+        // ON SCREEN: the rows are read out of the button's own `NSMenu` and a
+        // row is chosen with `performActionForItem(at:)`, both inside the
+        // app's own process, and since 2026-09-21 the menu's own name comes
+        // from the panel's register rather than from accessibility. All 80
+        // walks that use one were forced twice on a Mac locked since the 17th
+        // and 77 were green both times; the three exceptions were two tutorial
+        // cards and one walk since corrected and green twice
+        // (`walks-that-fail-in-the-full-sweep`, batch 14).
+        //
+        // The one thing that kept it refused until today was a doubt about
+        // the colour picker: four walks pressed a colour well under a lock and
+        // found no picker, which read as "a popover raised by a click does not
+        // come up while the login window is up". It does. The locked sweep of
+        // 2026-09-22 03:01 ran ten walks that press a well and then press
+        // controls INSIDE the picker — `picker-controls-walk` pressed Solid,
+        // Linear, Add a stop, Radial and Angular — and every one of them
+        // passed. What had been wrong was the way a synthesized press was
+        // delivered, fixed in batches 13 and 14; the same four walks pass with
+        // somebody logged in too.
+        //
+        // A panel menu asked for its PICTURE is still refused, in
+        // `lockTrouble(with:)`, because that is the one part of it that really
+        // does need the menu on screen.
+        "panelMenu",
         // Watched on 2026-09-21: `motion-timing-strip-walk`, forced under a
         // lock, dragged the same bar four times and read the milliseconds back
         // each time — "Ellipse Rotation body dragged 90 ms: 0-900 ms became
@@ -216,7 +242,6 @@ public enum PlaytestLockSafety {
         var stops: [String: String] = [
             "menus": frozenBar,
             "menuShot": menu,
-            "panelMenu": menu,
             "rightClick": menu,
             "startGuide": tutorial,
             "expectTutorialStep": tutorial,
@@ -235,6 +260,25 @@ public enum PlaytestLockSafety {
     /// What a locked screen would do to this one step, or nil when it would do
     /// nothing at all.
     public static func lockTrouble(with step: PlaytestStep) -> String? {
+        // A panel menu is read and chosen from inside the app's own process,
+        // so a lock takes nothing away from it — unless the step wants a
+        // PICTURE of the open menu, which is the one part that needs the menu
+        // really on screen, or opens it by clicking some other control, which
+        // nobody has watched under a lock.
+        if case .panelMenu(_, _, let shot, _, let clicking) = step {
+            if shot != nil {
+                return "asks for a picture of the open menu, and a menu draws outside this "
+                    + "process: the only picture of one there is comes from the screen recorder "
+                    + "photographing its own window, which is not there while the login window "
+                    + "is up. The same step without a picture runs"
+            }
+            if clicking != nil {
+                return "opens its menu by clicking another control, which has never been watched "
+                    + "with the screen locked; the same step opened by pressing the menu itself "
+                    + "runs"
+            }
+            return nil
+        }
         // A wait is only as safe as the thing it waits for: a tutorial card is
         // the one thing on this list that a lock genuinely hides.
         if case .waitFor(let condition, _) = step {

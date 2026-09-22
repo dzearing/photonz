@@ -10,8 +10,8 @@ import Testing
 ///
 /// So the question "may this walk run with the screen locked" has an answer,
 /// and it is per step: a walk built out of clicks, drags, keys, snapshots and
-/// the app's own control registry runs perfectly, while one that asks
-/// accessibility for a field or opens a panel menu cannot find anything.
+/// the app's own control registry runs perfectly, while one that needs a real
+/// menu on screen, a tutorial card drawn, or a live menu bar cannot.
 ///
 /// This is the part of that which can be decided without an app, off the walk
 /// alone, so a walk knows before it launches whether its answer would be worth
@@ -52,12 +52,36 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.refusal(for: steps) == nil)
     }
 
-    @Test("A walk that opens a real menu still cannot")
-    func panelMenuCannot() {
+    /// Opening a panel menu and picking a row off it was the biggest stop left
+    /// in the set, at 80 walks, and stopped being one on 2026-09-22. Nothing
+    /// about it needs the menu to be ON SCREEN: the rows are read out of the
+    /// button's own `NSMenu` and the row is chosen with
+    /// `performActionForItem(at:)`, both inside the app's own process, and
+    /// since 2026-09-21 the menu's name comes from the panel's register rather
+    /// than from accessibility. All 80 walks that use one were forced twice on
+    /// a Mac locked since the 17th and 77 were green both times, the three
+    /// exceptions being two tutorial cards and one walk since corrected.
+    @Test("A walk that opens a panel menu and picks a row off it runs under a lock")
+    func panelMenuCan() {
         let steps: [PlaytestStep] = [
             .snapshot(name: "a-start", window: nil),
             .panelMenu(menu: "Add Effect", in: nil, shot: nil, choose: "Shadow", clicking: nil),
             .snapshot(name: "b-shadow", window: nil),
+        ]
+        #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)
+        #expect(PlaytestLockSafety.canRunLocked(steps))
+        #expect(PlaytestLockSafety.refusal(for: steps) == nil)
+    }
+
+    /// The one thing about a panel menu that really does need it on screen is
+    /// its PICTURE, which is the same objection that stops `menuShot`: a menu
+    /// draws outside this process, so the only picture of one there is comes
+    /// from the screen recorder photographing its window.
+    @Test("A panel menu asked for its picture still cannot: that needs the menu really on screen")
+    func panelMenuPictureCannot() {
+        let steps: [PlaytestStep] = [
+            .snapshot(name: "a-start", window: nil),
+            .panelMenu(menu: "Add Effect", in: nil, shot: "b-menu", choose: nil, clicking: nil),
         ]
         let blocked = PlaytestLockSafety.nameLookups(in: steps)
         #expect(blocked.count == 1)
@@ -66,16 +90,25 @@ struct PlaytestLockSafetyTests {
         #expect(!PlaytestLockSafety.canRunLocked(steps))
     }
 
+    /// A menu opened by clicking some other control is a different act from
+    /// pressing the button in code, and nobody has watched one under a lock.
+    @Test("A panel menu opened by clicking another control is unproven, so it is refused")
+    func panelMenuByClickCannot() {
+        let step = PlaytestStep.panelMenu(menu: "100%", in: nil, shot: nil, choose: "400%",
+                                          clicking: "Zoom level")
+        #expect(PlaytestLockSafety.lockTrouble(with: step) != nil)
+    }
+
     @Test("The refusal names the first step that needs a name and what is still there to photograph")
     func refusalSaysWhatIsLost() {
         let steps: [PlaytestStep] = [
             .snapshot(name: "a-start", window: nil),
             .snapshot(name: "b-styled", window: nil),
-            .panelMenu(menu: "Add Effect", in: nil, shot: nil, choose: "Shadow", clicking: nil),
+            .startGuide("redline", window: nil),
             .snapshot(name: "c-shadow", window: nil),
         ]
         let said = PlaytestLockSafety.refusal(for: steps)
-        #expect(said?.contains("step 3 (panelMenu)") == true)
+        #expect(said?.contains("step 3 (startGuide)") == true)
         // What a runner decides with: forcing it still gets the first two.
         #expect(said?.contains("2 of its 3 pictures") == true)
     }
