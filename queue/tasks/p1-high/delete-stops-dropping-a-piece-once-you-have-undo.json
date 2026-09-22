@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T12:16:12.601Z",
-  "updated": "2026-09-22T13:00:12.631Z",
+  "updated": "2026-09-22T13:01:18.340Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-22 by the digest pass, on the probe built from 5ac6ce15, twice (once inside the full sweep, once on its own).\n\n  Scripts/playtest.sh Scripts/playtest/delete-key-drops-a-piece-walk.json --no-build\n  -> step 23 (shortcut): delete should have gone to Video ▸ Delete This Piece but was taken by window\n\nThe walk gets that far cleanly: three pieces, the middle one deleted (step 17 passes, stage 2-delete-dropped-the-middle-piece), then action videoUndoEdit, then expectRecording pieces 3 keeps 3 seconds 8 passes, so the undo itself is right and the document really is back to three pieces. It is only the SECOND Delete that misses. So the piece is coming back without whatever makes Delete This Piece the key's owner: either the piece selection is not restored by the undo, or the menu item is left disabled.\n\nFound in the 2026-09-22T12:10Z full sweep (queue/sweep/2026-09-22-031225.log), which named 16 failing walks; this is the only one of them in the focus epic, which is why it is out on its own rather than left in walks-that-fail-in-the-full-sweep-4.",
@@ -47,11 +47,20 @@
     {
       "t": "2026-09-22T13:00:12.630Z",
       "note": "REPRODUCED and then found to be TWO bugs, not one. (1) The walk's step 23 was failing for a reason nothing to do with undo: Video ▸ Delete This Piece carried U+007F as its key equivalent, and AppKit normalises a ⌫ press to backspace before it looks along the menu bar, so NSMenu.performKeyEquivalent matched the row never. Measured in a throwaway binary: a menu holding U+007F matched a real CoreGraphics ⌫ never, bare or with ⌘ or with ⌥; one holding U+0008 matched every time. Also measured: a live U+0008 row does NOT steal the key from a focused text field (the field deleted a character, the row did not run), and with nothing focused the row ran, so making it live is safe beside typing. (2) The task's own title was right about a surface the walk never touched: on the TIMELINE, deleteClipPieceInHand clears selectedClipPieceIndex and an undo put the document back without putting the piece back in your hand, so canDeleteClipPieceInHand was false and ⌫ answered nothing. Found by a new walk, which failed with \"no piece is picked to throw away\" exactly where the task said it would."
+    },
+    {
+      "t": "2026-09-22T13:01:18.289Z",
+      "note": "Left rough, not filed: after a delete the playhead lands on the closed join and no piece is in hand, so the bar shows nothing lit until you undo. That is the designed landing and nobody has complained about it, so it is a question in the audit rather than a task. Also left rough: the piece coming back on undo rides on the next-selection-undo flag, so turning that off brings the silence back — the audit says so and the user can react to it. Filed instead: find-out-whether-delete-layer-and-the-fill-keys (p2), for the two rows still carrying the character macOS will not match."
+    },
+    {
+      "t": "2026-09-22T13:01:18.338Z",
+      "note": "Two bugs, both fixed and both verified on the probe. (1) Video ▸ Delete This Piece carried U+007F, which AppKit never matches for a ⌫ press: it carries DeleteKeyCharacters.menuKeyEquivalent (U+0008) now, measured both ways in a throwaway binary including that a focused text field still keeps the key. (2) On the timeline an undo put the document back without putting the picked piece back in your hand, so ⌫ went silent: the picked piece now rides in LayerPick with the layers, restored by restoreSelectionFromHistory like the rest of a pick. Verified: Scripts/test.sh green (8924 tests, 712 suites, including new tests for both); delete-key-drops-a-piece-walk ok twice on its own, now going round the delete-and-undo pair twice; new delete-key-drops-a-timeline-piece-walk ok; delete, undo, cut, menu and shortcut walk batches all green (36 walks, the one failure clip-contents-walk being identical to its failure in the last two sweeps and nothing to do with this). Audit: queue/audits/2026-09-22-delete-after-undo.json with two real window captures. Full sweep requested because the harness's menu lookup changed."
     }
   ],
   "walks": [
     "delete-key-drops-a-piece-walk",
     "delete-key-drops-a-timeline-piece-walk"
   ],
-  "started": "2026-09-22T12:22:11.073Z"
+  "started": "2026-09-22T12:22:11.073Z",
+  "completed": "2026-09-22T13:01:18.339Z"
 }
