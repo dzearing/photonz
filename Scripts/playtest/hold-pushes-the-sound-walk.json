@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/hold-pushes-the-sound-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "soundDetach" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "reveal", "control": "Time section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-a-shot-with-sound-under-it", "note": "An eight second screen recording with its own voice taken off onto its own layer, and fourteen seconds of music under both. Three bars in step. The picture is picked and the playhead is on the frame worth keeping. Under Hold This Frame the Time section asks what the hold should push, and it is on Everything waits" },
+    { "do": "panel", "stage": "1-a-shot-with-sound-under-it" },
+    { "do": "expect", "field": "What the hold pushes", "reads": "The voice, the music and anything else on the timeline pause with the picture, so what was said over a shot stays over that shot." },
+    { "do": "snapshot", "name": "push-1-a-shot-with-sound-under-it" },
+
+    { "do": "press", "control": "Hold This Frame" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "reveal", "control": "Hold for 5s" },
+    { "do": "press", "control": "Hold for 5s" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-everything-waits", "note": "THE FIRST TEST. The frame is held for five seconds and everything waits with it: both sound bars carry a five second block badged silence, exactly under the hold, and what was being said at three and a half seconds is still being said at three and a half seconds of picture afterwards. Nothing has drifted, and the timeline shows why" },
+    { "do": "expect", "field": "Held length reading", "reads": "One frame, on screen for 5s." },
+    { "do": "expect", "field": "What the hold pushes", "reads": "The voice, the music and anything else on the timeline pause with the picture, so what was said over a shot stays over that shot." },
+    { "do": "panel", "stage": "2-everything-waits" },
+    { "do": "snapshot", "name": "push-2-everything-waits" },
+
+    { "comment": "THE PROOF IN THE FILE: the music ran to fourteen seconds and the hold pushed five seconds into it, so the document, and the file it writes, is nineteen. This number is the whole difference between the two choices and it is measured rather than eyeballed.", "do": "writeVideo", "name": "push-everything-nineteen-seconds", "format": "mp4", "seconds": 19.0, "within": 0.5, "copied": false },
+
+    { "do": "reveal", "control": "The rest carries on" },
+    { "do": "press", "control": "The rest carries on" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-the-rest-carries-on", "note": "THE SECOND TEST, and the same hold: one click and the silence comes back out of both sound bars. They are the length they were, they run straight on under the frozen frame — which is what you want when you are talking over it — and each one now carries an orange hairline where the hold is, saying 5s out. That is the cost of this choice, said on the timeline rather than found at the end of the edit" },
+    { "do": "expect", "field": "What the hold pushes", "reads": "Everything else keeps running under the frozen frame, so you can talk over it. What comes after it lands 5s out of step with the picture." },
+    { "do": "expect", "field": "Tutorial Sample sound out of step", "reads": "5s out" },
+    { "do": "panel", "stage": "3-the-rest-carries-on" },
+    { "do": "snapshot", "name": "push-3-the-rest-carries-on" },
+
+    { "comment": "THE PROOF THE OTHER WAY: nothing was pushed into the music, so the document is the fourteen seconds the music always was. Five seconds shorter than the same edit made the other way, out of the same three layers and one click between them.", "do": "writeVideo", "name": "push-picture-only-fourteen-seconds", "format": "mp4", "seconds": 14.0, "within": 0.5, "copied": false },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-undone", "note": "THE THIRD TEST: changing your mind is an ordinary edit. Command Z puts the silence back and the hairlines go, so the document is byte for byte the one from the second picture" },
+    { "do": "expect", "field": "What the hold pushes", "reads": "The voice, the music and anything else on the timeline pause with the picture, so what was said over a shot stays over that shot." },
+    { "do": "snapshot", "name": "push-4-undone" }
+  ]
+}

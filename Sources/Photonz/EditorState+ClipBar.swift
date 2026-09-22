@@ -175,12 +175,52 @@ extension EditorState {
         endTrimBeforeCutting()
         guard canHoldFrameAtPlayhead, let id = clipInHandID else { return }
         pauseDocument()
-        perform { $0.holdFrame(id, atMS: documentTimeMS) }
+        perform { $0.holdFrame(id, atMS: documentTimeMS, push: holdPushChoice) }
         if let time = document?.layer(id: id)?.time,
            let held = document?.layer(id: id)?.clipPieces?.pieceIndex(atMS: documentTimeMS - time.inMS) {
             selectClipPiece(layerID: id, index: held)
         }
         documentMomentChanged()
+    }
+
+    /// What the hold in hand pushes, or nil where the piece in hand is one
+    /// that plays (`HoldPush.swift`).
+    var holdPushInHand: HoldPush? { clipPieceInHandPiece?.holdPush }
+
+    /// What the Time section's pair of choices is showing: the hold in hand
+    /// where there is one, else what the next hold will do. One control, two
+    /// jobs, and never ambiguous — a hold is either in your hand or it is not.
+    var shownHoldPush: HoldPush { holdPushInHand ?? holdPushChoice }
+
+    func canSetHoldPush(_ push: HoldPush) -> Bool {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime else { return false }
+        return shownHoldPush != push
+    }
+
+    /// Say what a hold pushes.
+    ///
+    /// With a hold in your hand it changes THAT hold, there and then, and the
+    /// rest of the document moves under it. With no hold in your hand it is
+    /// what the next freeze will do, remembered for the window, so the person
+    /// who wants the voice to run on says so once rather than once per freeze.
+    func setHoldPush(_ push: HoldPush) {
+        endTrimBeforeCutting()
+        guard canSetHoldPush(push) else { return }
+        holdPushChoice = push
+        guard holdPushInHand != nil, let id = clipInHandID,
+              let index = clipPieceInHand else { return }
+        pauseDocument()
+        perform { $0.setHoldPush(id, ofPiece: index, to: push) }
+        selectClipPiece(layerID: id, index: index)
+        documentTimeMS = min(documentTimeMS, lastDocumentTimeMS)
+        documentMomentChanged()
+    }
+
+    /// Where this layer runs under a hold that pushed the picture alone, for
+    /// the marks the timeline draws on its bar (`HoldPush.swift`).
+    func holdDrifts(forLayer id: UUID) -> [HoldDrift] {
+        guard Experiments.shared.cutRecordingEnabled else { return [] }
+        return shownDocument?.holdDrifts(forLayer: id) ?? []
     }
 
     /// What is being held at the moment the canvas is drawing, or nil while the

@@ -957,6 +957,15 @@ final class EditorState {
     var selectedClipPieceIndex: Int? {
         didSet { noteSelectionForHistory() }
     }
+    /// What the NEXT hold will push (`HoldPush.swift`): the whole document, so
+    /// a voice stays with the shot it belongs to, or the picture alone, so it
+    /// runs on under the frozen frame.
+    ///
+    /// It lives in the window rather than in the document because it is not a
+    /// property of the document: it is what you meant the last time you froze
+    /// a frame, and it is offered again where the next freeze is made. Every
+    /// hold carries its own answer once it exists.
+    var holdPushChoice: HoldPush = .whenNobodySays
     /// Which CUT of the picked clip is in hand, named by the piece that arrives
     /// at it (`EditorState+ClipTransitions`). Nil means no cut is picked, which
     /// is every moment until somebody clicks a join.

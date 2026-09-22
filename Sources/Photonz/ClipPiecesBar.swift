@@ -81,6 +81,14 @@ struct ClipPiecesBar: View {
             ForEach(shownCuts(pieces), id: \.index) { cut in
                 band(cut, x0: x0, ruler: ruler)
             }
+            // Where this bar runs under a hold that pushed the picture alone,
+            // and is therefore no longer in step with it (`HoldPush.swift`).
+            // Drawn UNDER the grips, and drawn nowhere else: a document nobody
+            // has frozen, and one frozen with everything waiting, are both
+            // left clean.
+            ForEach(editorState.holdDrifts(forLayer: layerID), id: \.atMS) { drift in
+                driftMark(drift, ruler: ruler)
+            }
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
             }
@@ -213,7 +221,7 @@ struct ClipPiecesBar: View {
                 }
             }
             .overlay {
-                if let badge = Self.badge(item), shown.width > 22 {
+                if let badge = Self.badge(item, isSound: isSound), shown.width > 22 {
                     Text(badge)
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
@@ -279,12 +287,51 @@ struct ClipPiecesBar: View {
                                     : AnyShapeStyle(.secondary.opacity(0.45)))
     }
 
+    /// The mark on a bar that a hold elsewhere has left out of step with the
+    /// picture: a hairline where the hold is, and how far out everything from
+    /// there on now is.
+    ///
+    /// This is the freeze clickthrough's own closing question answered the
+    /// narrow way. It asked whether the timeline should show the drift or
+    /// whether that would clutter the common case; it is shown only where
+    /// there IS drift, which is the case nobody wants to find out about at the
+    /// end of the edit.
+    @ViewBuilder
+    private func driftMark(_ drift: HoldDrift, ruler: MotionStripRuler) -> some View {
+        let x = laneWidth * ruler.fraction(ofMS: Double(drift.atMS))
+        if x >= 0, x <= laneWidth {
+            HStack(spacing: 3) {
+                Rectangle()
+                    .fill(Color.orange.opacity(0.95))
+                    .frame(width: 1.5, height: barHeight)
+                Text(drift.label)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.orange)
+                    .fixedSize()
+                    .padding(.horizontal, 3)
+                    .padding(.vertical, 1)
+                    // A chip under the words, because they are drawn over a
+                    // waveform and orange on a waveform is a smudge.
+                    .background(RoundedRectangle(cornerRadius: 3).fill(.black.opacity(0.65)))
+            }
+            .frame(height: barHeight, alignment: .leading)
+            .offset(x: x)
+            .allowsHitTesting(false)
+            .panelReadout(drift.label)
+            .playtestField("\(layerName) out of step")
+            .help(drift.sentence)
+        }
+    }
+
     /// What is written on a piece that is not playing at the speed it was
     /// recorded at. Nothing at all on an ordinary one, because a badge on
     /// every piece is a badge that says nothing.
-    static func badge(_ piece: ClipPiece?) -> String? {
+    static func badge(_ piece: ClipPiece?, isSound: Bool = false) -> String? {
         guard let piece else { return nil }
-        if piece.isHeld { return "hold" }
+        // A held piece on a SOUND is not a frame standing still, it is the
+        // quiet a hold on the picture pushed into it. Same piece, and the word
+        // for it is different because what you get is different.
+        if piece.isHeld { return isSound ? "silence" : "hold" }
         switch piece.speedPercent {
         case ClipPiece.asRecordedPercent: return nil
         case let percent where percent % 100 == 0: return "\(percent / 100)x"

@@ -65,6 +65,16 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// How fast it plays: 100 as recorded, 0 while a frame is held.
     public private(set) var speedPercent: Int
 
+    /// What this HOLD pushed, for a piece that holds a frame
+    /// (`HoldPush.swift`). Nil on a piece that plays, and nil on a hold made
+    /// before anybody could choose, which pushed the picture alone.
+    ///
+    /// It is written on the piece rather than worked out from the document
+    /// because it cannot be worked out: a document where the voice runs on
+    /// under a hold and one where the voice was never there in the first place
+    /// look identical afterwards, and the panel has to be able to say which.
+    private var push: HoldPush?
+
     /// How this piece ARRIVES, which is what is on the cut before it
     /// (`ClipTransitions.swift`).
     ///
@@ -75,19 +85,35 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     public internal(set) var transitionIn: ClipTransition?
 
     public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent,
-                transitionIn: ClipTransition? = nil) {
+                transitionIn: ClipTransition? = nil, push: HoldPush? = nil) {
         self.sourceInMS = max(0, sourceInMS)
         self.lengthMS = max(Self.shortestMS, lengthMS)
         self.speedPercent = speedPercent == 0
             ? 0
             : min(max(Self.slowestPercent, speedPercent), Self.fastestPercent)
         self.transitionIn = transitionIn
+        // Only a hold pushes anything, so only a hold carries the answer.
+        self.push = self.speedPercent == 0 ? push : nil
     }
 
     /// A frame held: a piece whose start and end in the recording are the same
     /// moment, on screen for as long as it is given.
-    public static func held(atSourceMS ms: Int, forMS length: Int) -> ClipPiece {
-        ClipPiece(sourceInMS: ms, lengthMS: length, speedPercent: 0)
+    public static func held(atSourceMS ms: Int, forMS length: Int,
+                            push: HoldPush? = nil) -> ClipPiece {
+        ClipPiece(sourceInMS: ms, lengthMS: length, speedPercent: 0, push: push)
+    }
+
+    /// What this hold pushed when it was made, or nil for a piece that plays
+    /// (`HoldPush.swift`). A hold that never said pushed the picture alone,
+    /// because that is all a hold could do before the choice existed.
+    public var holdPush: HoldPush? { isHeld ? (push ?? .pictureOnly) : nil }
+
+    /// The same hold, pushing the other thing. What that does to the rest of
+    /// the document is `PhotonzDocument.setHoldPush`; this is only the writing.
+    public func pushing(_ push: HoldPush) -> ClipPiece {
+        guard isHeld else { return self }
+        return ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS, speedPercent: speedPercent,
+                         transitionIn: transitionIn, push: push)
     }
 
     // MARK: - Reading
@@ -154,9 +180,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // The head still arrives the way this piece did; the new join between
         // them is a hard cut until somebody puts something on it.
         return (ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
-                          transitionIn: transitionIn),
+                          transitionIn: transitionIn, push: push),
                 ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
-                          lengthMS: lengthMS - offset, speedPercent: speedPercent))
+                          lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push))
     }
 
     /// The same piece with its start edge moved later into the recording by
@@ -168,14 +194,25 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     public func trimmedStart(byMS delta: Int) -> ClipPiece {
         ClipPiece(sourceInMS: sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent)),
                   lengthMS: lengthMS - delta,
-                  speedPercent: speedPercent, transitionIn: transitionIn)
+                  speedPercent: speedPercent, transitionIn: transitionIn, push: push)
     }
 
     /// The same piece with its end edge moved later by `delta` (earlier, for a
     /// negative one).
     public func trimmedEnd(byMS delta: Int) -> ClipPiece {
         ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
-                  transitionIn: transitionIn)
+                  transitionIn: transitionIn, push: push)
+    }
+
+    /// This piece and the one after it as ONE, where they are two halves of
+    /// one continuous stretch played at one speed. Nil where they are not, and
+    /// nil where the second one arrives on a transition, which is a cut
+    /// somebody put something on.
+    func joined(with next: ClipPiece) -> ClipPiece? {
+        guard !isHeld, !next.isHeld, speedPercent == next.speedPercent,
+              next.transitionIn == nil, sourceOutMS == next.sourceInMS else { return nil }
+        return ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
+                         speedPercent: speedPercent, transitionIn: transitionIn)
     }
 
     /// The same stretch of recording, played at another speed.
@@ -228,7 +265,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     // MARK: - Written down
 
     private enum CodingKeys: String, CodingKey {
-        case sourceInMS, lengthMS, speedPercent, transitionIn
+        case sourceInMS, lengthMS, speedPercent, transitionIn, push
     }
 
     /// A piece playing at the speed it was recorded writes two numbers. The
@@ -241,6 +278,10 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // ...and the fourth only where a cut has something on it, so every
         // document written before transitions existed reads back byte for byte.
         if let transitionIn { try c.encode(transitionIn, forKey: .transitionIn) }
+        // ...and the fifth only where somebody said what the hold should push,
+        // so a document written before the choice existed reads back and writes
+        // out identical.
+        if let push { try c.encode(push, forKey: .push) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -249,7 +290,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
                   lengthMS: try c.decode(Int.self, forKey: .lengthMS),
                   speedPercent: try c.decodeIfPresent(Int.self, forKey: .speedPercent)
                       ?? Self.asRecordedPercent,
-                  transitionIn: try c.decodeIfPresent(ClipTransition.self, forKey: .transitionIn))
+                  transitionIn: try c.decodeIfPresent(ClipTransition.self, forKey: .transitionIn),
+                  push: try c.decodeIfPresent(HoldPush.self, forKey: .push))
     }
 }
 
@@ -562,12 +604,14 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     /// away, made longer, cut in two. Everything after it moves along, by the
     /// one gap rule.
     @discardableResult
-    public mutating func holdFrame(atMS ms: Int, forMS length: Int = ClipPieces.defaultHoldMS) -> Bool {
+    public mutating func holdFrame(atMS ms: Int, forMS length: Int = ClipPieces.defaultHoldMS,
+                                   push: HoldPush? = nil) -> Bool {
         guard let index = pieceIndex(atMS: ms) else { return false }
         let moment = min(max(0, ms), totalLengthMS)
         let offset = moment - startMS(ofPiece: index)
         let piece = pieces[index]
-        let held = ClipPiece.held(atSourceMS: piece.sourceMS(atOffsetMS: offset), forMS: length)
+        let held = ClipPiece.held(atSourceMS: piece.sourceMS(atOffsetMS: offset), forMS: length,
+                                  push: push)
         if let (head, tail) = piece.split(atOffsetMS: offset) {
             pieces.replaceSubrange(index...index, with: [head, held, tail])
             settleFirstArrival()
@@ -596,6 +640,78 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         let wanted = max(ClipPiece.shortestMS, length)
         guard wanted != piece.lengthMS else { return false }
         return trimEnd(ofPiece: index, byMS: wanted - piece.lengthMS)
+    }
+
+    /// Say what this hold pushes (`HoldPush.swift`). Refused for a piece that
+    /// plays, and for the answer it already has.
+    ///
+    /// **This writes the answer and nothing else.** Moving the rest of the
+    /// document is the document's job, because one clip's pieces cannot see
+    /// the voice on the layer below them.
+    @discardableResult
+    public mutating func setHoldPush(ofPiece index: Int, to push: HoldPush) -> Bool {
+        guard let piece = piece(at: index), piece.holdPush != nil,
+              piece.holdPush != push else { return false }
+        pieces[index] = piece.pushing(push)
+        return true
+    }
+
+    /// Put `length` of held time into this clip at a moment of its own clock,
+    /// or lengthen the held time already there.
+    ///
+    /// This is what a hold somewhere ELSE does to a clip it runs across when
+    /// the hold pushes everything: on a picture the frame stops with the one
+    /// being held, and on a sound it is silence, because a held piece reads no
+    /// stretch of its file at all (`ClipPiece.playsSound`). What comes after it
+    /// resumes exactly where it left off, which is what keeps the voice with
+    /// the shot it belongs to.
+    @discardableResult
+    mutating func insertHeldTime(atMS ms: Int, forMS length: Int) -> Bool {
+        guard length > 0 else { return false }
+        if let index = heldTimeIndex(atMS: ms) {
+            return trimEnd(ofPiece: index, byMS: length)
+        }
+        // It is marked as time everything waited for, because that is what it
+        // is. Left unmarked it would read as a hold of its own that pushed the
+        // picture alone, and the timeline would draw a drift mark on every bar
+        // for a hold that drifted nothing (seen on the first run of
+        // `hold-pushes-the-sound-walk`).
+        return holdFrame(atMS: ms, forMS: length, push: .everything)
+    }
+
+    /// Take held time back out: the exact undo of `insertHeldTime`, down to
+    /// the two halves either side closing back into the one piece they were.
+    ///
+    /// Refused where there is no held piece starting at that moment, which is
+    /// the honest answer when somebody has edited the clip since: it is not
+    /// this call's business to guess which piece was meant.
+    @discardableResult
+    mutating func removeHeldTime(atMS ms: Int, forMS length: Int) -> Bool {
+        guard length > 0, let index = heldTimeIndex(atMS: ms),
+              let piece = piece(at: index) else { return false }
+        if piece.lengthMS - length >= ClipPiece.shortestMS {
+            return trimEnd(ofPiece: index, byMS: -length)
+        }
+        guard pieces.count > 1 else { return false }
+        pieces.remove(at: index)
+        // The join the silence was wedged into closes back up. Two pieces that
+        // read one continuous stretch of the file at one speed ARE one piece,
+        // and leaving them as two would put a seam on the bar where nobody cut.
+        if index > 0, index < pieces.count,
+           let joined = pieces[index - 1].joined(with: pieces[index]) {
+            pieces.replaceSubrange((index - 1)...index, with: [joined])
+        }
+        settleFirstArrival()
+        return true
+    }
+
+    /// The held piece STARTING at this moment that a hold elsewhere put there.
+    /// A hold that merely covers the moment, and one somebody took themselves
+    /// on this very frame, are both somebody else's edit and are left alone.
+    func heldTimeIndex(atMS ms: Int) -> Int? {
+        guard let index = pieceIndex(atMS: ms), startMS(ofPiece: index) == ms,
+              piece(at: index)?.holdPush == .everything else { return nil }
+        return index
     }
 
     /// Give a piece a speed. It keeps the frames it reads and changes how long
@@ -708,20 +824,43 @@ extension PhotonzDocument {
         editClip(id) { pieces, _ in pieces.trimEnd(ofPiece: index, byMS: delta) }
     }
 
-    /// Hold on the frame under the playhead, for as long as asked.
+    /// Hold on the frame under the playhead, for as long as asked, pushing
+    /// what the person said a hold should push (`HoldPush.swift`).
+    ///
+    /// The default is the picture alone because that is all one clip's pieces
+    /// can do by themselves; the app asks for `.everything` on purpose, and
+    /// the rest of the document moves here rather than inside `ClipPieces`,
+    /// which can only see the one clip.
     @discardableResult
     public mutating func holdFrame(_ id: UUID, atMS ms: Int,
-                                   forMS length: Int = ClipPieces.defaultHoldMS) -> Bool {
-        editClip(id) { pieces, time in
+                                   forMS length: Int = ClipPieces.defaultHoldMS,
+                                   push: HoldPush = .pictureOnly) -> Bool {
+        let did = editClip(id) { pieces, time in
             guard ms >= time.inMS, ms < time.outMS else { return false }
-            return pieces.holdFrame(atMS: ms - time.inMS, forMS: length)
+            return pieces.holdFrame(atMS: ms - time.inMS, forMS: length, push: push)
         }
+        guard did, push == .everything, let start = heldPieceStartMS(id, nearMS: ms) else {
+            return did
+        }
+        rippleTime(atMS: start, byMS: length, exceptLayer: id)
+        return true
     }
 
     /// Hold one of a clip's frames for a chosen length.
+    ///
+    /// A hold that pushes everything takes everything with it as it grows and
+    /// shrinks, or the silence it put under itself would stop matching the
+    /// frame it is holding.
     @discardableResult
     public mutating func setHoldLength(_ id: UUID, ofPiece index: Int, toMS length: Int) -> Bool {
-        editClip(id) { pieces, _ in pieces.setHoldLength(ofPiece: index, toMS: length) }
+        let before = layer(id: id)?.clipPieces?.piece(at: index)
+        let start = holdStartMS(id, ofPiece: index)
+        let did = editClip(id) { pieces, _ in pieces.setHoldLength(ofPiece: index, toMS: length) }
+        guard did, before?.holdPush == .everything, let start,
+              let after = layer(id: id)?.clipPieces?.piece(at: index),
+              let was = before?.lengthMS else { return did }
+        rippleTime(atMS: start, byMS: after.lengthMS - was, exceptLayer: id)
+        return true
     }
 
     /// Give a piece of a clip a speed.

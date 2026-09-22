@@ -657,13 +657,43 @@ Four things the surface adds to that model, and nothing else:
   was pointing at is an arrow pointing at the wrong thing. Where the picture is
   playing, nothing changes: a mark stays up for the whole document as before.
 
-**A hold pushes the PICTURE.** Sound on its own layer runs straight on
-underneath it, which is what you want when you are talking over the frozen
-frame, and it means a detached voice and the picture after the hold drift apart
-on purpose. `video-freeze-wt` offers Everything or Picture only as a segmented
-choice; only Picture only is built, because Everything is a ripple insert across
-the whole document rather than across one clip's pieces
-(`say-whether-a-held-frame-pushes-the-sound-too`).
+**A hold pushes what the person says it pushes** (built 2026-09-22,
+`HoldPush.swift`). Holding a frame inserts time, and whose time it is was the
+clickthrough's own open question:
+
+- **Everything waits**, the default. Time goes into the whole document at that
+  moment: a layer starting later starts later still, and a layer the hold lands
+  inside pauses and resumes where it left off — a frozen frame on a picture,
+  silence on a sound. A voice recorded with the shot stays over that shot. It
+  is the default because a voice that has quietly slid five seconds out of step
+  is a mistake you find at the end of the edit, while a pause over a frozen
+  frame is one you hear at once and undo with a click.
+- **The rest carries on.** Only this clip gets longer, which is what you want
+  when you froze the frame in order to talk over it, and everything after the
+  hold is out of step with the picture by the hold's length on purpose.
+
+The row is in the **Time** section, where the freeze is made, and it is the same
+control before and after: before a freeze it is what the next one will do
+(remembered for the window), and with a hold in hand it is what THAT hold did,
+changeable there and then. `setHoldPush` is exact both ways — turned on and off
+again the document is byte for byte what it was, down to the two halves of the
+voice closing back into the one piece they were.
+
+The clickthrough draws this as a segmented row called "The insert pushes", with
+Everything and Picture only on it. Two things are different: it is the same list
+of circles as "Hold for" directly above it rather than a segmented control the
+panel uses nowhere else, and the choices are named for what you would HEAR,
+because "ripple" is a word you have to already know.
+
+**The drift is drawn, and only where there is drift.** That is the
+clickthrough's closing question ("should the timeline show it, or does that
+clutter the common case?") answered the narrow way: a bar running under a hold
+that pushed the picture alone carries an orange hairline at the hold with `5s
+out` beside it (`PhotonzDocument.holdDrifts`), and two such holds add up. A
+document nobody has frozen, and one frozen with everything waiting, are both
+left clean. The walk is `hold-pushes-the-sound-walk`, and it proves each choice
+in the exported file: the same three layers and one click between them come out
+as a nineteen second file and a fourteen second one.
 
 What the clickthrough draws and this does not: the **hatched bar**. The bar
 already badges a piece with what is unusual about it, and a second visual

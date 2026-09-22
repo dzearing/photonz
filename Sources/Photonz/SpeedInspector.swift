@@ -47,6 +47,7 @@ struct SpeedInspector: View {
                     // thing you decide about the shot in your hand rather than
                     // a thing you go to the menu bar for.
                     holdThisFrame()
+                    whatItPushes(holdMS: ClipPieces.defaultHoldMS)
                     // What it is doing FIRST, then the list that changes it.
                     // The three sentences are the whole answer and they were
                     // last in the section when it was first built, which put
@@ -209,6 +210,7 @@ struct SpeedInspector: View {
                  + "stretch instead, pick a piece that plays.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
+            whatItPushes(holdMS: piece.lengthMS)
             Text(reading.sound.sentence)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -250,6 +252,62 @@ struct SpeedInspector: View {
                          detail: "the Time section's \(ClipPieces.holdTitle(ms)) hold")
         .panelHelp("Hold this frame for \(ClipPieces.holdTitle(ms)). Everything after it moves "
                    + "along, because a hold inserts time rather than covering it over.")
+    }
+
+    // MARK: What the hold pushes
+
+    /// **Whose time the hold inserts** (`HoldPush.swift`): the whole
+    /// timeline's, so a voice pauses with the picture and stays with the shot
+    /// it belongs to, or this clip's alone, so the voice carries on talking
+    /// over the frozen frame.
+    ///
+    /// The clickthrough draws this as a segmented row called "The insert
+    /// pushes", with Everything and Picture only on it. Two things are
+    /// different here and both are about a person who has never edited video:
+    /// the row is the same list of circles as "Hold for" directly above it
+    /// rather than a segmented control the panel uses nowhere else, and the
+    /// choices are named for what you would HEAR. "Ripple" is a word you have
+    /// to already know; "the rest carries on" is not.
+    ///
+    /// It is in the section BOTH before and after a freeze, and it is the same
+    /// control: before, it is what the next one will do; after, it is what the
+    /// hold in your hand did, and clicking the other one moves the rest of the
+    /// document there and then.
+    @ViewBuilder
+    private func whatItPushes(holdMS: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("While the frame is held")
+                .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(HoldPush.allCases, id: \.self) { push in
+                    pushChoice(push, isOn: editorState.shownHoldPush == push)
+                }
+            }
+            Text(editorState.shownHoldPush.sentence(holdMS: holdMS))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .panelReadout(editorState.shownHoldPush.sentence(holdMS: holdMS))
+                .playtestField("What the hold pushes")
+        }
+    }
+
+    private func pushChoice(_ push: HoldPush, isOn: Bool) -> some View {
+        Button {
+            editorState.setHoldPush(push)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+                Text(push.title)
+                    .font(.system(size: 11))
+                Spacer(minLength: 4)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isOn && !editorState.canSetHoldPush(push))
+        .playtestControl(push.title, detail: "the Time section's \(push.title) choice")
+        .panelHelp(push.help)
     }
 
     // MARK: The speeds

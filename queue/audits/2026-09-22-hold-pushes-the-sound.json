@@ -1,0 +1,30 @@
+{
+  "feature": "A held frame says whether the sound waits with it",
+  "epic": "video-cutting",
+  "summary": "Freezing a frame used to stretch the picture and leave every voice and every piece of music running on underneath, so the rest of the edit quietly fell out of step with what was being said. You now say which you meant, where you freeze, and change your mind afterwards on the hold itself.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags next-cut-a-recording and next-sound-on-the-timeline, both on by default in Next. Open a recording, or the sample one.",
+  "try": [
+    { "do": "Open a recording and use Video ▸ Detach Sound, so its voice sits on its own layer under the picture." },
+    { "do": "Put the playhead on a frame worth keeping, click the picture's bar, and open the Time section in Properties.", "shot": "2026-09-22-hold-push-1-everything-waits.png" },
+    { "do": "Read the new row at the foot of that section: While the frame is held, on Everything waits." },
+    { "do": "Click Hold This Frame, then Hold for 5s." },
+    { "do": "Look at the sound bar: it carries a five second block badged silence, exactly under the hold on the picture." },
+    { "do": "Click The rest carries on, and watch the silence come back out of the sound bar.", "shot": "2026-09-22-hold-push-2-the-rest-carries-on.png" },
+    { "do": "Look at the sound bar again: an orange hairline where the hold is, reading 5s out." },
+    { "do": "Press ⌘Z to put it back the way it was." }
+  ],
+  "evaluate": [
+    "Everything waits is the default. Is that the one you would want nine times out of ten, or do you freeze frames mainly in order to talk over them?",
+    "Do the two names say what will happen before you click them, or would Everything and Picture only, as the clickthrough had it, have been clearer?",
+    "The same row sets what the NEXT freeze will do when no hold is picked, and changes the hold in your hand when one is. Does that read as one control, or as two pretending to be one?",
+    "Is the orange 5s out mark loud enough to catch at a glance, or too loud for something that is a deliberate choice rather than a mistake?",
+    "Does a block badged silence on a sound bar read as the sound waiting on purpose, or as something having gone wrong with it?"
+  ],
+  "rough": [
+    "The hairline part of the drift mark lands under the playhead straight after a freeze, because the freeze was made at the playhead, so at that moment only the 5s out chip is really visible. Move the playhead and the hairline appears.",
+    "What the next freeze will push is remembered for the window and nothing longer. A new window, and a new launch, starts on Everything waits again.",
+    "The drift mark is drawn on any bar that runs under a picture-only hold, including a title or an arrow, not only on sound. It is the same fact about all of them, but the words say out of step, which reads as a sound word.",
+    "Changed from the clickthrough on purpose: a pair of circles in the same shape as Hold for directly above it, rather than the segmented control the mock drew, and the choices named for what you would hear rather than for what the edit is called.",
+    "A second video clip that the hold lands inside gets a frozen frame of its own, which is the sync rule applied evenly. It is pinned by a test and has not been watched by hand in a two clip document, because the sample recording is one clip."
+  ]
+}

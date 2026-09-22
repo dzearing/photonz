@@ -18885,3 +18885,51 @@ Next: the standing video set. The audit is
 answered are whether doubling is the right step and whether the overview bar
 tells you where you are quickly enough.
 
+
+## 2026-09-22 — A held frame says whether the sound waits with it
+
+`say-whether-a-held-frame-pushes-the-sound-too`. Holding a frame inserts time,
+and until today it inserted it into the picture alone: a voice on its own layer
+carried on talking under the frozen frame, and everything after the hold was out
+of step with the picture by the hold's length, silently. Both readings are right
+on different days, so the person now says which.
+
+`HoldPush` (PhotonzCore) is the choice, written on the held piece itself because
+it cannot be worked out afterwards, and `rippleTime(atMS:byMS:exceptLayer:)` is
+the whole of what "everything waits" does: a layer starting at or after the
+moment starts that much later, a layer carrying media that the moment falls
+inside pauses and resumes where it left off, and a layer carrying no media —
+words, an arrow — stays on screen through the pause. The pause is an ordinary
+held piece, which on a picture is a frozen frame and on a sound is silence, so
+nothing new is written down to make it work. `setHoldPush` is exact both ways:
+turned on and off again the document is byte for byte what it was, down to the
+two halves of a voice closing back into the one piece they were.
+
+The row is in the Time section where the freeze is made: a pair of circles in
+the same shape as "Hold for" above it rather than the mock's segmented control,
+named for what you would hear ("Everything waits", "The rest carries on") rather
+than for what the edit is called. With a hold in hand it changes that hold there
+and then; with none it is what the next freeze will do. The default is
+everything waiting, because a voice that has quietly slid five seconds is a
+mistake you find at the end of the edit while a pause over a frozen frame is one
+you hear at once.
+
+The freeze clickthrough's closing question — should the timeline show the drift?
+— is answered the narrow way: a bar running under a hold that pushed the picture
+alone carries an orange hairline reading `5s out`, and nothing is drawn anywhere
+else. Two such holds add up.
+
+Worth knowing: the first run of the new walk drew `5s out` on all three bars of
+an edit that drifted nothing, because the silence the hold had just pushed into
+each sound layer was an unmarked held piece and so read as a hold of its own.
+Inserted silence now says what it is. The tests were green through the whole of
+that; the walk's picture is what caught it.
+
+New: `hold-pushes-the-sound-walk` (44 steps, 4 real window captures), which
+proves each choice in the file it exports — the same three layers and one click
+between them come out as nineteen seconds and as fourteen.
+
+Next: the standing video set. The audit is
+`queue/audits/2026-09-22-hold-pushes-the-sound.json`; the question it most wants
+answered is whether everything waiting is the right default, or whether people
+freeze frames mainly in order to talk over them.
