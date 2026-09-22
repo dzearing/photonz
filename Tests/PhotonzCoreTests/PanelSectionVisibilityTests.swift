@@ -264,7 +264,7 @@ import Testing
                                                in: emptyHanded)
         #expect(rows.contains { $0.reason == .automaticallyOut },
                 "this situation must actually leave sections out, or the test proves nothing")
-        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections")
+        #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections")
     }
 
     /// Turn one off and the count is one, however many the document is holding
@@ -274,7 +274,7 @@ import Testing
         choices.set("motion", shown: false)
         let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
                                                in: emptyHanded)
-        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections · 1 hidden")
+        #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections · 1 hidden")
     }
 
     @Test func turningTwoSectionsOffCountsTwo() {
@@ -283,7 +283,7 @@ import Testing
         choices.set("arrange", shown: false)
         let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
                                                in: emptyHanded)
-        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections · 2 hidden")
+        #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections · 2 hidden")
     }
 
     /// Both ways back go quiet again: the switch, and Use Automatic For All.
@@ -293,14 +293,46 @@ import Testing
         choices.set("motion", shown: true)
         #expect(PanelSectionVisibility.footerLabel(
             for: PanelSectionVisibility.rows(for: offeredSections, choices: choices,
-                                             in: emptyHanded)) == "Sections")
+                                             in: emptyHanded), in: emptyHanded) == "Sections")
 
         var handedBack = PanelSectionVisibility.Choices()
         handedBack.set("motion", shown: false)
         handedBack.useAutomaticForAll()
         #expect(PanelSectionVisibility.footerLabel(
             for: PanelSectionVisibility.rows(for: offeredSections, choices: handedBack,
-                                             in: emptyHanded)) == "Sections")
+                                             in: emptyHanded), in: emptyHanded) == "Sections")
+    }
+
+    /// A section turned off that the document had nothing for anyway is not
+    /// counted either, because nothing on screen changed when it went.
+    ///
+    /// This is what stops a mode from ringing the alarm about nothing. A window
+    /// swapped into Icon folds Measurements, the shelf and Columns; in a blank
+    /// document none of the three was on screen, so the row must read the same
+    /// as the window beside it that is in no mode at all (found 2026-09-22
+    /// building `next-window-modes`, where it read "Sections · 3 hidden" over a
+    /// panel identical to the one it was being compared with).
+    @Test func hidingSomethingTheDocumentHasNothingForIsNotCounted() {
+        var choices = PanelSectionVisibility.Choices()
+        choices.set("measurements", shown: false)
+        choices.set("library", shown: false)
+        choices.set("columns", shown: false)
+        let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                               in: emptyHanded)
+        #expect(rows.filter { $0.reason == .turnedOff }.count == 3,
+                "all three must really be turned off, or the test proves nothing")
+        #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections")
+        // ...and in a document that IS doing those jobs, the same three count,
+        // because now they are three things you would otherwise see.
+        let busy = PanelSectionVisibility.Situation(documentHasMeasurement: true,
+                                                    documentHasComponent: true,
+                                                    documentHasContainer: true,
+                                                    documentHasFrame: true,
+                                                    isLibraryAskedFor: true)
+        let busyRows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
+                                                   in: busy)
+        #expect(PanelSectionVisibility.footerLabel(for: busyRows, in: busy)
+                == "Sections · 3 hidden")
     }
 
     /// A section you turned ON that automatic would have left out is not
@@ -310,7 +342,7 @@ import Testing
         choices.set("measurements", shown: true)
         let rows = PanelSectionVisibility.rows(for: offeredSections, choices: choices,
                                                in: emptyHanded)
-        #expect(PanelSectionVisibility.footerLabel(for: rows) == "Sections")
+        #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections")
     }
 
     // MARK: Remembering it

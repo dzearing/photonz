@@ -226,6 +226,20 @@ struct EditorCommands: Commands {
         Experiments.shared.recordingExportSheetEnabled && (video?.isReady ?? false)
     }
 
+    /// The key a mode answers to: ⌃1 … ⌃9, in the order the list shows them, so
+    /// the menu, the chip's list and the keyboard never disagree about which
+    /// number means which mode (`WindowModes.shortcutNumber`).
+    ///
+    /// Control rather than Command: every Command digit in this app is already
+    /// spoken for (⌘0 fits, ⌘1 is actual size) and Photoshop spends its own on
+    /// channels, so a mode taking one would be taking it off something a hand
+    /// already knows.
+    private func modeKey(_ id: String) -> KeyboardShortcut? {
+        guard let number = WindowModes.shortcutNumber(for: id),
+              let character = String(number).first else { return nil }
+        return KeyboardShortcut(KeyEquivalent(character), modifiers: .control)
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
@@ -1090,6 +1104,30 @@ struct EditorCommands: Commands {
                     set: { _ in editor?.toggleMotionStrip() }))
                 .keyboardShortcut("t", modifiers: [.command, .option])
                 .disabled(!(editor?.hasMotionStrip ?? false))
+            }
+            // What this window is set up for (Next, `next-window-modes`). Here
+            // rather than anywhere else because a mode is a VIEW preference in
+            // the strictest sense: it changes what the window offers and
+            // nothing whatever about the document. It sits with the panel and
+            // the strip above it, which are the other two surfaces a window can
+            // put away.
+            //
+            // A submenu rather than a flat run of rows: five modes and two ways
+            // out would be seven rows in the middle of View, and the chip in
+            // the title bar is the everyday door. This one is the keyboard's
+            // door and accessibility's.
+            if Experiments.shared.windowModesEnabled {
+                Menu(WindowModeCopy.menuTitle) {
+                    ForEach(WindowModes.swappable) { mode in
+                        Button(mode.title) { WindowModeStore.shared.swap(to: mode.id) }
+                            .keyboardShortcut(modeKey(mode.id))
+                    }
+                    Divider()
+                    Button(WindowModeCopy.showEverything) {
+                        WindowModeStore.shared.showEverything()
+                    }
+                }
+                .disabled(!hasDocument)
             }
             Button("Zoom In") { editor?.zoomIn() }
                 .keyboardShortcut("=", modifiers: .command) // the ⌘+ key

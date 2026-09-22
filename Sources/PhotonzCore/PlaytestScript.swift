@@ -567,6 +567,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// clipboard is only visible after a paste.
     case copy, copyMerged, cut
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
+    /// What the window is set up for (`WindowModes`, `next-window-modes`). Each
+    /// one is View ▸ Mode ▸ … and ⌃1 … ⌃4, so every one of them hangs off the
+    /// focused window and is dimmed for the whole of a walk; a walk reaches
+    /// them here, or presses the chip in the title bar by name.
+    ///
+    /// Written out one case per mode rather than taken as a value, because a
+    /// walk's script is a fixed list a person reads: `modeRedline` says what
+    /// the press means, where `mode("redline")` would put a mode's id in a
+    /// script and a typo in it would be a walk that quietly did nothing. The
+    /// slice that makes modes editable data will have to revisit this, and the
+    /// test that every shipped mode has an action here is what will say so.
+    case modeIcon, modeRedline, modeVideo, modeDesign, modeShowEverything
     /// Take the window in and out of full screen. Full screen is where a Mac
     /// takes the title bar away, so anything that lives in the title bar has
     /// to be checked here rather than assumed.

@@ -6154,3 +6154,13 @@
 {"t":"2026-09-22T07:08:46.867Z","ev":"task_note","id":"work-out-whether-the-app-needs-project-types-at"}
 {"t":"2026-09-22T07:08:52.805Z","ev":"task_note","id":"work-out-whether-the-app-needs-project-types-at"}
 {"t":"2026-09-22T07:19:18.131Z","ev":"task_done","id":"work-out-whether-the-app-needs-project-types-at","from":"in_progress","note":"The study is answered and closed. The user picked modes AND the whole chain on 2026-09-20, and the expensive half of that answer is already built: the walk icon-into-a-component-onto-the-timeline ran all 44 steps green against the real app on 2026-09-22 and photographed five real windows, showing a drawn icon saved as a component, dropped onto a recording, with the panel reading Time 0:04 to 0:07 3.0s and no export or import anywhere in the chain. Reconciled the record with the answer so nothing still reads as an open question: docs/design/modes.md (status decided, new section 8 on what was answered and what is left), PRODUCT-MODEL.md section 4f (the card is answered; modes exist as presets, video is not a separate app and that bill is paid), the modes page (decided banner, kicker, recommendation), and the 2026-09-15 audit's setup line. The modes half is not built and is filed as swap-the-window-into-a-mode-from-a-chip-beside-t (p1) and a-mode-is-written-down-so-pixel-art-can-be-added (p2), plus the-library-holds-what-this-document-has-not-eve (p2) for the one bill the shelves half names. No app code changed this run; suite green at 8899 tests."}
+{"t":"2026-09-22T07:30:54.593Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T07:30:54.681Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":667,"of":558,"rotating":true}
+{"t":"2026-09-22T07:30:54.802Z","ev":"task_started","id":"swap-the-window-into-a-mode-from-a-chip-beside-t","title":"Swap the window into a mode from a chip beside the document name","priority":"p1-high"}
+{"t":"2026-09-22T08:08:06.766Z","ev":"task_walks","id":"swap-the-window-into-a-mode-from-a-chip-beside-t","walks":["window-modes-walk"]}
+{"t":"2026-09-22T08:08:16.060Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
+{"t":"2026-09-22T08:08:16.109Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
+{"t":"2026-09-22T08:08:16.158Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
+{"t":"2026-09-22T08:08:16.206Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
+{"t":"2026-09-22T08:08:16.255Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
+{"t":"2026-09-22T08:08:16.303Z","ev":"task_note","id":"a-mode-is-written-down-so-pixel-art-can-be-added"}

@@ -35,7 +35,9 @@ struct PanelSectionsFooter: View {
 
     /// What the row reads. "Sections" alone until somebody has turned one off,
     /// and then how many they turned off (`PanelSectionVisibility.footerLabel`).
-    private var label: String { PanelSectionVisibility.footerLabel(for: rows) }
+    private var label: String {
+        PanelSectionVisibility.footerLabel(for: rows, in: situation)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -157,7 +159,19 @@ struct PanelSectionsList: View {
                 }
             }
             Divider()
-            Button("Use Automatic For All") { store.useAutomaticForAll() }
+            // Handing every section back to automatic and leaving whatever mode
+            // the window is in are the SAME act, so this one button does both
+            // when modes are running (`next-window-modes`). The alternative was
+            // a panel with nothing folded while the chip still claimed to be in
+            // Icon, which is a window that has quietly stopped being what it
+            // says it is.
+            Button("Use Automatic For All") {
+                if Experiments.shared.windowModesEnabled {
+                    WindowModeStore.shared.showEverything()
+                } else {
+                    store.useAutomaticForAll()
+                }
+            }
                 .font(.caption)
                 .buttonStyle(.link)
                 .disabled(!store.choices.hasAnyCustom)

@@ -1,0 +1,28 @@
+{
+  "feature": "Swap the window into a mode",
+  "epic": "icon-svg",
+  "summary": "A quiet chip beside the traffic lights says what this window is set up for, and one click swaps it: Icon, Redline, Video or Design. Picking one folds away the panel sections that job does not need, all at once, instead of you turning them off one at a time, and nothing about it touches the document.",
+  "setup": "Photonz Dev, release Next. The flag is next-window-modes and it is on by default; it needs next-panel-sections on too, which it also is. Open any document.",
+  "try": [
+    { "do": "Open a document and look to the right of the traffic lights: the chip reads Everything.", "shot": "window-modes-2-mode-list-sc.png" },
+    { "do": "Click the chip and pick Icon. Watch the panel fold.", "shot": "window-modes-3-icon-sc.png" },
+    { "do": "Press ⌃2 for Redline without touching the chip, and watch it go the other way: measuring up, animating folded.", "shot": "window-modes-4-redline-sc.png" },
+    { "do": "Press ⌃4 for Design, then click Sections at the foot of the panel and turn Motion back on.", "shot": "window-modes-5b-sections-list-in-a-mode-sc.png" },
+    { "do": "Look at the chip: it now reads Design, edited.", "shot": "window-modes-6-design-edited-sc.png" },
+    { "do": "Open the chip and pick Show Everything, then press ⌃4 to go back into Design.", "shot": null },
+    { "do": "Confirm Design came back bent the way you left it, then use Reset Design in the same list to put it back as it shipped." }
+  ],
+  "evaluate": [
+    "Is the chip in the right place, or does a mode belong somewhere you look more often?",
+    "Does Everything read as a sensible name for the window you get before you pick a mode, or should the chip say something else when you are in no mode?",
+    "Four modes fold between one and four panel sections each. Is that enough of a difference to be worth swapping for, or does a mode only start earning its place once it moves the tools too?",
+    "Design, edited on the chip: does that read as useful honesty, or as the app nagging you about a change you meant to make?",
+    "Are Control 1 to Control 4 the right keys, or would you rather have those digits for something else?"
+  ],
+  "rough": [
+    "A mode can only FOLD a section, never summon one. The panel offers a section only once the selection and the document have already asked for it, and for every optional section that condition is the same one the automatic rule waits on, so a mode pinning Measurements ON does exactly nothing. Redline therefore does not open a measurements list on a document that holds no measurement, which is what the study drew. The presets ship as folds only and say so.",
+    "In a plain document with nothing much in it, Icon and Video fold nothing you can see, because the sections they fold were not on screen anyway. Modes only visibly differ once the document is doing several jobs at once. The second slice, folding tool groups into the overflow, is where a mode starts changing the window at a glance.",
+    "A section a MODE folded is listed at the foot of the panel saying Always hidden, which is the right side of the line the study drew (it is not the document having nothing for it) but is not quite true either: it is hidden in this mode, not always. Saying Folded by Design would be better and is cheap; it is left out here because the ask was the distinction, not the attribution.",
+    "The mode is one setting for the whole app, not one per window, because the panel choices it moves are one setting for the whole app. So two windows onto the same file cannot be in two different modes yet, which the study calls out as genuinely useful. Making it per-window means making the panel choices per-window first."
+  ]
+}

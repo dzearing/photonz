@@ -64,7 +64,12 @@ extension PlaytestMemory {
              // ...and which of the optional sections have been pinned on or
              // turned off by hand, which decides what the dock draws at all
              // (`next-panel-sections`).
-             PanelSectionVisibilityStore.defaultsKey(for: Experiments.shared.release)]
+             PanelSectionVisibilityStore.defaultsKey(for: Experiments.shared.release),
+             // ...and which MODE the window is in, which is a named bundle of
+             // exactly those choices (`next-window-modes`). Forgetting the
+             // choices without forgetting the mode would leave the chip naming
+             // a mode whose arrangement had just been thrown away.
+             WindowModeStore.defaultsKey(for: Experiments.shared.release)]
         case .grid:
             [EditorState.canvasGridKey]
         case .frames:
@@ -138,7 +143,10 @@ struct PlaytestSetupRunner {
             // be told, or it goes on drawing what was just thrown away.
             if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
             if setup.forget.contains(.frames) { IconKeylinesStore.shared.reload() }
-            if setup.forget.contains(.panel) { PanelSectionVisibilityStore.shared.reload() }
+            if setup.forget.contains(.panel) {
+                PanelSectionVisibilityStore.shared.reload()
+                WindowModeStore.shared.reload()
+            }
             if setup.forget.contains(.motion) { RecordingPlaceStore.shared.reload() }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             // The shared shelf is a file rather than a setting, so it is

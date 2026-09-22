@@ -228,6 +228,16 @@ struct EditorView: View {
                     TitlebarPanelToggleInstaller(editorState: editorState)
                 }
             }
+            // ...and, at the leading end of the same title bar, the chip that
+            // says what this window is set up for (Next, `next-window-modes`).
+            // Only with a document open, for the reason the toggle above is:
+            // an empty window has no panel to fold, so a chip that swapped a
+            // mode would change nothing anybody could see.
+            .background {
+                if editorState.document != nil, Experiments.shared.windowModesEnabled {
+                    TitlebarModeChipInstaller()
+                }
+            }
             // Animate show/hide only AFTER the first appearance: on open the pane
             // should just be there (or not), instantly — animating it in slows
             // the window's entrance. Later user toggles / auto-collapse animate.

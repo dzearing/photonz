@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:08.212Z",
-  "updated": "2026-09-22T07:08:08.215Z",
+  "updated": "2026-09-22T08:08:16.254Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Specification is already written and the user has answered the decision that authorises it: docs/design/modes.md sections 2, 3 and 4, and the prototype at http://127.0.0.1:8791/index.html#modes. Decision work-out-whether-the-app-needs-project-types-at-should-a-window-have-modes-you-s resolved 2026-09-20 with option b.\n\nThis is the FIRST slice: panel sections only. Folding tool groups into the overflow, and modes as data so a new one can be added without touching Swift, are the second slice and are filed separately.\n\nThe mechanism exists and must not be duplicated. PanelSectionVisibility.Choices is already a per-section yes/no that saves and reads back, and its own header says an override is exactly the shape a mode will want. PanelSectionVisibility.Reason already tells you turned this off apart from the document has nothing for it. PanelSectionVisibility.optionalSections is the whole list of what may fold, and the layers list, the picked layer own section, Appearance and Effects are deliberately not in it, so no mode can hide what makes this one app.\n\nModel in PhotonzCore, TDD, Codable, pure. ModeIsAPresetTests.swift already pins the behaviour a mode must have, written as evidence during the study; grow it rather than writing a second file. Nothing about a mode may reach the document: a mode may set a default for new work and change what the window offers, it may not reinterpret what is already there.\n\nEpic: filed under icon-svg because that is the epic the study ran under and Icon is the worked example. Its honest home is the shell, which is interaction-foundations, staged next and so not allowed to hold open tasks; re-home it if that epic is promoted.",
@@ -26,6 +26,38 @@
     {
       "t": "2026-09-22T07:08:08.214Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T07:30:54.800Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T08:08:06.764Z",
+      "note": "owns these walks: window-modes-walk"
+    },
+    {
+      "t": "2026-09-22T08:08:16.058Z",
+      "note": "Adversarial review BEFORE building. (1) The study puts the chip 'beside the document name' — the editor window is hiddenTitleBar and draws no name anywhere, so there is no status strip to put it in. Built it as a LEADING titlebar accessory, right of the traffic lights, mirroring TitlebarPanelToggle at the trailing end: that is the space the name would occupy and the harness already walks titlebar accessories, so the chip is playtestable for free. (2) Cut 'Edit modes…' from the popup: that row belongs to the second slice and a row that opens nothing is worse than no row. (3) Named the no-mode state rather than leaving the chip blank: the default is a mode called Everything that folds nothing, so the chip always says a state and Show Everything is a real destination rather than a verb with no noun."
+    },
+    {
+      "t": "2026-09-22T08:08:16.107Z",
+      "note": "Adversarial review AFTER building, on the real app. Three things came out of running it. (1) A mode can only FOLD a section, never summon one: InspectorPanel.availableSections gates every optional section on the same fact PanelSectionVisibility's automatic rule waits on, so Redline pinning measurements ON produced a panel identical to the one before it. Watched in window-modes-walk, which went looking for the section and found nothing. Every shipped preset is now folds only and WindowMode.preset says why; docs/design/modes.md section 8 records that section 2 was wrong about this. (2) Folding sections the document had nothing for made the Sections row read 'Sections · 3 hidden' over a panel identical to the one beside it in no mode — the exact false alarm footerLabel's own doc comment exists to stop. footerLabel now takes the Situation and counts only sections that would otherwise be shown. (3) The popup's summaries wrapped to three lines each and Redline's ran off the end at 286pt; they are one line now and the popup is 324pt."
+    },
+    {
+      "t": "2026-09-22T08:08:16.156Z",
+      "note": "left rough: a section a MODE folded is listed at the foot of the panel as 'Always hidden'. That is the right side of the line the study drew (it is not 'the document has nothing for it', which is acceptance item 6) but it is not quite true either — it is hidden in this mode, not always. 'Folded by Design' would be better and is cheap to compute (the choice matches the mode's own preset). Left out because the ask was the distinction, not the attribution; it is in the audit's rough so the user can ask for it."
+    },
+    {
+      "t": "2026-09-22T08:08:16.204Z",
+      "note": "left rough: the mode is ONE setting for the whole app, not one per window, because the panel choices it moves are one app-wide setting (PanelSectionVisibilityStore's own header says why). So two windows onto the same file cannot be in two different modes, which docs/design/modes.md section 3 calls genuinely useful. Making it per-window means making the panel choices per-window first, which is a change to a shipped feature nobody has asked for. Not filed as a task: nobody has hit it, and it is in the audit's rough where the user can turn it into one."
+    },
+    {
+      "t": "2026-09-22T08:08:16.253Z",
+      "note": "Verified: 8909 core tests green (Scripts/test.sh), window-modes-walk 131 steps ok with 9 real window captures, and the two sets of walks this could have broken are green — all 22 panel-* walks (the footerLabel change) and all 14 menu walks (the new View > Mode submenu). Asked for a full sweep rather than running one."
     }
+  ],
+  "started": "2026-09-22T07:30:54.799Z",
+  "walks": [
+    "window-modes-walk"
   ]
 }

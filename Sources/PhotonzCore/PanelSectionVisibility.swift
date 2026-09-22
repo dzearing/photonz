@@ -221,8 +221,18 @@ public enum PanelSectionVisibility {
     /// something, because a number that is there whatever you do is noise; and
     /// it says how many the moment one is off, because "where did Measurements
     /// go" is the whole risk of hiding anything.
-    public static func footerLabel(for rows: [Row]) -> String {
-        let hidden = rows.filter { $0.reason == .turnedOff }.count
+    /// ...and it counts only the ones that would OTHERWISE BE THERE. Turning
+    /// off a section the document has nothing for changes nothing on screen, so
+    /// counting it is the same alarm about nothing that counting the automatic
+    /// ones was: a blank document put into a mode that folds Measurements, the
+    /// shelf and Columns read "Sections · 3 hidden" while looking identical to
+    /// the one beside it that was in no mode at all (found 2026-09-22, building
+    /// `next-window-modes`). The number means "this many things you would see
+    /// are missing", and nothing else.
+    public static func footerLabel(for rows: [Row], in situation: Situation) -> String {
+        let hidden = rows.filter {
+            $0.reason == .turnedOff && isShownAutomatically($0.section, in: situation)
+        }.count
         return hidden == 0 ? "Sections" : "Sections · \(hidden) hidden"
     }
 
@@ -283,5 +293,20 @@ public enum PanelSectionVisibility {
 
         /// Hand the lot back.
         public mutating func useAutomaticForAll() { overrides = [:] }
+    }
+}
+
+extension PanelSectionVisibility.Choices: Codable {
+    /// Written down as the one string the settings file already holds
+    /// (`motion=1;library=0`), rather than as a second shape. A mode is a
+    /// bundle of these, so a mode written down as data and a panel written
+    /// down in settings say the same thing in the same words.
+    public init(from decoder: any Decoder) throws {
+        self.init(stored: try decoder.singleValueContainer().decode(String.self))
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(stored)
     }
 }

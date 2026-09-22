@@ -3198,6 +3198,25 @@ private final class Run {
             case .forgetThumbnails: editor.forgetLayerThumbnails()
             case .hideInspector: editor.setInspectorVisible(false)
             case .showInspector: editor.setInspectorVisible(true)
+            // What the window is set up for (`next-window-modes`). Says which
+            // mode it landed in and what the chip now reads, because "the
+            // action ran" is not the same claim as "the window swapped".
+            case .modeIcon, .modeRedline, .modeVideo, .modeDesign, .modeShowEverything:
+                let modes = WindowModeStore.shared
+                if action == .modeShowEverything {
+                    modes.showEverything()
+                } else {
+                    let id: String = switch action {
+                    case .modeIcon: "icon"
+                    case .modeRedline: "redline"
+                    case .modeVideo: "video"
+                    default: "design"
+                    }
+                    modes.swap(to: id)
+                }
+                actionDetail = Experiments.shared.windowModesEnabled
+                    ? "the chip reads \(modes.label)"
+                    : "modes are switched off in this release, so nothing swapped"
             case .toggleFullScreen:
                 // A walk opens its window straight, without going through the
                 // agent's own "a window is up now" hand-off, so the probe is

@@ -1,0 +1,627 @@
+{
+  "out": "/tmp/photonz-playtest/window-modes",
+  "seed": "THE CLAIM: a window can be set up for the job in front of you in one move, and nothing about the document moves with it. A chip beside the traffic lights says what this window is set up for; it opens a list of modes; picking one folds away the panel sections that job does not need, all at once, instead of you turning them off one at a time. The document is built first so the swaps have something to fold: two rectangles and a real gap measurement between them, which is what puts a Measurements list in the panel at all. Then four things are read at every stage rather than trusted from a picture: the WORDS on the chip, the WORDS on the Sections row at the foot of the panel, which sections the dock is actually drawing, and what is still picked. Icon folds the measurements list and keeps Motion; Redline is the other way round and is reached from the KEYBOARD rather than the chip, against the menu bar's own key equivalent; Design folds both. The same rectangle stays picked through every swap and the layer list stays three rows, because a mode is a fact about the WINDOW and never about the document. Last, the two ways back, which are the whole reason this is not a trap: turning one folded section back on by hand keeps you in the mode and turns the chip to Design, edited, and Show Everything hands the lot back in one press and puts the chip back to Everything.",
+  "setup": {
+    "forget": [
+      "panel",
+      "tools",
+      "shapes",
+      "text",
+      "color",
+      "measure",
+      "groups"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1400,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        240
+      ],
+      "to": [
+        380,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        460,
+        240
+      ],
+      "to": [
+        640,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "gap"
+    },
+    {
+      "do": "move",
+      "at": [
+        420,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        420,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        290,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-everything",
+      "note": "BEFORE. Two rectangles, one gap measurement between them, the left rectangle picked, and the window in no mode at all: the chip beside the traffic lights reads Everything, every section follows the document exactly as it does for somebody who never finds modes, and the Sections row at the foot of the panel reads just Sections because nobody has hidden a thing. Both of the sections the modes below fold are here: Measurements, because this document now holds one, and Motion. This is the window every later stage is measured against."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Everything"
+    },
+    {
+      "do": "expect",
+      "control": "Sections",
+      "reads": "Sections"
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-everything"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-1-everything"
+    },
+    {
+      "do": "press",
+      "control": "Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-mode-list",
+      "note": "The list the chip opens. Four modes, each with one plain sentence saying what it is for and the number it answers to on the keyboard, and under the line the panic button: Show Everything, one press and every folded thing comes back. It is a popup rather than a row of tabs on purpose: three tabs in the title bar would read as navigating between three applications, and a popup reads as state."
+    },
+    {
+      "do": "expect",
+      "control": "Icon mode",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Redline mode",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Video mode",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Design mode",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Show Everything",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-2-mode-list"
+    },
+    {
+      "do": "press",
+      "control": "Icon mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-icon",
+      "note": "One press, and the window is set up for drawing a glyph. THE CLAIM: the chip reads Icon, the measurements list has folded away because an icon is not a thing you redline, and Motion has STAYED because an icon that moves is the whole point of drawing one here. The Sections row says one is hidden, and it counts only what you would otherwise see. Nothing about the document moved: the same rectangle is still picked and the layer list is the three rows it was."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Icon"
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Sections",
+      "reads": "Sections · 1 hidden"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    },
+    {
+      "do": "panel",
+      "stage": "3-icon"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-3-icon"
+    },
+    {
+      "do": "shortcut",
+      "key": "2",
+      "modifiers": [
+        "control"
+      ],
+      "menuItem": "Redline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-redline",
+      "note": "The same kind of swap from the KEYBOARD, against the menu bar's own key equivalent, so a mode never needs the pointer. THE CLAIM: the chip reads Redline and the window is the exact opposite of the one before it: the measurements list is back because that is the job, and Motion has folded away because measuring a capture is not animating it. The measurement itself never moved: it is still in the document, and it was still in the document while Icon had its list folded."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Redline"
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": false
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    },
+    {
+      "do": "panel",
+      "stage": "4-redline"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-4-redline"
+    },
+    {
+      "do": "press",
+      "control": "Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Design mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "5-design",
+      "note": "A third mode, and a third arrangement: building screens, so neither measuring nor animating is in the way and the Sections row says two are hidden. Three modes, three windows, one document that has not changed in any of them."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Design"
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Sections",
+      "reads": "Sections · 2 hidden"
+    },
+    {
+      "do": "panel",
+      "stage": "5-design"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-5-design"
+    },
+    {
+      "do": "press",
+      "control": "Sections"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5b-sections-list-in-a-mode",
+      "note": "The way back, listed. THE CLAIM: the two sections this mode folded are still in the list at the foot of the panel, each with its own switch, and each says Always hidden rather than Automatic, not needed in this document yet. That difference is the whole point: one of those you turn back on, the other arrives by itself the moment the document does the thing it is for. A mode folding something never makes it look like something the document has nothing for."
+    },
+    {
+      "do": "expect",
+      "control": "Motion section switch",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section switch",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-5b-sections-list-in-a-mode"
+    },
+    {
+      "do": "appKey",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Sections"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Motion section switch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "appKey",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-design-edited",
+      "note": "You reach for the one thing this mode folded that you happen to want. THE CLAIM: you get it back with one switch and you are STILL in Design; the chip says Design, edited rather than quietly pretending nothing happened, and Reset Design is in the same list the chip opens. A mode you bend stays bent."
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Design, edited"
+    },
+    {
+      "do": "expect",
+      "control": "Sections",
+      "reads": "Sections · 1 hidden"
+    },
+    {
+      "do": "panel",
+      "stage": "6-design-edited"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-6-design-edited"
+    },
+    {
+      "do": "press",
+      "control": "Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Show Everything"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-everything-again",
+      "note": "AFTER. The panic button, one press. THE CLAIM: every folded section is back, the chip reads Everything again, the Sections row reads just Sections, and the dock is the window of stage 1 to the point. Nothing was lost by any of it, the measurement is still one measurement, and the document is the document it was four swaps ago."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Everything"
+    },
+    {
+      "do": "expect",
+      "control": "Sections",
+      "reads": "Sections"
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": true
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    },
+    {
+      "do": "panel",
+      "stage": "7-everything-again"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-7-everything-again"
+    },
+    {
+      "do": "shortcut",
+      "key": "4",
+      "modifiers": [
+        "control"
+      ],
+      "menuItem": "Design"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-back-in-design",
+      "note": "Back into the mode you left, from the keyboard. THE CLAIM: it is the window you LEFT and not the mode as it shipped — Motion is here because you turned it back on four steps ago, Measurements is still folded, and the chip still says Design, edited. Swapping away and back is not a reset, which is what makes leaving a mode safe."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Design, edited"
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Measurements section",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "8-back-in-design"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-8-back-in-design"
+    },
+    {
+      "do": "press",
+      "control": "Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Reset Design",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Reset Design"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "9-design-reset",
+      "note": "And the mode can be put back the way it shipped without leaving it. THE CLAIM: Motion is folded again, the chip drops the word edited and reads plain Design, and you are still in Design throughout. Three ways back, all of them one press: the switch, Reset Design, and Show Everything."
+    },
+    {
+      "do": "expect",
+      "control": "Mode",
+      "reads": "Design"
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "9-design-reset"
+    },
+    {
+      "do": "snapshot",
+      "name": "window-modes-9-design-reset"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "10-shortcuts-survive",
+      "note": "Last, the promise that makes the whole thing safe: no mode takes a capability away. R still arms the rectangle and I still arms Measure while the window is in a mode that has the measurements list folded, so the worst a mode can do is hide a panel you can put back, never a tool you cannot reach."
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    }
+  ]
+}

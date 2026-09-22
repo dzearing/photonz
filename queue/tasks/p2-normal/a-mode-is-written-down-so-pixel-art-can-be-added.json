@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:14.121Z",
-  "updated": "2026-09-22T07:08:14.124Z",
+  "updated": "2026-09-22T08:08:16.302Z",
   "deps": [
     "swap-the-window-into-a-mode-from-a-chip-beside-t"
   ],
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-22T07:08:14.123Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T08:08:16.301Z",
+      "note": "From the first slice, landed 2026-09-22: (1) a mode can only FOLD a panel section, never summon one — the panel offers a section only once the selection and document have asked for it, and that is the same fact the automatic rule waits on, so a preset saying yes does nothing. The Choices mechanism supports yes; the panel does not listen. If a written-down mode is meant to be able to OPEN a surface (the pixel art grid, the shelf), that is a second thing to build and not a property of the record. (2) In a plain document Icon and Video fold nothing visible, because what they fold was not on screen anyway. Modes only change the window at a glance once the TOOL GROUPS move, which is this task. (3) PlaytestAction now carries one case per mode (modeIcon, modeRedline, modeVideo, modeDesign, modeShowEverything) and PlaytestMenuStandIn maps control+1..4 onto them; making modes editable data means revisiting both, and ModeIsAPresetTests.everyModeIsReachableWithoutThePointer is the test that will say so."
     }
   ]
 }

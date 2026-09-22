@@ -200,6 +200,16 @@ extension Experiments {
     /// Next release's catalog, so Current always reads false.
     var panelSectionsEnabled: Bool { isEnabled(FeatureCatalog.panelSectionsFlag) }
 
+    /// `next-window-modes`: whether the window carries a mode chip beside the
+    /// traffic lights that folds the panel down to what one job needs. A mode
+    /// is a named bundle of the choices `next-panel-sections` already stores,
+    /// so it needs that flag on to mean anything and the chip does not appear
+    /// without it. Exists only in the Next release's catalog, so Current
+    /// always reads false.
+    var windowModesEnabled: Bool {
+        isEnabled(FeatureCatalog.windowModesFlag) && panelSectionsEnabled
+    }
+
     /// `next-blend-mode`: whether the Appearance section carries a Blending row
     /// under Opacity, so a layer can say how it mixes with what is under it
     /// rather than always painting straight over. Exists only in the Next

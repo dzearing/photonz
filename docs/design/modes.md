@@ -1,8 +1,9 @@
 # Modes you can swap, rather than project types you are stuck in
 
-Status: **decided.** The user answered on 2026-09-20 with the option that takes
-modes AND the whole chain, video included. The video half has since shipped and
-was checked in the running app on 2026-09-22; the modes half is still to build.
+Status: **decided, and built.** The user answered on 2026-09-20 with the option
+that takes modes AND the whole chain, video included. The video half shipped and
+was checked in the running app on 2026-09-22; the modes half shipped the same
+day, panel sections first (see §8).
 Pages: <http://127.0.0.1:8791/index.html#modes> and
 <http://127.0.0.1:8791/index.html#shelves>.
 Evidence: `Tests/PhotonzCoreTests/ModeIsAPresetTests.swift`,
@@ -252,11 +253,30 @@ document with time, so it gets an in and an out. Edit the original and it change
 here too."* No export step, no import step, no conversion anywhere. The claim the
 whole prototype rested on is now a fact about shipped code rather than a drawing.
 
-### Modes: still to build
+### Modes: the first slice is built, panel sections only
 
-Nothing in the app knows the word mode yet. `PanelSectionVisibility.Choices`,
-`ToolBarLayout` groups, `CanvasGridStore` and `magnifyNearest` are the pieces a
-mode is a named bundle of, and they are all running; what is missing is the
-bundle, the chip in the window's status that swaps it, and the way back shipping
-in the same slice rather than after it. Sections 2, 3 and 4 above are the
-specification for that work.
+Shipped 2026-09-22 behind `next-window-modes`. A chip at the leading end of the
+title bar, beside the traffic lights, says what the window is set up for and
+opens the list; the same list is View ▸ Mode and ⌃1 … ⌃4. Four modes ship — Icon,
+Redline, Video, Design — plus **Everything**, which is the window before you pick
+one and what **Show Everything** goes back to. The way back shipped in the same
+slice, as section 3 asks: a folded section is still listed at the foot of the
+panel saying *Always hidden* rather than *not needed in this document yet*,
+turning one back on by hand keeps you in the mode and turns the chip to "Design,
+edited", *Reset Design* puts it back, and swapping away and back lands on the
+arrangement you left. `window-modes-walk` drives all of that through the real app
+and photographs nine windows.
+
+**One thing section 2 got wrong, corrected in the code.** A mode can only FOLD a
+panel section, never summon one. The panel offers a section only once the
+selection and the document have already asked for it, and for every optional
+section that condition is the same fact the automatic rule waits on — the
+Measurements list is offered only once the document holds a measurement. So
+Redline pinning Measurements ON did precisely nothing, watched on 2026-09-22.
+Every shipped preset is folds only, and `WindowMode.preset` says why.
+
+Still to build, and filed as the second slice: tool groups folding into the
+overflow, and a mode being a record somebody can write rather than a list in
+Swift (section 4). Also unbuilt: two windows onto one file in two different
+modes, which needs the panel's choices to become per-window first — they are one
+app-wide setting today, and so is the mode.

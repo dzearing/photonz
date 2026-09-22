@@ -55,6 +55,8 @@ public enum FeatureCatalog {
 
     public static let panelSectionsFlag = "next-panel-sections"
 
+    public static let windowModesFlag = "next-window-modes"
+
     public static let cornerHandlesFlag = "next-corner-handles"
 
     public static let grabCueFlag = "next-grab-cue"
@@ -316,6 +318,16 @@ public enum FeatureCatalog {
                     name: panelSectionsFlag,
                     title: "The panel shows the sections that matter",
                     description: "You choose which of the panel\'s sections you want. A small Sections row at the foot of the panel opens a list of every section that answers for a job rather than for every layer: the Library shelf, Measurements, Motion, Layout, Columns, Component, Arrange and Shadow. Turn one off and it stays off in every document and after a relaunch; turn one on and it stays on. Left alone, each follows one written rule: it waits until the document is doing the job it is for, so a document with no measurement in it has no Measurements section and the shelf stays away until you ask for it. What you pick never adds or removes one of them, so the panel holds still as you click from layer to layer. Beside each switch is a word saying why that section is where it is, the row says how many are hidden, and one press hands the lot back to automatic.",
+                    area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: windowModesFlag,
+                    title: "Set the window up for the job in front of you",
+                    description: "A quiet chip beside the traffic lights says what this window is set up for, and opens a list to change it: Icon, Redline, Video or Design, also on Control 1 to Control 4 and on View, Mode. Picking one folds away the panel sections that job does not need, in one go, instead of you turning them off one at a time. Nothing about it touches the document: nothing is written into the file, an old document opens with no question asked, and the layers, the selection, the zoom and every tool shortcut are exactly where you left them. Everything it folds is one visible click from coming back: a folded section is listed at the foot of the panel and says you turned this off, turning one back on by hand keeps the mode and the chip says edited, Reset This Mode puts it back, and Show Everything hands the lot back in one press. Swap away and swap back and you land on the arrangement you left, bends and all.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),
