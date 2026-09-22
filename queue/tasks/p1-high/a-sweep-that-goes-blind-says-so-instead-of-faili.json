@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 340,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "infra",
   "created": "2026-09-22T04:46:51.236Z",
-  "updated": "2026-09-22T08:30:09.636Z",
+  "updated": "2026-09-22T08:30:35.793Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED from the artefacts, 2026-09-22.\n\n  queue/bin/sweep.sh status\n  -> Last sweep 2026-09-22T02:13:14Z: 115/553 walks passed in 26m.\n     Failing: copy-own-color-walk, delete-key-drops-a-piece-walk, distance-parking-preview, ... (438 names)\n\nThe run log says what really happened. queue/sweep/2026-09-21-184741.log runs normally for 117 walks and then every single walk from 'distance-parking-preview' on fails in 0s:\n\n  decided-size-walk                          13s  ok\n  delete-layer-key-walk                       9s  ok\n  distance-parking-preview                    0s  FAILED  no done.json\n  distance-three-clicks                       0s  FAILED  no done.json\n  ... 436 of them\n\n  grep -c 'no done.json' queue/sweep/2026-09-21-184741.log  -> 436\n\n0s and no done.json is the app never starting, not a walk failing: the whole run took 25m for 553 walks where a real sweep takes 105m for 544. Spot-checked four of the names against the real thing on 2026-09-22: border-offset-walk, corner-radius-rounds-walk, ellipse-border-walk and glow-effect-walk all pass on their own in about 20s.\n\nThe guard that exists only covers a run that never started at all: sweep-record.mjs has 'const nothingToSay = r.walks === 0 && r.couldNotRun === 0'. A run that answers 115 walks and then goes blind sails past it and overwrites queue/sweep/latest.json. The standing task's own notes block escaped (it still carries the 2026-09-21T08:42 sweep), so what is poisoned is latest.json and everything that reads it, which is sweep.sh status and the dashboard.\n\nWhat made the app stop launching that night is a second question and not the point of this task: the point is that the sweep could not tell 'the app will not start' from 'the app is broken in 438 ways', and the runner contract sends people to that list.",
@@ -55,8 +55,13 @@
     {
       "t": "2026-09-22T08:30:09.635Z",
       "note": "left rough: queue/history.jsonl still carries the poisoned sweep_pass event for the 2026-09-21 run, saying complete true with 438 failed. The file is append-only and nothing reads that number as the state of the app (lockedRunBegan only looks at screenLocked, loop-day only at timing), so it is left as the record of what happened rather than rewritten.\nleft rough: the dashboard reads queue/sweep/latest.json only, so a blind run shows there as nothing having happened since the last real sweep. Better than 438 broken walks, but a person watching the page would not learn the app had stopped launching. It is in the audit's rough list for the user to react to rather than filed, because whether the page should carry it is their call.\nfiled: the-dev-app-drill-stops-going-red-just-because-t (p2-normal). queue/bin/dev-app-drill.mjs fails every day now and the thing it checks is fine: it pins its clock at line 35 but calls lib.devAppSentence(s) with no clock at line 98, so the age it prints grows by a day every day. Proved with the same fixture state: devAppSentence(s) gives 'held for 4 days', devAppSentence(s, NOW) gives 'held for 2 days'. Not in CI."
+    },
+    {
+      "t": "2026-09-22T08:30:35.791Z",
+      "note": "A walk that nothing ran is now unanswered rather than broken, in all four places that decide it. Scripts/playtest.sh exits 5 with 'THE APP WOULD NOT START' instead of dying silently under set -e (which is why those walks said 'no done.json' at all); Scripts/playtest-all.sh counts them apart and stops the run after five in a row, one being a flake that stays a failure; queue/bin/sweep-parse.mjs reads a run of five or more out of any log including the poisoned one; queue/bin/sweep-record.mjs writes a blind run to queue/sweep/blind.json and never over latest.json, so the twelve-hour floor is still counted from a run that could see, with sweep.sh status and summary leading with it while it is newer. Verified with the probe bundle parked: playtest-all stopped at five of eight and exited 5, and a narrowed sweep.sh run printed 'WENT BLIND after 0m 15s' and left latest.json byte-identical, blind.json written, its request handed back, no claim behind it and no task filed. redline-walk then ran for real (14 window captures) to prove the launch path is untouched. Both poisoned records replaced by the real writers: latest.json is the 2026-09-21T06:47:03Z run again, 537 of 544, and the standing walk task's failing list went from 438 names to 7. New drill queue/bin/sweep-blind-drill.mjs (46 checks) in CI; every other queue drill green; Scripts/test.sh 8909 tests in 711 suites passed. Audit: queue/audits/2026-09-22-blind-sweep.json. Committed 40bbb38c, pushed to main. A sweep is asked for, since playtest.sh and playtest-all.sh are on every walk's path."
     }
   ],
   "walks": [],
-  "started": "2026-09-22T08:21:49.209Z"
+  "started": "2026-09-22T08:21:49.209Z",
+  "completed": "2026-09-22T08:30:35.792Z"
 }
