@@ -11,7 +11,8 @@ import Testing
 /// So the question "may this walk run with the screen locked" has an answer,
 /// and it is per step: a walk built out of clicks, drags, keys, snapshots and
 /// the app's own control registry runs perfectly, while one that needs a real
-/// menu on screen, a tutorial card drawn, or a live menu bar cannot.
+/// menu on screen, a live menu bar, or the Tutorials window's accessibility
+/// names cannot.
 ///
 /// This is the part of that which can be decided without an app, off the walk
 /// alone, so a walk knows before it launches whether its answer would be worth
@@ -104,21 +105,36 @@ struct PlaytestLockSafetyTests {
         let steps: [PlaytestStep] = [
             .snapshot(name: "a-start", window: nil),
             .snapshot(name: "b-styled", window: nil),
-            .startGuide("redline", window: nil),
+            .menus(stage: "after", menu: nil),
             .snapshot(name: "c-shadow", window: nil),
         ]
         let said = PlaytestLockSafety.refusal(for: steps)
-        #expect(said?.contains("step 3 (startGuide)") == true)
+        #expect(said?.contains("step 3 (menus)") == true)
         // What a runner decides with: forcing it still gets the first two.
         #expect(said?.contains("2 of its 3 pictures") == true)
     }
 
-    @Test("Waiting on a tutorial card cannot run: the login window is over it")
-    func tutorialCardsCannot() {
-        #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.tutorialStep("put-it-back"), timeout: 5)) != nil)
-        #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.tutorialFinished("redline"), timeout: 5)) != nil)
-        #expect(PlaytestLockSafety.lockTrouble(with: .startGuide("redline", window: nil)) != nil)
-        #expect(PlaytestLockSafety.lockTrouble(with: .expectTutorialStep("put-it-back")) != nil)
+    /// A guide is the app's own state, and so is the check each of its steps
+    /// is held to. Where a guide has got to is `TutorialController.run`, read
+    /// inside the app's own process; whether the step's control is really on
+    /// screen is the app's own anchor registry, which answered correctly on
+    /// the locked Mac of 2026-09-15 with the window occluded ("mark-it-up/
+    /// pick-arrow ... occlusion HIDDEN; found after 0.5s on screen").
+    ///
+    /// What a lock used to take was the card's PICTURE, which is a separate
+    /// problem with its own answer: a guide driven by a walk keeps its card up
+    /// however buried the window is (`TutorialCardPresence`), and a walk will
+    /// not photograph a window whose card is missing.
+    @Test("A guide's own state survives a lock, and the Tutorials window's names do not")
+    func guidesRunUnderALockAndTheTutorialsWindowDoesNot() {
+        #expect(PlaytestLockSafety.lockTrouble(with: .startGuide("redline", window: nil)) == nil)
+        #expect(PlaytestLockSafety.lockTrouble(with: .expectTutorialStep("put-it-back")) == nil)
+        #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.tutorialStep("put-it-back"), timeout: 5)) == nil)
+        #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.tutorialFinished("redline"), timeout: 5)) == nil)
+        // ...but the list of tracks is read out of the Tutorials window
+        // through accessibility, and a lock empties that.
+        let tracks = PlaytestStep.expectTutorialTracks(with: ["Basics"], without: [])
+        #expect(PlaytestLockSafety.lockTrouble(with: tracks) != nil)
         // ...while every other thing a walk waits for is read off the app itself.
         #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.sectionInView("Effects"), timeout: 5)) == nil)
         #expect(PlaytestLockSafety.lockTrouble(with: .waitFor(.dialog("Export", up: true), timeout: 5)) == nil)
@@ -144,9 +160,66 @@ struct PlaytestLockSafetyTests {
     func labelSaysWhatItCostsToPhotographUnderALock() {
         let label = PlaytestLockSafety.pictureLabel
         #expect(label.contains("locked"))
-        // the two known costs, so nobody reads a dimmed colour as a bug
+        // the one known cost, so nobody reads a dimmed colour as a bug
         #expect(label.lowercased().contains("colour") || label.lowercased().contains("color"))
+        // and the cost that stopped being one, said out loud so a reader who
+        // remembers the old label knows a missing card is now impossible
         #expect(label.contains("tutorial"))
+        #expect(label.contains("2026-09-22"))
+    }
+
+    /// The walk folder, found from this file rather than from the working
+    /// directory, which `swift test` does not promise anything about.
+    private static var walkDirectory: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()          // Tests/PhotonzCoreTests
+            .deletingLastPathComponent()          // Tests
+            .deletingLastPathComponent()          // repo root
+            .appendingPathComponent("Scripts/playtest")
+    }
+
+    /// A tutorial walk is a walk like any other now. Thirty-nine of them were
+    /// refused under a lock until 2026-09-22 on the grounds that a card is not
+    /// drawn while the login window is over the app. Half of that was never
+    /// true — a guide's step machine and its anchor check are the app's own
+    /// state — and the half that was is fixed rather than worked around: a
+    /// guide a walk is driving keeps its card up however buried the window is
+    /// (`TutorialCardPresence`), and a walk will not photograph a window whose
+    /// card is missing.
+    ///
+    /// So the only tutorial walks still refused are the ones that read the
+    /// Tutorials window through accessibility, or open a real menu, which are
+    /// objections about something else entirely.
+    @Test("A walk that drives a guide runs with the screen locked")
+    func walksThatDriveGuidesRunUnderALock() throws {
+        let files = try FileManager.default
+            .contentsOfDirectory(at: Self.walkDirectory, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        var drivesAGuide = 0
+        for file in files {
+            let script = try PlaytestScript.decode(try Data(contentsOf: file))
+            guard script.steps.contains(where: { if case .startGuide = $0 { true } else { false } })
+            else { continue }
+            drivesAGuide += 1
+            // The objections that are about something else entirely: a real
+            // menu on screen, a live menu bar, the Tutorials window's own
+            // accessibility names.
+            // `setLensAmount` is the odd one: it is refused for want of a
+            // witness rather than for anything about tutorials, and until
+            // today no walk carrying one ever got past its `startGuide` to be
+            // watched. The next run on a locked Mac can watch it.
+            let aboutSomethingElse: Set<String> = ["menus", "menuShot", "rightClick",
+                                                   "expectTutorialTracks", "panelMenu",
+                                                   "setLensAmount"]
+            let names: [String] = PlaytestLockSafety.nameLookups(in: script.steps).map(\.name)
+            let stops: [String] = names.filter { !aboutSomethingElse.contains($0) }
+            let refused = stops.joined(separator: ", ")
+            let said: Comment = "\(file.lastPathComponent) drives a guide and is refused under a lock for \(refused)"
+            #expect(stops.isEmpty, said)
+        }
+        // The walks themselves, so this cannot quietly pass on an empty folder.
+        #expect(drivesAGuide >= 39)
     }
 
     /// Writing a file is not looking at the screen. `writePicture` renders the

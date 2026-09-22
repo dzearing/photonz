@@ -24,6 +24,12 @@ enum PlaytestHarness {
     private static var editors: [EditorState] = []
     private static var run: Run?
 
+    /// Whether a scripted walk is driving this app. Read by anything whose
+    /// behaviour should not depend on a person being at the Mac: a guide's
+    /// card hides itself over a buried window for a person's sake, and a walk
+    /// is not a person (`TutorialCardPresence`).
+    static var isDrivingAWalk: Bool { run != nil }
+
     /// Every editor announces itself when its canvas lands in a window, so
     /// the run can find the one it just opened.
     static func register(_ editor: EditorState) {
@@ -82,6 +88,14 @@ enum PlaytestHarness {
 @MainActor
 private final class Run {
     struct Failure: Error, CustomStringConvertible {
+        let description: String
+    }
+
+    /// Neither a pass nor a failure: part way through, this run met something
+    /// that is missing BECAUSE the screen is locked. The run stops there and
+    /// reports `locked`, exactly as a walk refused before it started does, so
+    /// a lock can never be read as a fault in the app.
+    struct LockedOut: Error, CustomStringConvertible {
         let description: String
     }
 
@@ -226,6 +240,11 @@ private final class Run {
             do {
                 try await perform(step, number: number)
                 completed = number
+            } catch let lockedOut as LockedOut {
+                note(number, step.name, "COULD NOT RUN: \(lockedOut)")
+                finish(status: PlaytestScreenState.lockedStatus, steps: completed,
+                       error: "step \(number) (\(step.name)): \(lockedOut)")
+                return
             } catch {
                 note(number, step.name, "FAILED: \(error)")
                 finish(status: "failed", steps: completed, error: "step \(number) (\(step.name)): \(error)")
@@ -275,6 +294,52 @@ private final class Run {
     /// it. The rule's own grace, and a second on top for a panel section that
     /// arrives with a selection or has to be scrolled to.
     private static let anchorGrace = TutorialAnchorAudit.grace + 1.0
+
+    /// How long a card gets to arrive before a picture is taken without it.
+    /// The guide places its panels on its own follow pass, so a walk that asks
+    /// for a picture the instant a step lands can be a beat ahead of it.
+    private static let cardGrace = 2.0
+
+    /// A picture taken while a guide is showing has to have the guide's CARD
+    /// in it.
+    ///
+    /// The card is a window of its own hung on the one being photographed, so
+    /// it is in the picture when it is on screen and silently absent when it
+    /// is not — and until 2026-09-22 nothing in a walk noticed the difference.
+    /// A guide whose window was buried drew no card at all, and every tutorial
+    /// walk carried on green, photographing a window with an empty space where
+    /// the thing the walk exists to check should be. `TutorialCardPresence`
+    /// stops that happening for a walk at all; this is the check that says so
+    /// out loud if it ever happens again.
+    ///
+    /// Only for the window the guide is teaching in. A walk that photographs
+    /// the Tutorials window, or a toast, while a guide runs somewhere else is
+    /// not asking for a picture of the card.
+    private func requireTheCardIsInThePicture(of window: NSWindow) async throws {
+        let controller = TutorialController.shared
+        guard let saying = controller.whatTheCardIsSaying,
+              controller.guideWindow === window else { return }
+        let deadline = Date().addingTimeInterval(Self.cardGrace)
+        while !controller.cardIsOnScreen {
+            guard Date() < deadline else {
+                let said = "the guide is showing \(saying) and its card is not on screen, so this "
+                    + "picture would be the window with an empty space where the card belongs"
+                // Under a lock this is not news about the app. The login
+                // window covers everything, and if that ever stops the card
+                // being drawn the walk has no answer worth having: it stops
+                // with no verdict rather than shipping a picture of a window
+                // nobody would recognise.
+                if PlaytestScreenState.isLocked {
+                    throw LockedOut(description: said
+                        + ". The Mac's screen is locked, so this is about the lock and not about "
+                        + "the app: run it again with the screen unlocked")
+                }
+                throw Failure(description: said
+                    + ". Something is covering the window, or the guide put its card nowhere")
+            }
+            await sleep(0.05)
+        }
+    }
 
     /// The step a walk has just landed on has to be pointing at something real.
     /// Waits out the grace, then fails naming the guide, the step and the name
@@ -1334,6 +1399,7 @@ private final class Run {
                     ?? (try requireWindow().attachedSheet ?? (try requireWindow()))
             }
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            try await requireTheCardIsInThePicture(of: window)
             try snapshot(content, name: name)
             await screenCapture(window, name: name)
             note(number, step.name, "\(name).png \(Int(content.bounds.width))x\(Int(content.bounds.height)) pt")

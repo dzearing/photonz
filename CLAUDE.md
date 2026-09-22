@@ -82,9 +82,12 @@ press keys, photograph the window and reach panel controls through the app's own
 register of them. `redline-walk` ran all 70 of its steps and wrote fourteen real
 pictures of the window on a Mac that had been locked for three days. Those runs
 report `lockSafe: true` and every picture they leave carries a label saying it
-was taken under a lock, because two things about it are not what a person at the
-machine would see: colours can read dimmed, and a tutorial card does not draw at
-all. Which step kinds survive and which do not is
+was taken under a lock, because one thing about it is not what a person at the
+machine would see: colours can read dimmed. A tutorial card was a second cost
+until 2026-09-22, and is not any more: a guide a walk is driving keeps its card
+up however buried the window is, and a walk that finds the card missing stops
+rather than photographing the window without it. Which step kinds survive and
+which do not is
 `Sources/PhotonzCore/PlaytestLockSafety.swift`, one list, unit tested.
 
 A walk that DOES look a control up by name is a different matter: it **does not

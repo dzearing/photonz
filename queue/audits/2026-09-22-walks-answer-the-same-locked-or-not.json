@@ -1,0 +1,24 @@
+{
+  "feature": "A tutorial walk answers the same whether or not somebody is at the Mac",
+  "epic": "unmanned-loop",
+  "summary": "The 39 walks that teach a guide were skipped whenever the Mac was locked, on the grounds that a tutorial card is not drawn with the login window over the app. They run now: a guide a walk is driving keeps its card up however buried its window is, and a walk refuses to photograph a window the card is missing from, so a locked sweep covers 469 of 557 walks instead of 435 and every tutorial picture really has the card in it.",
+  "setup": "A terminal in the repo. Nothing to build by hand and nothing to turn on: Scripts/playtest.sh builds the probe bundle, which is the loop's own copy of the app and never the one you work in.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/tutorial-mark-it-up-walk.json and wait for \"walk complete\"." },
+    { "do": "Open /tmp/photonz-playtest/tutorial-mark-it-up-walk/2-draw-arrow-sc.png and look for the card reading \"Drag one out\".", "shot": "2026-09-22-tutorial-card-in-the-picture.png" },
+    { "do": "Run grep -o '\"tutorial\" : \"[^\"]*\"' /tmp/photonz-playtest/tutorial-resume-walk/log.json after running tutorial-resume-walk, and read the first guide line: it says \"occlusion HIDDEN\" and now also gives the card a rectangle, where it used to say \"card none\"." },
+    { "do": "Edit Sources/PhotonzCore/TutorialCardPresence.swift to return false always, run the mark-it-up walk again, and watch it stop at step 7 saying the card is not on screen instead of photographing the window without it. Put the file back." },
+    { "do": "Run Scripts/test.sh and read the two new suites: \"Whether a guide's card is on screen\" and \"A walk that drives a guide runs with the screen locked\"." }
+  ],
+  "evaluate": [
+    "Is \"a walk photographs what a person would see, whatever is in front of the window\" the right rule, or should a walk instead fail when the window is buried?",
+    "When a tutorial walk under a lock does find its card missing it reports no verdict rather than a failure. Is silence the right answer there, or would you rather see it listed as broken?",
+    "A locked sweep now skips 88 walks: 32 that read the menu bar, 31 that photograph an open menu, 16 that right click, and 9 others. Is that a small enough hole to trust a locked sweep, or should the loop keep refusing to treat one as a sweep at all?",
+    "The four walks this task was opened about all pass unattended now. Does the queue still need this task open for the menu-shaped remainder, or should that be its own thing?"
+  ],
+  "rough": [
+    "Nothing here was watched on a genuinely locked Mac: this Mac has been unlocked all evening, and nothing may lock it on purpose. What was watched is the exact condition a lock creates, a window whose occlusion says HIDDEN, and the card is placed in it now where it was not before. If the real lock turns out to do something else as well, the walks report \"locked\" rather than failing, which is the same answer they gave before this change.",
+    "tutorial-start-on-an-icon-frame-walk fails at step 36, waiting for the step \"what-the-frame-knows\" after showIconKeylines. It fails identically on the commit before this one, so it is not from this work; folded into walks-that-fail-in-the-full-sweep-4.",
+    "first-run-walk is still refused under a lock, at a menus step. That is the frozen menu bar, a different and still-unsolved problem worth 32 walks."
+  ]
+}

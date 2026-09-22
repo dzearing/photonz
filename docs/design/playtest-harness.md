@@ -215,9 +215,13 @@ refused walk with `PHOTONZ_ALLOW_LOCKED_WALK=1` when you need the pictures it
 can reach before its first name lookup: those pictures are the real window, even
 though the run's later steps are a fact about the lock rather than about the app.
 
-Every picture taken under a lock carries a label saying so, because two things
-about it are not what a person at the machine would see: colours can read
-dimmed, and a tutorial card does not draw at all with the login window over it.
+Every picture taken under a lock carries a label saying so, because one thing
+about it is not what a person at the machine would see: colours can read dimmed.
+A tutorial card used to be a second cost and stopped being one on 2026-09-22: a
+guide a walk is driving keeps its card up however buried the window is
+(`TutorialCardPresence`), and a `snapshot` taken while a guide is showing
+refuses to photograph a window the card is missing from, reporting `locked`
+rather than a failure when the screen is locked.
 In an audit that label is the step's `shotNote`, and the dashboard prints it
 under the picture.
 

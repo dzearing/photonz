@@ -458,6 +458,30 @@ final class TutorialController {
 
     private var hostWindow: NSWindow? { host?.tutorialWindow }
 
+    /// Whether a scripted walk is driving this app right now. Always false in
+    /// the shipping build, which does not contain the harness at all.
+    private static var aWalkIsDriving: Bool {
+        #if PHOTONZ_PLAYTEST
+        PlaytestHarness.isDrivingAWalk
+        #else
+        false
+        #endif
+    }
+
+    /// Whether the card a guide is showing — a step's callout, or the finish
+    /// card — is really on screen. What a walk asks before it photographs the
+    /// window, so a picture with no card in it is never shipped as one with.
+    var cardIsOnScreen: Bool { cardPanel?.isVisible == true && cardPanel?.alphaValue ?? 0 > 0 }
+
+    /// What the guide has to show for itself right now, for a walk that is
+    /// about to take a picture: the step it is on, or the finish card, or nil
+    /// when no guide is showing anything at all.
+    var whatTheCardIsSaying: String? {
+        if let run { return "\(run.guide.id) step \(run.step.id), \(run.number) of \(run.count)" }
+        if let finished { return "the card that finished \(finished.guideID)" }
+        return nil
+    }
+
     private func place() {
         guard let window = hostWindow else { return }
         watchForClose(window)
@@ -498,7 +522,15 @@ final class TutorialController {
         // covered window would be a card floating on top of whatever the person
         // is really looking at, so the panels go away and come back when the
         // window does.
-        guard !window.isMiniaturized, window.occlusionState.contains(.visible) else {
+        //
+        // Unless nobody is looking at it: a walk drives a window it never
+        // brings to the front and photographs that window itself, so what is
+        // in front of it must not decide what is in the picture
+        // (`TutorialCardPresence`).
+        guard TutorialCardPresence.shouldBeOnScreen(
+            miniaturized: window.isMiniaturized,
+            windowVisible: window.occlusionState.contains(.visible),
+            aWalkIsDriving: Self.aWalkIsDriving) else {
             cardPanel?.orderOut(nil)
             cuePanel?.orderOut(nil)
             // Nothing was placed, so the next visible pass has to place it

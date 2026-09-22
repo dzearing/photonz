@@ -205,6 +205,31 @@ public enum PlaytestLockSafety {
         // reads the document's own times. It was on the unreachable list
         // because `panelMenu` came first.
         "dragTiming",
+        // Watched on 2026-09-22, and the last big stop in the set at 39
+        // walks. Starting a guide, asking which step it is on and waiting for
+        // one are all the guide's own state inside the app's own process
+        // (`TutorialController.run`), and the check each step is held to —
+        // that the control it rings is really on screen — reads the app's own
+        // anchor registry, which a lock cannot touch: caught on the locked Mac
+        // of 2026-09-15, "mark-it-up/pick-arrow ... occlusion HIDDEN; found
+        // after 0.5s on screen".
+        //
+        // What a lock really took was the CARD's picture, and that was the
+        // trap: every one of the 39 walks photographs the window after its
+        // guide starts, so refusing only the ones that ask for a picture
+        // would have un-refused none of them, and letting them run as they
+        // were would have shipped 39 walks' worth of pictures with an empty
+        // space where the card belongs. Both halves are now closed. A guide
+        // driven by a walk keeps its card up however buried the window is
+        // (`TutorialCardPresence`), and a `snapshot` taken while a guide is
+        // showing refuses to photograph a window the card is missing from,
+        // reporting `locked` rather than a failure when the screen is locked.
+        // So a tutorial walk under a lock either answers honestly with the
+        // card in its pictures, or reports no verdict at all.
+        //
+        // `expectTutorialTracks` is NOT here: it reads the Tutorials window
+        // through the accessibility tree, which is exactly what a lock empties.
+        "startGuide", "expectTutorialStep",
         "expectReadout", "exportQuality", "expectLanding", "expectListStill", "panelEdge",
         "panelStart", "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
         "expectSVG", "expectOneUnit",
@@ -234,8 +259,9 @@ public enum PlaytestLockSafety {
             + "SwiftUI only fills a window-scoped command in for a window that has focus, so every "
             + "one of them reads dimmed and empty however the document changes, and the step itself "
             + "says so rather than pretending ('nothing in the probe has focus')"
-        let tutorial = "needs a tutorial card, and a card is not drawn while the login window is "
-            + "over the app, so it would wait for something that never appears"
+        let tutorial = "reads the Tutorials window through the accessibility tree, and a locked "
+            + "screen takes the name off everything in it, so the list would read empty however "
+            + "many tracks are really offered"
         let unproven = "has never been watched running with the screen locked, so it is refused "
             + "rather than trusted; force the walk, and if the step works, say so and it moves "
             + "to the list of steps a lock cannot touch"
@@ -243,8 +269,6 @@ public enum PlaytestLockSafety {
             "menus": frozenBar,
             "menuShot": menu,
             "rightClick": menu,
-            "startGuide": tutorial,
-            "expectTutorialStep": tutorial,
             "expectTutorialTracks": tutorial,
         ]
         for name in PlaytestStep.names
@@ -278,17 +302,6 @@ public enum PlaytestLockSafety {
                     + "runs"
             }
             return nil
-        }
-        // A wait is only as safe as the thing it waits for: a tutorial card is
-        // the one thing on this list that a lock genuinely hides.
-        if case .waitFor(let condition, _) = step {
-            switch condition {
-            case .tutorialStep, .tutorialFinished:
-                return "waits for a tutorial card, and a card is not drawn while the login window "
-                    + "is over the app, so it would wait for something that never appears"
-            default:
-                break
-            }
         }
         return lockStops[step.name]
     }
@@ -335,8 +348,10 @@ public enum PlaytestLockSafety {
     /// the next reader filing a dimmed colour as a bug.
     public static let pictureLabel =
         "Photographed while the Mac was locked. The window is the real one, drawn and driven "
-        + "normally, with two known costs: colours can read dimmed, and a tutorial card does not "
-        + "draw at all because the login window is over it."
+        + "normally, with one known cost: colours can read dimmed. A tutorial card used to be a "
+        + "second cost, and is not since 2026-09-22: a guide a walk is driving keeps its card up "
+        + "however buried the window is, and a walk that finds the card missing stops rather than "
+        + "photographing the window without it."
 
     /// Whether this step asks for a picture of the window.
     private static func asksForAPicture(_ step: PlaytestStep) -> Bool {
