@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 47,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.839Z",
-  "updated": "2026-09-22T01:43:46.919Z",
+  "updated": "2026-09-22T01:47:19.040Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Build on docs/design/mocks/pages/video-entry-wt.html, whose opening line is the situation to design for: \"No document open. The screen recording you made this morning is already in history, one keystroke away behind the menu-bar icon.\"\n\nDeliberately independent of the time model so it can be done now: this is about the path in, not about what you land on.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -84,6 +84,10 @@
     {
       "t": "2026-09-22T01:43:46.918Z",
       "note": "Follow-up folded rather than filed: dropping a recording ONTO an open window is still refused, and the open task a-sound-or-a-video-dropped-on-the-window-lands-a already covers it. Noted on that task what this one built that it can reuse."
+    },
+    {
+      "t": "2026-09-22T01:47:19.038Z",
+      "note": "A recording now has one way in wherever you ask from, the file is checked before any window opens, and coming back puts the playhead where you left it. RecordingDoor + RecordingPlaces in PhotonzCore (pure, tested); AppCoordinator routes every movie asked for through the recording door, so Finder, the dock, recent items and File > Open are all covered; the bundle declares movie types at LSHandlerRank Alternate. Flag next-opening-a-recording, on by default in Next. Verified: 8870 tests pass, opening-a-recording-walk (37 steps, 8 real window captures) and opening-a-recording-as-a-document-walk green, plus every walk matching recording, video, history, drop-lands-here, panel-grip. Audit at queue/audits/2026-09-22-opening-a-recording.json with four real screenshots. Committed 5ec77c66 and pushed."
     }
   ],
   "started": "2026-09-22T01:05:16.892Z",
@@ -96,5 +100,6 @@
   "walks": [
     "opening-a-recording-walk",
     "opening-a-recording-as-a-document-walk"
-  ]
+  ],
+  "completed": "2026-09-22T01:47:19.039Z"
 }
