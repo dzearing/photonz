@@ -73,8 +73,29 @@ extension EditorState {
             // moment, and what they want to hear is that moment.
             startAudio()
         }
+        // ...and where the playhead is being DRAGGED, the sliver of sound
+        // under it, so somebody hunting for a word can hear it go by
+        // (`ScrubAudition.swift`). Does nothing unless a drag is in hand.
+        auditionScrub()
         documentMomentChanged()
     }
+
+    // MARK: Dragging the playhead
+
+    // The three calls a hand on the playhead makes, in one place rather than
+    // inside a gesture, so the timeline's own drag and a scripted walk drive
+    // the same thing. Taking hold is where the listening starts; letting go is
+    // where it stops (`ScrubAudition.swift`).
+
+    /// A hand took hold of the playhead.
+    func beginPlayheadDrag() { beginScrubAudition() }
+
+    /// ...and moved it. The same landing as any other scrub, so the canvas,
+    /// the ruler and the sound all follow one call.
+    func dragPlayhead(toMS ms: Int) { scrubDocument(toMS: ms) }
+
+    /// ...and let go.
+    func endPlayheadDrag() { endScrubAudition() }
 
     /// One frame on, or back with a negative count. The step is the grid frames
     /// are fetched on, so stepping always lands on a frame that can be drawn.
@@ -106,6 +127,10 @@ extension EditorState {
         // at the end of something obviously means.
         if documentTimeMS >= lastDocumentTimeMS { documentTimeMS = 0 }
         isDocumentPlaying = true
+        // Anything left listening to a hand stands down: the whole mix is
+        // about to play, and a scrub over the top of it is the same sound
+        // twice (`ScrubAudition.swift`).
+        endScrubAudition()
         restartDocumentClock()
         startAudio()
     }

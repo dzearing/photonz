@@ -194,6 +194,63 @@ no-entry pointer it was before.
 
 ---
 
+## 5b. Hearing the scrub
+
+Dragging the playhead used to be silent, and finding the exact word somebody
+says meant reading the picture of the sound and aiming at it. §8 called scrub
+audio out of scope for exactly one reason — it is not what makes a cut aimable,
+the waveform is — and that reason held right up until the waveform was there
+and people started asking the second question: *which word is that?*
+
+**A scrub is the same plan, read a sliver at a time.**
+`ScrubAudition.windows(in:movingFromMS:toMS:)` (pure, `PhotonzCore`) takes the
+mix and the two moments the playhead moved between, and says which file, which
+frames of it, which way round and how loud. Nothing else works anything out, so
+what you hunt with is what you hear when you press space and what lands in an
+export.
+
+- **A grain is 60ms** and they butt up against each other: one is allowed to
+  start every 60ms, so a hand moving steadily makes a continuous sound and a
+  hand that stops goes quiet inside a grain. That is why standing still on the
+  timeline is silent: what a scrub plays is MOVEMENT.
+- **A click is not a drag.** The first grain is not due until 60ms after the
+  press, and a click is over long before that, so putting the playhead
+  somewhere makes no sound at all.
+- **Backwards plays backwards.** Going forward a grain starts where the
+  playhead is; going back it ends there and the samples are turned round.
+- **Both ends of a grain are faded**, 5ms each. A waveform cut off mid-cycle is
+  a click, and a run of them is a buzz loud enough to drown the thing you were
+  listening for.
+- **Every piece of sound under the playhead gets its own grain and its own
+  node**, at the level its own line says at that moment, so two sounds laid
+  over each other are both heard.
+- **Not while it is playing.** A scrub mid-play already restarts the whole mix
+  from where the hand put the playhead (§5), and that IS the sound of that
+  moment.
+
+### None of it is on the main thread
+
+`ScrubAudioPlayer` (main actor) does the arithmetic and the pacing and nothing
+else. `ScrubAudioEngine` (an actor) owns the `AVAudioEngine`, the open files
+and the nodes, and everything crossing into it is a value.
+
+This is not tidiness, it is the feature working at all. The first build did the
+engine start and the file reads on the main thread and the walk caught it at
+once: **the worst grain cost 70ms**, which is four frames of the playhead
+standing still to listen. Moving the warm up to the press left an 18.9ms grain
+on the second drag — a compressed file seek — so the reads went off the main
+thread too. The hand now pays 0.1ms a grain, and `soundScrubAcrossIt` in
+`hear-the-scrub-walk` fails the walk if any single move costs a frame.
+
+The walk also asks what was actually on the engine rather than how many buffers
+went to it: fifteen grains of silence schedule exactly as well as fifteen
+grains of somebody talking, so the loudest sample played is checked too.
+
+Behind `next-hear-the-scrub`, which leans on `next-sound-on-the-timeline`:
+with no sound on the timeline there is nothing under the playhead to hear.
+
+---
+
 ## 6. Where it is in the window
 
 | What | Where |
@@ -228,9 +285,10 @@ points is a smear and a level line has nowhere to be dragged.
 
 ## 8. What this deliberately does not do
 
-- **Scrub audio.** Dragging the playhead is silent. Hearing a scrub is its own
-  feature (a short window of samples per move) and it is not what makes a cut
-  aimable — the waveform is.
+- ~~**Scrub audio.**~~ Built on 2026-09-22, and §5b says how. The reason it was
+  out of scope — it is not what makes a cut aimable, the waveform is — was
+  right, and it stopped being a reason the moment the waveform was there and
+  the next question people asked was which word that is.
 - **Video export with sound.** There is no document video export yet
   (`video-share`). `AudioMixdown.composition(for:urls:)` hands back a
   composition with the sound already laid in and its volume ramps beside it, so

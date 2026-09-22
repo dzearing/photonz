@@ -817,6 +817,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Write the mix out beside the walk's own pictures, and fail if nothing
     /// lands: the one step that proves an export really happened.
     case soundExportMix
+    /// Drag the playhead across a sound and back again, through the very three
+    /// calls the timeline's own hand makes, and fail the walk unless sound came
+    /// out of it: grains forward, grains backward, every layer under the
+    /// playhead heard, the playhead landing exactly where the hand asked every
+    /// step of the way, and no single grain costing a frame. The one thing
+    /// about scrubbing that can be checked without ears.
+    case soundScrubAcrossIt
     /// The bar's LEFT end dragged an eighth of the document inwards, and back
     /// out again by the same amount. The pair is the proof that nothing was
     /// thrown away: what the first one put out of play, the second one takes
@@ -915,7 +922,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept,
-             .soundExpectPlaying, .soundExportMix,
+             .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,

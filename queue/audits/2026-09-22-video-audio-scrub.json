@@ -1,0 +1,30 @@
+{
+  "feature": "Hearing the sound under the playhead while you drag it",
+  "epic": "video-audio",
+  "summary": "Dragging the playhead over a recording now plays the sound under it, for as long as your hand is moving. Drag backwards and it plays backwards; two sounds laid over each other are both heard, each at the level its own line says.",
+  "setup": "Photonz Dev, a recording open, Experiments window, release Next. Two flags, both on by default: Take a recording's sound off its picture (next-sound-on-the-timeline) and Hear the sound under the playhead (next-hear-the-scrub).",
+  "try": [
+    { "do": "Open a screen recording with sound in it, and press space to stop it if it started playing." },
+    { "do": "Click once on the timeline to put the playhead somewhere. It should make no sound at all: a click is not a drag." },
+    { "do": "Now press on the timeline and drag the playhead slowly across the recording. The sound should follow your hand.", "shot": "2026-09-22-hear-the-scrub-2.png" },
+    { "do": "Stop moving, with the button still down. It should go quiet inside a fraction of a second." },
+    { "do": "Drag back the way you came. It should play backwards rather than going silent." },
+    { "do": "Video menu, Add Sound, and put a piece of music under the recording, then drag the playhead across both.", "shot": "2026-09-22-hear-the-scrub-1.png" },
+    { "do": "Pull the music's level down in the Sound section of the panel and drag across it again: the scrub should be quieter too." },
+    { "do": "Press space to play, and while it is playing drag the playhead. It should carry on playing from where you put it rather than stacking a second sound on top." }
+  ],
+  "evaluate": [
+    "Is a 60ms sliver long enough to recognise a word by, or does it come out as a chatter you cannot read?",
+    "Dragging slowly makes short bursts with gaps between them. Does that read as scrubbing, or as something broken?",
+    "Does backwards actually help you find a moment, or would you rather it played forwards whichever way your hand goes?",
+    "Two sounds at once: is hearing both what you want, or do you want only the layer you have picked?",
+    "Should this ever be switchable from inside the app, or is on-always right for a tool where you are hunting for a moment?"
+  ],
+  "rough": [
+    "Nobody has listened to it. The walk proves the right samples reached a running engine, at real loudness, in the right order, and that no grain cost the picture a frame, but an agent has no ears: whether it SOUNDS like a scrub is the first thing to judge by hand.",
+    "Only the pointer scrubs. Stepping a frame with the arrow keys is still silent, and jogging by key is the other half of how people hunt for a moment. Left undone on purpose: a key press has no end, so it needs its own answer for when the sound stops.",
+    "A grain plays at natural pitch even where the piece is sped up. What you hear is the right part of the file, going by at the right place on the timeline, but not chipmunked the way playing it back would be. That is what every other editor does too, and it is a choice worth disagreeing with.",
+    "There is no toggle in the app, only the flag in the Experiments window. Some people find scrub audio grating and will want it off without opening Experiments.",
+    "Dragging a CLIP along the timeline is still silent, and so is dragging the ends of a trim. Only the playhead makes a sound."
+  ]
+}

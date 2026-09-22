@@ -1,0 +1,44 @@
+{
+  "out": "/tmp/photonz-playtest/hear-the-scrub-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-hear-the-scrub": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-a-recording-with-a-sound-in-it", "note": "An eight second screen recording, paused at the front. Its bar carries the shape of its sound, which until now was the only answer to where a word is: you read the picture of the sound and aim at it" },
+    { "do": "snapshot", "name": "1-a-recording-with-a-sound-in-it" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "2-two-sounds-under-the-playhead", "note": "A piece of music on the timeline at the playhead, over the recording's own sound. Two things make a sound at the same moment now, which is the case a scrub has to get right: both of them are under the playhead, so both of them should be heard" },
+    { "do": "snapshot", "name": "2-two-sounds-under-the-playhead" },
+
+    { "do": "action", "action": "soundScrubAcrossIt" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-dragging-the-playhead-makes-a-sound", "note": "THE WHOLE OF IT. The playhead is dragged forward across the sound and then back again, twenty four moves each way, and sound comes out the whole time: a short sliver of whatever is under it, over and over, for as long as the hand is moving. Backwards plays backwards. Both layers are heard, each at the level its own line says. The step fails unless the playhead landed exactly where the hand asked at every one of the forty eight moves, and unless no single sliver cost a frame, because hearing the scrub is not allowed to buy a stutter" },
+    { "do": "snapshot", "name": "3-dragging-the-playhead-makes-a-sound" },
+
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-pressing-play-still-plays", "note": "Space still plays the whole mix the way it always did, off the same plan the scrub reads a sliver of at a time. A scrub is not a second idea of what the sound is, it is the same one heard through a hand" },
+    { "do": "snapshot", "name": "4-pressing-play-still-plays" },
+
+    { "do": "action", "action": "soundScrubAcrossIt" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-and-it-still-scrubs-after-playing", "note": "Dragging again after a playthrough sounds the same as it did before one: the scrub's own engine is built when the first hand takes hold and given back the moment it lets go, so nothing is left running between drags" },
+    { "do": "snapshot", "name": "5-and-it-still-scrubs-after-playing" }
+  ]
+}

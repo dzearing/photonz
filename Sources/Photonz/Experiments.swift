@@ -446,6 +446,13 @@ extension Experiments {
     /// (`docs/design/video-audio.md`).
     var soundOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.soundOnTheTimelineFlag) }
 
+    /// `next-hear-the-scrub`: whether dragging the playhead plays the sound
+    /// under it (`ScrubAudition.swift`). Leans on the one above: with no sound
+    /// on the timeline there is nothing under the playhead to hear.
+    var scrubAuditionEnabled: Bool {
+        soundOnTheTimelineEnabled && isEnabled(FeatureCatalog.scrubAuditionFlag)
+    }
+
     /// `next-transitions-at-a-cut`: whether a cut can carry a transition, and
     /// whether an effect a layer already has can be changed over time
     /// (`docs/design/video-transitions.md`).

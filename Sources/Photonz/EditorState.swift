@@ -928,6 +928,10 @@ final class EditorState {
     /// press because an `AVAudioEngine` is not cheap to build, and outside the
     /// observation graph because nothing on screen is drawn from it.
     @ObservationIgnored var audioPlayerStorage: DocumentAudioPlayer?
+    /// What a drag on the playhead sounds like, made the first time somebody
+    /// drags one (`ScrubAudioPlayer.swift`). Its own engine because a scrub
+    /// and a playthrough want opposite things from the same plan.
+    @ObservationIgnored var scrubAudioStorage: ScrubAudioPlayer?
     /// The listening running in this window, or nil where none is
     /// (`EditorState+Captions`). It is what the Captions section's progress
     /// line is drawn from, so it is observed rather than ignored.

@@ -166,6 +166,49 @@ extension EditorState {
         audioPlayerStorage?.stop()
     }
 
+    // MARK: - Hearing the scrub
+
+    /// Where a drag on the playhead is heard from, made the first time one is
+    /// dragged.
+    var scrubAudio: ScrubAudioPlayer {
+        if let already = scrubAudioStorage { return already }
+        let player = ScrubAudioPlayer()
+        scrubAudioStorage = player
+        return player
+    }
+
+    /// Whether a drag on the playhead is in hand and being listened to.
+    var isAuditioningScrub: Bool { scrubAudioStorage?.isAuditioning ?? false }
+
+    /// A drag on the playhead started. Nothing is heard yet: what a scrub
+    /// plays is MOVEMENT, and so far there has been none, which is what keeps
+    /// a single click to place the playhead silent.
+    ///
+    /// Not while it is playing. A scrub mid-play already restarts the whole
+    /// mix from where the hand put the playhead (`EditorState+Time`), and that
+    /// IS the sound of that moment, so laying grains over it would be the same
+    /// sound twice.
+    func beginScrubAudition() {
+        guard Experiments.shared.scrubAuditionEnabled, documentHasAudio,
+              !isDocumentPlaying else { return }
+        scrubAudio.begin(audioMix, atMS: documentTimeMS)
+    }
+
+    /// The playhead landed somewhere new while a drag is in hand.
+    func auditionScrub() {
+        guard let player = scrubAudioStorage, player.isAuditioning else { return }
+        guard !isDocumentPlaying else {
+            player.end()
+            return
+        }
+        player.moved(audioMix, toMS: documentTimeMS)
+    }
+
+    /// The hand let go.
+    func endScrubAudition() {
+        scrubAudioStorage?.end()
+    }
+
     /// Keep every layer's level where the plan says it is as the playhead moves.
     func followAudio() {
         guard isDocumentPlaying else { return }

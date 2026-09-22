@@ -875,9 +875,13 @@ private struct DocumentPlayheadView: View {
     private var scrub: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                // The first change IS the press: there is no onBegan on a drag,
+                // so this is where the listening starts (`ScrubAudition.swift`).
+                if !editorState.isAuditioningScrub { editorState.beginPlayheadDrag() }
                 let fraction = min(max(0, value.location.x / max(1, laneWidth)), 1)
                 let ms = editorState.motionStripRuler.ms(atFraction: Double(fraction))
-                editorState.scrubDocument(toMS: Int(ms.rounded()))
+                editorState.dragPlayhead(toMS: Int(ms.rounded()))
             }
+            .onEnded { _ in editorState.endPlayheadDrag() }
     }
 }

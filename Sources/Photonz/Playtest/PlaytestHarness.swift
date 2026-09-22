@@ -2840,6 +2840,101 @@ private final class Run {
                 note(number, step.name,
                      "sound: \(mix.count) pieces of sound written to mix.m4a, \(size) bytes",
                      state: describe())
+            case .soundScrubAcrossIt:
+                guard Experiments.shared.scrubAuditionEnabled else {
+                    throw Failure(description: "hearing the scrub is switched off in this run, so "
+                        + "dragging the playhead is silent by design")
+                }
+                let audible = editor.audioMix.filter(\.isAudible)
+                guard let earliest = audible.min(by: { $0.startMS < $1.startMS }) else {
+                    throw Failure(description: "nothing in this document makes a sound, so there "
+                        + "is nothing under the playhead to hear")
+                }
+                // A quarter of the way into the first thing that makes a
+                // sound, placed BEFORE the drag starts so the placing itself
+                // is not part of what is being measured.
+                let grabbedAtMS = earliest.startMS + max(1, earliest.lengthMS / 4)
+                editor.scrubDocument(toMS: grabbedAtMS)
+                let travel = max(MovieRef.frameStepMS, earliest.lengthMS / 4)
+                let moves = 24
+                let stepMS = max(1, travel / moves)
+
+                // The hand: twenty four moves out and twenty four back, each
+                // one through the very call the timeline's gesture makes, with
+                // a real pause between them because the pacing of a scrub is
+                // the pacing of a hand.
+                var worstFollowMS = 0.0
+                func hand(_ direction: Int) async throws {
+                    for _ in 1...moves {
+                        let asked = min(max(0, editor.documentTimeMS + direction * stepMS),
+                                        editor.lastDocumentTimeMS)
+                        let began = CACurrentMediaTime()
+                        editor.dragPlayhead(toMS: asked)
+                        worstFollowMS = max(worstFollowMS, (CACurrentMediaTime() - began) * 1000)
+                        guard editor.documentTimeMS == asked else {
+                            throw Failure(description: "the playhead stopped following the hand: "
+                                + "it was put at \(asked) ms and it is at "
+                                + "\(editor.documentTimeMS) ms")
+                        }
+                        await sleep(0.02)
+                    }
+                }
+
+                editor.beginPlayheadDrag()
+                guard editor.isAuditioningScrub else {
+                    throw Failure(description: "taking hold of the playhead did not start the "
+                        + "listening, so nothing can come out of the drag")
+                }
+                try await hand(1)
+                let forward = editor.scrubAudio.grainsPlayed
+                guard forward > 0 else {
+                    throw Failure(description: "the playhead was dragged \(moves * stepMS) ms "
+                        + "across a sound and not one grain of it played")
+                }
+                try await hand(-1)
+                let player = editor.scrubAudio
+                let heard = player.layersHeard
+                let reversed = player.grainsReversed
+                let worstGrain = player.worstGrainMS
+                guard reversed > 0 else {
+                    throw Failure(description: "dragging backwards played nothing: \(forward) "
+                        + "grain(s) went out on the way there and none came back")
+                }
+                let underIt = Set(audible.filter { $0.contains(ms: editor.documentTimeMS) }
+                    .map(\.layerID))
+                guard heard.count >= min(2, underIt.count) || heard.count >= underIt.count else {
+                    throw Failure(description: "\(underIt.count) layer(s) make a sound under the "
+                        + "playhead and only \(heard.count) of them was heard")
+                }
+                // A grain that costs a frame is a grain that stutters the
+                // picture, which is the one thing hearing the scrub is not
+                // allowed to buy.
+                guard worstGrain < 16, worstFollowMS < 16 else {
+                    throw Failure(description: "the sound is costing the picture: the worst grain "
+                        + String(format: "took %.1fms and the worst move took %.1fms",
+                                 worstGrain, worstFollowMS)
+                        + ", and a frame is 16ms")
+                }
+
+                // What was actually on the engine, rather than how many
+                // buffers went to it: a grain of silence schedules exactly as
+                // well as a grain of somebody talking.
+                let loudest = await player.loudestSample()
+                guard loudest > 0.001 else {
+                    throw Failure(description: "\(player.grainsPlayed) grain(s) went to the "
+                        + "engine and every sample in them was silence, so nothing was audible")
+                }
+                editor.endPlayheadDrag()
+                guard !editor.isAuditioningScrub, !player.isMakingSound else {
+                    throw Failure(description: "letting go of the playhead did not stop the sound")
+                }
+                note(number, step.name,
+                     "scrub: \(player.grainsPlayed) grain(s) out of \(heard.count) layer(s), "
+                     + "\(reversed) of them backwards"
+                     + String(format: ", loudest sample %.3f, worst grain %.1fms, worst move %.1fms",
+                              loudest, worstGrain, worstFollowMS)
+                     + ", and it went quiet on release",
+                     state: describe())
             case .clipSpeedDouble, .clipSpeedHalf:
                 let percent = action == .clipSpeedDouble ? 200 : 50
                 guard editor.canSetClipSpeed(percent) else {
@@ -3278,7 +3373,8 @@ private final class Run {
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
-                 .soundExpectPlaying, .soundExportMix, .videoSeekStart: break
+                 .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
+                 .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one
             // refuses the walk rather than quietly doing nothing.
             case .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
