@@ -6124,3 +6124,7 @@
 {"t":"2026-09-22T04:57:36.556Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
 {"t":"2026-09-22T04:57:36.605Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
 {"t":"2026-09-22T04:57:36.653Z","ev":"task_pending","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","from":"in_progress","note":"panelMenu is no longer refused under a lock (03a1d1c4): a locked sweep runs 436 of 557 walks rather than 394, all 42 newly un-refused walks pass, 8886 tests pass. The colour-picker doubt that had blocked this since the 21st is settled with readings from both sides, awake and locked. Ten of the walks the standing sweep task carried as still failing are proved green. startGuide, 39 walks, is the one clear lever left."}
+{"t":"2026-09-22T05:10:26.660Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":622,"of":557,"rotating":true}
+{"t":"2026-09-22T05:10:26.771Z","ev":"task_started","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa","title":"A walk answers the same way whether or not somebody is at the Mac","priority":"p1-high"}
+{"t":"2026-09-22T05:46:13.238Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T05:46:21.565Z","ev":"task_note","id":"a-hundred-and-fifteen-walks-fail-on-code-that-pa"}
