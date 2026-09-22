@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:30:56.158Z",
-  "updated": "2026-09-22T17:24:16.197Z",
+  "updated": "2026-09-22T17:25:07.128Z",
   "deps": [],
   "blockedBy": [],
   "notes": "VERIFIED on 2026-09-21 by reading the drop path. Sources/Photonz/EditorState.swift:1070 addImageLayerOrOpen, which every canvas drop of a file URL goes through (EditorCanvasSurface.swift:150):\n\n  guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),\n        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }\n\nImageIO reads no .m4a, .mp3, .wav, .mov or .mp4, so every one of those takes the bare `return`. Not a refusal: a return. Nothing is drawn, nothing is said, nothing is logged.\n\nThat is against the rule the app already has. docs/design/mocks/shared/UX-PATTERNS.md:670 says \"A refusal speaks in the same place a yes would have, and it says WHY, and it names the one thing to do\", and :676 says a surface that refuses by going quiet is the thing the rule exists to stop.\n\nFrom the 2026-09-21-video-audio audit rough list: \"Dragging a sound file onto the window is refused: Add Sound in the Video menu is the only way in. The refusal is honest rather than silent, but it is the first thing most people will try.\" The audit was generous. Read at the code, it is silent.\n\nThe video half is worth doing in the same pass because it is the same line of code and a recording is a document now, so dropping an .mp4 on an open document is an obvious thing to try and does nothing.",
@@ -70,10 +70,15 @@
     {
       "t": "2026-09-22T17:24:16.196Z",
       "note": "Adversarial review before building: the mock/task assumed a sound on ANY document should land. It cannot: addSound would give a screenshot a duration, grow a timeline and a transport under it, and turn a redlining document into a video by accident. The acceptance already scoped it (\"a document that has time\"), so the picture case is refused IN WORDS rather than built. The other judgment call was a video on a still picture: refusing it would have been consistent with sound, but a recording IS a document, and a .photonz let go on a canvas has always opened a window rather than landing, so it opens. That kept the shortest version: one pure answer (MediaDrop.answer), three yeses and one no, no new chrome."
+    },
+    {
+      "t": "2026-09-22T17:25:07.126Z",
+      "note": "A sound or a video let go on an editor window now lands or says why not, behind next-dropping-a-sound-or-a-video (on by default in Next). One pure answer in PhotonzCore/MediaDrop.swift is read by the pointer, by the sentence the canvas draws mid-drag and by what lands, so they cannot disagree: a sound on a document with time lands on the timeline at the playhead; a video lands as a clip (new PhotonzDocument.addClip, the mirror of addSound); a video on a still picture opens in its own window through the recording door; a sound on a still picture is refused with 'No timeline here for X. Open a recording first' drawn under the pointer. Verified: 16 new core tests + 6 render tests, Scripts/test.sh green, new walk drop-a-sound-or-a-video-walk green with 6 real screenshots, and the 9 other drop walks and 4 sound walks green. Audit at queue/audits/2026-09-22-drop-a-sound-or-a-video.json. Commit bdce6f1f, pushed. Follow-up filed: let-go-of-a-sound-on-the-timeline-and-it-lands-a (aim the drop at a moment on the strip). Four rough items that did not clear the bar are in this log."
     }
   ],
   "started": "2026-09-22T16:43:51.538Z",
   "walks": [
     "drop-a-sound-or-a-video-walk"
-  ]
+  ],
+  "completed": "2026-09-22T17:25:07.127Z"
 }
