@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T21:42:05.378Z",
-  "updated": "2026-09-22T20:34:15.447Z",
+  "updated": "2026-09-22T20:34:43.657Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building layers-combine-over-the-tracks-below-them (2026-09-21). Reproduction: open any picture, unlock it, draw a rectangle with R, send it to the back with shift-cmd-[, select the picture and set Masked by to Its shape. The rectangle disappears from the canvas; its row still shows a red thumbnail and nothing else. queue/audits/2026-09-21-layers-combine-matte.png is the state.\n\nThe model already knows: PhotonzDocument.isSpentAsAMatte(_:) in Sources/PhotonzCore/LayerCompositing.swift answers it for any layer id, and the renderer uses exactly that rule to skip drawing it (DocumentRenderer.compositeLayers). The work is a LayerPanelRow field plus the row UI in the layers panel.",
@@ -47,10 +47,15 @@
     {
       "t": "2026-09-22T20:34:15.446Z",
       "note": "left rough, no task filed: (1) three deep, a middle layer is both halves and says only that it is being spent, deliberately, since a layer that is not in the picture at all is the more surprising truth and its own Masked by is changing no pixel; (2) the timeline draws the same layers and its lanes say nothing about a mask, but the Layers list is on screen beside it in the same window, so it is not a person stuck with no answer; (3) the mask row keeps its ordinary thumbnail, which is what the layer IS even though none of it is on the canvas, and it is in the audit as a question for the user."
+    },
+    {
+      "t": "2026-09-22T20:34:43.655Z",
+      "note": "Both rows of a mask pair now say so in the Layers list and name each other: the spent layer reads 'Mask for <name>' with an up arrow, the layer cut to it reads 'Masked by <name>' with a down arrow, and the hover on either says where the pixels went and how to get them back. Lines follow the picture, not the setting, so hiding either half takes both off and undo puts both rows straight back. Core: LayerMaskNote + the sibling-list matte rule shared with the renderer and inspector; UI: one caption line in LayersRow, no row taller. Verified by reproducing first with layers-combine-walk, then by that walk claiming both rows in words (green), 38 row-touching walks and 11 layers- walks green, and Scripts/test.sh 9058 tests green. Audit: queue/audits/2026-09-22-mask-row.json with a real window capture. Committed 9ffabd75, pushed."
     }
   ],
   "walks": [
     "layers-combine-walk"
   ],
-  "started": "2026-09-22T20:07:26.640Z"
+  "started": "2026-09-22T20:07:26.640Z",
+  "completed": "2026-09-22T20:34:43.656Z"
 }
