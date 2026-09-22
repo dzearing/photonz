@@ -219,7 +219,7 @@ struct PanelFileDrop: DropDelegate {
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }
-        guard FileDrop.carriesUsableFile(info) else {
+        guard FileDrop.carriesUsableFile(info, into: editorState) else {
             editorState.offerPanelDrop(.refuses, from: owner)
             return .forbidden
         }
@@ -340,7 +340,7 @@ struct SectionFileDrop: DropDelegate {
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }
-        guard FileDrop.carriesUsableFile(info) else {
+        guard FileDrop.carriesUsableFile(info, into: editorState) else {
             editorState.offerPanelDrop(.refuses, from: item)
             return .forbidden
         }

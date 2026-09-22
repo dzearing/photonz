@@ -97,8 +97,16 @@ extension CanvasNSView {
         // in the air is refused on the way down too, so nothing can slip past a
         // no-entry pointer and land anyway.
         guard let url = DragCargo.fileURL(on: sender.draggingPasteboard) else { return false }
-        let file = CanvasFileDrop.of(url)
+        let file = CanvasFileDrop.of(url, takingMedia: takesMedia)
         guard file.isAccepted else { return false }
+        // A sound or a recording never lands as a picture and never fills a
+        // collage slot: what it becomes is the editor's call, out of the very
+        // answer this view drew its sentence from (`MediaDrop`).
+        if file.media != nil {
+            guard mediaDropAnswer(url)?.lands == true else { return false }
+            onDropMediaURL(url, viewport.map { $0.documentPoint(fromView: point) })
+            return true
+        }
         if file != .package, let target = dropTarget(for: sender) {
             onDropImageURLIntoCollage(url, target.collageID, target.index)
         } else if let viewport {
@@ -207,9 +215,24 @@ extension CanvasNSView {
               draggedFile(url, sequence: sender.draggingSequenceNumber).isAccepted else {
             dropLanding = nil
             hoverSlot = nil
+            clearTextStyleNote()
             refreshOverlays()
             return []
         }
+        // A sound or a recording answers in WORDS rather than with a box, and
+        // it answers either way: where it lands the sentence says where it is
+        // going, and where it cannot the sentence says why and names the one
+        // move that works. A pointer on its own can only shrug
+        // (`MediaDrop`, `UX-PATTERNS` §refusals).
+        if draggedFile(url, sequence: sender.draggingSequenceNumber).media != nil,
+           let answer = mediaDropAnswer(url) {
+            dropLanding = nil
+            hoverSlot = nil
+            showDropNote(answer.note, lands: answer.lands, at: viewPoint(sender))
+            refreshOverlays()
+            return answer.lands ? .copy : []
+        }
+        clearTextStyleNote()
         // Highlight the collage slot under the pointer — dropping there fills
         // the slot instead of adding a floating layer.
         hoverSlot = dropTarget(for: sender)
@@ -240,9 +263,14 @@ extension CanvasNSView {
         if let measured = draggedImage, measured.sequence == sequence, measured.url == url {
             return measured.drop
         }
-        let drop = CanvasFileDrop.of(url)
+        let drop = CanvasFileDrop.of(url, takingMedia: takesMedia)
         draggedImage = (sequence, url, drop)
         return drop
     }
+
+    /// Whether this canvas reads a sound or a recording as anything but a file
+    /// it cannot use. Off, every one of them is `.unsupported` exactly as it
+    /// was before any of this existed.
+    private var takesMedia: Bool { Experiments.shared.droppingMedia }
 
 }

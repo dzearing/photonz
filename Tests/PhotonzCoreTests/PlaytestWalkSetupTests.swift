@@ -95,6 +95,13 @@ struct PlaytestWalkSetupTests {
             let script = try PlaytestScript.decode(try Data(contentsOf: file))
             var copies: Set<String> = []
             for scratch in script.setup.scratch {
+                // The two samples are written on demand rather than kept in the
+                // repo, so there is no file to look for: what is checked is
+                // that the walk names its copy by the name it will land under.
+                if let sample = PlaytestSampleFile.named(scratch) {
+                    copies.insert(sample.fileName)
+                    continue
+                }
                 let url = scratch.hasPrefix("/")
                     ? URL(fileURLWithPath: scratch)
                     : file.deletingLastPathComponent().appendingPathComponent(scratch).standardizedFileURL

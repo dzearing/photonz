@@ -257,9 +257,7 @@ struct PlaytestSetupRunner {
         scratchDirectory = folder
         var placed: [String] = []
         for file in files {
-            let source = file.hasPrefix("/")
-                ? URL(fileURLWithPath: file)
-                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            let source = try Self.scratchSource(file, besides: scriptURL)
             guard FileManager.default.fileExists(atPath: source.path) else {
                 throw PlaytestSetupError(
                     description: "setup asks for the scratch file \"\(file)\", and there is no such file at \(source.path)")
@@ -269,6 +267,33 @@ struct PlaytestSetupRunner {
             placed.append(source.lastPathComponent)
         }
         return placed
+    }
+
+    /// Where a scratch file comes from.
+    ///
+    /// Two of them are not files on disk at all until somebody asks: the
+    /// tutorial's own sample recording and sample music are written on demand,
+    /// and a walk about dropping media needs one of each without depending on
+    /// some earlier walk having made it. `sample:recording` and `sample:music`
+    /// name those, and everything else is a path as it always was.
+    private static func scratchSource(_ file: String, besides scriptURL: URL) throws -> URL {
+        switch PlaytestSampleFile.named(file) {
+        case .recording:
+            guard let url = TutorialSampleRecording.fresh() else {
+                throw PlaytestSetupError(description: "the sample recording could not be written")
+            }
+            return url
+        case .music:
+            guard let url = TutorialSampleSound.fresh() else {
+                throw PlaytestSetupError(description: "the sample music could not be written")
+            }
+            return url
+        case nil:
+            return file.hasPrefix("/")
+                ? URL(fileURLWithPath: file)
+                : scriptURL.deletingLastPathComponent().appendingPathComponent(file)
+                    .standardizedFileURL
+        }
     }
 
     /// Throws the walk's own folder away, with everything it wrote in it.

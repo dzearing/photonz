@@ -339,7 +339,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [300, 200], "hold": "refused" } ] }
         """)
-        guard case .dragFile(let file, let at, let hold, _, _) = script.steps[0] else {
+        guard case .dragFile(let file, let at, let hold, _, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(file == "notes.txt")
@@ -357,8 +357,8 @@ struct PlaytestScriptTests {
             { "do": "dragFile", "file": "shot.png", "at": [1050, 620] }
         ] }
         """)
-        guard case .dragFile(_, _, _, let released, _) = script.steps[0],
-              case .dragFile(_, _, _, let held, _) = script.steps[1] else {
+        guard case .dragFile(_, _, _, let released, _, _) = script.steps[0],
+              case .dragFile(_, _, _, let held, _, _) = script.steps[1] else {
             Issue.record("dragFile"); return
         }
         #expect(released)
@@ -378,8 +378,8 @@ struct PlaytestScriptTests {
             { "do": "dragFile", "file": "notes.txt", "at": [1150, 300], "space": "window" }
         ] }
         """)
-        guard case .dragFile(_, _, _, _, let abandoned) = script.steps[0],
-              case .dragFile(_, _, _, _, let tidy) = script.steps[1] else {
+        guard case .dragFile(_, _, _, _, let abandoned, _) = script.steps[0],
+              case .dragFile(_, _, _, _, let tidy, _) = script.steps[1] else {
             Issue.record("dragFile"); return
         }
         #expect(abandoned)
@@ -431,7 +431,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [1100, 200], "space": "window" } ] }
         """)
-        guard case .dragFile(_, let at, _, _, _) = script.steps[0] else {
+        guard case .dragFile(_, let at, _, _, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(at.point == CGPoint(x: 1100, y: 200))
@@ -443,7 +443,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [10, 10] } ] }
         """)
-        guard case .dragFile(_, _, let hold, _, _) = script.steps[0] else {
+        guard case .dragFile(_, _, let hold, _, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(hold == nil)

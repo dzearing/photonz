@@ -1,0 +1,32 @@
+{
+  "id": "let-go-of-a-sound-on-the-timeline-and-it-lands-a",
+  "title": "Let go of a sound on the timeline and it lands at that moment",
+  "goal": "You can drag a sound or a video onto a recording and it lands, but always at the playhead, however far along the timeline you were pointing when you let go. Aiming the drop at the moment you want it is the obvious thing to try and the strip does not take a drop at all, so bringing music in at 0:12 means moving the playhead there first and then dropping on the picture. Letting go over the strip should put it where you let go.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-22T17:23:59.595Z",
+  "updated": "2026-09-22T17:23:59.598Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-sound-or-a-video-dropped-on-the-window-lands-a (2026-09-22). The drop answer is already one pure function, PhotonzCore/MediaDrop.swift: MediaDrop.answer(for:named:documentHasTime:atMS:hasDocument:) takes the moment as atMS, so the strip only has to pass the moment under the pointer instead of the playhead and reuse the same sentence. What does not exist is a drag DESTINATION on the strip: MotionStripView/SoundLane have no registerForDraggedTypes and no onDrop. EditorState.dropMedia(at:droppedAt:) currently reads documentTimeMS itself for both sound and clip; it would take an explicit atMS. See docs/design/video-audio.md 5a.",
+  "acceptance": [
+    "A sound let go over a point on the timeline strip starts at the moment under the pointer, not at the playhead",
+    "While the file is in the air over the strip, the strip shows where it would start and says the moment in words, the same way a drop on the picture already says where it is going",
+    "A video let go over the strip lands as a clip starting at that moment",
+    "Letting go over the picture keeps doing exactly what it does today: it lands at the playhead",
+    "A walk covers a sound let go at a moment other than the playhead and checks the layer's in time"
+  ],
+  "log": [
+    {
+      "t": "2026-09-22T17:23:59.597Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "drop-a-sound-or-a-video-walk"
+  ]
+}

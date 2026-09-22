@@ -1963,7 +1963,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// anything ended, which is what escape, a release outside the window and a
     /// target rebuilt out from under the pointer all look like from the inside.
     /// It is how a walk proves a mark the panel put up clears itself.
-    case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool)
+    /// `says` is what the canvas must be SAYING about the file while it is in
+    /// the air: a sound or a recording answers in words rather than with a
+    /// landing box, and a refusal that names no reason is the thing those words
+    /// exist to stop (`MediaDrop`). Matched loosely, so a walk can name the
+    /// half of the sentence it cares about.
+    case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
+                  says: String?)
     /// One of the app's OWN things — a layer row, a shelf tile, a colour swatch
     /// — picked up by name and held over a point, so a walk can see what the
     /// panel says about a drag that has nothing to do with files. Nothing is
@@ -3057,7 +3063,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),
                              release: try f.optionalFlag("release") ?? false,
-                             leave: try f.optionalFlag("leave") ?? false)
+                             leave: try f.optionalFlag("leave") ?? false,
+                             says: try f.optionalString("says"))
         case "dragOver":
             self = .dragOver(carry: try f.string("carry"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

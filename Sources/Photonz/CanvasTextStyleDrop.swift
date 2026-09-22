@@ -107,10 +107,17 @@ extension CanvasNSView {
     /// reason: this is not text, or it is already wearing this. A tip cannot
     /// show while a drag is in the air, so the canvas draws its own.
     private func showTextStyleNote(_ answer: TextStyleDrop.Answer, at viewPoint: CGPoint) {
-        textStyleDropNote = answer.note
+        showDropNote(answer.note, lands: answer.lands, at: viewPoint)
+    }
+
+    /// The same sentence for anything else that has to speak while it is in the
+    /// air. A sound and a recording use it too (`CanvasDrop`), because neither
+    /// has a landing box to draw and a pointer on its own cannot say why.
+    func showDropNote(_ note: String, lands: Bool, at viewPoint: CGPoint) {
+        dropSentence = note
         let font = Self.dropNoteFont
         let inset = CGSize(width: 9, height: 4)
-        let text = CGSize(width: (answer.note as NSString)
+        let text = CGSize(width: (note as NSString)
                             .size(withAttributes: [.font: font]).width.rounded(.up),
                           height: (font.ascender - font.descender).rounded(.up))
         let box = CGSize(width: text.width + inset.width * 2,
@@ -123,14 +130,14 @@ extension CanvasNSView {
         // Accent for a style that lands, a plain dark plate for one that does
         // not: the colour repeats what the words say, so a glance is enough
         // and reading is only needed for the why.
-        dropNoteLayer.fillColor = (answer.lands
+        dropNoteLayer.fillColor = (lands
             ? NSColor.controlAccentColor
             : NSColor.black.withAlphaComponent(0.78)).cgColor
         dropNoteLayer.frame = bounds
         dropNoteLayer.path = CGPath(roundedRect: CGRect(origin: origin, size: box),
                                     cornerWidth: box.height / 2,
                                     cornerHeight: box.height / 2, transform: nil)
-        dropNoteTextLayer.string = answer.note
+        dropNoteTextLayer.string = note
         dropNoteTextLayer.font = font
         dropNoteTextLayer.fontSize = font.pointSize
         dropNoteTextLayer.foregroundColor = NSColor.white.cgColor
@@ -143,7 +150,7 @@ extension CanvasNSView {
 
     /// Takes the sentence and the outlines away, whichever way the drag ended.
     func clearTextStyleNote() {
-        textStyleDropNote = nil
+        dropSentence = nil
         textStyleDropBoxes = []
         dropNoteLayer.isHidden = true
     }

@@ -1240,6 +1240,12 @@ final class EditorState {
     /// say so in the corner and close the window this was going to fill.
     @ObservationIgnored var onRecordingWouldNotOpen: ((URL) -> Void)?
 
+    /// Opens a recording somewhere that is not this window. Set by the window
+    /// root, for the same reason as the two above: the editor knows a recording
+    /// has been let go on it and knows this is not the place for it, and
+    /// nothing about opening a second window belongs in here.
+    @ObservationIgnored var openRecordingInItsOwnWindow: ((URL) -> Void)?
+
     /// Answers the New Canvas sheet, from whichever route opened it. An empty
     /// window fills itself; a window already holding a picture keeps it and the
     /// canvas arrives in a window of its own.

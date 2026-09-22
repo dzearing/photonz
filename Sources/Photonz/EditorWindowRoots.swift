@@ -37,6 +37,14 @@ struct ImageEditorRootView: View {
                 editorState.openBlankCanvasWindow = { [coordinator] size in
                     coordinator.newBlankCanvasWindow(size: size)
                 }
+                // A recording let go on a window holding a still picture opens
+                // in a window of its own, the way a Photonz document dropped on
+                // a canvas always has (`MediaDrop`). It goes through the same
+                // door as File then Open, so a file that has gone or is still
+                // landing says so rather than opening an empty window.
+                editorState.openRecordingInItsOwnWindow = { [coordinator] url in
+                    coordinator.openRecording(url)
+                }
                 // From here on this window takes the shared shelf's edits as
                 // they happen (`EditorState+SharedComponents`).
                 editorState.followSharedShelf()

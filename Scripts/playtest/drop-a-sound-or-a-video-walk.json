@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/drop-a-sound-or-a-video-walk",
+  "setup": {
+    "forget": ["all"],
+    "scratch": ["sample:recording", "sample:music"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-opening-a-recording": true,
+      "next-dropping-a-sound-or-a-video": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-a-recording-is-open", "note": "An eight second screen recording, paused with the playhead about half way through. This is a document that runs in time, which is what makes a piece of sound something it can hold" },
+
+    { "do": "dragFile", "file": "scratch/Sample Music.m4a", "at": [640, 400], "hold": "1-sound-in-the-air-over-a-recording", "says": "lands on the timeline" },
+    { "do": "describe", "stage": "2-the-sound-says-where-it-is-going", "note": "The music is held over the picture with the button still down. The canvas says, under the pointer, that it lands on the timeline and at what moment. Nobody has to let go to find out what letting go does" },
+
+    { "do": "dropImage", "file": "scratch/Sample Music.m4a", "at": [640, 400] },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "snapshot", "name": "2-the-sound-landed" },
+    { "do": "describe", "stage": "3-it-landed-as-a-layer", "note": "Fourteen seconds of music is on the timeline, starting where the playhead was, as the very layer Add Sound would have made: its own row, its own waveform, and the document grew to hold it. A pill says so" },
+
+    { "do": "dragFile", "file": "scratch/Tutorial Sample.mp4", "at": [500, 300], "hold": "3-video-in-the-air-over-a-recording", "says": "lands as a clip" },
+    { "do": "dropImage", "file": "scratch/Tutorial Sample.mp4", "at": [500, 300] },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "snapshot", "name": "3-the-video-landed-as-a-clip" },
+    { "do": "describe", "stage": "4-a-video-lands-as-a-clip", "note": "A second recording let go over the picture lands as a clip on top, at the playhead, fitted into the box the drag drew. It is an ordinary layer from the moment it arrives, so the timeline cuts it and slides it like everything else" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "describe", "stage": "5-both-undo", "note": "Neither of them needed an undo of its own: a clip and a piece of sound are layers, and Command Z takes each back off the timeline in turn" },
+
+    { "do": "blank", "width": 1200, "height": 800 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "dragFile", "file": "scratch/Sample Music.m4a", "at": [600, 400], "hold": "4-sound-refused-on-a-picture", "says": "No timeline here" },
+    { "do": "describe", "stage": "6-a-sound-on-a-picture-is-refused-out-loud", "note": "THE CASE THIS TASK EXISTS FOR. A still picture has no timeline for a sound to sit on, so the pointer refuses it, and the canvas says why in the same place a yes would have appeared and names the one move that works: open a recording first. It used to be a no-entry sign and nothing else" },
+
+    { "do": "dragFile", "file": "scratch/Tutorial Sample.mp4", "at": [600, 400], "hold": "5-video-over-a-picture-opens", "says": "opens in its own window" },
+    { "do": "describe", "stage": "7-a-video-on-a-picture-opens-instead", "note": "A recording IS a document, so one let go on a picture opens in a window of its own rather than being refused, exactly as a Photonz document dropped on a canvas always has. The sentence says so before you let go" }
+  ]
+}

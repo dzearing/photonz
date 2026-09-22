@@ -162,6 +162,17 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// draws nothing on the canvas, so the same reason applies twice over:
         /// the only place it shows up is the timeline and the layers list.
         case soundAdded(name: String)
+        /// A recording was let go on a document that runs in time and landed
+        /// as a clip over it (`MediaDrop`). It DOES draw on the canvas, unlike
+        /// a piece of sound, but it lands at the playhead and the playhead is
+        /// rarely where a person just let go, so without a word a clip that
+        /// arrives somewhere else in time reads as a drop that did nothing.
+        case clipAdded(name: String)
+        /// A sound or a recording was let go and could not be taken after all:
+        /// the file has nothing playable in it, or it went away between the
+        /// drag and the drop. The drag promised this would land, so the app
+        /// owes an explanation rather than silence.
+        case mediaWouldNotOpen(name: String)
         /// The mix was written out as one sound file, or could not be.
         case mixWritten(file: String?)
         /// The app listened to the recording and wrote the captions
@@ -244,7 +255,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         // These are the ones you might want to ACT on, and 1.6 seconds is
         // under the time it takes to read a sentence naming two things and
         // decide what to do about it.
-        case .linksBroken, .componentPieceRefused, .toolColorStyle,
+        case .mediaWouldNotOpen,
+             .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
              .separatedIntoLayers, .turnedIntoText, .turnedIntoTextInBatch,
@@ -276,6 +288,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         switch subject {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
+        case .clipAdded: return "Clip added"
+        case .mediaWouldNotOpen: return "Not added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
         case .captionsWritten: return "Captions written"
         case .captionsCameTo: return "Captions"
@@ -315,6 +329,10 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(clip) keeps its picture. Its sound is a layer of its own now"
         case .soundAdded(let name):
             return "\(name) is on the timeline"
+        case .clipAdded(let name):
+            return "\(name) is on the timeline at the playhead"
+        case .mediaWouldNotOpen(let name):
+            return "There is nothing in \(name) the app can play"
         case .mixWritten(let file):
             guard let file else { return "The mix could not be written" }
             return file

@@ -182,6 +182,8 @@ public enum FeatureCatalog {
 
     public static let openingARecordingFlag = "next-opening-a-recording"
 
+    public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
+
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
 
     public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
@@ -663,6 +665,16 @@ public enum FeatureCatalog {
                     name: cutRecordingFlag,
                     title: "Cut a recording into pieces and drop the one you do not want",
                     description: "A recording you have just made has a start handle and an end handle, so you can shorten it from either end and that is all. If the bit you want rid of is in the middle, the only answer today is to record the whole thing again. This puts a cut wherever the playhead is: press B while it plays, or pick Split at Playhead in the Video menu, and the one clip becomes two pieces that meet at that moment. The line under the picture stops being a plain progress bar and becomes the pieces themselves, one block each, sized by how long they last, with the one you are watching lit up. Press Delete and that piece goes, and everything after it slides up to meet what came before, so there is no hole to drag shut and no silence at the join: what is left plays straight through as one recording. Nothing is thrown away while you work, because a piece is a start and an end onto the same file rather than a copy of it, so Command Z puts a cut back or brings a piece back, and only saving or exporting writes the shortened version out. Opening the trim handles keeps the pieces on screen instead of putting a plain bar back: each piece is still its own block, the part the handles would keep is lit and the part they would drop is not, so a handle coming up on a cut shows what it is about to eat into, and the count beside the scissors reads how many of the pieces the window still keeps. Off means the line under the picture is the progress bar it always was, B types nothing and Delete does nothing.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: droppingMediaFlag,
+                    title: "Drop a sound or a video on the window and it lands, or says why not",
+                    description: "Dragging a picture onto an open document lands it as a layer, which is the app\u{2019}s whole promise: everything is a layer. Dragging a sound file or a video onto the same window does nothing at all. The pointer shows the no-entry sign and never says why, so the first thing most people try reads as the app being broken. With this on, the gesture works for both. A sound let go on a document that runs in time lands on the timeline where the playhead is, as the same layer Add Sound would have made, ready to cut, slide, name and undo. A video let go on a document that runs in time lands as a clip over the picture, at the playhead, in the box the drag drew. A video let go on a still picture opens in a window of its own, exactly as a Photonz document dropped on a canvas always has, because a recording is a document. And the one case that genuinely cannot be taken says so in words, in the place a yes would have appeared: a sound needs a timeline to sit on, a picture has none, so the canvas says there is no timeline here and names the one move that works. Every one of these is said while the file is still in the air, under the pointer, so nobody lets go into a void. Off means a sound or a video dropped anywhere in the window is refused without a word, exactly as it is today.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

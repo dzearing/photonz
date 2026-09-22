@@ -177,7 +177,12 @@ struct LayerRowDropDelegate: DropDelegate {
     /// slot the pointer is pointing at, read the same three ways a row drag is,
     /// falling back to the top of the stack for a row that cannot take it.
     private func fileLanding(_ info: DropInfo) -> LayerDrop? {
-        editorState.incomingDropProposal(over: row, pointerY: info.location.y, rowHeight: rowHeight)
+        // A sound or a recording lands on top wherever it is let go, because
+        // where it goes is a place in TIME (`FileDrop.carriesMedia`). Promising
+        // the slot under the pointer would be a line the drop then ignores.
+        guard !FileDrop.carriesMedia(info) else { return editorState.incomingDropOnTop }
+        return editorState.incomingDropProposal(over: row, pointerY: info.location.y,
+                                                rowHeight: rowHeight)
             ?? editorState.incomingDropOnTop
     }
 
@@ -194,7 +199,7 @@ struct LayerRowDropDelegate: DropDelegate {
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }
-        guard FileDrop.carriesUsableFile(info) else {
+        guard FileDrop.carriesUsableFile(info, into: editorState) else {
             editorState.offerPanelDrop(.refuses, from: row.id)
             return .forbidden
         }

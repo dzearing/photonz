@@ -95,3 +95,58 @@ struct CanvasFileDropTests {
         #expect(CanvasFileDrop.of(text).pictureSize == nil)
     }
 }
+
+/// Sound and recordings, which the canvas only started reading when dropping
+/// one became a thing it could do (`next-dropping-a-sound-or-a-video`).
+@Suite("A sound or a recording dragged over the canvas")
+struct CanvasMediaDropTests {
+
+    private func write(_ name: String) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-media-\(UUID().uuidString)-\(name)")
+        try Data("not really media".utf8).write(to: url)
+        return url
+    }
+
+    @Test(arguments: ["music.m4a", "voice.mp3", "bell.wav"])
+    func aSoundIsReadAsSoundOnlyWhenTheCanvasIsTakingMedia(name: String) throws {
+        let url = try write(name)
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(CanvasFileDrop.of(url, takingMedia: true) == .media(.sound))
+        // With the feature off nothing about the old reading changes: a sound
+        // file is a file the canvas cannot use, exactly as it always was.
+        #expect(CanvasFileDrop.of(url) == .unsupported)
+    }
+
+    @Test(arguments: ["screen.mp4", "clip.mov", "cut.m4v"])
+    func aRecordingIsReadAsARecording(name: String) throws {
+        let url = try write(name)
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(CanvasFileDrop.of(url, takingMedia: true) == .media(.recording))
+        #expect(CanvasFileDrop.of(url) == .unsupported)
+    }
+
+    @Test func aPackageStillWinsOverEverything() throws {
+        let url = try write("board.photonz")
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(CanvasFileDrop.of(url, takingMedia: true) == .package)
+    }
+
+    @Test func aPictureIsUntouchedByAnyOfThis() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-media-\(UUID().uuidString)-shot.png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let context = CGContext(data: nil, width: 32, height: 16,
+                                bitsPerComponent: 8, bytesPerRow: 32 * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        try #require(ImageCodec.encode(context.makeImage()!, format: .png)).write(to: url)
+        #expect(CanvasFileDrop.of(url, takingMedia: true) == .picture(CGSize(width: 32, height: 16)))
+    }
+
+    @Test func mediaCarriesNoLandingBoxBecauseThereIsNothingToDraw() throws {
+        let url = try write("music.m4a")
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(CanvasFileDrop.of(url, takingMedia: true).pictureSize == nil)
+    }
+}

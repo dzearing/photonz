@@ -1306,7 +1306,7 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .dragFile(let file, let at, let hold, let release, let leave):
+        case .dragFile(let file, let at, let hold, let release, let leave, let says):
             // A file held over the canvas with the button still down, so the
             // step can write down the answer the pointer is showing. It is the
             // only way to record a refusal: letting go of a file the canvas
@@ -1350,6 +1350,12 @@ private final class Run {
                 await sleep(0.05)
             }
             let landing = canvas.dropLandingDescription
+            // The sentence the picture is saying about this file, read while
+            // the file is still in the air, because letting go or walking away
+            // takes it down. For a sound or a recording it is the WHOLE answer:
+            // neither draws a landing box, and a refusal that names no reason
+            // is what those words exist to stop (`MediaDrop`).
+            let sentence = canvas.dropSentence
             // What the RIGHT HAND PANEL is promising, read before the drag is
             // told to leave: the pointer's own sign lives in the window server
             // and cannot be photographed, so the panel's promise is the thing
@@ -1377,6 +1383,16 @@ private final class Run {
             if !leave { for view in chain { view.draggingExited(info) } }
             await sleep(leave ? PanelDropMarking.idleGrace + 0.5 : 0.1)
             let after = leave ? ", walked away without a word and then \(panelPromise())" : ""
+            if let says {
+                guard let sentence else {
+                    throw Failure(description: "the picture said nothing about "
+                        + "\(url.lastPathComponent), and the walk expected \"\(says)\"")
+                }
+                guard sentence.localizedCaseInsensitiveContains(says) else {
+                    throw Failure(description: "the picture said \"\(sentence)\" about "
+                        + "\(url.lastPathComponent), and the walk expected \"\(says)\"")
+                }
+            }
             let answer = operation.contains(.copy)
                 ? "would place a copy (\(answered) took it)"
                 : "refused: the pointer shows the no-entry sign"
@@ -1386,6 +1402,7 @@ private final class Run {
                 ?? "no landing box"
             note(number, step.name,
                  "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
+                    + (sentence.map { ", saying \"\($0)\"" } ?? ", saying nothing")
                     + ", \(promise)"
                     + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)\(after)",
                  state: describe())
@@ -7410,7 +7427,7 @@ private final class Run {
         // The sentence the picture is saying about this drag, for the walk to
         // read back. Only a saved style says one; everything else is silent,
         // and a walk that asks what a file says gets told there was nothing.
-        let sentence = canvas.textStyleDropNote
+        let sentence = canvas.dropSentence
         if let says {
             guard let sentence else {
                 throw Failure(description: "the picture said nothing about the tile "

@@ -269,6 +269,10 @@ struct CanvasView: NSViewRepresentable {
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL, CGPoint) -> Void
+    /// A sound or a recording let go on the picture (`next-dropping-a-sound-or-
+    /// a-video`), and what holding one over it would do.
+    let onDropMediaURL: (URL, CGPoint?) -> Void
+    let mediaDropAnswer: (URL) -> MediaDrop.Answer?
     let onDropComponent: (UUID, UUID?, CGPoint) -> Void
     /// A component drag moving across the canvas, so the row it is over can
     /// hold the room it would take open while the button is still down.
@@ -435,6 +439,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDeleteLayer = onDeleteLayer
         view.onDeleteLayers = onDeleteLayers
         view.onDropImageURL = onDropImageURL
+        view.onDropMediaURL = onDropMediaURL
+        view.mediaDropAnswer = mediaDropAnswer
         view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
         view.onDropComponent = onDropComponent
         view.onComponentDragMoved = onComponentDragMoved
@@ -575,6 +581,14 @@ final class CanvasNSView: NSView {
     var onDropImageURL: ((URL, CGPoint) -> Void) = { _, _ in }
     /// A file dropped straight into a collage slot: (url, collage layer, slot).
     var onDropImageURLIntoCollage: ((URL, UUID, Int) -> Void) = { _, _, _ in }
+    /// A sound or a recording let go on the picture, at a document point
+    /// (`next-dropping-a-sound-or-a-video`). What it becomes is the editor's
+    /// call, out of the same answer this view drew its sentence from.
+    var onDropMediaURL: ((URL, CGPoint?) -> Void) = { _, _ in }
+    /// What a sound or a recording held over this picture would do, asked of
+    /// the editor because the answer depends on the document. Nil means this is
+    /// not one of those files, which leaves every other drag as it was.
+    var mediaDropAnswer: ((URL) -> MediaDrop.Answer?) = { _ in nil }
     /// A component dragged off the Library shelf, dropped at a document point
     /// (Next, `next-components`).
     var onDropComponent: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
@@ -816,8 +830,10 @@ final class CanvasNSView: NSView {
     /// What that pill says RIGHT NOW, or nil when no drag is being described.
     var dragReadoutShown: String?
     /// What that pill currently says, for a playtest to read back. Nil whenever
-    /// no style is over this canvas.
-    var textStyleDropNote: String?
+    /// nothing that speaks is over this canvas. A saved style says one, and so
+    /// does a sound or a recording (`MediaDrop`), which is the only way either
+    /// of those can answer: neither has a box to draw.
+    var dropSentence: String?
     /// Every box a saved style let go of here would set. Empty whenever no
     /// style is over this canvas, or the drop would do nothing. It is a LIST
     /// rather than one box because a drop aimed at picked text reaches all of

@@ -492,6 +492,11 @@ extension Experiments {
     /// where you left it.
     var openingARecording: Bool { isEnabled(FeatureCatalog.openingARecordingFlag) }
 
+    /// Whether a sound or a video let go on an editor window lands as a layer,
+    /// opens as its own document, or is refused IN WORDS where a yes would have
+    /// appeared (`MediaDrop`). Off, all three are one silent no-entry pointer.
+    var droppingMedia: Bool { isEnabled(FeatureCatalog.droppingMediaFlag) }
+
     /// `next-saving-a-recording-says-so`: whether saving a recording reports
     /// itself in the bottom-right toast stack — a progress bar once the save
     /// has run past `SaveFeedback.quietWindow`, and a named confirmation when

@@ -1,0 +1,30 @@
+{
+  "feature": "Drop a sound or a video on the window",
+  "epic": "video-audio",
+  "summary": "A sound file dragged onto a recording now lands on the timeline at the playhead, and a video lands as a clip. A video dropped on a still picture opens in its own window. A sound dropped on a still picture is the one case that cannot work, and it now says why under the pointer and names the one move that works, instead of a no-entry sign with no reason.",
+  "setup": "Photonz Dev, Experiments window, release Next. Switch on \"Drop a sound or a video on the window and it lands, or says why not\" (it is on by default in Next), along with the recording and sound flags. You need any .m4a or .mp3 and any .mp4 in the Finder.",
+  "try": [
+    { "do": "Open a screen recording (File > Open, or double-click one in the Finder)." },
+    { "do": "Press space to play it, then space again to pause somewhere in the middle." },
+    { "do": "Drag a music file from the Finder over the picture and HOLD it there without letting go. Read the line under the pointer.", "shot": "2026-09-22-drop-a-sound-or-a-video-1-sound-in-the-air-over-a-recording-sc.png" },
+    { "do": "Let go. The music is a row on the timeline, starting where the playhead was.", "shot": "2026-09-22-drop-a-sound-or-a-video-2-the-sound-landed-sc.png" },
+    { "do": "Drag a different .mp4 over the picture and let go. It lands as a clip on top, at the playhead.", "shot": "2026-09-22-drop-a-sound-or-a-video-3-the-video-landed-as-a-clip-sc.png" },
+    { "do": "Press Command Z twice. Both come back off, one step each." },
+    { "do": "Open a screenshot or press Command N for a blank canvas, then drag the same music file over it and hold.", "shot": "2026-09-22-drop-a-sound-or-a-video-4-sound-refused-on-a-picture-sc.png" },
+    { "do": "On that same picture, drag the .mp4 over it and hold. The line says it opens in its own window; let go and it does." }
+  ],
+  "evaluate": [
+    "Holding a sound over a recording, does the line under the pointer tell you enough to let go without hesitating?",
+    "The refusal says \"No timeline here for X. Open a recording first\". Is that the reason you would have wanted, and is \"open a recording first\" really the move you would make next?",
+    "A video dropped on a still picture opens a second window rather than landing in the one you are looking at. Is that what you expected, or did you want it in this document?",
+    "A sound lands at the playhead, not at the point across the picture where you let go. Does that read as obvious, or did you expect to aim the drop at a moment?",
+    "The sentence appears under the pointer rather than in the corner where pills live. Is that where your eye is during a drag?"
+  ],
+  "rough": [
+    "You cannot aim the drop at a MOMENT. The timeline strip is not a drop target, so a sound always lands at the playhead wherever across the window you let go. Aiming at the strip is the obvious next thing and is not built.",
+    "A clip landing on top is fitted into the canvas and centred on the drop point, which for a recording the same size as the document means it covers the whole picture. Useful for b-roll, surprising if you expected a small picture-in-picture you could then drag.",
+    "The drop onto the window CHROME (the toolbar, the panel, the layers list) goes through the same one answer as the canvas and was reasoned through rather than walked: the new walk only drives the canvas. I could not find a way to aim a walk at window chrome that did not depend on the window being a particular size.",
+    "A sound or a video dropped while the trim bar is up leaves the trim bar up, still talking about the clip you are no longer holding. That is how the recording window already behaves and I did not change it.",
+    "A file that is NOT media and not a picture (a .txt, a .zip) is still refused with the no-entry pointer and no words at all. This pass only taught sound and video to speak."
+  ]
+}

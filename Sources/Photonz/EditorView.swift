@@ -10,7 +10,9 @@ import UniformTypeIdentifiers
 private struct WindowFileDrop: DropDelegate {
     let editorState: EditorState
 
-    func validateDrop(info: DropInfo) -> Bool { FileDrop.carriesUsableFile(info) }
+    func validateDrop(info: DropInfo) -> Bool {
+        FileDrop.carriesUsableFile(info, into: editorState)
+    }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
         DropProposal(operation: validateDrop(info: info) ? .copy : .forbidden)

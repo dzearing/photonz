@@ -149,6 +149,8 @@ struct EditorCanvasSurface: View {
                    onDeleteLayer: { editorState.deleteLayer(id: $0) },
                    onDeleteLayers: { editorState.deleteLayers(ids: $0) },
                    onDropImageURL: { editorState.addImageLayerOrOpen(at: $0, droppedAt: $1) },
+                   onDropMediaURL: { editorState.dropMedia(at: $0, droppedAt: $1) },
+                   mediaDropAnswer: { editorState.mediaDropAnswer(for: $0) },
                    onDropComponent: { componentID, version, point in
                        editorState.placeComponent(componentID: componentID, at: point,
                                                   version: version)

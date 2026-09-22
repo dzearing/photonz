@@ -157,6 +157,43 @@ says it should.
 
 ---
 
+## 5a. Letting one go on the window
+
+`MediaDrop` (pure, `PhotonzCore/MediaDrop.swift`) is the ONE answer for a sound
+or a recording dragged onto an editor window, read by three things that must
+never disagree: the pointer, the sentence the canvas draws while the file is
+still in the air, and the thing that actually lands. There are four answers and
+each of them says something:
+
+| What is in the air | What the document under it is | What happens | What the canvas says |
+| --- | --- | --- | --- |
+| a sound | runs in time | a sound layer at the playhead, the layer Add Sound would have made | `Sample Music lands on the timeline at 0:04` |
+| a sound | a still picture | **nothing**, and the pointer refuses it | `No timeline here for Sample Music. Open a recording first` |
+| a recording | runs in time | a clip layer at the playhead, fitted into the box the drag drew | `B Roll lands as a clip at 0:04` |
+| a recording | a still picture, or nothing at all | it opens in a window of its own, through the recording door | `B Roll opens in its own window` |
+
+Three things about the shape of it:
+
+- **A sound draws no landing box**, so it answers in WORDS instead. The sentence
+  is the same plate a saved text style already uses
+  (`CanvasNSView.showDropNote`), accent coloured for a yes and dark for a no.
+- **The refusal speaks where the yes would have** and names the one move that
+  works, which is the whole of `UX-PATTERNS` §refusals. There is no way to put
+  time into a picture today, so "open a recording first" is the answer rather
+  than a shrug.
+- **A recording opens rather than being refused** because a recording IS a
+  document (`video.md` §1), so it behaves exactly as a `.photonz` let go on a
+  canvas always has.
+
+Where the drop lands in TIME is the playhead, for both, because a drop on the
+picture points at a place on the canvas and not at a place on the timeline. The
+strip itself is not a drop target yet; that is the follow-up.
+
+Flag: `next-dropping-a-sound-or-a-video`. Off, every one of these is the silent
+no-entry pointer it was before.
+
+---
+
 ## 6. Where it is in the window
 
 | What | Where |
@@ -200,5 +237,9 @@ points is a smear and a level line has nowhere to be dragged.
   when video export moves onto the document path it adds a video track to the
   same composition rather than growing a second idea of what a mix is.
 - **A meter.** Nothing on screen says how loud it is coming out right now.
-- **Recording sound in the app.** Sound arrives with a recording or from a file.
+- **Recording sound in the app.** Sound arrives with a recording, from a file,
+  or let go on the window (§5a).
+- **Dropping onto the timeline itself.** A sound let go on the picture lands at
+  the playhead. Aiming a drop at a moment by pointing at the strip is the
+  obvious next thing and is not built.
 - **Anything above one file per layer**: no buses, no sends, no sub-mixes.

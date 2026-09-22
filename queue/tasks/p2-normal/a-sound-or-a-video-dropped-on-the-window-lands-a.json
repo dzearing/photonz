@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:30:56.158Z",
-  "updated": "2026-09-22T12:17:52.621Z",
+  "updated": "2026-09-22T17:24:16.197Z",
   "deps": [],
   "blockedBy": [],
   "notes": "VERIFIED on 2026-09-21 by reading the drop path. Sources/Photonz/EditorState.swift:1070 addImageLayerOrOpen, which every canvas drop of a file URL goes through (EditorCanvasSurface.swift:150):\n\n  guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),\n        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }\n\nImageIO reads no .m4a, .mp3, .wav, .mov or .mp4, so every one of those takes the bare `return`. Not a refusal: a return. Nothing is drawn, nothing is said, nothing is logged.\n\nThat is against the rule the app already has. docs/design/mocks/shared/UX-PATTERNS.md:670 says \"A refusal speaks in the same place a yes would have, and it says WHY, and it names the one thing to do\", and :676 says a surface that refuses by going quiet is the thing the rule exists to stop.\n\nFrom the 2026-09-21-video-audio audit rough list: \"Dragging a sound file onto the window is refused: Add Sound in the Video menu is the only way in. The refusal is honest rather than silent, but it is the first thing most people will try.\" The audit was generous. Read at the code, it is silent.\n\nThe video half is worth doing in the same pass because it is the same line of code and a recording is a document now, so dropping an .mp4 on an open document is an obvious thing to try and does nothing.",
@@ -38,6 +38,42 @@
     {
       "t": "2026-09-22T12:17:52.620Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-09-22T16:43:51.539Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T16:49:01.163Z",
+      "note": "Reproduced before building (walk /tmp/drop-media-repro-walk.json, 4 dragFile steps on the probe). CORRECTION to the task notes: the canvas is NOT silent today, it shows the no-entry pointer. All four cases log 'refused: the pointer shows the no-entry sign, no landing box, the panel says nothing' - sound over a recording, video over a recording, sound over a picture, video over a picture. So the defect is (a) two of those four should be a YES, and (b) the two that are genuinely no never say WHY. addImageLayerOrOpen's bare return is reached only from the panel/window drop paths, which refuse by type first."
+    },
+    {
+      "t": "2026-09-22T17:24:09.462Z",
+      "note": "owns these walks: drop-a-sound-or-a-video-walk"
+    },
+    {
+      "t": "2026-09-22T17:24:09.513Z",
+      "note": "left rough: a clip landing on a document the same size as the canvas is fitted to the whole canvas, so it covers the picture under it rather than arriving as a small picture-in-picture you could drag. Correct for b-roll, surprising if you wanted an overlay. Did not earn a task: nothing is broken and the right answer depends on what people actually drop."
+    },
+    {
+      "t": "2026-09-22T17:24:09.563Z",
+      "note": "left rough: the drop onto the window CHROME (toolbar, panel, layers list) shares the one answer with the canvas (FileDrop.carriesUsableFile -> MediaDrop.answer -> EditorState.dropMedia) but is not covered by a walk. dragFile aims at a point and every chrome point depends on the window being a particular size, so a walk over the panel would be fragile. Reasoned through and built, not walked."
+    },
+    {
+      "t": "2026-09-22T17:24:09.612Z",
+      "note": "left rough: a sound or a video dropped while the trim bar is up leaves the trim bar showing, still describing the clip you are no longer holding. Pre-existing: the recording window opens with the trim tool in hand (opensWithTrimInHand) and the bar does not follow the selection. Not touched by this task."
+    },
+    {
+      "t": "2026-09-22T17:24:09.661Z",
+      "note": "left rough: a file that is neither media nor a picture (.txt, .zip, a folder) is still refused with the no-entry pointer and no words. This pass taught only sound and video to speak. It already has the platform's own refusal sign, and there is no one move to name for a .zip, so it did not earn a task."
+    },
+    {
+      "t": "2026-09-22T17:24:16.196Z",
+      "note": "Adversarial review before building: the mock/task assumed a sound on ANY document should land. It cannot: addSound would give a screenshot a duration, grow a timeline and a transport under it, and turn a redlining document into a video by accident. The acceptance already scoped it (\"a document that has time\"), so the picture case is refused IN WORDS rather than built. The other judgment call was a video on a still picture: refusing it would have been consistent with sound, but a recording IS a document, and a .photonz let go on a canvas has always opened a window rather than landing, so it opens. That kept the shortest version: one pure answer (MediaDrop.answer), three yeses and one no, no new chrome."
     }
+  ],
+  "started": "2026-09-22T16:43:51.538Z",
+  "walks": [
+    "drop-a-sound-or-a-video-walk"
   ]
 }
