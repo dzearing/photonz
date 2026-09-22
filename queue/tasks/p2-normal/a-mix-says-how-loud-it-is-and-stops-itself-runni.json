@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T12:04:23.601Z",
-  "updated": "2026-09-22T18:59:26.333Z",
+  "updated": "2026-09-22T19:00:07.869Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 2). The task that built sound named this as the follow-up to file rather than build: \"Anything past that - buses, effects racks, meters with ballistics - is a follow-up\".\n\nREPRODUCED while writing Tests/PhotonzMediaTests/AudioMixdownTests.swift. The test severalSoundsMixTogether lays three copies of the same tone over each other and had to pull every one of them down to a quarter by hand, with this comment, to get a result worth asserting on:\n\n    // All three at a quarter, so three together is still inside the ceiling\n    // and the difference between one and three is a difference in level\n    // rather than a clip.\n\nAt the level they were recorded at the three sum past full scale and the difference between one sound and three stops being a difference in level. Nothing in the app warns.\n\nWhere it goes: AudioMixdown.composition(for:urls:) in Sources/PhotonzMedia/AudioMixdown.swift builds the composition and the AVMutableAudioMix. PhotonzDocument.audioMix() in Sources/PhotonzCore/AudioMix.swift already knows every segment and its gain at every moment, so the arithmetic for \"how loud could this get\" is pure and testable there. The live meter would read off DocumentAudioPlayer's main mixer.\n\nThe mock (docs/design/mocks/pages/video-audio.html) draws live meters over the canvas. docs/design/video-audio.md §7 says why they were cut for now; this is the task that decides whether they come back, and where.",
@@ -63,10 +63,15 @@
     {
       "t": "2026-09-22T18:59:26.332Z",
       "note": "CORRECTION to the note above about Scripts/probe-app.sh. It is NOT broken and it did not launch a stale bundle. Reproduced properly: I appended a deliberate type error to Sources/Photonz/AppInfo.swift, ran Scripts/probe-app.sh, and it exited 1 with the probe binary's checksum unchanged and nothing launched - set -euo pipefail plus a direct call to Scripts/build-app.sh --probe does exactly what it should. What actually happened was mine: I ran probe-app.sh with its output sent to /dev/null, never saw the exit code, and then ran Scripts/playtest.sh with --no-build, which launched the bundle that was already on disk. So the lesson is the opposite of the one I wrote down: do not redirect probe-app.sh's output away, and do not pass --no-build to a walk you are running to check a change you just made. Nothing to file."
+    },
+    {
+      "t": "2026-09-22T19:00:07.867Z",
+      "note": "Shipped in e8a02838. AudioHeadroom (pure, PhotonzCore, 18 tests) reads the mix plan and each file's own shape and says how loud the whole thing gets; EditorState.audioMix and AudioMixdown.composition both hand over the plan held under full scale, so the player, the scrub and every export get a mix that cannot clip, and limiting twice is limiting once. A meter in the transport reads the plan rather than an engine tap, so it moves while you drag the playhead, and turns amber with the number of decibels over. Export Sound's notice says when it held the mix down. Verified: 9026 tests green; AudioMixdownTests exports a real m4a of three full-level tones and reads it back (every peak inside full scale, three-over-one ratio above 2.5 where a clipped mix is about 1.25); mix-says-how-loud-walk passes with 6 real window captures and two new checking steps; the sound, scrub, mix and export walk families (26 walks) all pass. Audit: queue/audits/2026-09-22-mix-loudness.json. Filed alongside: a word the canvas says while a trim is in hand is printed underneath the trim bar."
     }
   ],
   "started": "2026-09-22T18:19:53.267Z",
   "walks": [
     "mix-says-how-loud-walk"
-  ]
+  ],
+  "completed": "2026-09-22T19:00:07.868Z"
 }
