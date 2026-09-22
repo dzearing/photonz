@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/captions-from-the-sound-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-sound-on-the-timeline": true,
+      "next-a-title-has-an-in-and-an-out": true,
+      "next-captions-from-the-sound": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-a-recording-with-nobody-talking", "note": "An eight second screen recording, open as an ordinary document. Its own sound is tones and blips, so there is nothing in it to caption yet: the Captions section in the panel says so rather than offering a button that would come back empty" },
+    { "do": "snapshot", "name": "1-a-recording-with-nobody-talking" },
+
+    { "do": "action", "action": "captionsWriteHearingNothing" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1b-it-says-it-heard-nothing", "note": "Write Captions on a recording whose only sound is tones and blips. It listens, finds no words, and SAYS SO — the thing that must never happen is a recogniser inventing words out of a tone, and the second thing is it leaving an empty track and letting you think it is still working" },
+    { "do": "snapshot", "name": "1b-it-says-it-heard-nothing" },
+
+    { "do": "action", "action": "captionsAddVoiceover" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-a-voiceover-laid-over-it", "note": "A spoken voiceover is on the timeline as another layer, longer than the picture, so the document grew to hold it. Nothing about the shell changed to take it: a piece of sound is a layer" },
+    { "do": "snapshot", "name": "2-a-voiceover-laid-over-it" },
+
+    { "do": "action", "action": "captionsWrite" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "captionsExpectSound" },
+    { "do": "describe", "stage": "3-the-app-wrote-the-captions", "note": "THE WHOLE POINT. Write Captions listened to the voiceover ON THIS MAC — nothing uploaded, no account, no per-minute charge — and put the words on the timeline at the moments they were said. Each line is a text layer with an in and an out, sitting in the title-safe band at the bottom of the picture with the same shadow every piece of text over a picture gets. They are in order and none is on screen while the next one is" },
+    { "do": "snapshot", "name": "3-the-app-wrote-the-captions" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-a-caption-on-the-picture", "note": "The playhead a quarter of the way in, so the caption that belongs to this moment is the one on screen and the others are not. What plays is what exports: these are ordinary layers, so the film that comes out has the words burned into it" },
+    { "do": "snapshot", "name": "4-a-caption-on-the-picture" },
+
+    { "do": "action", "action": "captionsCorrectFirstWord" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsExpectTimingsKept" },
+    { "do": "describe", "stage": "5-correcting-a-word-costs-no-timing", "note": "The recogniser heard the app's own name as something else, which is what every recogniser does with a name it has never seen. Typing over it is editing text, because a caption IS text — and the line keeps every timing it was heard with, so the caption still comes on and goes off exactly where it did" },
+    { "do": "snapshot", "name": "5-correcting-a-word-costs-no-timing" },
+
+    { "do": "writeVideo", "name": "5-burned-into-the-picture", "format": "mp4", "seconds": 17.3, "within": 1.0, "sound": true, "copied": false },
+    { "do": "describe", "stage": "5b-the-words-are-in-the-film", "note": "The document written out as an MP4. Nothing was written to burn the captions in: they are ordinary text layers, so the exporter draws them along with everything else, and the file that lands has the words on the picture" },
+
+    { "do": "action", "action": "captionsNudgeLater" },
+    { "do": "action", "action": "captionsNudgeLater" },
+    { "do": "action", "action": "captionsNudgeEarlier" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsExpectSound" },
+    { "do": "describe", "stage": "6-the-whole-track-nudged", "note": "Captions Later, twice, then Earlier: every caption moves together, a tenth of a second at a time. That is the fix for a recogniser that ran consistently late, which is a judgment made once instead of once per line. One line out of step on its own is dragged by its bar end on the timeline, which needed nothing written for it" },
+    { "do": "snapshot", "name": "6-the-whole-track-nudged" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "captionsExpectSound" },
+    { "do": "describe", "stage": "7-every-bit-of-it-undoes", "note": "Three presses of undo take the three nudges back off. Nothing about captions has an undo of its own: every edit goes through the same history every other edit does, so a caption undoes like a rectangle" },
+    { "do": "snapshot", "name": "7-every-bit-of-it-undoes" },
+
+    { "do": "action", "action": "captionsClear" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-taken-off-again", "note": "Clear Captions takes every one off and leaves the picture and the voiceover exactly where they were. Writing them again would replace them rather than laying a second track over the first" },
+    { "do": "snapshot", "name": "8-taken-off-again" }
+  ]
+}

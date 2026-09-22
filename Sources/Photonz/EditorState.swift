@@ -2,6 +2,7 @@ import AppKit
 import CoreGraphics
 import Observation
 import PhotonzCore
+import PhotonzMedia
 import PhotonzRender
 import SwiftUI
 import UniformTypeIdentifiers
@@ -920,6 +921,15 @@ final class EditorState {
     /// press because an `AVAudioEngine` is not cheap to build, and outside the
     /// observation graph because nothing on screen is drawn from it.
     @ObservationIgnored var audioPlayerStorage: DocumentAudioPlayer?
+    /// The listening running in this window, or nil where none is
+    /// (`EditorState+Captions`). It is what the Captions section's progress
+    /// line is drawn from, so it is observed rather than ignored.
+    var captionsBeingWritten: TranscriptionProgress?
+    /// The job doing the listening, so Stop can stop it.
+    @ObservationIgnored var captionsTask: Task<Void, Never>?
+    /// The job walking its progress readings onto this actor.
+    @ObservationIgnored var captionsWatcher: Task<Void, Never>?
+
     /// The video export running in this window, or nil where none is
     /// (`EditorState+VideoExport`). It is what the progress sheet is drawn
     /// from, so it is observed rather than ignored.

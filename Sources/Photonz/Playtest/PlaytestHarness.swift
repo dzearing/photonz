@@ -2551,6 +2551,151 @@ private final class Run {
                         + "to pull down")
                 }
                 editor.setSoundGain(0.5)
+            case .captionsAddVoiceover:
+                guard let url = await TutorialSampleVoiceover.fresh() else {
+                    throw Failure(description: "couldn't write the spoken sample")
+                }
+                let before = editor.document?.allLayers.count ?? 0
+                var landed: UUID?
+                let at = editor.documentTimeMS
+                Task { landed = await editor.addSound(from: url, atMS: at) }
+                try await poll("the spoken sample to land on the timeline", within: 20) {
+                    landed != nil && (editor.document?.allLayers.count ?? 0) > before
+                }
+            case .captionsWrite:
+                guard editor.canWriteCaptions else {
+                    throw Failure(description: "there is nothing to caption: this document has no "
+                        + "time in it, nothing in it makes a sound, or the listening is already "
+                        + "running")
+                }
+                editor.writeCaptions()
+                // It listens about ninety times faster than the sound runs, so
+                // a minute of voiceover is a second or so. The ceiling is for
+                // the first run on a Mac, which may have to fetch the
+                // language's words before it can start.
+                try await poll("the listening to finish", within: 180) {
+                    !editor.isWritingCaptions
+                }
+                guard editor.hasCaptions else {
+                    throw Failure(description: "the listening finished and wrote no captions: "
+                        + "\(editor.captionsReading)")
+                }
+                note(number, step.name,
+                     "captions: \(editor.captionsReading)", state: describe())
+            case .captionsWriteHearingNothing:
+                guard editor.canWriteCaptions else {
+                    throw Failure(description: "Write Captions is not offered here, so there is "
+                        + "nothing to find out about what it does with a recording it cannot hear "
+                        + "words in")
+                }
+                editor.writeCaptions()
+                try await poll("the listening to finish", within: 180) {
+                    !editor.isWritingCaptions
+                }
+                guard !editor.hasCaptions else {
+                    throw Failure(description: "it wrote \(editor.captionCount) caption(s) out of a "
+                        + "recording with no words in it, which means it invented them")
+                }
+                let said = editor.copyConfirmation?.detail ?? ""
+                guard said == Captions.heardNothing else {
+                    throw Failure(description: "it heard nothing and said \"\(said)\" rather than "
+                        + "\"\(Captions.heardNothing)\"")
+                }
+                note(number, step.name,
+                     "captions: it heard nothing and said so — \(said)", state: describe())
+            case .captionsNudgeLater, .captionsNudgeEarlier:
+                guard editor.canNudgeCaptions else {
+                    throw Failure(description: "there are no captions to nudge")
+                }
+                let was = editor.document?.captionLayers.first?.time?.inMS ?? 0
+                let step = action == .captionsNudgeLater
+                    ? EditorState.captionNudgeMS : -EditorState.captionNudgeMS
+                editor.nudgeCaptions(byMS: step)
+                let now = editor.document?.captionLayers.first?.time?.inMS ?? 0
+                guard now == max(0, was + step) else {
+                    throw Failure(description: "the nudge did not land: the first caption was at "
+                        + "\(was) ms and is at \(now) ms, not \(max(0, was + step)) ms")
+                }
+            case .captionsCorrectFirstWord:
+                guard let caption = editor.document?.captionLayers.first,
+                      case .text(var content) = caption.content else {
+                    throw Failure(description: "there is no caption to correct")
+                }
+                var words = content.string.split(whereSeparator: \.isWhitespace).map(String.init)
+                guard !words.isEmpty else {
+                    throw Failure(description: "the first caption has no words in it")
+                }
+                words[0] = "Photonz"
+                content.string = words.joined(separator: " ")
+                let id = caption.id
+                let corrected = content
+                editor.perform { $0.updateLayer(id: id) { $0.content = .text(corrected) } }
+                note(number, step.name,
+                     "captions: the first line now reads \(corrected.string)", state: describe())
+            case .captionsClear:
+                guard editor.canClearCaptions else {
+                    throw Failure(description: "there are no captions to clear")
+                }
+                editor.clearCaptions()
+                guard !editor.hasCaptions else {
+                    throw Failure(description: "some captions are still there after Clear")
+                }
+            case .captionsExpectSound:
+                let cues = editor.document?.captionCues ?? []
+                guard !cues.isEmpty else {
+                    throw Failure(description: "there are no captions in this document")
+                }
+                for layer in editor.document?.captionLayers ?? [] {
+                    guard case .text = layer.content else {
+                        throw Failure(description: "\(layer.name) is a caption and is not text; a "
+                            + "caption is a text layer and nothing else special")
+                    }
+                    guard layer.time != nil else {
+                        throw Failure(description: "\(layer.name) is a caption with no in and out")
+                    }
+                    guard layer.isPlacedInTime else {
+                        throw Failure(description: "\(layer.name) reads as a clip rather than as "
+                            + "something placed in time")
+                    }
+                }
+                for (a, b) in zip(cues, cues.dropFirst()) {
+                    guard a.inMS <= b.inMS else {
+                        throw Failure(description: "the captions are out of order at \(a.inMS) ms")
+                    }
+                    guard a.outMS <= b.inMS else {
+                        throw Failure(description: "two captions are on screen at once at "
+                            + "\(b.inMS) ms: the one before it runs to \(a.outMS) ms")
+                    }
+                    guard !a.words.isEmpty else {
+                        throw Failure(description: "the caption at \(a.inMS) ms kept no word "
+                            + "timings, so it cannot be re-cut or written out with real times")
+                    }
+                }
+                note(number, step.name,
+                     "captions: \(cues.count) in order, none overlapping, all carrying their "
+                     + "word timings", state: describe())
+            case .captionsExpectTimingsKept:
+                let cues = editor.document?.captionCues ?? []
+                guard !cues.isEmpty else {
+                    throw Failure(description: "there are no captions in this document")
+                }
+                for cue in cues {
+                    guard cue.words.count == cue.text.split(whereSeparator: \.isWhitespace).count
+                    else {
+                        throw Failure(description: "the caption at \(cue.inMS) ms has "
+                            + "\(cue.words.count) word timings for "
+                            + "\(cue.text.split(whereSeparator: \.isWhitespace).count) words")
+                    }
+                    for (a, b) in zip(cue.words, cue.words.dropFirst()) {
+                        guard a.startMS <= b.startMS else {
+                            throw Failure(description: "the words of the caption at \(cue.inMS) ms "
+                                + "are out of order")
+                        }
+                    }
+                }
+                note(number, step.name,
+                     "captions: every line's words still carry the moments they were heard at",
+                     state: describe())
             case .soundExpectPlaying:
                 guard editor.isDocumentPlaying else {
                     throw Failure(description: "the document is not playing, so nothing can be "
@@ -2971,6 +3116,12 @@ private final class Run {
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
                  .soundExpectPlaying, .soundExportMix, .videoSeekStart: break
+            // Captions, handled in full above for the same reason: each one
+            // refuses the walk rather than quietly doing nothing.
+            case .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
+                 .captionsNudgeLater,
+                 .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
+                 .captionsExpectSound, .captionsExpectTimingsKept: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             case .copy: editor.copySelectedLayer()

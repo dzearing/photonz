@@ -1600,6 +1600,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// clip stylable, maskable and effectable like anything else.
     public var movie: MovieRef?
 
+    /// The words the machine heard in this caption and when it heard each one
+    /// (`Captions.swift`). Nil for every layer that is not a caption, which is
+    /// every layer in every document written before captions existed.
+    ///
+    /// Read and written through `captionWords`, which refuses to store an
+    /// empty list: a caption with no words in it is not a caption.
+    internal var captionWordsStorage: [TranscribedWord]?
+
     /// Set on a clip whose sound has been taken off its picture and laid on a
     /// layer of its own (`SoundClip.swift`). Nil, and so false, for every
     /// layer in every document written before this existed.

@@ -654,6 +654,15 @@ struct InspectorPanel: View {
         if Experiments.shared.soundOnTheTimelineEnabled, editorState.soundLayerInHand != nil {
             set.insert(.sound)
         }
+        // Having the app write the captions (Next, `next-captions-from-the-sound`).
+        // Present for the whole document rather than for what is picked: unlike
+        // every other section here, this is where you go to MAKE something, so
+        // gating it on a caption being selected would mean it only appeared
+        // once you no longer needed it.
+        if Experiments.shared.captionsFromTheSoundEnabled, editorState.documentHasTime,
+           editorState.documentHasAudio || editorState.hasCaptions {
+            set.insert(.captions)
+        }
         // What is on the CUT in hand (Next, `next-transitions-at-a-cut`).
         // Present only where there is a cut to be on: a clip somebody has split
         // at least once. A recording nobody has cut has no join, and a section
@@ -1089,6 +1098,8 @@ struct InspectorPanel: View {
             SpeedInspector()
         case .sound:
             SoundInspector()
+        case .captions:
+            CaptionsInspector()
         case .shadow:
             ShadowInspector()
         case .library:

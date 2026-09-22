@@ -292,7 +292,11 @@ struct EditorView: View {
         .onOpenURL { openPicked($0) }
         // Closing a window holding a recording writes down where the playhead
         // was, so opening it again comes back to it (`RecordingPlaces`).
-        .onDisappear { editorState.noteRecordingPlace() }
+        .onDisappear {
+            editorState.noteRecordingPlace()
+            // A window that has gone is not listening to anything.
+            editorState.forgetCaptionsInFlight()
+        }
         .sheet(isPresented: $editorState.isResizeDialogPresented) {
             if let document = editorState.document {
                 ResizeDialog(originalSize: document.canvasSize)

@@ -1,0 +1,57 @@
+{
+  "feature": "Captions that write themselves",
+  "epic": "video-titles-graphics",
+  "summary": "The app now listens to a recording and writes the captions itself, on this Mac, with nothing uploaded and no permission dialog. Each line lands on the timeline as an ordinary text layer with an in and an out, so correcting a word is typing, restyling one is the Text section, and moving one is dragging its bar.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs 'A recording is a document', 'Sound on the timeline' and 'Words over the picture arrive and leave' on; the new flag is 'Have the app write the captions off the sound', on by default in Next. Open a screen recording that has somebody talking on it.",
+  "try": [
+    {
+      "do": "Open a recording with a voiceover on it. The Captions section is at the bottom of the panel, under Sound."
+    },
+    {
+      "do": "Press Write Captions on a recording with no talking on it first: it listens, finds no words, and says so rather than leaving an empty track.",
+      "shot": "2026-09-21-captions-heard-nothing.png"
+    },
+    {
+      "do": "Press Write Captions. It says how far along it is and how many words it has so far; on this Mac it runs about ninety times faster than the sound, so a five minute recording takes about three seconds.",
+      "shot": "2026-09-21-captions-written.png"
+    },
+    {
+      "do": "Scrub the playhead. One caption is on screen at a time, sitting at the bottom of the picture inside the title-safe inset.",
+      "shot": "2026-09-21-captions-on-the-picture.png"
+    },
+    {
+      "do": "Find a word it got wrong (a product name is the reliable one) and double click the caption to type over it. Check the line still comes on and goes off where it did."
+    },
+    {
+      "do": "Drag either end of one caption's bar on the timeline to change when that line is on screen."
+    },
+    {
+      "do": "Press Earlier or Later in the Captions section to move the whole track a tenth of a second, then ⌘Z to take it back."
+    },
+    {
+      "do": "Export the video and look at a frame: the words are burned in, with nothing asked for to put them there.",
+      "shot": "2026-09-21-captions-burned-in.png"
+    },
+    {
+      "do": "Video menu, Export Captions… to write the same words out as an .srt beside the film."
+    }
+  ],
+  "evaluate": [
+    "When the recogniser gets a word wrong, is fixing it fast enough that you would rather fix it than retype the line?",
+    "Do the lines break where you would have broken them, or do you find yourself wanting to re-split one?",
+    "Is one caption at a time the right amount of text on screen, or do you want two lines showing at once?",
+    "Earlier and Later move the whole track a tenth of a second at a time. Is that the right step, and is moving the whole track the fix you actually reach for?",
+    "The words sit in the title-safe band at the bottom. Is that where you want them, and is the size right for a screen recording?",
+    "Nothing says which words it was unsure of on the canvas, only a count in the panel. Would marking them on the line itself help, or would it be noise?"
+  ],
+  "rough": [
+    "The caption sits at the title-safe floor of the picture, which in the editing window is directly behind the floating tool bar and the transport. It is correct in the film that comes out (the chrome is not exported) but you cannot read the bottom line while you work unless you scroll the canvas. Left rough; noted on the task.",
+    "There is no active-word highlight, which the clickthrough draws as 'karaoke'. The per-word timings are all kept on the layer, so it can be added later without re-transcribing anything. Cut on purpose: a second text rendering path for a decorative effect, next to correcting, which is the thing that actually costs time.",
+    "There is no language picker. The Mac's own English is used, and a language this Mac does not have says so rather than failing quietly. Worth adding the day somebody captions a second language, and noted in the design doc as a deliberate cut.",
+    "Captions are written from the LONGEST sound in the document, with no way to pick a different one. Right almost every time (it is the voiceover) and wrong if you have two takes on the timeline; the way round it today is switching the other one off and running it again.",
+    "Writing the captions selects the first one, which scrolls the panel to it and takes the Captions section out of view. Minor, and the section comes back when you deselect.",
+    "The accuracy comparison the task asked for was made against the measured numbers rather than by running whisper.cpp here: Apple's is on device, word level, 89x realtime, needs no permission and costs the app nothing, against a model file of tens to hundreds of megabytes in an 8MB DMG. The table and the reasoning are in docs/design/video-captions.md §2, and the evidence for re-deciding would be a recording where Apple's answer is not good enough.",
+    "The speech tested was the Mac's own voice, not a human voiceover: there was no recording with speech in it anywhere on this machine (the capture history holds seven screenshots and no films). 42 minutes of it was transcribed end to end in 28.3 seconds, 8200 words across 22 pieces, with the seams checked for lost and doubled words. A real human voiceover on real screen-recording audio is still untested.",
+    "The pill that says what came back lands under the trim bar, which sits in the same place at the bottom of the canvas, so on a freshly opened recording you read it through another control. Not specific to captions: every canvas notice is under that bar while a trim is open."
+  ]
+}

@@ -156,6 +156,19 @@ public struct CopyConfirmation: Hashable, Sendable {
         case soundAdded(name: String)
         /// The mix was written out as one sound file, or could not be.
         case mixWritten(file: String?)
+        /// The app listened to the recording and wrote the captions
+        /// (`Captions.swift`). The words land in the title-safe band at the
+        /// bottom of the picture and on the timeline, and on a long recording
+        /// the playhead is usually nowhere near the first of them, so without a
+        /// word on screen a minute of listening ends in what looks like
+        /// nothing happening.
+        case captionsWritten(words: Int, cues: Int, ofMS: Int)
+        /// ...and where it heard nothing, or was stopped part way, or there
+        /// was nothing to listen to. One case for all three because they are
+        /// the same sentence to the person reading it: here is what you got.
+        case captionsCameTo(String)
+        /// The captions were written out as a subtitle file, or could not be.
+        case captionsFileWritten(file: String?)
         /// The document was written out as a video, or could not be
         /// (`EditorState+VideoExport`). The window looks identical the instant
         /// after, so without a word there is nothing to say a file landed.
@@ -256,6 +269,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
+        case .captionsWritten: return "Captions written"
+        case .captionsCameTo: return "Captions"
+        case .captionsFileWritten(let file): return file == nil ? "Not written" : "Captions written"
         case .videoWritten(let file): return file == nil ? "Not written" : "Video written"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
@@ -292,6 +308,13 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(name) is on the timeline"
         case .mixWritten(let file):
             guard let file else { return "The mix could not be written" }
+            return file
+        case .captionsWritten(let words, let cues, let ofMS):
+            return CaptionProgress.heard(words: words, cues: cues, ofMS: ofMS)
+        case .captionsCameTo(let said):
+            return said
+        case .captionsFileWritten(let file):
+            guard let file else { return "The captions could not be written" }
             return file
         case .videoWritten(let file):
             guard let file else { return "The video could not be written" }

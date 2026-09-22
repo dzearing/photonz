@@ -450,6 +450,10 @@ extension Experiments {
     /// (`TitleTime.swift`).
     var titleOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.titleOnTheTimelineFlag) }
 
+    /// `next-captions-from-the-sound`: whether the app will listen to the
+    /// recording and write the captions itself (`Captions.swift`).
+    var captionsFromTheSoundEnabled: Bool { isEnabled(FeatureCatalog.captionsFromTheSoundFlag) }
+
     /// `next-a-component-on-the-timeline`: whether a component placed on a
     /// document with time arrives at the playhead with an in and an out, and
     /// animates from the moment it arrives (`ComponentsInTime.swift`).

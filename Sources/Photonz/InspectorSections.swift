@@ -132,6 +132,14 @@ enum InspectorSectionID: String, CaseIterable {
     // picked makes a sound at all, which is a clip or a piece of sound and
     // nothing else in any document anybody has.
     case sound
+    // Having the app write the words off the sound (Next,
+    // `next-captions-from-the-sound`). Directly under Sound, because it is the
+    // one thing you do WITH a recording's sound that is not about how loud it
+    // is, and because the sound is what it is written from. Present wherever
+    // this document has time and something in it makes a sound, rather than
+    // only when a caption is picked: it is the surface you go to in order to
+    // HAVE captions, so it cannot depend on already having one.
+    case captions
     // Shadow stays at the bottom. It is part of the same look family as Color
     // and Effects, but it is a switch you set once rather than a slider you
     // pull, and it is the tallest section in the panel: putting it above the
@@ -171,6 +179,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .transition: "Transition"
         case .speed: "Time"
         case .sound: "Sound"
+        case .captions: "Captions"
         case .shadow: "Shadow"
         case .library: "Library"
         // Replaced at draw time by the scope's own noun; this is the fallback.

@@ -476,6 +476,33 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.documentHasAudio ?? false))
                 Divider()
             }
+            // Captions are what the Title / Text tool does when the document
+            // has time, so they live here beside the sound they are written
+            // from rather than in a caption menu
+            // (`docs/design/mocks/pages/video-captions.html`).
+            if Experiments.shared.captionsFromTheSoundEnabled {
+                if editor?.isWritingCaptions == true {
+                    Button("Stop Writing Captions") { editor?.stopWritingCaptions() }
+                } else {
+                    Button("Write Captions") { editor?.writeCaptions() }
+                        .disabled(!(editor?.canWriteCaptions ?? false))
+                }
+                Button("Captions Later") {
+                    editor?.nudgeCaptions(byMS: EditorState.captionNudgeMS)
+                }
+                .keyboardShortcut(.rightArrow, modifiers: [.option, .shift])
+                .disabled(!(editor?.canNudgeCaptions ?? false))
+                Button("Captions Earlier") {
+                    editor?.nudgeCaptions(byMS: -EditorState.captionNudgeMS)
+                }
+                .keyboardShortcut(.leftArrow, modifiers: [.option, .shift])
+                .disabled(!(editor?.canNudgeCaptions ?? false))
+                Button("Clear Captions") { editor?.clearCaptions() }
+                    .disabled(!(editor?.canClearCaptions ?? false))
+                Button("Export Captions…") { editor?.exportCaptions() }
+                    .disabled(!(editor?.canExportCaptions ?? false))
+                Divider()
+            }
             Button("Set Trim Start to Playhead") {
                 if let video { video.setTrimIn(video.currentTime) }
             }

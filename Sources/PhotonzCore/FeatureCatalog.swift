@@ -188,6 +188,8 @@ public enum FeatureCatalog {
 
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
+    public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
+
     public static let componentOnTheTimelineFlag = "next-a-component-on-the-timeline"
 
     public static let recordingExportSheetFlag = "next-recording-export-sheet"
@@ -707,6 +709,16 @@ public enum FeatureCatalog {
                     name: titleOnTheTimelineFlag,
                     title: "Words over the picture arrive and leave",
                     description: "Type words on a recording today and they are on screen for the whole of it, from the first frame to the last, because a document with a length in it makes no difference to where text lives. With this on, text placed on a document that has time gets a moment it arrives and a moment it leaves: it starts where the playhead is and runs for three seconds, and it draws a bar on the timeline beside the clip, named after the words. Drag either end of that bar to say when it comes on and when it goes, drag the middle to move the whole thing, and the Time section in the panel says the two moments in words with a button for each that puts it on the playhead. A title can come on rather than snap on: pick a fade length and the words arrive and leave over that long, written as an ordinary Opacity animation on the layer, so it turns up in the Motion list with a lane on the strip, takes a different curve, and undoes like anything else. Nothing else about the words is special. It is the same text tool, the same fonts, the same colours, the same saved text styles, the same shadow that keeps text readable over a picture nobody chose, and what plays is what exports. The same is true of anything else simply placed in time, which is why picking one stops offering a speed, a held frame and a split: those are about the frames behind a clip, and a title has none. Off means text on a recording is on screen for all of it.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: captionsFromTheSoundFlag,
+                    title: "Have the app write the captions off the sound",
+                    description: "Every video needs words on it, and typing them out by hand while scrubbing back and forth is the worst job in editing. With this on, Write Captions in the Video menu listens to the recording and puts the words on the timeline at the moments they were said, one caption per line, each a text layer with an in and an out like any other title. Nothing about the app changes to do it: there is no caption mode, no caption track and no caption editor, because a caption IS text on a document that has time. So correcting a word is editing text, restyling one is the font and colour controls you already use, moving one is dragging its bar, and every one of those undoes. The listening happens ON THIS MAC, using the speech recognition macOS already ships: nothing is uploaded, no account is needed, there is nothing to pay per minute and it works with the network off. A long recording is heard in pieces of a couple of minutes so the panel can say how far along it is and how many words it has so far, and Stop keeps every word it already heard rather than throwing the lot away. The pieces are cut where the sound goes quiet where it can, and where it cannot they overlap and are stitched by matching what was said, so no word is lost at a join and none is written twice. A word it was unsure of is marked rather than passed off as heard, and a recording it could hear nothing in says so instead of leaving an empty track. The words sit inside the title-safe part of the picture wearing the same shadow every piece of text over a picture gets, so they stay readable over whatever is behind them. Captions Later and Captions Earlier nudge the whole lot a tenth of a second at a time, which is the fix when the machine ran consistently late. What plays is what exports: the words are ordinary layers, so they are burned into the film that comes out, and Export Captions writes the same words out as a subtitle file for anything that would rather switch them off. Off means no Write Captions and no caption rows; captions already in a document draw either way.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

@@ -759,6 +759,38 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// panel-free path Add Sound takes, so a walk never has to answer an open
     /// panel.
     case soundAddSample
+    /// Put the spoken sample on the timeline where the playhead is: the Mac's
+    /// own voice reading five sentences about this app. What a captioning walk
+    /// needs, because the sample recording's own sound is tones and blips and
+    /// there are no words in it (`TutorialSampleVoiceover`).
+    case captionsAddVoiceover
+    /// **Write Captions**, and wait for the listening to finish. On this
+    /// machine it runs about ninety times faster than the sound it is
+    /// listening to, so a walk waits seconds rather than minutes.
+    case captionsWrite
+    /// **Write Captions** on a recording with no words in it, and fail unless
+    /// it comes back SAYING it heard nothing. The thing that must never happen
+    /// is a recogniser inventing words out of a tone, and the second thing is
+    /// it leaving an empty track and letting somebody think it is still
+    /// working.
+    case captionsWriteHearingNothing
+    /// Move every caption a tenth of a second later, then earlier: the nudge
+    /// that fixes a whole track that ran late.
+    case captionsNudgeLater, captionsNudgeEarlier
+    /// Type over the first word of the first caption, which on this sample is
+    /// the app's own name and the word the recogniser reliably gets wrong. A
+    /// walk's stand-in for double clicking the words and fixing them.
+    case captionsCorrectFirstWord
+    /// Take every caption off again.
+    case captionsClear
+    /// Fail unless the captions in the document are the shape a caption track
+    /// has to be: there are some, each is a text layer with an in and an out,
+    /// they are in order, none overlaps the next, and every one of them holds
+    /// the words the machine heard with the moments it heard them.
+    case captionsExpectSound
+    /// Fail unless every caption's words still carry the timings they were
+    /// heard with, which is what a correction must not cost.
+    case captionsExpectTimingsKept
     /// Duck the picked layer: four points either side of a dip, which is all a
     /// duck is. It is a walk's stand-in for dragging four dots on the bar.
     case soundDuck
@@ -842,6 +874,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         case .clipSplit, .clipDeletePiece, .clipHoldFrame,
              .clipSpeedDouble, .clipSpeedHalf,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
+             .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
+             .captionsNudgeLater, .captionsNudgeEarlier,
+             .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
+             .captionsExpectTimingsKept,
              .soundExpectPlaying, .soundExportMix,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
