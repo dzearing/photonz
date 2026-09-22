@@ -18721,3 +18721,24 @@ into `walks-that-fail-in-the-full-sweep-4`, which already owns it. Audit:
 **Next.** Two clips in one document is what would make a cut between LAYERS
 possible; until then the cut that exists is the join between two pieces. Push,
 wipe and morph are deliberately not built, and the reasons are in the design doc.
+
+## 2026-09-21 — Something you built, on the timeline
+
+Components on a recording's timeline (`next-a-component-on-the-timeline`, on by
+default in Next). A component you drew arrives at the playhead with an in and an
+out, draws a bar on the timeline, keeps its link to the original, and animates
+with the ordinary Motion list from the moment it arrives. `docs/design/video.md`
+§8c is the whole of it: one rule (`ComponentsInTime.placeInTime`), one bug (a
+copy did not carry its parts' motions, so an animated component stopped
+animating the moment it was copied) and one correction (a nested part's lane was
+drawn at the start of the film rather than where it happens).
+
+Two new walks: `icon-into-a-component-onto-the-timeline-walk` is the chain the
+user asked for end to end, and `component-on-the-timeline-walk` covers the copy,
+the repaint, the animation and the export. Three new export tests write a real
+movie and read the pixels back.
+
+Next: the standing video set. Open questions for the user are in
+`queue/audits/2026-09-22-components-on-the-timeline.json`, chiefly whether a
+shape drawn straight onto a recording should get an in and an out the way a
+component and a title now do.

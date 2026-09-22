@@ -1,0 +1,30 @@
+{
+  "feature": "Something you built, on the timeline",
+  "epic": "video-transitions-motion",
+  "summary": "A component you drew is now a thing you can put on a recording: it arrives where the playhead is, runs for three seconds, gets a bar on the timeline you can drag either end of, and animates with the ordinary Motion list from the moment it arrives. It stays linked to the original, so editing the original changes it on the film too.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs 'A recording is a document', 'Words over the picture arrive and leave' and the new 'Put something you built on the timeline and animate it'; all are on by default in Next.",
+  "try": [
+    { "do": "Draw a couple of shapes in a new document, select both, and press Make Component in the Layer menu. Name it." },
+    { "do": "Turn on Share across documents in its Component section, so it is on the shelf every document shares.", "shot": "2026-09-22-components-on-the-timeline-1.png" },
+    { "do": "Open a recording from History, press space to stop it, and put the playhead four seconds in." },
+    { "do": "Open the Library shelf on Comps and double click your component's tile. It lands on the film at the playhead." },
+    { "do": "Read the Time section in the panel: it should say 0:04 to 0:07 · 3.0s, with Start Here and End Here." },
+    { "do": "Drag the playhead back to the start. The component is not there yet.", "shot": "2026-09-22-components-on-the-timeline-3.png" },
+    { "do": "Back at four seconds, press the plus on the Motion header and add Rotation. Watch where its lane lands on the timeline.", "shot": "2026-09-22-components-on-the-timeline-2.png" },
+    { "do": "Export the document as MP4 and scrub the file: the component is on it, over the shot, moving." }
+  ],
+  "evaluate": [
+    "Three seconds at the playhead: is that where you would want a component to land, or would you rather it stood over the whole film until you said otherwise?",
+    "Does the Time section sit where you look for it? On a component it is below Component, Appearance, Effects, Motion and Layout, which is a long way down for the one question a timeline is about.",
+    "Animating the ORIGINAL makes every copy move from its own in point. Is that what you expected, or did you expect to animate one copy on its own?",
+    "The bar is named after the component. With three copies of one badge on the timeline, is that enough to tell them apart?",
+    "A shape drawn straight onto a recording still stands over the whole film, while a component placed on it runs for three seconds. Should the two be the same?"
+  ],
+  "rough": [
+    "A shape or an arrow drawn directly on a recording still has no in and no out, so it is on screen for the whole film. Only components and titles take the new rule. It was left alone on purpose: an existing walk asserts that a box drawn over a video is in every frame, so changing it is a decision rather than a fix.",
+    "The Time section is the last section before Library when a component is picked, so on a short window you scroll for it. Folded into the open task about panel section order rather than filed again.",
+    "A placed component cannot be cut in two with the blade, and it has no speed and no held frame. That is right for something with no frames behind it, but the blade says nothing when you try, which is a silence worth fixing one day.",
+    "A copy cannot have its own version of the original's animation. Animate the original and every copy runs it; a copy can add motions of its own but cannot change the original's.",
+    "The walk harness refused to scroll to the Time section in a long panel and said it could not be reached, in the same second a screenshot shows it plainly on screen. Filed."
+  ]
+}

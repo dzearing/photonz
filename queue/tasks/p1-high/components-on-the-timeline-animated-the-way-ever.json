@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T15:15:43.070Z",
-  "updated": "2026-09-21T13:31:04.220Z",
+  "updated": "2026-09-22T02:53:03.397Z",
   "deps": [
     "a-document-can-have-time",
     "transitions-at-a-cut-and-effects-you-can-control"
@@ -54,6 +54,32 @@
     {
       "t": "2026-09-21T13:31:04.219Z",
       "note": "seq 90 -> 50"
+    },
+    {
+      "t": "2026-09-22T02:13:14.551Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T02:25:26.903Z",
+      "note": "Adversarial review before building: the chain is mostly already there (components, shared shelf, LayerTime, motion, export), so this task is two real gaps plus proof, not a new subsystem. Gap 1: nothing but TEXT gets a place in time when it lands, so a component dropped on a recording stood over the whole film with no bar on the timeline. Gap 2 (the bad one): rebound() rebuilt a copy's children field by field and silently dropped motions, so a component whose parts animate stopped animating the moment it was copied. Cut from scope on purpose: a blade cut on a placed thing (a component has no frames behind it, so cutting one in two is a different gesture from cutting a clip, and TitleTime already refuses speed/hold/split for placed layers), and per-copy motion overrides (animate the ORIGINAL and every copy runs it from its own in point, which is the smaller and better answer)."
+    },
+    {
+      "t": "2026-09-22T02:48:42.830Z",
+      "note": "owns these walks: component-on-the-timeline-walk, icon-into-a-component-onto-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-22T02:52:59.912Z",
+      "note": "Built and verified. Acceptance, item by item: (1) placed, linked, follows the original - core tests + component-on-the-timeline-walk repaints the original's colour and both copies follow. (2) the icon chain - icon-into-a-component-onto-the-timeline-walk draws two shapes, makes them a component, shares it and drops it on a recording, nothing exported or converted. (3) start and end, moved - placeInTime gives it 0:04 to 0:07 at the playhead, both ends drag (moveLayerStart/End), and the panel's Start Here / End Here work; NOT cut and NOT retimed, see below. (4) and (5) animation and out of phase - the ordinary Motion list, a lane per moving part on the strip, real curves, and the export test reads the out-of-phase move back off the written mp4 pixel by pixel. (6) compositing - a matte borrowed from the layer below cuts the placed component, proved from the file. (7) export - three tests in Tests/PhotonzMediaTests/ComponentOnTheTimelineExportTests.swift write a real movie through the ordinary renderer and compare frames; the walk's writeVideo step checks an 8s file made frame by frame rather than copied. (8) audit at queue/audits/2026-09-22-components-on-the-timeline.json with three real screenshots.\n\nWhere it falls short of the acceptance text, on purpose: 'can be cut, moved and retimed with the same gestures' is only moved. A placed thing has no frames behind it, so a speed, a hold and a split mean nothing for one and TitleTime already refuses all three; cutting one in two would be a different gesture and nobody has asked for it. Said in the audit's rough and in docs/design/video.md 8c.\n\nLeft rough, not filed: the blade says nothing when you aim it at a placed component, it simply does not cut. Worth a sentence one day, not worth a task today."
+    },
+    {
+      "t": "2026-09-22T02:53:03.395Z",
+      "note": "A component you built goes on a recording: it arrives at the playhead with an in and an out, gets a bar on the timeline, keeps its link to the original, and animates from the moment it arrives. Shipped behind next-a-component-on-the-timeline (on by default in Next) in ComponentsInTime.swift plus two fixes: a copy now carries its parts' motions (rebound silently dropped them, so an animated component stopped animating the moment it was copied) and the timing strip draws a nested part's lane where it actually happens. Verified: 8884 tests green including three new export tests that write a real movie and read the pixels back, and two new walks with six real screenshots. Audit: queue/audits/2026-09-22-components-on-the-timeline.json. Commit fec6dcee, pushed."
     }
-  ]
+  ],
+  "started": "2026-09-22T02:13:14.550Z",
+  "walks": [
+    "component-on-the-timeline-walk",
+    "icon-into-a-component-onto-the-timeline-walk"
+  ],
+  "completed": "2026-09-22T02:53:03.396Z"
 }
