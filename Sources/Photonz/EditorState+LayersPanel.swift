@@ -509,7 +509,12 @@ extension EditorState {
         guard document?.layer(id: id)?.isLocked == false else { return }
         discardDragPreview()
         if selectedLayerID == id { selectedLayerID = nil }
-        perform { $0.removeLayer(id: id) }
+        // Taking a piece OUT of a turned card changes the box that card
+        // swings about exactly as resizing one does, so the pieces left in it
+        // stay where they are drawn (`holdingTurnedPivots`).
+        perform { document in
+            document.holdingTurnedPivots(above: id) { $0.removeLayer(id: id) }
+        }
     }
 
     /// The panel row thumbnail: cached per layer, re-rendered asynchronously

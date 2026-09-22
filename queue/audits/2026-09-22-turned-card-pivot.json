@@ -1,0 +1,28 @@
+{
+  "feature": "A turned card holds still while one piece in it changes",
+  "epic": "ui-layout",
+  "summary": "Group a few shapes, turn the card on a slant, then resize, move or delete one piece inside it. Only that piece changes now: everything else in the card stays exactly where it is drawn, and the corner opposite the handle you grabbed does not budge.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw two rectangles with the R tool, one large and one small sitting on top of it." },
+    { "do": "Rubber-band both with the Select tool and press Command G." },
+    { "do": "Drag the round knob above the card to turn it about 20 degrees." },
+    { "do": "Double click the small rectangle to step into the card and pick it." },
+    { "do": "Drag its top left handle out and up the screen.", "shot": "2026-09-22-turned-card-pivot-resized.png" },
+    { "do": "Watch the large rectangle behind it: it should not move by so much as a point." },
+    { "do": "Press Command Z, then drag the small rectangle across the card by its middle.", "shot": "2026-09-22-turned-card-pivot-dragged.png" },
+    { "do": "Press Command Z, then select the small rectangle and press Delete." }
+  ],
+  "evaluate": [
+    "When you pull the handle, does the corner across from it sit perfectly still, or can you still catch it shifting?",
+    "Does the rest of the card stay nailed down while you drag the piece around inside it?",
+    "Deleting a piece out of a turned card: does what is left behind stay put?",
+    "Does the turn knob still spin the card about the point your eye calls its middle after you have resized a piece inside it?",
+    "Does one Command Z put the whole thing back, card and piece together?"
+  ],
+  "rough": [
+    "The piece's own X and Y in the panel read in the card's space and are exactly where the drag aimed them; the card's own X and Y shift by a point or two when a piece inside it changes size, because the card gives its anchor back the swing its contents' middle would otherwise have taken. Nothing on screen moves either way, but if you are reading the card's numbers during a resize you will see them settle.",
+    "turned-piece-walk carried two claims about where a piece sits on the upright canvas. Those two numbers changed, for the reason above, and are now pinned by arithmetic in TurnedCardPivotTests as well as by the walk. Every claim about what is on SCREEN is untouched and now passes, including the one that caught this bug.",
+    "An upright card, a screen, and a document with no turned group at all are untouched: the whole thing is a no-op unless something above the piece has been turned."
+  ]
+}

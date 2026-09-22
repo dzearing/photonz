@@ -232,7 +232,9 @@ extension EditorState {
         // layer over a picture that has already moved it. Dropped once, not
         // once per mouse move: this runs on every point of the drag.
         if dragPreview != nil { discardDragPreview() }
-        for (id, origin) in moves { doc.moveLayer(id: id, toCanvasOrigin: origin) }
+        doc.holdingTurnedPivots(above: Array(moves.keys)) { doc in
+            for (id, origin) in moves { doc.moveLayer(id: id, toCanvasOrigin: origin) }
+        }
         previewMoves = moves.reduce(into: [:]) { frames, move in
             frames[move.key] = doc.canvasBounds(of: move.key)
         }
@@ -257,7 +259,9 @@ extension EditorState {
         let ordered = document?.allLayers.map(\.id).filter { moves[$0] != nil } ?? Array(moves.keys)
         var joined: [UUID] = []
         perform { document in
-            for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }
+            document.holdingTurnedPivots(above: ordered) { document in
+                for (id, origin) in moves { document.moveLayer(id: id, toCanvasOrigin: origin) }
+            }
             if joiningScreens { joined = document.adoptMovedLayers(ids: ordered) }
         }
         revealJoinedScreens(joined)

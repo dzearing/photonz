@@ -752,7 +752,9 @@ extension EditorState {
         guard !idSet.isEmpty else { return }
         discardDragPreview()
         if let selected = selectedLayerID, idSet.contains(selected) { selectedLayerID = nil }
-        perform { $0.removeLayers(ids: idSet) }
+        perform { document in
+            document.holdingTurnedPivots(above: Array(idSet)) { $0.removeLayers(ids: idSet) }
+        }
         setSelection(nil, captureLayers: false, recording: false)
     }
 

@@ -2956,10 +2956,15 @@ final class EditorState {
         let byHand = Experiments.shared.placementEnabled
         perform { document in
             let canvas = document.canvasSize
-            for move in ordered {
-                document.updateLayer(id: move.id) {
-                    $0 = $0.geometrySet(to: move.frame, canvas: canvas, byHand: byHand,
-                                        captionPillSize: $0.measuredCaptionPillSize)
+            // Typing a number at a piece inside a card that has been turned is
+            // the same change a drag makes, so the card holds the pivot it had
+            // and nothing else in it moves (`holdingTurnedPivots`).
+            document.holdingTurnedPivots(above: ordered.map(\.id)) { document in
+                for move in ordered {
+                    document.updateLayer(id: move.id) {
+                        $0 = $0.geometrySet(to: move.frame, canvas: canvas, byHand: byHand,
+                                            captionPillSize: $0.measuredCaptionPillSize)
+                    }
                 }
             }
         }

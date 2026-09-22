@@ -96,8 +96,14 @@ extension EditorState {
         }
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
-        doc.updateLayer(id: id) {
-            $0 = $0.resized(to: frame, chosenByHand: Experiments.shared.placementEnabled)
+        // A card that has been turned swings about the middle of what is in
+        // it, so changing one piece would slide every other piece in the card
+        // across the screen. Held still here as well as on the commit, or the
+        // rest of the card would shuffle under the pointer for the whole drag
+        // and snap back on mouse-up (`holdingTurnedPivots`).
+        let byHand = Experiments.shared.placementEnabled
+        doc.holdingTurnedPivots(above: id) { doc in
+            doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand) }
         }
         submit(doc)
     }
@@ -120,10 +126,15 @@ extension EditorState {
         let byHand = Experiments.shared.placementEnabled
         perform { document in
             let canvas = document.canvasSize
-            document.updateLayer(id: id) {
-                $0 = AnnotationBuilder.planningCaption(
-                    $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
-                    captionPillSize: $0.measuredCaptionPillSize)
+            // Every turned card above this layer keeps the pivot it had, so
+            // resizing or moving one piece leaves the rest of the card exactly
+            // where it is drawn (`holdingTurnedPivots`).
+            document.holdingTurnedPivots(above: id) { document in
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.planningCaption(
+                        $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
+                        captionPillSize: $0.measuredCaptionPillSize)
+                }
             }
             // In the SAME mutation as the move, so one undo puts the layer back
             // where it was and back in what held it.
