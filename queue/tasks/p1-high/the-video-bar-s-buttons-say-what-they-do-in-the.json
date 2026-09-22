@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:07:21.894Z",
-  "updated": "2026-09-22T04:27:47.660Z",
+  "updated": "2026-09-22T04:28:03.593Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-20 with a screenshot of the trim bar, hovering the scissors: \"tooltips don't look like any other tooltip. I don't know what the buttons do.\" The tooltip in the shot reads 'Split at Playhead (B)' in a plain dark rounded box that is not the app's tooltip.\n\nThe app HAS a tooltip system and these buttons are not using it. Look at .toolTip(_:key:fallback:) which the tool bar uses (every tool shows a tooltip that names it and its key, a shipped task), and panelHelp which the panel uses. One of those is the right answer for this row; a third look is not.\n\nThe icons are the other half and are worth checking rather than assuming: eight glyphs in a row with no labels, several of which look like glyphs used for other things elsewhere in the app. There is a done task 'edit-is-one-glyph-across-the-corpus' about exactly this kind of drift, and an icon conformance epic. Check this row against the same rule.\n\nThis is a small task and it is deliberately narrow: it is about the row of buttons reading correctly, not about whether that row should exist. Where the video surface goes is the design pass's question and is blocked on a decision card.",
@@ -94,10 +94,15 @@
     {
       "t": "2026-09-22T04:27:47.659Z",
       "note": "Release call, made deliberately and flagged rather than made quietly. The task is release next, and the tooltip half honours that by itself: .toolTip falls back to .help with identical words wherever next-tool-tips is off, which is always in Current. The two GLYPHS do not, because VideoEditorView is shared and an Image(systemName:) is not flag-gated. The choices were to fork a whole file for two symbol names, which the Releases README says is only for a release that genuinely needs the file different, or to add a flag to the Experiments window for two pictures, which is clutter. Shipped shared instead: neither swap changes what any button does, and one of them (an import arrow on the Export button) was plainly wrong in both releases. Written into the audit's rough as a line the user can disagree with."
+    },
+    {
+      "t": "2026-09-22T04:28:03.591Z",
+      "note": "Every button in the recording's bar now answers with the app's own tooltip (name first, key quieter) instead of the system help tag: Sources/Photonz/VideoEditorView.swift, fourteen .help() call sites moved to .toolTip. Current keeps the exact words it had, because .toolTip falls back to .help wherever next-tool-tips is off. Two glyphs corrected against the app's own set and the mock's: Trim scissors -> timeline.selection (what Tool.trim wears, and the mock's ic-trim), Export square.and.arrow.down -> .up (the down one is the mock's ic-import, and it sat beside Save's down arrow). The other six already matched. Verified with Scripts/test.sh (8884 tests, all passing) and a new walk, video-bar-says-what-it-does-walk, 51 steps, ok, 14 real window captures, which rests on the Crop tool for the standard and then on every button in the bar; 38 trim/recording/cut/video/tooltip walks green. Dimming measured from the captures rather than asserted: disabled 90, disabled+hovered 126, enabled 168. Audit at queue/audits/2026-09-21-video-bar-says-what-it-does.json with four real screenshots. Commit cc27a0af, pushed."
     }
   ],
   "started": "2026-09-22T04:06:19.375Z",
   "walks": [
     "video-bar-says-what-it-does-walk"
-  ]
+  ],
+  "completed": "2026-09-22T04:28:03.592Z"
 }
