@@ -161,6 +161,10 @@ final class EditorState {
     /// the sheet on whatever was last picked.
     var playtestOpensExportOnRecordingFormat: RecordingFormat?
     var playtestOpensExportAtQuality: VideoExportQuality?
+    /// Probe only: open that same sheet on the picture instead, so a walk can
+    /// photograph the frame answer without clicking inside a sheet
+    /// (`PlaytestAction.exportDialogAsFrame`).
+    var playtestOpensExportOnFrame = false
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false

@@ -1,0 +1,28 @@
+{
+  "feature": "A frame of a video comes out as a picture",
+  "epic": "video-share",
+  "summary": "Export on a recording now offers a picture beside MP4, GIF and HEIC: PNG writes the one frame the playhead is on, with everything drawn over it, at the size the document is. It is the same sheet the video leaves through, not a second one.",
+  "setup": "Photonz Dev, Experiments window, release Next. Turn on \"A recording opens in the editor you already know\", \"Cut a recording\" and \"An edited recording comes out as a video file\". Open any screen recording.",
+  "try": [
+    { "do": "Press space to play, then space again to stop somewhere you like." },
+    { "do": "Draw a rectangle over the picture with the Rectangle tool." },
+    { "do": "Press ⇧⌘E. The Format row has four buttons now: MP4, GIF, HEIC, PNG." },
+    { "do": "Pick PNG. The size presets go away, one sentence says what a picture is here, and the lines say \"1280 × 800 px · the frame at 0:04\" and what it really weighs.", "shot": "2026-09-22-frame-as-a-picture-sheet.png" },
+    { "do": "Press Export…, save it, and open the file. It is that frame at the document's own size, with your rectangle on it.", "shot": "2026-09-22-frame-as-a-picture-frame.png" },
+    { "do": "Move the playhead somewhere else and do it again. The line says the new moment and the new file holds the new frame." },
+    { "do": "Pick MP4 back on the same sheet. The presets come back and the video export is exactly what it was." }
+  ],
+  "evaluate": [
+    "Does PNG sitting beside three video formats read as one frame, or does it read as turning the whole recording into pictures?",
+    "Is \"the frame at 0:04\" where your eye goes to check you are about to save the right moment?",
+    "The playhead stops where it is when the sheet opens, so the picture cannot change under the sheet. Is stopping playback there what you expect, or is it a surprise?",
+    "A GIF says the size comes with the file, and a PNG says what it weighs to the byte. Is that difference confusing on one sheet, or obviously right?",
+    "The file the save box opens on is named after the document, with no moment in the name. Grabbing three frames means naming three files by hand: is that worth fixing?"
+  ],
+  "rough": [
+    "The save box suggests \"Recording.png\" every time, so a second still lands on the first unless you rename it. Putting the moment in the name would fix it and would break the rule every other format on this sheet follows, so it is left as it is and asked about above.",
+    "The sheet opening on PNG (because that is what you exported last) shows \"size not known until it is written\" for about a tenth of a second before the real number lands. It settles too fast to read on this machine and would be slower on a twelve megapixel document.",
+    "Choosing the picture is remembered separately from the video format, so a recording window's own Export sheet, which has no picture on it, still opens on whatever video format you last used. Nothing shows the two memories are separate.",
+    "A walk cannot press Export… (the save box is not drivable), so what the button hands to the writer is checked by a walk that calls the same writer directly. Pressing the button itself was checked by reading it, not by pressing it."
+  ]
+}

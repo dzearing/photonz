@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T16:38:56.980Z",
-  "updated": "2026-09-22T12:17:52.862Z",
+  "updated": "2026-09-22T21:09:02.006Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the 2026-09-21-video-export audit. Export on a timed document is now VideoExportDialog (Sources/Photonz/VideoExportDialog.swift) rather than ExportDialog, and the three formats are RecordingExport.formats. The frame itself is already available: EditorState.shownDocument is document.drawn(atTimeMS: documentTimeMS), so a still is previewRenderer.render(shownDocument, store:) through the existing ExportSizer path. The sheet is the place to add it, NOT a second sheet: the whole point of the video sheet is that a recording and a picture leave through the same one.",
@@ -26,7 +26,30 @@
     {
       "t": "2026-09-22T12:17:52.861Z",
       "note": "seq 3030 -> 90"
+    },
+    {
+      "t": "2026-09-22T20:45:09.286Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T20:48:41.177Z",
+      "note": "Adversarial review before building. (1) Four buttons MP4|GIF|HEIC|PNG: PNG next to three video formats could read as 'turn the whole video into pictures'. The button label cannot carry that on its own, so the line under it must say the frame and the moment: '1280 x 800 px - the frame at 0:04', plus one sentence saying what it is for, in the place the video formats put their 'who it is for' line. Acceptance says the same words as the other three, so the button stays PNG rather than becoming 'Frame'. (2) The size presets mean nothing for one frame (they cap the long side and the fps of a video), so the Quality row goes away for PNG exactly as the scale row goes away for SVG on the picture sheet, and the frame is written at the document size. (3) The playhead can MOVE while the sheet is up, so the sheet would say one moment and the file would hold another. The moment is read when the sheet opens and the same moment is what gets written. (4) A GIF says 'size not known until it is written' because weighing it is writing it; one frame is one render plus one encode, so the PNG row can say the real number and the bytes it weighed are the bytes that get saved. (5) The frame at the playhead may not be in the picture store, so the still goes through DocumentFrames (the very thing the video export uses) rather than rendering whatever happens to be cached."
+    },
+    {
+      "t": "2026-09-22T21:09:01.904Z",
+      "note": "walks none -> a-frame-of-a-video-comes-out-as-a-picture-walk"
+    },
+    {
+      "t": "2026-09-22T21:09:01.957Z",
+      "note": "Built and verified. Core: RecordingExport.Choice (.video(format) / .still) with the four choices, the short names, the shape line ('1280 x 800 px - the frame at 0:04'), the size line (exact bytes for a weighed frame, the GIF's own sentence before it lands), the purpose sentence and the suggested file name; Source gained playheadTime. App: the video Export sheet is choice-based, stops the playhead when it opens, reads the moment there, weighs the frame off the main actor through the same DocumentFrames the video export uses, and hands those very bytes to the save box; CanvasNotice gained frameWritten. New walk a-frame-of-a-video-comes-out-as-a-picture-walk (39 steps, 4 real window captures) plus a writeFrame step kind that writes the frame and reads the PNG back. Verified: 9070 tests green, the new walk green, all 14 export walks green (the picture sheet is untouched, acceptance 3), all 4 video walks green. The written frame was opened and looked at: the clip's frame at the playhead with the rectangle drawn over it, 1280 x 800."
+    },
+    {
+      "t": "2026-09-22T21:09:02.005Z",
+      "note": "Left rough, none of it filed: (a) the save box suggests the document's name every time, so a second still lands on the first unless it is renamed - asked about in the audit rather than decided here, since putting the moment in the name breaks the rule the other three formats follow; (b) a sheet opening on PNG shows 'size not known until it is written' for about a tenth of a second before the weigh lands, which is too fast to read here and would be slower on a twelve megapixel document; (c) the picture is remembered separately from the video format, so the recording window's own sheet is unaffected, and nothing on screen says the two memories are separate; (d) a walk cannot press Export (the save box is not drivable), so the button itself was checked by reading it while the writer behind it is driven directly."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-frame-of-a-video-comes-out-as-a-picture-walk"
+  ],
+  "started": "2026-09-22T20:45:09.285Z"
 }

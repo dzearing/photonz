@@ -17,9 +17,27 @@ enum RecordingExportMemory {
     static let formatKey = "export.recording.format"
     static let qualityKey = "export.recording.quality"
     static let movieQualityKey = "export.recording.quality.mp4"
+    /// What the DOCUMENT sheet was last set to, which is the only one of the
+    /// two that can answer "one frame, as a picture". Kept apart from the
+    /// format above so that grabbing a still never changes what a recording
+    /// window's own sheet opens on, where a picture is not on offer at all.
+    static let choiceKey = "export.recording.choice"
 
     static var format: RecordingFormat {
         RecordingFormat(rawValue: UserDefaults.standard.string(forKey: formatKey) ?? "") ?? .mp4
+    }
+
+    /// What the document's Export sheet opens on: the picture where that is
+    /// what was last written, and otherwise whatever video format was.
+    static var choice: RecordingExport.Choice {
+        UserDefaults.standard.string(forKey: choiceKey) == "still" ? .still : .video(format)
+    }
+
+    static func remember(choice: RecordingExport.Choice, quality: VideoExportQuality) {
+        UserDefaults.standard.set(choice == .still ? "still" : choice.fileExtension,
+                                  forKey: choiceKey)
+        guard let format = choice.format else { return }
+        remember(format: format, quality: quality)
     }
 
     /// The preset this format was last exported at, or the one it opens on the

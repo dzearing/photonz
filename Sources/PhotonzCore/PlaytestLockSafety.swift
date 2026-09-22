@@ -145,8 +145,9 @@ public enum PlaytestLockSafety {
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
         // A video export asks the editor to write a file and then opens the
-        // file: no name, no menu, and nothing on screen it depends on.
-        "writeVideo",
+        // file: no name, no menu, and nothing on screen it depends on. Writing
+        // one frame out as a picture is the same thing, one frame long.
+        "writeVideo", "writeFrame",
         // Watched on 2026-09-20, twenty-two walks forced under a lock and all
         // of them green. Every one of these either drives the app through its
         // own pasteboard and its own views, or reads a number the app is

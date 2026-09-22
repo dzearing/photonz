@@ -4,6 +4,7 @@ import Foundation
 import PhotonzCore
 import PhotonzMedia
 import PhotonzRender
+import UniformTypeIdentifiers
 
 // Getting a document that has time out of the app as a video
 // (`docs/design/video.md` §8).
@@ -46,7 +47,8 @@ extension EditorState {
                                       sourceSize: document?.canvasSize ?? .zero,
                                       fileBytes: bytes, isEdited: untouched == nil,
                                       sourceFPS: DocumentVideoExport.movieFPS,
-                                      hasAudio: document?.audioMix().isEmpty == false)
+                                      hasAudio: document?.audioMix().isEmpty == false,
+                                      playheadTime: Double(documentTimeMS) / 1000)
     }
 
     /// **Export…** on a document that has time: pick a place, then write it.
@@ -99,6 +101,60 @@ extension EditorState {
                 videoExport = nil
                 videoExportTask = nil
                 raiseCanvasNotice(.videoWritten(file: nil))
+            }
+        }
+    }
+
+    // MARK: One frame of it, as a picture
+
+    /// The frame at a moment, as the bytes of a PNG file.
+    ///
+    /// The same picture the video export writes at that moment, through the
+    /// same `DocumentFrames`: the clip's own frame fetched if the window is
+    /// not already holding it, everything drawn over it, at the size the
+    /// document is. Rendering and encoding both happen off the main actor, so
+    /// the sheet keeps drawing while its size line is being worked out.
+    ///
+    /// Nil where there is no document with time, or where the frame could not
+    /// be made at all.
+    func stillFrame(atMS ms: Int) async -> Data? {
+        guard let document, document.hasTime else { return nil }
+        let pictures = DocumentFrames(document: document, store: store,
+                                      movieURLs: MovieLibrary.shared.urls(in: document))
+        defer { pictures.putTheStoreBack() }
+        return await pictures.png(atMS: ms)
+    }
+
+    /// **Export…** with the picture chosen: pick a place, then write the one
+    /// frame there.
+    ///
+    /// `weighed` is the file the sheet already made to say what it would
+    /// weigh, so pressing Export after reading that number writes those very
+    /// bytes rather than rendering the frame a second time. Without one, the
+    /// frame is made here.
+    func exportStillFrame(atMS ms: Int, weighed: Data? = nil) {
+        guard let document, document.hasTime else { return }
+        let name = RecordingExport.suggestedFileName(recording: videoExportName, choice: .still)
+        Task { [weak self] in
+            guard let self else { return }
+            var data = weighed
+            if data == nil { data = await stillFrame(atMS: ms) }
+            guard let data else {
+                raiseCanvasNotice(.frameWritten(file: nil))
+                return
+            }
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [UTType.png]
+            panel.nameFieldStringValue = name
+            panel.canCreateDirectories = true
+            panel.message = "Write the frame the playhead is on out as a picture"
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do {
+                try data.write(to: url)
+                raiseCanvasNotice(.frameWritten(file: url.lastPathComponent))
+            } catch {
+                NSLog("Frame export failed: \(error)")
+                raiseCanvasNotice(.frameWritten(file: nil))
             }
         }
     }
@@ -224,6 +280,14 @@ final class DocumentFrames: @unchecked Sendable {
         let picture = renderer.render(shown, store: store) ?? blank()
         dropOldFrames()
         return picture
+    }
+
+    /// One frame as the bytes of a PNG file, made and encoded off the main
+    /// actor: what a still export writes, and what the sheet weighs to say
+    /// what it will weigh.
+    func png(atMS ms: Int) async -> Data? {
+        guard let picture = await frame(atMS: ms) else { return nil }
+        return ImageCodec.encode(picture, format: .png)
     }
 
     /// An empty frame the size of the canvas.

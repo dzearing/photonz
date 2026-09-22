@@ -1526,6 +1526,11 @@ private final class Run {
                                           sound: sound, copied: copied),
                  state: describe())
 
+        case .writeFrame(let name, let atMS, let width, let height):
+            note(number, step.name,
+                 try await writeFrameFile(name: name, atMS: atMS, width: width, height: height),
+                 state: describe())
+
         case .exportQuality(let format, let percent):
             guard ExportQuality.applies(toFormat: format) else {
                 throw Failure(description: "\(format) has no quality to set")
@@ -3935,6 +3940,9 @@ private final class Run {
                 editor.playtestOpensExportOnPicture = .webp
                 editor.isExportDialogPresented = true
             case .exportDialogAsVideo:
+                editor.isExportDialogPresented = true
+            case .exportDialogAsFrame:
+                editor.playtestOpensExportOnFrame = true
                 editor.isExportDialogPresented = true
             case .exportDialogAsSmallGIF:
                 editor.playtestOpensExportOnRecordingFormat = .gif
@@ -8949,6 +8957,68 @@ private final class Run {
         }
         facts.append("the sheet said \"\(said)\"")
 
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + ". "
+                + facts.joined(separator: "; "))
+        }
+        return facts.joined(separator: "; ")
+    }
+
+    /// Write ONE FRAME of the open document out as a picture and then READ
+    /// BACK what landed.
+    ///
+    /// The save box cannot be driven by a walk, so this asks the editor for
+    /// the very picture the Export sheet weighs and the save box writes
+    /// (`EditorState.stillFrame`), puts it on disk, and opens it: how big it
+    /// is, what it weighs, and whether it is the size the document is.
+    private func writeFrameFile(name: String, atMS: Int?,
+                                width: Double?, height: Double?) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "this window holds no document with time in it, "
+                + "so there is no frame to write")
+        }
+        let moment = atMS ?? editor.documentTimeMS
+        let destination = out.appendingPathComponent("\(name).png")
+        let said = RecordingExport.shapeLine(choice: .still, quality: .standard,
+                                             source: editor.videoExportSource)
+        let started = Date()
+        guard let data = await editor.stillFrame(atMS: moment) else {
+            throw Failure(description: "the frame at \(moment) ms could not be made at all")
+        }
+        do {
+            try data.write(to: destination)
+        } catch {
+            throw Failure(description: "writing the frame failed: \(error)")
+        }
+        let took = Int(Date().timeIntervalSince(started) * 1000)
+        guard let picture = CGImageSourceCreateWithURL(destination as CFURL, nil)
+            .flatMap({ CGImageSourceCreateImageAtIndex($0, 0, nil) }) else {
+            throw Failure(description: "nothing readable landed at \(destination.lastPathComponent)")
+        }
+        let size = CGSize(width: picture.width, height: picture.height)
+        var facts = ["\(destination.lastPathComponent) is "
+                     + "\(ExportQuality.fileSize(bytes: data.count)) (\(data.count) bytes), "
+                     + "\(picture.width) × \(picture.height) px, "
+                     + "the frame at \(moment) ms, written in \(took) ms"]
+        var wrong: [String] = []
+        // A frame leaves at the size the document is: no preset, no scale.
+        let canvas = document.canvasSize
+        if abs(canvas.width - size.width) > 2 || abs(canvas.height - size.height) > 2 {
+            wrong.append("the picture that landed is \(picture.width) × \(picture.height) px and "
+                + "the document is \(Int(canvas.width.rounded())) × "
+                + "\(Int(canvas.height.rounded())) px, so the frame was not written at the "
+                + "size of the document")
+        }
+        if let width, abs(width - size.width) > 2 {
+            wrong.append("the picture that landed is \(picture.width) px wide, not "
+                + "\(Int(width.rounded()))")
+        }
+        if let height, abs(height - size.height) > 2 {
+            wrong.append("the picture that landed is \(picture.height) px tall, not "
+                + "\(Int(height.rounded()))")
+        }
+        facts.append("the sheet said \"\(said)\"")
         guard wrong.isEmpty else {
             throw Failure(description: wrong.joined(separator: "; ") + ". "
                 + facts.joined(separator: "; "))

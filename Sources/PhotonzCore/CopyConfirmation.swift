@@ -198,6 +198,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// (`EditorState+VideoExport`). The window looks identical the instant
         /// after, so without a word there is nothing to say a file landed.
         case videoWritten(file: String?)
+        /// One frame of it was written out as a picture, or could not be. Its
+        /// own words rather than the video's: a pill saying "Video written"
+        /// over a PNG of one frame is a pill nobody believes.
+        case frameWritten(file: String?)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -302,6 +306,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .captionsCameTo: return "Captions"
         case .captionsFileWritten(let file): return file == nil ? "Not written" : "Captions written"
         case .videoWritten(let file): return file == nil ? "Not written" : "Video written"
+        case .frameWritten(let file): return file == nil ? "Not written" : "Frame written"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
@@ -355,6 +360,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             return file
         case .videoWritten(let file):
             guard let file else { return "The video could not be written" }
+            return file
+        case .frameWritten(let file):
+            guard let file else { return "The frame could not be written" }
             return file
         case .specList(let count):
             return "Spec list with \(count == 0 ? "no visible measurements" : Self.measurementPhrase(count))"

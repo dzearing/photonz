@@ -13,6 +13,15 @@ import SwiftUI
 /// pieces in the order they are in with everything drawn over them and the mix
 /// under them.
 ///
+/// **And one frame of it, as a picture.** PNG is a fourth button on the same
+/// row rather than a second sheet, because everything leaving this window
+/// leaves through one. Picking it puts the size presets away — they cap how big
+/// a video's picture is and how fast it runs, and one frame has neither
+/// question in it — and writes the frame the playhead is on at the size the
+/// document is. The moment is read when the sheet opens and the playhead is
+/// stopped there, so the line saying "the frame at 0:04" and the file that
+/// lands are the same frame.
+///
 /// The sheet only CHOOSES. Pressing Export… hands to the save box and then to
 /// `EditorState.writeVideo`, so the fast path for an untouched recording is
 /// still a verbatim file copy.
@@ -20,7 +29,7 @@ struct VideoExportDialog: View {
     @Environment(EditorState.self) private var editor
     @Environment(\.dismiss) private var dismiss
 
-    @State private var format: RecordingFormat = .mp4
+    @State private var choice: RecordingExport.Choice = .video(.mp4)
     @State private var quality: VideoExportQuality = .standard
     /// Everything the lines are worked out from, read once when the sheet
     /// opens: nothing can edit the document while its own window is behind a
@@ -28,19 +37,30 @@ struct VideoExportDialog: View {
     @State private var source = RecordingExport.Source(sourceDuration: 0, keptDuration: 0,
                                                        sourceSize: .zero, fileBytes: 0,
                                                        isEdited: false)
+    /// Which moment the picture is of, read when the sheet opens.
+    @State private var momentMS = 0
+    /// The frame already written out as a PNG, which is both what the size line
+    /// says and what Export saves: one frame is a render and an encode, so
+    /// unlike a GIF it really can be weighed while somebody watches.
+    @State private var stillFile: Data?
+    @State private var weighing: Task<Void, Never>?
 
-    private var offersQuality: Bool { RecordingExport.offersQuality(format) }
+    private var offersQuality: Bool { RecordingExport.offersQuality(choice) }
+
+    /// Whether the answer showing is the picture rather than a video.
+    private var isStill: Bool { choice == .still }
 
     private var shapeLine: String {
-        RecordingExport.shapeLine(format: format, quality: quality, source: source)
+        RecordingExport.shapeLine(choice: choice, quality: quality, source: source)
     }
 
     private var sizeLine: String {
-        RecordingExport.sizeLine(format: format, quality: quality, source: source)
+        RecordingExport.sizeLine(choice: choice, quality: quality, source: source,
+                                 stillBytes: stillFile?.count)
     }
 
     private var purposeLine: String {
-        RecordingExport.purposeLine(format: format, quality: quality)
+        RecordingExport.purposeLine(choice: choice, quality: quality)
     }
 
     var body: some View {
@@ -48,9 +68,9 @@ struct VideoExportDialog: View {
             Text("Export")
                 .font(.headline)
             ExportSheetRow("Format") {
-                Picker("Format", selection: $format) {
-                    ForEach(RecordingExport.formats, id: \.self) { format in
-                        Text(RecordingExport.shortName(format)).tag(format)
+                Picker("Format", selection: $choice) {
+                    ForEach(RecordingExport.choices, id: \.self) { choice in
+                        Text(RecordingExport.shortName(choice)).tag(choice)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -66,16 +86,17 @@ struct VideoExportDialog: View {
                         }
                         .pickerStyle(.segmented)
                         .labelsHidden()
-                        Text(purposeLine)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .playtestControl(RecordingExportDialog.purposeLabel,
-                                             detail: purposeLine)
+                        purpose
                     }
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
+                // With no preset row to sit under, the sentence saying what
+                // this answer is moves down beside the two lines. PNG next to
+                // three video formats needs it most of the three: without it,
+                // it reads as though it might turn the whole recording into
+                // pictures.
+                if !offersQuality { purpose }
                 Text(shapeLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -90,21 +111,22 @@ struct VideoExportDialog: View {
                 Spacer()
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Export…") {
-                    dismiss()
-                    editor.exportVideo(format: format, quality: quality)
-                }
-                .keyboardShortcut(.defaultAction)
+                Button("Export…") { export() }
+                    .keyboardShortcut(.defaultAction)
             }
         }
         .padding(ExportSheetMetrics.padding)
         .frame(width: ExportSheetMetrics.width)
         .onAppear {
-            format = RecordingExportMemory.format
-            quality = RecordingExportMemory.quality(for: format)
+            choice = RecordingExportMemory.choice
+            quality = RecordingExportMemory.quality(for: choice.format ?? .mp4)
             #if PHOTONZ_PLAYTEST
+            if editor.playtestOpensExportOnFrame {
+                choice = .still
+                editor.playtestOpensExportOnFrame = false
+            }
             if let asked = editor.playtestOpensExportOnRecordingFormat {
-                format = asked
+                choice = .video(asked)
                 editor.playtestOpensExportOnRecordingFormat = nil
             }
             if let asked = editor.playtestOpensExportAtQuality {
@@ -112,10 +134,54 @@ struct VideoExportDialog: View {
                 editor.playtestOpensExportAtQuality = nil
             }
             #endif
+            // A picture is of a MOMENT, so the playhead stops where it is and
+            // stays there: a document still playing behind the sheet would
+            // make the line and the file disagree about which frame this is.
+            editor.pauseDocument()
+            momentMS = editor.documentTimeMS
             source = editor.videoExportSource
+            weighTheFrame()
         }
-        .onChange(of: format) { _, now in
-            quality = RecordingExportMemory.quality(for: now)
+        .onChange(of: choice) { _, now in
+            if let format = now.format { quality = RecordingExportMemory.quality(for: format) }
+            weighTheFrame()
+        }
+        .onDisappear {
+            weighing?.cancel()
+            weighing = nil
+        }
+    }
+
+    /// The one sentence saying who this answer is for, wherever it sits.
+    private var purpose: some View {
+        Text(purposeLine)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .playtestControl(RecordingExportDialog.purposeLabel, detail: purposeLine)
+    }
+
+    /// Make the picture, once, the first time it is asked for. It is the
+    /// answer to what the file will weigh AND the file itself, so pressing
+    /// Export after reading the number writes those very bytes.
+    private func weighTheFrame() {
+        guard isStill, stillFile == nil, weighing == nil else { return }
+        weighing = Task { @MainActor in
+            let made = await editor.stillFrame(atMS: momentMS)
+            guard !Task.isCancelled else { return }
+            stillFile = made
+            weighing = nil
+        }
+    }
+
+    /// Hand what was chosen to the save box.
+    private func export() {
+        RecordingExportMemory.remember(choice: choice, quality: quality)
+        dismiss()
+        if let format = choice.format {
+            editor.exportVideo(format: format, quality: quality)
+        } else {
+            editor.exportStillFrame(atMS: momentMS, weighed: stillFile)
         }
     }
 }

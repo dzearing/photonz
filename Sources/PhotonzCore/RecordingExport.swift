@@ -52,11 +52,15 @@ public enum RecordingExport {
         /// Whether the recording carries any sound, which is the difference
         /// between a budget for pictures and a budget for both.
         public var hasAudio: Bool
+        /// Where the playhead is, in seconds. Only one answer uses it — the
+        /// picture, which is a frame of a particular moment and says which.
+        public var playheadTime: TimeInterval
 
         public init(sourceDuration: TimeInterval, keptDuration: TimeInterval,
                     sourceSize: CGSize, cropSize: CGSize? = nil,
                     fileBytes: Int, isEdited: Bool,
-                    sourceFPS: Double = 30, hasAudio: Bool = false) {
+                    sourceFPS: Double = 30, hasAudio: Bool = false,
+                    playheadTime: TimeInterval = 0) {
             self.sourceDuration = sourceDuration
             self.keptDuration = keptDuration
             self.sourceSize = sourceSize
@@ -65,6 +69,38 @@ public enum RecordingExport {
             self.isEdited = isEdited
             self.sourceFPS = sourceFPS
             self.hasAudio = hasAudio
+            self.playheadTime = playheadTime
+        }
+    }
+
+    /// What Export is being asked for on a document that has time.
+    ///
+    /// Three of the four answers are the whole thing, playing. The fourth is
+    /// one frame of it, standing still, which is what somebody wants for a bug
+    /// report, a slide or a thumbnail — and which the video sheet took away
+    /// when it replaced the picture sheet for a recording. It is a fourth
+    /// button on the same row rather than a second sheet, because the whole
+    /// point of this sheet is that everything leaves through one.
+    public enum Choice: Sendable, Hashable {
+        /// The document as a file that plays.
+        case video(RecordingFormat)
+        /// The frame the playhead is on, as a picture.
+        case still
+
+        /// What the file is called at the end.
+        public var fileExtension: String {
+            switch self {
+            case .video(let format): return format.fileExtension
+            case .still: return "png"
+            }
+        }
+
+        /// The video format this answer writes, where it is a video at all.
+        public var format: RecordingFormat? {
+            switch self {
+            case .video(let format): return format
+            case .still: return nil
+            }
         }
     }
 
@@ -257,8 +293,113 @@ public enum RecordingExport {
     /// extension of the format that was actually chosen.
     public static func suggestedFileName(recording: String,
                                          format: RecordingFormat) -> String {
+        suggestedFileName(recording: recording, choice: .video(format))
+    }
+
+    // MARK: - The picture on the same sheet
+
+    /// Everything Export can write from a document that has time, in the order
+    /// the buttons sit: the video's three formats as they were, then the one
+    /// frame. The recording comes first because that is what the sheet is
+    /// mostly for.
+    public static let choices: [Choice] = formats.map(Choice.video) + [.still]
+
+    /// What the file is called in the one line under the row. A picture says
+    /// what it is beside "MP4 Video" and "Animated GIF", in the same shape.
+    public static func displayName(_ choice: Choice) -> String {
+        switch choice {
+        case .video(let format): return format.displayName
+        case .still: return "PNG picture"
+        }
+    }
+
+    /// The name on the segmented row.
+    public static func shortName(_ choice: Choice) -> String {
+        switch choice {
+        case .video(let format): return shortName(format)
+        case .still: return "PNG"
+        }
+    }
+
+    /// Whether this answer has a size preset worth choosing.
+    ///
+    /// Every video does: the preset decides how big the picture is and how
+    /// many frames a second there are. One frame has neither question in it —
+    /// it leaves at the size the document is — so the row goes away rather
+    /// than standing there meaning nothing, exactly as the scale row does for
+    /// an SVG on the picture sheet.
+    public static func offersQuality(_ choice: Choice) -> Bool {
+        switch choice {
+        case .video(let format): return offersQuality(format)
+        case .still: return false
+        }
+    }
+
+    /// The pixel size the written file will really have.
+    public static func outputSize(choice: Choice, quality: VideoExportQuality,
+                                  source: Source) -> CGSize {
+        switch choice {
+        case .video(let format):
+            return outputSize(format: format, quality: quality, source: source)
+        case .still:
+            // Nothing is scaled: the frame is the document, at the size the
+            // document is, which is what a still is wanted for.
+            return source.cropSize ?? source.sourceSize
+        }
+    }
+
+    /// How big the file's picture is, and how much of the recording is in it.
+    /// For one frame, that last part is the moment it was taken at.
+    public static func shapeLine(choice: Choice, quality: VideoExportQuality,
+                                 source: Source) -> String {
+        guard case .still = choice else {
+            return shapeLine(format: choice.format ?? .mp4, quality: quality, source: source)
+        }
+        var parts: [String] = []
+        let size = outputSize(choice: choice, quality: quality, source: source)
+        if size.width >= 1, size.height >= 1 {
+            parts.append("\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
+        }
+        parts.append("the frame at \(RecordingClock.elapsedString(source.playheadTime))")
+        return parts.joined(separator: " · ")
+    }
+
+    /// What the file is, and what it costs.
+    ///
+    /// `stillBytes` is the picture already weighed — one frame is a render and
+    /// an encode, so unlike a GIF it really can be weighed while somebody
+    /// watches, and the bytes that were weighed are the bytes that get saved.
+    /// Nil is the moment before that lands, and says what everything else that
+    /// cannot be weighed says.
+    public static func sizeLine(choice: Choice, quality: VideoExportQuality,
+                                source: Source, stillBytes: Int? = nil) -> String {
+        guard case .still = choice else {
+            return sizeLine(format: choice.format ?? .mp4, quality: quality, source: source)
+        }
+        let name = displayName(choice)
+        guard let stillBytes, stillBytes > 0 else {
+            return "\(name) · size not known until it is written"
+        }
+        return "\(name) · \(ExportQuality.fileSize(bytes: stillBytes))"
+    }
+
+    /// The one sentence saying who this answer is for.
+    ///
+    /// A video says which preset you want. A picture says what a picture even
+    /// means here, because PNG sitting beside three video formats otherwise
+    /// reads as though it might turn the whole recording into pictures.
+    public static func purposeLine(choice: Choice, quality: VideoExportQuality) -> String {
+        switch choice {
+        case .video(let format): return purposeLine(format: format, quality: quality)
+        case .still: return "The one frame the playhead is on, with everything drawn over it."
+        }
+    }
+
+    /// What the save box opens on: the document's own name, wearing the
+    /// extension of the answer that was actually chosen.
+    public static func suggestedFileName(recording: String, choice: Choice) -> String {
         let base = URL(fileURLWithPath: recording).deletingPathExtension().lastPathComponent
         let name = base.isEmpty ? "Recording" : base
-        return "\(name).\(format.fileExtension)"
+        return "\(name).\(choice.fileExtension)"
     }
 }

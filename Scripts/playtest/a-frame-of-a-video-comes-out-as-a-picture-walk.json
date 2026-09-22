@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/a-frame-of-a-video-comes-out-as-a-picture-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true,
+      "next-export-the-video": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 120], "to": [620, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-a-box-over-the-video", "note": "A recording paused halfway with a box drawn over it. What is on screen at this moment is a frame of the clip with a layer over it, and that is exactly what a picture of it has to hold" },
+    { "do": "snapshot", "name": "1-a-box-over-the-video" },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-the-sheet-has-four-answers", "note": "THE TEST: Export on a document that has time now offers a picture beside MP4, GIF and HEIC, on the one sheet. The video answers are untouched: same order, same presets, same two lines" },
+    { "do": "snapshot", "name": "2-the-sheet-has-four-answers" },
+    { "do": "expect", "control": "PNG", "present": true },
+    { "do": "expect", "control": "MP4", "present": true },
+    { "do": "panel", "stage": "2-the-sheet-has-four-answers" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "exportDialogAsFrame" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "3-the-sheet-on-the-picture", "note": "THE NEW TEST: with the picture chosen, the size presets go away (they cap how big a video's picture is and how fast it runs, and one frame has neither question in it), one sentence says what a picture even means here, and the two lines answer the moment it is of and what it really weighs. A GIF cannot say that without being written; one frame can, because it has already been made" },
+    { "do": "snapshot", "name": "3-the-sheet-on-the-picture" },
+    { "do": "expect", "control": "What it will be", "present": true },
+    { "do": "expect", "control": "What it will weigh", "present": true },
+    { "do": "expect", "control": "Who it is for", "present": true },
+    { "do": "expect", "control": "Small", "present": false },
+    { "do": "panel", "stage": "3-the-sheet-on-the-picture" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeFrame", "name": "1-the-frame-at-the-playhead" },
+    { "do": "writeFrame", "name": "2-the-first-frame", "atMS": 0 },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-back-at-the-start", "note": "The playhead moved, so the picture Export writes moved with it: the frame is whatever the window is showing when the sheet opens" },
+    { "do": "snapshot", "name": "4-back-at-the-start" },
+    { "do": "writeFrame", "name": "3-the-frame-at-the-start" }
+  ]
+}

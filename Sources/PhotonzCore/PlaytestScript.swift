@@ -1114,6 +1114,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// already on GIF at the Small preset, since a walk cannot click a
     /// segmented row inside a sheet.
     case exportDialogAsVideo, exportDialogAsSmallGIF
+    /// ...and already on the picture, which is the fourth answer on that same
+    /// row: one frame of the document, at the moment the playhead is on.
+    case exportDialogAsFrame
     /// The View menu's Library rows (Next, `next-library`), so a walk can
     /// photograph the shelf.
     case showLibrary, hideLibrary
@@ -2084,6 +2087,16 @@ public enum PlaytestStep: Sendable, Equatable {
     case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
                     width: Double?, height: Double?, sound: Bool?, copied: Bool?)
+    /// Write ONE FRAME of the document out as a picture, exactly as choosing
+    /// PNG on that same sheet and picking a place would, then read the file
+    /// back and check it (`EditorState.exportStillFrame`).
+    ///
+    /// `width` and `height` are the picture's size in the file that landed,
+    /// which is what proves the frame left at the size the document is rather
+    /// than at whatever the last video preset was set to. `atMS` writes the
+    /// frame at a moment other than the one the playhead is on, for a walk
+    /// that wants two different frames without moving the playhead twice.
+    case writeFrame(name: String, atMS: Int?, width: Double?, height: Double?)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -2843,7 +2856,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dropComponent",
         "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG", "writeVideo",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo",
     ]
 
     /// The `do` name this step answers to.
@@ -2882,6 +2895,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .exportQuality: "exportQuality"
         case .writeRecording: "writeRecording"
         case .writeVideo: "writeVideo"
+        case .writeFrame: "writeFrame"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -3142,6 +3156,11 @@ public enum PlaytestStep: Sendable, Equatable {
                                height: try f.optionalNumber("height"),
                                sound: try f.optionalFlag("sound"),
                                copied: try f.optionalFlag("copied"))
+        case "writeFrame":
+            self = .writeFrame(name: try f.string("name"),
+                               atMS: try f.optionalNumber("atMS").map { Int($0) },
+                               width: try f.optionalNumber("width"),
+                               height: try f.optionalNumber("height"))
         case "menuShot":
             self = .menuShot(menu: try f.string("menu"), name: try f.string("name"),
                              ticked: try f.optionalStrings("ticked"),
