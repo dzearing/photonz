@@ -4,12 +4,12 @@
   "goal": "When an agent drives the app to check a feature, it asks the window to bring a control into view before pressing it. On a long panel that ask now fails, saying the control cannot be reached, at the same moment a photograph of the window shows the control sitting there in the open. Every check written that way stops, and the feature it was checking looks broken when it is not.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3080,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T02:48:31.608Z",
-  "updated": "2026-09-22T02:48:31.611Z",
+  "updated": "2026-09-22T12:17:53.150Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-21 on main at de8ba4e4 plus this task's changes, twice, with the probe app.\n\nRun:\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json --no-build\nwith a step { \"do\": \"reveal\", \"control\": \"Time section\" } immediately after insertPickedComponent.\n\nOutput:\n  [16 reveal] FAILED: scrolled 0pt and \"Time section\" is still not where a person could press it: it is already inside the part of the window a press can reach, so something other than a scroll is covering or cutting it. The window may be too short for the section it is in.\n\nThe snapshot taken by the step immediately BEFORE it (component-1-on-the-film-sc.png, copied to queue/audits/2026-09-22-components-on-the-timeline-1.png is the same layout) shows the Time section header, its reading, Start Here, End Here and the Fade rows all on screen, unobscured, about a third of the way down the panel.\n\nSo isInReach(landed) in PlaytestHarness (Sources/Photonz/Playtest/PlaytestHarness.swift, around line 4460-4505) is answering false for a control a person could press. It only shows up on a LONG panel: title-on-the-timeline-walk reveals the same control with a text layer picked and passes, because with a component picked the panel also carries Component, Layout and Library. Suspect the geometry it measures against (the dock clip view versus the window) rather than the scroll itself: it reports scrolling 0pt and then that nothing more can be done.\n\nThe walk ships without the reveal step (the expect on the Time reading field works without it), so nothing is blocked; what is lost is a walk being able to prove a person could SEE the row it is reading.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-22T02:48:31.610Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T12:17:53.149Z",
+      "note": "seq 3080 -> 150"
     }
   ],
   "walks": [

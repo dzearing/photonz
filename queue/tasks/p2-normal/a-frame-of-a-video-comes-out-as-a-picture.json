@@ -4,12 +4,12 @@
   "goal": "A recording open in the editor can now be exported as a video, and that took the other thing with it: there is no longer any way to get one frame out as a picture. Somebody wanting a still for a bug report, a slide or a thumbnail has to export the whole video and take a screenshot of it. Put a picture back on the same Export sheet, so one frame of what is on screen can leave as a PNG.",
   "epic": "video-share",
   "priority": "p2-normal",
-  "seq": 3030,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T16:38:56.980Z",
-  "updated": "2026-09-21T16:38:56.983Z",
+  "updated": "2026-09-22T12:17:52.862Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the 2026-09-21-video-export audit. Export on a timed document is now VideoExportDialog (Sources/Photonz/VideoExportDialog.swift) rather than ExportDialog, and the three formats are RecordingExport.formats. The frame itself is already available: EditorState.shownDocument is document.drawn(atTimeMS: documentTimeMS), so a still is previewRenderer.render(shownDocument, store:) through the existing ExportSizer path. The sheet is the place to add it, NOT a second sheet: the whole point of the video sheet is that a recording and a picture leave through the same one.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-21T16:38:56.982Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T12:17:52.861Z",
+      "note": "seq 3030 -> 90"
     }
   ],
   "walks": []

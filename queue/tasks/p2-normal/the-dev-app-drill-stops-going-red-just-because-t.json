@@ -4,12 +4,12 @@
   "goal": "One of the checks the loop runs on itself fails every day now, and the thing it is checking is not broken. Anyone running the loop's own checks sees a failure and has to work out that it is the check that is wrong, not the app or the loop. Make it read its own clock so it says the same thing tomorrow as it said the day it was written.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3100,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T08:28:46.647Z",
-  "updated": "2026-09-22T08:28:46.650Z",
+  "updated": "2026-09-22T12:17:53.200Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-22 while running every queue drill for a different task.\n\n  node queue/bin/dev-app-drill.mjs\n  ->   FAIL the sentence says the lock is the reason and how long it has been held\n         got: \"...that lock has been held for 4 days...\"\n\nThe drill pins its clock at dev-app-drill.mjs line 35 to 2026-09-20T09:00:00Z, and holds the lock 48.5 hours before that at line 91, so the sentence should say 2 days. But line 98 calls lib.devAppSentence(s) with no second argument, and queue-lib.mjs line 1429 defaults that argument to Date.now(). So the age is measured from the real clock against a fixture timestamp, and it grows by a day every day.\n\nProved it is the drill and not the product, with the same fixture state:\n\n  devAppSentence(s)        -> held for 4 days\n  devAppSentence(s, NOW)   -> held for 2 days\n\nSo the fix is to hand the drill's own clock in, at line 98 and anywhere else that calls a queue-lib renderer without it. Not in CI, so nothing is red on main because of it; what it costs is a runner reading a red drill and losing time on it.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-22T08:28:46.649Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T12:17:53.199Z",
+      "note": "seq 3100 -> 160"
     }
   ],
   "walks": []

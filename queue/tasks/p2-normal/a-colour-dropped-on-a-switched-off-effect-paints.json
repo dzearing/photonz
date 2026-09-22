@@ -4,12 +4,12 @@
   "goal": "Drag a colour onto a shadow or a border that has been switched off and the app takes it, says it painted it, and nothing changes on the picture: the effect is still off. One section higher, on Fill and the other Appearance parts, the same gesture turns the part on as well as painting it, and says so before you let go. Make the two agree, so a colour you drop always shows up.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T06:56:56.132Z",
-  "updated": "2026-09-21T13:31:08.498Z",
+  "updated": "2026-09-22T12:17:53.248Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-20 on the probe, screen locked, forced run.\n\nScript: draw a rectangle, pick it, Add Effect > Border, press the Border switch off, then dragColor from @fill onto @border.\n\n  PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/scratch-dropoff.json --no-build\n\n  [16 dragColor] the colour off \"@fill\" let go on \"@border\": the swatch lit up, saying \"Paints Border with this colour.\", drop landed\n  [19 expect] FAILED: the control called \"Switch\" in \"@border\" reads \"Border, off\", not \"on\"\n\nWhy the two differ today. An Appearance part that is off shows NO swatch, so OffPartColorDrop puts the drop on the whole row and builds its ColorDrop.Target with isAbsent: true, which is what makes ColorDrop.note say \"Turns Fill on, painted with this colour\" and what makes the apply path switch the part on. An EFFECT row keeps its swatch and all its settings when it is off (verified: both Shadow and Border still list Color, Style, Width, Offset with the switch off), so the drop lands on ColorSwatchDrag instead, which has no isAbsent and no turn-on. OffEffectColorDrop exists for the case where the effect row shows nothing but its name and tick, and its doc comment describes a panel that no longer behaves that way.\n\nSmallest fix is probably: give ColorSwatchDrag a switchedOff flag off the row it sits on, pass it as isAbsent, and route apply through the same one-mutation turn-on-and-paint the off-row drop uses, so one undo still puts both back.\n\nFiled by walks-that-fail-in-the-full-sweep batch 13. colour-onto-an-off-part-walk was corrected in that batch to record what the app does TODAY (it asserts the border stays off), so this task has to change that walk back as part of the fix.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-21T13:31:08.497Z",
       "note": "seq 3080 -> 110"
+    },
+    {
+      "t": "2026-09-22T12:17:53.247Z",
+      "note": "seq 110 -> 170"
     }
   ],
   "walks": [

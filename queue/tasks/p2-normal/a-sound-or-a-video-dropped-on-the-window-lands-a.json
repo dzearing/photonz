@@ -4,12 +4,12 @@
   "goal": "Drag a picture onto an open document and it lands as a layer, which is the app's whole promise: everything is a layer. Drag a sound file or a video onto the same window and absolutely nothing happens. No layer, no refusal, no line under the canvas, no cursor that said no while it was in the air. Sound is a layer now and a recording is a document, so the one gesture everybody tries first should work for both, and where it genuinely cannot it has to say so out loud.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:30:56.158Z",
-  "updated": "2026-09-22T01:43:35.678Z",
+  "updated": "2026-09-22T12:17:52.621Z",
   "deps": [],
   "blockedBy": [],
   "notes": "VERIFIED on 2026-09-21 by reading the drop path. Sources/Photonz/EditorState.swift:1070 addImageLayerOrOpen, which every canvas drop of a file URL goes through (EditorCanvasSurface.swift:150):\n\n  guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),\n        let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }\n\nImageIO reads no .m4a, .mp3, .wav, .mov or .mp4, so every one of those takes the bare `return`. Not a refusal: a return. Nothing is drawn, nothing is said, nothing is logged.\n\nThat is against the rule the app already has. docs/design/mocks/shared/UX-PATTERNS.md:670 says \"A refusal speaks in the same place a yes would have, and it says WHY, and it names the one thing to do\", and :676 says a surface that refuses by going quiet is the thing the rule exists to stop.\n\nFrom the 2026-09-21-video-audio audit rough list: \"Dragging a sound file onto the window is refused: Add Sound in the Video menu is the only way in. The refusal is honest rather than silent, but it is the first thing most people will try.\" The audit was generous. Read at the code, it is silent.\n\nThe video half is worth doing in the same pass because it is the same line of code and a recording is a document now, so dropping an .mp4 on an open document is an obvious thing to try and does nothing.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-22T01:43:35.676Z",
       "note": "from opening-a-recording-lands-you-somewhere-you-can (2026-09-22): the recording DOOR now routes a movie asked for by Finder, the dock, a recent item or File > Open to the recording window (AppCoordinator.openFileWindow -> openRecording, flag next-opening-a-recording). Dropping one on a window was deliberately left to this task: FileDrop still refuses it. When you build this, the routing and the plain refusal wording are already there to reuse (RecordingFiles.isRecording, RecordingDoor.message)."
+    },
+    {
+      "t": "2026-09-22T12:17:52.620Z",
+      "note": "seq 50 -> 40"
     }
   ]
 }

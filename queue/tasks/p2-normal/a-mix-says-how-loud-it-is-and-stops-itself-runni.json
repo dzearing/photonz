@@ -4,12 +4,12 @@
   "goal": "Three sounds playing together at the level they were recorded at add up to more than a sound file can carry, and the app says nothing about it: no meter while it plays, no mark on the export, and the written file comes out distorted. Show how loud the mix is and stop it clipping.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 70,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T12:04:23.601Z",
-  "updated": "2026-09-21T13:31:08.305Z",
+  "updated": "2026-09-22T12:17:52.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 2). The task that built sound named this as the follow-up to file rather than build: \"Anything past that - buses, effects racks, meters with ballistics - is a follow-up\".\n\nREPRODUCED while writing Tests/PhotonzMediaTests/AudioMixdownTests.swift. The test severalSoundsMixTogether lays three copies of the same tone over each other and had to pull every one of them down to a quarter by hand, with this comment, to get a result worth asserting on:\n\n    // All three at a quarter, so three together is still inside the ceiling\n    // and the difference between one and three is a difference in level\n    // rather than a clip.\n\nAt the level they were recorded at the three sum past full scale and the difference between one sound and three stops being a difference in level. Nothing in the app warns.\n\nWhere it goes: AudioMixdown.composition(for:urls:) in Sources/PhotonzMedia/AudioMixdown.swift builds the composition and the AVMutableAudioMix. PhotonzDocument.audioMix() in Sources/PhotonzCore/AudioMix.swift already knows every segment and its gain at every moment, so the arithmetic for \"how loud could this get\" is pure and testable there. The live meter would read off DocumentAudioPlayer's main mixer.\n\nThe mock (docs/design/mocks/pages/video-audio.html) draws live meters over the canvas. docs/design/video-audio.md §7 says why they were cut for now; this is the task that decides whether they come back, and where.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-21T13:31:08.304Z",
       "note": "seq 3110 -> 70"
+    },
+    {
+      "t": "2026-09-22T12:17:52.714Z",
+      "note": "seq 70 -> 60"
     }
   ]
 }

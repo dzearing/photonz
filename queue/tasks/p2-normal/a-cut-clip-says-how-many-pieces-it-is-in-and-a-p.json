@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T22:51:34.670Z",
-  "updated": "2026-09-22T10:11:48.844Z",
+  "updated": "2026-09-22T10:12:02.786Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Both halves are gaps the 2026-09-20 cutting build left, recorded in queue/audits/2026-09-20-video-cutting.json. (1) UX-PATTERNS D18 and docs/design/video-surface.md 10.5 both say the layers list shows the layer once WITH its piece count; the row is LayersRow.swift and the count is layer.clipPieces?.count, nil-safe and already computed. (2) docs/design/mocks/pages/video-speed.html: \"Retiming is a property of the selected clip, so nothing new appears in the chrome\" - so it belongs in the Properties panel, not only in the Video menu. EditorState.clipSpeedInHand / setClipSpeedInHand / clipSpeeds are written and wired already (EditorState+ClipBar.swift); this is the panel row over them. ClipPiece.isHeld is the held case.",
@@ -55,10 +55,15 @@
     {
       "t": "2026-09-22T10:11:48.843Z",
       "note": "Left rough, not filed: the row says how many pieces and nothing about them, so a clip with a held frame in it reads like three ordinary cuts (the bar badges that on the piece it is true of, which is why it was left); the count is a readout and there is no way from it to the pieces; and this line is drawn in shared code rather than under Releases/Next, which is safe because only Next can cut a clip at all, so a Current document never has cuts to count. All three are in the audit's rough list where the user can react to them."
+    },
+    {
+      "t": "2026-09-22T10:12:02.784Z",
+      "note": "A cut clip's row in the layers list now says how many pieces it is in (ClipPiecesNote in PhotonzCore, drawn by LayersRow in the caption line under the name), and an uncut one still says nothing extra. The Speed half landed on 2026-09-21 and was re-verified here: speed-a-stretch-walk passes and the panel and Video > Speed are the same call, so one undo step. Verified by 9 new core tests, Scripts/test.sh green at 8919 tests, the new the-layers-row-says-how-many-pieces-walk with four real window captures, and 20 neighbouring cut and layers walks. Audit: queue/audits/2026-09-22-video-cutting-piece-count.json. Commit 5ac6ce15, pushed."
     }
   ],
   "started": "2026-09-22T09:50:02.658Z",
   "walks": [
     "the-layers-row-says-how-many-pieces-walk"
-  ]
+  ],
+  "completed": "2026-09-22T10:12:02.785Z"
 }

@@ -4,12 +4,12 @@
   "goal": "Dragging the playhead over a recording is silent. Finding the exact word someone says, or the exact beat, is something people do by ear while they drag, and right now only the picture of the sound answers. Make the sound play under the playhead as it moves.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T12:04:16.634Z",
-  "updated": "2026-09-21T13:31:08.256Z",
+  "updated": "2026-09-22T12:17:52.667Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the 2026-09-21 sound task (queue/audits/2026-09-21-video-audio.json, rough item 1). Nothing is broken: the waveform is the primary answer to aiming a cut and it works. This is the second answer people reach for.\n\nThe model already has what it needs: PhotonzDocument.audioMix(atMS:) says exactly which files and offsets are audible at a moment. What is missing is the app half. The live player (Sources/Photonz/DocumentAudioPlayer.swift) schedules whole segments against one engine start, which is right for playing and wrong for scrubbing: a scrub wants a short window of samples per pointer move, played once. That is its own path through the engine, probably a second player node fed AVAudioPCMBuffers read straight out of an AVAudioFile at the source offset the mix gives.\n\nHook: EditorState.scrubDocument(toMS:) in Sources/Photonz/EditorState+Time.swift is where every scrub lands.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-21T13:31:08.255Z",
       "note": "seq 3100 -> 60"
+    },
+    {
+      "t": "2026-09-22T12:17:52.666Z",
+      "note": "seq 60 -> 50"
     }
   ],
   "walks": []

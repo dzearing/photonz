@@ -4,24 +4,33 @@
   "goal": "Drag a component onto the canvas and the right hand panel scrolls itself down to the Library, so the section about the thing you just placed is above the top of the panel and you have to scroll back up to it. The panel should stay on what you just put down.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 3090,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T06:51:24.741Z",
-  "updated": "2026-09-22T06:51:24.744Z",
+  "updated": "2026-09-22T12:19:59.846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-22 while finishing a-copy-of-a-component-is-configured-not-authored. Command: Scripts/playtest.sh Scripts/playtest/component-drag-lands-a-copy-walk.json --no-build. The walk s own panel reading at stage 1-copy: dockSections [Layers -366--203, Component -203--32, Appearance -32-215, Effects 215-283, Motion 283-364, Layout 364-623, Library 623-841], dockViewport 841, dockInView [Effects, Motion, Layout, Library]. The Component section spans -203 to -32, entirely above the visible top. Cause is EditorState.askForLibraryAfterFetching (EditorState.swift:276), called by insertStarterComponent and insertSharedComponent after a drop so the shelf stays where you left it; it sets pendingLibraryReveal, which scrolls the dock to the Library. Pre-dates the drag-lands-a-copy change: the same reveal ran when the first drop was the original. Related to appearance-is-below-the-fold-again-because-the-p, which is about the panel wanting more height than the window has; this one is about where the panel chooses to scroll.",
   "acceptance": [
     "After a component is dropped on the canvas, the Component section for what was placed is fully on screen without scrolling, at 1240x900",
     "The shelf still ends up somewhere a person can reach for a second drop, so this does not just trade one hunt for another",
-    "A walk reads the dock section offsets back after a drop and fails if the Component section is off screen"
+    "A walk reads the dock section offsets back after a drop and fails if the Component section is off screen",
+    "The rule is written down once in docs/design/mocks/shared/UX-PATTERNS.md beside the dock rules: after an action, the panel looks at what the action produced, and it names the four cases from this task log as the evidence"
   ],
   "log": [
     {
       "t": "2026-09-22T06:51:24.743Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T12:17:53.297Z",
+      "note": "seq 3090 -> 180"
+    },
+    {
+      "t": "2026-09-22T12:19:59.821Z",
+      "note": "WIDENED by the 2026-09-22 digest pass: this is not one path, it is a missing rule, and it hit four separate surfaces in twenty four hours. (1) After a component drop the panel scrolls to the Library, so the Component section spans -203 to -32 in a viewport of 841 (queue/audits/2026-09-22-component-drag-lands-a-copy.json). (2) Writing captions selects the first caption, which scrolls the panel to it and takes the Captions section out of view (queue/audits/2026-09-21-captions-from-the-sound.json). (3) Picking a component puts its Time section last before Library, so on a short window you scroll for it (queue/audits/2026-09-22-components-on-the-timeline.json). (4) The full sweep fails dock-picked-first-walk on sectionInView(\"Appearance\") timing out after 4s. Four features, four different answers to the same question: after you do something, where should the panel be looking? Nothing written down says, so each one guessed. Whoever fixes the drop should write the answer into the shared UX patterns doc beside the dock rules, so the fifth feature inherits it."
     }
   ],
   "walks": [

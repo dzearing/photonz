@@ -6187,3 +6187,57 @@
 {"t":"2026-09-22T10:11:48.748Z","ev":"task_note","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p"}
 {"t":"2026-09-22T10:11:48.797Z","ev":"task_note","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p"}
 {"t":"2026-09-22T10:11:48.845Z","ev":"task_note","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p"}
+{"t":"2026-09-22T10:12:02.787Z","ev":"task_done","id":"a-cut-clip-says-how-many-pieces-it-is-in-and-a-p","from":"in_progress","note":"A cut clip's row in the layers list now says how many pieces it is in (ClipPiecesNote in PhotonzCore, drawn by LayersRow in the caption line under the name), and an uncut one still says nothing extra. The Speed half landed on 2026-09-21 and was re-verified here: speed-a-stretch-walk passes and the panel and Video > Speed are the same call, so one undo step. Verified by 9 new core tests, Scripts/test.sh green at 8919 tests, the new the-layers-row-says-how-many-pieces-walk with four real window captures, and 20 neighbouring cut and layers walks. Audit: queue/audits/2026-09-22-video-cutting-piece-count.json. Commit 5ac6ce15, pushed."}
+{"t":"2026-09-22T12:10:35.760Z","ev":"sweep_pass","walks":560,"passed":544,"failed":16,"seconds":7090,"complete":true,"total":560}
+{"t":"2026-09-22T12:16:12.605Z","ev":"task_created","id":"delete-stops-dropping-a-piece-once-you-have-undo","priority":"p1-high","title":"Delete stops dropping a piece once you have undone a delete"}
+{"t":"2026-09-22T12:16:23.011Z","ev":"task_walks","id":"delete-stops-dropping-a-piece-once-you-have-undo","walks":["delete-key-drops-a-piece-walk"]}
+{"t":"2026-09-22T12:16:23.059Z","ev":"task_resequenced","id":"delete-stops-dropping-a-piece-once-you-have-undo","from":350,"to":10}
+{"t":"2026-09-22T12:16:23.107Z","ev":"task_note","id":"delete-stops-dropping-a-piece-once-you-have-undo"}
+{"t":"2026-09-22T12:16:23.156Z","ev":"task_reprioritized","id":"walks-that-fail-in-the-full-sweep-4","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-22T12:16:23.205Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-4","from":90,"to":30}
+{"t":"2026-09-22T12:16:23.253Z","ev":"task_resequenced","id":"trim-becomes-a-tool-and-the-recording-window-ret","from":20,"to":20}
+{"t":"2026-09-22T12:16:39.635Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T12:16:39.685Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T12:16:39.734Z","ev":"task_note","id":"appearance-is-below-the-fold-again-because-the-p"}
+{"t":"2026-09-22T12:16:52.258Z","ev":"task_note","id":"check-the-loop-actually-builds-most-of-its-day-n"}
+{"t":"2026-09-22T12:16:52.309Z","ev":"task_note","id":"check-the-loop-actually-builds-most-of-its-day-n"}
+{"t":"2026-09-22T12:17:01.180Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-22T12:17:01.229Z","ev":"task_dropped","id":"a-test-run-says-what-is-wrong-with-the-code-not","from":"pending","note":"duplicate of the-test-suite-stops-reporting-failures-that-are: same test file, same failure text, same question (is this red real?). The stale-build-folder reproduction and its crash report are folded into that task's log and its acceptance."}
+{"t":"2026-09-22T12:17:13.333Z","ev":"task_dropped","id":"a-shape-that-was-turned-into-a-picture-and-undon","from":"pending","note":"image-editing is staged later, and the defect is no longer reproducible through the walk this task named as its own proof: turn-two-shapes-into-pictures-walk passes in the 2026-09-22T12:10Z full sweep and passed again when the digest pass ran it on its own. The minimal reproduction is preserved in this task's notes and the undo-leaves-a-delete-key-dead pattern is carried forward on delete-stops-dropping-a-piece-once-you-have-undo. Re-create this if image editing is staged and the refusal is still missing."}
+{"t":"2026-09-22T12:17:52.476Z","ev":"task_resequenced","id":"the-timeline-zooms-so-a-recording-longer-than-a","from":30,"to":10}
+{"t":"2026-09-22T12:17:52.524Z","ev":"task_resequenced","id":"the-fourteen-video-pages-still-contradict-the-vi","from":40,"to":20}
+{"t":"2026-09-22T12:17:52.573Z","ev":"task_resequenced","id":"say-whether-a-held-frame-pushes-the-sound-too","from":3050,"to":30}
+{"t":"2026-09-22T12:17:52.622Z","ev":"task_resequenced","id":"a-sound-or-a-video-dropped-on-the-window-lands-a","from":50,"to":40}
+{"t":"2026-09-22T12:17:52.668Z","ev":"task_resequenced","id":"hearing-the-sound-under-the-playhead-while-you-d","from":60,"to":50}
+{"t":"2026-09-22T12:17:52.716Z","ev":"task_resequenced","id":"a-mix-says-how-loud-it-is-and-stops-itself-runni","from":70,"to":60}
+{"t":"2026-09-22T12:17:52.766Z","ev":"task_resequenced","id":"a-move-with-a-hold-in-it-shows-its-keys-on-the-s","from":3040,"to":70}
+{"t":"2026-09-22T12:17:52.815Z","ev":"task_resequenced","id":"a-layer-being-used-as-a-mask-says-so-in-the-laye","from":3060,"to":80}
+{"t":"2026-09-22T12:17:52.863Z","ev":"task_resequenced","id":"a-frame-of-a-video-comes-out-as-a-picture","from":3030,"to":90}
+{"t":"2026-09-22T12:17:52.910Z","ev":"task_resequenced","id":"a-gif-says-how-big-it-will-be-like-every-other-f","from":3070,"to":100}
+{"t":"2026-09-22T12:17:52.959Z","ev":"task_resequenced","id":"resizing-one-piece-inside-a-turned-card-moves-th","from":100,"to":110}
+{"t":"2026-09-22T12:17:53.007Z","ev":"task_resequenced","id":"appearance-is-below-the-fold-again-because-the-p","from":140,"to":120}
+{"t":"2026-09-22T12:17:53.055Z","ev":"task_resequenced","id":"check-the-loop-actually-builds-most-of-its-day-n","from":3020,"to":130}
+{"t":"2026-09-22T12:17:53.102Z","ev":"task_resequenced","id":"the-test-suite-stops-reporting-failures-that-are","from":120,"to":140}
+{"t":"2026-09-22T12:17:53.151Z","ev":"task_resequenced","id":"a-walk-can-reach-a-control-that-is-plainly-on-sc","from":3080,"to":150}
+{"t":"2026-09-22T12:17:53.201Z","ev":"task_resequenced","id":"the-dev-app-drill-stops-going-red-just-because-t","from":3100,"to":160}
+{"t":"2026-09-22T12:17:53.249Z","ev":"task_resequenced","id":"a-colour-dropped-on-a-switched-off-effect-paints","from":110,"to":170}
+{"t":"2026-09-22T12:17:53.299Z","ev":"task_resequenced","id":"the-panel-jumps-to-the-shelf-after-a-drop-instea","from":3090,"to":180}
+{"t":"2026-09-22T12:17:53.348Z","ev":"task_resequenced","id":"the-library-holds-what-this-document-has-not-eve","from":60,"to":190}
+{"t":"2026-09-22T12:17:53.397Z","ev":"task_resequenced","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":150,"to":200}
+{"t":"2026-09-22T12:17:53.446Z","ev":"task_resequenced","id":"make-a-button-with-states-and-properties-and-set","from":160,"to":210}
+{"t":"2026-09-22T12:17:53.495Z","ev":"task_resequenced","id":"a-shape-you-turned-still-shows-its-points","from":170,"to":220}
+{"t":"2026-09-22T12:17:53.544Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":180,"to":230}
+{"t":"2026-09-22T12:17:53.592Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":190,"to":240}
+{"t":"2026-09-22T12:17:53.640Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":200,"to":250}
+{"t":"2026-09-22T12:17:53.689Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":210,"to":260}
+{"t":"2026-09-22T12:17:53.738Z","ev":"task_resequenced","id":"a-mode-is-written-down-so-pixel-art-can-be-added","from":20,"to":270}
+{"t":"2026-09-22T12:17:53.787Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":220,"to":280}
+{"t":"2026-09-22T12:17:53.836Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":10,"to":10}
+{"t":"2026-09-22T12:17:53.885Z","ev":"task_resequenced","id":"a-screenshot-separated-before-today-only-has-to","from":20,"to":20}
+{"t":"2026-09-22T12:17:53.933Z","ev":"task_resequenced","id":"the-guide-rule-says-that-a-guide-never-closes-a","from":30,"to":30}
+{"t":"2026-09-22T12:19:44.409Z","ev":"task_created","id":"a-button-that-cannot-be-pressed-stops-lighting-u","priority":"p3-low","title":"A button that cannot be pressed stops lighting up when you point at it"}
+{"t":"2026-09-22T12:19:51.467Z","ev":"task_resequenced","id":"a-button-that-cannot-be-pressed-stops-lighting-u","from":1340,"to":40}
+{"t":"2026-09-22T12:19:51.515Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-22T12:19:59.823Z","ev":"task_note","id":"the-panel-jumps-to-the-shelf-after-a-drop-instea"}
+{"t":"2026-09-22T12:20:04.975Z","ev":"triage","summary":"34 to 35 open. Merged 1 (the two test-suite tasks became one), dropped 2 (a-test-run-says-what-is-wrong-with-the-code-not as a duplicate; a-shape-that-was-turned-into-a-picture-and-undon because image-editing is staged later and its own walk now passes twice). Filed 2: delete-stops-dropping-a-piece-once-you-have-undo (p1, focus, reproduced twice) and a-button-that-cannot-be-pressed-stops-lighting-u (p3, verified in IconActionButtonStyle.swift). Moved 1 to p1 (walks-that-fail-in-the-full-sweep-4, 15 broken walks). Folded 6 findings into 4 tasks. Resequenced all 35 to steps of ten, video focus first. Every open task has a goal, an acceptance list and an epic; guard found nothing to reset and there are no leftovers."}
+{"t":"2026-09-22T12:21:44.853Z","ev":"digest","file":"2026-09-22.md"}

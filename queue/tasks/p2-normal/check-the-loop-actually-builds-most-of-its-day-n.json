@@ -4,12 +4,12 @@
   "goal": "A day after the walk sweep was put on a schedule, look at where the loop actually spent its time and say whether the change worked. If it did not, the schedule needs another turn of the knob rather than another guess.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3020,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T15:55:54.511Z",
-  "updated": "2026-09-21T15:55:54.514Z",
+  "updated": "2026-09-22T12:17:53.054Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Before the change, measured 2026-09-21T15:41Z over 24h: tasks 597m (41.4%), sweeps 834m (57.9%), between 9m (0.6%), 13 full-set runs, 8 tasks. Over 48h: tasks 36.2%, sweeps 63.0%, 28 full-set runs.\n\nThe projection in queue/audits/2026-09-21-sweep-schedule.json is 21 to 27 per cent on walk checks. The knob is PHOTONZ_SWEEP_FLOOR_HOURS (default 12, queue/bin/sweep-schedule.mjs) and PHOTONZ_SLICE_MINUTES (default 10).\n\nIf the share is still bad, the two likeliest causes are the rotating check costing more than budgeted (a cold probe build is minutes, and it is not in the ten minute budget) and the full sweep having grown past 113 minutes.",
@@ -22,6 +22,18 @@
     {
       "t": "2026-09-21T15:55:54.513Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-22T12:16:52.256Z",
+      "note": "MEASURED 2026-09-22T12:13Z by the digest pass. node queue/bin/loop-day.mjs --hours 24: tasks 828m 57.5% over 20 tasks, sweeps 410m 28.4% over 5 full-set runs, slices 175m 12.1% over 16 rotating checks, between 28m 1.9%. Over 48h: tasks 51.9%, sweeps 40.7%, slices 6.1%. Against 2026-09-21's 41.4% tasks and 57.9% sweeps, the knob worked: building is the majority of the day for the first time. Acceptance item 2 is met. Acceptance item 3 is NOT: 5 full-set runs in the window against a ceiling of 2, and the rotating checks are written down above."
+    },
+    {
+      "t": "2026-09-22T12:16:52.307Z",
+      "note": "WHY the count is 5 and what is left to fix. The floor landed at 2026-09-21T16:01Z, so only three of those five are its responsibility: runs beginning 2026-09-22T01:47Z, 08:30Z and 10:12Z. The 10:12Z one is CORRECT and deliberate: the 08:30Z run went blind, and sweep-record.mjs (line 88 onward) keeps a blind run out of latest.json on purpose so it 'does not buy itself half a day of nobody looking again'. The 01:47Z one is correct too: queue/loop.log shows a clean ramp of rotating checks reporting 2.9h, 3.9h ... 9.9h before it, so the twelve hours really had passed. The ONE that is unexplained is 08:30Z (01:30 local, queue/loop.log line 246605). Twenty two minutes before it the slice at 01:08 local correctly said '6.4h since the last whole-set run'. Handing sweep-schedule.mjs decide() those same inputs by hand returns {run: slice, why: 6.7h since the last whole-set run}, and none of the eight requests that run served carries now:true, so it was not a --now jump. What else happened in those twenty two minutes: commit 40bbb38c, the blind-sweep change, landed and rewrote sweep-record.mjs. Start there: can that change move an already-recorded run out of latest.json, or leave latest.json unreadable, so the next decision measures from a much older run and every sweep after it is due immediately? That is the whole remaining cost, about two hours of the day."
+    },
+    {
+      "t": "2026-09-22T12:17:53.053Z",
+      "note": "seq 3020 -> 130"
     }
   ]
 }

@@ -4,19 +4,21 @@
   "goal": "Eleven tests that read the words off a screenshot report failures whenever the Mac is busy doing something else. The code is fine; the reading simply comes back empty under load, so every row keeps the number it was given and eleven checks go red. Anyone reading a red test run has to work out for themselves whether the app broke or the machine was busy, and that is not a question a test run should leave open.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "infra",
   "created": "2026-09-20T19:47:11.338Z",
-  "updated": "2026-09-22T03:47:40.291Z",
+  "updated": "2026-09-22T12:17:53.101Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED on 2026-09-20 while landing a-document-can-have-time, and it cost that runner most of an hour.\n\nWhat happens: Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift reads the words off Fixtures/settings-pane-2x.png with TextReader (Vision) and checks that the layers list names its rows after them. Under load Vision hands back nothing, every displayName falls through to the auto name, and the eleven tests report 21 issues that all look like this:\n\n  Expectation failed: (names -> [\"Text 9\", ..., \"Background\"]).contains(words -> \"General\")\n\nThe evidence, all on the same machine and the same tree:\n\n  Scripts/test.sh                       (walks/builds running)  -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (busy)    -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.45s\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.42s\n  Scripts/test.sh                       (idle)                  -> passed, 8530 tests, 190.9s\n\nA throwaway diagnostic in the same tree showed the whole path working when nothing else was running: 19 pieces, 9 runs, TextReader returning General / Launch at login / Show in menu bar, and the layers list naming all nine rows correctly. So the reading is right and the timing is not.\n\nWHY IT IS WORTH FIXING rather than living with: a runner that sees this cannot tell a break from a flake. This one stashed its own work twice and spent a full extra test cycle bisecting a regression that did not exist, and it very nearly filed the wrong bug against itself. That is the same failure mode the unmanned-loop epic was promoted for.\n\nWhere to look: TextReader.words(in:) in Sources/PhotonzRender/TextReader.swift and whatever timeout or request reuse is behind it.",
   "acceptance": [
     "Running the whole suite while the machine is also building something reports the same result as running it on an idle machine, checked both ways",
     "If the reading cannot be done reliably, the eleven tests say so out loud rather than failing: a skip with a reason beats a red that means nothing",
-    "The fix is proved by running the suite under deliberate load and getting the same answer twice"
+    "The fix is proved by running the suite under deliberate load and getting the same answer twice",
+    "Adding a stored property to Layer and running Scripts/test.sh either passes or fails for a real reason, never with a crash inside a copy of a layer",
+    "A run that hits the stale build folder says so in words and rebuilds, rather than printing failures that look like broken code, and an ordinary run costs no noticeable extra time"
   ],
   "log": [
     {
@@ -34,6 +36,14 @@
     {
       "t": "2026-09-22T03:47:40.290Z",
       "note": "Another flake for the pile, seen 2026-09-21 while building captions: the whole SeparatedRowsSayTheirWordsTests suite (PhotonzRenderTests, Vision OCR over a real 2x settings-pane capture) failed 21 assertions in one run, with every row still named 'Text N' / 'Box N' because TextReader.words came back empty for all nine runs of text. It was reproduced once on a filtered run, then passed four times in a row on the same source, including the full suite twice (8884 tests green). It failed while the machine was loaded (a 42-minute on-device transcription had just finished). So the OCR read is load-sensitive and this suite can currently report a break where there is none. It cost a real bisect: the first \"culprit\" it fingered was an unrelated new stored property on Layer, which turned out to be innocent."
+    },
+    {
+      "t": "2026-09-22T12:17:01.177Z",
+      "note": "MERGED IN from a-test-run-says-what-is-wrong-with-the-code-not (dropped today as a near-twin): the same test file, Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift, reports the same failure shape ((names -> [\"Text 9\", ...]).contains(words -> \"General\")) for a SECOND reason that has nothing to do with the code either. REPRODUCED 2026-09-20 while building ClipPieces: add one optional stored property to Sources/PhotonzCore/Layer.swift, run Scripts/test.sh, and get 20 failures in that file plus 'exited with unexpected signal code 11'. The crash (node Scripts/crash-report.mjs --file ~/Library/Logs/DiagnosticReports/swiftpm-testing-helper-2026-09-20-054858.ips) is EXC_BAD_ACCESS KERN_INVALID_ADDRESS at 0x8 in swift_retain, inside 'outlined init with copy of Layer': the build folder is holding half-rebuilt pieces that disagree about the shape of Layer. So one file has two ways of going red on healthy code, one from load and one from a stale build folder, and a person reading either cannot tell which. Fix both or the red still means nothing."
+    },
+    {
+      "t": "2026-09-22T12:17:53.100Z",
+      "note": "seq 120 -> 140"
     }
   ]
 }
