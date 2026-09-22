@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:42.128Z",
-  "updated": "2026-09-21T13:31:08.354Z",
+  "updated": "2026-09-21T23:40:54.664Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is NOT a new control. VideoExportQuality already exists in Sources/PhotonzCore/Recording.swift with high, standard and small, each carrying a targetFPS and a maxDimension, and RecordingExportDialog already draws the Quality row as a segmented picker. The row is hidden for MP4 by RecordingExport.offersQuality, which the file itself comments as \"MP4 has none yet\". So this is finishing the row that shipped on 2026-09-19, not adding a new one, and it does not need a decision card.\n\nWhat actually has to change: VideoExporter.exportMP4 is pinned to AVAssetExportPresetHighestQuality, so there is nothing behind the choice yet. Map the three presets onto real encode settings and keep the fast path: an untouched recording exported at the top choice is still a verbatim file copy and must stay one.\n\nThe estimate. RecordingExport.sizeLine already works an MP4 estimate out from what the recording itself costs per second and per pixel, and on the eight second sample it said \"about 16 KB\" against 16,531 bytes landing. Re-check it per preset rather than trusting the one that exists.\n\nComes from the 2026-09-19-recording-export-sheet audit rough list, word for word: \"There is still no way to make an MP4 smaller. The sheet can now tell you a recording will weigh 200 MB and offers you nothing to do about it.\" The user who asked for the whole trim-and-send flow ended their sentence with \"send in teams\", which is the case this serves.",
@@ -38,7 +38,16 @@
     {
       "t": "2026-09-21T13:31:08.353Z",
       "note": "seq 10 -> 80"
+    },
+    {
+      "t": "2026-09-21T23:40:54.611Z",
+      "note": "done as part of getting-a-recording-out-is-quick-and-the-file-is, which landed in 2a900df4. Everything this task asked for is in: the Quality row appears for MP4 with the same three choices, each says the frame rate and pixel size it will land at on the line under it, the weight moves when you change it and was checked against files actually written at each of the three (147/147 exact for the copy, 147/134 Standard, 96/108 Small), an untouched recording at the top choice still takes the verbatim copy fast path, and the choice is remembered per format so picking Small for a GIF does not quietly shrink the next video. The one place it went further: VideoExportQuality.recipe gives MP4 its own meaning for the three words rather than reusing the animated 24/15/10 fps and 1280/800/480 caps, because High on a video has to mean the recording as it is or the fast path goes. Audit at queue/audits/2026-09-21-recording-export-size.json."
+    },
+    {
+      "t": "2026-09-21T23:40:54.662Z",
+      "note": "folded into and shipped by getting-a-recording-out-is-quick-and-the-file-is (2a900df4): the MP4 Quality row, the live weight and the verbatim fast path are all in, each checked against a file actually written"
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "completed": "2026-09-21T23:40:54.663Z"
 }

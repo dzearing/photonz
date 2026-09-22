@@ -48,6 +48,9 @@ final class AppCoordinator {
     #if PHOTONZ_PLAYTEST
     /// What the bottom-right corner is saying right now, for `expectToast`.
     var playtestToastLines: [String] { toasts.playtestLines }
+    /// The panel of the newest toast, so a `snapshot` of "Toast" photographs
+    /// the thing that just got said.
+    var newestToastPanel: NSWindow? { toasts.newestPanel }
     #endif
 
     /// Says in the same corner that a recording is saving, and that it saved.
@@ -270,12 +273,103 @@ final class AppCoordinator {
     /// `.video` window for it and bring the app forward. Opening a recording for
     /// playback is NOT TCC-gated (only capturing one is). Falls back to revealing
     /// the file in Finder if the window action isn't wired up yet.
+    ///
+    /// With `next-opening-a-recording` on, the FILE is looked at before any
+    /// window opens (`RecordingDoor`). A recording that has gone, or that has
+    /// nothing playable in it, says so by name in the corner and opens nothing;
+    /// one that is still landing on disk says it is still being saved and then
+    /// opens itself when it finishes. Without the check, all three of those
+    /// opened a window that never became anything.
     func openRecording(_ url: URL) {
         guard openWindowAction != nil else {
             NSWorkspace.shared.activateFileViewerSelecting([url])
             return
         }
-        openWindow(.video(standardizing: url))
+        // A window already holding this recording is the answer whatever the
+        // file on disk says now: what is in that window is somebody's work, and
+        // refusing to focus it because the file was moved underneath would lose
+        // it. Re-opening the same id focuses it (`EditorWindowID`).
+        guard Experiments.shared.openingARecording, !hasOpenRecordingWindow(url) else {
+            openWindow(.video(standardizing: url))
+            return
+        }
+        Task { await openRecordingOnceItIsThere(url) }
+    }
+
+    /// The checked way in. Loops only while the file is still growing, so a
+    /// recording that plays opens after one look.
+    private func openRecordingOnceItIsThere(_ url: URL) async {
+        let name = url.lastPathComponent
+        let giveUpAt = Date().addingTimeInterval(RecordingDoor.patienceSeconds)
+        var saidItWasLanding = false
+        while true {
+            let facts = await RecordingFileReader.facts(for: url)
+            switch RecordingDoor.state(of: facts) {
+            case .ready:
+                openWindow(.video(standardizing: url))
+                return
+            case .gone:
+                // Nothing to come back to, so there is no moment to keep either.
+                RecordingPlaceStore.shared.forget(url: url)
+                sayAboutRecording(.gone, name: name, symbol: "questionmark.folder")
+                return
+            case .unplayable:
+                sayAboutRecording(.unplayable, name: name, symbol: "exclamationmark.triangle")
+                return
+            case .stillWriting:
+                if !saidItWasLanding {
+                    saidItWasLanding = true
+                    sayAboutRecording(.stillWriting, name: name, symbol: "arrow.down.circle")
+                }
+                guard Date() < giveUpAt else {
+                    let said = RecordingDoor.gaveUpMessage(name: name)
+                    toasts.presentNote(title: said.title, detail: said.detail,
+                                       symbol: "exclamationmark.triangle", on: activeScreen())
+                    return
+                }
+                try? await Task.sleep(for: .seconds(0.5))
+            }
+        }
+    }
+
+    /// A window opened for a recording that turned out not to be readable after
+    /// all: the file went, or stopped being playable, between the door's check
+    /// and the window's own load. Say what happened where every other refusal
+    /// is said, and forget where you were in it.
+    func reportRecordingWouldNotOpen(_ url: URL) {
+        let name = url.lastPathComponent
+        let gone = !FileManager.default.fileExists(atPath: url.path)
+        if gone { RecordingPlaceStore.shared.forget(url: url) }
+        sayAboutRecording(gone ? .gone : .unplayable, name: name,
+                          symbol: gone ? "questionmark.folder" : "exclamationmark.triangle")
+    }
+
+    private func sayAboutRecording(_ state: RecordingOpenState, name: String, symbol: String) {
+        guard let said = RecordingDoor.message(for: state, name: name) else { return }
+        toasts.presentNote(title: said.title, detail: said.detail,
+                           symbol: symbol, on: activeScreen())
+    }
+
+    // MARK: - Which recordings already have a window
+
+    private final class RecordingWindowMark {
+        weak var state: AnyObject?
+        init(_ state: AnyObject?) { self.state = state }
+    }
+
+    /// Every recording with a window standing for it right now, kept weakly:
+    /// closing the window releases the editor state SwiftUI owns, and the mark
+    /// goes empty with it.
+    @ObservationIgnored private var recordingWindows: [URL: RecordingWindowMark] = [:]
+
+    /// Called by an editor window root once it holds a recording.
+    func noteRecordingWindow(_ state: AnyObject, for url: URL) {
+        recordingWindows[url.standardizedFileURL] = RecordingWindowMark(state)
+        recordingWindows = recordingWindows.filter { $0.value.state != nil }
+    }
+
+    func hasOpenRecordingWindow(_ url: URL) -> Bool {
+        recordingWindows[url.standardizedFileURL]?.state != nil
     }
 
     /// Show a capture in the Finder. History is a live listing of a real folder,
@@ -707,16 +801,31 @@ final class AppCoordinator {
     }
 
     /// Open an image / `.photonz` file in its own window.
+    ///
+    /// A MOVIE asked for through this door is a recording, and goes through the
+    /// recording door instead (`next-opening-a-recording`). Without that, the
+    /// file landed in `EditorState.openImageOrSidecar`, which read it as a
+    /// photograph, got nothing, and left a window that never became anything.
+    /// This is the one place Finder, the dock, a recent item and the Open panel
+    /// all come through, so routing here covers every one of them.
     func openFileWindow(_ url: URL) {
+        if Experiments.shared.openingARecording, RecordingFiles.isRecording(url) {
+            openRecording(url)
+            return
+        }
         openWindow(.file(url))
     }
 
     /// Menu "Open…": runs an open panel from the agent (works with no window
-    /// open), then opens the chosen file in its own editor window.
+    /// open), then opens the chosen file in its own editor window. Recordings
+    /// are offered alongside pictures once `next-opening-a-recording` is on, so
+    /// a recording that is not in the capture folder still has a way in.
     func presentOpenPanel() {
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image, EditorState.photonzType]
+        panel.allowedContentTypes = Experiments.shared.openingARecording
+            ? [.image, EditorState.photonzType] + RecordingContentTypes.all
+            : [.image, EditorState.photonzType]
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         openFileWindow(url)

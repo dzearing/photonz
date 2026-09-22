@@ -232,6 +232,20 @@ cat > "$APP/Contents/Info.plist" <<PLIST
             </array>
         </dict>
         <dict>
+            <!-- A recording. Alternate rank on purpose: Photonz appears under
+                 Finder's "Open With" for a movie and can never take .mp4 or
+                 .mov off whatever opens it today just by being installed. -->
+            <key>CFBundleTypeName</key><string>Recording</string>
+            <key>CFBundleTypeRole</key><string>Editor</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.mpeg-4</string>
+                <string>com.apple.quicktime-movie</string>
+                <string>com.apple.m4v-video</string>
+            </array>
+        </dict>
+        <dict>
             <key>CFBundleTypeName</key><string>Photonz Document</string>
             <key>CFBundleTypeRole</key><string>Editor</string>
             <key>LSTypeIsPackage</key><true/>

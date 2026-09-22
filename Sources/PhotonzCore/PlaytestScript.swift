@@ -155,8 +155,17 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var forget: [PlaytestMemory]
     /// Pictures to place in the capture folder for the length of the walk, so
     /// the Library's Media shelf has them, and take away again afterwards.
-    /// Paths are relative to the script, or absolute.
+    /// Paths are relative to the script, or absolute, or the one name that is
+    /// not a file at all: `sampleRecordingToken`.
     public var captures: [String]
+
+    /// The one `captures` entry that names no file. It means the guides' own
+    /// sample recording, written fresh by the runner: a walk about history
+    /// needs a RECORDING in the capture folder, and the repo keeps no video
+    /// fixture, because the sample is drawn in code so nothing binary is
+    /// committed. Named here rather than in the app so the guard test that
+    /// checks every borrowed capture exists knows to let this one through.
+    public static let sampleRecordingToken = "sample-recording"
     /// Files to copy into an empty folder of the walk's own, which the walk
     /// names as "scratch/<file>" and which is thrown away at the end. This is
     /// for a walk that WRITES beside the picture it opened — saving layers next
@@ -630,6 +639,25 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// way into a recording window depends on the person having recorded
     /// something.
     case openSampleRecording
+    /// The other doors a recording is asked for through, so a walk can check
+    /// that one which cannot be opened SAYS so rather than leaving a window
+    /// with nothing in it (`RecordingDoor`).
+    ///
+    /// `openRecordingFromDisk` puts a copy of the sample somewhere that is NOT
+    /// the capture folder and asks the app to open it exactly as Finder does.
+    /// `openMissingRecording` asks for one that is not there. `openLandingRecording`
+    /// asks for one that is still being written and keeps writing it for a
+    /// couple of seconds afterwards, which is what a big file being copied in
+    /// looks like.
+    case openRecordingFromDisk, openMissingRecording, openLandingRecording
+    /// ⇧⌘6 / the menu's "Edit Last Capture": open the newest thing in history
+    /// for editing, from wherever you are. A walk pairs it with a setup that
+    /// lends `sample-recording` to the capture folder, which is the only way to
+    /// drive the real history door with a real recording in it.
+    case editLastCapture
+    /// Shut the window holding the sample recording and ask for it again: how a
+    /// walk checks that coming back puts the playhead where it was left.
+    case reopenSampleRecording
     /// Move the playhead to a fraction of what is left to watch, which is a
     /// real scrub's outcome without a walk having to know how long the clip is.
     case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
@@ -2267,7 +2295,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// live trim window keeps, and how long that window is. Every claim is
     /// optional; the step has to make at least one.
     case expectRecording(pieces: Int?, picked: Int?, keeps: Int?, seconds: Double?,
-                         starts: Double?, caught: Bool?)
+                         starts: Double?, caught: Bool?, playhead: Double?)
     /// What the recording's FILE on disk says, which is the only thing that
     /// settles whether a save saved. `seconds` is how long the stored media
     /// must now be, `within` how close that has to be, and `original` whether
@@ -3294,17 +3322,18 @@ public enum PlaytestStep: Sendable, Equatable {
             let seconds = fields["seconds"] != nil ? try f.number("seconds") : nil
             let starts = fields["starts"] != nil ? try f.number("starts") : nil
             let caught = try f.optionalFlag("caught")
+            let playhead = fields["playhead"] != nil ? try f.number("playhead") : nil
             guard pieces != nil || picked != nil || keeps != nil || seconds != nil
-                || starts != nil || caught != nil else {
+                || starts != nil || caught != nil || playhead != nil else {
                 throw f.invalid("pieces", "expectRecording has to claim something about the "
                     + "recording: \"pieces\" for how many pieces it is in, \"picked\" for which "
                     + "one is picked (1-based, 0 for none), \"keeps\" for how many of them the "
                     + "trim window keeps, \"seconds\" for how long the window is, \"starts\" for "
-                    + "where the start handle sits, or \"caught\" for whether a handle is "
-                    + "standing on a cut")
+                    + "where the start handle sits, \"caught\" for whether a handle is "
+                    + "standing on a cut, or \"playhead\" for what second the playhead is on")
             }
             self = .expectRecording(pieces: pieces, picked: picked, keeps: keeps, seconds: seconds,
-                                    starts: starts, caught: caught)
+                                    starts: starts, caught: caught, playhead: playhead)
         case "expectStoredRecording":
             let seconds = fields["seconds"] != nil ? try f.number("seconds") : nil
             if let seconds, seconds < 0 {

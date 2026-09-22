@@ -178,6 +178,8 @@ public enum FeatureCatalog {
 
     public static let recordingIsADocumentFlag = "next-a-recording-is-a-document"
 
+    public static let openingARecordingFlag = "next-opening-a-recording"
+
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
 
     public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
@@ -643,6 +645,16 @@ public enum FeatureCatalog {
                     name: cutRecordingFlag,
                     title: "Cut a recording into pieces and drop the one you do not want",
                     description: "A recording you have just made has a start handle and an end handle, so you can shorten it from either end and that is all. If the bit you want rid of is in the middle, the only answer today is to record the whole thing again. This puts a cut wherever the playhead is: press B while it plays, or pick Split at Playhead in the Video menu, and the one clip becomes two pieces that meet at that moment. The line under the picture stops being a plain progress bar and becomes the pieces themselves, one block each, sized by how long they last, with the one you are watching lit up. Press Delete and that piece goes, and everything after it slides up to meet what came before, so there is no hole to drag shut and no silence at the join: what is left plays straight through as one recording. Nothing is thrown away while you work, because a piece is a start and an end onto the same file rather than a copy of it, so Command Z puts a cut back or brings a piece back, and only saving or exporting writes the shortened version out. Opening the trim handles keeps the pieces on screen instead of putting a plain bar back: each piece is still its own block, the part the handles would keep is lit and the part they would drop is not, so a handle coming up on a cut shows what it is about to eat into, and the count beside the scissors reads how many of the pieces the window still keeps. Off means the line under the picture is the progress bar it always was, B types nothing and Delete does nothing.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: openingARecordingFlag,
+                    title: "Opening a recording lands you somewhere you can work",
+                    description: "A recording only has one way in today, and everything else about opening one fails quietly. History opens the recordings it lists, and that is the whole of it: File then Open greys movies out, so a recording sitting on your Desktop or handed to you by somebody else cannot be opened at all, and asking for one anyway opens a window that never becomes anything, because the app tries to read a video as if it were a photograph. A recording that has been moved or deleted since, or one that is still landing on disk while it is copied in, does the same thing: an empty window and no word about why. With this on, a recording has one way in wherever you ask from. File then Open offers movies, the app appears under Finder's Open With for them without ever taking .mp4 off whatever opens it today, and a movie asked for by any of those routes opens as a recording rather than as a broken picture. Before any window opens, the file is checked: one that has gone says so by name in the corner of the screen and opens nothing, one with nothing playable in it says that instead, and one that is still being written says it is still being saved and then opens by itself the moment it has finished, up to twenty seconds. And the app remembers where you were: leave a recording part way through, come back to it later, and the playhead is where you left it rather than back at the start, unless you had barely started or had watched it out, in which case it starts over. A recording saved since is started over too, because the moment you left may no longer be in it. Off means history is the only door, and everything else is a window with nothing in it.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

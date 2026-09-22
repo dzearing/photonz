@@ -41,6 +41,19 @@ extension EditorState {
         return fetcher
     }
 
+    // MARK: Where you were
+
+    /// Note where the playhead is, so opening this recording again comes back
+    /// to it instead of starting over (`RecordingPlaces`). Called when playback
+    /// stops and when the window goes, never while a drag is running: what is
+    /// worth keeping is where somebody LEFT it.
+    func noteRecordingPlace() {
+        guard Experiments.shared.openingARecording, documentHasTime,
+              let url = recordingURL, documentLengthMS > 0 else { return }
+        RecordingPlaceStore.shared.remember(url: url, momentMS: documentTimeMS,
+                                            durationMS: documentLengthMS)
+    }
+
     // MARK: Moving the playhead
 
     /// Put the playhead somewhere. Anything outside the document is clamped to
@@ -99,6 +112,7 @@ extension EditorState {
 
     func pauseDocument() {
         guard isDocumentPlaying else { return }
+        noteRecordingPlace()
         isDocumentPlaying = false
         stopAudio()
         documentPlaybackTask?.cancel()

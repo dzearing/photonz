@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 47,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.839Z",
-  "updated": "2026-09-21T13:54:35.931Z",
+  "updated": "2026-09-22T01:43:46.919Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Build on docs/design/mocks/pages/video-entry-wt.html, whose opening line is the situation to design for: \"No document open. The screen recording you made this morning is already in history, one keystroke away behind the menu-bar icon.\"\n\nDeliberately independent of the time model so it can be done now: this is about the path in, not about what you land on.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -28,6 +28,73 @@
     {
       "t": "2026-09-21T13:54:35.930Z",
       "note": "seq 340 -> 47"
+    },
+    {
+      "t": "2026-09-21T23:55:13.763Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-21T23:58:32.754Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The mock's entry is history to a full editor with a timeline, which is the document path, and that path is behind next-a-recording-is-a-document, off by default and owned by the BLOCKED task trim-becomes-a-tool-and-the-recording-window-ret (it waits on the Command S card). So nothing here may depend on that flag or flip it: the entry work is built in shared code so it is true on both the old recording window and the document path. (2) Walked it as a first-time user and found the real hole, which is not in history at all: a recording that is anywhere BUT the capture folder has no way in. File > Open greys movies out (AppCoordinator.presentOpenPanel allows only .image and .photonz), the bundle declares no movie document type at all (Scripts/build-app.sh CFBundleDocumentTypes is PNG/JPEG/TIFF/HEIC/GIF plus .photonz), and openWindow(.file(<an mp4>)) opens an editor that never gets a document. REPRODUCED: a walk whose only step was open /tmp/entry-sample.mp4 failed with 'an editor for entry-sample.mp4 did not appear within 15.0s' — a window on screen that is never anything. (3) The mock filters history to Videos before picking. Cut: the newest capture is already first and the filter saves nobody a step worth building for. (4) Shortest version that carries the value: never land nowhere. Check the file BEFORE a window opens, say in plain words why not, and route a movie to the recording door instead of the picture door. A preview in history, a recents list and a progress bar for a landing file are all cut. (5) Declaring the movie type in the bundle is the one thing here that changes the user's Mac rather than the app, so it goes in as LSHandlerRank Alternate: Photonz appears under Open With and can never take .mp4 off QuickTime by being installed."
+    },
+    {
+      "t": "2026-09-22T00:56:25.776Z",
+      "note": "runner failed (exit 1, attempt 1): API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+    },
+    {
+      "t": "2026-09-22T00:56:26.275Z",
+      "note": "ran out of turn with 23 file(s) still changed: Scripts/build-app.sh, Sources/Photonz/AppCoordinator.swift, Sources/Photonz/EditorState+Time.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/EditorView.swift, Sources/Photonz/EditorWindowRoots.swift, Sources/Photonz/Experiments.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/Playtest/PlaytestSetupRunner.swift, Sources/Photonz/ToastController.swift, Sources/Photonz/VideoEditorState.swift, Sources/Photonz/VideoEditorView.swift, Sources/PhotonzCore/FeatureCatalog.swift, Sources/PhotonzCore/PlaytestScript.swift, Tests/PhotonzCoreTests/PlaytestLockSafetyTests.swift, docs/design/video.md, Scripts/playtest/opening-a-recording-as-a-document-walk.json, Scripts/playtest/opening-a-recording-walk.json, Sources/Photonz/RecordingPlaceStore.swift, Sources/PhotonzCore/RecordingDoor.swift, Sources/PhotonzCore/RecordingPlaces.swift, Tests/PhotonzCoreTests/RecordingDoorTests.swift, Tests/PhotonzCoreTests/RecordingPlacesTests.swift. Put aside so the next task started clean; restore with `git stash apply e8902b595816ff9217cd3b6d8dab802516508956` before carrying on."
+    },
+    {
+      "t": "2026-09-22T00:56:57.747Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T00:56:57.749Z",
+      "note": "a previous attempt at this task left 23 file(s) changed; they are set aside. Restore them with `git stash apply e8902b595816ff9217cd3b6d8dab802516508956` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-22T01:03:15.431Z",
+      "note": "runner failed (exit 1, attempt 2): API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+    },
+    {
+      "t": "2026-09-22T01:05:16.893Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T01:43:35.776Z",
+      "note": "owns these walks: opening-a-recording-walk, opening-a-recording-as-a-document-walk"
+    },
+    {
+      "t": "2026-09-22T01:43:46.516Z",
+      "note": "BUILT. RecordingDoor + RecordingPlaces (PhotonzCore, pure, tested); RecordingPlaceStore + RecordingFileReader (app); AppCoordinator.openRecording checks the file before a window opens; openFileWindow routes a movie to the recording door, which covers Finder, the dock, recent items and File > Open at once; the Open panel and the in-window importer offer CaptureLibrary.videoExtensions (never UTType.movie, which conforms to things the app cannot open); the bundle declares the movie types at LSHandlerRank Alternate so Photonz shows under Open With and never takes .mp4 over. Flag next-opening-a-recording, on by default in next. Design written up in docs/design/video.md section 8b."
+    },
+    {
+      "t": "2026-09-22T01:43:46.610Z",
+      "note": "ADVERSARIAL REVIEW of the built thing, on the real app. The walk's own screenshot caught it: coming back to a recording landed on the right frame, paused, with NO transport on screen at all, because the controller only appears when playback stops or the pointer comes near the bottom of the window and neither had happened. A paused frame with no controller is indistinguishable from a still picture, so the one thing that says where you are was missing from the exact moment the feature exists for. Fixed: VideoEditorState.cameBackToAMoment, and VideoEditorView keeps the controller up until the first thing you do (pointer, key, or play). The screenshot now reads 0:06.00 / 0:08.00. This is the one place in the recording window the controller does not fade on its own clock."
+    },
+    {
+      "t": "2026-09-22T01:43:46.711Z",
+      "note": "BUG FOUND AND FIXED in the walk harness, not the app: a walk that lends a capture and asks for the newest one immediately got whatever was already in the person's Screenshots folder, because history watches the folder through FSEvents and the watcher takes about a second. REPRODUCED: opening-a-recording-walk step 1 failed with 'the newest thing in history is a picture, not a recording' after its setup had lent a recording 0.7s earlier. Fixed in PlaytestHarness: the listing is re-read after setup lends and after it takes back. Five walks lend captures and all five pass."
+    },
+    {
+      "t": "2026-09-22T01:43:46.810Z",
+      "note": "left rough (below the follow-up bar, written here instead of filed): (1) saving a recording writes the trim into the file, which changes its fingerprint, which forgets where you were in it. Deliberate, because the old moment may be past the end of the new file, but it means a save quietly loses your place. (2) The twenty second patience for a file still landing is a guess; a recording copied over a slow share could take longer and then it says it gave up. (3) The mock's Videos filter in history was cut: the newest capture is already first. (4) The controller staying up on arrival is the one place in the recording window it does not fade by itself. All four are in the audit's rough list, where the user can react to any of them."
+    },
+    {
+      "t": "2026-09-22T01:43:46.918Z",
+      "note": "Follow-up folded rather than filed: dropping a recording ONTO an open window is still refused, and the open task a-sound-or-a-video-dropped-on-the-window-lands-a already covers it. Noted on that task what this one built that it can reuse."
     }
+  ],
+  "started": "2026-09-22T01:05:16.892Z",
+  "failures": 2,
+  "lastError": {
+    "at": "2026-09-22T01:03:15.430Z",
+    "exit": 1,
+    "message": "API Error: 529 Overloaded. This is a server-side issue, usually temporary — try again in a moment. If it persists, check https://status.claude.com."
+  },
+  "walks": [
+    "opening-a-recording-walk",
+    "opening-a-recording-as-a-document-walk"
   ]
 }

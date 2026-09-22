@@ -459,6 +459,13 @@ extension Experiments {
     /// always was, because nothing about a clip is written into pixels.
     var recordingIsADocument: Bool { isEnabled(FeatureCatalog.recordingIsADocumentFlag) }
 
+    /// `next-opening-a-recording`: whether a recording has one way in from
+    /// wherever you ask (Open, Finder, history), whether the file is checked
+    /// before a window opens so a missing or half-landed one says so instead of
+    /// opening empty, and whether coming back to a recording puts the playhead
+    /// where you left it.
+    var openingARecording: Bool { isEnabled(FeatureCatalog.openingARecordingFlag) }
+
     /// `next-saving-a-recording-says-so`: whether saving a recording reports
     /// itself in the bottom-right toast stack — a progress bar once the save
     /// has run past `SaveFeedback.quietWindow`, and a named confirmation when

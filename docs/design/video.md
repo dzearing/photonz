@@ -313,6 +313,89 @@ takes the half-written file with it.
 
 ---
 
+## 8b. The way in: one door, and it tells you when it cannot take you
+
+*Built 2026-09-21, `next-opening-a-recording`.*
+
+Opening a recording was an act of faith. A window opened first and the file was
+read afterwards, so three ordinary situations all produced the same nothing:
+
+- **A recording that has gone.** `MovieLibrary.movie(at:)` hands back nil and
+  `openRecordingAsDocument` returned, leaving a window that never became
+  anything. The old recording window did the same thing differently: its
+  metadata load finished with `isReady == false` and its spinner spun for ever.
+- **A recording still landing on disk**, which is any big file being copied into
+  the capture folder. It reads as unplayable and gets the same empty window,
+  even though waiting a second would have worked.
+- **A recording that is not in the capture folder at all.** History was the only
+  door. `File ▸ Open` greyed movies out, the bundle declared no movie document
+  type, so Finder never offered the app, and `openWindow(.file(<an mp4>))` sent
+  it to the picture door, which read a video as a photograph and got nothing.
+
+### The check
+
+`RecordingDoor` (PhotonzCore, pure, tested) turns three facts about the file
+into one of four answers, and `RecordingDoor.message(for:name:)` is the plain
+sentence for each. `RecordingFileReader` (app) reads the facts:
+
+1. Does anything exist there.
+2. Can a length be read off it (`AVURLAsset`, and a video track).
+3. Only when the length could not be read: does the file get BIGGER between two
+   looks 0.4s apart. So a recording that plays opens after one look and never
+   pays for the second sample.
+
+`AppCoordinator.openRecording` runs the check before it opens a window. `gone`
+and `unplayable` open nothing and say so by name in the corner.
+`stillWriting` says it is still being saved and then opens by itself as soon as
+the file finishes, for up to `RecordingDoor.patienceSeconds` (20).
+
+A window ALREADY holding that recording skips the check entirely
+(`hasOpenRecordingWindow`, a weak mark set by both window roots). What is in
+that window is somebody's work, and refusing to focus it because the file was
+moved underneath would lose it.
+
+The race that survives — the file goes between the check and the window's own
+load — is answered in the window: the document path calls
+`onRecordingWouldNotOpen`, which says the same sentence and closes the window it
+was going to fill, and the old recording window draws the sentence where the
+picture would have been instead of spinning.
+
+### One door, whichever way you ask
+
+`openFileWindow` is where Finder, the dock, a recent item and the Open panel all
+come through, so a movie is routed to `openRecording` there and every one of
+them is covered at once. `File ▸ Open` offers exactly the three extensions
+`CaptureLibrary.videoExtensions` names, never `UTType.movie`, which conforms to
+formats the app cannot open and would just move the empty window into the panel.
+The bundle declares the movie types at `LSHandlerRank: Alternate`, so Photonz
+appears under Finder's Open With and can never take `.mp4` off whatever opens it
+today by being installed.
+
+Dropping a recording on the window is still refused by `FileDrop`, deliberately:
+a picture dropped on an open document becomes a layer, and a recording dropped
+on one should become a clip on the timeline, which is `video-cutting` work and
+not a door.
+
+### Where you were
+
+`RecordingPlaces` (PhotonzCore, pure, tested) remembers the playhead per
+recording, keyed on the file's size and modification time, at most 40 of them.
+It is APP state and not document state, for the reason `MovieLibrary` is: where
+somebody else got up to does not travel with the file.
+
+It is forgetful on purpose. A moment in the first 1.5 seconds is where a
+recording opens anyway, and a moment in the last second means it was watched
+out; both forget the recording instead of storing something useless, so a
+restart really restarts. A file whose fingerprint changed (a save wrote the trim
+into it) starts over, because the old moment may no longer be in the file.
+
+A recording nobody left off in still autoplays from the top. One you DID leave
+part way through opens PAUSED on that moment: coming back to a recording is
+coming back to work on it, and a clip that starts running the instant the window
+appears has moved off the moment before you can look at it.
+
+---
+
 ## 9. What this deliberately does not do
 
 Each of these will push back on the model, and the model is right when they can

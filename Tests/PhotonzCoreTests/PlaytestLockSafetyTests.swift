@@ -159,7 +159,7 @@ struct PlaytestLockSafetyTests {
             .action(.openSampleRecording),
             .action(.videoBeginTrim),
             .expectRecording(pieces: 3, picked: 2, keeps: nil, seconds: nil,
-                             starts: nil, caught: nil),
+                             starts: nil, caught: nil, playhead: nil),
             .snapshot(name: "a-trimming", window: nil),
         ]
         #expect(PlaytestLockSafety.nameLookups(in: steps).isEmpty)

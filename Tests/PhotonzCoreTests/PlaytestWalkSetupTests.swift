@@ -72,6 +72,9 @@ struct PlaytestWalkSetupTests {
         for file in try Self.walkFiles() {
             let script = try PlaytestScript.decode(try Data(contentsOf: file))
             for capture in script.setup.captures {
+                // One name is not a file: it means the guides' sample
+                // recording, written fresh by the runner.
+                if capture == PlaytestSetup.sampleRecordingToken { continue }
                 let url = capture.hasPrefix("/")
                     ? URL(fileURLWithPath: capture)
                     : file.deletingLastPathComponent().appendingPathComponent(capture).standardizedFileURL

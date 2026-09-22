@@ -1,0 +1,31 @@
+{
+  "id": "a-gif-says-how-big-it-will-be-like-every-other-f",
+  "title": "A GIF says how big it will be, like every other format",
+  "goal": "Pick GIF or HEIC on a recording's Export sheet and the one number you came for goes away: it says the size is not known until the file is written. Those are the two formats most likely to come out too big to send, so they are the worst ones to say nothing about. Give them a number too.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 3070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-21T23:41:09.189Z",
+  "updated": "2026-09-21T23:41:09.192Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The honest reason it says nothing today is in RecordingExport's header comment: weighing a GIF IS writing the GIF, frame by frame, and for a minute of screen that is minutes of work. So this is not a matter of finding a formula, it is a matter of choosing which approximation to make and proving it.\n\nTwo approaches worth measuring before picking one:\n\n1. Sample a handful of frames (say eight, spread across the kept pieces), encode just those into a throwaway GIF at the chosen preset, and multiply by the frame count. Cheap, and it gets the palette and the typical inter-frame cost roughly right. Likely wrong for a recording that is still for half its length.\n2. Encode the whole thing in the background as soon as the sheet opens on GIF, showing the number when it arrives. Exact, and it does work nobody asked for.\n\nWhatever lands, keep the shape the video already has (RecordingExport.weight returns exact / about / unknown) and keep saying about.\n\nComes from the 2026-09-21-recording-export-size audit rough list, first item. The video half of this shipped in 2a900df4: VideoExportRecipe gives MP4 a real bits-per-second budget, and RecordingExport.weight takes the smaller of that budget and what the recording already costs. The measured error on the video was 9 to 14 per cent, which is the bar to beat.",
+  "acceptance": [
+    "Picking GIF or HEIC shows a weight on the sheet rather than the words size not known until it is written",
+    "The number moves when the Quality choice moves, the way it does for a video",
+    "The number is checked against files actually written at each of the three choices, on a short recording and a long one, and the error is recorded in the audit",
+    "Whatever the number costs to work out, the sheet stays usable while it is being worked out: no frozen row and no spinner that outlives the sheet"
+  ],
+  "log": [
+    {
+      "t": "2026-09-21T23:41:09.191Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "recording-export-sheet-walk"
+  ]
+}

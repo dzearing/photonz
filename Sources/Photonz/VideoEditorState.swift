@@ -140,6 +140,11 @@ final class VideoEditorState {
 
     /// True once metadata (duration/size) has loaded, so the timeline can render.
     private(set) var isReady = false
+
+    /// Set once, when this window opened on a remembered moment rather than at
+    /// the top. The view reads it to show the transport on arrival, so a
+    /// recording you are part way through does not open looking like a still.
+    private(set) var cameBackToAMoment = false
     /// True once the metadata load finished, ready or not — the window stays
     /// hidden until then so it can open already sized to the recording
     /// (instead of appearing small and visibly resizing).
@@ -281,9 +286,25 @@ final class VideoEditorState {
             if !cuts.isWholeClip {
                 await rebuildPlayerItem(resumeAt: 0, keepPlaying: false)
             }
-            // Autoplay from the top of the working clip, like a normal player.
-            seek(to: 0)
-            play()
+            // A recording nobody has left off in autoplays from the top, like a
+            // normal player. One you DID leave part way through opens paused on
+            // the moment you left: coming back to a recording is coming back to
+            // work on it, and a clip that starts running the instant the window
+            // appears has moved off that moment before you can look at it.
+            let resume = resumeSeconds()
+            seek(to: resume)
+            if resume > 0 {
+                // Paused on the moment you left, and the transport SAYS so.
+                // Without this the window opened on a still frame with no
+                // controller under it, which reads as a picture rather than as
+                // a recording you are part way through: the controller only
+                // appears when playback stops or the pointer goes near it, and
+                // neither has happened yet. Found on 2026-09-21 in
+                // `opening-a-recording-walk`'s own screenshot.
+                cameBackToAMoment = true
+            } else {
+                play()
+            }
         }
     }
 
@@ -323,8 +344,32 @@ final class VideoEditorState {
     }
 
     func pause() {
+        // Only a real stop is worth writing down. `pause()` is also the first
+        // half of a scrub and of every frame step, and noting the place on each
+        // of those would write a setting on every frame of a drag.
+        let wasPlaying = isPlaying
         player?.pause()
         isPlaying = false
+        if wasPlaying { noteRecordingPlace() }
+    }
+
+    /// Where this recording was left off last time, in timeline seconds.
+    private func resumeSeconds() -> TimeInterval {
+        guard Experiments.shared.openingARecording, let url, duration > 0,
+              let ms = RecordingPlaceStore.shared.moment(
+                for: url, durationMS: Int((duration * 1000).rounded()))
+        else { return 0 }
+        return TimeInterval(ms) / 1000
+    }
+
+    /// Note where the playhead is, so opening this recording again comes back
+    /// to it (`RecordingPlaces`). Called when playback stops and when the
+    /// window goes.
+    func noteRecordingPlace() {
+        guard Experiments.shared.openingARecording, let url, isReady, duration > 0 else { return }
+        RecordingPlaceStore.shared.remember(url: url,
+                                            momentMS: Int((currentTime * 1000).rounded()),
+                                            durationMS: Int((duration * 1000).rounded()))
     }
 
     /// Seconds an arrow-key skip moves while playing.

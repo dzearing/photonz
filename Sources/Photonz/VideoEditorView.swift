@@ -24,6 +24,10 @@ struct VideoEditorView: View {
     /// bottom band (or a transport key is pressed); they fade back out shortly
     /// after the pointer leaves, whether playing or paused.
     @State private var controlsVisible = false
+    /// Set while the controller is up because this window opened on a moment
+    /// somebody left off at, and cleared by the first thing they do. It keeps
+    /// the transport from fading before it has been looked at.
+    @State private var pinnedOnArrival = false
     /// True while the pointer rests on the controller itself — pins it visible
     /// (no auto-fade) until the pointer leaves or the user hits play.
     @State private var hoveringControls = false
@@ -37,6 +41,26 @@ struct VideoEditorView: View {
     /// Height of the bottom-of-window band that reveals the controller on mouse
     /// movement — sized to comfortably cover the controller plus a little above.
     private let revealBand: CGFloat = 200
+
+    /// Said where the picture would have been, for a recording that turned out
+    /// to have nothing playable in it.
+    @ViewBuilder
+    private var couldNotOpen: some View {
+        let name = state.url?.lastPathComponent ?? "That recording"
+        let said = RecordingDoor.message(for: .unplayable, name: name)
+        VStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 26, weight: .light))
+                .foregroundStyle(.secondary)
+            Text(said?.title ?? name)
+                .font(.headline)
+            Text(said?.detail ?? "")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .multilineTextAlignment(.center)
+        .padding(24)
+    }
 
     /// True while an explicit edit mode is active — the controller stays pinned
     /// (never auto-hides) so the mode's chrome is always reachable.
@@ -70,10 +94,19 @@ struct VideoEditorView: View {
                 }
                 .opacity(controlsVisible ? 1 : 0)
                 .allowsHitTesting(controlsVisible)
+            } else if state.metadataDidLoad {
+                // Loaded, and there is nothing in it to play. Before this the
+                // spinner simply kept spinning, which reads as an app that has
+                // hung rather than a file that cannot be opened. The door
+                // normally catches this before a window opens at all
+                // (`RecordingDoor`); this is the race where the file went in
+                // between.
+                couldNotOpen
             } else {
                 ProgressView()
             }
         }
+        .onDisappear { state.noteRecordingPlace() }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onGeometryChange(for: CGSize.self, of: { $0.size }) { viewSize = $0 }
         .focusable(state.isReady)
@@ -85,6 +118,19 @@ struct VideoEditorView: View {
         // it (the one case that overrides the hover pin); moving the mouse
         // brings it back. Pausing reveals it.
         .onChange(of: state.isPlaying) { _, playing in playing ? forceHide() : reveal() }
+        // A recording that opened on the moment you left it is paused there,
+        // and nothing else would put the transport on screen: it appears when
+        // playback stops or when the pointer comes near it, and neither has
+        // happened yet. It stays up until the first thing you do, because a
+        // paused frame with no controller under it is indistinguishable from a
+        // still picture, and the controller is the only thing saying where in
+        // the recording you are. Found on 2026-09-21 in this walk's own
+        // screenshot.
+        .onChange(of: state.cameBackToAMoment) { _, came in
+            guard came else { return }
+            pinnedOnArrival = true
+            reveal()
+        }
         // Entering an edit mode reveals the controller and pins it (it never
         // auto-hides while editing). Leaving a mode re-arms the fade.
         .onChange(of: state.isTrimming) { _, _ in reveal() }
@@ -115,14 +161,16 @@ struct VideoEditorView: View {
         .onContinuousHover { phase in
             switch phase {
             case .active(let location):
+                pinnedOnArrival = false
                 if pointerInRevealBand(location) { reveal() } else { hideSoon() }
             case .ended:
+                pinnedOnArrival = false
                 hideSoon()
             }
         }
         .onKeyPress(phases: [.down, .repeat]) { press in
             let result = handleKey(press)
-            if result == .handled { reveal() }
+            if result == .handled { pinnedOnArrival = false; reveal() }
             return result
         }
         // The same sheet a picture leaves through, with the recording's formats
@@ -159,7 +207,7 @@ struct VideoEditorView: View {
     /// cursor; only leaving it (or hitting play) starts the fade.
     private func scheduleHide(after seconds: Double = 2.4) {
         hideTask?.cancel()
-        guard !editing, !hoveringControls, controlsVisible else { return }
+        guard !editing, !hoveringControls, !pinnedOnArrival, controlsVisible else { return }
         hideTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
@@ -177,6 +225,7 @@ struct VideoEditorView: View {
         // Hitting play normally clears the controller out of the way even with
         // the pointer on it. Not while a guide is running: the card would be
         // pointing at a button that had just faded out.
+        pinnedOnArrival = false
         guard controlsVisible, !editing else { return }
         withAnimation(.easeInOut(duration: 0.35)) { controlsVisible = false }
     }

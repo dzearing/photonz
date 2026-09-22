@@ -41,6 +41,17 @@ struct ImageEditorRootView: View {
                 // they happen (`EditorState+SharedComponents`).
                 editorState.followSharedShelf()
                 if let windowID {
+                    // A window holding a recording says so, so asking to open
+                    // the same recording again focuses it rather than
+                    // re-checking a file somebody may have moved underneath it
+                    // (`AppCoordinator.hasOpenRecordingWindow`).
+                    if case .video(let url) = windowID {
+                        coordinator.noteRecordingWindow(editorState, for: url)
+                        editorState.onRecordingWouldNotOpen = { [coordinator] url in
+                            coordinator.reportRecordingWouldNotOpen(url)
+                            editorState.hostWindow?.close()
+                        }
+                    }
                     editorState.seed(from: windowID, capture: coordinator.capture)
                     // A window a guide opened for itself starts that guide as
                     // soon as its sample picture is in it, so picking the
@@ -81,6 +92,7 @@ struct VideoEditorRootView: View {
             }
             .task {
                 state.saves = coordinator.recordingSaves
+                coordinator.noteRecordingWindow(state, for: url)
                 state.seed(url: url, capture: coordinator.capture)
                 // From here on a guide can find this window: one that brought
                 // its own recording starts as soon as the clip is loaded, and

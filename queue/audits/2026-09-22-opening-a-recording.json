@@ -1,0 +1,29 @@
+{
+  "feature": "Opening a recording lands you somewhere you can work",
+  "epic": "video-cutting",
+  "summary": "A recording now has one way in wherever you ask from, the file is checked before any window opens so a missing or half-copied one says so plainly instead of leaving an empty window, and coming back to a recording puts the playhead where you left it.",
+  "setup": "Photonz Dev, release Next. The flag \"Opening a recording lands you somewhere you can work\" is on by default in Next; it is in the Experiments window under Motion if you want to compare it off.",
+  "try": [
+    { "do": "Record something (⇧⌘5), then press ⇧⌘6 from anywhere to open the newest thing in history for editing.", "shot": "2026-09-22-opening-a-recording-1.png" },
+    { "do": "Let it play a few seconds, then close the window." },
+    { "do": "Press ⇧⌘6 again and look at the time on the left of the transport.", "shot": "2026-09-22-opening-a-recording-2.png" },
+    { "do": "Drag any .mp4 or .mov out of the capture folder onto the Desktop, then open it with File ▸ Open, or double-click it in Finder after picking Photonz under Open With." },
+    { "do": "Delete a recording in Finder, then ask for it again from a recent item or by opening the same path.", "shot": "2026-09-22-opening-a-recording-3.png" },
+    { "do": "Start copying a large .mp4 into the capture folder and ask to open it while the copy is still running.", "shot": "2026-09-22-opening-a-recording-4.png" },
+    { "do": "Watch a short recording all the way to the end, close it, and open it again." }
+  ],
+  "evaluate": [
+    "When you come back to a recording, is being put back on the moment you left right, or would you rather it always started at the top?",
+    "It comes back PAUSED on that moment rather than playing. Is that what you want, or should it carry on playing from there?",
+    "The corner is where a recording that cannot be opened says so. Is that loud enough, or does a file that has gone deserve a dialog?",
+    "A recording still being copied in says so and then opens by itself when the copy finishes, up to twenty seconds. Is opening by itself welcome, or would you rather it just told you to try again?",
+    "Photonz now appears under Finder's Open With for movies but never takes them over. Is appearing there at all what you want?"
+  ],
+  "rough": [
+    "Where you were is remembered per file, and a recording you save (which writes the trim into the file) is started over, because the moment you left may no longer be inside the new file. That is safe but it means a save quietly loses your place.",
+    "Dropping a recording ONTO an open window is still refused. A picture dropped there becomes a layer; a recording should become a clip on the timeline, which is cutting work rather than a door, so it was left alone.",
+    "The mock filtered history to Videos before picking one. Cut: the newest capture is already first and ⇧⌘6 takes it, so the filter saved nobody a step.",
+    "The twenty second wait for a file that is still landing is a guess. A recording being copied over a slow network share could take longer, and then it says it gave up and you have to ask again.",
+    "The transport now stays up when you come back to a moment, until the first thing you do. Everywhere else in the recording window it fades after a couple of seconds, so this is the one place the controller behaves differently."
+  ]
+}

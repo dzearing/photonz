@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 46,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T13:54:35.672Z",
-  "updated": "2026-09-21T23:18:04.247Z",
+  "updated": "2026-09-21T23:41:19.432Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This one does NOT depend on the time model: it improves the way out that exists today, and it is the step the user hits every single time they record something. There is already a pending task about making a recording small enough to send; read it and fold rather than duplicating.\n\nPairs with the picture export work: the task about choosing a quality and seeing the file size is the same idea for stills, and the two should not grow two different controls for one question.\n\n---\nGrounded in the video clickthroughs, which the user says are ideas to build on rather than specs: say in the audit where you went further or differently and why. The thesis every page shares governs this too: video is not a mode, it is the layer document with time.",
@@ -49,10 +49,19 @@
     {
       "t": "2026-09-21T23:18:04.246Z",
       "note": "two real bugs found and fixed while building this, both of which would have frozen an export. (1) Feeding one AVAssetWriter both the pictures and the sound deadlocks: it stops asking for pictures part way through and never asks again, whoever is ahead. The eight second sample stopped at 45 to 65 frames every time, reproduced in a unit test the moment the source had a sound track on it (VideoExportBudgetTests, 'A recording with sound on it exports all the way through'). Fixed by writing the picture and the sound separately and joining them with a passthrough copy, which is the shape DocumentMovieWriter already settled on for the same reason. (2) Neither writer checked the writer's status while waiting for it to be hungry again, so a writer that had given up left the export waiting forever with a bar that never moved. That is what hung the whole test suite twice today at 0 per cent CPU. Both now throw with what AVFoundation said, and there is a 90 second stall limit as a backstop."
+    },
+    {
+      "t": "2026-09-21T23:41:15.302Z",
+      "note": "left rough, none of it earning its own task. (1) Exporting a re-encode twice is not byte for byte identical: the system's H.264 rate control decides differently under load. Measured three pairs on one clip: 52,390/52,766, then equal, then 54,902/52,390. Turning frame reordering off makes the short case reproducible and MORE THAN DOUBLES the file (130,349 becomes 278,280), which is the wrong trade for a feature about sending files, and it did not hold on the eight second sample anyway. What is byte identical is the path most exports take, the untouched copy, and the walk checks that strictly. Nobody notices the rest. (2) Standard is not guaranteed smaller than High: on material that spends neither budget the only difference is the picture size, and downscaling sharp edges can cost bits rather than save them (1440x900 came out 101,244 against 1920x1200's 99,740 on a synthetic clip). The sheet shows the predicted weight either way, and on real screen material Standard did shrink. It is in the audit for the user to react to. (3) A second export now waits for the first, one at a time across the app, and its card sits at nought per cent without saying why. Only happens with two windows exporting at once. Also in the audit. The one rough item that DID clear the bar is filed: a-gif-says-how-big-it-will-be-like-every-other-f."
+    },
+    {
+      "t": "2026-09-21T23:41:19.430Z",
+      "note": "Shipped in 2a900df4 (pushed to main). A video now has the same three choices the animated formats have, each a real pixel cap and a real bits-per-second budget (VideoExportRecipe, PhotonzCore, pure and tested), with one sentence under the row saying who each is for. Because the export asks for a budget instead of 'highest quality', the weight on the sheet is a prediction: measured against files actually written, copy 147 KB said / 147 KB landed, Standard 147/134, Small 96/108, trimmed and cropped 26/22. A long write puts up a card with the encoder's own count and a Stop that leaves no half a file. Two freezes found and fixed on the way: one writer fed both picture and sound deadlocks at 45 to 65 frames, and neither writer checked its own status while waiting to be hungry, which hung the test suite twice. Exports now queue one at a time. Verified in Quick Look, in Chromium (browsers and the chat apps) and through AVFoundation: H.264 High with AAC-LC, right size, right length, plays. Scripts/test.sh green at 8848 tests; recording-export-sheet-walk and thirteen other recording and video walks green. Audit at queue/audits/2026-09-21-recording-export-size.json with two real screenshots. The paired p2 task a-recording-can-be-made-small-enough-to-send is folded in and closed; one rough item filed as a-gif-says-how-big-it-will-be-like-every-other-f."
     }
   ],
   "started": "2026-09-21T21:52:46.116Z",
   "walks": [
     "recording-export-sheet-walk"
-  ]
+  ],
+  "completed": "2026-09-21T23:41:19.431Z"
 }

@@ -204,6 +204,14 @@ private final class Run {
         // run ends, everything it borrowed goes back.
         do {
             let said = try setupRunner.perform(script.setup, besides: scriptURL)
+            // History watches the folder, and the watcher takes about a second
+            // to notice. A walk's first step can come sooner than that, so the
+            // listing is re-read here rather than waited for: without it, a
+            // walk that lends a capture and immediately asks for the newest one
+            // gets whatever was in the person's own folder. Found on
+            // 2026-09-21 by `opening-a-recording-walk`, which lent a recording
+            // and was told the newest capture was a picture.
+            if !script.setup.captures.isEmpty { coordinator.capture.store.reload() }
             note(0, "setup", said)
         } catch {
             finish(status: "failed", steps: 0, error: "setup: \(error)")
@@ -393,7 +401,12 @@ private final class Run {
         }
         // Anything the setup lent goes back first, so a walk that failed
         // halfway leaves nothing of its own in a person's Screenshots folder.
-        if let returned = setupRunner.returnCaptures() { note(steps, "setup", returned) }
+        if let returned = setupRunner.returnCaptures() {
+            // Same again on the way out, so the walk after this one does not
+            // see a capture this one has already taken away.
+            coordinator.capture.store.reload()
+            note(steps, "setup", returned)
+        }
         if let cleared = setupRunner.clearScratch() { note(steps, "setup", cleared) }
         // Then every remembered setting, so the walk after this one starts from
         // the machine this one did rather than from whatever this one left.
@@ -1304,13 +1317,22 @@ private final class Run {
                  state: describe())
 
         case .snapshot(let name, let wanted):
+            // Every toast is called "Toast" and they stack, so a walk asking for
+            // one means the one in the corner: the newest, the one that just
+            // said something. Asked of the stack itself rather than guessed from
+            // window order, which puts the oldest first.
             // A sheet is its own window on top of the editor's, so while one is
             // up it IS what a person is looking at, and it is what gets
             // photographed. `window` overrides that with any of the app's own
             // windows by title, which is the only way to photograph a floating
             // panel like the history overlay.
-            let window = try wanted.map { try requireWindow(titled: $0) }
-                ?? (try requireWindow().attachedSheet ?? (try requireWindow()))
+            let window: NSWindow
+            if wanted == ToastController.panelTitle, let newest = coordinator.newestToastPanel {
+                window = newest
+            } else {
+                window = try wanted.map { try requireWindow(titled: $0) }
+                    ?? (try requireWindow().attachedSheet ?? (try requireWindow()))
+            }
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             try snapshot(content, name: name)
             await screenCapture(window, name: name)
@@ -1580,10 +1602,11 @@ private final class Run {
                  state: describe())
 
         case .expectRecording(let pieces, let picked, let keeps, let seconds,
-                              let starts, let caught):
+                              let starts, let caught, let playhead):
             note(number, step.name,
                  try checkRecording(pieces: pieces, picked: picked, keeps: keeps,
-                                    seconds: seconds, starts: starts, caught: caught),
+                                    seconds: seconds, starts: starts, caught: caught,
+                                    playhead: playhead),
                  state: describe())
 
         case .expectStoredRecording(let seconds, let within, let original):
@@ -2143,6 +2166,130 @@ private final class Run {
             note(number, step.name,
                  "\(action.rawValue): \(TutorialController.shared.liveDescription(in: window))",
                  state: describe())
+
+        // The keyboard path from anywhere into the newest thing in history
+        // (⇧⌘6). With a recording lent to the capture folder by the walk's
+        // setup, this is the real history door: newest first, a video goes to
+        // the recording window rather than the picture one.
+        case .action(.editLastCapture):
+            guard let newest = coordinator.lastCapture else {
+                throw Failure(description: "history is empty, so there is no last capture to edit; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            coordinator.editLastCapture()
+            guard newest.kind == .video else {
+                throw Failure(description: "the newest thing in history is a picture, not a "
+                    + "recording, so this step would open the picture editor")
+            }
+            let url = newest.url.standardizedFileURL
+            if Experiments.shared.recordingIsADocument {
+                var landed: EditorState?
+                try await poll("the recording to open as a document", within: 20) {
+                    landed = PlaytestHarness.readyEditors.last {
+                        $0.recordingURL?.standardizedFileURL == url
+                    }
+                    return landed != nil
+                }
+                guard let landed else { throw Failure(description: "no editor opened the recording") }
+                try await adopt(landed, window: nil, step: step.name,
+                                subject: "the newest recording in history", number: number)
+                break
+            }
+            var opened: VideoEditorState?
+            try await poll("the recording to open", within: 20) {
+                opened = PlaytestHarness.readyRecordings.last { $0.url?.standardizedFileURL == url }
+                return opened != nil
+            }
+            guard let opened else {
+                throw Failure(description: "asking for the newest capture opened no recording window")
+            }
+            try await adoptRecording(opened, step: step.name,
+                                     subject: "the newest recording in history", number: number)
+
+        // Asking for a recording that is not there. Nothing is adopted: the
+        // point of the step is that NO window opens, and what the walk checks
+        // next is the line in the corner (`expectToast`) and the window count.
+        case .action(.openMissingRecording):
+            let url = Self.walkRecordingsFolder()
+                .appendingPathComponent("a-recording-that-went-away.mp4")
+            try? FileManager.default.removeItem(at: url)
+            coordinator.openRecording(url)
+            await sleep(2.0)
+            note(number, step.name, "asked for \(url.lastPathComponent), which is not there",
+                 state: describe())
+
+        // Asking for a recording that is still being written, which is what a
+        // big file being copied into the capture folder looks like. The first
+        // quarter of the sample lands, the rest arrives over the next two
+        // seconds, and the app is asked for it in between.
+        case .action(.openLandingRecording):
+            let url = try Self.startLandingRecording()
+            coordinator.openRecording(url)
+            var opened: VideoEditorState?
+            try await poll("the recording to open once it had landed", within: 30) {
+                opened = PlaytestHarness.readyRecordings.last { $0.url == url }
+                return opened != nil
+            }
+            guard let opened else { throw Failure(description: "no window opened for the landed file") }
+            try await adoptRecording(opened, step: step.name,
+                                     subject: "a recording that was still landing", number: number)
+
+        // A recording that is NOT in the capture folder, opened the way Finder
+        // opens one: the same door a double-click, the dock and File ▸ Open all
+        // come through (`AppCoordinator.openFileWindow`).
+        case .action(.openRecordingFromDisk):
+            let url = try Self.recordingOnDisk(named: "somewhere-else.mp4")
+            coordinator.openFileWindow(url)
+            var opened: VideoEditorState?
+            try await poll("the recording from disk to open", within: 20) {
+                opened = PlaytestHarness.readyRecordings.last { $0.url == url }
+                return opened != nil
+            }
+            guard let opened else {
+                throw Failure(description: "opening \(url.lastPathComponent) the way Finder does "
+                    + "left no recording window")
+            }
+            try await adoptRecording(opened, step: step.name,
+                                     subject: "a recording from outside the capture folder", number: number)
+
+        // Shut the window holding the recording and ask for the same recording
+        // again, through the door a person would use.
+        case .action(.reopenSampleRecording):
+            if Experiments.shared.recordingIsADocument {
+                let editor = try requireEditor()
+                guard let url = editor.recordingURL else {
+                    throw Failure(description: "the window in front is not holding a recording")
+                }
+                editor.hostWindow?.close()
+                await sleep(1.0)
+                coordinator.openRecording(url)
+                var landed: EditorState?
+                try await poll("the recording to open again as a document", within: 20) {
+                    landed = PlaytestHarness.readyEditors.last {
+                        $0.recordingURL == url && $0 !== editor
+                    }
+                    return landed != nil
+                }
+                guard let landed else { throw Failure(description: "the recording did not open again") }
+                try await adopt(landed, window: nil, step: step.name,
+                                subject: "the same recording, opened again", number: number)
+                break
+            }
+            let recording = try requireRecording()
+            guard let url = recording.url else {
+                throw Failure(description: "the window in front is not holding a recording")
+            }
+            recording.hostWindow?.close()
+            await sleep(1.0)
+            coordinator.openRecording(url)
+            var reopened: VideoEditorState?
+            try await poll("the recording to open again", within: 20) {
+                reopened = PlaytestHarness.readyRecordings.last { $0.url == url && $0 !== recording }
+                return reopened != nil
+            }
+            guard let reopened else { throw Failure(description: "the recording did not open again") }
+            try await adoptRecording(reopened, step: step.name,
+                                     subject: "the same recording, opened again", number: number)
 
         // A recording window with no guide in front of it, on the sample clip
         // the video guides bring. The walk moves into it, exactly as it would
@@ -3418,7 +3565,8 @@ private final class Run {
                  .videoExportSheet, .videoExportSheetAsGIF, .videoExportSheetAsHEIC,
                  .videoExportSheetCancel, .videoExportBegin, .videoExportStop,
                  .videoCropMiddle,
-                 .openSampleRecording:
+                 .openSampleRecording, .openRecordingFromDisk, .openMissingRecording,
+                 .openLandingRecording, .reopenSampleRecording, .editLastCapture:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
                  .clipSpeedDouble, .clipSpeedHalf,
@@ -7681,7 +7829,24 @@ private final class Run {
     /// proves nothing at all; this is the step that fails.
     private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,
                                 seconds: Double?, starts: Double? = nil,
-                                caught: Bool? = nil) throws -> String {
+                                caught: Bool? = nil, playhead: Double? = nil) throws -> String {
+        // A recording opened as a DOCUMENT has no recording window behind it:
+        // its playhead is the document's own clock (`EditorState+Time`). That
+        // is the one claim that still means something there, so it is answered
+        // and the rest say plainly that they cannot be.
+        if recording == nil, let editor, editor.documentHasTime {
+            guard let playhead, pieces == nil, picked == nil, keeps == nil,
+                  seconds == nil, starts == nil, caught == nil else {
+                throw Failure(description: "this recording is open as a document, where the only "
+                    + "claim expectRecording can answer is \"playhead\"")
+            }
+            let at = Double(editor.documentTimeMS) / 1000
+            guard abs(playhead - at) <= 0.25 else {
+                throw Failure(description: "the playhead is at \(String(format: "%.2f", at))s, "
+                    + "not \(String(format: "%.2f", playhead))s")
+            }
+            return "the playhead is at \(String(format: "%.2f", at))s, as claimed"
+        }
         let video = try requireRecording()
         let counted = video.trimmedPieceCount
         // 1-based on the way in and on the way out, because "piece 2" is what
@@ -7696,6 +7861,7 @@ private final class Run {
             + (video.caughtCut.map { ", caught on the cut at \(String(format: "%.2f", $0))s" }
                 ?? ", caught on nothing")
             + (video.isTrimming ? ", trim open" : ", trim closed")
+            + ", playhead at \(String(format: "%.2f", video.currentTime))s"
 
         var wrong: [String] = []
         if let pieces, pieces != video.cuts.pieceCount {
@@ -7719,6 +7885,13 @@ private final class Run {
         if let starts, abs(starts - video.trim.inPoint) > 0.005 {
             wrong.append("the start handle is at \(String(format: "%.3f", video.trim.inPoint))s, "
                 + "not \(String(format: "%.3f", starts))s")
+        }
+        // A quarter of a second either way: the playhead is a live clock and a
+        // walk asking where it came back to is asking about the moment, not
+        // about a frame.
+        if let playhead, abs(playhead - video.currentTime) > 0.25 {
+            wrong.append("the playhead is at \(String(format: "%.2f", video.currentTime))s, "
+                + "not \(String(format: "%.2f", playhead))s")
         }
         if let caught, caught != (video.caughtCut != nil) {
             wrong.append(caught
@@ -8162,6 +8335,65 @@ private final class Run {
             return (frames, .zero)
         }
         return (frames, CGSize(width: first.width, height: first.height))
+    }
+
+    // MARK: - Recordings a walk puts somewhere on purpose
+
+    /// A scratch folder for recordings a walk needs OUTSIDE the capture folder:
+    /// one that is missing, one still landing, one sitting on a desk. Emptied
+    /// on every use, so a walk never reads what the walk before it left.
+    static func walkRecordingsFolder() -> URL {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PhotonzWalkRecordings", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    /// A complete copy of the sample recording, somewhere that is not the
+    /// capture folder.
+    static func recordingOnDisk(named name: String) throws -> URL {
+        guard let sample = TutorialSampleRecording.fresh() else {
+            throw Failure(description: "couldn't write the sample recording")
+        }
+        let url = walkRecordingsFolder().appendingPathComponent(name)
+        try? FileManager.default.removeItem(at: url)
+        try FileManager.default.copyItem(at: sample, to: url)
+        return url
+    }
+
+    /// The first quarter of the sample recording on disk, with the rest arriving
+    /// over the next two seconds. What a file being copied in looks like from
+    /// the outside, and the one thing that cannot be faked with a setting.
+    ///
+    /// Bounded on purpose: the appending task writes a fixed number of chunks
+    /// and stops, so nothing a walk starts here outlives it.
+    static func startLandingRecording() throws -> URL {
+        guard let sample = TutorialSampleRecording.fresh() else {
+            throw Failure(description: "couldn't write the sample recording")
+        }
+        let data = try Data(contentsOf: sample)
+        let url = walkRecordingsFolder().appendingPathComponent("still-landing.mp4")
+        try? FileManager.default.removeItem(at: url)
+        let head = data.count / 4
+        try data.prefix(head).write(to: url)
+        let rest = data.suffix(from: head)
+        Task { @MainActor in
+            guard let handle = try? FileHandle(forWritingTo: url) else { return }
+            defer { try? handle.close() }
+            try? handle.seekToEnd()
+            let chunks = 8
+            let size = max(1, rest.count / chunks)
+            var offset = rest.startIndex
+            for _ in 0..<chunks {
+                try? await Task.sleep(for: .milliseconds(250))
+                let end = min(rest.endIndex, offset + size)
+                guard offset < end else { break }
+                handle.write(rest[offset..<end])
+                offset = end
+            }
+            if offset < rest.endIndex { handle.write(rest[offset...]) }
+        }
+        return url
     }
 
     private func requireRecording() throws -> VideoEditorState {

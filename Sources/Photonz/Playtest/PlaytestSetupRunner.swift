@@ -72,7 +72,10 @@ extension PlaytestMemory {
         case .tutorials:
             [TutorialController.progressKey]
         case .motion:
-            [EditorState.motionStripOpenKey]
+            // The playhead each recording was left on, too: a walk that opens
+            // the sample recording must start it at the top, not wherever the
+            // walk before it stopped watching (`RecordingPlaces`).
+            [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.
@@ -136,6 +139,7 @@ struct PlaytestSetupRunner {
             if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
             if setup.forget.contains(.frames) { IconKeylinesStore.shared.reload() }
             if setup.forget.contains(.panel) { PanelSectionVisibilityStore.shared.reload() }
+            if setup.forget.contains(.motion) { RecordingPlaceStore.shared.reload() }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             // The shared shelf is a file rather than a setting, so it is
             // emptied here by hand. The shelf it had is already on record
@@ -186,9 +190,17 @@ struct PlaytestSetupRunner {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         var placed: [String] = []
         for file in files {
-            let source = file.hasPrefix("/")
-                ? URL(fileURLWithPath: file)
-                : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL
+            // One name is not a file at all: it means the guides' own sample
+            // recording, written fresh. A walk about history needs a RECORDING
+            // in the capture folder, and the repo keeps no video fixture (the
+            // sample is drawn in code so nothing binary is committed). It is
+            // lent and taken away like every other capture, so it never
+            // outlives the walk in somebody's Screenshots folder.
+            let source = file == PlaytestSetup.sampleRecordingToken
+                ? (TutorialSampleRecording.fresh() ?? URL(fileURLWithPath: "/nowhere"))
+                : (file.hasPrefix("/")
+                    ? URL(fileURLWithPath: file)
+                    : scriptURL.deletingLastPathComponent().appendingPathComponent(file).standardizedFileURL)
             guard FileManager.default.fileExists(atPath: source.path) else {
                 throw PlaytestSetupError(
                     description: "setup asks for the capture \"\(file)\", and there is no such file at \(source.path)")
@@ -203,6 +215,17 @@ struct PlaytestSetupRunner {
                         + "but a file of that name is already there; move it aside or rename the fixture")
             }
             try FileManager.default.copyItem(at: source, to: destination)
+            // Stamped NOW, in the order the walk listed them. A lent capture
+            // stands in for something you just took, and history is ordered by
+            // when a capture was made: without this the walk's answer depends
+            // on what happens to be in the person's own folder, and a copy can
+            // inherit the date of the file it replaced at that path, so the
+            // thing a walk just lent can read as older than a screenshot from
+            // last week. Found on 2026-09-21: a lent recording came last in a
+            // folder whose newest picture was a day old.
+            let stamp = Date().addingTimeInterval(Double(placed.count) * 0.001)
+            try? FileManager.default.setAttributes(
+                [.creationDate: stamp, .modificationDate: stamp], ofItemAtPath: destination.path)
             lentCaptures.append(destination)
             placed.append(source.lastPathComponent)
         }

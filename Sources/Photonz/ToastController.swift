@@ -99,6 +99,49 @@ final class ToastController {
         layout(animated: true)
     }
 
+    // MARK: - A plain note
+
+    /// Say one thing in the corner, with no thumbnail and nothing to press.
+    ///
+    /// The corner is where the app already talks about captures, and it is the
+    /// only surface that works with no window open, which is exactly the
+    /// situation a recording that will not open leaves you in. An alert was the
+    /// other candidate and was rejected: it takes the keyboard, it has to be
+    /// dismissed, and "the file you asked for is still landing" is news, not a
+    /// question.
+    func presentNote(title: String, detail: String, symbol: String, on screen: NSScreen) {
+        self.screen = screen
+
+        while items.count >= maxVisible, let oldest = items.last {
+            remove(oldest.id, animated: false)
+        }
+
+        let panel = makePanel()
+        let item = Item(panel: panel, message: title)
+        let id = item.id
+
+        let view = NoteToastView(
+            title: title, detail: detail, symbol: symbol,
+            onDismiss: { [weak self] in self?.remove(id, animated: true) },
+            holdSeconds: Experiments.shared.captureToastHoldSeconds,
+            fadeSeconds: Experiments.shared.captureToastFadeSeconds)
+        let hosting = NSHostingView(rootView: view)
+        let size = hosting.fittingSize
+        hosting.frame = CGRect(origin: .zero, size: size)
+        panel.setContentSize(size)
+        panel.contentView = hosting
+
+        items.insert(item, at: 0)
+
+        let vf = screen.visibleFrame
+        panel.setFrame(CGRect(x: vf.maxX - margin - size.width,
+                              y: vf.minY + margin,
+                              width: size.width, height: size.height), display: true)
+        panel.alphaValue = 1
+        panel.orderFrontRegardless()
+        layout(animated: true)
+    }
+
     // MARK: - Progress toast (GIF prep)
 
     /// Show a non-fading progress toast in the same bottom-right stack (e.g. while
@@ -138,6 +181,11 @@ final class ToastController {
     }
 
     #if PHOTONZ_PLAYTEST
+    /// The panel of the newest toast, which is the one in the corner. Probe
+    /// only: it is how a walk photographs the thing that just got said rather
+    /// than whichever panel the window list happens to hand back first.
+    var newestPanel: NSWindow? { items.first?.panel }
+
     /// Every line the corner is saying right now, newest first: a capture or
     /// confirmation toast's message, and a progress toast's caption. Probe-only
     /// — it is how `expectToast` asks whether the app SAID a thing, which no
@@ -266,6 +314,57 @@ final class ToastProgress {
 
     func update(fraction newValue: Double) {
         fraction = min(1, max(fraction, newValue))
+    }
+}
+
+/// A toast that only says something: a glyph, a line, and the reason under it.
+/// Fades itself out on the same clock a capture toast does, and stays while the
+/// pointer is on it so a line can actually be read.
+struct NoteToastView: View {
+    let title: String
+    let detail: String
+    let symbol: String
+    let onDismiss: () -> Void
+    let holdSeconds: Double
+    let fadeSeconds: Double
+
+    @State private var hovered = false
+    @State private var faded = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            ZStack {
+                Circle().fill(.quaternary)
+                Image(systemName: symbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.primary)
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .frame(width: 244, alignment: .leading)
+        .padding(12)
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .padding(8) // room for the shadow so it isn't clipped, matching ToastView
+        .opacity(faded && !hovered ? 0 : 1)
+        .animation(.easeOut(duration: hovered ? 0.15 : fadeSeconds), value: faded || hovered)
+        .playtestHover("toast note") { hovered = $0 }
+        .task {
+            try? await Task.sleep(for: .seconds(holdSeconds))
+            faded = true
+            try? await Task.sleep(for: .seconds(fadeSeconds + 0.2))
+            if !hovered { onDismiss() }
+        }
     }
 }
 

@@ -274,10 +274,12 @@ struct EditorView: View {
         // against the window's own background.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .fileImporter(isPresented: $editorState.isImporterPresented,
-                      allowedContentTypes: [.image, EditorState.photonzType]) { result in
+                      allowedContentTypes: Experiments.shared.openingARecording
+                          ? [.image, EditorState.photonzType] + RecordingContentTypes.all
+                          : [.image, EditorState.photonzType]) { result in
             if case .success(let url) = result {
                 let scoped = url.startAccessingSecurityScopedResource()
-                editorState.openImage(at: url)
+                openPicked(url)
                 if scoped { url.stopAccessingSecurityScopedResource() }
             }
         }
@@ -285,8 +287,12 @@ struct EditorView: View {
         // the window that is not the picture itself: into an open document it
         // becomes a new layer; otherwise it opens as a document.
         .onDrop(of: FileDrop.types, delegate: WindowFileDrop(editorState: editorState))
-        // Finder double-click / `open` with a document (image or .photonz).
-        .onOpenURL { editorState.openImage(at: $0) }
+        // Finder double-click / `open` with a document (image, .photonz, or a
+        // recording).
+        .onOpenURL { openPicked($0) }
+        // Closing a window holding a recording writes down where the playhead
+        // was, so opening it again comes back to it (`RecordingPlaces`).
+        .onDisappear { editorState.noteRecordingPlace() }
         .sheet(isPresented: $editorState.isResizeDialogPresented) {
             if let document = editorState.document {
                 ResizeDialog(originalSize: document.canvasSize)
@@ -416,6 +422,18 @@ struct EditorView: View {
     /// tool is active, the measurement kinds present in the document, each
     /// swatched in its canvas ink (Alignment as a dashed line). Chrome only —
     /// it can never appear in an export.
+    /// A file handed to this window from outside it: Finder, the dock, a recent
+    /// item, the Open panel. A recording goes to the recording door rather than
+    /// being read as a photograph, which got nothing and left the window as it
+    /// was (`next-opening-a-recording`).
+    private func openPicked(_ url: URL) {
+        if Experiments.shared.openingARecording, RecordingFiles.isRecording(url) {
+            coordinator.openRecording(url)
+            return
+        }
+        editorState.openImage(at: url)
+    }
+
     private func measureLegend(_ entries: [EditorState.MeasureLegendEntry]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(entries) { entry in

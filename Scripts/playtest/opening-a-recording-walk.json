@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/opening-a-recording-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": { "next-opening-a-recording": true },
+    "captures": ["sample-recording"]
+  },
+  "steps": [
+    { "do": "action", "action": "editLastCapture" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "describe", "stage": "0-one-move-from-history", "note": "THE FIRST TEST: a recording sitting in history, opened in ONE move from wherever you were. Shift Command 6 takes the newest thing in history, sees it is a recording, and opens it for editing" },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8.0 },
+    { "do": "snapshot", "name": "0-one-move-from-history" },
+
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-ready-to-work", "note": "a recording asked for from history: the clip is loaded, the transport is under it, and nothing is dimmed waiting for anything" },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8.0 },
+    { "do": "snapshot", "name": "1-a-recording-opens-ready" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-left-off-here", "note": "left off six seconds in, which is where the playhead is when the window is shut" },
+    { "do": "snapshot", "name": "2-left-off-six-seconds-in" },
+
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "playhead": 6.0 },
+    { "do": "describe", "stage": "3-back-where-you-were", "note": "THE TEST: the same recording asked for again. The playhead is back on the moment it was left on rather than at the top, and it is paused there instead of running away from it" },
+    { "do": "snapshot", "name": "3-back-where-you-left-it" },
+
+    { "do": "action", "action": "openMissingRecording" },
+    { "do": "expectToast", "says": "is not there any more" },
+    { "do": "expectWindows", "titled": "a-recording-that-went-away", "count": 0 },
+    { "do": "describe", "stage": "4-one-that-went-away", "note": "THE TEST: asking for a recording that has been deleted. No window opened at all, and the corner says which file and why. Before this it was a window that never became anything" },
+    { "do": "snapshot", "name": "4-a-recording-that-went-away", "window": "Toast" },
+
+    { "do": "action", "action": "openLandingRecording" },
+    { "do": "expectToast", "says": "still being saved" },
+    { "do": "snapshot", "name": "5-still-being-saved", "window": "Toast" },
+    { "do": "expectRecording", "seconds": 8.0 },
+    { "do": "describe", "stage": "5-one-still-landing", "note": "THE TEST: asking for a recording while it is still being written. The corner said it was still being saved, and the window opened by itself the moment the file finished, on the whole eight seconds rather than the quarter that had landed" },
+    { "do": "snapshot", "name": "5-it-opened-once-it-had-landed" },
+
+    { "do": "action", "action": "openRecordingFromDisk" },
+    { "do": "expectRecording", "pieces": 1, "seconds": 8.0 },
+    { "do": "describe", "stage": "6-from-anywhere", "note": "THE TEST: a recording that is not in the capture folder at all, opened the way Finder opens one. It used to land in the picture door and leave an empty window" },
+    { "do": "snapshot", "name": "6-a-recording-from-outside-history" }
+  ]
+}

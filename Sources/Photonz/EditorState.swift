@@ -1147,7 +1147,15 @@ final class EditorState {
         // (`docs/design/video.md` §7), and until then this window says there is
         // nothing here to save rather than writing something wrong.
         Task { @MainActor [weak self] in
-            guard let self, let movie = await MovieLibrary.shared.movie(at: url) else { return }
+            guard let self else { return }
+            guard let movie = await MovieLibrary.shared.movie(at: url) else {
+                // The file was there when the door checked it and is not now,
+                // or it stopped being readable in between. An empty window is
+                // the one thing this must not leave behind, so it says what
+                // happened and takes the window with it.
+                onRecordingWouldNotOpen?(url)
+                return
+            }
             let name = url.deletingPathExtension().lastPathComponent
             installDocument(.recording(movie, name: name), url: nil)
             // After the install, which clears it: this window holds a
@@ -1157,7 +1165,12 @@ final class EditorState {
             // A recording opens SAVED: nothing has been done to it yet, and a
             // window born with the edited dot on it would be lying.
             markSaved()
-            documentTimeMS = 0
+            // Back where you left it. A recording you had barely started, had
+            // watched out, or have saved since starts at the top instead
+            // (`RecordingPlaces`).
+            documentTimeMS = Experiments.shared.openingARecording
+                ? (RecordingPlaceStore.shared.moment(for: url, durationMS: movie.durationMS) ?? 0)
+                : 0
             // The first frame, fetched before anybody presses anything, so the
             // window opens on the picture rather than on nothing.
             documentMomentChanged()
@@ -1193,6 +1206,11 @@ final class EditorState {
     /// the window root, which is where the app coordinator lives; the editor
     /// itself stays free of window plumbing.
     @ObservationIgnored var openBlankCanvasWindow: ((CGSize) -> Void)?
+
+    /// What happens when a recording this window was opened for cannot be read
+    /// after all. Set by the window root, which is the only thing that can both
+    /// say so in the corner and close the window this was going to fill.
+    @ObservationIgnored var onRecordingWouldNotOpen: ((URL) -> Void)?
 
     /// Answers the New Canvas sheet, from whichever route opened it. An empty
     /// window fills itself; a window already holding a picture keeps it and the

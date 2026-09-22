@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/opening-a-recording-as-a-document-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-opening-a-recording": true,
+      "next-a-recording-is-a-document": true,
+      "next-cut-a-recording": true
+    }
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-ready-to-work", "note": "the same way in, landing in the ordinary editor: the clip is a layer, the timeline is across the bottom, and nothing is waiting on anything" },
+    { "do": "snapshot", "name": "1-a-recording-opens-ready" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectRecording", "playhead": 6.0 },
+    { "do": "snapshot", "name": "2-left-off-six-seconds-in" },
+
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectRecording", "playhead": 6.0 },
+    { "do": "describe", "stage": "3-back-where-you-were", "note": "THE TEST: the same recording asked for again, in the editor the whole of video is being built in. The playhead is back on the moment it was left on" },
+    { "do": "snapshot", "name": "3-back-where-you-left-it" }
+  ]
+}
