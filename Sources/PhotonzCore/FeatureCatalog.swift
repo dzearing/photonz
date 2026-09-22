@@ -517,8 +517,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: toolTipsFlag,
-                    title: "Tools explain themselves with a tooltip",
-                    description: "Resting the pointer on a tool in the floating tool bar shows a small label with the tool's name and the key that picks it, in the app's own tooltip style: it appears once the pointer has been still for a moment, follows the pointer from tool to tool without flicker, and never gets in the way of a click. Off means the buttons show the plain system help tag, which may not appear at all.",
+                    title: "Buttons explain themselves with a tooltip",
+                    description: "Resting the pointer on a button that is only a picture shows a small label with its name and the key that presses it, in the app's own tooltip style: it appears once the pointer has been still for a moment, follows the pointer from button to button without flicker, and never gets in the way of a click. The tools in the floating bar, the panel toggle, the capture history and the row of buttons under a recording all answer this way. Off means they show the plain system help tag, which macOS draws in its own style and may not show at all.",
                     area: .tools,
                     isEnabled: false,
                     parameters: []),

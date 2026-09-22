@@ -6083,3 +6083,32 @@
 {"t":"2026-09-22T02:48:42.832Z","ev":"task_walks","id":"components-on-the-timeline-animated-the-way-ever","walks":["component-on-the-timeline-walk","icon-into-a-component-onto-the-timeline-walk"]}
 {"t":"2026-09-22T02:52:59.914Z","ev":"task_note","id":"components-on-the-timeline-animated-the-way-ever"}
 {"t":"2026-09-22T02:53:03.398Z","ev":"task_done","id":"components-on-the-timeline-animated-the-way-ever","from":"in_progress","note":"A component you built goes on a recording: it arrives at the playhead with an in and an out, gets a bar on the timeline, keeps its link to the original, and animates from the moment it arrives. Shipped behind next-a-component-on-the-timeline (on by default in Next) in ComponentsInTime.swift plus two fixes: a copy now carries its parts' motions (rebound silently dropped them, so an animated component stopped animating the moment it was copied) and the timing strip draws a nested part's lane where it actually happens. Verified: 8884 tests green including three new export tests that write a real movie and read the pixels back, and two new walks with six real screenshots. Audit: queue/audits/2026-09-22-components-on-the-timeline.json. Commit fec6dcee, pushed."}
+{"t":"2026-09-22T03:06:08.489Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T03:06:08.572Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":622,"of":555,"rotating":true}
+{"t":"2026-09-22T03:06:08.689Z","ev":"task_started","id":"captions-that-write-themselves-and-titles-that-b","title":"Captions that write themselves, and titles that behave like text","priority":"p1-high"}
+{"t":"2026-09-22T03:06:32.829Z","ev":"task_reprioritized","id":"the-video-bar-s-buttons-say-what-they-do-in-the","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-22T03:06:32.880Z","ev":"task_resequenced","id":"the-video-bar-s-buttons-say-what-they-do-in-the","from":10,"to":3}
+{"t":"2026-09-22T03:47:40.293Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-22T03:47:55.402Z","ev":"task_walks","id":"captions-that-write-themselves-and-titles-that-b","walks":["captions-from-the-sound-walk"]}
+{"t":"2026-09-22T03:47:55.452Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:47:55.500Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:47:59.933Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:47:59.982Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:48:00.032Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:55:29.329Z","ev":"task_note","id":"captions-that-write-themselves-and-titles-that-b"}
+{"t":"2026-09-22T03:55:29.379Z","ev":"task_done","id":"captions-that-write-themselves-and-titles-that-b","from":"in_progress","note":"Write Captions listens to a recording on this Mac and puts the words on the timeline as ordinary text layers with an in and an out. Model in PhotonzCore/Captions.swift (words, cues, seams, chunk plan, file-clock to document-clock mapping, SRT, progress copy), listening in PhotonzMedia/SpeechTranscription.swift (macOS 26 SpeechTranscriber, on device, no permission), window in EditorState+Captions.swift and CaptionsInspector.swift, Video menu rows, flag next-captions-from-the-sound. Verified: 30 core tests, 7 media tests against real speech, the whole suite green at 8884, captions-from-the-sound-walk green with 9 real screenshots including a burned-in export frame, and a 42:05 recording transcribed in 28.3s with the seams checked. Design doc docs/design/video-captions.md; audit queue/audits/2026-09-21-captions-from-the-sound.json. Pushed as a2507317."}
+{"t":"2026-09-22T04:06:19.182Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T04:06:19.267Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":626,"of":556,"rotating":true}
+{"t":"2026-09-22T04:06:19.378Z","ev":"task_started","id":"the-video-bar-s-buttons-say-what-they-do-in-the","title":"The video bar's buttons say what they do, in the app's own voice","priority":"p1-high"}
+{"t":"2026-09-22T04:26:56.175Z","ev":"task_walks","id":"the-video-bar-s-buttons-say-what-they-do-in-the","walks":["video-bar-says-what-it-does-walk"]}
+{"t":"2026-09-22T04:26:56.223Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:10.848Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:10.897Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:10.947Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:10.996Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:11.044Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:16.010Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:16.059Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:16.107Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}
+{"t":"2026-09-22T04:27:21.776Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-22T04:27:47.661Z","ev":"task_note","id":"the-video-bar-s-buttons-say-what-they-do-in-the"}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T17:07:21.894Z",
-  "updated": "2026-09-22T03:06:32.879Z",
+  "updated": "2026-09-22T04:27:47.660Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-20 with a screenshot of the trim bar, hovering the scissors: \"tooltips don't look like any other tooltip. I don't know what the buttons do.\" The tooltip in the shot reads 'Split at Playhead (B)' in a plain dark rounded box that is not the app's tooltip.\n\nThe app HAS a tooltip system and these buttons are not using it. Look at .toolTip(_:key:fallback:) which the tool bar uses (every tool shows a tooltip that names it and its key, a shipped task), and panelHelp which the panel uses. One of those is the right answer for this row; a third look is not.\n\nThe icons are the other half and are worth checking rather than assuming: eight glyphs in a row with no labels, several of which look like glyphs used for other things elsewhere in the app. There is a done task 'edit-is-one-glyph-across-the-corpus' about exactly this kind of drift, and an icon conformance epic. Check this row against the same rule.\n\nThis is a small task and it is deliberately narrow: it is about the row of buttons reading correctly, not about whether that row should exist. Where the video surface goes is the design pass's question and is blocked on a decision card.",
@@ -46,6 +46,58 @@
     {
       "t": "2026-09-22T03:06:32.908317Z",
       "note": "Filed on 2026-09-20 without priority or source, so it defaulted to p2 and manual. It is a user report (\"tooltips don't look like any other tooltip. I don't know what the buttons do\", reported twice, 2026-09-20 and again 2026-09-21 after a build that did not include it). Put to p1 seq 3 where a user report belongs."
+    },
+    {
+      "t": "2026-09-22T04:06:19.376Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T04:26:56.173Z",
+      "note": "owns these walks: video-bar-says-what-it-does-walk"
+    },
+    {
+      "t": "2026-09-22T04:26:56.221Z",
+      "note": "Reproduced first: the row's eight buttons were all .help(), which is macOS's own help tag drawn in macOS's own style on macOS's own schedule, so the report 'tooltips don't look like any other tooltip' was exactly right. Recon walk /tmp/vb-recon.json photographed the row before any change (scissors on Trim, a down arrow on Export)."
+    },
+    {
+      "t": "2026-09-22T04:27:10.846Z",
+      "note": "Adversarial pass BEFORE building. Walking the row as a first-time user: eight circles, no words, and the only way to learn one is to press it and find out. Two of the eight are near-twins at 14pt: Save is a document with a down arrow and Export is a tray with a down arrow, side by side in one row meaning different things. One of them lies: the tray with the arrow going DOWN is the picture of bringing a file IN (the mock's own ic-import), on a button that sends one out. And the picture that says 'cut' in every editor ever made, scissors, was on Trim, two buttons away from the button that actually cuts. The shortest fix that delivers the whole value is therefore: the app's tooltip on all of them, and exactly two pictures changed. Everything else in the row already matches the mock's icon set and was left alone."
+    },
+    {
+      "t": "2026-09-22T04:27:10.895Z",
+      "note": "Built it. Sources/Photonz/VideoEditorView.swift: every .help() in the bar became .toolTip(name, key:) — the designed plate in HintTooltip.swift that the tool bar, the panel toggle, the capture history and the trim handles already use. Fourteen call sites: split, delete piece (x2, the row and the trim session), trim, crop, undo, saving, save, the three transport buttons, copy, export. With next-tool-tips off (so always in Current) .toolTip falls back to .help with the same words, so Current's behaviour is untouched."
+    },
+    {
+      "t": "2026-09-22T04:27:10.945Z",
+      "note": "Glyphs, checked against the app's own set and the mock's icons.mjs. CHANGED: Trim scissors -> timeline.selection, which is what Tool.trim wears in the picture editor (ToolGroupButton.swift barSymbol) and the same drawing as the mock's ic-trim (a clip with an in point and an out point). Export square.and.arrow.down -> square.and.arrow.up, matching the mock's ic-export; the down version is the mock's ic-import and macOS's own download glyph, and it sat beside Save's own down arrow. The trimmed-length readout beside the volume moved from scissors to timeline.selection with the button. UNCHANGED, each because it already matches: split rectangle.split.2x1 = ic-blade minus the dashed divider SF Symbols does not offer; trash = ic-trash; crop = ic-crop, same glyph as Tool.crop; copy doc.on.doc = ic-copy, same as the history overlay's copy; undo arrow.uturn.backward = ic-undo, same as the component panel's revert; save arrow.down.doc = the same glyph the save announcement already uses (the mock's ic-save is a floppy disk and macOS has none). Scissors now means exactly one thing in the app: the orange clipped badge in the layers list."
+    },
+    {
+      "t": "2026-09-22T04:27:10.994Z",
+      "note": "Verified. Scripts/test.sh: 8884 tests in 709 suites, all passing. New walk Scripts/playtest/video-bar-says-what-it-does-walk.json, 51 steps, ok, 14 real window captures: it rests on the Crop tool in the floating bar for the standard, then on every button in the video bar, and each hover line in log.json names the plate that came up ('Split at Playhead (B) above at (584, 624) 121x31', 'Undo Cut (⌘Z)', 'Play (Space)', 'Crop to Region', 'Copy to Clipboard', 'Export', 'Trim', 'Delete This Piece (⌫)', 'Save (⌘S)'). Regression: playtest-all --no-build over trim (12), recording (11), cut (9), video (2), tooltip (2), tool-tips (1), experiment (1) — 38 walks, 0 failed."
+    },
+    {
+      "t": "2026-09-22T04:27:11.042Z",
+      "note": "Dimming, measured rather than asserted. IconActionButtonStyle carries .opacity(isEnabled ? 1 : 0.4). Sampling the glyph boxes in the walk's captures: an enabled button at rest peaks at 168, the disabled split at 90, and the disabled split under the pointer at 126. So a button that cannot act IS visibly dimmer, and it still raises its tooltip, which is the case the acceptance asks about."
+    },
+    {
+      "t": "2026-09-22T04:27:16.008Z",
+      "note": "The flag that owns this now says so. next-tool-tips was titled 'Tools explain themselves with a tooltip' and described as the floating tool bar only, which had already stopped being true (the capture history and the trim handles use it) and is further from true now. Retitled 'Buttons explain themselves with a tooltip' and the description names the four places, so somebody switching it off in the Experiments window knows the recording's row goes back to the system tag too."
+    },
+    {
+      "t": "2026-09-22T04:27:16.057Z",
+      "note": "Left rough, none of it earning its own task. (1) A disabled icon button still brightens under the pointer and still grows its hover ring: IconActionButtonStyle computes 'lit' from hovering without consulting isEnabled, so the disabled split reads 126 hovered against 90 at rest. It is still clearly dimmer than the 168 of its live neighbours, so nothing is unreadable, and the style is shared with Current, where changing it would be a Current behaviour change this task does not have licence for. (2) Trim's tooltip is the bare noun 'Trim' in a row of verbs; it matches Tool.trim.barTitle, which is why it was left, and it is an evaluate question in the audit. (3) Four buttons print no key because they have none: Trim, Crop to Region, Copy to Clipboard, Export."
+    },
+    {
+      "t": "2026-09-22T04:27:16.105Z",
+      "note": "Could not check, said plainly in the audit rather than guessed: how the row reads in a very narrow window. topRow is a ZStack with the transport centred over an HStack that pins these buttons right, so below some width they must meet, and no playtest step can size a recording window (only 'open' and 'blank' take a size, and a recording arrives through an action). Not filed as a bug because it is not reproduced."
+    },
+    {
+      "t": "2026-09-22T04:27:47.659Z",
+      "note": "Release call, made deliberately and flagged rather than made quietly. The task is release next, and the tooltip half honours that by itself: .toolTip falls back to .help with identical words wherever next-tool-tips is off, which is always in Current. The two GLYPHS do not, because VideoEditorView is shared and an Image(systemName:) is not flag-gated. The choices were to fork a whole file for two symbol names, which the Releases README says is only for a release that genuinely needs the file different, or to add a flag to the Experiments window for two pictures, which is clutter. Shipped shared instead: neither swap changes what any button does, and one of them (an import arrow on the Export button) was plainly wrong in both releases. Written into the audit's rough as a line the user can disagree with."
     }
+  ],
+  "started": "2026-09-22T04:06:19.375Z",
+  "walks": [
+    "video-bar-says-what-it-does-walk"
   ]
 }

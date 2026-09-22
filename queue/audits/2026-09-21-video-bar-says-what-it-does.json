@@ -1,0 +1,50 @@
+{
+  "feature": "The video bar's buttons say what they do",
+  "epic": "video-cutting",
+  "summary": "Resting on any button under a recording now raises the app's own tooltip, the same dark plate a tool in the floating bar raises, with the name first and the key printed quieter. Two of the pictures changed as well: Trim wears the Trim tool's own glyph instead of scissors, and Export wears an arrow going out instead of the one that means bringing a file in.",
+  "setup": "Photonz Dev, a recording open (History, then Edit on a video). Release Next; the flags 'Buttons explain themselves with a tooltip' and 'Cut a recording into pieces' are both on by default.",
+  "try": [
+    {
+      "do": "Rest the pointer on the Crop tool in the floating bar over a picture. This is the plate everything below has to match.",
+      "shot": "2026-09-21-video-bar-0-the-standard.png"
+    },
+    {
+      "do": "Open a recording and rest the pointer on each button in the row on the right, left to right, without clicking."
+    },
+    {
+      "do": "Press B to cut the recording where the playhead is, then rest on the split button again: the playhead is now on the join, so it is dimmed.",
+      "shot": "2026-09-21-video-bar-1-the-row.png"
+    },
+    {
+      "do": "Rest on the last button in the row and read what it says and what it draws.",
+      "shot": "2026-09-21-video-bar-2-export.png"
+    },
+    {
+      "do": "Rest on the button that was scissors, third from the right, and see whether the picture tells you what it opens."
+    },
+    {
+      "do": "Switch the Mac to Light Appearance and rest on the same button again.",
+      "shot": "2026-09-21-video-bar-3-light.png"
+    },
+    {
+      "do": "Sweep the pointer straight along the whole row without stopping, then stop on one."
+    }
+  ],
+  "evaluate": [
+    "Covering the tooltip: can you name what each of the eight pictures does, from the row alone?",
+    "Does the plate over the recording read as the same thing as the plate over the tool bar, or does one of them still look borrowed?",
+    "Trim says just 'Trim', the one bare noun in a row of verbs. Is that enough, or should it say what pressing it opens?",
+    "The dimmed split still answers with its name and key. Is that right, or would you rather it said why it cannot act?",
+    "Does the row still read at a glance in Light Appearance, where the bar goes pale and the glyphs go dark?"
+  ],
+  "rough": [
+    "Trim's picture is the Trim TOOL's picture (a clip with an in point and an out point) rather than the mock's, because they are the same drawing: the mock's ic-trim and SF Symbols' timeline.selection are the same idea. It used to be scissors, which says 'cut' and sat two buttons from the button that actually cuts.",
+    "Split keeps the app's two-block picture rather than the mock's blade. The mock draws a dashed line down the middle to say 'the cut goes here' and SF Symbols has no dashed version, so the divider is solid. The app won on availability, not on merit, and the button is the least self-explanatory in the row.",
+    "Save keeps a document with a down arrow rather than the mock's floppy disk: macOS has no floppy, and the app's own save announcement already uses this one.",
+    "Four buttons have no key to print because they have none: Trim, Crop to Region, Copy to Clipboard and Export. File's Export (Shift Command E) opens a sheet while the button opens a small menu, so the button does not claim that key.",
+    "A dimmed button still brightens a little and grows its hover ring when the pointer crosses it, so it reads as slightly more pressable than it is. It is still clearly dimmer than its neighbours. This is in the shared icon button style, not in the video bar.",
+    "Not checked: how the row reads in a very narrow window. The transport is centred in the same strip the buttons are pinned to the right of, so at some width they must meet, and a scripted walk cannot size a recording window to find out where.",
+    "Not checked with a person: whether somebody who has used the rest of the app can name each button from the row alone. That is the first question above, and only the user can answer it.",
+    "The two glyph swaps are shared, so Current gets them too. VideoEditorView is not a forked file, and the alternatives were forking a whole file for two SF Symbol names or adding a flag to the Experiments window for them, which is clutter nobody asked for. Neither picture changes what a button does; one of them was simply wrong in both releases. If you would rather Current keep exactly the pictures it shipped with, say so on this line."
+  ]
+}

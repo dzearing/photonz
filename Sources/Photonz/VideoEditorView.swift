@@ -444,7 +444,7 @@ struct VideoEditorView: View {
     @ViewBuilder
     private var statusLabels: some View {
         if state.isTrimming, state.trim.isTrimmed {
-            Label(VideoTimecode.label(state.trim.effectiveDuration), systemImage: "scissors")
+            Label(VideoTimecode.label(state.trim.effectiveDuration), systemImage: "timeline.selection")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -466,6 +466,26 @@ struct VideoEditorView: View {
     /// The right-side actions, all sharing the circular icon style: undo (when
     /// there's an applied edit to revert), trim, crop, save (when there's an
     /// edit to commit), copy, export.
+    ///
+    /// Every one of them is a picture with no word beside it, so two rules hold
+    /// the row together and are the whole reason it can be read.
+    ///
+    /// **It explains itself in the app's own tooltip.** `.toolTip` is the
+    /// designed plate the tool bar, the panel toggle and the trim handles
+    /// already use: it waits for the pointer to rest, follows it along the row,
+    /// and prints the key quieter under the name. Until this row got it, these
+    /// were `.help()` system tags — a box drawn by macOS that looks like nothing
+    /// else in the app, on macOS's own schedule — which is what the person
+    /// using it reported: "tooltips don't look like any other tooltip. I don't
+    /// know what the buttons do."
+    ///
+    /// **One picture, one meaning.** Trim wears `timeline.selection`, which is
+    /// what the Trim TOOL wears in the image editor (`Tool.barSymbol`) and what
+    /// the mock's `ic-trim` draws: a clip with an in point and an out point.
+    /// It used to wear scissors, which says "cut" and sat one button away from
+    /// the button that actually cuts. Export wears `square.and.arrow.up`,
+    /// because the down arrow it used to wear is the picture of bringing a file
+    /// IN, and it was sitting in the same row as Save's own down arrow.
     private var editButtons: some View {
         HStack(spacing: 6) {
             saveButton
@@ -476,29 +496,29 @@ struct VideoEditorView: View {
                 }
                 .buttonStyle(IconActionButtonStyle())
                 .disabled(!state.canCutAtPlayhead)
-                .help("Split at Playhead (B)")
+                .toolTip("Split at Playhead", key: "B")
 
                 if state.canDeleteSelectedPiece {
                     Button { state.deleteSelectedPiece() } label: {
                         Image(systemName: "trash")
                     }
                     .buttonStyle(IconActionButtonStyle())
-                    .help("Delete This Piece (⌫)")
+                    .toolTip("Delete This Piece", key: "⌫")
                 }
             }
 
             Button { state.beginTrim() } label: {
-                Image(systemName: "scissors")
+                Image(systemName: "timeline.selection")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help("Trim")
+            .toolTip("Trim")
             .tutorialAnchor(.video(.trim))
 
             Button { state.beginCrop() } label: {
                 Image(systemName: "crop")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help("Crop to Region")
+            .toolTip("Crop to Region")
 
             copyMenu
             exportMenu
@@ -520,7 +540,7 @@ struct VideoEditorView: View {
                 Image(systemName: "arrow.uturn.backward")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help("Undo \(action)")
+            .toolTip("Undo \(action)", key: "⌘Z")
             .playtestControl("Undo", detail: action)
         }
     }
@@ -540,13 +560,13 @@ struct VideoEditorView: View {
             ProgressView()
                 .controlSize(.small)
                 .frame(width: 28, height: 28)
-                .help("Saving…")
+                .toolTip("Saving…")
         } else if state.hasUnsavedChanges {
             Button { state.save() } label: {
                 Image(systemName: "arrow.down.doc")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help("Save (⌘S)")
+            .toolTip("Save", key: "⌘S")
             .tutorialAnchor(.video(.save))
         }
     }
@@ -579,7 +599,7 @@ struct VideoEditorView: View {
                             Image(systemName: "trash")
                         }
                         .buttonStyle(IconActionButtonStyle())
-                        .help("Delete This Piece (⌫)")
+                        .toolTip("Delete This Piece", key: "⌫")
                         .playtestControl("Delete This Piece", detail: "Trim mode")
                     }
                 }
@@ -620,20 +640,20 @@ struct VideoEditorView: View {
                 Image(systemName: state.isPlaying ? "gobackward" : "backward.frame.fill")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help(state.isPlaying ? "Back 1 second (←)" : "Previous frame (←)")
+            .toolTip(state.isPlaying ? "Back 1 Second" : "Previous Frame", key: "←")
 
             Button { state.togglePlayPause() } label: {
                 Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 28, weight: .bold))
             }
             .buttonStyle(IconActionButtonStyle(diameter: 50))
-            .help(state.isPlaying ? "Pause (space)" : "Play (space)")
+            .toolTip(state.isPlaying ? "Pause" : "Play", key: "Space")
 
             Button { state.stepForward() } label: {
                 Image(systemName: state.isPlaying ? "goforward" : "forward.frame.fill")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help(state.isPlaying ? "Forward 1 second (→)" : "Next frame (→)")
+            .toolTip(state.isPlaying ? "Forward 1 Second" : "Next Frame", key: "→")
         }
         .disabled(state.isCropping)
         .tutorialAnchor(.video(.transport))
@@ -653,7 +673,7 @@ struct VideoEditorView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .disabled(coordinator.isExportingRecording)
-        .help("Copy to Clipboard…")
+        .toolTip("Copy to Clipboard")
         .tutorialAnchor(.video(.copy))
     }
 
@@ -674,7 +694,7 @@ struct VideoEditorView: View {
             if coordinator.isExportingRecording {
                 ProgressView().controlSize(.small)
             } else {
-                Image(systemName: "square.and.arrow.down")
+                Image(systemName: "square.and.arrow.up")
             }
         }
         .menuStyle(.button)
@@ -682,7 +702,7 @@ struct VideoEditorView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .disabled(coordinator.isExportingRecording)
-        .help("Export…")
+        .toolTip("Export")
         .tutorialAnchor(.video(.export))
     }
 
